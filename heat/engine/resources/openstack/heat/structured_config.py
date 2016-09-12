@@ -242,7 +242,8 @@ class StructuredDeployments(StructuredDeploymentGroup):
         version='7.0.0',
         previous_status=support.SupportStatus(
             status=support.DEPRECATED,
-            version='2014.2'))
+            version='2014.2'),
+        substitute_class=StructuredDeploymentGroup)
 
 
 def resource_mapping():
