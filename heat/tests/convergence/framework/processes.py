@@ -28,8 +28,8 @@ class Processes(object):
         global worker
         global event_loop
 
-        engine = engine_wrapper.Engine()
         worker = worker_wrapper.Worker()
+        engine = engine_wrapper.Engine(worker)
 
         event_loop = event_loop_module.EventLoop(engine, worker)
 

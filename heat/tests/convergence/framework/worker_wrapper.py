@@ -35,3 +35,6 @@ class Worker(message_processor.MessageProcessor):
                                  current_traversal,
                                  data, is_update,
                                  adopt_stack_data)
+
+    def stop_all_workers(self, current_stack):
+        pass
