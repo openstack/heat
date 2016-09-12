@@ -1308,7 +1308,7 @@ class EngineService(service.Service):
         s = self._get_stack(cntx, stack_identity)
         stack = parser.Stack.load(cntx, stack=s)
 
-        return api.format_stack_outputs(stack, stack.t[stack.t.OUTPUTS])
+        return api.format_stack_outputs(stack.outputs)
 
     @context.request_context
     def show_output(self, cntx, stack_identity, output_key):
@@ -1322,14 +1322,13 @@ class EngineService(service.Service):
         s = self._get_stack(cntx, stack_identity)
         stack = parser.Stack.load(cntx, stack=s)
 
-        outputs = stack.t[stack.t.OUTPUTS]
+        outputs = stack.outputs
 
         if output_key not in outputs:
             raise exception.NotFound(_('Specified output key %s not '
                                        'found.') % output_key)
-        output = stack.resolve_outputs_data({output_key: outputs[output_key]})
 
-        return api.format_stack_output(stack, output, output_key)
+        return api.format_stack_output(outputs[output_key])
 
     def _remote_call(self, cnxt, lock_engine_id, call, **kwargs):
         timeout = cfg.CONF.engine_life_check_timeout

@@ -99,7 +99,7 @@ class TestValueSimple(TestValue):
             stack = self.create_stack(templ_dict, env)
             self.assertEqual(self.param1, stack['my_value'].FnGetAtt('value'))
             self.assertEqual(self.param1, stack['my_value2'].FnGetAtt('value'))
-            self.assertEqual(self.param1, stack.output('myout'))
+            self.assertEqual(self.param1, stack.outputs['myout'].get_value())
 
 
 class TestValueLessSimple(TestValue):

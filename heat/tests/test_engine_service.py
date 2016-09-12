@@ -1054,7 +1054,7 @@ class StackServiceTest(common.HeatTestCase):
         self.patchobject(self.eng, '_get_stack')
         self.patchobject(parser.Stack, 'load', return_value=stack)
         self.patchobject(
-            stack, 'output',
+            stack.outputs['test'], 'get_value',
             side_effect=[exception.EntityNotFound(entity='one', name='name')])
 
         output = self.eng.show_output(self.ctx, mock.ANY, 'test')

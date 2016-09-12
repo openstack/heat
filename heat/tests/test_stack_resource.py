@@ -22,6 +22,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import output
 from heat.engine import resource
 from heat.engine.resources import stack_resource
 from heat.engine import stack as parser
@@ -624,8 +625,7 @@ class StackResourceAttrTest(StackResourceBaseTest):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
         stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {"key": "value"}
-        nested.output('key').AndReturn("value")
+        nested.outputs = {"key": output.OutputDefinition("key", "value")}
         self.m.ReplayAll()
 
         self.assertEqual("value", self.parent_resource.get_output("key"))
@@ -649,8 +649,7 @@ class StackResourceAttrTest(StackResourceBaseTest):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
         stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {'key': 'value'}
-        nested.output('key').AndReturn('value')
+        nested.outputs = {'key': output.OutputDefinition('key', 'value')}
         self.m.ReplayAll()
 
         self.assertEqual('value',
@@ -662,8 +661,8 @@ class StackResourceAttrTest(StackResourceBaseTest):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
         stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {'key': {'a': 1, 'b': 2}}
-        nested.output('key').AndReturn({'a': 1, 'b': 2})
+        nested.outputs = {'key': output.OutputDefinition('key',
+                                                         {'a': 1, 'b': 2})}
         self.m.ReplayAll()
 
         self.assertEqual({'a': 1, 'b': 2},
@@ -675,8 +674,7 @@ class StackResourceAttrTest(StackResourceBaseTest):
         nested = self.m.CreateMockAnything()
         self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
         stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {"key": [1, 2, 3]}
-        nested.output('key').AndReturn([1, 2, 3])
+        nested.outputs = {'key': output.OutputDefinition('key', [1, 2, 3])}
         self.m.ReplayAll()
 
         self.assertEqual([1, 2, 3],

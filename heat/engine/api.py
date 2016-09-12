@@ -171,37 +171,33 @@ def translate_filters(params):
     return params
 
 
-def format_stack_outputs(stack, outputs, resolve_value=False):
+def format_stack_outputs(outputs, resolve_value=False):
     """Return a representation of the given output template.
 
     Return a representation of the given output template for the given stack
     that matches the API output expectations.
     """
-    return [format_stack_output(stack, outputs,
-                                key, resolve_value=resolve_value)
+    return [format_stack_output(outputs[key], resolve_value=resolve_value)
             for key in outputs]
 
 
-def format_stack_output(stack, outputs, k, resolve_value=True):
+def format_stack_output(output_defn, resolve_value=True):
     result = {
-        rpc_api.OUTPUT_KEY: k,
-        rpc_api.OUTPUT_DESCRIPTION: outputs[k].get(stack.t.OUTPUT_DESCRIPTION,
-                                                   'No description given'),
+        rpc_api.OUTPUT_KEY: output_defn.name,
+        rpc_api.OUTPUT_DESCRIPTION: output_defn.description(),
     }
 
     if resolve_value:
+        value = None
         try:
-            value = stack.output(k)
+            value = output_defn.get_value()
         except Exception as ex:
             # We don't need error raising, just adding output_error to
             # resulting dict.
-            value = None
             result.update({rpc_api.OUTPUT_ERROR: six.text_type(ex)})
         finally:
             result.update({rpc_api.OUTPUT_VALUE: value})
 
-    if outputs[k].get('error_msg'):
-        result.update({rpc_api.OUTPUT_ERROR: outputs[k].get('error_msg')})
     return result
 
 
@@ -244,8 +240,7 @@ def format_stack(stack, preview=False, resolve_outputs=True):
 
     # allow users to view the outputs of stacks
     if stack.action != stack.DELETE and resolve_outputs:
-        info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack,
-                                                           stack.outputs,
+        info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack.outputs,
                                                            resolve_value=True)
 
     return info

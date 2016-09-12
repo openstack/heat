@@ -741,7 +741,8 @@ class HOTemplateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('foo-success', self.stack.output('replaced'))
+        self.assertEqual('foo-success',
+                         self.stack.outputs['replaced'].get_value())
 
     def test_get_file(self):
         """Test get_file function."""

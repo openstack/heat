@@ -585,14 +585,12 @@ class StackResource(resource.Resource):
         stack = self.nested()
         if stack is None:
             return None
-        if op not in stack.outputs:
+
+        try:
+            return stack.outputs[op].get_value()
+        except (KeyError, Exception):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=op)
-        result = stack.output(op)
-        if result is None and stack.outputs[op].get('error_msg') is not None:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=op)
-        return result
 
     def _resolve_attribute(self, name):
         return self.get_output(name)
