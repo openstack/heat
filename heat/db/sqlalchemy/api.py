@@ -1559,7 +1559,8 @@ def reset_stack_status(context, stack_id, stack=None):
         query = context.session.query(models.Resource).filter_by(
             status='IN_PROGRESS', stack_id=stack_id)
         query.update({'status': 'FAILED',
-                      'status_reason': 'Stack status manually reset'})
+                      'status_reason': 'Stack status manually reset',
+                      'engine_id': None})
 
         query = context.session.query(models.ResourceData)
         query = query.join(models.Resource)

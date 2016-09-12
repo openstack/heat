@@ -3620,7 +3620,8 @@ class ResetStackStatusTests(common.HeatTestCase):
 
     def test_resource_reset(self):
         resource_progress = create_resource(self.ctx, self.stack,
-                                            status='IN_PROGRESS')
+                                            status='IN_PROGRESS',
+                                            engine_id=UUID2)
         resource_complete = create_resource(self.ctx, self.stack)
         db_api.reset_stack_status(self.ctx, self.stack.id)
 
@@ -3628,6 +3629,7 @@ class ResetStackStatusTests(common.HeatTestCase):
         resource_progress = db_api.resource_get(self.ctx, resource_progress.id)
         self.assertEqual('complete', resource_complete.status)
         self.assertEqual('FAILED', resource_progress.status)
+        self.assertIsNone(resource_progress.engine_id)
 
     def test_hook_reset(self):
         resource = create_resource(self.ctx, self.stack)
@@ -3645,7 +3647,8 @@ class ResetStackStatusTests(common.HeatTestCase):
                              owner_id=self.stack.id)
         grandchild = create_stack(self.ctx, self.template, self.user_creds,
                                   owner_id=child.id, status='IN_PROGRESS')
-        resource = create_resource(self.ctx, grandchild, status='IN_PROGRESS')
+        resource = create_resource(self.ctx, grandchild, status='IN_PROGRESS',
+                                   engine_id=UUID2)
         db_api.reset_stack_status(self.ctx, self.stack.id)
 
         grandchild = db_api.stack_get(self.ctx, grandchild.id)
@@ -3653,4 +3656,5 @@ class ResetStackStatusTests(common.HeatTestCase):
         resource = db_api.resource_get(self.ctx, resource.id)
         self.assertEqual('FAILED', grandchild.status)
         self.assertEqual('FAILED', resource.status)
+        self.assertIsNone(resource.engine_id)
         self.assertEqual('FAILED', self.stack.status)
