@@ -12,18 +12,22 @@
 #    under the License.
 
 import collections
-import copy
 
 import six
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import function
+from heat.engine import output
 from heat.engine import template
 
 
 class CommonTemplate(template.Template):
-    """A class of the common implementation for HOT and CFN templates."""
+    """A class of the common implementation for HOT and CFN templates.
+
+    This is *not* a stable interface, and any third-parties who create derived
+    classes from it do so at their own risk.
+    """
 
     @classmethod
     def validate_resource_key_type(cls, key, valid_types, typename,
@@ -82,7 +86,7 @@ class CommonTemplate(template.Template):
             'string', name, data)
 
     def _resolve_conditions(self, stack):
-        cd_snippet = self.get_condition_definitions()
+        cd_snippet = self._get_condition_definitions()
         result = {}
         for cd_key, cd_value in six.iteritems(cd_snippet):
             # hasn't been resolved yet
@@ -96,31 +100,9 @@ class CommonTemplate(template.Template):
 
         return result
 
-    def get_condition_definitions(self):
+    def _get_condition_definitions(self):
         """Return the condition definitions of template."""
         return {}
-
-    def has_condition_section(self, snippet):
-        return False
-
-    def get_output_condition(self, stack, o_data, o_key):
-        path = '.'.join([self.OUTPUTS, o_key, self.OUTPUT_CONDITION])
-
-        return self.get_condition(o_data, stack, path)
-
-    def get_condition(self, snippet, stack, path=''):
-        # if specify condition return the resolved condition value,
-        # true or false if don't specify condition, return true
-        if self.has_condition_section(snippet):
-            cd_key = snippet[self.CONDITION]
-            cds = self.conditions(stack)
-            if cd_key not in cds:
-                raise exception.InvalidConditionReference(
-                    cd=cd_key, path=path)
-            cd = cds[cd_key]
-            return cd
-
-        return True
 
     def conditions(self, stack):
         if self._conditions is None:
@@ -136,16 +118,48 @@ class CommonTemplate(template.Template):
 
         return self._conditions
 
-    def parse_outputs_conditions(self, outputs, stack):
-        copy_outputs = copy.deepcopy(outputs)
-        for key, snippet in six.iteritems(copy_outputs):
-            if self.has_condition_section(snippet):
-                cd = self.get_output_condition(stack, snippet, key)
-                snippet[self.OUTPUT_CONDITION] = cd
-                if not cd:
-                    snippet[self.OUTPUT_VALUE] = None
+    def outputs(self, stack):
+        conditions = Conditions(self.conditions(stack))
 
-        return copy_outputs
+        outputs = self.t.get(self.OUTPUTS) or {}
+
+        def get_outputs():
+            for key, val in outputs.items():
+                if not isinstance(val, collections.Mapping):
+                    message = _('Output definitions must be a map. Found a '
+                                '%s instead') % type(val).__name__
+                    raise exception.StackValidationFailed(
+                        error='Output validation error',
+                        path=[self.OUTPUTS, key],
+                        message=message)
+
+                if self.OUTPUT_VALUE not in val:
+                    message = _('Each output definition must contain '
+                                'a %s key.') % self.OUTPUT_VALUE
+                    raise exception.StackValidationFailed(
+                        error='Output validation error',
+                        path=[self.OUTPUTS, key],
+                        message=message)
+
+                description = val.get(self.OUTPUT_DESCRIPTION)
+
+                if hasattr(self, 'OUTPUT_CONDITION'):
+                    cond_name = val.get(self.OUTPUT_CONDITION)
+                    path = '.'.join([self.OUTPUTS,
+                                     key,
+                                     self.OUTPUT_CONDITION])
+                    if not conditions.is_enabled(cond_name, path):
+                        yield key, output.OutputDefinition(key, None,
+                                                           description)
+                        continue
+
+                value_def = self.parse(stack, val[self.OUTPUT_VALUE],
+                                       path='.'.join([self.OUTPUTS, key,
+                                                      self.OUTPUT_VALUE]))
+
+                yield key, output.OutputDefinition(key, value_def, description)
+
+        return dict(get_outputs())
 
 
 class Conditions(object):

@@ -189,14 +189,12 @@ class CfnTemplate(CfnTemplateBase):
     SECTIONS_NO_DIRECT_ACCESS = (CfnTemplateBase.SECTIONS_NO_DIRECT_ACCESS |
                                  set([CONDITIONS]))
 
-    CONDITION = 'Condition'
-
-    RES_CONDITION = CONDITION
+    RES_CONDITION = 'Condition'
     _RESOURCE_KEYS = CfnTemplateBase._RESOURCE_KEYS + (RES_CONDITION,)
     HOT_TO_CFN_RES_ATTRS = CfnTemplateBase.HOT_TO_CFN_RES_ATTRS
     HOT_TO_CFN_RES_ATTRS.update({'condition': RES_CONDITION})
 
-    OUTPUT_CONDITION = CONDITION
+    OUTPUT_CONDITION = 'Condition'
     OUTPUT_KEYS = CfnTemplateBase.OUTPUT_KEYS + (OUTPUT_CONDITION,)
 
     functions = {
@@ -228,14 +226,8 @@ class CfnTemplate(CfnTemplateBase):
 
         self.merge_sections = [self.PARAMETERS, self.CONDITIONS]
 
-    def get_condition_definitions(self):
+    def _get_condition_definitions(self):
         return self.t.get(self.CONDITIONS, {})
-
-    def has_condition_section(self, snippet):
-        if snippet and self.CONDITION in snippet:
-            return True
-
-        return False
 
     def _validate_resource_definition(self, name, data):
         super(CfnTemplate, self)._validate_resource_definition(name, data)

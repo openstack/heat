@@ -1900,7 +1900,7 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('Each output must contain a Value key.',
+        self.assertIn('Each output definition must contain a Value key.',
                       six.text_type(ex))
         self.assertIn('Outputs.Resource_attr', six.text_type(ex))
 
@@ -1956,8 +1956,7 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('Outputs must contain Output. '
-                      'Found a [%s] instead' % six.text_type,
+        self.assertIn('Found a %s instead' % six.text_type.__name__,
                       six.text_type(ex))
         self.assertIn('Outputs.Resource_attr', six.text_type(ex))
 
@@ -2096,8 +2095,7 @@ class StackTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.stack.validate)
 
-        self.assertIn('Outputs must contain Output. '
-                      'Found a [%s] instead' % type([]), six.text_type(ex))
+        self.assertIn('Found a list', six.text_type(ex))
         self.assertIn('Outputs.Resource_attr', six.text_type(ex))
 
     def test_incorrect_deletion_policy(self):

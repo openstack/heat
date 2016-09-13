@@ -149,10 +149,6 @@ class Template(collections.Mapping):
                 self.t[s] = {}
             self.t[s].update(other.t[s])
 
-    def parse_outputs_conditions(self, outputs, stack):
-        """Return a dictionary of outputs data which resolved conditions."""
-        return outputs
-
     @classmethod
     def load(cls, context, template_id, t=None):
         """Retrieve a Template with the given ID from the database."""
@@ -261,9 +257,15 @@ class Template(collections.Mapping):
         return {}
 
     def outputs(self, stack):
-        resolve_outputs = self.parse_outputs_conditions(self[self.OUTPUTS],
-                                                        stack)
-        outputs = self.parse(stack, resolve_outputs, path=self.OUTPUTS)
+        warnings.warn("The default implementation of the outputs() method "
+                      "is deprecated, and this method could become an "
+                      "abstractmethod as early as the Pike release. "
+                      "Template subclasses should override this method with "
+                      "a custom implementation for their particular template "
+                      "format.",
+                      DeprecationWarning)
+
+        outputs = self.parse(stack, self[self.OUTPUTS], path=self.OUTPUTS)
 
         def get_outputs():
             for key, val in outputs.items():
