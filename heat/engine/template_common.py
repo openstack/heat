@@ -92,7 +92,7 @@ class CommonTemplate(template.Template):
             # hasn't been resolved yet
             if not isinstance(cd_value, bool):
                 condition_func = self.parse_condition(
-                    stack, cd_value)
+                    stack, cd_value, '.'.join([self.CONDITIONS, cd_key]))
                 resolved_cd_value = function.resolve(condition_func)
                 result[cd_key] = resolved_cd_value
             else:
@@ -110,9 +110,12 @@ class CommonTemplate(template.Template):
             if resolved_cds:
                 for cd_key, cd_value in six.iteritems(resolved_cds):
                     if not isinstance(cd_value, bool):
-                        raise exception.InvalidConditionDefinition(
-                            cd=cd_key,
-                            definition=cd_value)
+                        msg_data = {'cd': cd_key, 'definition': cd_value}
+                        message = _('The definition of condition "%(cd)s" is '
+                                    'invalid: %(definition)s') % msg_data
+                        raise exception.StackValidationFailed(
+                            error='Condition validation error',
+                            message=message)
 
             self._conditions = resolved_cds
 
@@ -145,9 +148,7 @@ class CommonTemplate(template.Template):
 
                 if hasattr(self, 'OUTPUT_CONDITION'):
                     cond_name = val.get(self.OUTPUT_CONDITION)
-                    path = '.'.join([self.OUTPUTS,
-                                     key,
-                                     self.OUTPUT_CONDITION])
+                    path = [self.OUTPUTS, key, self.OUTPUT_CONDITION]
                     if not conditions.is_enabled(cond_name, path):
                         yield key, output.OutputDefinition(key, None,
                                                            description)
@@ -166,12 +167,13 @@ class Conditions(object):
     def __init__(self, conditions_dict):
         self._conditions = conditions_dict
 
-    def is_enabled(self, condition_name, path):
+    def is_enabled(self, condition_name, path=None):
         if condition_name is None:
             return True
 
         if condition_name not in self._conditions:
-            raise exception.InvalidConditionReference(cd=condition_name,
-                                                      path=path)
+            message = _('Invalid condition "%s"') % condition_name
+            raise exception.StackValidationFailed(path=path,
+                                                  message=message)
 
         return self._conditions[condition_name]

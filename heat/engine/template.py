@@ -318,9 +318,9 @@ class Template(collections.Mapping):
     def parse(self, stack, snippet, path=''):
         return parse(self.functions, stack, snippet, path, self)
 
-    def parse_condition(self, stack, snippet):
+    def parse_condition(self, stack, snippet, path=''):
         return parse(self._parser_condition_functions, stack, snippet,
-                     template=self)
+                     path, self)
 
     def validate(self):
         """Validate the template.

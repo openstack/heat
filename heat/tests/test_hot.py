@@ -1157,10 +1157,9 @@ class HOTemplateTest(common.HeatTestCase):
 
         snippet = {'equals': [{'get_attr': [None, 'att1']},
                               {'get_attr': [None, 'att2']}]}
-        exc = self.assertRaises(exception.InvalidConditionFunction,
+        exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
-        error_msg = 'The function is not supported in condition: get_attr'
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn('"get_attr" is invalid', six.text_type(exc))
 
     def test_if(self):
         snippet = {'if': ['create_prod', 'value_if_true', 'value_if_false']}
