@@ -1200,6 +1200,8 @@ class Stack(collections.Mapping):
         if new_stack is not None:
             self.disable_rollback = new_stack.disable_rollback
             self.timeout_mins = new_stack.timeout_mins
+
+            self.parameters = new_stack.parameters
             self._set_param_stackid()
 
             self.tags = new_stack.tags
@@ -1455,7 +1457,6 @@ class Stack(collections.Mapping):
             updater = scheduler.TaskRunner(update_task)
 
             self.parameters = newstack.parameters
-            self.t._conditions = newstack.t.conditions(newstack)
             self.t.files = newstack.t.files
             self.t.env = newstack.t.env
             self.disable_rollback = newstack.disable_rollback

@@ -128,7 +128,6 @@ class Template(collections.Mapping):
         self.files = files or {}
         self.maps = self[self.MAPPINGS]
         self.env = env or environment.Environment({})
-        self._conditions = None
         self.merge_sections = [self.PARAMETERS]
 
         self.version = get_version(self.t, _template_classes.keys())

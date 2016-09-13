@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import weakref
 
 import six
 
@@ -29,6 +30,11 @@ class CommonTemplate(template.Template):
     This is *not* a stable interface, and any third-parties who create derived
     classes from it do so at their own risk.
     """
+
+    def __init__(self, template, template_id=None, files=None, env=None):
+        super(CommonTemplate, self).__init__(template, template_id=template_id,
+                                             files=files, env=env)
+        self._conditions_cache = None, None
 
     @classmethod
     def validate_resource_key_type(cls, key, valid_types, typename,
@@ -91,21 +97,28 @@ class CommonTemplate(template.Template):
         return {}
 
     def conditions(self, stack):
-        if self._conditions is None:
-            raw_defs = self._get_condition_definitions()
-            if not isinstance(raw_defs, collections.Mapping):
-                message = _('Condition definitions must be a map. Found a '
-                            '%s instead') % type(raw_defs).__name__
-                raise exception.StackValidationFailed(
-                    error='Conditions validation error',
-                    message=message)
+        get_cache_stack, cached_conds = self._conditions_cache
+        if (cached_conds is not None and
+                get_cache_stack is not None and
+                get_cache_stack() is stack):
+            return cached_conds
 
-            parsed = {n: self.parse_condition(stack, c,
-                                              '.'.join([self.CONDITIONS, n]))
-                      for n, c in raw_defs.items()}
-            self._conditions = conditions.Conditions(parsed)
+        raw_defs = self._get_condition_definitions()
+        if not isinstance(raw_defs, collections.Mapping):
+            message = _('Condition definitions must be a map. Found a '
+                        '%s instead') % type(raw_defs).__name__
+            raise exception.StackValidationFailed(
+                error='Conditions validation error',
+                message=message)
 
-        return self._conditions
+        parsed = {n: self.parse_condition(stack, c,
+                                          '.'.join([self.CONDITIONS, n]))
+                  for n, c in raw_defs.items()}
+        conds = conditions.Conditions(parsed)
+
+        get_cache_stack = weakref.ref(stack) if stack is not None else None
+        self._conditions_cache = get_cache_stack, conds
+        return conds
 
     def outputs(self, stack):
         conds = self.conditions(stack)
