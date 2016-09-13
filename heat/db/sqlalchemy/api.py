@@ -348,14 +348,12 @@ def resource_data_set(context, resource_id, key, value, redact=False):
 def resource_exchange_stacks(context, resource_id1, resource_id2):
     query = context.session.query(models.Resource)
     session = query.session
-    session.begin()
 
-    res1 = query.get(resource_id1)
-    res2 = query.get(resource_id2)
+    with session.begin():
+        res1 = query.get(resource_id1)
+        res2 = query.get(resource_id2)
 
-    res1.stack, res2.stack = res2.stack, res1.stack
-
-    session.commit()
+        res1.stack, res2.stack = res2.stack, res1.stack
 
 
 def resource_data_delete(context, resource_id, key):
@@ -1030,9 +1028,10 @@ def software_deployment_create(context, values):
     obj_ref = models.SoftwareDeployment()
     obj_ref.update(values)
     session = context.session
-    session.begin()
-    obj_ref.save(session)
-    session.commit()
+
+    with session.begin():
+        obj_ref.save(session)
+
     return obj_ref
 
 
