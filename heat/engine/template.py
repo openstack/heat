@@ -407,8 +407,7 @@ def parse(functions, stack, snippet, path='', template=None):
                                     template)
                     else:
                         return Func(stack, fn_name, recurse(args, path))
-                except (ValueError, TypeError, KeyError,
-                        exception.InvalidTemplateVersion) as e:
+                except (ValueError, TypeError, KeyError) as e:
                     raise exception.StackValidationFailed(
                         path=path,
                         message=six.text_type(e))

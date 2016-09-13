@@ -614,9 +614,10 @@ class Removed(function.Function):
 
     Check the HOT guide for an equivalent native function.
     """
-    def __init__(self, stack, fn_name, args):
+
+    def validate(self):
         exp = (_("The function %s is not supported in this version of HOT.") %
-               fn_name)
+               self.fn_name)
         raise exception.InvalidTemplateVersion(explanation=exp)
 
     def result(self):
@@ -656,9 +657,10 @@ class Repeat(function.Function):
               for_each:
                 %var%: ['a', 'b', 'c']''')
             raise KeyError(_('"repeat" syntax should be %s') % example)
-        self.validate_args()
 
-    def validate_args(self):
+    def validate(self):
+        super(Repeat, self).validate()
+
         if not isinstance(self._for_each, function.Function):
             if not isinstance(self._for_each, collections.Mapping):
                 raise TypeError(_('The "for_each" argument to "%s" must '
@@ -872,6 +874,8 @@ class Yaql(function.Function):
             raise KeyError(_('"%(name)s" syntax should be %(example)s') % {
                 'name': self.fn_name, 'example': example})
 
+    def validate(self):
+        super(Yaql, self).validate()
         if not isinstance(self._expression, function.Function):
             self._parse(self._expression)
 
