@@ -160,6 +160,84 @@ outputs:
                  'no_prod_res']}
 '''
 
+before_rename_tmpl = '''
+heat_template_version: 2016-10-14
+parameters:
+  env_type:
+    default: test
+    type: string
+conditions:
+  cd1: {equals : [{get_param: env_type}, "prod"]}
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value: {if: [cd1, 'prod', 'test']}
+'''
+
+after_rename_tmpl = '''
+heat_template_version: 2016-10-14
+parameters:
+  env_type:
+    default: prod
+    type: string
+conditions:
+  cd2: {equals : [{get_param: env_type}, "prod"]}
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value: {if: [cd2, 'prod', 'test']}
+  test2:
+    type: OS::Heat::TestResource
+    properties:
+      value: {if: [cd2, 'prod', 'test']}
+'''
+
+fail_rename_tmpl = '''
+heat_template_version: 2016-10-14
+parameters:
+  env_type:
+    default: prod
+    type: string
+conditions:
+  cd3: {equals : [{get_param: env_type}, "prod"]}
+resources:
+  test:
+    type: OS::Heat::TestResource
+    properties:
+      value: {if: [cd3, 'prod', 'test']}
+  test2:
+    type: OS::Heat::TestResource
+    properties:
+      value: {if: [cd3, 'prod', 'test']}
+  test_fail:
+    type: OS::Heat::TestResource
+    properties:
+      fail: True
+    depends_on: [test, test2]
+'''
+
+recover_rename_tmpl = '''
+heat_template_version: 2016-10-14
+parameters:
+  env_type:
+    default: prod
+    type: string
+conditions:
+  cd3: {equals : [{get_param: env_type}, "prod"]}
+resources:
+  test2:
+    type: OS::Heat::TestResource
+    properties:
+      value: {if: [cd3, 'prod', 'test']}
+  test_fail:
+    type: OS::Heat::TestResource
+    properties:
+      fail: False
+    depends_on: [test2]
+'''
+
 
 class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
@@ -363,3 +441,10 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         resources = self.client.resources.list(stack_identifier)
         self.res_assert_for_test(resources)
         self.output_assert_for_test(stack_identifier)
+
+    def test_condition_rename(self):
+        stack_identifier = self.stack_create(template=before_rename_tmpl)
+        self.update_stack(stack_identifier, template=after_rename_tmpl)
+        self.update_stack(stack_identifier, template=fail_rename_tmpl,
+                          expected_status='UPDATE_FAILED')
+        self.update_stack(stack_identifier, template=recover_rename_tmpl)
