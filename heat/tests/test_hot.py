@@ -20,6 +20,7 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_functions
 from heat.engine import check_resource as cr
+from heat.engine import conditions
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import functions as hot_functions
@@ -1168,14 +1169,16 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_newton_tpl_empty)
         stack = parser.Stack(utils.dummy_context(),
                              'test_if_function', tmpl)
-        tmpl._conditions = {'create_prod': True}
-        resolved = self.resolve(snippet, tmpl, stack)
-        self.assertEqual('value_if_true', resolved)
+        with mock.patch.object(tmpl, 'conditions') as conds:
+            conds.return_value = conditions.Conditions({'create_prod': True})
+            resolved = self.resolve(snippet, tmpl, stack)
+            self.assertEqual('value_if_true', resolved)
         # when condition evaluates to false, if function
         # resolve to value_if_false
-        tmpl._conditions = {'create_prod': False}
-        resolved = self.resolve(snippet, tmpl, stack)
-        self.assertEqual('value_if_false', resolved)
+        with mock.patch.object(tmpl, 'conditions') as conds:
+            conds.return_value = conditions.Conditions({'create_prod': False})
+            resolved = self.resolve(snippet, tmpl, stack)
+            self.assertEqual('value_if_false', resolved)
 
     def test_if_invalid_args(self):
         snippet = {'if': ['create_prod', 'one_value']}
@@ -1191,11 +1194,13 @@ class HOTemplateTest(common.HeatTestCase):
         tmpl = template.Template(hot_newton_tpl_empty)
         stack = parser.Stack(utils.dummy_context(),
                              'test_if_function', tmpl)
-        tmpl._conditions = {'create_prod': True}
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                self.resolve, snippet, tmpl, stack)
-        self.assertIn('Invalid condition name "cd_not_existing"',
+        with mock.patch.object(tmpl, 'conditions') as conds:
+            conds.return_value = conditions.Conditions({'create_prod': True})
+            exc = self.assertRaises(exception.StackValidationFailed,
+                                    self.resolve, snippet, tmpl, stack)
+        self.assertIn('Invalid condition "cd_not_existing"',
                       six.text_type(exc))
+        self.assertIn('if:', six.text_type(exc))
 
     def test_repeat(self):
         """Test repeat function."""

@@ -17,6 +17,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.engine import conditions
 from heat.engine import function
 from heat.engine import output
 from heat.engine import template
@@ -85,44 +86,29 @@ class CommonTemplate(template.Template):
             six.string_types,
             'string', name, data)
 
-    def _resolve_conditions(self, stack):
-        cd_snippet = self._get_condition_definitions()
-        result = {}
-        for cd_key, cd_value in six.iteritems(cd_snippet):
-            # hasn't been resolved yet
-            if not isinstance(cd_value, bool):
-                condition_func = self.parse_condition(
-                    stack, cd_value, '.'.join([self.CONDITIONS, cd_key]))
-                resolved_cd_value = function.resolve(condition_func)
-                result[cd_key] = resolved_cd_value
-            else:
-                result[cd_key] = cd_value
-
-        return result
-
     def _get_condition_definitions(self):
         """Return the condition definitions of template."""
         return {}
 
     def conditions(self, stack):
         if self._conditions is None:
-            resolved_cds = self._resolve_conditions(stack)
-            if resolved_cds:
-                for cd_key, cd_value in six.iteritems(resolved_cds):
-                    if not isinstance(cd_value, bool):
-                        msg_data = {'cd': cd_key, 'definition': cd_value}
-                        message = _('The definition of condition "%(cd)s" is '
-                                    'invalid: %(definition)s') % msg_data
-                        raise exception.StackValidationFailed(
-                            error='Condition validation error',
-                            message=message)
+            raw_defs = self._get_condition_definitions()
+            if not isinstance(raw_defs, collections.Mapping):
+                message = _('Condition definitions must be a map. Found a '
+                            '%s instead') % type(raw_defs).__name__
+                raise exception.StackValidationFailed(
+                    error='Conditions validation error',
+                    message=message)
 
-            self._conditions = resolved_cds
+            parsed = {n: self.parse_condition(stack, c,
+                                              '.'.join([self.CONDITIONS, n]))
+                      for n, c in raw_defs.items()}
+            self._conditions = conditions.Conditions(parsed)
 
         return self._conditions
 
     def outputs(self, stack):
-        conditions = Conditions(self.conditions(stack))
+        conds = self.conditions(stack)
 
         outputs = self.t.get(self.OUTPUTS) or {}
 
@@ -148,8 +134,15 @@ class CommonTemplate(template.Template):
 
                 if hasattr(self, 'OUTPUT_CONDITION'):
                     cond_name = val.get(self.OUTPUT_CONDITION)
-                    path = [self.OUTPUTS, key, self.OUTPUT_CONDITION]
-                    if not conditions.is_enabled(cond_name, path):
+                    try:
+                        enabled = conds.is_enabled(cond_name)
+                    except ValueError as exc:
+                        path = [self.OUTPUTS, key, self.OUTPUT_CONDITION]
+                        message = six.text_type(exc)
+                        raise exception.StackValidationFailed(path=path,
+                                                              message=message)
+
+                    if not enabled:
                         yield key, output.OutputDefinition(key, None,
                                                            description)
                         continue
@@ -161,19 +154,3 @@ class CommonTemplate(template.Template):
                 yield key, output.OutputDefinition(key, value_def, description)
 
         return dict(get_outputs())
-
-
-class Conditions(object):
-    def __init__(self, conditions_dict):
-        self._conditions = conditions_dict
-
-    def is_enabled(self, condition_name, path=None):
-        if condition_name is None:
-            return True
-
-        if condition_name not in self._conditions:
-            message = _('Invalid condition "%s"') % condition_name
-            raise exception.StackValidationFailed(path=path,
-                                                  message=message)
-
-        return self._conditions[condition_name]
