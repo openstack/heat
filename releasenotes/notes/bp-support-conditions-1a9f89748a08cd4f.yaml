@@ -1,0 +1,17 @@
+---
+features:
+  - Adds optional section ``conditions`` for hot template (
+    heat_template_version.2016-10-14) and ``Conditions`` for
+    cfn template (AWSTemplateFormatVersion.2010-09-09).
+  - Adds some condition functions, like ``equals``, ``not``, ``and``
+    and ``or``, these condition functions can be used in ``conditions``
+    section to define one or more conditions which are evaluated
+    based on input parameter values provided when a user creates or
+    updates a stack.
+  - Adds optional section ``condition`` for resource and output definitions.
+    Condition name defined in ``conditions`` and condition functions can be
+    referenced in this section, in order to conditionally create resources
+    or conditionally give outputs of a stack.
+  - Adds function ``if`` to return corresponding value based on condition
+    evaluation. This function can be used to conditionally set the value of
+    resource properties and outputs.
