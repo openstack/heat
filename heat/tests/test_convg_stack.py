@@ -375,8 +375,9 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack = tools.get_stack('test_stack', utils.dummy_context(),
                                 template=tools.string_template_five,
                                 convergence=True)
+        stack.status = stack.FAILED
         stack.store()
-        stack.state_set(stack.action, stack.FAILED, 'test-reason')
+        stack.purge_db()
         self.assertEqual('', stack.current_traversal)
 
     @mock.patch.object(raw_template_object.RawTemplate, 'delete')
