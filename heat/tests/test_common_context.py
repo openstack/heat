@@ -150,7 +150,7 @@ class TestRequestContext(common.HeatTestCase):
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
         with mock.patch(policy_check) as pc:
             pc.return_value = False
-            with mock.patch('keystoneclient.discover.Discover') as discover:
+            with mock.patch('keystoneauth1.discover.Discover') as discover:
                 class MockDiscover(object):
                     def url_for(self, endpoint):
                         return 'http://xyz/v3'
