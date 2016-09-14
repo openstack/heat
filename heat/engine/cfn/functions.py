@@ -426,27 +426,16 @@ class Not(hot_funcs.Not):
     returns false for a condition that evaluates to true.
     """
 
-    def _get_condition(self):
-        try:
-            if (not self.args or
-                    not isinstance(self.args, collections.Sequence) or
-                    isinstance(self.args, six.string_types)):
-                raise ValueError()
-            if len(self.args) != 1:
-                raise ValueError()
-            return self.args[0]
-        except ValueError:
-            msg = _('Arguments to "%s" must be of the form: '
-                    '[condition]')
-            raise ValueError(msg % self.fn_name)
-
-    def result(self):
-        resolved_value = function.resolve(self.condition)
-        if not isinstance(resolved_value, bool):
-            msg = _('The condition value should be boolean, '
-                    'after resolved the value is: %s')
-            raise ValueError(msg % resolved_value)
-        return not resolved_value
+    def _check_args(self):
+        msg = _('Arguments to "%s" must be of the form: '
+                '[condition]') % self.fn_name
+        if (not self.args or
+                not isinstance(self.args, collections.Sequence) or
+                isinstance(self.args, six.string_types)):
+            raise ValueError(msg)
+        if len(self.args) != 1:
+            raise ValueError(msg)
+        self.condition = self.args[0]
 
 
 class And(hot_funcs.And):
