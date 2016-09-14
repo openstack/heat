@@ -21,6 +21,9 @@ from heat.common import exception
 from heat.engine import function
 
 
+_in_progress = object()
+
+
 class Conditions(object):
     def __init__(self, conditions_dict):
         assert isinstance(conditions_dict, collections.Mapping)
@@ -55,8 +58,19 @@ class Conditions(object):
             raise ValueError(_('Invalid condition "%s"') % condition_name)
 
         if condition_name not in self._resolved:
+            self._resolved[condition_name] = _in_progress
             self._resolved[condition_name] = self._resolve(condition_name)
-        return self._resolved[condition_name]
+
+        result = self._resolved[condition_name]
+
+        if result is _in_progress:
+            message = _('Circular definition for condition '
+                        '"%s"') % condition_name
+            raise exception.StackValidationFailed(
+                error='Condition validation error',
+                message=message)
+
+        return result
 
     def __repr__(self):
         return 'Conditions(%r)' % self._conditions

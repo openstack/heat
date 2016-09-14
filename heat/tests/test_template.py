@@ -362,6 +362,32 @@ class TestTemplateConditionParser(common.HeatTestCase):
         self.assertIn('The definition of condition "prod_env" is invalid',
                       six.text_type(ex))
 
+    def test_condition_reference_condition(self):
+        t = {
+            'heat_template_version': '2016-10-14',
+            'parameters': {
+                'env_type': {
+                    'type': 'string',
+                    'default': 'test'
+                }
+            },
+            'conditions': {
+                'prod_env': {'equals': [{'get_param': 'env_type'}, 'prod']},
+                'test_env': {'not': 'prod_env'},
+                'prod_or_test_env': {'or': ['prod_env', 'test_env']},
+                'prod_and_test_env': {'and': ['prod_env', 'test_env']},
+            }}
+
+        # test with get_attr in equals
+        tmpl = template.Template(t)
+        stk = stack.Stack(self.ctx, 'test_condition_reference', tmpl)
+        conditions = tmpl.conditions(stk)
+
+        self.assertFalse(conditions.is_enabled('prod_env'))
+        self.assertTrue(conditions.is_enabled('test_env'))
+        self.assertTrue(conditions.is_enabled('prod_or_test_env'))
+        self.assertFalse(conditions.is_enabled('prod_and_test_env'))
+
     def test_get_res_condition_invalid(self):
         tmpl = copy.deepcopy(self.tmpl)
         # test condition name is invalid
@@ -391,6 +417,29 @@ class TestTemplateConditionParser(common.HeatTestCase):
                                lambda: stk.outputs)
         self.assertIn('Invalid condition "222"', six.text_type(ex))
         self.assertIn('outputs.foo.condition', six.text_type(ex))
+
+    def test_conditions_circular_ref(self):
+        t = {
+            'heat_template_version': '2016-10-14',
+            'parameters': {
+                'env_type': {
+                    'type': 'string',
+                    'default': 'test'
+                }
+            },
+            'conditions': {
+                'first_cond': {'not': 'second_cond'},
+                'second_cond': {'not': 'third_cond'},
+                'third_cond': {'not': 'first_cond'},
+            }
+        }
+        tmpl = template.Template(t)
+        stk = stack.Stack(self.ctx, 'test_condition_circular_ref', tmpl)
+        conds = tmpl.conditions(stk)
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               conds.is_enabled, 'first_cond')
+        self.assertIn('Circular definition for condition "first_cond"',
+                      six.text_type(ex))
 
 
 class TestTemplateValidate(common.HeatTestCase):
@@ -958,12 +1007,13 @@ class TemplateTest(common.HeatTestCase):
     def test_not_invalid_args(self):
         tmpl = template.Template(aws_empty_template)
 
+        stk = stack.Stack(utils.dummy_context(),
+                          'test_not_invalid', tmpl)
         snippet = {'Fn::Not': ['invalid_arg']}
         exc = self.assertRaises(ValueError,
-                                self.resolve_condition, snippet, tmpl)
+                                self.resolve_condition, snippet, tmpl, stk)
 
-        error_msg = ('The condition value must be a boolean: '
-                     'invalid_arg')
+        error_msg = 'Invalid condition "invalid_arg"'
         self.assertIn(error_msg, six.text_type(exc))
         # test invalid type
         snippet = {'Fn::Not': 'invalid'}
@@ -1036,11 +1086,11 @@ class TemplateTest(common.HeatTestCase):
                                 self.resolve_condition, snippet, tmpl)
         self.assertIn(error_msg, six.text_type(exc))
 
+        stk = stack.Stack(utils.dummy_context(), 'test_and_invalid', tmpl)
         snippet = {'Fn::And': ['cd1', True]}
         exc = self.assertRaises(ValueError,
-                                self.resolve_condition, snippet, tmpl)
-        error_msg = ('The condition value must be a boolean: '
-                     'cd1')
+                                self.resolve_condition, snippet, tmpl, stk)
+        error_msg = 'Invalid condition "cd1"'
         self.assertIn(error_msg, six.text_type(exc))
 
     def test_or(self):
@@ -1097,11 +1147,11 @@ class TemplateTest(common.HeatTestCase):
                                 self.resolve_condition, snippet, tmpl)
         self.assertIn(error_msg, six.text_type(exc))
 
+        stk = stack.Stack(utils.dummy_context(), 'test_or_invalid', tmpl)
         snippet = {'Fn::Or': ['invalid_cd', True]}
         exc = self.assertRaises(ValueError,
-                                self.resolve_condition, snippet, tmpl)
-        error_msg = ('The condition value must be a boolean: '
-                     'invalid_cd')
+                                self.resolve_condition, snippet, tmpl, stk)
+        error_msg = 'Invalid condition "invalid_cd"'
         self.assertIn(error_msg, six.text_type(exc))
 
     def test_join(self):

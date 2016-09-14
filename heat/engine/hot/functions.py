@@ -1182,8 +1182,8 @@ class ConditionBoolean(function.Function):
         if isinstance(arg, bool):
             return arg
 
-        msg = _('The condition value must be a boolean: %s')
-        raise ValueError(msg % arg)
+        conditions = self.stack.t.conditions(self.stack)
+        return conditions.is_enabled(arg)
 
 
 class Not(ConditionBoolean):
