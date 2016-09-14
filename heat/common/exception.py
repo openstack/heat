@@ -511,10 +511,6 @@ class SIGHUPInterrupt(HeatException):
     msg_fmt = _("System SIGHUP signal received.")
 
 
-class NoActionRequired(Exception):
-    pass
-
-
 class InvalidServiceVersion(HeatException):
     msg_fmt = _("Invalid service %(service)s version %(version)s")
 

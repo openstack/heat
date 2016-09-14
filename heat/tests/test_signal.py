@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import swift
+from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as stk
 from heat.engine import template
@@ -536,7 +537,7 @@ class SignalTest(common.HeatTestCase):
 
         stack = self._create_stack(TEMPLATE_CFN_SIGNAL)
 
-        mock_handle.side_effect = exception.NoActionRequired()
+        mock_handle.side_effect = resource.NoActionRequired()
         rsrc = stack['signal_handler']
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

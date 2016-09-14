@@ -65,6 +65,16 @@ def _register_class(resource_type, resource_class):
 UpdateReplace = exception.UpdateReplace
 
 
+# Attention developers about to move this: STOP IT!!!
+class NoActionRequired(Exception):
+    """Exception raised when a signal is ignored.
+
+    Resource subclasses should raise this exception from handle_signal() to
+    suppress recording of an event corresponding to the signal.
+    """
+    pass
+
+
 class PollDelay(Exception):
     """Exception to delay polling of the resource.
 
@@ -2121,7 +2131,7 @@ class Resource(object):
             else:
                 reason_string = get_string_details()
             self._add_event('SIGNAL', self.status, reason_string)
-        except exception.NoActionRequired:
+        except NoActionRequired:
             # Don't log an event as it just spams the user.
             pass
         except Exception as ex:
