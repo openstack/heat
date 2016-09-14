@@ -924,14 +924,9 @@ class Stack(collections.Mapping):
             self._send_notification_and_add_event()
             if self.convergence:
                 # do things differently for convergence
-                exp_trvsl = self.current_traversal
-                if self.status == self.FAILED:
-                    self.current_traversal = ''
-                    values['current_traversal'] = self.current_traversal
-
                 updated = stack_object.Stack.select_and_update(
                     self.context, self.id, values,
-                    exp_trvsl=exp_trvsl)
+                    exp_trvsl=self.current_traversal)
 
                 return updated
 
@@ -2021,13 +2016,17 @@ class Stack(collections.Mapping):
        """
         resource_objects.Resource.purge_deleted(self.context, self.id)
 
+        exp_trvsl = self.current_traversal
+        if self.status == self.FAILED:
+            self.current_traversal = ''
+
         prev_tmpl_id = None
         if (self.prev_raw_template_id is not None and
                 self.status != self.FAILED):
             prev_tmpl_id = self.prev_raw_template_id
             self.prev_raw_template_id = None
 
-        stack_id = self.store()
+        stack_id = self.store(exp_trvsl=exp_trvsl)
         if stack_id is None:
             # Failed concurrent update
             LOG.warning(_LW("Failed to store stack %(name)s with traversal ID "
@@ -2039,7 +2038,7 @@ class Stack(collections.Mapping):
         if prev_tmpl_id is not None:
             raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
 
-        sync_point.delete_all(self.context, self.id, self.current_traversal)
+        sync_point.delete_all(self.context, self.id, exp_trvsl)
 
         if (self.action, self.status) == (self.DELETE, self.COMPLETE):
             if not self.owner_id:
