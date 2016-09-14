@@ -321,7 +321,7 @@ class TranslationRule(object):
     def _exec_resolve(self, translation_key, translation_data):
 
         def resolve_and_find(translation_value):
-            if isinstance(translation_value, cfn_funcs.ResourceRef):
+            if isinstance(translation_value, hot_funcs.GetResource):
                 return
             if isinstance(translation_value, function.Function):
                 translation_value = function.resolve(translation_value)

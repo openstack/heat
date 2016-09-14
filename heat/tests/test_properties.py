@@ -15,8 +15,8 @@ from oslo_serialization import jsonutils
 import six
 
 from heat.common import exception
-from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import constraints
+from heat.engine.hot import functions as hot_funcs
 from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import plugin_manager
@@ -1235,7 +1235,7 @@ class PropertiesTest(common.HeatTestCase):
         # define properties with function and constraint
         props = properties.Properties(
             schema,
-            {'foo': cfn_funcs.ResourceRef(
+            {'foo': hot_funcs.GetResource(
                 stack, 'get_resource', 'another_res')},
             test_resolver)
 

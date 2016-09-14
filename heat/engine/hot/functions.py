@@ -24,7 +24,6 @@ from yaql.language import exceptions
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
-from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 
 opts = [
@@ -113,7 +112,32 @@ class GetParam(function.Function):
             return ''
 
 
-class GetAttThenSelect(cfn_funcs.GetAtt):
+class GetResource(function.Function):
+    """A function for resolving resource references.
+
+    Takes the form::
+
+        get_resource: <resource_name>
+    """
+
+    def _resource(self, path='unknown'):
+        resource_name = function.resolve(self.args)
+
+        try:
+            return self.stack[resource_name]
+        except KeyError:
+            raise exception.InvalidTemplateReference(resource=resource_name,
+                                                     key=path)
+
+    def dependencies(self, path):
+        return itertools.chain(super(GetResource, self).dependencies(path),
+                               [self._resource(path)])
+
+    def result(self):
+        return self._resource().FnGetRefId()
+
+
+class GetAttThenSelect(function.Function):
     """A function for resolving resource attributes.
 
     Takes the form::
@@ -124,6 +148,13 @@ class GetAttThenSelect(cfn_funcs.GetAtt):
           - <path1>
           - ...
     """
+
+    def __init__(self, stack, fn_name, args):
+        super(GetAttThenSelect, self).__init__(stack, fn_name, args)
+
+        (self._resource_name,
+         self._attribute,
+         self._path_components) = self._parse_args()
 
     def _parse_args(self):
         if (not isinstance(self.args, collections.Sequence) or
@@ -136,12 +167,65 @@ class GetAttThenSelect(cfn_funcs.GetAtt):
                                '[resource_name, attribute, (path), ...]') %
                              self.fn_name)
 
-        self._path_components = self.args[2:]
+        return self.args[0], self.args[1], self.args[2:]
 
-        return tuple(self.args[:2])
+    def _resource(self, path='unknown'):
+        resource_name = function.resolve(self._resource_name)
+
+        try:
+            return self.stack[resource_name]
+        except KeyError:
+            raise exception.InvalidTemplateReference(resource=resource_name,
+                                                     key=path)
+
+    def dep_attrs(self, resource_name):
+        if self._resource().name == resource_name:
+            attrs = [function.resolve(self._attribute)]
+        else:
+            attrs = []
+        return itertools.chain(super(GetAttThenSelect,
+                                     self).dep_attrs(resource_name),
+                               attrs)
+
+    def dependencies(self, path):
+        return itertools.chain(super(GetAttThenSelect,
+                                     self).dependencies(path),
+                               [self._resource(path)])
+
+    def _allow_without_attribute_name(self):
+        return False
+
+    def validate(self):
+        super(GetAttThenSelect, self).validate()
+        res = self._resource()
+
+        if self._allow_without_attribute_name():
+            # if allow without attribute_name, then don't check
+            # when attribute_name is None
+            if self._attribute is None:
+                return
+
+        attr = function.resolve(self._attribute)
+        from heat.engine import resource
+        if (type(res).get_attribute == resource.Resource.get_attribute and
+                attr not in res.attributes_schema):
+            raise exception.InvalidTemplateAttribute(
+                resource=self._resource_name, key=attr)
 
     def result(self):
-        attribute = super(GetAttThenSelect, self).result()
+        attr_name = function.resolve(self._attribute)
+
+        r = self._resource()
+        if r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
+                        r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
+            attribute = r.FnGetAtt(attr_name)
+        # NOTE(sirushtim): Add r.INIT to states above once convergence
+        # is the default.
+        elif r.stack.has_cache_data(r.name) and r.action == r.INIT:
+            attribute = r.FnGetAtt(attr_name)
+        else:
+            attribute = None
+
         if attribute is None:
             return None
 
@@ -213,7 +297,7 @@ class GetAttAllAttributes(GetAtt):
             if len(self.args) > 1:
                 return super(GetAttAllAttributes, self)._parse_args()
             else:
-                return self.args[0], None
+                return self.args[0], None, []
         else:
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
@@ -246,7 +330,7 @@ class GetAttAllAttributes(GetAtt):
         return True
 
 
-class Replace(cfn_funcs.Replace):
+class Replace(function.Function):
     """A function for performing string substitutions.
 
     Takes the form::
@@ -267,6 +351,15 @@ class Replace(cfn_funcs.Replace):
     performed is otherwise undefined.
     """
 
+    def __init__(self, stack, fn_name, args):
+        super(Replace, self).__init__(stack, fn_name, args)
+
+        self._mapping, self._string = self._parse_args()
+        if not isinstance(self._mapping,
+                          (collections.Mapping, function.Function)):
+            raise TypeError(_('"%s" parameters must be a mapping') %
+                            self.fn_name)
+
     def _parse_args(self):
         if not isinstance(self.args, collections.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map') %
@@ -285,6 +378,39 @@ class Replace(cfn_funcs.Replace):
                            example)
         else:
             return mapping, string
+
+    def result(self):
+        template = function.resolve(self._string)
+        mapping = function.resolve(self._mapping)
+
+        if not isinstance(template, six.string_types):
+            raise TypeError(_('"%s" template must be a string') % self.fn_name)
+
+        if not isinstance(mapping, collections.Mapping):
+            raise TypeError(_('"%s" params must be a map') % self.fn_name)
+
+        def replace(string, change):
+            placeholder, value = change
+
+            if not isinstance(placeholder, six.string_types):
+                raise TypeError(_('"%s" param placeholders must be strings') %
+                                self.fn_name)
+
+            if value is None:
+                value = ''
+
+            if not isinstance(value,
+                              (six.string_types, six.integer_types,
+                               float, bool)):
+                raise TypeError(_('"%s" params must be strings or numbers') %
+                                self.fn_name)
+
+            return string.replace(placeholder, six.text_type(value))
+
+        mapping = collections.OrderedDict(sorted(mapping.items(),
+                                                 key=lambda t: len(t[0]),
+                                                 reverse=True))
+        return six.moves.reduce(replace, six.iteritems(mapping), template)
 
 
 class ReplaceJson(Replace):
@@ -387,17 +513,62 @@ class GetFile(function.Function):
         return f
 
 
-class Join(cfn_funcs.Join):
+class Join(function.Function):
     """A function for joining strings.
 
     Takes the form::
 
-        { "list_join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] ] }
+        list_join:
+          - <delim>
+          - - <string_1>
+            - <string_2>
+            - ...
 
     And resolves to::
 
         "<string_1><delim><string_2><delim>..."
     """
+
+    def __init__(self, stack, fn_name, args):
+        super(Join, self).__init__(stack, fn_name, args)
+
+        example = '"%s" : [ " ", [ "str1", "str2"]]' % self.fn_name
+        fmt_data = {'fn_name': self.fn_name,
+                    'example': example}
+
+        if not isinstance(self.args, list):
+            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                              'should be: %(example)s') % fmt_data)
+
+        try:
+            self._delim, self._strings = self.args
+        except ValueError:
+            raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
+                               'should be: %(example)s') % fmt_data)
+
+    def result(self):
+        strings = function.resolve(self._strings)
+        if strings is None:
+            strings = []
+        if (isinstance(strings, six.string_types) or
+                not isinstance(strings, collections.Sequence)):
+            raise TypeError(_('"%s" must operate on a list') % self.fn_name)
+
+        delim = function.resolve(self._delim)
+        if not isinstance(delim, six.string_types):
+            raise TypeError(_('"%s" delimiter must be a string') %
+                            self.fn_name)
+
+        def ensure_string(s):
+            if s is None:
+                return ''
+            if not isinstance(s, six.string_types):
+                raise TypeError(
+                    _('Items to join must be strings not %s'
+                      ) % (repr(s)[:200]))
+            return s
+
+        return delim.join(ensure_string(s) for s in strings)
 
 
 class JoinMultiple(function.Function):
@@ -405,7 +576,12 @@ class JoinMultiple(function.Function):
 
     Takes the form::
 
-        { "list_join" : [ "<delim>", [ "<string_1>", "<string_2>", ... ] ] }
+        list_join:
+          - <delim>
+          - - <string_1>
+            - <string_2>
+            - ...
+          - - ...
 
     And resolves to::
 
@@ -476,11 +652,14 @@ class MapMerge(function.Function):
 
     Takes the form::
 
-        { "map_merge" : [{'k1': 'v1', 'k2': 'v2'}, {'k1': 'v2'}] }
+        map_merge:
+          - <k1>: <v1>
+            <k2>: <v2>
+          - <k1>: <v3>
 
     And resolves to::
 
-        {'k1': 'v2', 'k2': 'v2'}
+        {"<k1>": "<v2>", "<k2>": "<v3>"}
 
     """
 
@@ -517,13 +696,17 @@ class MapReplace(function.Function):
 
     Takes the form::
 
-        {"map_replace" : [{'k1': 'v1', 'k2': 'v2'},
-                           {'keys': {'k1': 'K1'},
-                            'values': {'v2': 'V2'}}]}
+        map_replace:
+          - <k1>: <v1>
+            <k2>: <v2>
+          - keys:
+              <k1>: <K1>
+            values:
+              <v2>: <V2>
 
     And resolves to::
 
-        {'K1': 'v1', 'k2': 'V2'}
+        {"<K1>": "<v1>", "<k2>": "<V2>"}
 
     """
 
@@ -588,7 +771,7 @@ class MapReplace(function.Function):
         return ret_map
 
 
-class ResourceFacade(cfn_funcs.ResourceFacade):
+class ResourceFacade(function.Function):
     """A function for retrieving data in a parent provider template.
 
     A function for obtaining data from the facade resource from within the
@@ -607,6 +790,26 @@ class ResourceFacade(cfn_funcs.ResourceFacade):
     ) = (
         'metadata', 'deletion_policy', 'update_policy'
     )
+
+    def __init__(self, stack, fn_name, args):
+        super(ResourceFacade, self).__init__(stack, fn_name, args)
+
+        if self.args not in self._RESOURCE_ATTRIBUTES:
+            fmt_data = {'fn_name': self.fn_name,
+                        'allowed': ', '.join(self._RESOURCE_ATTRIBUTES)}
+            raise ValueError(_('Incorrect arguments to "%(fn_name)s" '
+                               'should be one of: %(allowed)s') % fmt_data)
+
+    def result(self):
+        attr = function.resolve(self.args)
+
+        if attr == self.METADATA:
+            return self.stack.parent_resource.metadata_get()
+        elif attr == self.UPDATE_POLICY:
+            up = self.stack.parent_resource.t._update_policy or {}
+            return function.resolve(up)
+        elif attr == self.DELETION_POLICY:
+            return self.stack.parent_resource.t.deletion_policy()
 
 
 class Removed(function.Function):
@@ -767,14 +970,11 @@ class StrSplit(function.Function):
 
     Takes the form::
 
-        str_split: [delimiter, string, <index> ]
-
-    or::
-
         str_split:
-          - delimiter
-          - string
+          - <delimiter>
+          - <string>
           - <index>
+
     If <index> is specified, the specified list item will be returned
     otherwise, the whole list is returned, similar to get_attr with
     path based attributes accessing lists.
@@ -901,7 +1101,9 @@ class Equals(function.Function):
 
     Takes the form::
 
-        { "equals" : ["value_1", "value_2"] }
+        equals:
+          - <value_1>
+          - <value_2>
 
     The value can be any type that you want to compare. Returns true
     if the two values are equal or false if they aren't.
@@ -931,7 +1133,10 @@ class If(function.Macro):
 
     Takes the form::
 
-        { "if" : [condition_name, value_if_true, value_if_false] }
+        if:
+          - <condition_name>
+          - <value_if_true>
+          - <value_if_false>
 
     The value_if_true to be returned if the specified condition evaluates
     to true, the value_if_false to be returned if the specified condition
@@ -958,11 +1163,11 @@ class If(function.Macro):
 
 
 class Not(function.Function):
-    """A function acts as a NOT operator.
+    """A function that acts as a NOT operator on a condition.
 
     Takes the form::
 
-        { "not" : condition }
+        not: <condition>
 
     Returns true for a condition that evaluates to false or
     returns false for a condition that evaluates to true.
@@ -970,10 +1175,13 @@ class Not(function.Function):
 
     def __init__(self, stack, fn_name, args):
         super(Not, self).__init__(stack, fn_name, args)
+        self.condition = self._get_condition()
+
+    def _get_condition(self):
         try:
             if not self.args:
                 raise ValueError()
-            self.condition = self.args
+            return self.args
         except ValueError:
             msg = _('Arguments to "%s" must be of the form: '
                     'condition')
@@ -989,11 +1197,14 @@ class Not(function.Function):
 
 
 class And(function.Function):
-    """A function acts as an AND operator.
+    """A function that acts as an AND operator on conditions.
 
     Takes the form::
 
-        { "and" : [{condition_1}, {condition_2}, {...}, {condition_n}] }
+        and:
+          - <condition_1>
+          - <condition_2>
+          - ...
 
     Returns true if all the specified conditions evaluate to true, or returns
     false if any one of the conditions evaluates to false. The minimum number
@@ -1025,11 +1236,14 @@ class And(function.Function):
 
 
 class Or(function.Function):
-    """A function acts as an OR operator to evaluate all the conditions.
+    """A function that acts as an OR operator on conditions.
 
     Takes the form::
 
-        { "or" : [{condition_1}, {condition_2}, {...}, {condition_n}] }
+        or:
+          - <condition_1>
+          - <condition_2>
+          - ...
 
     Returns true if any one of the specified conditions evaluate to true,
     or returns false if all of the conditions evaluates to false. The minimum

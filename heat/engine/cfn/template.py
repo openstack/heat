@@ -17,7 +17,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
-from heat.engine.hot import functions as hot_funcs
 from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import template_common
@@ -212,16 +211,16 @@ class CfnTemplate(CfnTemplateBase):
         'Fn::Base64': cfn_funcs.Base64,
         'Fn::MemberListToMap': cfn_funcs.MemberListToMap,
         'Fn::ResourceFacade': cfn_funcs.ResourceFacade,
-        'Fn::If': hot_funcs.If,
+        'Fn::If': cfn_funcs.If,
     }
 
     condition_functions = {
-        'Fn::Equals': hot_funcs.Equals,
+        'Fn::Equals': cfn_funcs.Equals,
         'Ref': cfn_funcs.ParamRef,
         'Fn::FindInMap': cfn_funcs.FindInMap,
         'Fn::Not': cfn_funcs.Not,
-        'Fn::And': hot_funcs.And,
-        'Fn::Or': hot_funcs.Or
+        'Fn::And': cfn_funcs.And,
+        'Fn::Or': cfn_funcs.Or
     }
 
     def __init__(self, tmpl, template_id=None, files=None, env=None):

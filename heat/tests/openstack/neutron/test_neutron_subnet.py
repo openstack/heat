@@ -20,8 +20,8 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.clients.os import neutron
+from heat.engine.hot import functions as hot_funcs
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -710,6 +710,6 @@ class NeutronSubnetTest(common.HeatTestCase):
         rsrc = stack['subnet']
         stack.create()
 
-        self.assertEqual(cfn_funcs.ResourceRef(stack, 'get_resource', 'net'),
+        self.assertEqual(hot_funcs.GetResource(stack, 'get_resource', 'net'),
                          rsrc.properties.get('network'))
         self.assertIsNone(rsrc.properties.get('network_id'))
