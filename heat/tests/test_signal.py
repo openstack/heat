@@ -13,7 +13,7 @@
 
 import datetime
 
-from keystoneclient import exceptions as kc_exceptions
+from keystoneauth1 import exceptions as kc_exceptions
 import mock
 import six
 from six.moves.urllib import parse as urlparse

@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from keystoneauth1 import exceptions as keystone_exc
 from keystoneauth1.identity import generic as ks_auth
 from keystoneauth1 import session as ks_session
-from keystoneclient import exceptions as keystone_exc
 import mox
 from oslo_config import cfg
 import six

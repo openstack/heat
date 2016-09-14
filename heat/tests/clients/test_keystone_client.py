@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from keystoneclient import exceptions as keystone_exceptions
+from keystoneauth1 import exceptions as keystone_exceptions
 import mock
 import six
 
