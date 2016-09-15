@@ -250,7 +250,8 @@ class Port(neutron.NeutronResource):
                         ]
                     ),
                 },
-            )
+            ),
+            update_allowed=True,
         ),
         VNIC_TYPE: properties.Schema(
             properties.Schema.STRING,
