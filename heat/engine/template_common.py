@@ -179,9 +179,12 @@ class CommonTemplate(template.Template):
                 description = val.get(self.OUTPUT_DESCRIPTION)
 
                 if hasattr(self, 'OUTPUT_CONDITION'):
-                    cond_name = val.get(self.OUTPUT_CONDITION)
+                    path = [self.OUTPUTS, key, self.OUTPUT_CONDITION]
+                    cond = self.parse_condition(stack,
+                                                val.get(self.OUTPUT_CONDITION),
+                                                '.'.join(path))
                     try:
-                        enabled = conds.is_enabled(cond_name)
+                        enabled = conds.is_enabled(function.resolve(cond))
                     except ValueError as exc:
                         path = [self.OUTPUTS, key, self.OUTPUT_CONDITION]
                         message = six.text_type(exc)

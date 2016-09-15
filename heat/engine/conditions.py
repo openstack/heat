@@ -53,6 +53,9 @@ class Conditions(object):
         if condition_name is None:
             return True
 
+        if isinstance(condition_name, bool):
+            return condition_name
+
         if not (isinstance(condition_name, six.string_types) and
                 condition_name in self._conditions):
             raise ValueError(_('Invalid condition "%s"') % condition_name)

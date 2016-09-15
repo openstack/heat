@@ -11,11 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+
 import six
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine import function
 from heat.engine import parameters
 from heat.engine import rsrc_defn
 from heat.engine import template_common
@@ -121,7 +124,7 @@ class CfnTemplateBase(template_common.CommonTemplate):
                     raise exception.StackValidationFailed(message=msg)
 
                 defn = rsrc_defn.ResourceDefinition(name, **defn_data)
-                cond_name = defn.condition_name()
+                cond_name = defn.condition()
 
                 if cond_name is not None:
                     try:
@@ -205,14 +208,14 @@ class CfnTemplate(CfnTemplateBase):
         for arg in super(CfnTemplate, self)._rsrc_defn_args(stack, name, data):
             yield arg
 
-        def no_parse(field, path):
-            return field
+        parse_cond = functools.partial(self.parse_condition, stack)
 
         yield ('condition',
                self._parse_resource_field(self.RES_CONDITION,
-                                          (six.string_types, bool),
+                                          (six.string_types, bool,
+                                           function.Function),
                                           'string or boolean',
-                                          name, data, no_parse))
+                                          name, data, parse_cond))
 
 
 class HeatTemplate(CfnTemplateBase):

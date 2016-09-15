@@ -135,8 +135,9 @@ class ResourceDefinitionCore(object):
             self._deletion_policy = self.RETAIN
 
         if condition is not None:
-            assert isinstance(condition, six.string_types)
-            self._hash ^= hash(condition)
+            assert isinstance(condition, (six.string_types, bool,
+                                          function.Function))
+            self._hash ^= _hash_data(condition)
 
     def freeze(self, **overrides):
         """Return a frozen resource definition, with all functions resolved.
@@ -268,12 +269,12 @@ class ResourceDefinitionCore(object):
         """Return the external resource id."""
         return function.resolve(self._external_id)
 
-    def condition_name(self):
+    def condition(self):
         """Return the name of the conditional inclusion rule, if any.
 
         Returns None if the resource is included unconditionally.
         """
-        return self._condition
+        return function.resolve(self._condition)
 
     def render_hot(self):
         """Return a HOT snippet for the resource definition."""
