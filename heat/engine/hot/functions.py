@@ -346,9 +346,8 @@ class Replace(function.Function):
 
         "<value_1> <value_2>"
 
-    This is implemented using python str.replace on each key. Longer keys are
-    substituted before shorter ones, but the order in which replacements are
-    performed is otherwise undefined.
+    When keys overlap in the template, longer matches are preferred. For keys
+    of equal length, lexicographically smaller keys are preferred.
     """
 
     def __init__(self, stack, fn_name, args):
@@ -379,6 +378,18 @@ class Replace(function.Function):
         else:
             return mapping, string
 
+    def _validate_replacement(self, value):
+        if value is None:
+            return ''
+
+        if not isinstance(value,
+                          (six.string_types, six.integer_types,
+                           float, bool)):
+            raise TypeError(_('"%s" params must be strings or numbers') %
+                            self.fn_name)
+
+        return six.text_type(value)
+
     def result(self):
         template = function.resolve(self._string)
         mapping = function.resolve(self._mapping)
@@ -389,28 +400,22 @@ class Replace(function.Function):
         if not isinstance(mapping, collections.Mapping):
             raise TypeError(_('"%s" params must be a map') % self.fn_name)
 
-        def replace(string, change):
-            placeholder, value = change
+        def replace(strings, keys):
+            if not keys:
+                return strings
 
+            placeholder = keys[0]
             if not isinstance(placeholder, six.string_types):
                 raise TypeError(_('"%s" param placeholders must be strings') %
                                 self.fn_name)
 
-            if value is None:
-                value = ''
+            remaining_keys = keys[1:]
+            value = self._validate_replacement(mapping[placeholder])
+            return [value.join(replace(s.split(placeholder),
+                                       remaining_keys)) for s in strings]
 
-            if not isinstance(value,
-                              (six.string_types, six.integer_types,
-                               float, bool)):
-                raise TypeError(_('"%s" params must be strings or numbers') %
-                                self.fn_name)
-
-            return string.replace(placeholder, six.text_type(value))
-
-        mapping = collections.OrderedDict(sorted(mapping.items(),
-                                                 key=lambda t: len(t[0]),
-                                                 reverse=True))
-        return six.moves.reduce(replace, six.iteritems(mapping), template)
+        return replace([template], sorted(sorted(mapping),
+                                          key=len, reverse=True))[0]
 
 
 class ReplaceJson(Replace):
@@ -429,57 +434,33 @@ class ReplaceJson(Replace):
 
         "<value_1> <value_2>"
 
-    This is implemented using python str.replace on each key. Longer keys are
-    substituted before shorter ones, but the order in which replacements are
-    performed is otherwise undefined.
+    When keys overlap in the template, longer matches are preferred. For keys
+    of equal length, lexicographically smaller keys are preferred.
 
     Non-string param values (e.g maps or lists) are serialized as JSON before
     being substituted in.
     """
 
-    def result(self):
-        template = function.resolve(self._string)
-        mapping = function.resolve(self._mapping)
+    def _validate_replacement(self, value):
+        if value is None:
+            return ''
 
-        if not isinstance(template, six.string_types):
-            raise TypeError(_('"%s" template must be a string') % self.fn_name)
+        if not isinstance(value, (six.string_types, six.integer_types,
+                                  float, bool)):
+            if isinstance(value, (collections.Mapping, collections.Sequence)):
+                try:
+                    return jsonutils.dumps(value, default=None)
+                except TypeError:
+                    raise TypeError(_('"%(name)s" params must be strings, '
+                                      'numbers, list or map. '
+                                      'Failed to json serialize %(value)s'
+                                      ) % {'name': self.fn_name,
+                                           'value': value})
+            else:
+                raise TypeError(_('"%s" params must be strings, numbers, '
+                                  'list or map.') % self.fn_name)
 
-        if not isinstance(mapping, collections.Mapping):
-            raise TypeError(_('"%s" params must be a map') % self.fn_name)
-
-        def replace(string, change):
-            placeholder, value = change
-
-            if not isinstance(placeholder, six.string_types):
-                raise TypeError(_('"%s" param placeholders must be strings') %
-                                self.fn_name)
-
-            if value is None:
-                value = ''
-
-            if not isinstance(value,
-                              (six.string_types, six.integer_types,
-                               float, bool)):
-                if isinstance(value,
-                              (collections.Mapping, collections.Sequence)):
-                    try:
-                        value = jsonutils.dumps(value, default=None)
-                    except TypeError:
-                        raise TypeError(_('"%(name)s" params must be strings, '
-                                          'numbers, list or map. '
-                                          'Failed to json serialize %(value)s'
-                                          ) % {'name': self.fn_name,
-                                               'value': value})
-                else:
-                    raise TypeError(_('"%s" params must be strings, numbers, '
-                                      'list or map.') % self.fn_name)
-
-            return string.replace(placeholder, six.text_type(value))
-
-        mapping = collections.OrderedDict(sorted(mapping.items(),
-                                                 key=lambda t: len(t[0]),
-                                                 reverse=True))
-        return six.moves.reduce(replace, six.iteritems(mapping), template)
+        return six.text_type(value)
 
 
 class GetFile(function.Function):
