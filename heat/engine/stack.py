@@ -435,6 +435,9 @@ class Stack(collections.Mapping):
         Includes nested stacks below.
         """
         if not stack_id:
+            if not self.id:
+                # We're not stored yet, so we don't have anything to count
+                return 0
             stack_id = self.id
         return stack_object.Stack.count_total_resources(self.context, stack_id)
 
