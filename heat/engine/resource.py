@@ -1813,14 +1813,15 @@ class Resource(object):
             raise
 
         if not updated_ok:
-            ex = exception.UpdateInProgress(self.name)
-            LOG.error(_LE(
-                'Error acquiring lock for resource id:%(resource_id)s with '
-                'atomic_key:%(atomic_key)s, '
-                'engine_id:%(rs_engine_id)s/%(engine_id)s') % {
-                    'resource_id': rs.id, 'atomic_key': rs.atomic_key,
-                    'rs_engine_id': rs.engine_id, 'engine_id': engine_id})
-            raise ex
+            LOG.info(_LI('Resource %s is locked for update; deferring'),
+                     six.text_type(self))
+            LOG.debug(('Resource id:%(resource_id)s with '
+                       'atomic_key:%(atomic_key)s, locked '
+                       'by engine_id:%(rs_engine_id)s/%(engine_id)s') % {
+                           'resource_id': rs.id, 'atomic_key': rs.atomic_key,
+                           'rs_engine_id': rs.engine_id,
+                           'engine_id': engine_id})
+            raise exception.UpdateInProgress(self.name)
 
     def _release(self, engine_id):
         rs = None
