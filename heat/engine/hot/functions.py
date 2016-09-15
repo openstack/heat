@@ -212,17 +212,24 @@ class GetAttThenSelect(function.Function):
             raise exception.InvalidTemplateAttribute(
                 resource=self._resource_name, key=attr)
 
+    def _result_ready(self, r):
+        if r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
+                        r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
+            return True
+
+        # NOTE(sirushtim): Add r.INIT to states above once convergence
+        # is the default.
+        if r.stack.has_cache_data(r.name) and r.action == r.INIT:
+            return True
+
+        return False
+
     def result(self):
         attr_name = function.resolve(self._attribute)
 
-        r = self._resource()
-        if r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
-                        r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
-            attribute = r.FnGetAtt(attr_name)
-        # NOTE(sirushtim): Add r.INIT to states above once convergence
-        # is the default.
-        elif r.stack.has_cache_data(r.name) and r.action == r.INIT:
-            attribute = r.FnGetAtt(attr_name)
+        resource = self._resource()
+        if self._result_ready(resource):
+            attribute = resource.FnGetAtt(attr_name)
         else:
             attribute = None
 
@@ -249,11 +256,9 @@ class GetAtt(GetAttThenSelect):
         path_components = function.resolve(self._path_components)
         attribute = function.resolve(self._attribute)
 
-        r = self._resource()
-        if (r.status in (r.IN_PROGRESS, r.COMPLETE) and
-                r.action in (r.CREATE, r.ADOPT, r.SUSPEND, r.RESUME,
-                             r.UPDATE, r.CHECK, r.SNAPSHOT)):
-            return r.FnGetAtt(attribute, *path_components)
+        resource = self._resource()
+        if self._result_ready(resource):
+            return resource.FnGetAtt(attribute, *path_components)
         else:
             return None
 
