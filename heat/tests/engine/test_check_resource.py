@@ -77,12 +77,12 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         for mocked in [mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid]:
             self.assertFalse(mocked.called)
 
+    @mock.patch.object(worker.WorkerService, '_retrigger_replaced')
     def test_stale_traversal(
-            self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
+            self, mock_rnt, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
         self.worker.check_resource(self.ctx, self.resource.id,
                                    'stale-traversal', {}, True, None)
-        for mocked in [mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid]:
-            self.assertFalse(mocked.called)
+        self.assertTrue(mock_rnt.called)
 
     def test_is_update_traversal(
             self, mock_cru, mock_crc, mock_pcr, mock_csc, mock_cid):
@@ -320,7 +320,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertTrue(self.stack.purge_db.called)
 
     @mock.patch.object(check_resource.CheckResource,
-                       '_retrigger_check_resource')
+                       'retrigger_check_resource')
     @mock.patch.object(stack.Stack, 'load')
     def test_initiate_propagate_rsrc_retriggers_check_rsrc_on_new_stack_update(
             self, mock_stack_load, mock_rcr, mock_cru, mock_crc, mock_pcr,
@@ -368,8 +368,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         # A, B are predecessors to C when is_update is True
         expected_predecessors = {(self.stack['A'].id, True),
                                  (self.stack['B'].id, True)}
-        self.cr._retrigger_check_resource(self.ctx, self.is_update,
-                                          resC.id, self.stack)
+        self.cr.retrigger_check_resource(self.ctx, self.is_update,
+                                         resC.id, self.stack)
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, resC.id,
                                          self.stack.current_traversal,
                                          mock.ANY, (resC.id, True), None,
@@ -386,7 +386,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             [(1, False), (1, True)], [(2, False), None]])
         # simulate rsrc 2 completing its update for old traversal
         # and calling rcr
-        self.cr._retrigger_check_resource(self.ctx, True, 2, self.stack)
+        self.cr.retrigger_check_resource(self.ctx, True, 2, self.stack)
         # Ensure that pcr was called with proper delete traversal
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
@@ -401,7 +401,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             [(1, False), (1, True)], [(2, False), (2, True)]])
         # simulate rsrc 2 completing its delete for old traversal
         # and calling rcr
-        self.cr._retrigger_check_resource(self.ctx, False, 2, self.stack)
+        self.cr.retrigger_check_resource(self.ctx, False, 2, self.stack)
         # Ensure that pcr was called with proper delete traversal
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
@@ -426,7 +426,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, 'purge_db')
     @mock.patch.object(stack.Stack, 'state_set')
     @mock.patch.object(check_resource.CheckResource,
-                       '_retrigger_check_resource')
+                       'retrigger_check_resource')
     @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
     def test_handle_rsrc_failure_when_update_fails(
             self, mock_tr, mock_rcr, mock_ss, mock_pdb, mock_cru, mock_crc,
@@ -444,7 +444,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, 'purge_db')
     @mock.patch.object(stack.Stack, 'state_set')
     @mock.patch.object(check_resource.CheckResource,
-                       '_retrigger_check_resource')
+                       'retrigger_check_resource')
     @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
     def test_handle_rsrc_failure_when_update_fails_different_traversal(
             self, mock_tr, mock_rcr, mock_ss, mock_pdb, mock_cru, mock_crc,
