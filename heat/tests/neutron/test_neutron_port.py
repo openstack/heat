@@ -410,6 +410,10 @@ class NeutronPortTest(common.HeatTestCase):
         new_props['name'] = "new_name"
         new_props['security_groups'] = [
             '8a2f582a-e1cd-480f-b85d-b02631c10656']
+        new_props['allowed_address_pairs'] = [{
+            'ip_address': u'10.0.3.0/24',
+            'mac_address': u'00-B0-D0-86-BB-F7'
+        }]
         new_props_update = new_props.copy()
         new_props_update.pop('network_id')
 
@@ -480,9 +484,22 @@ class NeutronPortTest(common.HeatTestCase):
                                                       new_props)
         scheduler.TaskRunner(port.update, update_snippet)()
         # update again to test port without security group
-        update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
-                                                      new_props1)
-        scheduler.TaskRunner(port.update, update_snippet)()
+        update_snippet1 = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                       new_props1)
+        scheduler.TaskRunner(port.update, update_snippet1)()
+
+        # check, that update does not cause of Update Replace
+        create_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      props)
+        before_props = create_snippet.properties(port.properties_schema,
+                                                 port.context)
+
+        after_props = update_snippet.properties(port.properties_schema,
+                                                port.context)
+        port.translate_properties(after_props)
+        port.translate_properties(before_props)
+        self.assertIsNotNone(
+            port.update_template_diff_properties(after_props, before_props))
 
         self.m.VerifyAll()
 

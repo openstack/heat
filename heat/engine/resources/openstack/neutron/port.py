@@ -200,7 +200,8 @@ class Port(neutron.NeutronResource):
                         ]
                     ),
                 },
-            )
+            ),
+            update_allowed=True,
         ),
         DEVICE_OWNER: properties.Schema(
             properties.Schema.STRING,
