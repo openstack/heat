@@ -35,6 +35,10 @@ class StackLock(object):
         self.listener = None
 
     def get_engine_id(self):
+        """Return the ID of the engine which currently holds the lock.
+
+        Returns None if there is no lock held on the stack.
+        """
         return stack_lock_object.StackLock.get_engine_id(self.context,
                                                          self.stack_id)
 
