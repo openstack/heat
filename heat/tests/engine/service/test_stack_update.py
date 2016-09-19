@@ -482,8 +482,10 @@ resources:
         stk.disable_rollback = False
         stk.store()
 
+        self.man.engine_id = service_utils.generate_engine_id()
+
         self.patchobject(stack.Stack, 'load', return_value=stk)
-        self.patchobject(stack_lock.StackLock, 'try_acquire',
+        self.patchobject(stack_lock.StackLock, 'get_engine_id',
                          return_value=self.man.engine_id)
         self.patchobject(self.man.thread_group_mgr, 'send')
 
@@ -500,7 +502,7 @@ resources:
         stk.disable_rollback = False
         stk.store()
         self.patchobject(stack.Stack, 'load', return_value=stk)
-        self.patchobject(stack_lock.StackLock, 'try_acquire',
+        self.patchobject(stack_lock.StackLock, 'get_engine_id',
                          return_value=str(uuid.uuid4()))
         self.patchobject(service_utils, 'engine_alive',
                          return_value=True)
@@ -513,6 +515,23 @@ resources:
         self.assertRaises(dispatcher.ExpectedException,
                           self.man.stack_cancel_update,
                           self.ctx, stk.identifier())
+
+    def test_stack_cancel_update_no_lock(self):
+        stack_name = 'service_update_stack_test_cancel_same_engine'
+        stk = tools.get_stack(stack_name, self.ctx)
+        stk.state_set(stk.UPDATE, stk.IN_PROGRESS, 'test_override')
+        stk.disable_rollback = False
+        stk.store()
+
+        self.patchobject(stack.Stack, 'load', return_value=stk)
+        self.patchobject(stack_lock.StackLock, 'get_engine_id',
+                         return_value=None)
+        self.patchobject(self.man.thread_group_mgr, 'send')
+
+        self.man.stack_cancel_update(self.ctx, stk.identifier(),
+                                     cancel_with_rollback=False)
+
+        self.assertFalse(self.man.thread_group_mgr.send.called)
 
     def test_stack_cancel_update_wrong_state_fails(self):
         stack_name = 'service_update_cancel_test_stack'

@@ -1127,12 +1127,13 @@ class EngineService(service.Service):
             self.thread_group_mgr.start(current_stack.id, func)
             return
 
-        # stop the running update and take the lock
-        # as we cancel only running update, the acquire_result is
-        # always some engine_id, not None
         lock = stack_lock.StackLock(cnxt, current_stack.id,
                                     self.engine_id)
-        engine_id = lock.try_acquire()
+        engine_id = lock.get_engine_id()
+
+        if engine_id is None:
+            LOG.debug('No lock found on stack %s', db_stack.name)
+            return
 
         if cancel_with_rollback:
             cancel_message = rpc_api.THREAD_CANCEL_WITH_ROLLBACK
@@ -1155,6 +1156,12 @@ class EngineService(service.Service):
             else:
                 raise exception.EventSendFailed(stack_name=current_stack.name,
                                                 engine_id=engine_id)
+
+        else:
+            LOG.warning(_('Cannot cancel stack %(stack_name)s: lock held by '
+                          'unknown engine %(engine_id)s') % {
+                              'stack_name': db_stack.name,
+                              'engine_id': engine_id})
 
     @context.request_context
     def validate_template(self, cnxt, template, params=None, files=None,
