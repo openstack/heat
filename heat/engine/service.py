@@ -1387,31 +1387,68 @@ class EngineService(service.Service):
         if acquire_result == self.engine_id:
             # give threads which are almost complete an opportunity to
             # finish naturally before force stopping them
-            eventlet.sleep(0.2)
-            self.thread_group_mgr.stop(stack.id)
+            self.thread_group_mgr.send(stack.id, rpc_api.THREAD_CANCEL)
 
         # Another active engine has the lock
         elif service_utils.engine_alive(cnxt, acquire_result):
-            stop_result = self._remote_call(
-                cnxt, acquire_result, self.listener.STOP_STACK,
-                stack_identity=stack_identity)
-            if stop_result is None:
-                LOG.debug("Successfully stopped remote task on engine %s"
-                          % acquire_result)
+            cancel_result = self._remote_call(
+                cnxt, acquire_result, self.listener.SEND,
+                stack_identity=stack_identity, message=rpc_api.THREAD_CANCEL)
+            if cancel_result is None:
+                LOG.debug("Successfully sent %(msg)s message "
+                          "to remote task on engine %(eng)s" % {
+                              'eng': acquire_result,
+                              'msg': rpc_api.THREAD_CANCEL})
             else:
-                raise exception.StopActionFailed(stack_name=stack.name,
-                                                 engine_id=acquire_result)
+                raise exception.EventSendFailed(stack_name=stack.name,
+                                                engine_id=acquire_result)
 
-        # There may be additional resources that we don't know about
-        # if an update was in-progress when the stack was stopped, so
-        # reload the stack from the database.
-        st = self._get_stack(cnxt, stack_identity)
-        stack = parser.Stack.load(cnxt, stack=st)
-        self.resource_enforcer.enforce_stack(stack)
+        def reload():
+            st = self._get_stack(cnxt, stack_identity)
+            stack = parser.Stack.load(cnxt, stack=st)
+            self.resource_enforcer.enforce_stack(stack)
+            return stack
 
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              stack.delete)
-        return
+        def wait_then_delete(stack):
+            watch = timeutils.StopWatch(cfg.CONF.error_wait_time + 10)
+            watch.start()
+
+            while not watch.expired():
+                LOG.debug('Waiting for stack cancel to complete: %s' %
+                          stack.name)
+                with lock.try_thread_lock() as acquire_result:
+
+                    if acquire_result is None:
+                        stack = reload()
+                        # do the actual delete with the aquired lock
+                        self.thread_group_mgr.start_with_acquired_lock(
+                            stack, lock, stack.delete)
+                        return
+                eventlet.sleep(1.0)
+
+            if acquire_result == self.engine_id:
+                # cancel didn't finish in time, attempt a stop instead
+                self.thread_group_mgr.stop(stack.id)
+            elif service_utils.engine_alive(cnxt, acquire_result):
+                # Another active engine has the lock
+                stop_result = self._remote_call(
+                    cnxt, acquire_result, self.listener.STOP_STACK,
+                    stack_identity=stack_identity)
+                if stop_result is None:
+                    LOG.debug("Successfully stopped remote task "
+                              "on engine %s" % acquire_result)
+                else:
+                    raise exception.StopActionFailed(
+                        stack_name=stack.name, engine_id=acquire_result)
+
+            stack = reload()
+            # do the actual delete in a locked task
+            self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
+                                                  stack.delete)
+
+        # Cancelling the stack could take some time, so do it in a task
+        self.thread_group_mgr.start(stack.id, wait_then_delete,
+                                    stack)
 
     @context.request_context
     def export_stack(self, cnxt, stack_identity):
