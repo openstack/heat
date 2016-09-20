@@ -1482,7 +1482,7 @@ class EngineService(service.Service):
                              for name in mgr.names()]
         versions = []
         for t in sorted(_template_classes):  # Sort to ensure dates come first
-            if issubclass(t[1], cfntemplate.CfnTemplate):
+            if issubclass(t[1], cfntemplate.CfnTemplateBase):
                 type = 'cfn'
             else:
                 type = 'hot'
