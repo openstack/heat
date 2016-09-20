@@ -18,6 +18,7 @@ import eventlet.queue
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_service import service
+from oslo_utils import uuidutils
 from osprofiler import profiler
 
 from heat.common import context
@@ -28,6 +29,7 @@ from heat.common import messaging as rpc_messaging
 from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import sync_point
+from heat.objects import stack as stack_objects
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_client as rpc_client
 
@@ -102,14 +104,24 @@ class WorkerService(service.Service):
         in_progress resources to complete normally; no worker is stopped
         abruptly.
         """
-        reason = 'User cancelled stack %s ' % stack.action
-        # state_set will update the current traversal to '' for FAILED state
         old_trvsl = stack.current_traversal
+        updated = _update_current_traversal(stack)
+        if not updated:
+            LOG.warning(_LW("Failed to update stack %(name)s with new "
+                            "traversal, aborting stack cancel"),
+                        {'name': stack.name})
+            return
+
+        reason = 'User cancelled stack %s ' % stack.action
         updated = stack.state_set(stack.action, stack.FAILED, reason)
         if not updated:
-            LOG.warning(_LW("Failed to stop traversal %(trvsl)s of stack "
-                            "%(name)s while cancelling the operation."),
-                        {'name': stack.name, 'trvsl': old_trvsl})
+            LOG.warning(_LW("Failed to update stack %(name)s status"
+                            " to %(action)_%(state)"),
+                        {'name': stack.name, 'action': stack.action,
+                        'state': stack.FAILED})
+            return
+
+        sync_point.delete_all(stack.context, stack.id, old_trvsl)
 
     def stop_all_workers(self, stack):
         # stop the traversal
@@ -170,6 +182,15 @@ class WorkerService(service.Service):
         cancelled.
         """
         _cancel_check_resource(stack_id, self.engine_id, self.thread_group_mgr)
+
+
+def _update_current_traversal(stack):
+    previous_traversal = stack.current_traversal
+    stack.current_traversal = uuidutils.generate_uuid()
+    values = {'current_traversal': stack.current_traversal}
+    return stack_objects.Stack.select_and_update(
+        stack.context, stack.id, values,
+        exp_trvsl=previous_traversal)
 
 
 def _cancel_check_resource(stack_id, engine_id, tgm):
