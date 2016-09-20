@@ -642,6 +642,19 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
             default=0),
     }
 
+    update_policy_schema = {
+        resource_group.ResourceGroup.ROLLING_UPDATE: properties.Schema(
+            properties.Schema.MAP,
+            schema=rolling_update_schema,
+            support_status=support.SupportStatus(version='7.0.0')
+        ),
+        resource_group.ResourceGroup.BATCH_CREATE: properties.Schema(
+            properties.Schema.MAP,
+            schema=resource_group.ResourceGroup.batch_create_schema,
+            support_status=support.SupportStatus(version='7.0.0')
+        )
+    }
+
     def get_size(self):
         return len(self.properties[self.SERVERS])
 
