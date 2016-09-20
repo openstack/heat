@@ -94,8 +94,8 @@ class CheckResource(object):
             latest_stack = parser.Stack.load(cnxt, stack_id=stack.id,
                                              force_reload=True)
             if traversal != latest_stack.current_traversal:
-                self._retrigger_check_resource(cnxt, is_update, rsrc_id,
-                                               latest_stack)
+                self.retrigger_check_resource(cnxt, is_update, rsrc_id,
+                                              latest_stack)
 
     def _handle_stack_timeout(self, cnxt, stack):
         failure_reason = u'Timed out'
@@ -158,7 +158,7 @@ class CheckResource(object):
 
         return False
 
-    def _retrigger_check_resource(self, cnxt, is_update, resource_id, stack):
+    def retrigger_check_resource(self, cnxt, is_update, resource_id, stack):
         current_traversal = stack.current_traversal
         graph = stack.convergence_dependencies.graph()
         key = (resource_id, is_update)
@@ -239,8 +239,8 @@ class CheckResource(object):
                               current_traversal)
                     return
 
-                self._retrigger_check_resource(cnxt, is_update,
-                                               resource_id, stack)
+                self.retrigger_check_resource(cnxt, is_update,
+                                              resource_id, stack)
             else:
                 raise
 
