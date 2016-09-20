@@ -245,6 +245,10 @@ class HeatTestCase(testscenarios.WithScenarios,
         validate = self.patchobject(cinder.VolumeConstraint, 'validate')
         validate.return_value = True
 
+    def stub_QoSSpecsConstraint_validate(self):
+        validate = self.patchobject(cinder.QoSSpecsConstraint, 'validate')
+        validate.return_value = True
+
     def stub_SnapshotConstraint_validate(self):
         validate = self.patchobject(
             cinder.VolumeSnapshotConstraint, 'validate')
