@@ -933,7 +933,7 @@ class UpdatePortTest(common.HeatTestCase):
                          return_value=fake_groups_list)
 
         props = {'network_id': u'net1234',
-                 'name': utils.PhysName(stack.name, 'port'),
+                 'name': str(utils.PhysName(stack.name, 'port')),
                  'admin_state_up': True,
                  'device_owner': u'network:dhcp'}
 
@@ -970,6 +970,15 @@ class UpdatePortTest(common.HeatTestCase):
                                                update_props)())
 
         update_port.assset_called_once_with(update_dict)
+
+        # check, that update does not cause of Update Replace
+        create_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
+                                                      props)
+        after_props, before_props = port._prepare_update_props(update_snippet,
+                                                               create_snippet)
+        self.assertIsNotNone(
+            port.update_template_diff_properties(after_props, before_props))
+
         # update with empty prop_diff
         scheduler.TaskRunner(port.handle_update, update_snippet, {}, {})()
         self.assertEqual(1, update_port.call_count)
