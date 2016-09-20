@@ -154,7 +154,7 @@ class ResourceInfo(object):
         return False
 
     def get_class(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def get_class_to_instantiate(self):
         return self.get_class()
