@@ -16,6 +16,7 @@ import datetime
 import functools
 import itertools
 import os
+import pydoc
 import socket
 
 import eventlet
@@ -1533,10 +1534,6 @@ class EngineService(service.ServiceBase):
             type_name=type_name,
             version=heat_version,
             with_description=with_description)
-        if with_description:
-            for resource_type in result:
-                resource_type['description'] = api.build_resource_description(
-                    resource_type['description'])
         return result
 
     def list_template_versions(self, cnxt):
@@ -1591,10 +1588,7 @@ class EngineService(service.ServiceBase):
         functions = []
         for func_name, func in six.iteritems(supported_funcs):
             if func is not hot_functions.Removed:
-                if func.__doc__.split('\n')[0]:
-                    desc = func.__doc__.split('\n')[0].strip()
-                else:
-                    desc = func.__doc__.split('\n')[1].strip()
+                desc = pydoc.splitdoc(pydoc.getdoc(func))[0]
                 functions.append(
                     {'functions': func_name,
                      'description': desc}
@@ -1616,6 +1610,8 @@ class EngineService(service.ServiceBase):
                           'from global environment.',
                           type_name)
             raise exception.InvalidGlobalResource(type_name=type_name)
+
+        assert resource_class is not None
 
         if resource_class.support_status.status == support.HIDDEN:
             raise exception.NotSupported(feature=type_name)
@@ -1657,9 +1653,7 @@ class EngineService(service.ServiceBase):
                 resource_class.support_status.to_dict()
         }
         if with_description:
-            docstring = resource_class.__doc__
-            description = api.build_resource_description(docstring)
-            result[rpc_api.RES_SCHEMA_DESCRIPTION] = description
+            result[rpc_api.RES_SCHEMA_DESCRIPTION] = resource_class.getdoc()
         return result
 
     def generate_template(self, cnxt, type_name, template_type='cfn'):

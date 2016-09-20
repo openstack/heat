@@ -76,14 +76,14 @@ class ResourceTypeTest(common.HeatTestCase):
         description = ("Heat Template Resource for Designate Domain.\n\n"
                        "Designate provides DNS-as-a-Service services for "
                        "OpenStack. So, domain\nis a realm with an "
-                       "identification string, unique in DNS.\n")
+                       "identification string, unique in DNS.")
         self.assertIn({'resource_type': 'OS::Designate::Domain',
                        'description': description}, resources)
         self.assertIn({'resource_type': 'AWS::RDS::DBInstance',
                        'description': 'Builtin AWS::RDS::DBInstance'},
                       resources)
         self.assertIn({'resource_type': 'AWS::EC2::Instance',
-                       'description': 'No description given'},
+                       'description': 'No description available'},
                       resources)
 
     def test_resource_schema(self):
@@ -117,7 +117,7 @@ class ResourceTypeTest(common.HeatTestCase):
                 'message': None,
                 'previous_status': None
             },
-            'description': 'No description given'
+            'description': 'No description available'
         }
 
         schema = self.eng.resource_schema(self.ctx, type_name=type_name,

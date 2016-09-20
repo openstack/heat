@@ -14,6 +14,7 @@
 import base64
 import contextlib
 import datetime as dt
+import pydoc
 import weakref
 
 from oslo_config import cfg
@@ -309,6 +310,12 @@ class Resource(object):
     @property
     def external_id(self):
         return self.t.external_id()
+
+    @classmethod
+    def getdoc(cls):
+        if cls.__doc__ is None:
+            return _('No description available')
+        return pydoc.getdoc(cls)
 
     @property
     def stack(self):
