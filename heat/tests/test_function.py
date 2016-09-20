@@ -178,8 +178,9 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_func(self):
         self.assertIsNone(function.validate(self.func))
         self.func = TestFunction(None, 'foo', ['bar'])
-        ex = self.assertRaises(TypeError, function.validate, self.func)
-        self.assertEqual('Need more arguments', six.text_type(ex))
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                '.foo: Need more arguments',
+                                function.validate, self.func)
 
     def test_validate_dict(self):
         snippet = {'foo': 'bar', 'blarg': self.func}
@@ -187,8 +188,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        ex = self.assertRaises(TypeError, function.validate, snippet)
-        self.assertEqual('Need more arguments', six.text_type(ex))
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                '.blarg.foo: Need more arguments',
+                                function.validate, snippet)
 
     def test_validate_list(self):
         snippet = ['foo', 'bar', 'baz', 'blarg', self.func]
@@ -196,8 +198,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        ex = self.assertRaises(TypeError, function.validate, snippet)
-        self.assertEqual('Need more arguments', six.text_type(ex))
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                '.blarg.foo: Need more arguments',
+                                function.validate, snippet)
 
     def test_validate_all(self):
         snippet = ['foo', {'bar': ['baz', {'blarg': self.func}]}]
@@ -205,8 +208,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        ex = self.assertRaises(TypeError, function.validate, snippet)
-        self.assertEqual('Need more arguments', six.text_type(ex))
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                '.blarg.foo: Need more arguments',
+                                function.validate, snippet)
 
 
 class DependenciesTest(common.HeatTestCase):

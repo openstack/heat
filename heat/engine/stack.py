@@ -838,15 +838,13 @@ class Stack(collections.Mapping):
 
         for op_name, output in six.iteritems(self.outputs):
             try:
-                output.validate()
-            except exception.StackValidationFailed as ex:
+                path = '.'.join([self.t.OUTPUTS, op_name,
+                                 self.t.OUTPUT_VALUE])
+                output.validate(path)
+            except exception.StackValidationFailed:
                 raise
             except AssertionError:
                 raise
-            except Exception as ex:
-                raise exception.StackValidationFailed(
-                    error='Validation error in output "%s"' % op_name,
-                    message=six.text_type(ex))
 
     def requires_deferred_auth(self):
         """Determine whether to perform API requests with deferred auth.

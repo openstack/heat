@@ -1118,7 +1118,10 @@ class HOTemplateTest(common.HeatTestCase):
                    'data': {'var1': [1, 2, 3, 4]}}}
         tmpl = template.Template(hot_newton_tpl_empty)
         yaql = tmpl.parse(None, snippet)
-        self.assertRaises(ValueError, function.validate, yaql)
+        regxp = ('.yaql: Bad expression Parse error: unexpected end '
+                 'of statement.')
+        self.assertRaisesRegexp(exception.StackValidationFailed, regxp,
+                                function.validate, yaql)
 
     def test_yaql_data_as_function(self):
         snippet = {'yaql': {'expression': '$.data.var1.len()',
@@ -1381,7 +1384,10 @@ conditions:
         snippet = {'repeat': {'template': 'this is %var%',
                               'for_each': '%var%'}}
         repeat = tmpl.parse(None, snippet)
-        self.assertRaises(TypeError, function.validate, repeat)
+        regxp = ('.repeat: The "for_each" argument to "repeat" '
+                 'must contain a map')
+        self.assertRaisesRegexp(exception.StackValidationFailed, regxp,
+                                function.validate, repeat)
 
     def test_digest(self):
         snippet = {'digest': ['md5', 'foobar']}
@@ -1624,10 +1630,11 @@ conditions:
         snippet = {'Fn::GetAZs': ''}
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_juno_tpl_empty))
-        error = self.assertRaises(exception.InvalidTemplateVersion,
-                                  function.validate,
-                                  stack.t.parse(stack, snippet))
-        self.assertIn(next(iter(snippet)), six.text_type(error))
+        regxp = '.Fn::GetAZs: The template version is invalid'
+        self.assertRaisesRegexp(exception.StackValidationFailed,
+                                regxp,
+                                function.validate,
+                                stack.t.parse(stack, snippet))
 
     def test_add_resource(self):
         hot_tpl = template_format.parse('''

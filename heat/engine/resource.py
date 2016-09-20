@@ -1501,8 +1501,8 @@ class Resource(object):
                 self.stack.context,
                 self.t.resource_type
             )
-
-        function.validate(self.t)
+        path = '.'.join([self.stack.t.RESOURCES, self.name])
+        function.validate(self.t, path)
         self.validate_deletion_policy(self.t.deletion_policy())
         self.t.update_policy(self.update_policy_schema,
                              self.context).validate()
