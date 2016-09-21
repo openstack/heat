@@ -209,8 +209,8 @@ def _stop_traversal(stack):
     reason = 'Stack %(action)s cancelled' % {'action': stack.action}
     updated = stack.state_set(stack.action, stack.FAILED, reason)
     if not updated:
-        LOG.warning(_LW("Failed to update stack %(name)s status"
-                        " to %(action)_%(state)"),
+        LOG.warning(_LW("Failed to update stack %(name)s status "
+                        "to %(action)s_%(state)s"),
                     {'name': stack.name, 'action': stack.action,
                     'state': stack.FAILED})
         return
