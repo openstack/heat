@@ -1358,6 +1358,10 @@ class EngineService(service.Service):
         """
 
         st = self._get_stack(cnxt, stack_identity)
+        if (st.status == parser.Stack.COMPLETE and
+                st.action == parser.Stack.DELETE):
+            raise exception.EntityNotFound(entity='Stack', name=st.name)
+
         LOG.info(_LI('Deleting stack %s'), st.name)
         stack = parser.Stack.load(cnxt, stack=st)
         self.resource_enforcer.enforce_stack(stack)

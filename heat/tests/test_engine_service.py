@@ -975,6 +975,17 @@ class StackServiceTest(common.HeatTestCase):
         outputs = self.eng.list_outputs(self.ctx, mock.ANY)
         self.assertEqual([], outputs)
 
+    def test_stack_delete_complete_is_not_found(self):
+        mock_get_stack = self.patchobject(self.eng, '_get_stack')
+        mock_get_stack.return_value = mock.MagicMock()
+        mock_get_stack.return_value.status = parser.Stack.COMPLETE
+        mock_get_stack.return_value.action = parser.Stack.DELETE
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.delete_stack,
+                               'irrelevant',
+                               'irrelevant')
+        self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
+
     def test_get_environment(self):
         # Setup
         t = template_format.parse(tools.wp_template)
