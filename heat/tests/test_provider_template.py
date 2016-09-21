@@ -1021,4 +1021,5 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         rpcc = self.res.rpc_client.return_value
         rpcc.delete_stack.assert_called_once_with(
             self.ctx,
-            self.res.nested().identifier())
+            self.res.nested().identifier(),
+            cast=False)

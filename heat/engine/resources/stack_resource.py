@@ -454,9 +454,10 @@ class StackResource(resource.Resource):
             if self.abandon_in_progress:
                 self.rpc_client().abandon_stack(self.context, stack_identity)
             else:
-                self.rpc_client().delete_stack(self.context, stack_identity)
+                self.rpc_client().delete_stack(self.context, stack_identity,
+                                               cast=False)
         except Exception as ex:
-            self.rpc_client().ignore_error_named(ex, 'NotFound')
+            self.rpc_client().ignore_error_named(ex, 'EntityNotFound')
 
     def handle_delete(self):
         return self.delete_nested()

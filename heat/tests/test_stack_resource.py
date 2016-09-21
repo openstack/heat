@@ -516,7 +516,7 @@ class StackResourceTest(StackResourceBaseTest):
             side_effect=exception.NotFound())
         self.assertIsNone(self.parent_resource.delete_nested())
         rpcc.return_value.delete_stack.assert_called_once_with(
-            self.parent_resource.context, mock.ANY)
+            self.parent_resource.context, mock.ANY, cast=False)
 
     def test_need_update_for_nested_resource(self):
         """Test the resource with nested stack should need update.
