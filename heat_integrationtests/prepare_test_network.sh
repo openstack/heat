@@ -22,4 +22,7 @@ HEAT_PRIVATE_SUBNET_CIDR=10.0.5.0/24
 source $DEST/devstack/openrc demo demo
 openstack network create heat-net
 neutron subnet-create --name heat-subnet heat-net $HEAT_PRIVATE_SUBNET_CIDR
-openstack router add subnet router1 heat-subnet
+
+# Don't use osc command till bug #1625954 is fixed
+# openstack router add subnet router1 heat-subnet
+neutron router-interface-add router1 heat-subnet
