@@ -25,6 +25,7 @@ from novaclient import exceptions
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
+from retrying import retry
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -655,6 +656,30 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return True
         else:
             return False
+
+    @retry(stop_max_attempt_number=10,
+           wait_fixed=500,
+           retry_on_result=client_plugin.retry_if_result_is_false)
+    def check_interface_detach(self, server_id, port_id):
+        server = self.fetch_server(server_id)
+        if server:
+            interfaces = server.interface_list()
+            for iface in interfaces:
+                if iface.port_id == port_id:
+                    return False
+        return True
+
+    @retry(stop_max_attempt_number=10,
+           wait_fixed=500,
+           retry_on_result=client_plugin.retry_if_result_is_false)
+    def check_interface_attach(self, server_id, port_id):
+        server = self.fetch_server(server_id)
+        if server:
+            interfaces = server.interface_list()
+            for iface in interfaces:
+                if iface.port_id == port_id:
+                    return True
+        return False
 
     def has_extension(self, alias):
         """Check if extension is present."""

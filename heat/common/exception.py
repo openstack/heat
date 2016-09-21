@@ -479,6 +479,16 @@ class ServiceNotFound(HeatException):
     msg_fmt = _("Service %(service_id)s not found")
 
 
+class InterfaceAttachFailed(HeatException):
+    msg_fmt = _("Failed to attach interface (%(port)s) "
+                "to server (%(server)s)")
+
+
+class InterfaceDetachFailed(HeatException):
+    msg_fmt = _("Failed to detach interface (%(port)s) "
+                "from server (%(server)s)")
+
+
 class UnsupportedObjectError(HeatException):
     msg_fmt = _('Unsupported object type %(objtype)s')
 

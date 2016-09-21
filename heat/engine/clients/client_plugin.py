@@ -228,3 +228,7 @@ class ClientPlugin(object):
             return True
         except exceptions.EndpointNotFound:
             return False
+
+
+def retry_if_result_is_false(result):
+    return result is False
