@@ -50,9 +50,6 @@ class WatchControllerTest(common.HeatTestCase):
                                                        'deny_stack_user.json')
         self.addCleanup(self.m.VerifyAll)
 
-    def tearDown(self):
-        super(WatchControllerTest, self).tearDown()
-
     def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string
         params = params or {}

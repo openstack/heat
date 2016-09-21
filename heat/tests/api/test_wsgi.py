@@ -32,9 +32,6 @@ from heat.tests import common
 
 class RequestTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(RequestTest, self).setUp()
-
     def test_content_type_missing(self):
         request = wsgi.Request.blank('/tests/123')
         self.assertRaises(exception.InvalidContentType,
@@ -105,9 +102,6 @@ class RequestTest(common.HeatTestCase):
 
 
 class ResourceTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(ResourceTest, self).setUp()
 
     def test_get_action_args(self):
         env = {

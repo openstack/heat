@@ -35,9 +35,6 @@ outputs:
     value: {get_attr: [\u8d44\u6e90, value]}
 '''
 
-    def setUp(self):
-        super(StackUnicodeTemplateTest, self).setUp()
-
     def _assert_results(self, result):
         self.assertTrue(result['disable_rollback'])
         self.assertIsNone(result['parent'])

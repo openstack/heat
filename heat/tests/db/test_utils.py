@@ -35,9 +35,6 @@ class DBMigrationUtilsTest(common.HeatTestCase):
         super(DBMigrationUtilsTest, self).setUp()
         self.engine = utils.get_engine()
 
-    def tearDown(self):
-        super(DBMigrationUtilsTest, self).tearDown()
-
     def test_clone_table_adds_or_deletes_columns(self):
         meta = MetaData()
         meta.bind = self.engine

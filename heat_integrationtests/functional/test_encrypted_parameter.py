@@ -43,9 +43,6 @@ outputs:
     value: { get_param: foo }
 '''
 
-    def setUp(self):
-        super(EncryptedParametersTest, self).setUp()
-
     def test_db_encryption(self):
         # Create a stack with the value of 'foo' to be encrypted
         foo_param = 'my_encrypted_foo'

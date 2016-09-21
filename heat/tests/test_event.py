@@ -77,9 +77,6 @@ tmpl_multiple_srsly_too_large = {
 
 class EventCommon(common.HeatTestCase):
 
-    def setUp(self):
-        super(EventCommon, self).setUp()
-
     def _setup_stack(self, the_tmpl):
         self.username = 'event_test_user'
 

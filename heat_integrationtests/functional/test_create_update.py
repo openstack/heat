@@ -74,9 +74,6 @@ def _change_rsrc_properties(template, rsrcs, values):
 
 
 class CreateStackTest(functional_base.FunctionalTestsBase):
-    def setUp(self):
-        super(CreateStackTest, self).setUp()
-
     def test_create_rollback(self):
         values = {'fail': True, 'value': 'test_create_rollback'}
         template = _change_rsrc_properties(test_template_one_resource,
@@ -152,9 +149,6 @@ resources:
       fail: {get_param: do_fail}
       wait_secs: 1
 '''
-
-    def setUp(self):
-        super(UpdateStackTest, self).setUp()
 
     def test_stack_update_nochange(self):
         template = _change_rsrc_properties(test_template_one_resource,

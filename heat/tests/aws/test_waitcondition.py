@@ -78,9 +78,6 @@ test_template_wc_count = '''
 
 class WaitConditionTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(WaitConditionTest, self).setUp()
-
     def create_stack(self, stack_id=None,
                      template=test_template_waitcondition, params=None,
                      stub=True, stub_status=True):
@@ -379,9 +376,6 @@ class WaitConditionTest(common.HeatTestCase):
 
 
 class WaitConditionHandleTest(common.HeatTestCase):
-    def setUp(self):
-        super(WaitConditionHandleTest, self).setUp()
-
     def create_stack(self, stack_name=None, stack_id=None):
         temp = template_format.parse(test_template_waitcondition)
         template = tmpl.Template(temp)
@@ -559,9 +553,6 @@ class WaitConditionHandleTest(common.HeatTestCase):
 
 
 class WaitConditionUpdateTest(common.HeatTestCase):
-    def setUp(self):
-        super(WaitConditionUpdateTest, self).setUp()
-
     def create_stack(self, temp=None):
         if temp is None:
             temp = test_template_wc_count

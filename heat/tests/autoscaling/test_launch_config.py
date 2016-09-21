@@ -25,9 +25,6 @@ from heat.tests import utils
 
 
 class LaunchConfigurationTest(common.HeatTestCase):
-    def setUp(self):
-        super(LaunchConfigurationTest, self).setUp()
-
     def validate_launch_config(self, stack, lc_name='LaunchConfig'):
         # create the launch configuration resource
         conf = stack[lc_name]

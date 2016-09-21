@@ -39,9 +39,6 @@ class TemplateAPITest(functional_base.FunctionalTestsBase):
         }
     }
 
-    def setUp(self):
-        super(TemplateAPITest, self).setUp()
-
     def test_get_stack_template(self):
         stack_identifier = self.stack_create(
             template=self.template

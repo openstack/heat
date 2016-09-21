@@ -40,9 +40,6 @@ restarter_template = '''
 
 
 class RestarterTest(common.HeatTestCase):
-    def setUp(self):
-        super(RestarterTest, self).setUp()
-
     def create_restarter(self):
         snippet = template_format.parse(restarter_template)
         self.stack = utils.parse_stack(snippet)

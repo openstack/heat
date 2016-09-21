@@ -27,9 +27,6 @@ from heat.tests import utils
 
 
 class WorkerServiceTest(common.HeatTestCase):
-    def setUp(self):
-        super(WorkerServiceTest, self).setUp()
-
     def test_make_sure_rpc_version(self):
         self.assertEqual(
             '1.3',

@@ -32,9 +32,6 @@ as_params = inline_templates.as_params
 
 
 class TestAutoScalingPolicy(common.HeatTestCase):
-    def setUp(self):
-        super(TestAutoScalingPolicy, self).setUp()
-
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
         self.assertIsNone(rsrc.validate())
@@ -174,9 +171,6 @@ class TestAutoScalingPolicy(common.HeatTestCase):
 
 
 class TestCooldownMixin(common.HeatTestCase):
-    def setUp(self):
-        super(TestCooldownMixin, self).setUp()
-
     def create_scaling_policy(self, t, stack, resource_name):
         rsrc = stack[resource_name]
         self.assertIsNone(rsrc.validate())

@@ -63,9 +63,6 @@ outputs:
                                  expect1=12, expect2=12)),
     ]
 
-    def setUp(self):
-        super(DefaultParametersTest, self).setUp()
-
     def test_defaults(self):
         env = {'parameters': {}, 'parameter_defaults': {}}
         if self.param:

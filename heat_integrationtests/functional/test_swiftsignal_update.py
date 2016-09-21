@@ -33,9 +33,6 @@ outputs:
 
 class SwiftSignalHandleUpdateTest(functional_base.FunctionalTestsBase):
 
-    def setUp(self):
-        super(SwiftSignalHandleUpdateTest, self).setUp()
-
     def test_stack_update_same_template_replace_no_url(self):
         stack_identifier = self.stack_create(template=test_template)
         stack = self.client.stacks.get(stack_identifier)

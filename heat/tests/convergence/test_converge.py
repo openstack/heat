@@ -35,9 +35,6 @@ class ScenarioTest(common.HeatTestCase):
         po.side_effect = self.procs.worker.check_resource
         cfg.CONF.set_default('convergence_engine', True)
 
-    def tearDown(self):
-        super(ScenarioTest, self).tearDown()
-
     def test_scenario(self):
         self.procs.clear()
         runner = scenario.Scenario(self.name, self.path)

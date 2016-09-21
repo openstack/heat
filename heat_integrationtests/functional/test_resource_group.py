@@ -42,9 +42,6 @@ outputs:
     value: {get_attr: [random_group, value]}
 '''
 
-    def setUp(self):
-        super(ResourceGroupTest, self).setUp()
-
     def test_resource_group_zero_novalidate(self):
         # Nested resources should be validated only when size > 0
         # This allows features to be disabled via size=0 without
@@ -377,9 +374,6 @@ outputs:
         )),
     ]
 
-    def setUp(self):
-        super(ResourceGroupTestNullParams, self).setUp()
-
     def test_create_pass_zero_parameter(self):
         templ = self.template.replace('type: empty',
                                       'type: %s' % self.p_type)
@@ -416,9 +410,6 @@ outputs:
   test1:
     value: {get_attr: [group1, resource.1.value]}
 '''
-
-    def setUp(self):
-        super(ResourceGroupAdoptTest, self).setUp()
 
     def _yaml_to_json(self, yaml_templ):
         return yaml.safe_load(yaml_templ)
@@ -488,9 +479,6 @@ resources:
       fail: true
       wait_secs: 2
 '''
-
-    def setUp(self):
-        super(ResourceGroupErrorResourceTest, self).setUp()
 
     def test_fail(self):
         stack_identifier = self.stack_create(

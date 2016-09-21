@@ -32,9 +32,6 @@ outputs:
     value: { get_resource: test_resource }
 '''
 
-    def setUp(self):
-        super(StackEventsTest, self).setUp()
-
     def _verify_event_fields(self, event, event_characteristics):
         self.assertIsNotNone(event_characteristics)
         self.assertIsNotNone(event.event_time)

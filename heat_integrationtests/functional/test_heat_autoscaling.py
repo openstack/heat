@@ -72,9 +72,6 @@ outputs:
     value: {get_attr: [random_str, value]}
 '''
 
-    def setUp(self):
-        super(HeatAutoscalingTest, self).setUp()
-
     def _assert_output_values(self, stack_id):
         stack = self.client.stacks.get(stack_id)
         all_values = self._stack_output(stack, 'all_values')
@@ -119,9 +116,6 @@ resources:
       auto_scaling_group_id: { get_resource: test_group }
       scaling_adjustment: 1
 '''
-
-    def setUp(self):
-        super(AutoScalingGroupUpdateWithNoChanges, self).setUp()
 
     def test_as_group_update_without_resource_changes(self):
         stack_identifier = self.stack_create(template=self.template)

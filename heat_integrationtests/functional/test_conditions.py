@@ -307,9 +307,6 @@ resources:
 
 class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
-    def setUp(self):
-        super(CreateUpdateResConditionTest, self).setUp()
-
     def res_assert_for_prod(self, resources, bj_prod=True, fj_zone=False,
                             shannxi_provice=False):
         res_names = [res.resource_name for res in resources]

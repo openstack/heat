@@ -33,9 +33,6 @@ as_template = inline_templates.as_template
 
 
 class TestAutoScalingGroupValidation(common.HeatTestCase):
-    def setUp(self):
-        super(TestAutoScalingGroupValidation, self).setUp()
-
     def validate_scaling_group(self, t, stack, resource_name):
         # create the launch configuration resource
         conf = stack['LaunchConfig']
@@ -270,9 +267,6 @@ class TestInitialGroupSize(common.HeatTestCase):
         ('253', dict(mins=2, maxs=5, desired=3, expected=3)),
         ('14n', dict(mins=1, maxs=4, desired=None, expected=1)),
     ]
-
-    def setUp(self):
-        super(TestInitialGroupSize, self).setUp()
 
     def test_initial_size(self):
         t = template_format.parse(as_template)

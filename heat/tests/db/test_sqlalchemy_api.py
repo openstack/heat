@@ -80,9 +80,6 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.fc = fakes_nova.FakeClient()
         self.ctx = utils.dummy_context()
 
-    def tearDown(self):
-        super(SqlAlchemyTest, self).tearDown()
-
     def _mock_get_image_id_success(self, imageId_input, imageId):
         self.m.StubOutWithMock(glance.GlanceClientPlugin,
                                'find_image_by_name_or_id')

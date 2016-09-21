@@ -20,9 +20,6 @@ from heat.tests import common
 
 class ISO8601UtilityTest(common.HeatTestCase):
 
-    def setUp(self):
-        super(ISO8601UtilityTest, self).setUp()
-
     def test_valid_durations(self):
         self.assertEqual(0, util.parse_isoduration('PT'))
         self.assertEqual(3600, util.parse_isoduration('PT1H'))

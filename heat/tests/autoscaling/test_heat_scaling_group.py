@@ -84,9 +84,6 @@ class TestInitialGroupSize(common.HeatTestCase):
         ('14n', dict(mins=1, maxs=4, desired=None, expected=1)),
     ]
 
-    def setUp(self):
-        super(TestInitialGroupSize, self).setUp()
-
     def test_initial_size(self):
         t = template_format.parse(inline_templates.as_heat_template)
         properties = t['resources']['my-group']['properties']

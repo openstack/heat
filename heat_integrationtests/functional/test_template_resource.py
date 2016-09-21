@@ -47,9 +47,6 @@ resource_registry:
   "OS::Heat::RandomString": nested.yaml
 '''
 
-    def setUp(self):
-        super(TemplateResourceTest, self).setUp()
-
     def test_nested_env(self):
         main_templ = '''
 heat_template_version: 2013-05-23
@@ -171,9 +168,6 @@ outputs:
 resource_registry:
   "My::NestedSecret": nested.yaml
 '''
-
-    def setUp(self):
-        super(NestedAttributesTest, self).setUp()
 
     def test_stack_ref(self):
         nested_templ = '''
@@ -496,9 +490,6 @@ Outputs:
                                       expect=NOCHANGE)),
     ]
 
-    def setUp(self):
-        super(TemplateResourceUpdateTest, self).setUp()
-
     def test_template_resource_update_template_schema(self):
         stack_identifier = self.stack_create(
             template=self.main_template,
@@ -598,9 +589,6 @@ Outputs:
     Value: {'Fn::GetAtt': [RealRandom, value]}
 '''
 
-    def setUp(self):
-        super(TemplateResourceAdoptTest, self).setUp()
-
     def _yaml_to_json(self, yaml_templ):
         return yaml.safe_load(yaml_templ)
 
@@ -680,9 +668,6 @@ Outputs:
     Value: {'Fn::GetAtt': [RealRandom, value]}
 '''
 
-    def setUp(self):
-        super(TemplateResourceCheckTest, self).setUp()
-
     def test_check(self):
         stack_identifier = self.stack_create(
             template=self.main_template,
@@ -711,9 +696,6 @@ Resources:
       fail: true
       wait_secs: 2
 '''
-
-    def setUp(self):
-        super(TemplateResourceErrorMessageTest, self).setUp()
 
     def test_fail(self):
         stack_identifier = self.stack_create(
@@ -746,9 +728,6 @@ resources:
   test_random_string:
     type: OS::Heat::RandomString
 '''
-
-    def setUp(self):
-        super(TemplateResourceSuspendResumeTest, self).setUp()
 
     def test_suspend_resume(self):
         """Basic test for template resource suspend resume."""

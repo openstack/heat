@@ -36,9 +36,6 @@ outputs:
 
 class UpdateSubnetTest(functional_base.FunctionalTestsBase):
 
-    def setUp(self):
-        super(UpdateSubnetTest, self).setUp()
-
     def get_outputs(self, stack_identifier, output_key):
         stack = self.client.stacks.get(stack_identifier)
         output = self._stack_output(stack, output_key)

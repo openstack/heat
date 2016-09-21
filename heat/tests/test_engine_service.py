@@ -113,9 +113,6 @@ resources:
 
 
 class StackCreateTest(common.HeatTestCase):
-    def setUp(self):
-        super(StackCreateTest, self).setUp()
-
     def test_wordpress_single_instance_stack_create(self):
         stack = tools.get_stack('test_stack', utils.dummy_context())
         tools.setup_mocks(self.m, stack)

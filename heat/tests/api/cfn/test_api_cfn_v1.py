@@ -62,9 +62,6 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.assertRaises(
             exception.HeatInvalidActionError, self.controller.default, None)
 
-    def tearDown(self):
-        super(CfnStackControllerTest, self).tearDown()
-
     def _dummy_GET_request(self, params=None):
         # Mangle the params dict into a query string
         params = params or {}

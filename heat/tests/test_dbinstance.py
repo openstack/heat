@@ -149,9 +149,6 @@ class DBInstance(resource.Resource):
 
 
 class DBInstanceTest(common.HeatTestCase):
-    def setUp(self):
-        super(DBInstanceTest, self).setUp()
-
     def test_dbinstance(self):
         """Test that Template is parsable and publishes correct properties."""
         templ = template.Template(template_format.parse(rds_template))

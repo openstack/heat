@@ -33,9 +33,6 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
     :module:'heat.common.lifecycle_plugin_utils'.
     """
 
-    def setUp(self):
-        super(LifecyclePluginUtilsTest, self).setUp()
-
     def tearDown(self):
         super(LifecyclePluginUtilsTest, self).tearDown()
         lifecycle_plugin_utils.pp_class_instances = None
