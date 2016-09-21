@@ -375,4 +375,4 @@ Outputs:
         self.res.nested().identifier.return_value = stack_identity
         self.res.handle_delete()
         self.res.rpc_client.return_value.delete_stack.assert_called_once_with(
-            self.ctx, self.res.nested().identifier())
+            self.ctx, self.res.nested().identifier(), cast=False)

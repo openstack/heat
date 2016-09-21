@@ -452,9 +452,10 @@ class StackResource(resource.Resource):
         stack_identity = stack.identifier()
 
         try:
-            self.rpc_client().delete_stack(self.context, stack_identity)
+            self.rpc_client().delete_stack(self.context, stack_identity,
+                                           cast=False)
         except Exception as ex:
-            self.rpc_client().ignore_error_named(ex, 'NotFound')
+            self.rpc_client().ignore_error_named(ex, 'StackNotFound')
 
     def handle_delete(self):
         return self.delete_nested()
