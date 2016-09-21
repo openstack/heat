@@ -341,9 +341,6 @@ class KeystoneUserRoleAssignment(resource.Resource,
     properties_schema.update(
         KeystoneRoleAssignmentMixin.mixin_properties_schema)
 
-    def __init__(self, *args, **kwargs):
-        super(KeystoneUserRoleAssignment, self).__init__(*args, **kwargs)
-
     def client(self):
         return super(KeystoneUserRoleAssignment, self).client().client
 
@@ -401,9 +398,6 @@ class KeystoneGroupRoleAssignment(resource.Resource,
 
     properties_schema.update(
         KeystoneRoleAssignmentMixin.mixin_properties_schema)
-
-    def __init__(self, *args, **kwargs):
-        super(KeystoneGroupRoleAssignment, self).__init__(*args, **kwargs)
 
     def client(self):
         return super(KeystoneGroupRoleAssignment, self).client().client
