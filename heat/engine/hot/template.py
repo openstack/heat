@@ -509,3 +509,43 @@ class HOTemplate20161014(HOTemplate20160408):
                                            function.Function),
                                           'string_or_boolean',
                                           name, data, parse_cond))
+
+
+class HOTemplate20170224(HOTemplate20161014):
+    functions = {
+        'get_attr': hot_funcs.GetAttAllAttributes,
+        'get_file': hot_funcs.GetFile,
+        'get_param': hot_funcs.GetParam,
+        'get_resource': hot_funcs.GetResource,
+        'list_join': hot_funcs.JoinMultiple,
+        'repeat': hot_funcs.RepeatWithMap,
+        'resource_facade': hot_funcs.ResourceFacade,
+        'str_replace': hot_funcs.ReplaceJson,
+
+        # functions added in 2015-04-30
+        'digest': hot_funcs.Digest,
+
+        # functions added in 2015-10-15
+        'str_split': hot_funcs.StrSplit,
+
+        # functions added in 2016-04-08
+        'map_merge': hot_funcs.MapMerge,
+
+        # functions added in 2016-10-14
+        'yaql': hot_funcs.Yaql,
+        'map_replace': hot_funcs.MapReplace,
+        'if': hot_funcs.If,
+
+        # functions removed from 2015-10-15
+        'Fn::Select': hot_funcs.Removed,
+
+        # functions removed from 2014-10-16
+        'Fn::GetAZs': hot_funcs.Removed,
+        'Fn::Join': hot_funcs.Removed,
+        'Fn::Split': hot_funcs.Removed,
+        'Fn::Replace': hot_funcs.Removed,
+        'Fn::Base64': hot_funcs.Removed,
+        'Fn::MemberListToMap': hot_funcs.Removed,
+        'Fn::ResourceFacade': hot_funcs.Removed,
+        'Ref': hot_funcs.Removed,
+    }

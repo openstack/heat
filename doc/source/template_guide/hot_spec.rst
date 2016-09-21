@@ -31,9 +31,9 @@ Status
 ~~~~~~
 
 HOT is considered reliable, supported, and standardized as of our
-Icehouse (April 2014) release.  The Heat core team may make improvements
-to the standard, which very likely would be backward compatible.  The template
-format is also versioned.  Since Juno release, Heat supports multiple
+Icehouse (April 2014) release. The Heat core team may make improvements
+to the standard, which very likely would be backward compatible. The template
+format is also versioned. Since Juno release, Heat supports multiple
 different versions of the HOT specification.
 
 Template structure
@@ -141,8 +141,8 @@ for the ``heat_template_version`` key:
 ----------
     The key with value ``2014-10-16`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the Juno
-    release.  This version removes most CFN functions that were supported in
-    the Icehouse release, i.e. the ``2013-05-23`` version.  So the supported
+    release. This version removes most CFN functions that were supported in
+    the Icehouse release, i.e. the ``2013-05-23`` version. So the supported
     functions now are::
 
       get_attr
@@ -200,7 +200,7 @@ for the ``heat_template_version`` key:
 ----------
     The key with value ``2016-04-08`` indicates that the YAML document is a HOT
     template and it may contain features added and/or removed up until the
-    Mitaka release.  This version also adds the ``map_merge`` function which
+    Mitaka release. This version also adds the ``map_merge`` function which
     can be used to merge the contents of maps. The complete list of supported
     functions is::
 
@@ -220,7 +220,7 @@ for the ``heat_template_version`` key:
 -------------------
     The key with value ``2016-10-14`` or ``newton`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
-    up until the Newton release.  This version adds the ``yaql`` function which
+    up until the Newton release. This version adds the ``yaql`` function which
     can be used for evaluation of complex expressions, the ``map_replace``
     function that can do key/value replacements on a mapping, and the ``if``
     function which can be used to return corresponding value based on condition
@@ -248,6 +248,35 @@ for the ``heat_template_version`` key:
     condition function which acts as an OR operator to evaluate all the
     specified conditions. The complete list of supported condition
     functions is::
+
+      equals
+      get_param
+      not
+      and
+      or
+
+2017-02-24 | ocata
+-------------------
+    The key with value ``2017-02-24`` or ``ocata`` indicates that the YAML
+    document is a HOT template and it may contain features added and/or removed
+    up until the Ocata release. The complete list of supported functions is::
+
+      digest
+      get_attr
+      get_file
+      get_param
+      get_resource
+      list_join
+      map_merge
+      map_replace
+      repeat
+      resource_facade
+      str_replace
+      str_split
+      yaql
+      if
+
+    The complete list of supported condition functions is::
 
       equals
       get_param
@@ -842,7 +871,7 @@ expression
       or
 
     Note: In condition functions, you can reference a value from an input
-    parameter, but you cannot reference resource or its attribute.  We support
+    parameter, but you cannot reference resource or its attribute. We support
     referencing other conditions (by condition name) in condition functions.
 
 An example of conditions section definition
@@ -1111,7 +1140,7 @@ get_resource
 The ``get_resource`` function references another resource within the
 same template. At runtime, it is resolved to reference the ID of the referenced
 resource, which is resource type specific. For example, a reference to a
-floating IP resource returns the respective IP address at runtime.  The syntax
+floating IP resource returns the respective IP address at runtime. The syntax
 of the ``get_resource`` function is
 
 .. code-block:: yaml
