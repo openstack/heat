@@ -1128,21 +1128,21 @@ class Stack(collections.Mapping):
         checker()
 
     def supports_check_action(self):
-        def is_supported(stack, res):
+        def is_supported(res):
             if res.has_nested() and res.nested():
                 return res.nested().supports_check_action()
             else:
-                return hasattr(res, 'handle_%s' % self.CHECK.lower())
+                return hasattr(res, 'handle_%s' % res.CHECK.lower())
 
-        supported = [is_supported(self, res)
-                     for res in six.itervalues(self.resources)]
+        all_supported = all(is_supported(res)
+                            for res in six.itervalues(self.resources))
 
-        if not all(supported):
+        if not all_supported:
             msg = ". '%s' not fully supported (see resources)" % self.CHECK
             reason = self.status_reason + msg
             self.state_set(self.CHECK, self.status, reason)
 
-        return all(supported)
+        return all_supported
 
     @profiler.trace('Stack._backup_stack', hide_args=False)
     def _backup_stack(self, create_if_missing=True):
