@@ -37,7 +37,7 @@ class Event(object):
         already in the database.
         """
         self.context = context
-        self.stack = stack
+        self._stack_identifier = stack.identifier()
         self.action = action
         self.status = status
         self.reason = reason
@@ -57,7 +57,7 @@ class Event(object):
         ev = {
             'resource_name': self.resource_name,
             'physical_resource_id': self.physical_resource_id,
-            'stack_id': self.stack.id,
+            'stack_id': self._stack_identifier.stack_id,
             'resource_action': self.action,
             'resource_status': self.status,
             'resource_status_reason': self.reason,
@@ -114,7 +114,7 @@ class Event(object):
             return None
 
         res_id = identifier.ResourceIdentifier(
-            resource_name=self.resource_name, **self.stack.identifier())
+            resource_name=self.resource_name, **self._stack_identifier)
 
         return identifier.EventIdentifier(event_id=str(self.uuid), **res_id)
 
@@ -127,7 +127,7 @@ class Event(object):
             'payload': {
                 'resource_name': self.resource_name,
                 'physical_resource_id': self.physical_resource_id,
-                'stack_id': self.stack.id,
+                'stack_id': self._stack_identifier.stack_id,
                 'resource_action': self.action,
                 'resource_status': self.status,
                 'resource_status_reason': self.reason,
