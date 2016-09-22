@@ -58,14 +58,16 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         ADMIN_USER, AVAILABILITY_ZONE, SECURITY_GROUPS, NETWORKS,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
         RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
-        ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT, USER_DATA_UPDATE_POLICY
+        ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT, USER_DATA_UPDATE_POLICY,
+        TAGS
     ) = (
         'name', 'image', 'block_device_mapping', 'block_device_mapping_v2',
         'flavor', 'flavor_update_policy', 'image_update_policy', 'key_name',
         'admin_user', 'availability_zone', 'security_groups', 'networks',
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
         'reservation_id', 'config_drive', 'diskConfig', 'personality',
-        'admin_pass', 'software_config_transport', 'user_data_update_policy'
+        'admin_pass', 'software_config_transport', 'user_data_update_policy',
+        'tags'
     )
 
     _BLOCK_DEVICE_MAPPING_KEYS = (
@@ -128,10 +130,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
     ATTRIBUTES = (
         NAME_ATTR, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS,
-        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6, CONSOLE_URLS,
+        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6, CONSOLE_URLS, TAGS_ATTR
     ) = (
         'name', 'addresses', 'networks', 'first_address',
-        'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls',
+        'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls', 'tags'
     )
 
     # valid image Status
@@ -511,6 +513,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             _('The administrator password for the server.'),
             update_allowed=True
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('Server tags. Supported since client version 2.26.'),
+            support_status=support.SupportStatus(version='8.0.0'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True
+        )
     }
 
     attributes_schema = {
@@ -577,6 +586,11 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             support_status=support.SupportStatus(version='2015.1'),
             type=attributes.Schema.MAP
         ),
+        TAGS_ATTR: attributes.Schema(
+            _('Tags from the server. Supported since client version 2.26.'),
+            support_status=support.SupportStatus(version='8.0.0'),
+            type=attributes.Schema.LIST
+        )
     }
 
     physical_resource_name_limit = cfg.CONF.max_server_name_length
@@ -903,11 +917,18 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
     def check_create_complete(self, server_id):
         check = self.client_plugin()._check_active(server_id)
         if check:
+            if self.properties[self.TAGS]:
+                self._update_server_tags(self.properties[self.TAGS])
             self.store_external_ports()
             # Addresses binds to server not immediately, so we need to wait
             # until server is created and after that associate floating ip.
             self.floating_ips_nova_associate()
         return check
+
+    def _update_server_tags(self, tags):
+        server = self.client().servers.get(self.resource_id)
+        self.client(version=self.client_plugin().V2_26
+                    ).servers.set_tags(server, tags)
 
     def floating_ips_nova_associate(self):
         # If there is no neutron used, floating_ip still unassociated,
@@ -939,11 +960,21 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 raise exception.EntityNotFound(entity='Resource',
                                                name=self.name)
             raise
+
+        try:
+            tag_server = self.client(
+                version=self.client_plugin().V2_26
+            ).server.get(self.resource_id)
+        except Exception as ex:
+            LOG.warning('Cannot resolve tags for observe reality in case of '
+                        'unsupported minimal version tag support client')
+        else:
+            server_data['tags'] = tag_server.tag_list()
         return server, server_data
 
     def parse_live_resource_data(self, resource_properties, resource_data):
         server, server_data = resource_data
-        return {
+        result = {
             # there's a risk that flavor id will be int type, so cast to str
             self.FLAVOR: six.text_type(server_data.get(self.FLAVOR)['id']),
             self.IMAGE: six.text_type(server_data.get(self.IMAGE)['id']),
@@ -951,6 +982,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             self.METADATA: server_data.get(self.METADATA),
             self.NETWORKS: self._get_live_networks(server, resource_properties)
         }
+        if 'tags' in server_data:
+            result.update({self.TAGS: server_data['tags']})
+        return result
 
     def _get_live_networks(self, server, props):
         reality_nets = self._add_port_for_address(server,
@@ -1141,6 +1175,13 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             return server.accessIPv6
         if name == self.CONSOLE_URLS:
             return self.client_plugin('nova').get_console_urls(server)
+        if name == self.TAGS_ATTR:
+            try:
+                cv = self.client(
+                    version=self.client_plugin().V2_26)
+                return cv.servers.tag_list(server)
+            except exception.InvalidServiceVersion:
+                return None
 
     def add_dependencies(self, deps):
         super(Server, self).add_dependencies(deps)
@@ -1281,6 +1322,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             server = self.client_plugin().get_server(self.resource_id)
             self.client_plugin().meta_update(server,
                                              prop_diff[self.METADATA])
+
+        if self.TAGS in prop_diff:
+            self._update_server_tags(prop_diff[self.TAGS] or [])
 
         if self.FLAVOR in prop_diff:
             updaters.extend(self._update_flavor(prop_diff))
@@ -1497,6 +1541,16 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             networks_with_port = (networks_with_port or
                                   network.get(self.NETWORK_PORT) is not None)
             self._validate_network(network)
+
+        # Check if tags is allowed to use
+        if self.properties[self.TAGS]:
+            try:
+                self.client(
+                    version=self.client_plugin().V2_26)
+            except exception.InvalidServiceVersion as ex:
+                msg = _('Cannot use "tags" property - nova does not support '
+                        'it: %s') % six.text_type(ex)
+                raise exception.StackValidationFailed(message=msg)
 
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties[self.METADATA]
