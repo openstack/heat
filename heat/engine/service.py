@@ -79,6 +79,10 @@ cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_adopt', 'heat.common.config')
 cfg.CONF.import_opt('convergence_engine', 'heat.common.config')
 
+# Time to wait for a stack to stop when cancelling running threads, before
+# giving up on being able to start a delete.
+STOP_STACK_TIMEOUT = 30
+
 LOG = logging.getLogger(__name__)
 
 
@@ -1121,7 +1125,8 @@ class EngineService(service.Service):
         # Another active engine has the lock
         elif stack_lock.StackLock.engine_alive(cnxt, engine_id):
             cancel_result = self._remote_call(
-                cnxt, engine_id, self.listener.SEND,
+                cnxt, engine_id, cfg.CONF.engine_life_check_timeout,
+                self.listener.SEND,
                 stack_identity=stack_identity, message=cancel_message)
             if cancel_result is None:
                 LOG.debug("Successfully sent %(msg)s message "
@@ -1286,8 +1291,7 @@ class EngineService(service.Service):
 
         return api.format_stack_output(stack, {output_key: output}, output_key)
 
-    def _remote_call(self, cnxt, lock_engine_id, call, **kwargs):
-        timeout = cfg.CONF.engine_life_check_timeout
+    def _remote_call(self, cnxt, lock_engine_id, timeout, call, **kwargs):
         self.cctxt = self._client.prepare(
             version='1.0',
             timeout=timeout,
@@ -1337,7 +1341,8 @@ class EngineService(service.Service):
         # Another active engine has the lock
         elif stack_lock.StackLock.engine_alive(cnxt, acquire_result):
             stop_result = self._remote_call(
-                cnxt, acquire_result, self.listener.STOP_STACK,
+                cnxt, acquire_result, STOP_STACK_TIMEOUT,
+                self.listener.STOP_STACK,
                 stack_identity=stack_identity)
             if stop_result is None:
                 LOG.debug("Successfully stopped remote task on engine %s"

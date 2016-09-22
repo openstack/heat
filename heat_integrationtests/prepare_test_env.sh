@@ -52,7 +52,7 @@ iniset heat_integrationtests.conf DEFAULT skip_scenario_test_list 'SoftwareConfi
 
 # Skip some tests for convergence until it is fixed
 if [ "$ENABLE_CONVERGENCE" == "true" ] ; then
-    iniset heat_integrationtests.conf DEFAULT skip_functional_test_list 'StackValidationTest'
+    iniset heat_integrationtests.conf DEFAULT skip_functional_test_list 'StackValidationTest, DeleteInProgressTest'
 fi
 
 cat heat_integrationtests.conf
