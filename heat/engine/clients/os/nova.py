@@ -40,7 +40,6 @@ from heat.engine import constraints
 LOG = logging.getLogger(__name__)
 
 
-NOVA_API_VERSION = "2.1"
 CLIENT_NAME = 'nova'
 
 
@@ -59,11 +58,24 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
+    supported_versions = [
+        NOVA_API_VERSION, V2_26
+    ] = [
+        '2.1', '2.26'
+    ]
+
     service_types = [COMPUTE] = ['compute']
 
-    def _create(self):
+    def _get_service_name(self):
+        return self.COMPUTE
+
+    def _create(self, version=None):
+        if not version:
+            # TODO(prazumovsky): remove all unexpected calls from tests and
+            # add default_version after that.
+            version = self.NOVA_API_VERSION
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        extensions = nc.discover_extensions(NOVA_API_VERSION)
+        extensions = nc.discover_extensions(version)
 
         args = {
             'session': self.context.keystone_session,
@@ -75,7 +87,15 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                                                       'http_log_debug')
         }
 
-        client = nc.Client(NOVA_API_VERSION, **args)
+        client = nc.Client(version, **args)
+        # NOTE: check for microversion availability
+        if version == self.V2_26:
+            try:
+                client.versions.get_current()
+            except exceptions.NotAcceptable:
+                raise exception.InvalidServiceVersion(service=self.COMPUTE,
+                                                      version=version)
+
         return client
 
     def is_not_found(self, ex):

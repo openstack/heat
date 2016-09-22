@@ -52,6 +52,28 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         ext_mock.assert_called_once_with('2.1')
         self.assertIsNotNone(client.servers)
 
+    def test_v2_26_create(self):
+        ctxt = utils.dummy_context()
+        ext_mock = self.patchobject(nc, 'discover_extensions')
+        self.patchobject(nc, 'Client', return_value=mock.Mock())
+
+        plugin = ctxt.clients.client_plugin('nova')
+        plugin.client(version=plugin.V2_26)
+
+        ext_mock.assert_called_once_with(plugin.V2_26)
+
+    def test_v2_26_create_failed(self):
+        ctxt = utils.dummy_context()
+        self.patchobject(nc, 'discover_extensions')
+        plugin = ctxt.clients.client_plugin('nova')
+        client_stub = mock.Mock()
+        client_stub.versions.get_current.side_effect = [
+            nova_exceptions.NotAcceptable(406)]
+        self.patchobject(nc, 'Client', return_value=client_stub)
+
+        self.assertRaises(exception.InvalidServiceVersion, plugin.client,
+                          plugin.V2_26)
+
     def test_get_ip(self):
         my_image = mock.MagicMock()
         my_image.addresses = {
