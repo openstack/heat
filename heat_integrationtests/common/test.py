@@ -285,6 +285,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                         stack_identifier) != stack.updated_time:
                     self.updated_time[stack_identifier] = stack.updated_time
                     return True
+            elif status == 'DELETE_COMPLETE' and stack.deletion_time is None:
+                # Wait for deleted_time to be filled, so that we have more
+                # confidence the operation is finished.
+                return False
             else:
                 return True
 
