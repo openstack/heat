@@ -19,8 +19,9 @@
 import sys
 
 from oslo_log import log as logging
+from oslo_utils import excutils
+
 import six
-from six import reraise as raise_
 
 from heat.common.i18n import _
 from heat.common.i18n import _LE
@@ -58,25 +59,23 @@ class HeatException(Exception):
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
+        if self.error_code in ERROR_CODE_MAP:
+            self.msg_fmt = ERROR_CODE_MAP[self.error_code]
+
         try:
-            if self.error_code in ERROR_CODE_MAP:
-                self.msg_fmt = ERROR_CODE_MAP[self.error_code]
-
             self.message = self.msg_fmt % kwargs
-
-            if self.error_code:
-                self.message = 'HEAT-E%s %s' % (self.error_code, self.message)
         except KeyError:
-            exc_info = sys.exc_info()
-            # kwargs doesn't match a variable in the message
-            # log the issue and the kwargs
-            LOG.exception(_LE('Exception in string format operation'))
-            for name, value in six.iteritems(kwargs):
-                LOG.error(_LE("%(name)s: %(value)s"),
-                          {'name': name, 'value': value})  # noqa
+            with excutils.save_and_reraise_exception(
+                    reraise=_FATAL_EXCEPTION_FORMAT_ERRORS):
+                # kwargs doesn't match a variable in the message
+                # log the issue and the kwargs
+                LOG.exception(_LE('Exception in string format operation'))
+                for name, value in six.iteritems(kwargs):
+                    LOG.error(_LE("%(name)s: %(value)s"),
+                              {'name': name, 'value': value})  # noqa
 
-            if _FATAL_EXCEPTION_FORMAT_ERRORS:
-                raise_(exc_info[0], exc_info[1], exc_info[2])
+        if self.error_code:
+            self.message = 'HEAT-E%s %s' % (self.error_code, self.message)
 
     def __str__(self):
         return self.message
