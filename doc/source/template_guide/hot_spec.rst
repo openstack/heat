@@ -1079,7 +1079,7 @@ The following example demonstrates the use of the ``get_param`` function
 .. code-block:: yaml
 
     parameters:
-       instance_type:
+      instance_type:
         type: string
         label: Instance Type
         description: Instance type to be used.
