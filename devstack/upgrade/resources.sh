@@ -35,9 +35,9 @@ function _heat_set_user {
 
 function create {
     # run heat_integrationtests instead of tempest smoke before create
-    # TODO(sbaker) run with tempest after the next major release
-    pushd $BASE_DEVSTACK_DIR/../heat
-    conf_file=heat_integrationtests/heat_integrationtests.conf
+    pushd $BASE_DEVSTACK_DIR/../tempest
+    conf_file=etc/tempest.conf
+    iniset_multiline $conf_file service_available heat_plugin True
     iniset $conf_file heat_plugin username $OS_USERNAME
     iniset $conf_file heat_plugin password $OS_PASSWORD
     iniset $conf_file heat_plugin tenant_name $OS_PROJECT_NAME
@@ -45,7 +45,7 @@ function create {
     iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
-    tox -eintegration -- '(test_create_update.CreateStackTest|test_create_update.UpdateStackTest)'
+    tempest run --regex '(test_create_update.CreateStackTest|test_create_update.UpdateStackTest)'
     popd
 
     # creates a tenant for the server
