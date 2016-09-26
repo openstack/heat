@@ -61,7 +61,7 @@ class ResourceChainTest(common.HeatTestCase):
         resource = tmpl['resources']['0']
         self.assertEqual('OS::Heat::SoftwareConfig', resource['type'])
         self.assertEqual(RESOURCE_PROPERTIES, resource['properties'])
-        self.assertTrue('depends_on' not in resource)
+        self.assertNotIn('depends_on', resource)
 
         resource = tmpl['resources']['1']
         self.assertEqual('OS::Heat::StructuredConfig', resource['type'])
@@ -83,10 +83,10 @@ class ResourceChainTest(common.HeatTestCase):
         # isn't present
         tmpl = child_template.t
         resource = tmpl['resources']['0']
-        self.assertTrue('depends_on' not in resource)
+        self.assertNotIn('depends_on', resource)
 
         resource = tmpl['resources']['1']
-        self.assertTrue('depends_on' not in resource)
+        self.assertNotIn('depends_on', resource)
 
     def test_child_template_default_concurrent(self):
         # Setup
@@ -102,7 +102,7 @@ class ResourceChainTest(common.HeatTestCase):
         # isn't present
         tmpl = child_template.t
         resource = tmpl['resources']['0']
-        self.assertTrue('depends_on' not in resource)
+        self.assertNotIn('depends_on', resource)
 
         resource = tmpl['resources']['1']
         self.assertEqual(['0'], resource['depends_on'])
@@ -119,7 +119,7 @@ class ResourceChainTest(common.HeatTestCase):
         # Verify
         tmpl = child_template.t
         # No error, but no resources to create
-        self.assertTrue('resources' not in tmpl)
+        self.assertNotIn('resources', tmpl)
         # Sanity check that it's actually a template
         self.assertIn('heat_template_version', tmpl)
 
