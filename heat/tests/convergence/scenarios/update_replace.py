@@ -21,7 +21,7 @@ def store_c_uuid():
 def check_c_replaced():
     test.assertNotEqual(c_uuid,
                         next(iter(reality.resources_by_logical_name('C'))).uuid)
-    test.assertIsNot(c_uuid, None)
+    test.assertIsNotNone(c_uuid)
 
 
 example_template = Template({
