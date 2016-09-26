@@ -170,7 +170,7 @@ class EnvironmentTest(common.HeatTestCase):
         env.register_constraint("constraint2", second_constraint)
         self.assertIs(first_constraint, env.get_constraint("constraint1"))
         self.assertIs(second_constraint, env.get_constraint("constraint2"))
-        self.assertIs(None, env.get_constraint("no_constraint"))
+        self.assertIsNone(env.get_constraint("no_constraint"))
 
     def test_constraints_registry(self):
         constraint_content = '''
@@ -193,7 +193,7 @@ def constraint_mapping():
 
         self.assertEqual("MyConstraint",
                          env.get_constraint("constraint1").__name__)
-        self.assertIs(None, env.get_constraint("no_constraint"))
+        self.assertIsNone(env.get_constraint("no_constraint"))
 
     def test_constraints_registry_error(self):
         constraint_content = '''
@@ -219,7 +219,7 @@ def constraint_mapping():
 
         self.assertEqual("FlavorConstraint",
                          env.get_constraint("nova.flavor").__name__)
-        self.assertIs(None, env.get_constraint("no_constraint"))
+        self.assertIsNone(env.get_constraint("no_constraint"))
 
     def test_event_sinks(self):
         env = environment.Environment(
