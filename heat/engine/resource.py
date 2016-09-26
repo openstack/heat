@@ -450,10 +450,10 @@ class Resource(object):
     def _break_if_required(self, action, hook):
         """Block the resource until the hook is cleared if there is one."""
         if self.stack.env.registry.matches_hook(self.name, hook):
+            self.trigger_hook(hook)
             self._add_event(self.action, self.status,
                             _("%(a)s paused until Hook %(h)s is cleared")
                             % {'a': action, 'h': hook})
-            self.trigger_hook(hook)
             LOG.info(_LI('Reached hook on %s'), six.text_type(self))
 
             while self.has_hook(hook) and self.status != self.FAILED:
