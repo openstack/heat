@@ -212,7 +212,7 @@ def add_command_parsers(subparsers):
 
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
-                                help='Show available commands.',
+                                help=_('Show available commands.'),
                                 handler=add_command_parsers)
 
 
