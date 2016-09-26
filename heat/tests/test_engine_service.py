@@ -24,6 +24,7 @@ from heat.common import context
 from heat.common import environment_util as env_util
 from heat.common import exception
 from heat.common import identifier
+from heat.common import policy
 from heat.common import template_format
 from heat.engine.cfn import template as cfntemplate
 from heat.engine import environment
@@ -1165,6 +1166,7 @@ class StackServiceTest(common.HeatTestCase):
     @mock.patch.object(service.api, 'format_stack_preview', new=mock.Mock())
     @mock.patch.object(service.parser, 'Stack')
     def test_preview_stack_checks_stack_validity(self, mock_parser):
+        self.patchobject(policy.ResourceEnforcer, 'enforce_stack')
         exc = exception.StackValidationFailed(message='Validation Failed')
         mock_parsed_stack = mock.Mock()
         mock_parsed_stack.validate.side_effect = exc

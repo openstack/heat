@@ -697,6 +697,7 @@ class EngineService(service.Service):
                              parent_resource=parent_resource_name,
                              **common_params)
 
+        self.resource_enforcer.enforce_stack(stack)
         self._validate_deferred_auth_context(cnxt, stack)
         stack.validate()
         # For the root stack print a summary of the TemplateResources loaded
@@ -735,7 +736,6 @@ class EngineService(service.Service):
                                                         args,
                                                         convergence=conv_eng)
 
-        self.resource_enforcer.enforce_stack(stack)
         return api.format_stack_preview(stack)
 
     @context.request_context
@@ -801,7 +801,6 @@ class EngineService(service.Service):
             stack_user_project_id, convergence, parent_resource_name,
             template_id)
 
-        self.resource_enforcer.enforce_stack(stack)
         stack_id = stack.store()
         if cfg.CONF.reauthentication_auth_method == 'trusts':
             stack = parser.Stack.load(
