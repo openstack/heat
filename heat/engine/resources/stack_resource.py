@@ -13,6 +13,7 @@
 
 import json
 import warnings
+import weakref
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -87,7 +88,7 @@ class StackResource(resource.Resource):
             #       with all available outputs
             self.attributes = attributes.Attributes(
                 self.name, self.attributes_schema,
-                self._resolve_all_attributes)
+                self._make_resolver(weakref.ref(self)))
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
