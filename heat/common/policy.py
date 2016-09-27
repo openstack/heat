@@ -94,8 +94,7 @@ class ResourceEnforcer(Enforcer):
         super(ResourceEnforcer, self).__init__(
             default_rule=default_rule, **kwargs)
 
-    def enforce(self, context, res_type, scope=None, target=None):
-        # NOTE(pas-ha): try/except just to log the exception
+    def _enforce(self, context, res_type, scope=None, target=None):
         try:
             result = super(ResourceEnforcer, self).enforce(
                 context, res_type,
@@ -107,8 +106,20 @@ class ResourceEnforcer(Enforcer):
         if not result:
             if self.exc:
                 raise self.exc(action=res_type)
-            else:
-                return result
+        return result
+
+    def enforce(self, context, res_type, scope=None, target=None):
+        # NOTE(pas-ha): try/except just to log the exception
+        result = self._enforce(context, res_type, scope, target)
+
+        if result:
+            # check for wildcard resource types
+            subparts = res_type.split("::")[:-1]
+            subparts.append('*')
+            res_type_wc = "::".join(subparts)
+            return self._enforce(context, res_type_wc, scope, target)
+
+        return result
 
     def enforce_stack(self, stack, scope=None, target=None):
         for res in stack.resources.values():

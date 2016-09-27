@@ -1,6 +1,7 @@
 {
     "context_is_admin":  "role:admin",
 
-    "resource_types:OS::Test::AdminOnly": "rule:context_is_admin"
+    "resource_types:OS::Test::AdminOnly": "rule:context_is_admin",
+    "resource_types:OS::Keystone::*": "rule:context_is_admin"
 
 }

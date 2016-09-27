@@ -186,14 +186,14 @@ class TestPolicyEnforcer(common.HeatTestCase):
         enforcer = policy.ResourceEnforcer(
             policy_file=self.get_policy_file('resources.json'))
         res_type = "OS::Test::NotInPolicy"
-        self.assertIsNone(enforcer.enforce(context, res_type))
+        self.assertTrue(enforcer.enforce(context, res_type))
 
     def test_resource_enforce_success(self):
         context = utils.dummy_context(roles=['admin'])
         enforcer = policy.ResourceEnforcer(
             policy_file=self.get_policy_file('resources.json'))
         res_type = "OS::Test::AdminOnly"
-        self.assertIsNone(enforcer.enforce(context, res_type))
+        self.assertTrue(enforcer.enforce(context, res_type))
 
     def test_resource_enforce_fail(self):
         context = utils.dummy_context(roles=['non-admin'])
@@ -205,6 +205,16 @@ class TestPolicyEnforcer(common.HeatTestCase):
                                context, res_type)
         self.assertIn(res_type, ex.message)
 
+    def test_resource_wildcard_enforce_fail(self):
+        context = utils.dummy_context(roles=['non-admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'))
+        res_type = "OS::Keystone::User"
+        ex = self.assertRaises(exception.Forbidden,
+                               enforcer.enforce,
+                               context, res_type)
+        self.assertIn(res_type.split("::", 1)[0], ex.message)
+
     def test_resource_enforce_returns_false(self):
         context = utils.dummy_context(roles=['non-admin'])
         enforcer = policy.ResourceEnforcer(
@@ -212,6 +222,7 @@ class TestPolicyEnforcer(common.HeatTestCase):
             exc=None)
         res_type = "OS::Test::AdminOnly"
         self.assertFalse(enforcer.enforce(context, res_type))
+        self.assertIsNotNone(enforcer.enforce(context, res_type))
 
     def test_resource_enforce_exc_on_false(self):
         context = utils.dummy_context(roles=['non-admin'])
