@@ -1846,13 +1846,11 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
                                  template.Template(tmpl))
 
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               self.stack.validate)
-
-        self.assertEqual('Validation error in output "Resource_attr": '
-                         'The Referenced Attribute '
-                         '(AResource Bar) is incorrect.',
-                         six.text_type(ex))
+        self.assertRaisesRegexp(
+            exception.StackValidationFailed,
+            ('Outputs.Resource_attr.Value.Fn::GetAtt: The Referenced '
+             'Attribute \(AResource Bar\) is incorrect.'),
+            self.stack.validate)
 
     def test_incorrect_outputs_cfn_incorrect_reference(self):
         tmpl = template_format.parse("""
@@ -2212,13 +2210,11 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
                                  template.Template(tmpl))
 
-        ex = self.assertRaises(exception.StackValidationFailed,
-                               self.stack.validate)
-
-        self.assertEqual('Validation error in output "resource_attr": '
-                         'The Referenced Attribute '
-                         '(AResource Bar) is incorrect.',
-                         six.text_type(ex))
+        self.assertRaisesRegexp(
+            exception.StackValidationFailed,
+            ('outputs.resource_attr.value.get_attr: The Referenced Attribute '
+             '\(AResource Bar\) is incorrect.'),
+            self.stack.validate)
 
     def test_snapshot_save_called_first(self):
         def snapshotting_called_first(stack, action, status, reason):

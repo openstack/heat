@@ -18,6 +18,7 @@ import weakref
 
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 
 
@@ -198,16 +199,29 @@ def resolve(snippet):
     return snippet
 
 
-def validate(snippet):
+def validate(snippet, path=''):
     if isinstance(snippet, Function):
-        snippet.validate()
+        try:
+            snippet.validate()
+        except AssertionError:
+            raise
+        except Exception as e:
+            path = '.'.join([path, snippet.fn_name])
+            raise exception.StackValidationFailed(
+                path=path, message=six.text_type(e))
     elif isinstance(snippet, collections.Mapping):
-        for v in six.itervalues(snippet):
-            validate(v)
+        def mkpath(key):
+            return '.'.join([path, key])
+
+        for k, v in six.iteritems(snippet):
+            validate(v, mkpath(k))
     elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
-        for v in snippet:
-            validate(v)
+        def mkpath(indx):
+            return '.'.join([path, '[%d]' % indx])
+
+        for i, v in enumerate(snippet):
+            validate(v, mkpath(i))
 
 
 def dependencies(snippet, path=''):

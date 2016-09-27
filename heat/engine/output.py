@@ -25,9 +25,9 @@ class OutputDefinition(object):
         self._resolved_value = None
         self._description = description
 
-    def validate(self):
+    def validate(self, path=''):
         """Validate the output value without resolving it."""
-        function.validate(self._value)
+        function.validate(self._value, path)
 
     def dep_attrs(self, resource_name):
         """Iterate over attributes of a given resource that this references.
