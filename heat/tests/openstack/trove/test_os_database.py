@@ -15,7 +15,7 @@ import uuid
 
 import mock
 import six
-from troveclient.openstack.common.apiclient import exceptions as troveexc
+from troveclient import exceptions as troveexc
 from troveclient.v1 import users
 
 from heat.common import exception

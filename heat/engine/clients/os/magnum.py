@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from magnumclient.common.apiclient import exceptions as mc_exc
+from magnumclient import exceptions as mc_exc
 from magnumclient.v1 import client as magnum_client
 
 from heat.common import exception

@@ -12,7 +12,7 @@
 #    under the License.
 
 from troveclient import client as tc
-from troveclient.openstack.common.apiclient import exceptions
+from troveclient import exceptions
 
 from heat.common import exception
 from heat.common.i18n import _

@@ -13,7 +13,6 @@
 
 from aodhclient import exceptions as aodh_exc
 from ceilometerclient import exc as ceil_exc
-from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
 from glanceclient.openstack.common.apiclient import exceptions as g_a_exc
@@ -394,14 +393,6 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=False,
             plugin='ceilometer',
             exception=lambda: ceil_exc.HTTPNotFound(details='gone'),
-        )),
-        ('ceilometer_not_found_apiclient', dict(
-            is_not_found=True,
-            is_over_limit=False,
-            is_client_exception=True,
-            is_conflict=False,
-            plugin='ceilometer',
-            exception=lambda: c_a_exc.NotFound(details='gone'),
         )),
         ('ceilometer_exception', dict(
             is_not_found=False,

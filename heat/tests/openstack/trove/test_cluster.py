@@ -14,7 +14,7 @@
 import copy
 import mock
 import six
-from troveclient.openstack.common.apiclient import exceptions as troveexc
+from troveclient import exceptions as troveexc
 
 from heat.common import exception
 from heat.common import template_format

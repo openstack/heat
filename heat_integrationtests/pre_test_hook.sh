@@ -33,15 +33,14 @@ echo -e 'notification_driver=messagingv2\n' >> $localconf
 echo -e 'hidden_stack_tags=hidden\n' >> $localconf
 echo -e 'encrypt_parameters_and_properties=True\n' >> $localconf
 echo -e 'logging_exception_prefix=%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s\n' >> $localconf
+# Limit the number of connections, we're overflowing mysql
+echo -e 'executor_thread_pool_size=8\n' >> $localconf
 
 echo -e '[heat_api]\nworkers=2\n' >> $localconf
 echo -e '[heat_api_cfn]\nworkers=2\n' >> $localconf
 echo -e '[heat_api_cloudwatch]\nworkers=2\n' >> $localconf
 
 echo -e '[cache]\nenabled=True\n' >> $localconf
-
-echo -e '[[post-config|/etc/neutron/neutron_vpnaas.conf]]\n' >> $localconf
-echo -e '[service_providers]\nservice_provider=VPN:openswan:neutron_vpnaas.services.vpn.service_drivers.ipsec.IPsecVPNDriver:default\n' >> $localconf
 
 # Use the lbaas v2 namespace driver for devstack integration testing since
 # octavia uses nested vms.

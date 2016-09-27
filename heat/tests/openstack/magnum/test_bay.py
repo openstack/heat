@@ -12,7 +12,7 @@
 #    under the License.
 
 import copy
-from magnumclient.common.apiclient import exceptions as mc_exc
+from magnumclient import exceptions as mc_exc
 import mock
 from oslo_config import cfg
 import six
