@@ -93,5 +93,6 @@
     "resource_types:OS::Neutron::QoSBandwidthLimitRule": "rule:project_admin",
     "resource_types:OS::Nova::HostAggregate": "rule:project_admin",
     "resource_types:OS::Cinder::QoSSpecs": "rule:project_admin",
-    "resource_types:OS::Cinder::QoSAssociation": "rule:project_admin"
+    "resource_types:OS::Cinder::QoSAssociation": "rule:project_admin",
+    "resource_types:OS::Keystone::*": "rule:project_admin"
 }
