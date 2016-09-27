@@ -16,7 +16,6 @@ from ceilometerclient import exc as ceil_exc
 from ceilometerclient.openstack.common.apiclient import exceptions as c_a_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
-from glanceclient.openstack.common.apiclient import exceptions as g_a_exc
 from heatclient import client as heatclient
 from heatclient import exc as heat_exc
 from keystoneauth1 import exceptions as keystone_exc
@@ -34,6 +33,7 @@ from zaqarclient.transport import errors as zaqar_exc
 
 from heat.common import exception
 from heat.engine import clients
+from heat.engine.clients import client_exception
 from heat.engine.clients import client_plugin
 from heat.tests import common
 from heat.tests import fakes
@@ -490,7 +490,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=False,
             plugin='glance',
-            exception=lambda: g_a_exc.NotFound(),
+            exception=lambda: client_exception.EntityMatchNotFound(),
         )),
         ('glance_not_found_2', dict(
             is_not_found=True,
@@ -515,14 +515,6 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=False,
             plugin='glance',
             exception=lambda: glance_exc.HTTPOverLimit(details='over'),
-        )),
-        ('glance_conflict_1', dict(
-            is_not_found=False,
-            is_over_limit=False,
-            is_client_exception=True,
-            is_conflict=True,
-            plugin='glance',
-            exception=lambda: g_a_exc.Conflict(),
         )),
         ('glance_conflict_1', dict(
             is_not_found=False,
