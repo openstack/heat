@@ -13,9 +13,8 @@
 
 from glanceclient import client as gc
 from glanceclient import exc
-from glanceclient.openstack.common.apiclient import exceptions
 
-from heat.common.i18n import _
+from heat.engine.clients import client_exception
 from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
 from heat.engine import constraints
@@ -25,7 +24,7 @@ CLIENT_NAME = 'glance'
 
 class GlanceClientPlugin(client_plugin.ClientPlugin):
 
-    exceptions_module = [exceptions, exc]
+    exceptions_module = [client_exception, exc]
 
     service_types = [IMAGE] = ['image']
 
@@ -47,17 +46,11 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         matches = list(self._findall_with_attr(entity, **kwargs))
         num_matches = len(matches)
         if num_matches == 0:
-            msg = _("No %(name)s matching %(args)s.") % {
-                'name': entity,
-                'args': kwargs
-            }
-            raise exceptions.NotFound(msg)
+            raise client_exception.EntityMatchNotFound(entity=entity,
+                                                       args=kwargs)
         elif num_matches > 1:
-            msg = _("No %(name)s unique match found for %(args)s.") % {
-                'name': entity,
-                'args': kwargs
-            }
-            raise exceptions.NoUniqueMatch(msg)
+            raise client_exception.EntityUniqueMatchNotFound(entity=entity,
+                                                             args=kwargs)
         else:
             return matches[0]
 
@@ -68,13 +61,14 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         return func.list(**filters)
 
     def is_not_found(self, ex):
-        return isinstance(ex, (exceptions.NotFound, exc.HTTPNotFound))
+        return isinstance(ex, (client_exception.EntityMatchNotFound,
+                               exc.HTTPNotFound))
 
     def is_over_limit(self, ex):
         return isinstance(ex, exc.HTTPOverLimit)
 
     def is_conflict(self, ex):
-        return isinstance(ex, (exceptions.Conflict, exc.Conflict))
+        return isinstance(ex, exc.Conflict)
 
     def find_image_by_name_or_id(self, image_identifier):
         """Return the ID for the specified image name or identifier.
@@ -104,7 +98,8 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
 
 class ImageConstraint(constraints.BaseCustomConstraint):
-    expected_exceptions = (exceptions.NotFound, exceptions.NoUniqueMatch)
+    expected_exceptions = (client_exception.EntityMatchNotFound,
+                           client_exception.EntityUniqueMatchNotFound)
 
     resource_client_name = CLIENT_NAME
     resource_getter_name = 'find_image_by_name_or_id'
