@@ -1825,7 +1825,7 @@ class Stack(collections.Mapping):
         """
         # No need to suspend if the stack has been suspended
         if self.state == (self.SUSPEND, self.COMPLETE):
-            LOG.info(_LI('%s is already suspended'), six.text_type(self))
+            LOG.info(_LI('%s is already suspended'), self)
             return
 
         self.updated_time = oslo_timeutils.utcnow()
@@ -1850,7 +1850,7 @@ class Stack(collections.Mapping):
         """
         # No need to resume if the stack has been resumed
         if self.state == (self.RESUME, self.COMPLETE):
-            LOG.info(_LI('%s is already resumed'), six.text_type(self))
+            LOG.info(_LI('%s is already resumed'), self)
             return
 
         self.updated_time = oslo_timeutils.utcnow()

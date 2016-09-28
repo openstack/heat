@@ -207,7 +207,7 @@ class TaskRunner(object):
                 return False
 
             if self._timeout is not None and self._timeout.expired():
-                LOG.info(_LI('%s timed out'), six.text_type(self))
+                LOG.info(_LI('%s timed out'), self)
                 self._done = True
 
                 self._timeout.trigger(self._runner)
