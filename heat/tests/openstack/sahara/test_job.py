@@ -61,10 +61,16 @@ class SaharaJobTest(common.HeatTestCase):
                                                'id': 'fake-execution-id'}
         self.client.job_executions.find.return_value = [fake_execution]
 
-    def _create_resource(self, name, snippet, stack):
+    def _create_resource(self, name, snippet, stack, without_name=False):
         jb = job.SaharaJob(name, snippet, stack)
+        if without_name:
+            self.client.jobs.create = mock.Mock(return_value='fake_rsrc_id')
+            jb.physical_resource_name = mock.Mock(
+                return_value='fake_phys_name')
         value = mock.MagicMock(id='fake-resource-id')
         self.client.jobs.create.return_value = value
+        mock_get_res = mock.Mock(return_value='some res')
+        jb.client_plugin().find_resource_by_name_or_id = mock_get_res
         scheduler.TaskRunner(jb.create)()
         return jb
 
@@ -89,11 +95,7 @@ class SaharaJobTest(common.HeatTestCase):
         props = self.stack.t.t['resources']['job']['properties']
         del props['name']
         self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
-        jb = job.SaharaJob('job', self.rsrc_defn, self.stack)
-        value = mock.MagicMock(id='fake-resource-id')
-        self.client.jobs.create.return_value = value
-        jb.physical_resource_name = mock.Mock(return_value='fake_phys_name')
-        scheduler.TaskRunner(jb.create)()
+        jb = self._create_resource('job', self.rsrc_defn, self.stack, True)
         args = self.client.jobs.create.call_args[1]
         expected_args = {
             'name': 'fake_phys_name',

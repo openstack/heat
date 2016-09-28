@@ -88,7 +88,10 @@ class SaharaCluster(resource.Resource):
             properties.Schema.STRING,
             _('ID of the Cluster Template used for '
               'Node Groups and configurations.'),
-            required=True,
+            constraints=[
+                constraints.CustomConstraint('sahara.cluster_template')
+            ],
+            required=True
         ),
         KEY_NAME: properties.Schema(
             properties.Schema.STRING,

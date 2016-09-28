@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from oslo_utils import uuidutils
 from saharaclient.api import base as sahara_base
 from saharaclient import client as sahara_client
 import six
@@ -72,6 +71,21 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
                 ex.error_code == 400 and
                 ex.error_name == 'IMAGE_NOT_REGISTERED')
 
+    def find_resource_by_name_or_id(self, resource_name, value):
+        """Return the ID for the specified name or identifier.
+
+        :param resource_name: API name of entity
+        :param value: ID or name of entity
+        :returns: the id of the requested :value:
+        :raises: exception.EntityNotFound,
+                 exception.PhysicalResourceNameAmbiguity
+        """
+        try:
+            entity = getattr(self.client(), resource_name)
+            return entity.get(value).id
+        except sahara_base.APIException:
+            return self.find_resource_by_name(resource_name, value)
+
     def get_image_id(self, image_identifier):
         """Return the ID for the specified image name or identifier.
 
@@ -80,40 +94,37 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
         :raises: exception.EntityNotFound,
                  exception.PhysicalResourceNameAmbiguity
         """
-        if uuidutils.is_uuid_like(image_identifier):
-            try:
-                image_id = self.client().images.get(image_identifier).id
-            except sahara_base.APIException as ex:
-                if self.is_not_registered(ex):
-                    image_id = self.get_image_id_by_name(image_identifier)
-        else:
-            image_id = self.get_image_id_by_name(image_identifier)
-        return image_id
+        # leave this method for backward compatibility
+        try:
+            return self.find_resource_by_name_or_id('images', image_identifier)
+        except exception.EntityNotFound:
+            raise exception.EntityNotFound(entity='Image',
+                                           name=image_identifier)
 
-    def get_image_id_by_name(self, image_identifier):
-        """Return the ID for the specified image name.
+    def find_resource_by_name(self, resource_name, value):
+        """Return the ID for the specified entity name.
 
-        :param image_identifier: image name
-        :returns: the id of the requested :image_identifier:
         :raises: exception.EntityNotFound,
                  exception.PhysicalResourceNameAmbiguity
         """
         try:
-            filters = {'name': image_identifier}
-            image_list = self.client().images.find(**filters)
+            filters = {'name': value}
+            obj = getattr(self.client(), resource_name)
+            obj_list = obj.find(**filters)
         except sahara_base.APIException as ex:
             raise exception.Error(
-                _("Error retrieving image list from sahara: "
-                  "%s") % six.text_type(ex))
-        num_matches = len(image_list)
+                _("Error retrieving %(entity)s list from sahara: "
+                  "%(err)s") % dict(entity=resource_name,
+                                    err=six.text_type(ex)))
+        num_matches = len(obj_list)
         if num_matches == 0:
-            raise exception.EntityNotFound(entity='Image',
-                                           name=image_identifier)
+            raise exception.EntityNotFound(entity=resource_name or 'entity',
+                                           name=value)
         elif num_matches > 1:
             raise exception.PhysicalResourceNameAmbiguity(
-                name=image_identifier)
+                name=value)
         else:
-            return image_list[0].id
+            return obj_list[0].id
 
     def get_plugin_id(self, plugin_name):
         """Get the id for the specified plugin name.
@@ -130,16 +141,41 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
 
 
 class SaharaBaseConstraint(constraints.BaseCustomConstraint):
+    expected_exceptions = (exception.EntityNotFound,
+                           exception.PhysicalResourceNameAmbiguity,)
+    resource_name = None
+
+    def validate_with_client(self, client, resource_id):
+        sahara_plugin = client.client_plugin(CLIENT_NAME)
+        sahara_plugin.find_resource_by_name_or_id(self.resource_name,
+                                                  resource_id)
+
+
+class PluginConstraint(constraints.BaseCustomConstraint):
+    # do not touch constraint for compatibility
     resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_plugin_id'
 
 
 class ImageConstraint(SaharaBaseConstraint):
-
-    expected_exceptions = (exception.EntityNotFound,
-                           exception.PhysicalResourceNameAmbiguity,)
-    resource_getter_name = 'get_image_id'
+    resource_name = 'images'
 
 
-class PluginConstraint(SaharaBaseConstraint):
+class JobBinaryConstraint(SaharaBaseConstraint):
+    resource_name = 'job_binaries'
 
-    resource_getter_name = 'get_plugin_id'
+
+class ClusterConstraint(SaharaBaseConstraint):
+    resource_name = 'clusters'
+
+
+class DataSourceConstraint(SaharaBaseConstraint):
+    resource_name = 'data_sources'
+
+
+class ClusterTemplateConstraint(SaharaBaseConstraint):
+    resource_name = 'cluster_templates'
+
+
+class JobTypeConstraint(SaharaBaseConstraint):
+    resource_name = 'job_types'
