@@ -3720,7 +3720,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         """Test for other exceptions when checking for service availability
 
         Ex. when client throws an error, make sure resource is throwing
-        ResourceTypeUnavailable that contains the orginal exception message.
+        ResourceTypeUnavailable that contains the original exception message.
         """
         with mock.patch.object(
                 generic_rsrc.ResourceWithDefaultClientName,
