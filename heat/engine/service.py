@@ -250,7 +250,7 @@ class ThreadGroupManager(object):
 
 
 @profiler.trace_cls("rpc")
-class EngineListener(service.Service):
+class EngineListener(object):
     """Listen on an AMQP queue named for the engine.
 
     Allows individual engines to communicate with each other for multi-engine
@@ -260,18 +260,27 @@ class EngineListener(service.Service):
     ACTIONS = (STOP_STACK, SEND) = ('stop_stack', 'send')
 
     def __init__(self, host, engine_id, thread_group_mgr):
-        super(EngineListener, self).__init__()
         self.thread_group_mgr = thread_group_mgr
         self.engine_id = engine_id
         self.host = host
+        self._server = None
 
     def start(self):
-        super(EngineListener, self).start()
         self.target = messaging.Target(
             server=self.engine_id,
             topic=rpc_api.LISTENER_TOPIC)
-        server = rpc_messaging.get_rpc_server(self.target, self)
-        server.start()
+        self._server = rpc_messaging.get_rpc_server(self.target, self)
+        self._server.start()
+
+    def stop(self):
+        if self._server is not None:
+            LOG.debug("Attempting to stop engine listener...")
+            try:
+                self._server.stop()
+                self._server.wait()
+                LOG.info(_LI("Engine listener is stopped successfully"))
+            except Exception as e:
+                LOG.error(_LE("Failed to stop engine listener, %s"), e)
 
     def listening(self, ctxt):
         """Respond to a watchdog request.
@@ -292,7 +301,7 @@ class EngineListener(service.Service):
 
 
 @profiler.trace_cls("rpc")
-class EngineService(service.Service):
+class EngineService(service.ServiceBase):
     """Manages the running instances from creation to destruction.
 
     All the methods in here are called from the RPC backend.  This is
@@ -306,7 +315,6 @@ class EngineService(service.Service):
     RPC_API_VERSION = '1.35'
 
     def __init__(self, host, topic):
-        super(EngineService, self).__init__()
         resources.initialise()
         self.host = host
         self.topic = topic
@@ -399,8 +407,6 @@ class EngineService(service.Service):
                                          self.service_manage_report)
         self.manage_thread_grp.add_thread(self.reset_stack_status)
 
-        super(EngineService, self).start()
-
     def _configure_db_conn_pool_size(self):
         # bug #1491185
         # Set the DB max_overflow to match the thread pool size.
@@ -427,6 +433,8 @@ class EngineService(service.Service):
 
     def stop(self):
         self._stop_rpc_server()
+        if self.listener:
+            self.listener.stop()
 
         if cfg.CONF.convergence_engine and self.worker_service:
             # Stop the WorkerService
@@ -451,10 +459,11 @@ class EngineService(service.Service):
 
         # Terminate the engine process
         LOG.info(_LI("All threads were gone, terminating engine"))
-        super(EngineService, self).stop()
+
+    def wait(self):
+        pass
 
     def reset(self):
-        super(EngineService, self).reset()
         logging.setup(cfg.CONF, 'heat')
 
     @context.request_context

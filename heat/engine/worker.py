@@ -17,7 +17,6 @@ import eventlet.queue
 
 from oslo_log import log as logging
 import oslo_messaging
-from oslo_service import service
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
@@ -40,7 +39,7 @@ CANCEL_RETRIES = 3
 
 
 @profiler.trace_cls("rpc")
-class WorkerService(service.Service):
+class WorkerService(object):
     """Service that has 'worker' actor in convergence.
 
     This service is dedicated to handle internal messages to the 'worker'
@@ -57,7 +56,6 @@ class WorkerService(service.Service):
                  topic,
                  engine_id,
                  thread_group_mgr):
-        super(WorkerService, self).__init__()
         self.host = host
         self.topic = topic
         self.engine_id = engine_id
@@ -81,8 +79,6 @@ class WorkerService(service.Service):
         self._rpc_server = rpc_messaging.get_rpc_server(target, self)
         self._rpc_server.start()
 
-        super(WorkerService, self).start()
-
     def stop(self):
         if self._rpc_server is None:
             return
@@ -95,8 +91,6 @@ class WorkerService(service.Service):
         except Exception as e:
             LOG.error(_LE("%(topic)s is failed to stop, %(exc)s"),
                       {'topic': self.topic, 'exc': e})
-
-        super(WorkerService, self).stop()
 
     def stop_traversal(self, stack):
         """Update current traversal to stop workers from propagating.
