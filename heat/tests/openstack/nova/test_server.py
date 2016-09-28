@@ -997,7 +997,7 @@ class ServersTest(common.HeatTestCase):
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
         _, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['admin_pass'], None)
+        self.assertIsNone(kwargs['admin_pass'])
 
     def test_server_create_custom_admin_pass(self):
         return_server = self.fc.servers.list()[1]
