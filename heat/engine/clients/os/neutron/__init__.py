@@ -17,6 +17,7 @@ from neutronclient.v2_0 import client as nc
 from oslo_utils import uuidutils
 
 from heat.common import exception
+from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
 
@@ -155,17 +156,20 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
                         raise exception.PhysicalResourceNameAmbiguity(name=sg)
         return seclist
 
-    def _resove_resource_path(self, resource):
+    def _resolve_resource_path(self, resource):
         """Returns sfc resource path."""
 
         if resource == 'port_pair':
-            RESOURCE_PATH = "/sfc/port_pairs"
-            return RESOURCE_PATH
+            path = "/sfc/port_pairs"
+        elif resource == 'port_pair_group':
+            path = "/sfc/port_pair_groups"
+
+        return path
 
     def create_sfc_resource(self, resource, props):
         """Returns created sfc resource record."""
 
-        path = self._resove_resource_path(resource)
+        path = self._resolve_resource_path(resource)
         record = self.client().create_ext(path, {resource: props}
                                           ).get(resource)
         return record
@@ -173,19 +177,48 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def update_sfc_resource(self, resource, prop_diff, resource_id):
         """Returns updated sfc resource record."""
 
-        path = self._resove_resource_path(resource)
-        return self.client().update_ext(path + '/%s', self.resource_id,
+        path = self._resolve_resource_path(resource)
+        return self.client().update_ext(path + '/%s', resource_id,
                                         {resource: prop_diff})
 
     def delete_sfc_resource(self, resource, resource_id):
-        """deletes sfc resource record and returns status"""
+        """Deletes sfc resource record and returns status."""
 
-        path = self._resove_resource_path(resource)
-        return self.client().delete_ext(path + '/%s', self.resource_id)
+        path = self._resolve_resource_path(resource)
+        return self.client().delete_ext(path + '/%s', resource_id)
 
     def show_sfc_resource(self, resource, resource_id):
-        """returns specific sfc resource record"""
+        """Returns specific sfc resource record."""
 
-        path = self._resove_resource_path(resource)
-        return self.client().show_ext(path + '/%s', self.resource_id
+        path = self._resolve_resource_path(resource)
+        return self.client().show_ext(path + '/%s', resource_id
                                       ).get(resource)
+
+    def resolve_ext_resource(self, resource, name_or_id):
+        """Returns the id and validate neutron ext resource."""
+
+        path = self._resolve_resource_path(resource)
+
+        try:
+            record = self.client().show_ext(path + '/%s', name_or_id)
+            return record.get(resource).get('id')
+        except exceptions.NotFound:
+            res_plural = resource + 's'
+            result = self.client().list_ext(collection=res_plural,
+                                            path=path, retrieve_all=True)
+            resources = result.get(res_plural)
+            matched = []
+            for res in resources:
+                if res.get('name') == name_or_id:
+                    matched.append(res.get('id'))
+            if len(matched) > 1:
+                raise exceptions.NeutronClientNoUniqueMatch(resource=resource,
+                                                            name=name_or_id)
+            elif len(matched) == 0:
+                not_found_message = (_("Unable to find %(resource)s with name "
+                                       "or id '%(name_or_id)s'") %
+                                     {'resource': resource,
+                                      'name_or_id': name_or_id})
+                raise exceptions.NotFound(message=not_found_message)
+            else:
+                return matched[0]
