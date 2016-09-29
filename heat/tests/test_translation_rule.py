@@ -417,6 +417,9 @@ class TestTranslationRule(common.HeatTestCase):
                     schema={
                         'red': properties.Schema(
                             properties.Schema.STRING
+                        ),
+                        'check': properties.Schema(
+                            properties.Schema.STRING
                         )
                     }
                 )
@@ -434,7 +437,16 @@ class TestTranslationRule(common.HeatTestCase):
             ['far', 'red'])
         rule.execute_rule()
 
-        self.assertEqual([{'red': None}, {'red': None}], props.get('far'))
+        self.assertEqual([{'check': None, 'red': None},
+                          {'check': None, 'red': None}], props.get('far'))
+
+        # check if no data translation still is correct
+        props = properties.Properties(schema, {'far': [{'check': 'yep'}]})
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.DELETE,
+            ['far', 'red'])
+        self.assertIsNone(rule.execute_rule())
 
     def test_delete_rule_other(self):
         schema = {

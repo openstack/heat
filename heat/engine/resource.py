@@ -1039,7 +1039,17 @@ class Resource(object):
         """
         rules = self.translation_rules(properties) or []
         for rule in rules:
-            rule.execute_rule(client_resolve)
+            try:
+                rule.execute_rule(client_resolve)
+            except exception.ResourcePropertyConflict as ex:
+                path = [self.stack.t.RESOURCES, self.name,
+                        self.stack.t.get_section_name(
+                            self.stack.t.RES_PROPERTIES)]
+                raise exception.StackValidationFailed(
+                    error='Property error',
+                    path=path,
+                    message=ex.message
+                )
 
     def cancel_grace_period(self):
         if self.status != self.IN_PROGRESS:
