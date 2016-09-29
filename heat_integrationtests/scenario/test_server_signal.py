@@ -24,8 +24,8 @@ class ServerSignalIntegrationTest(scenario_base.ScenarioTestsBase):
         """Check a server in a created network can signal to heat."""
         parameters = {
             'key_name': self.keypair_name,
-            'flavor': self.conf.instance_type,
-            'image': self.conf.image_ref,
+            'flavor': self.conf.minimal_instance_type,
+            'image': self.conf.minimal_image_ref,
             'timeout': self.conf.build_timeout,
         }
 

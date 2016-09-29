@@ -34,7 +34,8 @@ class AutoscalingGroupTest(functional_base.FunctionalTestsBase):
   "Parameters" : {"size": {"Type": "String", "Default": "1"},
                   "AZ": {"Type": "String", "Default": "nova"},
                   "image": {"Type": "String"},
-                  "flavor": {"Type": "String"}},
+                  "flavor": {"Type": "String"},
+                  "user_data": {"Type": "String", "Default": "jsconfig data"}},
   "Resources": {
     "JobServerGroup": {
       "Type" : "AWS::AutoScaling::AutoScalingGroup",
@@ -53,7 +54,7 @@ class AutoscalingGroupTest(functional_base.FunctionalTestsBase):
         "ImageId"           : {"Ref": "image"},
         "InstanceType"      : {"Ref": "flavor"},
         "SecurityGroups"    : [ "sg-1" ],
-        "UserData"          : "jsconfig data"
+        "UserData"          : {"Ref": "user_data"}
       }
     }
   },
@@ -79,7 +80,7 @@ resources:
   random1:
     type: OS::Heat::RandomString
     properties:
-      salt: {get_param: ImageId}
+      salt: {get_param: UserData}
 outputs:
   PublicIp: {value: {get_attr: [random1, value]}}
   AvailabilityZone: {value: 'not-used11'}
@@ -116,8 +117,6 @@ outputs:
 
     def setUp(self):
         super(AutoscalingGroupTest, self).setUp()
-        if not self.conf.image_ref:
-            raise self.skipException("No image configured to test")
         if not self.conf.minimal_image_ref:
             raise self.skipException("No minimal image configured to test")
         if not self.conf.instance_type:
@@ -152,7 +151,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         files = {'provider.yaml': self.instance_template}
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 4,
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
         stack_identifier = self.stack_create(template=self.template,
                                              files=files, environment=env)
@@ -169,7 +168,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         files = {'provider.yaml': self.instance_template}
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 2,
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
 
         stack_identifier = self.stack_create(template=self.template,
@@ -181,7 +180,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         # Increase min size to 5
         env2 = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                 'parameters': {'size': 5,
-                               'image': self.conf.image_ref,
+                               'image': self.conf.minimal_image_ref,
                                'flavor': self.conf.instance_type}}
         self.update_stack(stack_identifier, self.template,
                           environment=env2, files=files)
@@ -198,7 +197,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         env = {'resource_registry':
                {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': '1',
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
 
         stack_identifier = self.stack_create(template=self.template,
@@ -211,8 +210,9 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
                 {'AWS::EC2::Instance': 'provider.yaml'},
                 'parameters': {'size': '1',
                                'AZ': 'wibble',
-                               'image': self.conf.image_ref,
-                               'flavor': self.conf.instance_type}}
+                               'image': self.conf.minimal_image_ref,
+                               'flavor': self.conf.instance_type,
+                               'user_data': 'new data'}}
         self.update_stack(stack_identifier, self.template,
                           environment=env2, files=files)
 
@@ -230,7 +230,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         files = {'provider.yaml': self.bad_instance_template}
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 2,
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
 
         self.client.stacks.create(
@@ -265,7 +265,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         files = {'provider.yaml': self.instance_template}
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 2,
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
 
         stack_identifier = self.stack_create(template=self.template,
@@ -317,7 +317,7 @@ class AutoscalingGroupBasicTest(AutoscalingGroupTest):
         files = {'provider.yaml': self.instance_template}
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': 4,
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
         stack_identifier = self.stack_create(template=self.template,
                                              files=files, environment=env)
@@ -353,7 +353,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         size = 10
         env = {'resource_registry': {'AWS::EC2::Instance': 'provider.yaml'},
                'parameters': {'size': size,
-                              'image': self.conf.image_ref,
+                              'image': self.conf.minimal_image_ref,
                               'flavor': self.conf.instance_type}}
         stack_name = self._stack_rand_name()
         stack_identifier = self.stack_create(
@@ -424,7 +424,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         policy['MinInstancesInService'] = '1'
         policy['MaxBatchSize'] = '3'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+        config['Properties']['UserData'] = 'new data'
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=10,
@@ -443,7 +443,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         policy['MinInstancesInService'] = '8'
         policy['MaxBatchSize'] = '4'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+        config['Properties']['UserData'] = 'new data'
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=8,
@@ -458,7 +458,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         policy['MinInstancesInService'] = '0'
         policy['MaxBatchSize'] = '20'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+        config['Properties']['UserData'] = 'new data'
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=10,
@@ -474,7 +474,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         policy['MaxBatchSize'] = '1'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['ImageId'] = self.conf.minimal_image_ref
+        config['Properties']['UserData'] = 'new data'
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=9,
@@ -624,7 +624,7 @@ outputs:
                      {'custom_lb': {'AWS::EC2::Instance': 'lb.yaml'}},
                      'AWS::EC2::Instance': 'provider.yaml'},
                     'parameters': {'size': 2,
-                                   'image': self.conf.image_ref,
+                                   'image': self.conf.minimal_image_ref,
                                    'flavor': self.conf.instance_type}}
 
     def check_instance_count(self, stack_identifier, expected):

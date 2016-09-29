@@ -42,6 +42,13 @@ $::deploy_server_id during $::deploy_action",
 
 class SoftwareConfigIntegrationTest(scenario_base.ScenarioTestsBase):
 
+    def setUp(self):
+        super(SoftwareConfigIntegrationTest, self).setUp()
+        if not self.conf.image_ref:
+            raise self.skipException("No image configured to test")
+        if not self.conf.instance_type:
+            raise self.skipException("No flavor configured to test")
+
     def check_stack(self):
         sid = self.stack_identifier
         # Check that all stack resources were created
