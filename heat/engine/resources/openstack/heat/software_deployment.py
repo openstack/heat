@@ -435,10 +435,14 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        prev_derived_config = self._get_derived_config_id()
-        old_config = self._load_config(prev_derived_config)
-        old_inputs = {i.name(): i
-                      for i in old_config[rpc_api.SOFTWARE_CONFIG_INPUTS]}
+        if self.resource_id is None:
+            prev_derived_config = None
+            old_inputs = {}
+        else:
+            prev_derived_config = self._get_derived_config_id()
+            old_config = self._load_config(prev_derived_config)
+            old_inputs = {i.name(): i
+                          for i in old_config[rpc_api.SOFTWARE_CONFIG_INPUTS]}
 
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
