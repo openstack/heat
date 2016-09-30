@@ -25,16 +25,16 @@ from heat.tests import utils
 class SynchronousThreadGroupManager(service.ThreadGroupManager):
     """Wrapper for thread group manager.
 
-    The start method of thread group manager needs to be overriden to
-    run the function synchronously so that the convergence scenario
-    tests can run.
+    The start method of thread group manager needs to be overridden to
+    run the function synchronously so the convergence scenario
+    tests can be run.
     """
     def start(self, stack_id, func, *args, **kwargs):
         func(*args, **kwargs)
 
 
 class Engine(message_processor.MessageProcessor):
-    """Wrapper to the engine service.
+    """Wrapper for the engine service.
 
     Methods of this class will be called from the scenario tests.
     """
