@@ -209,7 +209,7 @@ class Resource(object):
         """
         return attributes.Attributes(self.name,
                                      self.attributes_schema,
-                                     self._resolve_all_attributes)
+                                     self._make_resolver(weakref.ref(self)))
 
     def __init__(self, name, definition, stack):
 
@@ -2279,3 +2279,17 @@ class Resource(object):
         except Exception:
             return False
         return True
+
+    @staticmethod
+    def _make_resolver(ref):
+        """Return an attribute resolution method.
+
+        This builds a resolver without a strong reference to this resource, to
+        break a possible cycle.
+        """
+        def resolve(attr):
+            res = ref()
+            if res is None:
+                raise RuntimeError("Resource collected")
+            return res._resolve_all_attributes(attr)
+        return resolve
