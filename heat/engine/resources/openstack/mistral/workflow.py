@@ -25,6 +25,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import signal_responder
 from heat.engine import support
+from heat.engine import translation
 
 
 class Workflow(signal_responder.SignalResponder,
@@ -57,17 +58,18 @@ class Workflow(signal_responder.SignalResponder,
         TASK_NAME, TASK_DESCRIPTION, ON_ERROR, ON_COMPLETE, ON_SUCCESS,
         POLICIES, ACTION, WORKFLOW, PUBLISH, TASK_INPUT, REQUIRES,
         RETRY, WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT,
-        WITH_ITEMS, KEEP_RESULT, TARGET, JOIN
+        WITH_ITEMS, KEEP_RESULT, TARGET, JOIN, CONCURRENCY
     ) = (
         'name', 'description', 'on_error', 'on_complete', 'on_success',
         'policies', 'action', 'workflow', 'publish', 'input', 'requires',
         'retry', 'wait_before', 'wait_after', 'pause_before', 'timeout',
-        'with_items', 'keep_result', 'target', 'join'
+        'with_items', 'keep_result', 'target', 'join', 'concurrency'
     )
 
     _TASKS_TASK_DEFAULTS = [
         ON_ERROR, ON_COMPLETE, ON_SUCCESS,
-        REQUIRES, RETRY, WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT
+        REQUIRES, RETRY, WAIT_BEFORE, WAIT_AFTER, PAUSE_BEFORE, TIMEOUT,
+        CONCURRENCY
     ]
 
     _SIGNAL_DATA_KEYS = (
@@ -186,6 +188,13 @@ class Workflow(signal_responder.SignalResponder,
                       'a task will be failed automatically '
                       'by engine if hasn\'t completed.')
                 ),
+                CONCURRENCY: properties.Schema(
+                    properties.Schema.INTEGER,
+                    _('Defines a max number of actions running simultaneously '
+                      'in a task. Applicable only for tasks that have '
+                      'with-items.'),
+                    support_status=support.SupportStatus(version='8.0.0')
+                )
             },
             update_allowed=True
         ),
@@ -253,13 +262,18 @@ class Workflow(signal_responder.SignalResponder,
                           'that influence how Mistral Engine runs tasks. Must '
                           'satisfy Mistral DSL v2.'),
                         support_status=support.SupportStatus(
-                            status=support.DEPRECATED,
-                            version='5.0.0',
+                            status=support.HIDDEN,
+                            version='8.0.0',
                             message=_('Add needed policies directly to '
                                       'the task, Policy keyword is not '
                                       'needed'),
                             previous_status=support.SupportStatus(
-                                version='2015.1'))
+                                status=support.DEPRECATED,
+                                version='5.0.0',
+                                previous_status=support.SupportStatus(
+                                    version='2015.1')
+                            )
+                        )
                     ),
                     REQUIRES: properties.Schema(
                         properties.Schema.LIST,
@@ -313,6 +327,13 @@ class Workflow(signal_responder.SignalResponder,
                           'after task completion.'),
                         support_status=support.SupportStatus(version='5.0.0')
                     ),
+                    CONCURRENCY: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('Defines a max number of actions running '
+                          'simultaneously in a task. Applicable only for '
+                          'tasks that have with-items.'),
+                        support_status=support.SupportStatus(version='8.0.0')
+                    ),
                     TARGET: properties.Schema(
                         properties.Schema.STRING,
                         _('It defines an executor to which task action '
@@ -357,6 +378,31 @@ class Workflow(signal_responder.SignalResponder,
             type=attributes.Schema.LIST
         )
     }
+
+    def translation_rules(self, properties):
+        policies_keys = [self.PAUSE_BEFORE, self.WAIT_AFTER, self.WAIT_BEFORE,
+                         self.TIMEOUT, self.CONCURRENCY, self.RETRY]
+        rules = []
+        for key in policies_keys:
+            rules.append(
+                translation.TranslationRule(
+                    properties,
+                    translation.TranslationRule.REPLACE,
+                    [self.TASKS, key],
+                    value_name=self.POLICIES,
+                    custom_value_path=[key]
+                )
+            )
+        # after executing rules above properties data contains policies key
+        # with empty dict value, so need to remove policies from properties.
+        rules.append(
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.DELETE,
+                [self.TASKS, self.POLICIES]
+            )
+        )
+        return rules
 
     def get_reference_id(self):
         return self._workflow_name()
@@ -446,6 +492,11 @@ class Workflow(signal_responder.SignalResponder,
                             'item': task_item
                         }
                         raise exception.StackValidationFailed(message=msg)
+
+            if (task.get(self.WITH_ITEMS) is None and
+                    task.get(self.CONCURRENCY) is not None):
+                raise exception.ResourcePropertyDependency(
+                    prop1=self.CONCURRENCY, prop2=self.WITH_ITEMS)
 
     def _workflow_name(self):
         return self.properties.get(self.NAME) or self.physical_resource_name()
