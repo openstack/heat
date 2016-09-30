@@ -41,16 +41,14 @@ resources:
 
     def setUp(self):
         super(CancelUpdateTest, self).setUp()
-        if not self.conf.image_ref:
-            raise self.skipException("No image configured to test.")
-        if not self.conf.instance_type:
-            raise self.skipException("No flavor configured to test.")
+        if not self.conf.minimal_image_ref:
+            raise self.skipException("No minimal image configured to test")
         if not self.conf.minimal_instance_type:
             raise self.skipException("No minimal flavor configured to test.")
 
     def test_cancel_update_server_with_port(self):
         parameters = {'InstanceType': self.conf.minimal_instance_type,
-                      'ImageId': self.conf.image_ref,
+                      'ImageId': self.conf.minimal_image_ref,
                       'network': self.conf.fixed_network_name}
 
         stack_identifier = self.stack_create(template=self.template,

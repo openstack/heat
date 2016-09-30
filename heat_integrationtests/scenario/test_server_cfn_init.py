@@ -21,6 +21,10 @@ class CfnInitIntegrationTest(scenario_base.ScenarioTestsBase):
 
     def setUp(self):
         super(CfnInitIntegrationTest, self).setUp()
+        if not self.conf.image_ref:
+            raise self.skipException("No image configured to test")
+        if not self.conf.instance_type:
+            raise self.skipException("No flavor configured to test")
 
     def check_stack(self, sid):
         # Check status of all resources

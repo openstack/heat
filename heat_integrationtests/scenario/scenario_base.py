@@ -28,11 +28,6 @@ class ScenarioTestsBase(test.HeatIntegrationTest):
             raise self.skipException("No default network configured to test")
         self.net = self._get_network()
 
-        if not self.conf.image_ref:
-            raise self.skipException("No image configured to test")
-        if not self.conf.instance_type:
-            raise self.skipException("No flavor configured to test")
-
         if not self.conf.minimal_image_ref:
             raise self.skipException("No minimal image configured to test")
         if not self.conf.minimal_instance_type:
