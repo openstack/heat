@@ -844,7 +844,8 @@ class ResourceRegistryTest(common.HeatTestCase):
             generic_resource.GenericResource,
             'is_service_available',
             side_effect=exception.ClientNotAvailable(client_name='generic'))
-        types = registry.get_types(utils.dummy_context())
+        types = registry.get_types(utils.dummy_context(),
+                                   type_name='GenericResourceType')
         self.assertNotIn('GenericResourceType', types)
 
     def test_list_type_with_invalid_type_name(self):
