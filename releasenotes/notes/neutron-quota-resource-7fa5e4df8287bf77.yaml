@@ -1,0 +1,3 @@
+---
+features:
+  - New resource ``OS::Neutron::Quota`` is added to manage neutron quotas.
