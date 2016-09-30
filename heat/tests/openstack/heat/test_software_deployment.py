@@ -136,6 +136,21 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         }
     }
 
+    template_update_only = {
+        'HeatTemplateFormatVersion': '2012-12-12',
+        'Resources': {
+            'deployment_mysql': {
+                'Type': 'OS::Heat::SoftwareDeployment',
+                'Properties': {
+                    'server': '9f1f0e00-05d2-4ca5-8602-95021f19c9d0',
+                    'config': '48e8ade1-9196-42d5-89a2-f709fde42632',
+                    'input_values': {'foo': 'bar'},
+                    'actions': ['UPDATE'],
+                }
+            }
+        }
+    }
+
     template_no_config = {
         'HeatTemplateFormatVersion': '2012-12-12',
         'Resources': {
@@ -880,6 +895,19 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertRaises(resource.UpdateReplace,
                           self.deployment.handle_update,
                           snippet, None, prop_diff)
+
+    def test_handle_update_with_update_only(self):
+        self._create_stack(self.template_update_only)
+        rsrc = self.stack['deployment_mysql']
+        prop_diff = {
+            'input_values': {'foo': 'different'}
+        }
+        props = copy.copy(rsrc.properties.data)
+        props.update(prop_diff)
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        self.deployment.handle_update(
+            json_snippet=snippet, tmpl_diff=None, prop_diff=prop_diff)
+        self.rpc_client.show_software_deployment.assert_not_called()
 
     def test_handle_suspend_resume(self):
         self._create_stack(self.template_delete_suspend_resume)
