@@ -16,6 +16,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class KeystoneEndpoint(resource.Resource):
@@ -82,6 +83,17 @@ class KeystoneEndpoint(resource.Resource):
             support_status=support.SupportStatus(version='6.0.0')
         )
     }
+
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.SERVICE],
+                client_plugin=self.client_plugin(),
+                finder='get_service_id'
+            )
+        ]
 
     def client(self):
         return super(KeystoneEndpoint, self).client().client
