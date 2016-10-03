@@ -139,6 +139,30 @@ combination_alarm_template = '''
 }
 '''
 
+event_alarm_template = '''
+{
+  "heat_template_version" : "newton",
+  "description" : "Event alarm test",
+  "parameters" : {},
+  "resources" : {
+    "test_event_alarm": {
+     "type": "OS::Aodh::EventAlarm",
+     "properties": {
+        "description": "Alarm event when an image is updated",
+        "event_type": "image.update",
+        "query": [{
+          "field": 'traits.resource_id',
+          "op": "eq",
+          "value": "9a8fec25-1ba6-4170-aa44-5d72f17c07f6"}]
+      }
+    },
+    "signal_handler" : {
+      "type" : "SignalResourceType"
+    }
+  }
+}
+'''
+
 
 class FakeCombinationAlarm(object):
     alarm_id = 'foo'
@@ -772,3 +796,96 @@ class CombinationAlarmTest(common.HeatTestCase):
         res.client().alarms.get.return_value = FakeCombinationAlarm()
         scheduler.TaskRunner(res.create)()
         self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
+
+
+class EventAlarmTest(common.HeatTestCase):
+    def setUp(self):
+        super(EventAlarmTest, self).setUp()
+        self.fa = mock.Mock()
+
+    def create_stack(self, template=None):
+        if template is None:
+            template = event_alarm_template
+        temp = template_format.parse(template)
+        template = tmpl.Template(temp)
+        ctx = utils.dummy_context()
+        ctx.tenant = 'test_tenant'
+        stack = parser.Stack(ctx, utils.random_name(), template,
+                             disable_rollback=True)
+        stack.store()
+
+        self.patchobject(aodh.AodhClientPlugin,
+                         '_create').return_value = self.fa
+
+        self.patchobject(self.fa.alarm, 'create').return_value = FakeAodhAlarm
+
+        return stack
+
+    def test_update(self):
+        test_stack = self.create_stack()
+        update_mock = self.patchobject(self.fa.alarm, 'update')
+        test_stack.create()
+        rsrc = test_stack['test_event_alarm']
+
+        update_props = copy.deepcopy(rsrc.properties.data)
+        update_props.update({
+            'enabled': True,
+            'insufficient_data_actions': [],
+            'alarm_actions': [],
+            'ok_actions': ['signal_handler'],
+            'query': [dict(
+                field='traits.resource_id',
+                op='eq',
+                value='c7405b0f-139f-4fbd-9348-f32dfc5674ac')]
+        })
+
+        snippet = rsrc_defn.ResourceDefinition(rsrc.name,
+                                               rsrc.type(),
+                                               update_props)
+
+        scheduler.TaskRunner(rsrc.update, snippet)()
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(1, update_mock.call_count)
+
+    def test_delete(self):
+        test_stack = self.create_stack()
+        rsrc = test_stack['test_event_alarm']
+
+        self.patchobject(aodh.AodhClientPlugin, 'client',
+                         return_value=self.fa)
+        self.patchobject(self.fa.alarm, 'delete')
+        rsrc.resource_id = '12345'
+
+        self.assertEqual('12345', rsrc.handle_delete())
+        self.assertEqual(1, self.fa.alarm.delete.call_count)
+
+    def _prepare_check_resource(self):
+        snippet = template_format.parse(event_alarm_template)
+        self.stack = utils.parse_stack(snippet)
+        res = self.stack['test_event_alarm']
+        res.client = mock.Mock()
+        mock_alarm = mock.Mock(enabled=True, state='ok')
+        res.client().alarm.get.return_value = mock_alarm
+        return res
+
+    def test_check(self):
+        res = self._prepare_check_resource()
+        scheduler.TaskRunner(res.check)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+
+    def test_check_alarm_failure(self):
+        res = self._prepare_check_resource()
+        res.client().alarm.get.side_effect = Exception('Boom')
+
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(res.check))
+        self.assertEqual((res.CHECK, res.FAILED), res.state)
+        self.assertIn('Boom', res.status_reason)
+
+    def test_show_resource(self):
+        res = self._prepare_check_resource()
+        res.client().alarm.create.return_value = FakeAodhAlarm
+        res.client().alarm.get.return_value = FakeAodhAlarm
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual(FakeAodhAlarm, res.FnGetAtt('show'))
