@@ -114,6 +114,8 @@ class ResourceInfo(object):
         else:
             return MapResourceInfo(registry, path, value)
 
+    __slots__ = ('_registry', 'path', 'name', 'value', 'user_resource')
+
     def __init__(self, registry, path, value):
         self._registry = weakref.ref(registry)
         self.path = path
@@ -169,6 +171,8 @@ class ClassResourceInfo(ResourceInfo):
     """Store the mapping of resource name to python class implementation."""
     description = 'Plugin'
 
+    __slots__ = tuple()
+
     def get_class(self, files=None):
         return self.value
 
@@ -176,6 +180,8 @@ class ClassResourceInfo(ResourceInfo):
 class TemplateResourceInfo(ResourceInfo):
     """Store the info needed to start a TemplateResource."""
     description = 'Template'
+
+    __slots__ = ('template_name',)
 
     def __init__(self, registry, path, value):
         super(TemplateResourceInfo, self).__init__(registry, path, value)
@@ -214,6 +220,8 @@ class MapResourceInfo(ResourceInfo):
     """
     description = 'Mapping'
 
+    __slots__ = tuple()
+
     def get_class(self, files=None):
         return None
 
@@ -232,6 +240,8 @@ class GlobResourceInfo(MapResourceInfo):
     like: OS::* -> OS::Heat::None
     """
     description = 'Wildcard Mapping'
+
+    __slots__ = tuple()
 
     def get_resource_info(self, resource_type=None, resource_name=None):
         # NOTE(pas-ha) we end up here only when self.name already
