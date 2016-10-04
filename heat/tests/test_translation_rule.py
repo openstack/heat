@@ -862,6 +862,44 @@ class TestTranslationRule(common.HeatTestCase):
         self.assertEqual({'source': param, 'destination': ''},
                          data)
 
+    def test_property_get_attr_translation_successfully_skipped(self):
+        schema = {
+            'source': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'sub-source': properties.Schema(
+                            properties.Schema.STRING
+                        )
+                    }
+                )
+            ),
+            'destination': properties.Schema(
+                properties.Schema.STRING
+            )}
+
+        class DummyStack(dict):
+            pass
+
+        class rsrc(object):
+            pass
+
+        stack = DummyStack(res=rsrc())
+        attr_func = cfn_funcs.GetAtt(stack, 'Fn::GetAtt',
+                                     ['res', 'sub-sources'])
+
+        data = {'source': attr_func, 'destination': ''}
+        props = properties.Properties(schema, data)
+
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.REPLACE,
+            ['source', 'sub-sources'],
+            value_path=['destination'])
+        rule.execute_rule()
+        self.assertEqual({'source': attr_func, 'destination': ''}, props.data)
+
     def test_list_list_add_translation_rule(self):
         schema = {
             'far': properties.Schema(
