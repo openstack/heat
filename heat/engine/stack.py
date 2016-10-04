@@ -526,7 +526,8 @@ class Stack(collections.Mapping):
             tags=tags,
             tags_any=tags_any,
             not_tags=not_tags,
-            not_tags_any=not_tags_any)
+            not_tags_any=not_tags_any,
+            eager_load=True)
         for stack in stacks:
             try:
                 yield cls._from_db(context, stack)
@@ -917,7 +918,8 @@ class Stack(collections.Mapping):
         """Persist stack state to database"""
         if self.id is None:
             return
-        stack = stack_object.Stack.get_by_id(self.context, self.id)
+        stack = stack_object.Stack.get_by_id(self.context, self.id,
+                                             eager_load=False)
         if stack is not None:
             values = {'action': self.action,
                       'status': self.status,
@@ -948,7 +950,8 @@ class Stack(collections.Mapping):
         """Persist stack state to database and release stack lock"""
         if self.id is None:
             return
-        stack = stack_object.Stack.get_by_id(self.context, self.id)
+        stack = stack_object.Stack.get_by_id(self.context, self.id,
+                                             eager_load=False)
         if stack is not None:
             values = {'action': self.action,
                       'status': self.status,

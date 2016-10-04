@@ -67,7 +67,8 @@ class StackLock(object):
             return
 
         stack = stack_object.Stack.get_by_id(self.context, self.stack_id,
-                                             show_deleted=True)
+                                             show_deleted=True,
+                                             eager_load=False)
         if (lock_engine_id == self.engine_id or
                 service_utils.engine_alive(self.context, lock_engine_id)):
             LOG.debug("Lock on stack %(stack)s is owned by engine "

@@ -469,7 +469,8 @@ class EngineService(service.Service):
             s = stack_object.Stack.get_by_id(
                 cnxt,
                 stack_name,
-                show_deleted=True)
+                show_deleted=True,
+                eager_load=False)
             # may be the name is in uuid format, so if get by id returns None,
             # we should get the info by name again
         if not s:

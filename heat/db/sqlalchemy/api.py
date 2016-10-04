@@ -430,16 +430,17 @@ def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
 def stack_get_by_name(context, stack_name):
     query = soft_delete_aware_query(
         context, models.Stack
-    ).options(orm.joinedload("raw_template")).filter(sqlalchemy.or_(
-        models.Stack.tenant == context.tenant_id,
-        models.Stack.stack_user_project_id == context.tenant_id)
-    ).filter_by(name=stack_name)
+    ).filter(sqlalchemy.or_(
+             models.Stack.tenant == context.tenant_id,
+             models.Stack.stack_user_project_id == context.tenant_id)
+             ).filter_by(name=stack_name)
     return query.first()
 
 
-def stack_get(context, stack_id, show_deleted=False):
-    query = context.session.query(models.Stack).options(
-        orm.joinedload("raw_template"))
+def stack_get(context, stack_id, show_deleted=False, eager_load=True):
+    query = context.session.query(models.Stack)
+    if eager_load:
+        query = query.options(orm.joinedload("raw_template"))
     result = query.get(stack_id)
 
     deleted_ok = show_deleted or context.show_deleted
@@ -572,14 +573,15 @@ def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                   sort_dir=None, filters=None,
                   show_deleted=False, show_nested=False, show_hidden=False,
                   tags=None, tags_any=None, not_tags=None,
-                  not_tags_any=None):
+                  not_tags_any=None, eager_load=False):
     query = _query_stack_get_all(context,
                                  show_deleted=show_deleted,
                                  show_nested=show_nested,
                                  show_hidden=show_hidden, tags=tags,
                                  tags_any=tags_any, not_tags=not_tags,
                                  not_tags_any=not_tags_any)
-    query = query.options(orm.joinedload("raw_template"))
+    if eager_load:
+        query = query.options(orm.joinedload("raw_template"))
     return _filter_and_page_query(context, query, limit, sort_keys,
                                   marker, sort_dir, filters).all()
 
