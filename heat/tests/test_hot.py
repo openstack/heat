@@ -956,6 +956,14 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual('role1', resolved['role1'])
         self.assertEqual('role2', resolved['role2'])
 
+    def test_merge_containing_repeat_with_none(self):
+        snippet = {'map_merge': {'repeat': {'template': {'ROLE': 'ROLE'},
+                   'for_each': {'ROLE': None}}}}
+        tmpl = template.Template(hot_mitaka_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual({}, resolved)
+
     def test_map_replace(self):
         snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
                                    {'keys': {'f1': 'F1'},
