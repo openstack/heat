@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import pickle
 import six
+
+from sqlalchemy.util.compat import pickle
 
 import oslo_db.exception
 from oslo_log import log as logging
@@ -75,7 +76,8 @@ class Event(object):
         # event.resource_properties column if the data is too large
         # (greater than permitted by BLOB). Otherwise, we end up with
         # an unsightly log message.
-        rp_size = len(pickle.dumps(ev['resource_properties']))
+        rp_size = len(pickle.dumps(ev['resource_properties'],
+                                   pickle.HIGHEST_PROTOCOL))
         if rp_size > MAX_EVENT_RESOURCE_PROPERTIES_SIZE:
             LOG.debug('event\'s resource_properties too large to store at '
                       '%d bytes', rp_size)
@@ -86,7 +88,8 @@ class Event(object):
             err = 'Resource properties are too large to store fully'
             ev['resource_properties'].update({'Error': err})
             ev['resource_properties'][max_key] = '<Deleted, too large>'
-            rp_size = len(pickle.dumps(ev['resource_properties']))
+            rp_size = len(pickle.dumps(ev['resource_properties'],
+                                       pickle.HIGHEST_PROTOCOL))
             if rp_size > MAX_EVENT_RESOURCE_PROPERTIES_SIZE:
                 LOG.debug('event\'s resource_properties STILL too large '
                           'after truncating largest key at %d bytes', rp_size)
