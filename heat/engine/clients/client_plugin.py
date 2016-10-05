@@ -92,6 +92,9 @@ class ClientPlugin(object):
         """Return a newly created client."""
         pass
 
+    def _get_region_name(self):
+        return self.context.region_name or cfg.CONF.region_name_for_services
+
     def url_for(self, **kwargs):
         keystone_session = self.context.keystone_session
 
@@ -106,8 +109,8 @@ class ClientPlugin(object):
         except KeyError:
             pass
 
-        reg = self.context.region_name or cfg.CONF.region_name_for_services
-        kwargs.setdefault('region_name', reg)
+        kwargs.setdefault('region_name', self._get_region_name())
+
         url = None
         try:
             url = get_endpoint()

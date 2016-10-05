@@ -35,7 +35,8 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
         args = {
             'endpoint_type': endpoint_type,
             'service_type': self.DATABASE,
-            'session': con.keystone_session
+            'session': con.keystone_session,
+            'region_name': self._get_region_name()
         }
 
         client = tc.Client('1.0', **args)

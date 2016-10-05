@@ -62,6 +62,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             'extensions': extensions,
             'interface': self.interface,
             'service_type': self.service_type,
+            'region_name': self._get_region_name(),
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug')
         }

@@ -34,7 +34,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         args = {
             'session': con.keystone_session,
             'service_type': self.NETWORK,
-            'interface': interface
+            'interface': interface,
+            'region_name': self._get_region_name()
         }
 
         return nc.Client(**args)

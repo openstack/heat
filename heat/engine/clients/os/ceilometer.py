@@ -36,7 +36,8 @@ class CeilometerClientPlugin(client_plugin.ClientPlugin):
             'session': con.keystone_session,
             'interface': interface,
             'service_type': self.METERING,
-            'aodh_endpoint': aodh_endpoint
+            'aodh_endpoint': aodh_endpoint,
+            'region_name': self._get_region_name()
         }
 
         return cc.get_client('2', **args)
