@@ -1041,7 +1041,6 @@ class Yaql(function.Function):
 
     def __init__(self, stack, fn_name, args):
         super(Yaql, self).__init__(stack, fn_name, args)
-        self._yaql_context = yaql.create_context()
 
         if not isinstance(self.args, collections.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map.') %
@@ -1079,7 +1078,7 @@ class Yaql(function.Function):
     def result(self):
         statement = self._parse(function.resolve(self._expression))
         data = function.resolve(self._data)
-        return statement.evaluate({'data': data}, self._yaql_context)
+        return statement.evaluate({'data': data})
 
 
 class Equals(function.Function):
