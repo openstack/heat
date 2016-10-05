@@ -878,15 +878,19 @@ class Repeat(function.Function):
 
     def result(self):
         for_each = function.resolve(self._for_each)
-        if not all(self._valid_arg(l) for l in for_each.values()):
+        keys, lists = six.moves.zip(*for_each.items())
+
+        # use empty list for references(None) else validation will fail
+        values = [[] if value is None else value for value in lists]
+
+        if not all(self._valid_arg(l) for l in values):
             raise TypeError(_('The values of the "for_each" argument to '
                               '"%s" must be lists') % self.fn_name)
 
         template = function.resolve(self._template)
 
-        keys, lists = six.moves.zip(*for_each.items())
         return [self._do_replacement(keys, replacements, template)
-                for replacements in itertools.product(*lists)]
+                for replacements in itertools.product(*values)]
 
 
 class RepeatWithMap(Repeat):
