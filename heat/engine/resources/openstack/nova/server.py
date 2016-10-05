@@ -38,6 +38,7 @@ from heat.engine import translation
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
+cfg.CONF.import_opt('default_user_data_format', 'heat.common.config')
 cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
@@ -444,7 +445,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
               'For SOFTWARE_CONFIG user_data is bundled as part of the '
               'software config data, and metadata is derived from any '
               'associated SoftwareDeployment resources.'),
-            default=HEAT_CFNTOOLS,
+            default=cfg.CONF.default_user_data_format,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_FORMATS),
             ]

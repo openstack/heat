@@ -230,6 +230,19 @@ engine_opts = [
                       'credentials. ZAQAR_SIGNAL will create a dedicated '
                       'zaqar queue to be signaled using the provided keystone '
                       'credentials.')),
+    cfg.StrOpt('default_user_data_format',
+               choices=['HEAT_CFNTOOLS',
+                        'RAW',
+                        'SOFTWARE_CONFIG'],
+               default='HEAT_CFNTOOLS',
+               help=_('Template default for how the user_data should be '
+                      'formatted for the server. For HEAT_CFNTOOLS, the '
+                      'user_data is bundled as part of the heat-cfntools '
+                      'cloud-init boot configuration data. For RAW the '
+                      'user_data is passed to Nova unmodified. For '
+                      'SOFTWARE_CONFIG user_data is bundled as part of the '
+                      'software config data, and metadata is derived from any '
+                      'associated SoftwareDeployment resources.')),
     cfg.ListOpt('hidden_stack_tags',
                 default=['data-processing-cluster'],
                 help=_('Stacks containing these tag names will be hidden. '
