@@ -160,8 +160,9 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
                                                      physical_resource_id)
 
 
-def stack_get(context, stack_id, show_deleted=False):
-    return IMPL.stack_get(context, stack_id, show_deleted=show_deleted)
+def stack_get(context, stack_id, show_deleted=False, eager_load=True):
+    return IMPL.stack_get(context, stack_id, show_deleted=show_deleted,
+                          eager_load=eager_load)
 
 
 def stack_get_status(context, stack_id):
@@ -181,11 +182,12 @@ def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                   sort_dir=None, filters=None,
                   show_deleted=False, show_nested=False, show_hidden=False,
                   tags=None, tags_any=None, not_tags=None,
-                  not_tags_any=None):
+                  not_tags_any=None, eager_load=False):
     return IMPL.stack_get_all(context, limit, sort_keys,
                               marker, sort_dir, filters,
                               show_deleted, show_nested, show_hidden,
-                              tags, tags_any, not_tags, not_tags_any)
+                              tags, tags_any, not_tags, not_tags_any,
+                              eager_load=eager_load)
 
 
 def stack_get_all_by_owner_id(context, owner_id):

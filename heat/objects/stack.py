@@ -114,7 +114,7 @@ class Stack(
                 sort_dir=None, filters=None,
                 show_deleted=False, show_nested=False, show_hidden=False,
                 tags=None, tags_any=None, not_tags=None,
-                not_tags_any=None):
+                not_tags_any=None, eager_load=False):
         db_stacks = db_api.stack_get_all(
             context,
             limit=limit,
@@ -128,7 +128,8 @@ class Stack(
             tags=tags,
             tags_any=tags_any,
             not_tags=not_tags,
-            not_tags_any=not_tags_any)
+            not_tags_any=not_tags_any,
+            eager_load=eager_load)
         for db_stack in db_stacks:
             try:
                 yield cls._from_db_object(context, cls(context), db_stack)
