@@ -30,7 +30,8 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
         client = barbican_client.Client(
             session=self.context.keystone_session,
             service_type=self.KEY_MANAGER,
-            interface=interface)
+            interface=interface,
+            region_name=self._get_region_name())
         return client
 
     def is_not_found(self, ex):

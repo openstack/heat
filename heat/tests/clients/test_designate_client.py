@@ -49,11 +49,14 @@ class DesignateClientPluginTest(common.HeatTestCase):
         session = mock.Mock()
         context.keystone_session = session
         client_plugin = client.DesignateClientPlugin(context)
+        self.patchobject(client_plugin, '_get_region_name',
+                         return_value='region1')
         client_plugin.client()
 
         # Make sure proper client is created with expected args
         client_designate.assert_called_once_with(
-            endpoint_type='publicURL', service_type='dns', session=session
+            endpoint_type='publicURL', service_type='dns',
+            session=session, region_name='region1'
         )
 
 

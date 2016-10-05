@@ -39,7 +39,8 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
         return gc.Client(version, session=con.keystone_session,
                          interface=interface,
-                         service_type=self.IMAGE)
+                         service_type=self.IMAGE,
+                         region_name=self._get_region_name())
 
     def _find_with_attr(self, entity, **kwargs):
         """Find a item for entity with attributes matching ``**kwargs``."""

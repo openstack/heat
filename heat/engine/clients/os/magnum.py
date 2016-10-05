@@ -30,7 +30,8 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
         args = {
             'interface': interface,
             'service_type': self.CONTAINER,
-            'session': self.context.keystone_session
+            'session': self.context.keystone_session,
+            'region_name': self._get_region_name()
         }
         client = magnum_client.Client(**args)
         return client
