@@ -38,7 +38,8 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
         args = {
             'endpoint_type': endpoint_type,
             'service_type': self.DATA_PROCESSING,
-            'session': con.keystone_session
+            'session': con.keystone_session,
+            'region_name': self._get_region_name()
         }
         client = sahara_client.Client('1.1', **args)
         return client

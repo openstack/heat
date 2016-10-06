@@ -33,7 +33,8 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         return client.Client(session=self.context.keystone_session,
                              endpoint_type=endpoint_type,
-                             service_type=self.DNS)
+                             service_type=self.DNS,
+                             region_name=self._get_region_name())
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)

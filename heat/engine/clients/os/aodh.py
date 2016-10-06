@@ -36,7 +36,8 @@ class AodhClientPlugin(client_plugin.ClientPlugin):
             version,
             session=self.context.keystone_session,
             interface=interface,
-            service_type=self.ALARMING)
+            service_type=self.ALARMING,
+            region_name=self._get_region_name())
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.NotFound)

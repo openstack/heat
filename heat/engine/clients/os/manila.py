@@ -32,7 +32,8 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
         args = {
             'endpoint_type': endpoint_type,
             'service_type': self.SHARE,
-            'session': self.context.keystone_session
+            'session': self.context.keystone_session,
+            'region_name': self._get_region_name()
         }
         client = manila_client.Client(MANILACLIENT_VERSION, **args)
         return client
