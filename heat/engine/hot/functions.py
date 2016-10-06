@@ -1041,6 +1041,7 @@ class Yaql(function.Function):
                 'yaql.memoryQuota': cfg.CONF.yaql.memory_quota
             }
             cls._parser = yaql.YaqlFactory().create(global_options)
+            cls._context = yaql.create_context()
         return cls._parser
 
     def __init__(self, stack, fn_name, args):
@@ -1082,7 +1083,8 @@ class Yaql(function.Function):
     def result(self):
         statement = self._parse(function.resolve(self._expression))
         data = function.resolve(self._data)
-        return statement.evaluate({'data': data})
+        context = self._context.create_child_context()
+        return statement.evaluate({'data': data}, context)
 
 
 class Equals(function.Function):
