@@ -203,7 +203,7 @@ class Parameter(object):
         else:
             raise ValueError(_('Invalid Parameter type "%s"') % schema.type)
 
-        return ParamClass(name, schema, value)
+        return super(Parameter, cls).__new__(ParamClass)
 
     def __init__(self, name, schema, value=None):
         """Initialise the parameter.

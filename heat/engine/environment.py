@@ -93,26 +93,28 @@ def is_valid_restricted_action(key, value):
 class ResourceInfo(object):
     """Base mapping of resource type to implementation."""
 
-    def __new__(cls, registry, path, value, **kwargs):
+    def __new__(cls, registry, path, value):
         """Create a new ResourceInfo of the appropriate class."""
 
-        if cls != ResourceInfo:
+        if cls is not ResourceInfo:
             # Call is already for a subclass, so pass it through
             return super(ResourceInfo, cls).__new__(cls)
 
         name = path[-1]
         if name.endswith(('.yaml', '.template')):
             # a template url for the resource "Type"
-            return TemplateResourceInfo(registry, path, value)
+            klass = TemplateResourceInfo
         elif not isinstance(value, six.string_types):
-            return ClassResourceInfo(registry, path, value)
+            klass = ClassResourceInfo
         elif value.endswith(('.yaml', '.template')):
             # a registered template
-            return TemplateResourceInfo(registry, path, value)
+            klass = TemplateResourceInfo
         elif name.endswith('*'):
-            return GlobResourceInfo(registry, path, value)
+            klass = GlobResourceInfo
         else:
-            return MapResourceInfo(registry, path, value)
+            klass = MapResourceInfo
+
+        return super(ResourceInfo, cls).__new__(klass)
 
     __slots__ = ('_registry', 'path', 'name', 'value', 'user_resource')
 
