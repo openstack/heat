@@ -205,6 +205,8 @@ class Parameter(object):
 
         return super(Parameter, cls).__new__(ParamClass)
 
+    __slots__ = ('name', 'schema', 'user_value', 'user_default')
+
     def __init__(self, name, schema, value=None):
         """Initialise the parameter.
 
@@ -299,6 +301,8 @@ class Parameter(object):
 class NumberParam(Parameter):
     """A template parameter of type "Number"."""
 
+    __slots__ = tuple()
+
     def __int__(self):
         """Return an integer representation of the parameter."""
         return int(super(NumberParam, self).value())
@@ -321,6 +325,8 @@ class NumberParam(Parameter):
 class BooleanParam(Parameter):
     """A template parameter of type "Boolean"."""
 
+    __slots__ = tuple()
+
     def _validate(self, val, context, template=None):
         try:
             strutils.bool_from_string(val, strict=True)
@@ -339,6 +345,8 @@ class BooleanParam(Parameter):
 class StringParam(Parameter):
     """A template parameter of type "String"."""
 
+    __slots__ = tuple()
+
     def _validate(self, val, context, template=None):
         self.schema.validate_value(val, context=context, template=template)
 
@@ -348,6 +356,8 @@ class StringParam(Parameter):
 
 class ParsedParameter(Parameter):
     """A template parameter with cached parsed value."""
+
+    __slots__ = ('parsed',)
 
     def __init__(self, name, schema, value=None):
         super(ParsedParameter, self).__init__(name, schema, value)
@@ -367,6 +377,8 @@ class ParsedParameter(Parameter):
 
 class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
     """A template parameter of type "CommaDelimitedList"."""
+
+    __slots__ = ('parsed',)
 
     def __init__(self, name, schema, value=None):
         self.parsed = []
@@ -412,6 +424,8 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
 
 class JsonParam(ParsedParameter):
     """A template parameter who's value is map or list."""
+
+    __slots__ = ('parsed',)
 
     def __init__(self, name, schema, value=None):
         self.parsed = {}
