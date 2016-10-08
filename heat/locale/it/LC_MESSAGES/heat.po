@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev352\n"
+"Project-Id-Version: heat 7.0.1.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-06-02 03:51+0000\n"
+"POT-Creation-Date: 2016-10-07 09:58+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -496,13 +496,6 @@ msgstr ""
 "Un elenco di politiche stringa da applicare. L'impostazione predefinita è "
 "anti-affinity."
 
-msgid ""
-"A list of the specified attribute of each individual resource. Requires "
-"heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"Un elenco di attributi specificati di ogni singola risorsa. Richiede "
-"heat_template_version: 2014-10-16 o versione successiva."
-
 msgid "A login profile for the user."
 msgstr "Un profilo di login per l'utente."
 
@@ -546,13 +539,6 @@ msgid ""
 msgstr ""
 "Un'associazione di nomi risorsa per l'attributo specificato di ogni singola "
 "risorsa."
-
-msgid ""
-"A map of resource names to the specified attribute of each individual "
-"resource. Requires heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"Un'associazione di nomi risorsa per l'attributo specificato di ogni singola "
-"risorsa. Richiede heat_template_version: 2014-10-16 o versione successiva."
 
 msgid ""
 "A map of resource names to the specified attribute of each individual "
@@ -1818,9 +1804,6 @@ msgstr "Indirizzo EIP da associare all'istanza."
 msgid "Each %(object_name)s must contain a %(sub_section)s key."
 msgstr "Ciascun %(object_name)s deve contenere una chiave %(sub_section)s."
 
-msgid "Each Output must contain a Value key."
-msgstr "Ciascun output deve contenere una chiave Value."
-
 msgid "Each Resource must contain a Type key."
 msgstr "Ciascuna risorsa deve contenere una chiave Type."
 
@@ -2231,9 +2214,6 @@ msgstr ""
 "Granularità da utilizare per l'argomento age, assume il valore predefinito "
 "days."
 
-msgid "HTTP verb to use for signaling output values"
-msgstr "Il verbo HTTP da utilizzare per la segnalazione dei valori di output"
-
 msgid "Hadoop cluster name."
 msgstr "Nome cluster Hadoop."
 
@@ -2585,17 +2565,6 @@ msgid ""
 msgstr ""
 "Se configurato, consente di eseguire l'azione o il flusso di lavoro "
 "associato ad un'attività più volte in un determinato elenco di elementi."
-
-#, python-format
-msgid ""
-"If neither \"%(backup_id)s\" nor \"%(size)s\" is provided, one and only one "
-"of \"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s\" "
-"must be specified, but currently specified options: %(exclusive_options)s."
-msgstr ""
-"Se non vengono forniti né \"%(backup_id)s\" né \"%(size)s\", uno e solo uno "
-"fra \"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s"
-"\" devono essere specificati, ma le opzioni attualmente specificate sono: "
-"%(exclusive_options)s."
 
 msgid "If set, then the server's certificate will not be verified."
 msgstr "Se impostato, il certificato del server non verrà verificato."
@@ -3315,9 +3284,6 @@ msgstr ""
 msgid "Listener associated with this pool."
 msgstr "Listener associato a questo pool."
 
-msgid "Listner name or ID to be associated with this pool."
-msgstr "Nome o ID listener da associare a questo pool."
-
 msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
@@ -3420,13 +3386,6 @@ msgstr "Numero massimo di risorse nel cluster. -1 indica illimitato."
 
 msgid "Maximum number of resources in the group."
 msgstr "Numero massimo di risorse nel gruppo."
-
-msgid ""
-"Maximum number of seconds for a monitor to wait for a connection to be "
-"established before it times out."
-msgstr ""
-"Numero massimo di secondi che un monitor deve attendere per stabilire una "
-"connessione prima che venga raggiunto il timeout."
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr ""
@@ -3573,13 +3532,6 @@ msgstr "Notifica Monasca."
 
 msgid "Multiple actions specified"
 msgstr "Più azioni specificate"
-
-msgid ""
-"Multiple attach is not supported by the current volume API. Use this "
-"property since Cinder API v2."
-msgstr ""
-"Il collegamento multiplo non è supportato dall'API del volume corrente. "
-"Utilizzare questa proprietà a partire da Cinder API v2."
 
 #, python-format
 msgid "Multiple physical resources were found with name (%(name)s)."
@@ -4032,10 +3984,6 @@ msgid "No event %s found"
 msgstr "Nessun evento %s trovato"
 
 #, python-format
-msgid "No event exists with id \"%s\""
-msgstr "Nessun evento esistente con id \"%s\""
-
-#, python-format
 msgid "No events found for resource %s"
 msgstr "Nessun evento trovato per la risorsa %s"
 
@@ -4167,9 +4115,6 @@ msgid "Number value for timeout during resolving output value."
 msgstr ""
 "Il valore numerico per il timeout durante la risoluzione del valore di "
 "output."
-
-msgid "OS::Heat::CWLiteAlarm is deprecated, use OS::Ceilometer::Alarm instead."
-msgstr "OS::Heat::CWLiteAlarm è obsoleto, utilizzare OS::Ceilometer::Alarm."
 
 #, python-format
 msgid "Object action %(action)s failed because: %(reason)s"
@@ -4427,13 +4372,6 @@ msgstr ""
 "ridimensionamento server o sostituzione dell'intero server."
 
 msgid ""
-"Policy on how to apply a user_data update; either by ignorning it or by "
-"replacing the entire server."
-msgstr ""
-"Politica di applicazione dell'aggiornamento user_data; ignorando o "
-"sostituendo l'intero server."
-
-msgid ""
 "Policy on how to apply an image-id update; either by requesting a server "
 "rebuild or by replacing the entire server."
 msgstr ""
@@ -4569,11 +4507,6 @@ msgstr ""
 "contemporaneamente."
 
 #, python-format
-msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
-msgstr ""
-"La proprietà %(prop)s: %(ua)s e %(im)s non possono essere entrambe True"
-
-#, python-format
 msgid "Property %(ref)s required when protocol is %(term)s."
 msgstr "Proprietà %(ref)s richiesta quando il protocollo è %(term)s."
 
@@ -4605,9 +4538,6 @@ msgid ""
 msgstr ""
 "La proprietà cookie_name NON deve essere specificata quando il tipo "
 "session_persistence è impostato su SOURCE_IP."
-
-msgid "Property uses removed function."
-msgstr "La proprietà utilizza la funzione rimossa."
 
 msgid "Property values for the resources in the group."
 msgstr "I valori delle proprietà per le risorse nel gruppo."
@@ -4877,11 +4807,6 @@ msgid "Safety assessment lifetime value in specified units."
 msgstr ""
 "Valore della durata di valutazione della sicurezza in unità specificate."
 
-msgid "Scheduler hints are not supported by the current volume API."
-msgstr ""
-"I suggerimenti dello scheduler non sono supportati dall'API del volume "
-"corrente."
-
 msgid "Scheduler hints to pass to Nova (Heat extension)."
 msgstr ""
 "Suggerimenti (hint) dello scheduler da passare a Nova (estensione heat)."
@@ -4905,13 +4830,6 @@ msgid ""
 msgstr ""
 "Ambito di accessibilità del flavor. Pubblico o privato. Il valore "
 "predefinito è True, che indica pubblico, condiviso tra tutti i progetti."
-
-msgid ""
-"Scope of image accessibility. Public or private. Default value is False "
-"means private."
-msgstr ""
-"Ambito di accessibilità dell'immagine. Pubblico o privato. Il valore "
-"predefinito è False il che indica privato."
 
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
@@ -5664,10 +5582,6 @@ msgid "The IP version, which is 4 or 6."
 msgstr "La versione IP, che è 4 o 6."
 
 #, python-format
-msgid "The Parameter (%(key)s) has no attributes."
-msgstr "Il parametro (%(key)s) non ha attributi."
-
-#, python-format
 msgid "The Parameter (%(key)s) was not defined in template."
 msgstr "Il parametro (%(key)s) non è stato definito nel template."
 
@@ -6293,10 +6207,6 @@ msgstr ""
 "port_range_max. Se il protocollo è ICMP, questo valore deve essere di tipo "
 "ICMP."
 
-msgid "The minimum time in seconds between regular connections of the member."
-msgstr ""
-"Il tempo minimo espresso in secondi tra connessioni regolari del membro."
-
 msgid "The name for the QoS policy."
 msgstr "Il nome della politica QoS."
 
@@ -6683,12 +6593,6 @@ msgstr "La dimensione dello scambio, in MB."
 
 msgid "The size of the volume in GB."
 msgstr "La dimensione del volume in GB."
-
-msgid ""
-"The size of the volume in GB. On update only increase in size is supported."
-msgstr ""
-"La dimensione del volume in GB. In aggiornamento è supportato solo "
-"l'incremento della sono supportate."
 
 msgid ""
 "The size of the volume, in GB. It is safe to leave this blank and have the "
@@ -7369,20 +7273,6 @@ msgstr ""
 "<resource_name> }"
 
 msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"SoftwareDeploymentGroup instead."
-msgstr ""
-"L'utilizzo di questa risorsa è sconsigliato. Utilizzare invece OS::Heat::"
-"SoftwareDeploymentGroup."
-
-msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"StructuredDeploymentGroup instead."
-msgstr ""
-"L'utilizzo di questa risorsa è sconsigliato. Utilizzare invece OS::Heat::"
-"StructuredDeploymentGroup."
-
-msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be exactly "
 "1."
@@ -7415,9 +7305,6 @@ msgstr ""
 
 msgid "Use this resource at your own risk."
 msgstr "Utilizzare questa risorsa a proprio rischio."
-
-msgid "Use value_name only for replacing list elements."
-msgstr "Utilizzare value_name solo per sostituire gli elementi dell'elenco."
 
 #, python-format
 msgid "User %s in invalid domain"
@@ -7456,12 +7343,6 @@ msgstr "Nome utente per l'accesso all'URL del job binary."
 
 msgid "Username of privileged user in the image."
 msgstr "Nome utente dell'utente privilegiato nell'immagine."
-
-msgid "Using Cinder API V1, volume type access"
-msgstr "Utilizzo di Cinder API V1, accesso del tipo di volume"
-
-msgid "Using Cinder API V1, volume_type update"
-msgstr "Utilizzo di Cinder API V1, aggiornamento di volume_type"
 
 msgid "VLAN ID for VLAN networks or tunnel-id for GRE/VXLAN networks."
 msgstr "ID VLAN per le reti VLAN o ID tunnel per le reti GRE/VXLAN."
@@ -7619,39 +7500,6 @@ msgid ""
 msgstr ""
 "Quando si esegue il server in modalità SSL, è necessario specificare sia un "
 "valore dell'opzione cert_file che key_file nel file di configurazione"
-
-msgid ""
-"When this feature is enabled, scheduler hints identifying the heat stack "
-"context of a server or volume resource are passed to the configured "
-"schedulers in nova and cinder, for creates done using heat resource types "
-"OS::Cinder::Volume, OS::Nova::Server, and AWS::EC2::Instance. "
-"heat_root_stack_id will be set to the id of the root stack of the resource, "
-"heat_stack_id will be set to the id of the resource's parent stack, "
-"heat_stack_name will be set to the name of the resource's parent stack, "
-"heat_path_in_stack will be set to a list of tuples, (stackresourcename, "
-"stackname) with list[0] being (None, rootstackname), heat_resource_name will "
-"be set to the resource's name, and heat_resource_uuid will be set to the "
-"resource's orchestration id."
-msgstr ""
-"Quando questa funzione è abilitata, i suggerimenti dello scheduler che "
-"identificano il contesto stack heat di una risorsa server o volume vengono "
-"trasmessi agli scheduler configurati in nova e cinder, per creazioni "
-"eseguite utilizzando tipi di risorse heat OS::Cinder::Volume, OS::Nova::"
-"Server e AWS::EC2::Instance. heat_root_stack_id verrà impostato sull'id "
-"dello stack root della risorsa, heat_stack_id verrà impostato sull'id dello "
-"stack parent della risorsa, heat_stack_name verrà impostato sul nome dello "
-"stack parent della risorsa, heat_path_in_stack verrà impostato su un elenco "
-"di tuple, (stackresourcename, stackname) con list[0] che corrisponde a "
-"(None, rootstackname), heat_resource_name verrà impostato sul nome della "
-"risorsa e heat_resource_uuid verrà impostato sull'id di orchestrazione della "
-"risorsa."
-
-msgid ""
-"Whether allow the volume to be attached more than once. This property is "
-"only supported from Cinder API v2."
-msgstr ""
-"Consente o meno che il volume sia collegato più di una volta. Questa "
-"proprietà è supportata solo da Cinder API v2."
 
 msgid "Whether enable this policy on that cluster."
 msgstr "Se abilitare o meno questa politica su quel cluster."
@@ -7890,10 +7738,6 @@ msgstr "è necessaria più memoria."
 msgid "no resource data found"
 msgstr "nessun dato di risorsa trovato"
 
-#, python-format
-msgid "no resources for stack_id %s were found"
-msgstr "nessuna risorsa per stack_id %s è stata trovata"
-
 msgid "no resources were found"
 msgstr "nessuna risorsa trovata"
 
@@ -7929,9 +7773,6 @@ msgstr "segmentation_id non è consentito per il tipo di rete flat."
 
 msgid "server_id must be specified"
 msgstr "specificare server_id"
-
-msgid "stack not found"
-msgstr "stack non trovato"
 
 #, python-format
 msgid ""

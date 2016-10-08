@@ -8,9 +8,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev352\n"
+"Project-Id-Version: heat 7.0.1.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-06-02 03:51+0000\n"
+"POT-Creation-Date: 2016-10-07 09:58+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -466,13 +466,6 @@ msgstr "보안 서비스 ID 또는 이름 목록입니다."
 msgid "A list of string policies to apply. Defaults to anti-affinity."
 msgstr "적용할 문자열 정책 목록입니다. 기본값은 안티 선호도입니다."
 
-msgid ""
-"A list of the specified attribute of each individual resource. Requires "
-"heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"각 개별 자원의 지정된 속성 목록입니다. heat_template_version: 2014-10-16 이상"
-"이 필요합니다."
-
 msgid "A login profile for the user."
 msgstr "사용자의 로그인 프로파일입니다."
 
@@ -508,13 +501,6 @@ msgid ""
 "A map of resource names to the specified attribute of each individual "
 "resource."
 msgstr "자원 이름과 각 개별 자원의 지정된 속성 간의 맵입니다."
-
-msgid ""
-"A map of resource names to the specified attribute of each individual "
-"resource. Requires heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"자원 이름과 각 개별 자원의 지정된 속성 간의 맵. heat_template_version: "
-"2014-10-16 이상이 필요합니다."
 
 msgid ""
 "A map of resource names to the specified attribute of each individual "
@@ -1694,9 +1680,6 @@ msgstr "인스턴스와 연관시킬 EIP 주소입니다."
 msgid "Each %(object_name)s must contain a %(sub_section)s key."
 msgstr "각 %(object_name)s에 %(sub_section)s 키가 있어야 합니다."
 
-msgid "Each Output must contain a Value key."
-msgstr "각 출력에 값 키가 있어야 합니다."
-
 msgid "Each Resource must contain a Type key."
 msgstr "각 자원에 유형 키가 있어야 합니다."
 
@@ -2087,9 +2070,6 @@ msgstr "클러스터 ips에 대해 manila에 설정된 권한을 제어합니다
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "기간 인수에 사용할 단위이며 기본값을 일로 설정합니다."
 
-msgid "HTTP verb to use for signaling output values"
-msgstr "출력 값 신호를 보내는 데 사용할 HTTP verb"
-
 msgid "Hadoop cluster name."
 msgstr "Hadoop 클러스터 이름입니다."
 
@@ -2420,16 +2400,6 @@ msgid ""
 msgstr ""
 "구성된 경우 제공된 항목 목록에서 태스크와 연관된 작업 또는 워크플로우를 여러 "
 "번 실행할 수 있습니다."
-
-#, python-format
-msgid ""
-"If neither \"%(backup_id)s\" nor \"%(size)s\" is provided, one and only one "
-"of \"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s\" "
-"must be specified, but currently specified options: %(exclusive_options)s."
-msgstr ""
-"\"%(backup_id)s\"과(와) \"%(size)s\"이(가) 모두 제공되지 않은 경우 "
-"\"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s\" 중 "
-"하나만 지정해야 하지만, 현재 지정된 옵션은 %(exclusive_options)s입니다."
 
 msgid "If set, then the server's certificate will not be verified."
 msgstr "설정되면 서버의 인증서가 확인되지 않습니다."
@@ -3101,9 +3071,6 @@ msgstr ""
 msgid "Listener associated with this pool."
 msgstr "이 풀과 연관된 리스너입니다."
 
-msgid "Listner name or ID to be associated with this pool."
-msgstr "이 풀과 연관될 리스너 이름 또는 ID입니다."
-
 msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
@@ -3196,13 +3163,6 @@ msgstr "클러스터의 최대 자원 수입니다. -1은 무제한을 나타냅
 
 msgid "Maximum number of resources in the group."
 msgstr "그룹의 최대 자원 수입니다."
-
-msgid ""
-"Maximum number of seconds for a monitor to wait for a connection to be "
-"established before it times out."
-msgstr ""
-"제한시간 초과되기 전에 연결이 설정될 때까지 대기하는 모니터에 대한 최대 시간"
-"(초)입니다."
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr "하나의 테넌트가 한 번에 활성으로 가질 수 있는 최대 스택 수입니다."
@@ -3334,13 +3294,6 @@ msgstr "Monasca 알림입니다."
 
 msgid "Multiple actions specified"
 msgstr "여러 조치가 지정됨"
-
-msgid ""
-"Multiple attach is not supported by the current volume API. Use this "
-"property since Cinder API v2."
-msgstr ""
-"현재 볼륨 API에서는 다중 연결이 지원되지 않습니다. Cinder API v2 이후로 이 특"
-"성을 사용하십시오."
 
 #, python-format
 msgid "Multiple physical resources were found with name (%(name)s)."
@@ -3765,10 +3718,6 @@ msgid "No event %s found"
 msgstr "이벤트 %s을(를) 찾을 수 없음 "
 
 #, python-format
-msgid "No event exists with id \"%s\""
-msgstr "ID가 \"%s\"인 이벤트가 존재하지 않음"
-
-#, python-format
 msgid "No events found for resource %s"
 msgstr "%s 자원에 대한 이벤트를 찾을 수 없음"
 
@@ -3891,11 +3840,6 @@ msgstr "제한조건 분석 중에 지연될 값(숫자)입니다."
 
 msgid "Number value for timeout during resolving output value."
 msgstr "출력 값 분석 중의 제한시간 값(숫자)입니다."
-
-msgid "OS::Heat::CWLiteAlarm is deprecated, use OS::Ceilometer::Alarm instead."
-msgstr ""
-"OS::Heat::CWLiteAlarm을 더 이상 사용하지 않고 대신 OS::Ceilometer::Alarm을 사"
-"용합니다."
 
 #, python-format
 msgid "Object action %(action)s failed because: %(reason)s"
@@ -4146,13 +4090,6 @@ msgstr ""
 "거나 전체 서버를 바꿉니다."
 
 msgid ""
-"Policy on how to apply a user_data update; either by ignorning it or by "
-"replacing the entire server."
-msgstr ""
-"user_data 업데이트를 적용하는 방법에 대한 정책입니다. 이 정책을 무시하거나 전"
-"체 서버를 바꿉니다."
-
-msgid ""
 "Policy on how to apply an image-id update; either by requesting a server "
 "rebuild or by replacing the entire server."
 msgstr ""
@@ -4278,10 +4215,6 @@ msgid "Property %(policies)s and %(item)s cannot be used both at one time."
 msgstr "특성 %(policies)s 및 %(item)s을(를) 동시에 사용할 수 없습니다."
 
 #, python-format
-msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
-msgstr "특성 %(prop)s: %(ua)s 및 %(im)s이(가) 둘 다 true일 수는 없음"
-
-#, python-format
 msgid "Property %(ref)s required when protocol is %(term)s."
 msgstr "프로토콜이 %(term)s인 경우 필요한 특성 %(ref)s입니다."
 
@@ -4313,9 +4246,6 @@ msgid ""
 msgstr ""
 "session_persistence 타입이 SOURCE_IP로 설정된 경우 특성 cookie_name을 지정하"
 "지 않아야 합니다."
-
-msgid "Property uses removed function."
-msgstr "특성에서 제거된 함수를 사용합니다."
 
 msgid "Property values for the resources in the group."
 msgstr "그룹에 있는자원의 특성 값입니다."
@@ -4569,9 +4499,6 @@ msgstr "안전 평가 유효시간 단위입니다."
 msgid "Safety assessment lifetime value in specified units."
 msgstr "지정된 단위의 안전 평가 유효시간 값입니다."
 
-msgid "Scheduler hints are not supported by the current volume API."
-msgstr "현재 볼륨 API에서 스케줄러 힌트를 지원하지 않습니다."
-
 msgid "Scheduler hints to pass to Nova (Heat extension)."
 msgstr "Nova에 전달할 스케줄러 힌트입니다(히트 확장)."
 
@@ -4592,13 +4519,6 @@ msgid ""
 msgstr ""
 "Flavor 접근성 범위입니다. 공용 또는 개인용입니다. 기본값은 True이며, 모든 프"
 "로젝트에서 공유되는 공용을 나타냅니다."
-
-msgid ""
-"Scope of image accessibility. Public or private. Default value is False "
-"means private."
-msgstr ""
-"이미지 접근성 범위입니다. 공용 또는 개인용입니다. 기본값은 false이며 개인용"
-"을 의미합니다."
 
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
@@ -5311,10 +5231,6 @@ msgid "The IP version, which is 4 or 6."
 msgstr "IP 버전(4 또는 6)입니다."
 
 #, python-format
-msgid "The Parameter (%(key)s) has no attributes."
-msgstr "매개변수(%(key)s)에 속성이 없습니다."
-
-#, python-format
 msgid "The Parameter (%(key)s) was not defined in template."
 msgstr "매개변수(%(key)s)이(가) 템플리트에 정의되지 않았습니다. "
 
@@ -5887,9 +5803,6 @@ msgstr ""
 "UDP인 경우 이 값은 port_range_max 속성과 같거나 작아야 합니다. 프로토콜이 "
 "ICMP인 경우 이 값은 ICMP 유형이어야 합니다."
 
-msgid "The minimum time in seconds between regular connections of the member."
-msgstr "일반 멤버 연결 간의 최소 시간(초)입니다."
-
 msgid "The name for the QoS policy."
 msgstr "QoS 정책의 이름입니다."
 
@@ -6252,10 +6165,6 @@ msgstr "스왑의 크기(MB)입니다."
 
 msgid "The size of the volume in GB."
 msgstr "볼륨의 크기(GB)입니다."
-
-msgid ""
-"The size of the volume in GB. On update only increase in size is supported."
-msgstr "볼륨 크기(GB)입니다. 업데이트 시 크기 증가만 지원됩니다."
 
 msgid ""
 "The size of the volume, in GB. It is safe to leave this blank and have the "
@@ -6883,20 +6792,6 @@ msgstr ""
 "<resource_name> })."
 
 msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"SoftwareDeploymentGroup instead."
-msgstr ""
-"이 자원은 사용하지 않는 것이 좋습니다. 대신 OS::Heat::SoftwareDeploymentGroup"
-"을 사용하십시오."
-
-msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"StructuredDeploymentGroup instead."
-msgstr ""
-"이 자원은 사용하지 않는 것이 좋습니다. 대신 OS::Heat::"
-"StructuredDeploymentGroup을 사용하십시오."
-
-msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be exactly "
 "1."
@@ -6928,9 +6823,6 @@ msgstr ""
 
 msgid "Use this resource at your own risk."
 msgstr "이 자원을 사용하면 위험이 따릅니다."
-
-msgid "Use value_name only for replacing list elements."
-msgstr "목록 요소를 대체할 때만 value_name을 사용하십시오."
 
 #, python-format
 msgid "User %s in invalid domain"
@@ -6969,12 +6861,6 @@ msgstr "작업 바이너리 URL에 액세스하기 위한 사용자 이름입니
 
 msgid "Username of privileged user in the image."
 msgstr "이미지에서 권한이 부여된 사용자의 사용자 이름입니다."
-
-msgid "Using Cinder API V1, volume type access"
-msgstr "Cinder API V1 사용, 볼륨 타입 액세스"
-
-msgid "Using Cinder API V1, volume_type update"
-msgstr "Cinder API V1 사용, volume_type 업데이트"
 
 msgid "VLAN ID for VLAN networks or tunnel-id for GRE/VXLAN networks."
 msgstr "VLAN 네트워크의 VLAN ID 또는 GRE/VXLAN 네트워크의 tunnel-id입니다."
@@ -7123,36 +7009,6 @@ msgid ""
 msgstr ""
 "SSL 모드로 서버를 실행하는 경우 구성 파일에서 cert_file 및 key_file 옵션 값 "
 "둘 다를 지정해야 합니다. "
-
-msgid ""
-"When this feature is enabled, scheduler hints identifying the heat stack "
-"context of a server or volume resource are passed to the configured "
-"schedulers in nova and cinder, for creates done using heat resource types "
-"OS::Cinder::Volume, OS::Nova::Server, and AWS::EC2::Instance. "
-"heat_root_stack_id will be set to the id of the root stack of the resource, "
-"heat_stack_id will be set to the id of the resource's parent stack, "
-"heat_stack_name will be set to the name of the resource's parent stack, "
-"heat_path_in_stack will be set to a list of tuples, (stackresourcename, "
-"stackname) with list[0] being (None, rootstackname), heat_resource_name will "
-"be set to the resource's name, and heat_resource_uuid will be set to the "
-"resource's orchestration id."
-msgstr ""
-"이 기능이 사용된 경우, heat 자원 유형 OS::Cinder::Volume, OS::Nova::Server "
-"및 AWS::EC2::Instance를 사용하여 작성을 수행한 동안 볼륨 리소스나 서버의 "
-"heat 스택 컨텍스트를 식별하는 스케줄러 힌트를 nova 및 cinder에 구성된 스케줄"
-"러에 전달합니다. heat_root_stack_id는 자원의 루트 스택 id로 설정되며, "
-"heat_stack_id는 자원의 상위 스택 id로 설정되고, heat_stack_name은 자원의 상"
-"위 스택 이름으로 설정되며, heat_path_in_stack은 튜플 목록(stackresourcename, "
-"stackname)으로 설정되고 list[0]은 (None, rootstackname)입니다. "
-"heat_resource_name은 자원 이름으로 설정되고  heat_resource_uuid는 자원의 구"
-"성 id로 설정됩니다."
-
-msgid ""
-"Whether allow the volume to be attached more than once. This property is "
-"only supported from Cinder API v2."
-msgstr ""
-"볼륨을 두 번 이상 연결할 수 있는지 여부입니다. 이 특성은 Cinder API v2에서만 "
-"지원됩니다."
 
 msgid "Whether enable this policy on that cluster."
 msgstr "해당 클러스터에서 이 정책 사용 여부입니다."
@@ -7375,10 +7231,6 @@ msgstr "추가 메모리가 필요합니다."
 msgid "no resource data found"
 msgstr "자원 데이터를 찾을 수 없음"
 
-#, python-format
-msgid "no resources for stack_id %s were found"
-msgstr "stack_id %s의 자원을 찾을 수 없음"
-
 msgid "no resources were found"
 msgstr "자원을 찾을 수 없음"
 
@@ -7412,9 +7264,6 @@ msgstr "segmentation_id는 일반 네트워크 유형에 대해 허용되지 않
 
 msgid "server_id must be specified"
 msgstr "server_id를 지정해야 함"
-
-msgid "stack not found"
-msgstr "스택을 찾을 수 없음"
 
 #, python-format
 msgid ""

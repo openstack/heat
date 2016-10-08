@@ -7,9 +7,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev352\n"
+"Project-Id-Version: heat 7.0.1.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-06-02 03:51+0000\n"
+"POT-Creation-Date: 2016-10-07 09:58+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -446,12 +446,6 @@ msgstr "安全服务标识或名称的列表。"
 msgid "A list of string policies to apply. Defaults to anti-affinity."
 msgstr "要应用的字符串策略列表。缺省为“反亲缘关系”。"
 
-msgid ""
-"A list of the specified attribute of each individual resource. Requires "
-"heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"每个资源的指定属性的列表。需要 heat_template_version 为 2014-10-16 或更高。"
-
 msgid "A login profile for the user."
 msgstr "用户的登录概要文件。"
 
@@ -486,13 +480,6 @@ msgid ""
 "A map of resource names to the specified attribute of each individual "
 "resource."
 msgstr "资源名称至每个资源的指定属性的映射。"
-
-msgid ""
-"A map of resource names to the specified attribute of each individual "
-"resource. Requires heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"资源名称至每个资源的指定属性的映射。需要 heat_template_version 为 2014-10-16 "
-"或更高。"
 
 msgid ""
 "A map of resource names to the specified attribute of each individual "
@@ -1626,9 +1613,6 @@ msgstr "要与实例关联的 EIP 地址。"
 msgid "Each %(object_name)s must contain a %(sub_section)s key."
 msgstr "每个 %(object_name)s 都必须包含一个 %(sub_section)s 键。"
 
-msgid "Each Output must contain a Value key."
-msgstr "每个输出都必须包含一个“值”键。"
-
 msgid "Each Resource must contain a Type key."
 msgstr "每个资源都必须包含一个“类型”键。"
 
@@ -2004,9 +1988,6 @@ msgstr "管理 manila 中为集群 IP 设置的许可权。"
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "要用于 age 自变量的粒度，缺省为天。"
 
-msgid "HTTP verb to use for signaling output values"
-msgstr "要用于发出输出值的信号的 HTTP 动词"
-
 msgid "Hadoop cluster name."
 msgstr "Hadoop 集群名称。"
 
@@ -2327,16 +2308,6 @@ msgid ""
 msgstr ""
 "如果配置了此项，那么允许针对所提供项列表多次运行与任务相关联的操作或工作流"
 "程。"
-
-#, python-format
-msgid ""
-"If neither \"%(backup_id)s\" nor \"%(size)s\" is provided, one and only one "
-"of \"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s\" "
-"must be specified, but currently specified options: %(exclusive_options)s."
-msgstr ""
-"如果未提供“%(backup_id)s”和“%(size)s”，那么必须指定下列其中一项并且仅指定其中"
-"一项：“%(image)s”、“%(image_ref)s”、“%(source_vol)s”和“%(snapshot_id)s”，但当"
-"前指定了以下选项：%(exclusive_options)s。"
 
 msgid "If set, then the server's certificate will not be verified."
 msgstr "如果已设置，那么将不验证服务器的证书。"
@@ -2980,9 +2951,6 @@ msgstr ""
 msgid "Listener associated with this pool."
 msgstr "与此池相关联的侦听器。"
 
-msgid "Listner name or ID to be associated with this pool."
-msgstr "要与此池相关联的侦听器名称或标识。"
-
 msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
@@ -3071,11 +3039,6 @@ msgstr "集群中的最大资源数。-1 表示无限制。"
 
 msgid "Maximum number of resources in the group."
 msgstr "组中的最大资源数。"
-
-msgid ""
-"Maximum number of seconds for a monitor to wait for a connection to be "
-"established before it times out."
-msgstr "在连接超时之前供监视器等待该连接建立的最长时间，以秒计。"
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr "一个租户可同时持有的最大活动堆栈数。"
@@ -3203,11 +3166,6 @@ msgstr "Monasca 通知。"
 
 msgid "Multiple actions specified"
 msgstr "已指定多个操作"
-
-msgid ""
-"Multiple attach is not supported by the current volume API. Use this "
-"property since Cinder API v2."
-msgstr "当前卷 API 不支持多次附加。应从 Cinder API v2 开始使用此属性。"
 
 #, python-format
 msgid "Multiple physical resources were found with name (%(name)s)."
@@ -3618,10 +3576,6 @@ msgid "No event %s found"
 msgstr "找不到任何事件 %s"
 
 #, python-format
-msgid "No event exists with id \"%s\""
-msgstr "不存在任何具有标识“%s”的事件"
-
-#, python-format
 msgid "No events found for resource %s"
 msgstr "对于资源 %s，找不到任何事件"
 
@@ -3740,9 +3694,6 @@ msgstr "表示解析约束期间的延迟的数字值。"
 
 msgid "Number value for timeout during resolving output value."
 msgstr "表示解析输出值期间的超时的数字值。"
-
-msgid "OS::Heat::CWLiteAlarm is deprecated, use OS::Ceilometer::Alarm instead."
-msgstr "OS::Heat::CWLiteAlarm 已弃用，请改为使用 OS::Ceilometer::Alarm。"
 
 #, python-format
 msgid "Object action %(action)s failed because: %(reason)s"
@@ -3977,11 +3928,6 @@ msgstr ""
 "关于如何应用实例类型更新的策略；通过请求服务器调整大小或通过替换整个服务器。"
 
 msgid ""
-"Policy on how to apply a user_data update; either by ignorning it or by "
-"replacing the entire server."
-msgstr "有关如何应用 user_data 更新的策略；通过忽略它或替换整个服务器进行。"
-
-msgid ""
 "Policy on how to apply an image-id update; either by requesting a server "
 "rebuild or by replacing the entire server."
 msgstr ""
@@ -4100,10 +4046,6 @@ msgid "Property %(policies)s and %(item)s cannot be used both at one time."
 msgstr "不能同时使用属性 %(policies)s 和 %(item)s。"
 
 #, python-format
-msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
-msgstr "属性 %(prop)s: %(ua)s 和 %(im)s 不能同时为 true"
-
-#, python-format
 msgid "Property %(ref)s required when protocol is %(term)s."
 msgstr "协议为 %(term)s 时需要属性 %(ref)s。"
 
@@ -4131,9 +4073,6 @@ msgid ""
 "set to SOURCE_IP."
 msgstr ""
 "session_persistence 类型设置为 SOURCE_IP 时，不能指定属性 cookie_name。"
-
-msgid "Property uses removed function."
-msgstr "属性使用了已移除的函数。"
 
 msgid "Property values for the resources in the group."
 msgstr "组中资源的属性值。"
@@ -4381,9 +4320,6 @@ msgstr "安全评估生存期单位。"
 msgid "Safety assessment lifetime value in specified units."
 msgstr "以指定单位表示的安全评估生存期值。"
 
-msgid "Scheduler hints are not supported by the current volume API."
-msgstr "当前卷 API 不支持调度程序提示。"
-
 msgid "Scheduler hints to pass to Nova (Heat extension)."
 msgstr "要传递至 Nova 的调度程序提示（Heat 扩展）。"
 
@@ -4402,11 +4338,6 @@ msgid ""
 "means public, shared across all projects."
 msgstr ""
 "类型可访问性的范围。公用或专用。缺省值为 True，表示公用（在所有项目间共享）。"
-
-msgid ""
-"Scope of image accessibility. Public or private. Default value is False "
-"means private."
-msgstr "映像可访问性范围。公用或专用。缺省值为 false，表示专用。"
 
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
@@ -5095,10 +5026,6 @@ msgid "The IP version, which is 4 or 6."
 msgstr "IP 版本，即 4 或 6。"
 
 #, python-format
-msgid "The Parameter (%(key)s) has no attributes."
-msgstr "参数 (%(key)s) 未包含任何属性。"
-
-#, python-format
 msgid "The Parameter (%(key)s) was not defined in template."
 msgstr "模板中未定义参数 (%(key)s)。"
 
@@ -5653,9 +5580,6 @@ msgstr ""
 "通过安全组规则匹配的范围中的最小端口号。如果协议为 TCP 或 UDP，那么此值必须小"
 "于或等于 port_range_max 属性的值。如果协议为 ICMP，那么此值必须为 ICMP 类型。"
 
-msgid "The minimum time in seconds between regular connections of the member."
-msgstr "对成员进行常规连接的最短间隔时间，以秒计。"
-
 msgid "The name for the QoS policy."
 msgstr "QoS 策略的名称。"
 
@@ -6002,10 +5926,6 @@ msgstr "交换的大小，以 MB 计。"
 
 msgid "The size of the volume in GB."
 msgstr "以GB为单位的卷大小。"
-
-msgid ""
-"The size of the volume in GB. On update only increase in size is supported."
-msgstr "卷大小（以 GB 计）。在更新时，仅支持增大大小。"
 
 msgid ""
 "The size of the volume, in GB. It is safe to leave this blank and have the "
@@ -6605,16 +6525,6 @@ msgid ""
 msgstr "改用 get_resource|Ref 命令。例如：{ get_resource : <resource_name> }"
 
 msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"SoftwareDeploymentGroup instead."
-msgstr "不推荐使用此资源。请改用 OS::Heat::SoftwareDeploymentGroup。"
-
-msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"StructuredDeploymentGroup instead."
-msgstr "不推荐使用此资源，请改用 OS::Heat::StructuredDeploymentGroup。"
-
-msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be exactly "
 "1."
@@ -6644,9 +6554,6 @@ msgstr ""
 
 msgid "Use this resource at your own risk."
 msgstr "使用此资源的风险由您自己承担。"
-
-msgid "Use value_name only for replacing list elements."
-msgstr "仅应在替换列表元素时使用 value_name。"
 
 #, python-format
 msgid "User %s in invalid domain"
@@ -6685,12 +6592,6 @@ msgstr "要访问作业二进制文件 URL 的用户名。"
 
 msgid "Username of privileged user in the image."
 msgstr "映像中的特权用户的用户名。"
-
-msgid "Using Cinder API V1, volume type access"
-msgstr "使用 Cinder API V1 时的卷类型访问权"
-
-msgid "Using Cinder API V1, volume_type update"
-msgstr "正在使用 Cinder API V1 volume_type 更新"
 
 msgid "VLAN ID for VLAN networks or tunnel-id for GRE/VXLAN networks."
 msgstr " VLAN 网络的 VLAN 标识，或 GRE/VXLAN 网络的通道标识。"
@@ -6835,33 +6736,6 @@ msgid ""
 msgstr ""
 "以 SSL 方式运行服务器时，必须在配置文件中同时指定 cert_file 和 key_file 选项"
 "值"
-
-msgid ""
-"When this feature is enabled, scheduler hints identifying the heat stack "
-"context of a server or volume resource are passed to the configured "
-"schedulers in nova and cinder, for creates done using heat resource types "
-"OS::Cinder::Volume, OS::Nova::Server, and AWS::EC2::Instance. "
-"heat_root_stack_id will be set to the id of the root stack of the resource, "
-"heat_stack_id will be set to the id of the resource's parent stack, "
-"heat_stack_name will be set to the name of the resource's parent stack, "
-"heat_path_in_stack will be set to a list of tuples, (stackresourcename, "
-"stackname) with list[0] being (None, rootstackname), heat_resource_name will "
-"be set to the resource's name, and heat_resource_uuid will be set to the "
-"resource's orchestration id."
-msgstr ""
-"如果启用了此功能，那么用于标识服务器或卷资源的 heat 堆栈上下文的调度程序提示"
-"将传递至 nova 和 cinder 中的已配置调度程序，对于使用 heat 资源类型 OS::"
-"Cinder::Volume、OS::Nova::Server 和 AWS::EC2::Instance 完成的创建，"
-"heat_root_stack_id 将设置为该资源的根堆栈的标识，heat_stack_id 将设置为资源父"
-"堆栈的标识，heat_stack_name 将设置为资源父堆栈的名称，heat_path_in_stack 将设"
-"置为 list[0] 为 (None, rootstackname) 的元组列表 (stackresourcename, "
-"stackname)，heat_resource_name 将设置为资源的名称，heat_resource_uuid 将设置"
-"为资源的编排标识。"
-
-msgid ""
-"Whether allow the volume to be attached more than once. This property is "
-"only supported from Cinder API v2."
-msgstr "是否允许多次附加该卷。此属性仅在 Cinder API v2 及以上版本中受支持。"
 
 msgid "Whether enable this policy on that cluster."
 msgstr "是否在该集群上启用此策略。"
@@ -7076,10 +6950,6 @@ msgstr "需要更多内存。"
 msgid "no resource data found"
 msgstr "找不到任何资源数据"
 
-#, python-format
-msgid "no resources for stack_id %s were found"
-msgstr "找不到任何用于 stack_id %s 的资源"
-
 msgid "no resources were found"
 msgstr "找不到任何资源"
 
@@ -7113,9 +6983,6 @@ msgstr "对于平面网络类型，不允许 segmentation_id。"
 
 msgid "server_id must be specified"
 msgstr "必须指定server_id"
-
-msgid "stack not found"
-msgstr "找不到堆栈"
 
 #, python-format
 msgid ""
