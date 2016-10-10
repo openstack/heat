@@ -79,7 +79,7 @@ release = version_info.release_string()
 version = version_info.version_string()
 
 # Config logABug feature
-giturl = u'http://git.openstack.org/cgit/openstack/heat/api-ref/source'
+giturl = u'http://git.openstack.org/cgit/openstack/heat/tree/api-ref/source'
 # source tree
 # html_context allows us to pass arbitrary values into the html template
 html_context = {'bug_tag': 'api-ref',
@@ -161,7 +161,7 @@ pygments_style = 'sphinx'
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'
 git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h'", "--date=local",
-    "-n1"]
+           "-n1"]
 try:
     html_last_updated_fmt = subprocess.Popen(
         git_cmd, stdout=subprocess.PIPE).communicate()[0]
