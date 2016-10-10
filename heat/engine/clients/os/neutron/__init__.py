@@ -164,7 +164,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             path = "/sfc/port_pairs"
         elif resource == 'port_pair_group':
             path = "/sfc/port_pair_groups"
-
+        elif resource == 'flow_classifier':
+            path = "/sfc/flow_classifiers"
         return path
 
     def create_sfc_resource(self, resource, props):
