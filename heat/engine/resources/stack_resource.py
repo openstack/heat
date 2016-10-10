@@ -56,6 +56,7 @@ class StackResource(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(StackResource, self).__init__(name, json_snippet, stack)
         self._nested = None
+        self._outputs = None
         self.resource_info = None
 
     def validate(self):
@@ -586,13 +587,22 @@ class StackResource(resource.Resource):
         particular exception, not KeyError, being raised if the key does not
         exist.)
         """
-        stack = self.nested()
-        if stack is None:
-            return None
+        if self._outputs is None or self._outputs.get(op,
+                                                      NotImplemented) is None:
+            stack_identity = self.nested_identifier()
+            if stack_identity is None:
+                return
+            stack = self.rpc_client().show_stack(self.context,
+                                                 dict(stack_identity))
+            if not stack:
+                return
+            outputs = stack[0][rpc_api.STACK_OUTPUTS]
+            self._outputs = {o[rpc_api.OUTPUT_KEY]: o[rpc_api.OUTPUT_VALUE]
+                             for o in outputs if rpc_api.OUTPUT_ERROR not in o}
 
         try:
-            return stack.outputs[op].get_value()
-        except (KeyError, Exception):
+            return self._outputs[op]
+        except KeyError:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=op)
 

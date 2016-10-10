@@ -22,6 +22,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
+from heat.engine import api
 from heat.engine import resource
 from heat.engine.resources.aws.cfn import stack as stack_res
 from heat.engine import rsrc_defn
@@ -297,10 +298,17 @@ Resources:
         stack_res._store()
 
         nested_t = template_format.parse(self.nested_template)
+        nested_t['Parameters']['KeyName']['Default'] = 'Key'
+
         nested_stack = parser.Stack(ctx, 'test',
                                     template.Template(nested_t))
         nested_stack.store()
-        stack_res.nested = mock.Mock(return_value=nested_stack)
+
+        stack_res._rpc_client = mock.MagicMock()
+        stack_res._rpc_client.show_stack.return_value = [
+            api.format_stack(nested_stack)]
+        stack_res.nested_identifier = mock.Mock()
+        stack_res.nested_identifier.return_value = {'foo': 'bar'}
         self.assertEqual('bar', stack_res.FnGetAtt('Outputs.Foo'))
 
 
