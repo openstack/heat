@@ -272,9 +272,13 @@ class ProviderTemplateTest(common.HeatTestCase):
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
         temp_res.resource_id = 'dummy_id'
-        nested = mock.Mock()
-        nested.outputs = {'Blarg': {'Value': 'fluffy'}}
-        temp_res._nested = nested
+        temp_res.nested_identifier = mock.Mock()
+        temp_res.nested_identifier.return_value = {'foo': 'bar'}
+
+        temp_res._rpc_client = mock.MagicMock()
+        output = {'outputs': [{'output_key': 'Blarg',
+                               'output_value': 'fluffy'}]}
+        temp_res._rpc_client.show_stack.return_value = [output]
         self.assertRaises(exception.InvalidTemplateAttribute,
                           temp_res.FnGetAtt, 'Foo')
 
@@ -308,11 +312,13 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition, stack)
         temp_res.resource_id = 'dummy_id'
         self.assertIsNone(temp_res.validate())
-        nested = mock.Mock()
-        nested.outputs = {'Foo': {'Value': 'not-this',
-                                  'error_msg': 'it is all bad'}}
-        nested.output.return_value = None
-        temp_res._nested = nested
+        temp_res.nested_identifier = mock.Mock()
+        temp_res.nested_identifier.return_value = {'foo': 'bar'}
+
+        temp_res._rpc_client = mock.MagicMock()
+        output = {'outputs': [{'output_key': 'Foo', 'output_value': None,
+                               'output_error': 'it is all bad'}]}
+        temp_res._rpc_client.show_stack.return_value = [output]
         self.assertRaises(exception.InvalidTemplateAttribute,
                           temp_res.FnGetAtt, 'Foo')
 
