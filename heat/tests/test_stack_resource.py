@@ -21,6 +21,7 @@ from oslo_serialization import jsonutils
 import six
 
 from heat.common import exception
+from heat.common import identifier
 from heat.common import template_format
 from heat.engine import output
 from heat.engine import resource
@@ -205,7 +206,7 @@ class StackResourceTest(StackResourceBaseTest):
     def test_abandon_nested_sends_rpc_abandon(self):
         rpcc = mock.Mock()
         self.parent_resource.rpc_client = rpcc
-        self.parent_resource.nested = mock.MagicMock()
+        self.parent_resource.resource_id = 'fake_id'
 
         self.parent_resource.prepare_abandon()
         self.parent_resource.delete_nested()
@@ -507,7 +508,7 @@ class StackResourceTest(StackResourceBaseTest):
         self.assertIsNone(self.parent_resource.delete_nested())
 
     def test_delete_nested_not_found_nested_stack(self):
-        self.parent_resource._nested = mock.MagicMock()
+        self.parent_resource.resource_id = 'fake_id'
         rpcc = mock.Mock()
         self.parent_resource.rpc_client = rpcc
         rpcc.return_value.delete_stack = mock.Mock(
@@ -943,25 +944,27 @@ class WithTemplateTest(StackResourceBaseTest):
     def test_update_with_template(self):
         if self.adopt_data is not None:
             return
-        nested = mock.MagicMock()
-        nested.updated_time = 'now_time'
-        nested.state = ('CREATE', 'COMPLETE')
-        nested.identifier.return_value = {'stack_identifier':
-                                          'stack-identifier'}
-        self.parent_resource.nested = mock.MagicMock(return_value=nested)
-        self.parent_resource._nested = nested
+        ident = identifier.HeatIdentifier(self.ctx.tenant_id, 'fake_name',
+                                          'pancakes')
+        self.parent_resource.resource_id = ident.stack_id
+        self.parent_resource.nested_identifier = mock.Mock(return_value=ident)
 
         self.parent_resource.child_params = mock.Mock(
             return_value=self.params)
         rpcc = mock.Mock()
         self.parent_resource.rpc_client = rpcc
-        rpcc.return_value._update_stack.return_value = {'stack_id': 'pancakes'}
-        self.parent_resource.update_with_template(
-            self.empty_temp, user_params=self.params,
-            timeout_mins=self.timeout_mins)
+        rpcc.return_value._update_stack.return_value = dict(ident)
+
+        status = ('CREATE', 'COMPLETE', '', 'now_time')
+        with self.patchobject(stack_object.Stack, 'get_status',
+                              return_value=status):
+            self.parent_resource.update_with_template(
+                self.empty_temp, user_params=self.params,
+                timeout_mins=self.timeout_mins)
+
         rpcc.return_value._update_stack.assert_called_once_with(
             self.ctx,
-            stack_identity={'stack_identifier': 'stack-identifier'},
+            stack_identity=dict(ident),
             template_id=self.IntegerMatch(),
             template=None,
             params=None,
@@ -974,13 +977,10 @@ class WithTemplateTest(StackResourceBaseTest):
 
         if self.adopt_data is not None:
             return
-        nested = mock.MagicMock()
-        nested.updated_time = 'now_time'
-        nested.state = ('CREATE', 'COMPLETE')
-        nested.identifier.return_value = {'stack_identifier':
-                                          'stack-identifier'}
-        self.parent_resource.nested = mock.MagicMock(return_value=nested)
-        self.parent_resource._nested = nested
+        ident = identifier.HeatIdentifier(self.ctx.tenant_id, 'fake_name',
+                                          'pancakes')
+        self.parent_resource.resource_id = ident.stack_id
+        self.parent_resource.nested_identifier = mock.Mock(return_value=ident)
 
         self.parent_resource.child_params = mock.Mock(
             return_value=self.params)
@@ -988,14 +988,19 @@ class WithTemplateTest(StackResourceBaseTest):
         self.parent_resource.rpc_client = rpcc
         remote_exc = StackValidationFailed_Remote(message='oops')
         rpcc.return_value._update_stack.side_effect = remote_exc
-        self.assertRaises(exception.ResourceFailure,
-                          self.parent_resource.update_with_template,
-                          self.empty_temp, user_params=self.params,
-                          timeout_mins=self.timeout_mins)
+
+        status = ('CREATE', 'COMPLETE', '', 'now_time')
+        with self.patchobject(stack_object.Stack, 'get_status',
+                              return_value=status):
+            self.assertRaises(exception.ResourceFailure,
+                              self.parent_resource.update_with_template,
+                              self.empty_temp, user_params=self.params,
+                              timeout_mins=self.timeout_mins)
+
         template_id = self.IntegerMatch()
         rpcc.return_value._update_stack.assert_called_once_with(
             self.ctx,
-            stack_identity={'stack_identifier': 'stack-identifier'},
+            stack_identity=dict(ident),
             template_id=template_id,
             template=None,
             params=None,

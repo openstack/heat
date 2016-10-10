@@ -198,7 +198,7 @@ class TemplateResource(stack_resource.StackResource):
                 reported_excp = err
 
         if t_data is None:
-            if self.nested() is not None:
+            if self.resource_id is not None:
                 t_data = jsonutils.dumps(self.nested().t.t)
 
         if t_data is not None:
@@ -296,17 +296,16 @@ class TemplateResource(stack_resource.StackResource):
                                          self.child_params())
 
     def get_reference_id(self):
-        if self.nested() is None:
+        if self.resource_id is None:
             return six.text_type(self.name)
 
-        if 'OS::stack_id' in self.nested().outputs:
-            return self.nested().outputs['OS::stack_id'].get_value()
-
-        return self.nested().identifier().arn()
+        try:
+            return self.get_output('OS::stack_id')
+        except exception.InvalidTemplateAttribute:
+            return self.nested_identifier().arn()
 
     def get_attribute(self, key, *path):
-        stack = self.nested()
-        if stack is None:
+        if self.resource_id is None:
             return None
 
         # first look for explicit resource.x.y
@@ -314,9 +313,4 @@ class TemplateResource(stack_resource.StackResource):
             return grouputils.get_nested_attrs(self, key, False, *path)
 
         # then look for normal outputs
-        if key in stack.outputs:
-            return attributes.select_from_attribute(self.get_output(key), path)
-
-        # otherwise the key must be wrong.
-        raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                 key=key)
+        return attributes.select_from_attribute(self.get_output(key), path)

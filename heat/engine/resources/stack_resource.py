@@ -92,24 +92,23 @@ class StackResource(resource.Resource):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
-        # Issue an update to the nested stack if the stack resource
-        # is able to update. If return true, let the individual
-        # resources in it decide if they need updating.
-
-        # FIXME (ricolin): seems currently can not call super here
-        if self.nested() is None and self.status == self.FAILED:
-            raise resource.UpdateReplace(self)
 
         # If stack resource is in CHECK_FAILED state, raise UpdateReplace
         # to replace the failed stack.
         if self.state == (self.CHECK, self.FAILED):
             raise resource.UpdateReplace(self)
 
-        if (check_init_complete and
-                self.nested() is None and
-                self.action == self.INIT and self.status == self.COMPLETE):
-            raise resource.UpdateReplace(self)
+        # If the nested stack has not been created, use the default
+        # implementation to determine if we need to replace the resource. Note
+        # that we do *not* return the result.
+        if self.resource_id is None:
+            super(StackResource, self)._needs_update(after, before,
+                                                     after_props, before_props,
+                                                     prev_resource,
+                                                     check_init_complete)
 
+        # Always issue an update to the nested stack and let the individual
+        # resources in it decide if they need updating.
         return True
 
     def nested_identifier(self):
@@ -450,8 +449,7 @@ class StackResource(resource.Resource):
                          self.physical_resource_name())
                 return {'target_action': self.stack.ROLLBACK}
 
-        nested_stack = self.nested()
-        if nested_stack is None:
+        if self.resource_id is None:
             # if the create failed for some reason and the nested
             # stack was not created, we need to create an empty stack
             # here so that the update will work.
@@ -464,18 +462,25 @@ class StackResource(resource.Resource):
             self.create_with_template(empty_temp, {})
             checker = scheduler.TaskRunner(_check_for_completion)
             checker(timeout=self.stack.timeout_secs())
-            nested_stack = self.nested()
 
         if timeout_mins is None:
             timeout_mins = self.stack.timeout_mins
 
+        try:
+            status_data = stack_object.Stack.get_status(self.context,
+                                                        self.resource_id)
+        except exception.NotFound:
+            raise resource.UpdateReplace(self)
+
+        action, status, status_reason, updated_time = status_data
+
         kwargs = self._stack_kwargs(user_params, child_template)
         cookie = {'previous': {
-            'updated_at': nested_stack.updated_time,
-            'state': nested_stack.state}}
+            'updated_at': updated_time,
+            'state': (action, status)}}
 
         kwargs.update({
-            'stack_identity': dict(nested_stack.identifier()),
+            'stack_identity': dict(self.nested_identifier()),
             'args': {rpc_api.PARAM_TIMEOUT: timeout_mins}
         })
         with self.translate_remote_exceptions:
@@ -515,11 +520,9 @@ class StackResource(resource.Resource):
 
     def delete_nested(self):
         """Delete the nested stack."""
-        stack = self.nested()
-        if stack is None:
+        stack_identity = self.nested_identifier()
+        if stack_identity is None:
             return
-
-        stack_identity = dict(stack.identifier())
 
         try:
             if self.abandon_in_progress:
@@ -537,34 +540,31 @@ class StackResource(resource.Resource):
         return self._check_status_complete(self.DELETE)
 
     def handle_suspend(self):
-        stack = self.nested()
-        if stack is None:
+        stack_identity = self.nested_identifier()
+        if stack_identity is None:
             raise exception.Error(_('Cannot suspend %s, stack not created')
                                   % self.name)
-        stack_identity = self.nested_identifier()
         self.rpc_client().stack_suspend(self.context, dict(stack_identity))
 
     def check_suspend_complete(self, cookie=None):
         return self._check_status_complete(self.SUSPEND)
 
     def handle_resume(self):
-        stack = self.nested()
-        if stack is None:
+        stack_identity = self.nested_identifier()
+        if stack_identity is None:
             raise exception.Error(_('Cannot resume %s, stack not created')
                                   % self.name)
-        stack_identity = self.nested_identifier()
         self.rpc_client().stack_resume(self.context, dict(stack_identity))
 
     def check_resume_complete(self, cookie=None):
         return self._check_status_complete(self.RESUME)
 
     def handle_check(self):
-        stack = self.nested()
-        if stack is None:
+        stack_identity = self.nested_identifier()
+        if stack_identity is None:
             raise exception.Error(_('Cannot check %s, stack not created')
                                   % self.name)
 
-        stack_identity = self.nested_identifier()
         self.rpc_client().stack_check(self.context, dict(stack_identity))
 
     def check_check_complete(self, cookie=None):
@@ -574,7 +574,7 @@ class StackResource(resource.Resource):
         self.abandon_in_progress = True
         nested_stack = self.nested()
         if nested_stack:
-            return self.nested().prepare_abandon()
+            return nested_stack.prepare_abandon()
 
         return {}
 
@@ -582,7 +582,9 @@ class StackResource(resource.Resource):
         """Return the specified Output value from the nested stack.
 
         If the output key does not exist, raise an InvalidTemplateAttribute
-        exception.
+        exception. (Note that TemplateResource.get_attribute() relies on this
+        particular exception, not KeyError, being raised if the key does not
+        exist.)
         """
         stack = self.nested()
         if stack is None:
