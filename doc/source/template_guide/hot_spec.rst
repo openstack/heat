@@ -259,7 +259,9 @@ for the ``heat_template_version`` key:
 -------------------
     The key with value ``2017-02-24`` or ``ocata`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
-    up until the Ocata release. The complete list of supported functions is::
+    up until the Ocata release. This version adds the ``str_replace_strict``
+    function which raises errors for missing params. The complete list of
+    supported functions is::
 
       digest
       get_attr
@@ -272,6 +274,7 @@ for the ``heat_template_version`` key:
       repeat
       resource_facade
       str_replace
+      str_replace_strict
       str_split
       yaql
       if
@@ -1424,6 +1427,14 @@ In the example above, one can imagine that MySQL is being configured on a
 compute instance and the root password is going to be set based on a user
 provided parameter. The script for doing this is provided as userdata to the
 compute instance, leveraging the ``str_replace`` function.
+
+
+str_replace_strict
+------------------
+``str_replace_strict`` behaves identically to the ``str_replace``
+function, only an error is raised if any of the params are not present
+in the template. This may help catch typo's or other issues sooner
+rather than later when processing a template.
 
 
 str_split
