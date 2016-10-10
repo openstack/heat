@@ -308,6 +308,30 @@ class KeystoneRoleAssignmentMixin(object):
                             ' role %s') % role_assignment.get(self.ROLE)
                     raise exception.StackValidationFailed(message=msg)
 
+    def parse_list_assignments(self, user_id=None, group_id=None):
+        """Method used for get_live_state implementation in other resources."""
+        assignments = []
+        roles = []
+        if user_id is not None:
+            assignments = self.client().role_assignments.list(user=user_id)
+        elif group_id is not None:
+            assignments = self.client().role_assignments.list(group=group_id)
+        for assignment in assignments:
+            values = assignment.to_dict()
+            if not values.get('role') or not values.get('role').get('id'):
+                continue
+            role = {
+                self.ROLE: values['role']['id'],
+                self.DOMAIN: (values.get('scope') and
+                              values['scope'].get('domain') and
+                              values['scope'].get('domain').get('id')),
+                self.PROJECT: (values.get('scope') and
+                               values['scope'].get('project') and
+                               values['scope'].get('project').get('id')),
+            }
+            roles.append(role)
+        return roles
+
 
 class KeystoneUserRoleAssignment(resource.Resource,
                                  KeystoneRoleAssignmentMixin):

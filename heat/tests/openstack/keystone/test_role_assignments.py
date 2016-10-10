@@ -346,6 +346,40 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
         self.assertRaises(exception.ResourcePropertyConflict,
                           self.test_role_assignment.validate)
 
+    def test_empty_parse_list_assignments(self):
+        self.assertEqual([],
+                         self.test_role_assignment.parse_list_assignments())
+
+    def test_user_parse_list_assignments(self):
+        self._test_parse_list_assignments('user')
+
+    def test_group_parse_list_assignments(self):
+        self._test_parse_list_assignments('group')
+
+    def _test_parse_list_assignments(self, entity=None):
+        dict_obj = mock.MagicMock()
+        dict_obj.to_dict.side_effect = [{'scope': {
+            'project': {'id': 'fc0fe982401643368ff2eb11d9ca70f1'}},
+            'role': {'id': '3b8b253648f44256a457a5073b78021d'},
+            entity: {'id': '4147558a763046cfb68fb870d58ef4cf'}},
+            {'role': {'id': '3b8b253648f44258021d6a457a5073b7'},
+             entity: {'id': '4147558a763046cfb68fb870d58ef4cf'}}]
+        self.keystoneclient.role_assignments.list.return_value = [dict_obj,
+                                                                  dict_obj]
+
+        kwargs = {'%s_id' % entity: '4147558a763046cfb68fb870d58ef4cf'}
+        list_assignments = self.test_role_assignment.parse_list_assignments(
+            **kwargs)
+        expected = [
+            {'role': '3b8b253648f44256a457a5073b78021d',
+             'project': 'fc0fe982401643368ff2eb11d9ca70f1',
+             'domain': None},
+            {'role': '3b8b253648f44258021d6a457a5073b7',
+             'project': None,
+             'domain': None},
+        ]
+        self.assertEqual(expected, list_assignments)
+
 
 class KeystoneUserRoleAssignmentTest(common.HeatTestCase):
 
