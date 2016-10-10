@@ -271,6 +271,7 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                   "DummyResource2")
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
+        temp_res.resource_id = 'dummy_id'
         nested = mock.Mock()
         nested.outputs = {'Blarg': {'Value': 'fluffy'}}
         temp_res._nested = nested
@@ -305,6 +306,7 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                   "DummyResource")
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
+        temp_res.resource_id = 'dummy_id'
         self.assertIsNone(temp_res.validate())
         nested = mock.Mock()
         nested.outputs = {'Foo': {'Value': 'not-this',
@@ -932,6 +934,7 @@ class TemplateDataTest(common.HeatTestCase):
 
     def test_template_data_in_update_without_template_file(self):
         self.res.action = self.res.UPDATE
+        self.res.resource_id = 'dummy_id'
         self.res.nested = mock.MagicMock()
         self.res.get_template_file = mock.Mock(
             side_effect=exception.NotFound(
@@ -942,6 +945,7 @@ class TemplateDataTest(common.HeatTestCase):
     def test_template_data_in_create_without_template_file(self):
         self.res.action = self.res.CREATE
         self.res.nested = mock.MagicMock()
+        self.res.resource_id = 'dummy_id'
         self.res.get_template_file = mock.Mock(
             side_effect=exception.NotFound(
                 msg_fmt='Could not fetch remote template '
