@@ -1446,7 +1446,7 @@ class Resource(object):
         if self.id is None or self.action == self.INIT:
             return None
 
-        name = '%s-%s-%s' % (self.stack.name,
+        name = '%s-%s-%s' % (self.stack.name.rstrip('*'),
                              self.name,
                              short_id.get_id(self.uuid))
 
