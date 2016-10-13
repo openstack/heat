@@ -1030,7 +1030,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         # mock keystone client create function
         self.mock_ks_v3_client.credentials.create(
-            user='atestuser', type='ec2', data=ex_data_json,
+            user='atestuser', type='ec2', blob=ex_data_json,
             project=ctx.tenant_id).AndReturn(mock_credential)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
@@ -1066,7 +1066,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         # mock keystone client create function
         self.mock_admin_client.credentials.create(
-            user='atestuser2', type='ec2', data=ex_data_json,
+            user='atestuser2', type='ec2', blob=ex_data_json,
             project='aproject').AndReturn(mock_credential)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
@@ -1103,7 +1103,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         # mock keystone client create function
         self.mock_ks_v3_client.credentials.create(
-            user='atestuser2', type='ec2', data=ex_data_json,
+            user='atestuser2', type='ec2', blob=ex_data_json,
             project=ctx.tenant_id).AndReturn(mock_credential)
         self.m.ReplayAll()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
