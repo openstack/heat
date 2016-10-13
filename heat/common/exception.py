@@ -509,8 +509,8 @@ class ReadOnlyFieldError(HeatException):
     msg_fmt = _('Cannot modify readonly field %(field)s')
 
 
-class DeploymentConcurrentTransaction(HeatException):
-    msg_fmt = _('Concurrent transaction for deployments of server %(server)s')
+class ConcurrentTransaction(HeatException):
+    msg_fmt = _('Concurrent transaction for %(action)s')
 
 
 class ObjectFieldInvalid(HeatException):
