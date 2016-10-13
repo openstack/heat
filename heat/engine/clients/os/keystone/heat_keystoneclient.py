@@ -474,7 +474,7 @@ class KsClientWrapper(object):
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
         ec2_creds = self.client.credentials.create(
-            user=user_id, type='ec2', data=jsonutils.dumps(data_blob),
+            user=user_id, type='ec2', blob=jsonutils.dumps(data_blob),
             project=project_id)
 
         # Return a AccessKey namedtuple for easier access to the blob contents
@@ -493,7 +493,7 @@ class KsClientWrapper(object):
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': uuid.uuid4().hex}
         creds = self.domain_admin_client.credentials.create(
-            user=user_id, type='ec2', data=jsonutils.dumps(data_blob),
+            user=user_id, type='ec2', blob=jsonutils.dumps(data_blob),
             project=project_id)
         return AccessKey(id=creds.id,
                          access=data_blob['access'],
