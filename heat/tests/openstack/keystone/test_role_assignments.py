@@ -96,6 +96,16 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
         (self.test_role_assignment.client_plugin.
          return_value) = self.keystone_client_plugin
 
+        self.parse_assgmnts = self.test_role_assignment.parse_list_assignments
+        self.test_role_assignment.parse_list_assignments = mock.MagicMock()
+        self.test_role_assignment.parse_list_assignments.return_value = [
+            {'role': 'role_1',
+             'domain': 'domain_1',
+             'project': None},
+            {'role': 'role_1',
+             'project': 'project_1',
+             'domain': None}]
+
     def test_properties_title(self):
         property_title_map = {MixinClass.ROLES: 'roles'}
 
@@ -325,6 +335,21 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
             group='group_1',
             project='project_1')
 
+    def test_role_assignment_delete_removed(self):
+        self.test_role_assignment.parse_list_assignments.return_value = [
+            {'role': 'role_1',
+             'domain': 'domain_1',
+             'project': None}]
+
+        self.assertIsNone(self.test_role_assignment.delete_assignment(
+            user_id='user_1'))
+
+        expected = [
+            ({'role': 'role_1', 'user': 'user_1', 'domain': 'domain_1'},)
+        ]
+
+        self.assertItemsEqual(expected, self.roles.revoke.call_args_list)
+
     def test_validate_1(self):
         self.test_role_assignment.properties = mock.MagicMock()
 
@@ -347,6 +372,7 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
                           self.test_role_assignment.validate)
 
     def test_empty_parse_list_assignments(self):
+        self.test_role_assignment.parse_list_assignments = self.parse_assgmnts
         self.assertEqual([],
                          self.test_role_assignment.parse_list_assignments())
 
@@ -357,6 +383,7 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
         self._test_parse_list_assignments('group')
 
     def _test_parse_list_assignments(self, entity=None):
+        self.test_role_assignment.parse_list_assignments = self.parse_assgmnts
         dict_obj = mock.MagicMock()
         dict_obj.to_dict.side_effect = [{'scope': {
             'project': {'id': 'fc0fe982401643368ff2eb11d9ca70f1'}},
@@ -418,6 +445,15 @@ class KeystoneUserRoleAssignmentTest(common.HeatTestCase):
         self.test_role_assignment.client_plugin = mock.MagicMock()
         (self.test_role_assignment.client_plugin.
          return_value) = self.keystone_client_plugin
+
+        self.test_role_assignment.parse_list_assignments = mock.MagicMock()
+        self.test_role_assignment.parse_list_assignments.return_value = [
+            {'role': 'role_1',
+             'domain': 'domain_1',
+             'project': None},
+            {'role': 'role_1',
+             'project': 'project_1',
+             'domain': None}]
 
     def test_user_role_assignment_handle_create(self):
         self.test_role_assignment.handle_create()
@@ -538,6 +574,15 @@ class KeystoneGroupRoleAssignmentTest(common.HeatTestCase):
         self.test_role_assignment.client_plugin = mock.MagicMock()
         (self.test_role_assignment.client_plugin.
          return_value) = self.keystone_client_plugin
+
+        self.test_role_assignment.parse_list_assignments = mock.MagicMock()
+        self.test_role_assignment.parse_list_assignments.return_value = [
+            {'role': 'role_1',
+             'domain': 'domain_1',
+             'project': None},
+            {'role': 'role_1',
+             'project': 'project_1',
+             'domain': None}]
 
     def test_group_role_assignment_handle_create(self):
         self.test_role_assignment.handle_create()
