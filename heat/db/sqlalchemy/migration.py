@@ -16,7 +16,7 @@ import os
 from oslo_db.sqlalchemy import migration as oslo_migration
 
 
-INIT_VERSION = 61
+INIT_VERSION = 64
 
 
 def db_sync(engine, version=None):
