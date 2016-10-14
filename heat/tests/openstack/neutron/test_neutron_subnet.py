@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-import mox
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
@@ -105,9 +104,10 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.m.StubOutWithMock(neutronclient.Client, 'delete_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
         self.m.StubOutWithMock(neutronclient.Client, 'update_subnet')
-        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
+        self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
     def create_subnet(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -251,12 +251,6 @@ class NeutronSubnetTest(common.HeatTestCase):
                 "tenant_id": "c1210485b2424d48804aad5d39c61b8f"
             }
         }
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnetpool',
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronclient.Client.create_subnet({
             'subnet': {
                 'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
@@ -640,13 +634,9 @@ class NeutronSubnetTest(common.HeatTestCase):
                          "supported for ipv4.", six.text_type(ex))
 
     def test_validate_both_subnetpool_cidr(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnetpool',
-            'new_pool',
-            cmd_resource=None,
-        ).AndReturn('new_pool')
-        self.m.ReplayAll()
+        self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
+                         return_value='new_pool')
+
         t = template_format.parse(neutron_template)
         props = t['resources']['sub_net']['properties']
         props['subnetpool'] = 'new_pool'

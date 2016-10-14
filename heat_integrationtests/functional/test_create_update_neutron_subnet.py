@@ -33,6 +33,26 @@ outputs:
     value: {get_attr: [subnet, gateway_ip]}
 '''
 
+test_template_with_translation = '''
+heat_template_version: 2016-10-14
+description: Test template to create/update subnet with translation
+parameters:
+  net_cidr:
+    type: string
+resources:
+  net:
+    type: OS::Neutron::Net
+  net_value:
+    type: OS::Heat::Value
+    properties:
+      value: {get_resource: net}
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network: { get_attr: [net_value, value] }
+      cidr: {get_param: net_cidr}
+'''
+
 
 class UpdateSubnetTest(functional_base.FunctionalTestsBase):
 
@@ -125,3 +145,14 @@ class UpdateSubnetTest(functional_base.FunctionalTestsBase):
         new_gw_ip = self.get_outputs(stack_identifier, 'gateway_ip')
         # new gateway_ip should be None
         self.assertIsNone(new_gw_ip)
+
+    def test_update_with_network_translation(self):
+        # Just create and update where network is translated properly.
+        env = {'parameters': {'net_cidr': '11.11.11.0/24'}}
+        stack_identifier = self.stack_create(
+            template=test_template_with_translation,
+            environment=env)
+        env = {'parameters': {'net_cidr': '11.11.12.0/24'}}
+        self.update_stack(stack_identifier,
+                          template=test_template_with_translation,
+                          environment=env)

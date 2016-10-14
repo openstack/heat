@@ -321,8 +321,6 @@ class TranslationRule(object):
     def _exec_resolve(self, translation_key, translation_data):
 
         def resolve_and_find(translation_value):
-            if isinstance(translation_value, hot_funcs.GetResource):
-                return
             if isinstance(translation_value, function.Function):
                 translation_value = function.resolve(translation_value)
             if translation_value:
@@ -333,10 +331,9 @@ class TranslationRule(object):
                     return resolved_value
                 finder = getattr(self.client_plugin, self.finder)
                 if self.entity:
-                    value = finder(self.entity, translation_value)
+                    return finder(self.entity, translation_value)
                 else:
-                    value = finder(translation_value)
-                return value
+                    return finder(translation_value)
 
         if isinstance(translation_data, list):
             for item in translation_data:
