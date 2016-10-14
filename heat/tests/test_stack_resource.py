@@ -23,7 +23,6 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
-from heat.engine import output
 from heat.engine import resource
 from heat.engine.resources import stack_resource
 from heat.engine import stack as parser
@@ -623,65 +622,61 @@ class StackResourceLimitTest(StackResourceBaseTest):
 
 class StackResourceAttrTest(StackResourceBaseTest):
     def test_get_output_ok(self):
-        nested = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
-        stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {"key": output.OutputDefinition("key", "value")}
-        self.m.ReplayAll()
+        self.parent_resource.nested_identifier = mock.Mock()
+        self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
+
+        self.parent_resource._rpc_client = mock.MagicMock()
+        output = {'outputs': [{'output_key': 'key', 'output_value': 'value'}]}
+        self.parent_resource._rpc_client.show_stack.return_value = [output]
 
         self.assertEqual("value", self.parent_resource.get_output("key"))
 
-        self.m.VerifyAll()
-
     def test_get_output_key_not_found(self):
-        nested = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
-        stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {}
-        self.m.ReplayAll()
+        self.parent_resource.nested_identifier = mock.Mock()
+        self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
+
+        self.parent_resource._rpc_client = mock.MagicMock()
+        output = {'outputs': []}
+        self.parent_resource._rpc_client.show_stack.return_value = [output]
 
         self.assertRaises(exception.InvalidTemplateAttribute,
                           self.parent_resource.get_output,
                           "key")
 
-        self.m.VerifyAll()
-
     def test_resolve_attribute_string(self):
-        nested = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
-        stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {'key': output.OutputDefinition('key', 'value')}
-        self.m.ReplayAll()
+        self.parent_resource.nested_identifier = mock.Mock()
+        self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
+
+        self.parent_resource._rpc_client = mock.MagicMock()
+        output = {'outputs': [{'output_key': 'key', 'output_value': 'value'}]}
+        self.parent_resource._rpc_client.show_stack.return_value = [output]
 
         self.assertEqual('value',
                          self.parent_resource._resolve_attribute("key"))
 
-        self.m.VerifyAll()
-
     def test_resolve_attribute_dict(self):
-        nested = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
-        stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {'key': output.OutputDefinition('key',
-                                                         {'a': 1, 'b': 2})}
-        self.m.ReplayAll()
+        self.parent_resource.nested_identifier = mock.Mock()
+        self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
+
+        self.parent_resource._rpc_client = mock.MagicMock()
+        output = {'outputs': [{'output_key': 'key',
+                               'output_value': {'a': 1, 'b': 2}}]}
+        self.parent_resource._rpc_client.show_stack.return_value = [output]
 
         self.assertEqual({'a': 1, 'b': 2},
                          self.parent_resource._resolve_attribute("key"))
 
-        self.m.VerifyAll()
-
     def test_resolve_attribute_list(self):
-        nested = self.m.CreateMockAnything()
-        self.m.StubOutWithMock(stack_resource.StackResource, 'nested')
-        stack_resource.StackResource.nested().AndReturn(nested)
-        nested.outputs = {'key': output.OutputDefinition('key', [1, 2, 3])}
-        self.m.ReplayAll()
+        self.parent_resource.nested_identifier = mock.Mock()
+        self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
+
+        self.parent_resource._rpc_client = mock.MagicMock()
+        output = {'outputs': [{'output_key': 'key',
+                               'output_value': [1, 2, 3]}]}
+        self.parent_resource._rpc_client.show_stack.return_value = [output]
 
         self.assertEqual([1, 2, 3],
                          self.parent_resource._resolve_attribute("key"))
-
-        self.m.VerifyAll()
 
     def test_validate_nested_stack(self):
         self.parent_resource.child_template = mock.Mock(return_value='foo')
