@@ -905,10 +905,17 @@ class StackServiceTest(common.HeatTestCase):
             Dummy Func2 Long Description.
             """
 
+        class DummyConditionFunc(object):
+            """Dummy Condition Func.
+
+            Dummy Condition Func Long Description.
+            """
+
         plugin_mock = mock.Mock(
             functions={'dummy1': DummyFunc1,
                        'dummy2': DummyFunc2,
-                       'removed': hot_functions.Removed})
+                       'removed': hot_functions.Removed},
+            condition_functions={'condition_dummy': DummyConditionFunc})
         dummy_tmpl = mock.Mock(plugin=plugin_mock)
 
         class DummyMgr(object):
@@ -921,6 +928,18 @@ class StackServiceTest(common.HeatTestCase):
                      'description': 'Dummy Func1.'},
                     {'functions': 'dummy2',
                      'description': 'Dummy Func2.'}]
+        self.assertEqual(sorted(expected, key=lambda k: k['functions']),
+                         sorted(functions, key=lambda k: k['functions']))
+
+        # test with_condition
+        functions = self.eng.list_template_functions(self.ctx, 'dummytemplate',
+                                                     with_condition=True)
+        expected = [{'functions': 'dummy1',
+                     'description': 'Dummy Func1.'},
+                    {'functions': 'dummy2',
+                     'description': 'Dummy Func2.'},
+                    {'functions': 'condition_dummy',
+                     'description': 'Dummy Condition Func.'}]
         self.assertEqual(sorted(expected, key=lambda k: k['functions']),
                          sorted(functions, key=lambda k: k['functions']))
 

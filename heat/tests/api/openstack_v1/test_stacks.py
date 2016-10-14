@@ -2567,25 +2567,42 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual({'template_versions': engine_response}, response)
         self.m.VerifyAll()
 
-    def test_list_template_functions(self, mock_enforce):
+    def _test_list_template_functions(self, mock_enforce, req, engine_response,
+                                      with_condition=False):
         self._mock_enforce_setup(mock_enforce, 'list_template_functions', True)
-        req = self._get('/template_versions/t1/functions')
-
-        engine_response = [
-            {'functions': 'func1', 'description': 'desc1'},
-        ]
 
         self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
         rpc_client.EngineClient.call(
             req.context, (
-                'list_template_functions', {'template_version': 't1'}),
-            version="1.13"
+                'list_template_functions',
+                {'template_version': 't1', 'with_condition': with_condition}),
+            version="1.35"
         ).AndReturn(engine_response)
         self.m.ReplayAll()
         response = self.controller.list_template_functions(
             req, tenant_id=self.tenant, template_version='t1')
         self.assertEqual({'template_functions': engine_response}, response)
         self.m.VerifyAll()
+
+    def test_list_template_functions(self, mock_enforce):
+        req = self._get('/template_versions/t1/functions')
+        engine_response = [
+            {'functions': 'func1', 'description': 'desc1'},
+        ]
+
+        self._test_list_template_functions(mock_enforce, req, engine_response)
+
+    def test_list_template_funcs_includes_condition_funcs(self, mock_enforce):
+        params = {'with_condition_func': 'true'}
+        req = self._get('/template_versions/t1/functions', params=params)
+
+        engine_response = [
+            {'functions': 'func1', 'description': 'desc1'},
+            {'functions': 'condition_func', 'description': 'desc2'}
+        ]
+
+        self._test_list_template_functions(mock_enforce, req, engine_response,
+                                           with_condition=True)
 
     def test_resource_schema(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'resource_schema', True)

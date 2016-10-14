@@ -303,7 +303,7 @@ class EngineService(service.Service):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.34'
+    RPC_API_VERSION = '1.35'
 
     def __init__(self, host, topic):
         super(EngineService, self).__init__()
@@ -1562,7 +1562,8 @@ class EngineService(service.Service):
 
         return versions
 
-    def list_template_functions(self, cnxt, template_version):
+    def list_template_functions(self, cnxt, template_version,
+                                with_condition=False):
         mgr = templatem._get_template_extension_manager()
         try:
             tmpl_class = mgr[template_version]
@@ -1570,8 +1571,12 @@ class EngineService(service.Service):
             raise exception.NotFound(_("Template with version %s not found") %
                                      template_version)
 
+        supported_funcs = tmpl_class.plugin.functions
+        if with_condition:
+            supported_funcs.update(tmpl_class.plugin.condition_functions)
+
         functions = []
-        for func_name, func in six.iteritems(tmpl_class.plugin.functions):
+        for func_name, func in six.iteritems(supported_funcs):
             if func is not hot_functions.Removed:
                 if func.__doc__.split('\n')[0]:
                     desc = func.__doc__.split('\n')[0].strip()

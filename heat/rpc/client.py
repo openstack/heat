@@ -57,6 +57,7 @@ class EngineClient(object):
         1.33 - Remove tenant_safe from list_stacks, count_stacks
                and list_software_configs
         1.34 - Add migrate_convergence_1 call
+        1.35 - Add with_condition to list_template_functions
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -473,16 +474,20 @@ class EngineClient(object):
         return self.call(ctxt, self.make_msg('list_template_versions'),
                          version='1.11')
 
-    def list_template_functions(self, ctxt, template_version):
+    def list_template_functions(self, ctxt, template_version,
+                                with_condition=False):
         """Get a list of available functions in a given template.
 
         :param ctxt: RPC context
         :param template_name : name of the template which function list you
                                want to get
+        :param with_condition: return includes condition functions.
         """
-        return self.call(ctxt, self.make_msg(
-            'list_template_functions', template_version=template_version),
-            version='1.13')
+        return self.call(ctxt,
+                         self.make_msg('list_template_functions',
+                                       template_version=template_version,
+                                       with_condition=with_condition),
+                         version='1.35')
 
     def resource_schema(self, ctxt, type_name, with_description=False):
         """Get the schema for a resource type.

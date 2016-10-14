@@ -653,10 +653,18 @@ class StackController(object):
     @util.policy_enforce
     def list_template_functions(self, req, template_version):
         """Returns a list of available functions in a given template."""
+        if req.params.get('with_condition_func') is not None:
+            with_condition = self._extract_bool_param(
+                'with_condition_func',
+                req.params.get('with_condition_func'))
+        else:
+            with_condition = False
+
         return {
             'template_functions':
             self.rpc_client.list_template_functions(req.context,
-                                                    template_version)
+                                                    template_version,
+                                                    with_condition)
         }
 
     @util.policy_enforce
