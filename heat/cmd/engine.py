@@ -44,12 +44,14 @@ i18n.enable_lazy()
 LOG = logging.getLogger('heat.engine')
 
 
-def main():
-    logging.register_options(cfg.CONF)
+def launch_engine(setup_logging=True):
+    if setup_logging:
+        logging.register_options(cfg.CONF)
     cfg.CONF(project='heat', prog='heat-engine',
              version=version.version_info.version_string())
-    logging.setup(cfg.CONF, 'heat-engine')
-    logging.set_defaults()
+    if setup_logging:
+        logging.setup(cfg.CONF, 'heat-engine')
+        logging.set_defaults()
     messaging.setup()
 
     config.startup_sanity_check()
@@ -76,4 +78,9 @@ def main():
         # We create the periodic tasks here, which mean they are created
         # only in the parent process when num_engine_workers>1 is specified
         srv.create_periodic_tasks()
+    return launcher
+
+
+def main():
+    launcher = launch_engine()
     launcher.wait()

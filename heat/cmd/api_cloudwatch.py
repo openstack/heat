@@ -43,28 +43,35 @@ i18n.enable_lazy()
 LOG = logging.getLogger('heat.api.cloudwatch')
 
 
-def main():
-    try:
+def launch_cloudwatch_api(setup_logging=True):
+    if setup_logging:
         logging.register_options(cfg.CONF)
-        cfg.CONF(project='heat',
-                 prog='heat-api-cloudwatch',
-                 version=version.version_info.version_string())
+    cfg.CONF(project='heat',
+             prog='heat-api-cloudwatch',
+             version=version.version_info.version_string())
+    if setup_logging:
         logging.setup(cfg.CONF, 'heat-api-cloudwatch')
         logging.set_defaults()
-        config.set_config_defaults()
-        messaging.setup()
+    config.set_config_defaults()
+    messaging.setup()
 
-        app = config.load_paste_app()
+    app = config.load_paste_app()
 
-        port = cfg.CONF.heat_api_cloudwatch.bind_port
-        host = cfg.CONF.heat_api_cloudwatch.bind_host
-        LOG.info(_LI('Starting Heat CloudWatch API on %(host)s:%(port)s'),
-                 {'host': host, 'port': port})
-        profiler.setup('heat-api-cloudwatch', host)
-        gmr.TextGuruMeditation.setup_autorun(version)
-        server = wsgi.Server('heat-api-cloudwatch',
-                             cfg.CONF.heat_api_cloudwatch)
-        server.start(app, default_port=port)
+    port = cfg.CONF.heat_api_cloudwatch.bind_port
+    host = cfg.CONF.heat_api_cloudwatch.bind_host
+    LOG.info(_LI('Starting Heat CloudWatch API on %(host)s:%(port)s'),
+             {'host': host, 'port': port})
+    profiler.setup('heat-api-cloudwatch', host)
+    gmr.TextGuruMeditation.setup_autorun(version)
+    server = wsgi.Server('heat-api-cloudwatch',
+                         cfg.CONF.heat_api_cloudwatch)
+    server.start(app, default_port=port)
+    return server
+
+
+def main():
+    try:
+        server = launch_cloudwatch_api()
         systemd.notify_once()
         server.wait()
     except RuntimeError as e:
