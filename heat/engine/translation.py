@@ -230,6 +230,11 @@ class TranslationRule(object):
     def translate_property(self, path, data, return_value=False, value=None,
                            value_data=None, value_key=None,
                            client_resolve=True):
+        if isinstance(data, function.Function):
+            if return_value:
+                raise AttributeError('No chance to translate value due to '
+                                     'value is function. Skip translation.')
+            return
         current_key = path[0]
         if len(path) <= 1:
             if return_value:
