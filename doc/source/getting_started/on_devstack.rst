@@ -81,13 +81,10 @@ will add the profiler notifier to your ceilometer::
 
 Enable the profiler in /etc/heat/heat.conf::
 
-  $ echo -e "[profiler]\nprofiler_enabled = True\n"\
-        "trace_sqlalchemy = True\n"\
-        >> /etc/heat/heat.conf
-
-Change the default hmac_key in /etc/heat/api-paste.ini::
-
-  $ sed -i "s/hmac_keys =.*/hmac_keys = SECRET_KEY/" /etc/heat/api-paste.ini
+  $ echo -e "[profiler]\nenabled = True\n"\
+  "trace_sqlalchemy = True\n"\
+  "hmac_keys = SECRET_KEY\n"\
+  >> /etc/heat/heat.conf
 
 Run any command with --profile SECRET_KEY::
 
@@ -96,7 +93,7 @@ Run any command with --profile SECRET_KEY::
 
 Get pretty HTML with traces::
 
-  $ osprofiler trace show --html <Profile ID>
+  $ osprofiler trace show --html <Trace ID>
 
 Note that osprofiler should be run with the admin user name & tenant.
 
