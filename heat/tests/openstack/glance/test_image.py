@@ -221,7 +221,10 @@ class GlanceImageTest(common.HeatTestCase):
         value.id = image_id
         self.images.create.return_value = value
         self.image_tags.update.return_value = None
-        self.my_image.t['Properties']['tags'] = ['tag1']
+        props = self.stack.t.t['resources']['my_image']['properties'].copy()
+        props['tags'] = ['tag1']
+        self.my_image.t = self.my_image.t.freeze(properties=props)
+        self.my_image.reparse()
         self.my_image.handle_create()
 
         self.assertEqual(image_id, self.my_image.resource_id)
@@ -295,7 +298,10 @@ class GlanceImageTest(common.HeatTestCase):
     def test_image_handle_update_tags(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
-        self.my_image.t['Properties']['tags'] = ['tag1']
+        props = self.stack.t.t['resources']['my_image']['properties'].copy()
+        props['tags'] = ['tag1']
+        self.my_image.t = self.my_image.t.freeze(properties=props)
+        self.my_image.reparse()
         prop_diff = {'tags': ['tag2']}
 
         self._handle_update_tags(prop_diff)
@@ -303,7 +309,10 @@ class GlanceImageTest(common.HeatTestCase):
     def test_image_handle_update_remove_tags(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
-        self.my_image.t['Properties']['tags'] = ['tag1']
+        props = self.stack.t.t['resources']['my_image']['properties'].copy()
+        props['tags'] = ['tag1']
+        self.my_image.t = self.my_image.t.freeze(properties=props)
+        self.my_image.reparse()
         prop_diff = {'tags': None}
 
         self.my_image.handle_update(json_snippet=None,
@@ -318,7 +327,10 @@ class GlanceImageTest(common.HeatTestCase):
     def test_image_handle_update_tags_delete_not_found(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
-        self.my_image.t['Properties']['tags'] = ['tag1']
+        props = self.stack.t.t['resources']['my_image']['properties'].copy()
+        props['tags'] = ['tag1']
+        self.my_image.t = self.my_image.t.freeze(properties=props)
+        self.my_image.reparse()
         prop_diff = {'tags': ['tag2']}
 
         self.image_tags.delete.side_effect = exc.HTTPNotFound()
