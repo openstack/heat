@@ -1757,6 +1757,46 @@ conditions:
 
         self.assertEqual(hot_tpl['resources'], empty.t['resources'])
 
+    def test_filter(self):
+        snippet = {'filter': [[None], [1, None, 4, 2, None]]}
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack=stack)
+
+        self.assertEqual([1, 4, 2], resolved)
+
+    def test_filter_wrong_args_type(self):
+        snippet = {'filter': 'foo'}
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        self.assertRaises(exception.StackValidationFailed, self.resolve,
+                          snippet, tmpl, stack=stack)
+
+    def test_filter_wrong_args_number(self):
+        snippet = {'filter': [[None], [1, 2], 'foo']}
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        self.assertRaises(exception.StackValidationFailed, self.resolve,
+                          snippet, tmpl, stack=stack)
+
+    def test_filter_dict(self):
+        snippet = {'filter': [[None], {'a': 1}]}
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        self.assertRaises(TypeError, self.resolve, snippet, tmpl, stack=stack)
+
+    def test_filter_str(self):
+        snippet = {'filter': [['a'], 'abcd']}
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        self.assertRaises(TypeError, self.resolve, snippet, tmpl, stack=stack)
+
+    def test_filter_str_values(self):
+        snippet = {'filter': ['abcd', ['a', 'b', 'c', 'd']]}
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        self.assertRaises(TypeError, self.resolve, snippet, tmpl, stack=stack)
+
 
 class HotStackTest(common.HeatTestCase):
     """Test stack function when stack was created from HOT template."""
