@@ -121,6 +121,8 @@ class Receiver(resource.Resource):
         return recv.to_dict()
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         recv = self.client().get_receiver(self.resource_id)
         return getattr(recv, name, None)
 

@@ -113,6 +113,8 @@ class ManilaShareNetwork(resource.Resource):
         return self.client().share_networks.get(self.resource_id)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         network = self._request_network()
         return getattr(network, name, None)
 

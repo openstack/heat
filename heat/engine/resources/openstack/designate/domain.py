@@ -109,6 +109,8 @@ class DesignateDomain(resource.Resource):
             self.client_plugin().domain_update(**args)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         if name == self.SERIAL:
             domain = self.client().domains.get(self.resource_id)
             return domain.serial

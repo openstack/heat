@@ -179,6 +179,8 @@ class Secret(resource.Resource):
                 value='application/octet-stream')
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         secret = self.client().secrets.get(self.resource_id)
 
         if name == self.DECRYPTED_PAYLOAD:

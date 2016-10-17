@@ -135,6 +135,8 @@ class CronTrigger(resource.Resource):
         self.resource_id_set(cron_trigger.name)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         trigger = self.client().cron_triggers.get(self.resource_id)
         if name == self.NEXT_EXECUTION_TIME:
             return trigger.next_execution_time

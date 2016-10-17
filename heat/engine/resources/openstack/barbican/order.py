@@ -255,6 +255,8 @@ class Order(resource.Resource):
         return order.status == 'ACTIVE'
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         client = self.client()
         order = client.orders.get(self.resource_id)
         if name in (

@@ -143,6 +143,8 @@ class GenericContainer(resource.Resource):
         return container.status == 'ACTIVE'
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         container = self.client().containers.get(self.resource_id)
         return getattr(container, name, None)
 

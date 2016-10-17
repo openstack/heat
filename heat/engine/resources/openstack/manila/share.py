@@ -195,6 +195,8 @@ class ManilaShare(resource.Resource):
         return self.client().shares.get(self.resource_id)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         share = self._request_share()
         return six.text_type(getattr(share, name))
 

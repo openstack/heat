@@ -485,6 +485,8 @@ class Port(neutron.NeutronResource):
             return True
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         if name == self.SUBNETS_ATTR:
             subnets = []
             try:

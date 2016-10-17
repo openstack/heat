@@ -237,6 +237,8 @@ class TroveCluster(resource.Resource):
             self.DATASTORE_TYPE, self.DATASTORE_VERSION)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         if name == self.INSTANCES_ATTR:
             instances = []
             cluster = self.client().clusters.get(self.resource_id)

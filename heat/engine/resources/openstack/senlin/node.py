@@ -136,6 +136,8 @@ class Node(resource.Resource):
         return self.client_plugin().check_action_status(action_id)
 
     def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
         node = self.client().get_node(self.resource_id, details=True)
         return getattr(node, name, None)
 
