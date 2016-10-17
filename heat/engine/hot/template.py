@@ -536,6 +536,9 @@ class HOTemplate20170224(HOTemplate20161014):
         'map_replace': hot_funcs.MapReplace,
         'if': hot_funcs.If,
 
+        # functions added in 2017-02-24
+        'str_replace_strict': hot_funcs.ReplaceJsonStrict,
+
         # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
 

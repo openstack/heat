@@ -355,6 +355,8 @@ class Replace(function.Function):
     of equal length, lexicographically smaller keys are preferred.
     """
 
+    _strict = False
+
     def __init__(self, stack, fn_name, args):
         super(Replace, self).__init__(stack, fn_name, args)
 
@@ -399,6 +401,9 @@ class Replace(function.Function):
         template = function.resolve(self._string)
         mapping = function.resolve(self._mapping)
 
+        if self._strict:
+            unreplaced_keys = set(mapping)
+
         if not isinstance(template, six.string_types):
             raise TypeError(_('"%s" template must be a string') % self.fn_name)
 
@@ -416,11 +421,24 @@ class Replace(function.Function):
 
             remaining_keys = keys[1:]
             value = self._validate_replacement(mapping[placeholder])
-            return [value.join(replace(s.split(placeholder),
+
+            def string_split(s):
+                ss = s.split(placeholder)
+                if self._strict and len(ss) > 1:
+                    unreplaced_keys.discard(placeholder)
+                return ss
+
+            return [value.join(replace(string_split(s),
                                        remaining_keys)) for s in strings]
 
-        return replace([template], sorted(sorted(mapping),
-                                          key=len, reverse=True))[0]
+        ret_val = replace([template], sorted(sorted(mapping),
+                                             key=len, reverse=True))[0]
+        if self._strict and len(unreplaced_keys) > 0:
+            raise ValueError(
+                _("The following params were not found in the template: %s") %
+                ','.join(sorted(sorted(unreplaced_keys),
+                                key=len, reverse=True)))
+        return ret_val
 
 
 class ReplaceJson(Replace):
@@ -466,6 +484,17 @@ class ReplaceJson(Replace):
                                   'list or map.') % self.fn_name)
 
         return six.text_type(value)
+
+
+class ReplaceJsonStrict(ReplaceJson):
+    """A function for performing string substituions.
+
+    str_replace_strict is identical to the str_replace function, only
+    a ValueError is raised if any of the params are not present in
+    the template.
+    """
+
+    _strict = True
 
 
 class GetFile(function.Function):

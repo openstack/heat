@@ -64,6 +64,10 @@ hot_newton_tpl_empty = template_format.parse('''
 heat_template_version: 2016-10-14
 ''')
 
+hot_ocata_tpl_empty = template_format.parse('''
+heat_template_version: 2017-02-24
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -682,6 +686,65 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertRaises(exception.StackValidationFailed,
                           self.resolve, snippet, tmpl)
 
+    def test_str_replace_missing_param(self):
+        """Test str_replace function missing param is OK."""
+
+        snippet = {'str_replace':
+                   {'template': 'Template var1 string var2',
+                    'params': {'var1': 'foo', 'var2': 'bar',
+                               'var3': 'zed'}}}
+        snippet_resolved = 'Template foo string bar'
+
+        # older template uses Replace, newer templates use ReplaceJson.
+        # test both.
+        for hot_tpl in (hot_tpl_empty, hot_ocata_tpl_empty):
+            tmpl = template.Template(hot_tpl)
+            self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_str_replace_strict_no_missing_param(self):
+        """Test str_replace_strict function no missing params, no problem."""
+
+        snippet = {'str_replace_strict':
+                   {'template': 'Template var1 var1 s var2 t varvarvar3',
+                    'params': {'var1': 'foo', 'var2': 'bar',
+                               'var3': 'zed', 'var': 'tricky '}}}
+        snippet_resolved = 'Template foo foo s bar t tricky tricky zed'
+
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_str_replace_strict_missing_param(self):
+        """Test str_replace_strict function missing param (s)raises error."""
+
+        snippet = {'str_replace_strict':
+                   {'template': 'Template var1 string var2',
+                    'params': {'var1': 'foo', 'var2': 'bar',
+                               'var3': 'zed'}}}
+
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        ex = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertEqual('The following params were not found in the '
+                         'template: var3', six.text_type(ex))
+
+        snippet = {'str_replace_strict':
+                   {'template': 'Template var1 string var2',
+                    'params': {'var1': 'foo', 'var2': 'bar',
+                               'var0': 'zed'}}}
+
+        ex = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertEqual('The following params were not found in the '
+                         'template: var0', six.text_type(ex))
+
+        snippet = {'str_replace_strict':
+                   {'template': 'Template var1 string var2',
+                    'params': {'var1': 'foo', 'var2': 'bar',
+                               'var0': 'zed', 'var': 'z',
+                               'longvarname': 'q'}}}
+
+        ex = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+        self.assertEqual('The following params were not found in the '
+                         'template: longvarname,var0,var', six.text_type(ex))
+
     def test_str_replace_invalid_param_keys(self):
         """Test str_replace function parameter keys.
 
@@ -704,6 +767,27 @@ class HOTemplateTest(common.HeatTestCase):
                                self.resolve, snippet, tmpl)
         self.assertIn('"str_replace" syntax should be str_replace:\\n',
                       six.text_type(ex))
+
+    def test_str_replace_strict_invalid_param_keys(self):
+        """Test str_replace function parameter keys.
+
+        Pass wrong parameters to function and verify that we get
+        a KeyError.
+        """
+
+        snippets = [{'str_replace_strict':
+                    {'t': 'Template var1 string var2',
+                     'params': {'var1': 'foo', 'var2': 'bar'}}},
+                    {'str_replace_strict':
+                    {'template': 'Template var1 string var2',
+                     'param': {'var1': 'foo', 'var2': 'bar'}}}]
+
+        for snippet in snippets:
+            tmpl = template.Template(hot_ocata_tpl_empty)
+            ex = self.assertRaises(exception.StackValidationFailed,
+                                   self.resolve, snippet, tmpl)
+        self.assertIn('"str_replace_strict" syntax should be '
+                      'str_replace_strict:\\n', six.text_type(ex))
 
     def test_str_replace_invalid_param_types(self):
         """Test str_replace function parameter values.
