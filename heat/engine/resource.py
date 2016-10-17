@@ -14,7 +14,6 @@
 import base64
 import contextlib
 import datetime as dt
-import warnings
 import weakref
 
 from oslo_config import cfg
@@ -514,23 +513,6 @@ class Resource(object):
         """Return an identifier for this resource."""
         return identifier.ResourceIdentifier(resource_name=self.name,
                                              **self.stack.identifier())
-
-    def parsed_template(self, section=None, default=None):
-        """Return the parsed template data for the resource.
-
-        May be limited to only one section of the data, in which case a default
-        value may also be supplied.
-        """
-        warnings.warn('Resource.parsed_template() is deprecated and will be '
-                      'removed in the Ocata release. Use the '
-                      'ResourceDefinition API instead.',
-                      DeprecationWarning)
-
-        frozen = self.t.freeze()
-        if section is None:
-            return frozen
-
-        return frozen.get(section, default or {})
 
     def frozen_definition(self):
         if self._stored_properties_data is not None:
