@@ -75,4 +75,5 @@ def get(url, allowed_schemes=('http', 'https')):
         return result
 
     except exceptions.RequestException as ex:
-        raise URLFetchError(_('Failed to retrieve template: %s') % ex)
+        LOG.info(_LI('Failed to retrieve template: %s') % ex)
+        raise URLFetchError(_('Failed to retrieve template from %s') % url)
