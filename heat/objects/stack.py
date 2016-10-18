@@ -66,11 +66,15 @@ class Stack(
     def _from_db_object(context, stack, db_stack):
         for field in stack.fields:
             if field == 'raw_template':
-                stack['raw_template'] = (
-                    raw_template.RawTemplate.from_db_object(
-                        context,
-                        raw_template.RawTemplate(),
-                        db_stack['raw_template']))
+                raw_template_obj = db_stack.__dict__.get('raw_template')
+                if raw_template_obj is not None:
+                    # Object is already lazy loaded
+                    raw_template_obj = (
+                        raw_template.RawTemplate.from_db_object(
+                            context,
+                            raw_template.RawTemplate(),
+                            raw_template_obj))
+                stack['raw_template'] = raw_template_obj
             else:
                 stack[field] = db_stack.__dict__.get(field)
         stack._context = context
