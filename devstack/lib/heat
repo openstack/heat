@@ -40,24 +40,10 @@ HEAT_BRANCH=${HEAT_BRANCH:-master}
 GITREPO["python-heatclient"]=${HEATCLIENT_REPO:-${GIT_BASE}/openstack/python-heatclient.git}
 GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 
-# heat-cfntools server agent
-HEAT_CFNTOOLS_REPO=${HEAT_CFNTOOLS_REPO:-${GIT_BASE}/openstack/heat-cfntools.git}
-HEAT_CFNTOOLS_BRANCH=${HEAT_CFNTOOLS_BRANCH:-master}
-
-# heat example templates and elements
-HEAT_TEMPLATES_REPO=${HEAT_TEMPLATES_REPO:-${GIT_BASE}/openstack/heat-templates.git}
-HEAT_TEMPLATES_BRANCH=${HEAT_TEMPLATES_BRANCH:-master}
-
 # Toggle for deploying Heat-API under HTTPD + mod_wsgi
 HEAT_USE_MOD_WSGI=${HEAT_USE_MOD_WSGI:-False}
 
 HEAT_DIR=$DEST/heat
-HEAT_CFNTOOLS_DIR=$DEST/heat-cfntools
-HEAT_TEMPLATES_REPO_DIR=$DEST/heat-templates
-OCC_DIR=$DEST/os-collect-config
-DIB_UTILS_DIR=$DEST/dib-utils
-ORC_DIR=$DEST/os-refresh-config
-OAC_DIR=$DEST/os-apply-config
 
 HEAT_PIP_REPO=$DATA_DIR/heat-pip-repo
 HEAT_PIP_REPO_PORT=${HEAT_PIP_REPO_PORT:-8899}
@@ -293,14 +279,9 @@ function install_heat {
     fi
 }
 
-# install_heat_other() - Collect source and prepare
+# dummy function called by stack.sh, remove it once moved to plugin
 function install_heat_other {
-    git_clone $HEAT_CFNTOOLS_REPO $HEAT_CFNTOOLS_DIR $HEAT_CFNTOOLS_BRANCH
-    git_clone $HEAT_TEMPLATES_REPO $HEAT_TEMPLATES_REPO_DIR $HEAT_TEMPLATES_BRANCH
-    git_clone $OAC_REPO $OAC_DIR $OAC_BRANCH
-    git_clone $OCC_REPO $OCC_DIR $OCC_BRANCH
-    git_clone $ORC_REPO $ORC_DIR $ORC_BRANCH
-    git_clone $DIB_UTILS_REPO $DIB_UTILS_DIR $DIB_UTILS_BRANCH
+    :
 }
 
 # dummy function called by stack.sh, remove it once moved to plugin
@@ -450,48 +431,6 @@ function create_heat_accounts_with_plugin {
         iniset $HEAT_CONF DEFAULT stack_domain_admin heat_domain_admin
         iniset $HEAT_CONF DEFAULT stack_domain_admin_password $SERVICE_PASSWORD
     fi
-}
-
-# build_heat_pip_mirror() - Build a pip mirror containing heat agent projects
-function build_heat_pip_mirror {
-    local project_dirs="$OCC_DIR $OAC_DIR $ORC_DIR $HEAT_CFNTOOLS_DIR $DIB_UTILS_DIR"
-    local projpath proj package
-
-    rm -rf $HEAT_PIP_REPO
-    mkdir -p $HEAT_PIP_REPO
-
-    echo "<html><body>" > $HEAT_PIP_REPO/index.html
-    for projpath in $project_dirs; do
-        proj=$(basename $projpath)
-        mkdir -p $HEAT_PIP_REPO/$proj
-        pushd $projpath
-        rm -rf dist
-        python setup.py sdist
-        pushd dist
-        package=$(ls *)
-        mv $package $HEAT_PIP_REPO/$proj/$package
-        popd
-
-        echo "<html><body><a href=\"$package\">$package</a></body></html>" > $HEAT_PIP_REPO/$proj/index.html
-        echo "<a href=\"$proj\">$proj</a><br/>" >> $HEAT_PIP_REPO/index.html
-
-        popd
-    done
-
-    echo "</body></html>" >> $HEAT_PIP_REPO/index.html
-
-    local heat_pip_repo_apache_conf
-    heat_pip_repo_apache_conf=$(apache_site_config_for heat_pip_repo)
-
-    sudo cp $FILES/apache-heat-pip-repo.template $heat_pip_repo_apache_conf
-    sudo sed -e "
-        s|%HEAT_PIP_REPO%|$HEAT_PIP_REPO|g;
-        s|%HEAT_PIP_REPO_PORT%|$HEAT_PIP_REPO_PORT|g;
-        s|%APACHE_NAME%|$APACHE_NAME|g;
-    " -i $heat_pip_repo_apache_conf
-    enable_apache_site heat_pip_repo
-    restart_apache_server
-    sudo iptables -I INPUT -d $HOST_IP -p tcp --dport $HEAT_PIP_REPO_PORT -j ACCEPT || true
 }
 
 # Restore xtrace

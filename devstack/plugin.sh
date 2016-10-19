@@ -15,8 +15,6 @@ if is_heat_enabled; then
         stack_install_service heat
         echo_summary "Installing heatclient"
         install_heatclient
-        echo_summary "Installing heat other"
-        install_heat_other
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Cleaning up heat"
@@ -35,10 +33,6 @@ if is_heat_enabled; then
         # Start the heat API and heat taskmgr components
         echo_summary "Starting heat"
         start_heat_with_plugin
-        if [ "$HEAT_BUILD_PIP_MIRROR" = "True" ]; then
-        echo_summary "Building Heat pip mirror"
-        build_heat_pip_mirror
-        fi
     fi
 
     if [[ "$1" == "unstack" ]]; then
