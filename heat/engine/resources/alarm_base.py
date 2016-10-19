@@ -137,7 +137,7 @@ common_properties_schema = {
 }
 
 
-NOVA_METERS = ['instance', 'memory', 'memory.usage',
+NOVA_METERS = ['instance', 'memory', 'memory.usage', 'memory.resident',
                'cpu', 'cpu_util', 'vcpus',
                'disk.read.requests', 'disk.read.requests.rate',
                'disk.write.requests', 'disk.write.requests.rate',
