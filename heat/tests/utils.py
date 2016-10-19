@@ -22,7 +22,7 @@ from oslo_serialization import jsonutils
 import sqlalchemy
 
 from heat.common import context
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.db.sqlalchemy import models
 from heat.engine import environment
 from heat.engine import resource

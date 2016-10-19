@@ -15,10 +15,10 @@
 import datetime
 import itertools
 import random
-import sys
 
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
+from oslo_db import options
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
@@ -49,6 +49,8 @@ CONF = cfg.CONF
 CONF.import_opt('hidden_stack_tags', 'heat.common.config')
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_group('profiler', 'heat.common.config')
+
+options.set_defaults(CONF)
 
 _facade = None
 db_context = enginefacade.transaction_context()
@@ -85,11 +87,6 @@ def get_engine():
 
 def get_session():
     return get_facade().get_session()
-
-
-def get_backend():
-    """The backend is this module itself."""
-    return sys.modules[__name__]
 
 
 def update_and_save(context, obj, values):

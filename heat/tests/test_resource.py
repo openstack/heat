@@ -27,7 +27,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import short_id
 from heat.common import timeutils
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import clients
