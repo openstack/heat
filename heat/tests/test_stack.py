@@ -1710,6 +1710,28 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
         self.m.VerifyAll()
 
+    def test_stack_eager_or_lazy_load_templ(self):
+        self.stack = stack.Stack(self.ctx, 'test_stack_eager_or_lazy_tmpl',
+                                 self.tmpl)
+        self.stack.store()
+
+        ctx1 = utils.dummy_context()
+        s1_db_result = db_api.stack_get(ctx1, self.stack.id, eager_load=True)
+        s1_obj = stack_object.Stack._from_db_object(ctx1, stack_object.Stack(),
+                                                    s1_db_result)
+        self.assertIsNotNone(s1_obj._raw_template)
+        self.assertIsNotNone(s1_obj.raw_template)
+
+        ctx2 = utils.dummy_context()
+        s2_db_result = db_api.stack_get(ctx2, self.stack.id, eager_load=False)
+        s2_obj = stack_object.Stack._from_db_object(ctx2, stack_object.Stack(),
+                                                    s2_db_result)
+        # _raw_template has not been set since it not eagerly loaded
+        self.assertFalse(hasattr(s2_obj, "_raw_template"))
+        # accessing raw_template lazy loads it
+        self.assertIsNotNone(s2_obj.raw_template)
+        self.assertIsNotNone(s2_obj._raw_template)
+
     def test_preview_resources_returns_list_of_resource_previews(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
