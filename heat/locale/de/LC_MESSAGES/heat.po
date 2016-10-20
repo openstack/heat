@@ -9,13 +9,13 @@
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.1.dev7\n"
+"Project-Id-Version: heat 7.0.1.dev15\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-07 09:58+0000\n"
+"POT-Creation-Date: 2016-10-19 12:18+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-10-07 07:25+0000\n"
+"PO-Revision-Date: 2016-10-13 11:34+0000\n"
 "Last-Translator: Robert Simai <robert.simai@suse.com>\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -38,6 +38,10 @@ msgid ""
 msgstr ""
 "\"%(name)s\"-Parameter müssen Zeichenfolgen, Zahlen, Listen oder Zuordnungen "
 "sein. JSON-Serialisierung für %(value)s fehlgeschlagen."
+
+#, python-format
+msgid "\"%(name)s\" syntax should be %(example)s"
+msgstr "\"%(name)s\" Syntax sollte %(example)s sein"
 
 #, python-format
 msgid ""
@@ -300,6 +304,10 @@ msgstr "%s muss angegeben werden. "
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
 msgstr "'%(attr)s': erwartet '%(expected)s', erhalten '%(current)s'"
+
+#, python-format
+msgid "'%s' is a FQDN. It should be a relative domain name."
+msgstr "'%s' ist ein FQDN. Es sollte ein relativer Domännenname sein."
 
 msgid ""
 "'task_name' is not assigned in 'params' in case of reverse type workflow."
@@ -926,6 +934,10 @@ msgstr ""
 "zugeordnet werden sollen."
 
 #, python-format
+msgid "Argument to \"%s\" must be a condition"
+msgstr "Argument für \"%s\" muss eine Bedingung sein"
+
+#, python-format
 msgid "Argument to \"%s\" must be a list"
 msgstr "Argument für \"%s\" muss eine Liste sein"
 
@@ -951,6 +963,10 @@ msgstr ""
 "[Ressourcenname, Attribut, (Pfad),  ...]"
 
 #, python-format
+msgid "Arguments to \"%s\" must be a list of conditions"
+msgstr "Argumente für \"%s\" müssen eine Liste von Bedingungen sein"
+
+#, python-format
 msgid "Arguments to \"%s\" must be a map"
 msgstr "Argumente für \"%s\" müssen eine Zuordnung sein"
 
@@ -973,6 +989,18 @@ msgstr ""
 #, python-format
 msgid "Arguments to \"%s\" must be of the form [resource_name, attribute]"
 msgstr "Argumente für \"%s\" müssen im Format [Ressourcenname, Attribut] sein"
+
+#, python-format
+msgid "Arguments to \"%s\" must be of the form: [condition]"
+msgstr "Argumente für \"%s\" müssen dieses Format haben: [condition]"
+
+#, python-format
+msgid ""
+"Arguments to \"%s\" must be of the form: [condition_name, value_if_true, "
+"value_if_false]"
+msgstr ""
+"Argumente für \"%s\" müssen im folgenden Format sein: [condition_name, "
+"value_if_true, value_if_false]"
 
 #, python-format
 msgid "Arguments to %s not fully resolved"
@@ -1846,6 +1874,10 @@ msgstr "Jedes %(object_name)s muss einen %(sub_section)s-Schlüssel enthalten."
 msgid "Each Resource must contain a Type key."
 msgstr "Jede Ressource muss einen Typschlüssel enthalten."
 
+#, python-format
+msgid "Each output must contain a %s key."
+msgstr "Jede Ausgabe muss einen %s Schlüssel enthalten."
+
 msgid "Ebs is missing, this is required when specifying BlockDeviceMappings."
 msgstr ""
 "Ebs fehlt, dies ist aber beim Angeben von BlockDeviceMappings erforderlich."
@@ -2005,6 +2037,9 @@ msgstr "Ausschlussstatus für CIDR. "
 #, python-format
 msgid "Expected 1 external network, found %d"
 msgstr "1 externes Netzwerk erwartet, %d gefunden"
+
+msgid "Expiration {0} is invalid: {1}"
+msgstr "Ablaufzeit {0} ist ungültig: {1}"
 
 msgid "Export locations of share."
 msgstr "Exportpositionen des Freigabeverzeichnisses."
@@ -2902,6 +2937,10 @@ msgid "Invalid codes in ignore_errors : %s"
 msgstr "Ungültige Codes in ignore_errors : %s"
 
 #, python-format
+msgid "Invalid condition \"%s\""
+msgstr "Ungültige Bedingung \"%s\""
+
+#, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr "Ungültiger Inhaltstyp %(content_type)s"
 
@@ -2949,6 +2988,10 @@ msgid "Invalid keys in resource mark unhealthy %s"
 msgstr ""
 "Ungültige Schlüssel in der Anforderung zum Kennzeichnen einer fehlerhaften "
 "Ressource:  %s"
+
+#, python-format
+msgid "Invalid keyword(s) inside a resource definition: %s"
+msgstr "Ungültige Schlüsselwörter in einer Ressourcen-Definition: %s"
 
 msgid ""
 "Invalid mix of disk and container formats. When setting a disk or container "
@@ -3758,6 +3801,9 @@ msgstr "Name der zu erstellenden Datenbankinstanz. "
 msgid "Name of the Node group."
 msgstr "Name der Knotengruppe."
 
+msgid "Name of the QoS."
+msgstr "Name des QoS."
+
 msgid ""
 "Name of the action associated with the task. Either action or workflow may "
 "be defined in the task."
@@ -4084,6 +4130,10 @@ msgid "Nexthop IP address."
 msgstr "Nexthop-IP-Adresse."
 
 #, python-format
+msgid "No %(name)s matching %(args)s."
+msgstr "Kein %(name)s entspricht %(args)s."
+
+#, python-format
 msgid "No %s specified"
 msgstr "%s nicht angegeben"
 
@@ -4102,6 +4152,9 @@ msgid ""
 msgstr ""
 "Kein Inhalt im Abschnitt \"files\" für %(fn_name)s-Pfad gefunden: "
 "%(file_key)s"
+
+msgid "No description given"
+msgstr "Keine Beschreibung angegeben"
 
 #, python-format
 msgid "No event %s found"
@@ -4330,6 +4383,10 @@ msgstr "Optionale Heat-URL im Format http://0.0.0.0:8004/v1/%(tenant_id)s."
 
 msgid "Optional subtype to specify with the type."
 msgstr "Optionaler Untertyp zum Angeben zusammen mit dem Typ. "
+
+#, python-format
+msgid "Options %(ua)s and %(im)s cannot both be True"
+msgstr "Optionen %(ua)s und %(im)s können icht beide Wahr sein"
 
 msgid "Options for simulating waiting."
 msgstr "Optionen, um Warten zu simulieren."
@@ -4826,6 +4883,9 @@ msgid ""
 msgstr ""
 "Das angeforderte Plug-in '%(plugin)s' unterstützt nicht die Version "
 "'%(version)s'. Zulässige Versionen: %(allowed)s"
+
+msgid "Required extension {0} in {1} service is not available."
+msgstr "Die erforderliche Erweiterung {0} ist im Dienst {1} nicht verfügbar."
 
 msgid ""
 "Required extra specification. Defines if share drivers handles share servers."
@@ -6042,6 +6102,10 @@ msgstr ""
 "(Beispiel: \"ubuntu\" für Ubuntu 12.04+, \"fedora\" für Fedora 19+ und "
 "\"cloud-user\" für CentOS/RHEL 6.5)."
 
+#, python-format
+msgid "The definition of condition \"%(cd)s\" is invalid: %(definition)s"
+msgstr "Die Definition der Bedingung \"%(cd)s\" ist ungültig: %(definition)s"
+
 msgid "The description for the QoS policy."
 msgstr "Die Beschreibung für die QoS-Richtlinie."
 
@@ -6156,6 +6220,14 @@ msgid "The following parameters are immutable and may not be updated: %(keys)s"
 msgstr ""
 "Die folgenden Parameter sind nicht veränderbar und können möglicherweise "
 "nicht aktualisiert werden: %(keys)s"
+
+#, python-format
+msgid "The following resource types could not be found: %s"
+msgstr "Die folgenden Ressourcetypen konnten nicht gefunden werden: %s"
+
+#, python-format
+msgid "The function \"%s\" is invalid in this context"
+msgstr "Die Funktion \"%s\" is in diesem Zusammenhang ungültig"
 
 #, python-format
 msgid "The function %s is not supported in this version of HOT."
@@ -6373,6 +6445,10 @@ msgid ""
 msgstr ""
 "Die Mindestanzahl an Zeichen aus dieser Folge, die in der erstellten "
 "Zeichenfolge verwendet werden."
+
+#, python-format
+msgid "The minimum number of condition arguments to \"%s\" is 2."
+msgstr "Die Mindestzahl der Bedingungsargumente für \"%s\" ist 2."
 
 msgid ""
 "The minimum number of resources in service while rolling updates are being "
@@ -6937,7 +7013,6 @@ msgstr ""
 "Der Typ des Datenträgers, der eine Zuordnung zum Back-End-Server vornimmt, "
 "falls vorhanden. "
 
-#, fuzzy
 msgid "The type/format the secret data is provided in."
 msgstr "Typ/Format für die angegebenen geheimen Daten."
 
@@ -8018,3 +8093,6 @@ msgstr ""
 
 msgid "value must be list type when rule is Add."
 msgstr "Wert muss vom Typ 'list' sein, wenn die Regel 'Add' ist."
+
+msgid "{0} {1} endpoint is not in service catalog."
+msgstr "{0} {1} Endpunkt ist nicht im Dienstkatalog."
