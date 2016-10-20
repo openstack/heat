@@ -1066,14 +1066,22 @@ class Resource(object):
         """Needs replace based on tmpl_diff."""
         return False
 
+    def needs_replace_failed(self):
+        """Needs replace if resource is in *_FAILED."""
+        if self.status == self.FAILED:
+            return True
+
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
-        if self.status == self.FAILED or (self.stack.convergence and (
-                self.action, self.status) == (self.DELETE, self.COMPLETE)):
+        if self.needs_replace_failed():
             raise UpdateReplace(self)
 
-        if check_init_complete and (self.action == self.INIT
-                                    and self.status == self.COMPLETE):
+        if (self.stack.convergence and
+                self.state == (self.DELETE, self.COMPLETE)):
+            raise UpdateReplace(self)
+
+        if (check_init_complete and
+                self.state == (self.INIT, self.COMPLETE)):
             raise UpdateReplace(self)
 
         if self.needs_replace(after_props):
