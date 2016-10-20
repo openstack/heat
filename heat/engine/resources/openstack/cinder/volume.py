@@ -117,6 +117,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             properties.Schema.MAP,
             _('Key/value pairs to associate with the volume.'),
             update_allowed=True,
+            default={}
         ),
         IMAGE_REF: properties.Schema(
             properties.Schema.STRING,
