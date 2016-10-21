@@ -332,7 +332,6 @@ class StackResourcesServiceTest(common.HeatTestCase):
         stack_name = 'signal_reception_async'
         self.stack = self._stack_create(stack_name)
         test_data = {'food': 'yum'}
-
         self.eng.resource_signal(self.ctx,
                                  dict(self.stack.identifier()),
                                  'WebServerScaleDownPolicy',
@@ -355,6 +354,20 @@ class StackResourcesServiceTest(common.HeatTestCase):
                                  test_data,
                                  sync_call=True)
         mock_signal.assert_called_once_with(mock.ANY, False)
+
+    def test_signal_reception_get_resource_none(self):
+        stack_name = 'signal_reception_no_resource'
+        self.stack = self._stack_create(stack_name)
+        test_data = {'food': 'yum'}
+
+        self.patchobject(stack.Stack, 'resource_get',
+                         return_value=None)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_signal, self.ctx,
+                               dict(self.stack.identifier()),
+                               'WebServerScaleDownPolicy',
+                               test_data)
+        self.assertEqual(exception.ResourceNotFound, ex.exc_info[0])
 
     def test_signal_reception_no_resource(self):
         stack_name = 'signal_reception_no_resource'
