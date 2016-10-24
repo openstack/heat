@@ -887,9 +887,13 @@ class PropertyTest(common.HeatTestCase):
         self.assertIs(False, p.get_value('false'))
         self.assertIs(False, p.get_value(False))
 
-    def test_boolean_invalid(self):
+    def test_boolean_invalid_string(self):
         p = properties.Property({'Type': 'Boolean'})
         self.assertRaises(ValueError, p.get_value, 'fish')
+
+    def test_boolean_invalid_int(self):
+        p = properties.Property({'Type': 'Boolean'})
+        self.assertRaises(TypeError, p.get_value, 5)
 
     def test_list_string(self):
         p = properties.Property({'Type': 'List'})
