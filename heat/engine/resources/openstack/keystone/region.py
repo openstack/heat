@@ -18,6 +18,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class KeystoneRegion(resource.Resource):
@@ -68,6 +69,17 @@ class KeystoneRegion(resource.Resource):
         )
     }
 
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.PARENT_REGION],
+                client_plugin=self.client_plugin(),
+                finder='get_region_id'
+            )
+        ]
+
     def client(self):
         return super(KeystoneRegion, self).client().client
 
@@ -97,6 +109,13 @@ class KeystoneRegion(resource.Resource):
                 description=description,
                 enabled=enabled
             )
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        return {
+            self.DESCRIPTION: resource_data.get(self.DESCRIPTION),
+            self.ENABLED: resource_data.get(self.ENABLED),
+            self.PARENT_REGION: resource_data.get('parent_region_id')
+        }
 
 
 def resource_mapping():
