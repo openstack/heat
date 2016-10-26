@@ -251,6 +251,12 @@ the end user.
   Constrains a numerical value.  Applicable to INTEGER and NUMBER.
   Both ``min`` and ``max`` default to ``None``.
 
+*Modulo(step, offset, description)*:
+  Starting with the specified ``offset``, every multiple of ``step`` is a valid
+  value. Applicable to INTEGER and NUMBER.
+
+  Available from template version 2017-02-24.
+
 *CustomConstraint(name, description, environment)*:
   This constructor brings in a named constraint class from an
   environment.  If the given environment is ``None`` (its default)

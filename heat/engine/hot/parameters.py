@@ -18,14 +18,16 @@ from heat.engine import parameters
 
 
 PARAM_CONSTRAINTS = (
-    DESCRIPTION, LENGTH, RANGE, ALLOWED_VALUES, ALLOWED_PATTERN,
+    DESCRIPTION, LENGTH, RANGE, MODULO, ALLOWED_VALUES, ALLOWED_PATTERN,
     CUSTOM_CONSTRAINT,
 ) = (
-    'description', 'length', 'range', 'allowed_values', 'allowed_pattern',
-    'custom_constraint',
+    'description', 'length', 'range', 'modulo', 'allowed_values',
+    'allowed_pattern', 'custom_constraint',
 )
 
 RANGE_KEYS = (MIN, MAX) = ('min', 'max')
+
+MODULO_KEYS = (STEP, OFFSET) = ('step', 'offset')
 
 
 class HOTParamSchema(parameters.Schema):
@@ -50,6 +52,34 @@ class HOTParamSchema(parameters.Schema):
     PARAMETER_KEYS = KEYS
 
     @classmethod
+    def _constraint_from_def(cls, constraint):
+        desc = constraint.get(DESCRIPTION)
+        if RANGE in constraint:
+            cdef = constraint.get(RANGE)
+            cls._check_dict(cdef, RANGE_KEYS, 'range constraint')
+            return constr.Range(parameters.Schema.get_num(MIN, cdef),
+                                parameters.Schema.get_num(MAX, cdef),
+                                desc)
+        elif LENGTH in constraint:
+            cdef = constraint.get(LENGTH)
+            cls._check_dict(cdef, RANGE_KEYS, 'length constraint')
+            return constr.Length(parameters.Schema.get_num(MIN, cdef),
+                                 parameters.Schema.get_num(MAX, cdef),
+                                 desc)
+        elif ALLOWED_VALUES in constraint:
+            cdef = constraint.get(ALLOWED_VALUES)
+            return constr.AllowedValues(cdef, desc)
+        elif ALLOWED_PATTERN in constraint:
+            cdef = constraint.get(ALLOWED_PATTERN)
+            return constr.AllowedPattern(cdef, desc)
+        elif CUSTOM_CONSTRAINT in constraint:
+            cdef = constraint.get(CUSTOM_CONSTRAINT)
+            return constr.CustomConstraint(cdef, desc)
+        else:
+            raise exception.InvalidSchemaError(
+                message=_("No constraint expressed"))
+
+    @classmethod
     def from_dict(cls, param_name, schema_dict):
         """Return a Parameter Schema object from a legacy schema dictionary.
 
@@ -72,31 +102,7 @@ class HOTParamSchema(parameters.Schema):
             for constraint in constraints:
                 cls._check_dict(constraint, PARAM_CONSTRAINTS,
                                 'parameter constraints')
-                desc = constraint.get(DESCRIPTION)
-                if RANGE in constraint:
-                    cdef = constraint.get(RANGE)
-                    cls._check_dict(cdef, RANGE_KEYS, 'range constraint')
-                    yield constr.Range(parameters.Schema.get_num(MIN, cdef),
-                                       parameters.Schema.get_num(MAX, cdef),
-                                       desc)
-                elif LENGTH in constraint:
-                    cdef = constraint.get(LENGTH)
-                    cls._check_dict(cdef, RANGE_KEYS, 'length constraint')
-                    yield constr.Length(parameters.Schema.get_num(MIN, cdef),
-                                        parameters.Schema.get_num(MAX, cdef),
-                                        desc)
-                elif ALLOWED_VALUES in constraint:
-                    cdef = constraint.get(ALLOWED_VALUES)
-                    yield constr.AllowedValues(cdef, desc)
-                elif ALLOWED_PATTERN in constraint:
-                    cdef = constraint.get(ALLOWED_PATTERN)
-                    yield constr.AllowedPattern(cdef, desc)
-                elif CUSTOM_CONSTRAINT in constraint:
-                    cdef = constraint.get(CUSTOM_CONSTRAINT)
-                    yield constr.CustomConstraint(cdef, desc)
-                else:
-                    raise exception.InvalidSchemaError(
-                        message=_("No constraint expressed"))
+                yield cls._constraint_from_def(constraint)
 
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
@@ -107,6 +113,22 @@ class HOTParamSchema(parameters.Schema):
                    hidden=schema_dict.get(HOTParamSchema.HIDDEN, False),
                    label=schema_dict.get(HOTParamSchema.LABEL),
                    immutable=schema_dict.get(HOTParamSchema.IMMUTABLE, False))
+
+
+class HOTParamSchema20170224(HOTParamSchema):
+    @classmethod
+    def _constraint_from_def(cls, constraint):
+        desc = constraint.get(DESCRIPTION)
+
+        if MODULO in constraint:
+            cdef = constraint.get(MODULO)
+            cls._check_dict(cdef, MODULO_KEYS, 'modulo constraint')
+            return constr.Modulo(parameters.Schema.get_num(STEP, cdef),
+                                 parameters.Schema.get_num(OFFSET, cdef),
+                                 desc)
+        else:
+            return super(HOTParamSchema20170224, cls)._constraint_from_def(
+                constraint)
 
 
 class HOTParameters(parameters.Parameters):

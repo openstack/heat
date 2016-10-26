@@ -2872,6 +2872,65 @@ class HOTParamValidatorTest(common.HeatTestCase):
         self.assertEqual(
             "AllowedPattern must be a string", six.text_type(error))
 
+    def test_modulo_constraint(self):
+        modulo_desc = 'Value must be an odd number'
+        modulo_name = 'ControllerCount'
+        param = {
+            modulo_name: {
+                'description': 'Number of controller nodes',
+                'type': 'number',
+                'default': 1,
+                'constraints': [{
+                    'modulo': {'step': 2, 'offset': 1},
+                    'description': modulo_desc
+                }]
+            }
+        }
+
+        def v(value):
+            param_schema = hot_param.HOTParamSchema20170224.from_dict(
+                modulo_name, param[modulo_name])
+            param_schema.validate()
+            param_schema.validate_value(value)
+            return True
+
+        value = 2
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
+        self.assertIn(modulo_desc, six.text_type(err))
+
+        value = 100
+        err = self.assertRaises(exception.StackValidationFailed, v, value)
+        self.assertIn(modulo_desc, six.text_type(err))
+
+        value = 1
+        self.assertTrue(v(value))
+
+        value = 3
+        self.assertTrue(v(value))
+
+        value = 777
+        self.assertTrue(v(value))
+
+    def test_modulo_constraint_invalid_default(self):
+        modulo_desc = 'Value must be an odd number'
+        modulo_name = 'ControllerCount'
+        param = {
+            modulo_name: {
+                'description': 'Number of controller nodes',
+                'type': 'number',
+                'default': 2,
+                'constraints': [{
+                    'modulo': {'step': 2, 'offset': 1},
+                    'description': modulo_desc
+                }]
+            }
+        }
+
+        schema = hot_param.HOTParamSchema20170224.from_dict(
+            modulo_name, param[modulo_name])
+        err = self.assertRaises(exception.InvalidSchemaError, schema.validate)
+        self.assertIn(modulo_desc, six.text_type(err))
+
 
 class TestGetAttAllAttributes(common.HeatTestCase):
     scenarios = [

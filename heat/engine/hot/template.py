@@ -97,6 +97,8 @@ class HOTemplate20130523(template_common.CommonTemplate):
         'Snapshot': rsrc_defn.ResourceDefinition.SNAPSHOT
     }
 
+    param_schema_class = parameters.HOTParamSchema
+
     def __getitem__(self, section):
         """"Get the relevant section in the template."""
         # first translate from CFN into HOT terminology if necessary
@@ -211,7 +213,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
                 parameter_section[name]['default'] = pdefaults[name]
 
         params = six.iteritems(parameter_section)
-        return dict((name, parameters.HOTParamSchema.from_dict(name, schema))
+        return dict((name, self.param_schema_class.from_dict(name, schema))
                     for name, schema in params)
 
     def parameters(self, stack_identifier, user_params, param_defaults=None):
@@ -552,3 +554,5 @@ class HOTemplate20170224(HOTemplate20161014):
         'Fn::ResourceFacade': hot_funcs.Removed,
         'Ref': hot_funcs.Removed,
     }
+
+    param_schema_class = parameters.HOTParamSchema20170224

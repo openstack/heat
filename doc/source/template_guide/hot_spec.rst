@@ -532,6 +532,24 @@ following range constraint would allow for all numeric values between 0 and
 
    range: { min: 0, max: 10 }
 
+modulo
+++++++
+The ``modulo`` constraint applies to parameters of type ``number``. The value
+is valid if it is a multiple of ``step``, starting with ``offset``.
+
+The syntax of the ``modulo`` constraint is
+
+.. code-block:: yaml
+
+   modulo: { step: <step>, offset: <offset> }
+
+Both ``step`` and ``offset`` must be specified.
+
+For example, the following modulo constraint would only allow for odd numbers
+
+.. code-block:: yaml
+
+   modulo: { step: 2, offset: 1 }
 
 allowed_values
 ++++++++++++++
