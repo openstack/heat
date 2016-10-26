@@ -126,7 +126,11 @@ class TroveClusterTest(common.HeatTestCase):
 
     def test_delete(self):
         tc = self._create_resource('cluster', self.rsrc_defn, self.stack)
-        self.patchobject(tc, 'handle_delete', return_value=None)
+        fake_cluster = FakeTroveCluster()
+        fake_cluster.task = {'name': 'NONE'}
+        self.client.clusters.get.side_effect = [fake_cluster,
+                                                fake_cluster,
+                                                troveexc.NotFound()]
         scheduler.TaskRunner(tc.delete)()
         self.assertEqual((tc.DELETE, tc.COMPLETE), tc.state)
 
@@ -137,6 +141,49 @@ class TroveClusterTest(common.HeatTestCase):
         self.assertEqual((tc.DELETE, tc.COMPLETE), tc.state)
         self.client.clusters.get.assert_called_with(tc.resource_id)
         self.assertEqual(2, self.client.clusters.get.call_count)
+
+    def test_delete_incorrect_status(self):
+        tc = self._create_resource('cluster', self.rsrc_defn, self.stack)
+        fake_cluster_bad = FakeTroveCluster()
+        fake_cluster_bad.task = {'name': 'BUILDING'}
+        fake_cluster_bad.delete = mock.Mock()
+        fake_cluster_ok = FakeTroveCluster()
+        fake_cluster_ok.task = {'name': 'NONE'}
+        fake_cluster_ok.delete = mock.Mock()
+        self.client.clusters.get.side_effect = [fake_cluster_bad,
+                                                # two for cluster_delete method
+                                                fake_cluster_bad,
+                                                fake_cluster_ok,
+                                                # for _refresh_cluster method
+                                                troveexc.NotFound()]
+        scheduler.TaskRunner(tc.delete)()
+        self.assertEqual((tc.DELETE, tc.COMPLETE), tc.state)
+        fake_cluster_bad.delete.assert_not_called()
+        fake_cluster_ok.delete.assert_called_once_with()
+
+    def test_delete_not_found_during_delete(self):
+        tc = self._create_resource('cluster', self.rsrc_defn, self.stack)
+        fake_cluster = FakeTroveCluster()
+        fake_cluster.task = {'name': 'NONE'}
+        fake_cluster.delete = mock.Mock(side_effect=[troveexc.NotFound()])
+        self.client.clusters.get.side_effect = [fake_cluster,
+                                                fake_cluster,
+                                                troveexc.NotFound()]
+        scheduler.TaskRunner(tc.delete)()
+        self.assertEqual((tc.DELETE, tc.COMPLETE), tc.state)
+        self.assertEqual(1, fake_cluster.delete.call_count)
+
+    def test_delete_already_deleting(self):
+        tc = self._create_resource('cluster', self.rsrc_defn, self.stack)
+        fake_cluster = FakeTroveCluster()
+        fake_cluster.task = {'name': 'DELETING'}
+        fake_cluster.delete = mock.Mock()
+        self.client.clusters.get.side_effect = [fake_cluster,
+                                                fake_cluster,
+                                                troveexc.NotFound()]
+        scheduler.TaskRunner(tc.delete)()
+        self.assertEqual((tc.DELETE, tc.COMPLETE), tc.state)
+        self.assertEqual(0, fake_cluster.delete.call_count)
 
     def test_validate_ok(self):
         tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
