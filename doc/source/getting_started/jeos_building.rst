@@ -61,7 +61,7 @@ files. This will speed stack launch time and reduce the risk of a transient
 package download failure causing the stack launch to fail.
 
 To create an image that contains hooks needed for SoftwareConfig and SoftwareDeployment,
-you can follow the steps bellow to build a fedora based image::
+you can follow the steps below to build a fedora based image::
 
     pip install git+https://git.openstack.org/openstack/diskimage-builder
     git clone https://git.openstack.org/openstack/tripleo-image-elements
