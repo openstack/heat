@@ -9,9 +9,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev352\n"
+"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-06-02 03:51+0000\n"
+"POT-Creation-Date: 2016-10-27 13:47+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -158,10 +158,6 @@ msgstr "\"%s\" テンプレートは文字列でなければなりません"
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr "\"repeat\" 構文は %s でなければなりません"
-
-#, python-format
-msgid "\"str_replace\" syntax should be %s"
-msgstr "\"str_replace\" 構文は %s でなければなりません"
 
 #, python-format
 msgid "%(a)s paused until Hook %(h)s is cleared"
@@ -473,13 +469,6 @@ msgid "A list of string policies to apply. Defaults to anti-affinity."
 msgstr ""
 "適用する文字列ポリシーの一覧。アンチアフィニティーにデフォルト設定されます。"
 
-msgid ""
-"A list of the specified attribute of each individual resource. Requires "
-"heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"個別のリソースごとに指定されている属性のリスト。heat_template_version: "
-"2014-10-16  以降が必要です。"
-
 msgid "A login profile for the user."
 msgstr "ユーザーのログインプロファイル。"
 
@@ -517,13 +506,6 @@ msgid ""
 "A map of resource names to the specified attribute of each individual "
 "resource."
 msgstr "個別のリソースごとに指定されている属性とリソース名のマップ。"
-
-msgid ""
-"A map of resource names to the specified attribute of each individual "
-"resource. Requires heat_template_version: 2014-10-16 or higher."
-msgstr ""
-"個別のリソースごとに指定されている属性とリソース名のマップ。"
-"heat_template_version: 2014-10-16  以降が必要です。"
 
 msgid ""
 "A map of resource names to the specified attribute of each individual "
@@ -1733,9 +1715,6 @@ msgid "Each %(object_name)s must contain a %(sub_section)s key."
 msgstr ""
 "各 %(object_name)s には %(sub_section)s キーが含まれていなければなりません。"
 
-msgid "Each Output must contain a Value key."
-msgstr "各出力には値キーが含まれている必要があります。"
-
 msgid "Each Resource must contain a Type key."
 msgstr "各リソースには Type キーが含まれている必要があります。"
 
@@ -2144,9 +2123,6 @@ msgstr "クラスターの ips のために manila で設定する権限を管�
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "存続期間引数に使用する単位、デフォルトは日数。"
 
-msgid "HTTP verb to use for signaling output values"
-msgstr "出力値のシグナル通知に使用する HTTP verb"
-
 msgid "Hadoop cluster name."
 msgstr "Hadoop クラスター名。"
 
@@ -2487,17 +2463,6 @@ msgid ""
 msgstr ""
 "設定すると、提供される一連の項目に対してタスクと関連付けられたアクションまた"
 "はワークフローを何度でも実行できます。"
-
-#, python-format
-msgid ""
-"If neither \"%(backup_id)s\" nor \"%(size)s\" is provided, one and only one "
-"of \"%(image)s\", \"%(image_ref)s\", \"%(source_vol)s\", \"%(snapshot_id)s\" "
-"must be specified, but currently specified options: %(exclusive_options)s."
-msgstr ""
-"\"%(backup_id)s\" と \"%(size)s\" のいずれも提供されない場合、 \"%(image)s"
-"\"、\"%(image_ref)s\"、\"%(source_vol)s\"、\"%(snapshot_id)s\" のうち 1 つだ"
-"けを指定する必要があるものの、現在指定されているオプションは "
-"%(exclusive_options)s です。"
 
 msgid "If set, then the server's certificate will not be verified."
 msgstr "設定すると、サーバーの証明書は検査されません。"
@@ -3196,9 +3161,6 @@ msgstr ""
 msgid "Listener associated with this pool."
 msgstr "このプールと関連付けられているリスナー。"
 
-msgid "Listner name or ID to be associated with this pool."
-msgstr "このプールと関連付ける必要のあるリスナーの名前または ID。"
-
 msgid ""
 "Local path on each cluster node on which to mount the share. Defaults to '/"
 "mnt/{share_id}'."
@@ -3292,12 +3254,6 @@ msgstr "クラスター内のリソースの最小数。-1 は無制限を指し
 
 msgid "Maximum number of resources in the group."
 msgstr "グループ内のリソースの最大数。"
-
-msgid ""
-"Maximum number of seconds for a monitor to wait for a connection to be "
-"established before it times out."
-msgstr ""
-"これを超えるとタイムアウトになる、モニターが接続の確立を待機する最大秒数。"
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr "任意の 1 つのテナントが同時にアクティブにできるスタックの最大数。"
@@ -3434,13 +3390,6 @@ msgstr "Monasca の通知。"
 
 msgid "Multiple actions specified"
 msgstr "複数のアクションが指定されています。"
-
-msgid ""
-"Multiple attach is not supported by the current volume API. Use this "
-"property since Cinder API v2."
-msgstr ""
-"現在のボリュームの API は複数の接続をサポートしません。Cinder API v2 以降では"
-"このプロパティーを使用してください。"
 
 #, python-format
 msgid "Multiple physical resources were found with name (%(name)s)."
@@ -3867,10 +3816,6 @@ msgid "No event %s found"
 msgstr "イベント \"%s\" は見つかりませんでした。"
 
 #, python-format
-msgid "No event exists with id \"%s\""
-msgstr "ID \"%s\" のイベントは存在しません"
-
-#, python-format
 msgid "No events found for resource %s"
 msgstr "リソース \"%s\" に関連するイベントは見つかりませんでした。"
 
@@ -3999,11 +3944,6 @@ msgstr "resolve 制約中の遅延に関する数値。"
 
 msgid "Number value for timeout during resolving output value."
 msgstr "出力値の解決中のタイムアウトに関する数値。"
-
-msgid "OS::Heat::CWLiteAlarm is deprecated, use OS::Ceilometer::Alarm instead."
-msgstr ""
-"OS::heat::CWLiteAlarm は非推奨です。代わりに OS::Ceilometer::Alarm を使用して"
-"ください。"
 
 #, python-format
 msgid "Object action %(action)s failed because: %(reason)s"
@@ -4259,13 +4199,6 @@ msgstr ""
 "サーバー全体を置換するかのいずれかです。"
 
 msgid ""
-"Policy on how to apply a user_data update; either by ignorning it or by "
-"replacing the entire server."
-msgstr ""
-"user_data の更新を適用する方法に関するポリシー。更新を無視するか、サーバー全"
-"体の置き換えを行うかのいずれかを実施します。"
-
-msgid ""
 "Policy on how to apply an image-id update; either by requesting a server "
 "rebuild or by replacing the entire server."
 msgstr ""
@@ -4397,11 +4330,6 @@ msgstr ""
 "ん。"
 
 #, python-format
-msgid "Property %(prop)s: %(ua)s and %(im)s cannot both be True"
-msgstr ""
-"プロパティー %(prop)s: %(ua)s と %(im)s の両方を True にすることはできません"
-
-#, python-format
 msgid "Property %(ref)s required when protocol is %(term)s."
 msgstr "プロトコルが %(term)s の場合、プロパティー %(ref)s が必要です。"
 
@@ -4433,9 +4361,6 @@ msgid ""
 msgstr ""
 "session_persistence タイプが SOURCE_IPP に設定されている場合、プロパティーの "
 "cookie_name を指定することはできません。"
-
-msgid "Property uses removed function."
-msgstr "プロパティーが削除された関数を使用しています。"
 
 msgid "Property values for the resources in the group."
 msgstr "グループ内のリソースのプロパティー値。"
@@ -4698,10 +4623,6 @@ msgstr "安全アセスメント存続期間単位。"
 msgid "Safety assessment lifetime value in specified units."
 msgstr "指定された単位の安全アセスメント存続期間値。"
 
-msgid "Scheduler hints are not supported by the current volume API."
-msgstr ""
-"スケジューラーのヒントは現行ボリューム API ではサポートされていません。"
-
 msgid "Scheduler hints to pass to Nova (Heat extension)."
 msgstr "nova に渡すスケジューラーヒント (heat 拡張)。"
 
@@ -4723,13 +4644,6 @@ msgstr ""
 "フレーバーのアクセス可能性の範囲。パブリックまたはプライベートに設定します。"
 "デフォルト値の True はプライベートを意味し、すべてのプロジェクトで共有されま"
 "す。"
-
-msgid ""
-"Scope of image accessibility. Public or private. Default value is False "
-"means private."
-msgstr ""
-"イメージのアクセス可能性の範囲。パブリックまたはプライベート。デフォルト値の "
-"False はプライベートを意味します。"
 
 #, python-format
 msgid "Searching Tenant %(target)s from Tenant %(actual)s forbidden."
@@ -5467,10 +5381,6 @@ msgid "The IP version, which is 4 or 6."
 msgstr "IP バージョン (4 または 6)。"
 
 #, python-format
-msgid "The Parameter (%(key)s) has no attributes."
-msgstr "パラメーター (%(key)s) に属性がありません。"
-
-#, python-format
 msgid "The Parameter (%(key)s) was not defined in template."
 msgstr "パラメーター (%(key)s) がテンプレートに定義されませんでした。"
 
@@ -6058,9 +5968,6 @@ msgstr ""
 "なければなりません。プロトコルがICMP の場合、この値は ICMP タイプでなければな"
 "りません。"
 
-msgid "The minimum time in seconds between regular connections of the member."
-msgstr "メンバーの定期接続間の最小時間 (秒)。"
-
 msgid "The name for the QoS policy."
 msgstr "QoS ポリシーの名前。"
 
@@ -6427,10 +6334,6 @@ msgstr "スワップの容量 (MB)。"
 
 msgid "The size of the volume in GB."
 msgstr "GB 単位のボリューム容量。"
-
-msgid ""
-"The size of the volume in GB. On update only increase in size is supported."
-msgstr "ボリュームのサイズ (GB)。更新時のみ、サイズの増加がサポートされます。"
 
 msgid ""
 "The size of the volume, in GB. It is safe to leave this blank and have the "
@@ -7069,20 +6972,6 @@ msgstr ""
 "{ get_resource : <resource_name> } です。"
 
 msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"SoftwareDeploymentGroup instead."
-msgstr ""
-"このリソースの使用は推奨しません。これではなく、OS::Heat::"
-"SoftwareDeploymentGroup を使用してください。"
-
-msgid ""
-"Use of this resource is discouraged. Please use OS::Heat::"
-"StructuredDeploymentGroup instead."
-msgstr ""
-"このリソースの使用は推奨しません。これではなく、OS::Heat::"
-"StructuredDeploymentGroup を使用してください。"
-
-msgid ""
 "Use only with Neutron, to list the internal subnet to which the instance "
 "will be attached; needed only if multiple exist; list length must be exactly "
 "1."
@@ -7115,9 +7004,6 @@ msgstr ""
 
 msgid "Use this resource at your own risk."
 msgstr "このリソースは自己責任で使用してください。"
-
-msgid "Use value_name only for replacing list elements."
-msgstr "リスト要素を置き換えるには value_name のみを使用します。"
 
 #, python-format
 msgid "User %s in invalid domain"
@@ -7156,12 +7042,6 @@ msgstr "ジョブバイナリーの URL にアクセスするためのユーザ�
 
 msgid "Username of privileged user in the image."
 msgstr "イメージ内の特権ユーザーのユーザー名。"
-
-msgid "Using Cinder API V1, volume type access"
-msgstr "Cinder API V1 を使用したボリュームタイプのアクセス"
-
-msgid "Using Cinder API V1, volume_type update"
-msgstr "Cinder API V1 を使用した volume_type 更新"
 
 msgid "VLAN ID for VLAN networks or tunnel-id for GRE/VXLAN networks."
 msgstr ""
@@ -7315,37 +7195,6 @@ msgid ""
 msgstr ""
 "サーバーを SSL モードで実行する場合は、cert_file オプション値と key_file オプ"
 "ション値の両方を設定ファイルに指定する必要があります"
-
-msgid ""
-"When this feature is enabled, scheduler hints identifying the heat stack "
-"context of a server or volume resource are passed to the configured "
-"schedulers in nova and cinder, for creates done using heat resource types "
-"OS::Cinder::Volume, OS::Nova::Server, and AWS::EC2::Instance. "
-"heat_root_stack_id will be set to the id of the root stack of the resource, "
-"heat_stack_id will be set to the id of the resource's parent stack, "
-"heat_stack_name will be set to the name of the resource's parent stack, "
-"heat_path_in_stack will be set to a list of tuples, (stackresourcename, "
-"stackname) with list[0] being (None, rootstackname), heat_resource_name will "
-"be set to the resource's name, and heat_resource_uuid will be set to the "
-"resource's orchestration id."
-msgstr ""
-"この機能を有効化すると、サーバーリソースまたはボリュームリソースの heat ス"
-"タックのコンテキストを特定するスケジューラーヒントが nova および cinder 内で"
-"設定されたスケジューラーに渡され、heat のリソースタイプである OS::Cinder::"
-"Volume、OS::Nova::Server、および AWS::EC2::Instance を使用してスケジューラー"
-"を作成します。heat_root_stack_id はリソースのルートスタックの ID に設定され、"
-"heat_stack_id はリソースの親スタックの ID に設定され、heat_stack_name はリ"
-"ソースの親スタックの名前に設定され、heat_path_in_stack は list[0] を (None, "
-"rootstackname) に設定したタプルのリストである (stackresourcename, stackname) "
-"に設定され、heat_resource_name はリソースの名前に設定され、"
-"heat_resource_uuid はリソースのオーケストレーション ID に設定されます。"
-
-msgid ""
-"Whether allow the volume to be attached more than once. This property is "
-"only supported from Cinder API v2."
-msgstr ""
-"2 度以上ボリュームを追加できるかどうかを指定します。このプロパティーは "
-"Cinder API v2 のみがサポートします。"
 
 msgid "Whether enable this policy on that cluster."
 msgstr "このクラスター上でこのポリシーを有効化すべきかどうか。"
@@ -7575,10 +7424,6 @@ msgstr "追加のメモリーが必要です。"
 msgid "no resource data found"
 msgstr "リソースデータが見つかりません"
 
-#, python-format
-msgid "no resources for stack_id %s were found"
-msgstr "stack_id %s のリソースが見つかりませんでした"
-
 msgid "no resources were found"
 msgstr "リソースが見つかりませんでした"
 
@@ -7612,9 +7457,6 @@ msgstr "segmentation_id はフラットネットワーク形式には使用で�
 
 msgid "server_id must be specified"
 msgstr "server_id の指定は必須です"
-
-msgid "stack not found"
-msgstr "stackが見つかりません"
 
 #, python-format
 msgid ""

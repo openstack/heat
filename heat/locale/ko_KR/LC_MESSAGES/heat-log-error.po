@@ -7,9 +7,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 6.0.1.dev82\n"
+"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-04-19 04:16+0000\n"
+"POT-Creation-Date: 2016-10-27 13:47+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -50,14 +50,6 @@ msgid "Ec2Token authorization failed, no auth_uri specified in config file"
 msgstr "Ec2Token 인증 실패, 설정 파일에 지정된 auth_uri 가 없음."
 
 #, python-format
-msgid ""
-"Error acquiring lock for resource id:%(resource_id)s with atomic_key:"
-"%(atomic_key)s, engine_id:%(rs_engine_id)s/%(engine_id)s"
-msgstr ""
-"atomic_key:%(atomic_key)s, engine_id:%(rs_engine_id)s/%(engine_id)s인 자원  "
-"id:%(resource_id)s의 잠금을 확보하는 중 오류 발생"
-
-#, python-format
 msgid "Error loading resource type %s from global environment."
 msgstr "글로벌 환경에서 자원 유형 %s을(를) 로드하는 중에 오류가 발생했습니다."
 
@@ -78,10 +70,6 @@ msgstr "자원 처리 예외: %s"
 msgid "Exception in string format operation"
 msgstr "문자열 형식화 오퍼레이션의 예외"
 
-#, python-format
-msgid "Exception: %s"
-msgstr "예외: %s"
-
 msgid "Failed sending error notification"
 msgstr "오류 알림을 보내는 데 실패"
 
@@ -100,14 +88,6 @@ msgid "Failed to load %(mapping_name)s from %(module)s"
 msgstr "%(module)s로부터 %(mapping_name)s 를 읽을 수 없습니다. "
 
 #, python-format
-msgid "Failed to parse %(file_path)s"
-msgstr "%(file_path)s를 구문 분석하는 데 실패했습니다."
-
-#, python-format
-msgid "Failed to read %(file_path)s"
-msgstr "%(file_path)s를 읽는데 실패했습니다. "
-
-#, python-format
 msgid "Failed to read %s"
 msgstr "%s를 읽지 못했습니다."
 
@@ -124,9 +104,6 @@ msgstr "%(module)s로부터 %(mapping_name)s의 속성이 맞지 않습니다."
 
 msgid "Keystone client authentication failed"
 msgstr "Keystone 클라이언트 인증 인증 실패"
-
-msgid "Keystone v3 API connection failed, no password trust or auth_token!"
-msgstr "신뢰할수 없는 비밀번호나 auth_token으로 Keystone v3 API 연결 실패, "
 
 msgid ""
 "No default floating IP pool configured. Set 'default_floating_pool' in nova."
@@ -155,14 +132,6 @@ msgstr "%s 매개변수가 요청에 포함되지 않음 !"
 
 msgid "Request does not contain required MetricData"
 msgstr "요청에 필요한 MetricData 가 없음. "
-
-#, python-format
-msgid "Resource %(name)s create failed: %(ex)s"
-msgstr "자원 %(name)s 작성 실패: %(ex)s"
-
-#, python-format
-msgid "Resource %(name)s delete failed: %(ex)s"
-msgstr "자원 %(name)s를 지울수 없습니다. : %(ex)s"
 
 #, python-format
 msgid "Returning %(code)s to user: %(explanation)s"
@@ -221,10 +190,6 @@ msgstr "감시 작업 작성을 시도하는 중에 실패, %s"
 msgid "Zaqar connection failed, no auth_token!"
 msgstr "Zaqar 연결 실패, auth_token이 없음!"
 
-#, python-format
-msgid "exception: %s"
-msgstr "예외: %s"
-
 msgid "failed to get lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 가져 오지 못했습니다"
 
@@ -234,10 +199,6 @@ msgstr "스택 수명주기 %s 클래스의 인스턴스를 실패"
 
 msgid "failed to sort lifecycle plug point classes"
 msgstr "라이프 사이클 플러그 포인트 클래스를 정렬하는 데 실패"
-
-#, python-format
-msgid "signal %(name)s : %(msg)s"
-msgstr "신호 %(name)s : %(msg)s"
 
 msgid "trust token re-scoping failed!"
 msgstr "신뢰할 수 있는 token 재설정 실패!"
