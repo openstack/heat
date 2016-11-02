@@ -167,6 +167,17 @@ blarg: wibble
         data = stacks.InstantiationData(body)
         self.assertEqual(env, data.environment())
 
+    def test_environment_with_env_files(self):
+        env = {'parameters': {'foo': 'bar', 'blarg': 'wibble'}}
+        body = {'environment': env, 'environment_files': ['env.yaml']}
+        expect = {'parameters': {},
+                  'encrypted_param_names': [],
+                  'parameter_defaults': {},
+                  'event_sinks': [],
+                  'resource_registry': {}}
+        data = stacks.InstantiationData(body)
+        self.assertEqual(expect, data.environment())
+
     def test_environment_and_parameters(self):
         body = {'parameters': {'foo': 'bar'},
                 'environment': {'parameters': {'blarg': 'wibble'}}}
