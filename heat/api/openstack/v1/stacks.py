@@ -137,7 +137,9 @@ class InstantiationData(object):
         environment global options.
         """
         env = {}
-        if self.PARAM_ENVIRONMENT in self.data:
+        # Don't use merged environment, if environment_files are supplied.
+        if (self.PARAM_ENVIRONMENT in self.data and
+                not self.data.get(self.PARAM_ENVIRONMENT_FILES)):
             env_data = self.data[self.PARAM_ENVIRONMENT]
             with self.parse_error_check('Environment'):
                 if isinstance(env_data, dict):
