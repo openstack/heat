@@ -27,9 +27,6 @@ class StackUser(resource.Resource):
     # Subclasses create a user, and optionally keypair associated with a
     # resource in a stack. Users are created in the heat stack user domain
     # (in a project specific to the stack)
-    def __init__(self, name, json_snippet, stack):
-        super(StackUser, self).__init__(name, json_snippet, stack)
-
     def handle_create(self):
         self._create_user()
 

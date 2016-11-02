@@ -89,9 +89,6 @@ class HeatWaitCondition(resource.Resource):
         ),
     }
 
-    def __init__(self, name, definition, stack):
-        super(HeatWaitCondition, self).__init__(name, definition, stack)
-
     def _get_handle_resource(self):
         return self.stack.resource_by_refid(self.properties[self.HANDLE])
 

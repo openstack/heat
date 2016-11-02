@@ -74,9 +74,6 @@ class WaitCondition(heat_wc.HeatWaitCondition):
         ),
     }
 
-    def __init__(self, name, json_snippet, stack):
-        super(WaitCondition, self).__init__(name, json_snippet, stack)
-
     def _validate_handle_url(self):
         handle_url = self.properties[self.HANDLE]
         handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
