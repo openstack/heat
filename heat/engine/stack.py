@@ -221,11 +221,12 @@ class Stack(collections.Mapping):
 
         resources.initialise()
 
-        self.parameters = self.t.parameters(
-            self.identifier(),
-            user_params=self.env.params,
-            param_defaults=self.env.param_defaults)
-        self._set_param_stackid()
+        if self.t is not None:
+            self.parameters = self.t.parameters(
+                self.identifier(),
+                user_params=self.env.params,
+                param_defaults=self.env.param_defaults)
+            self._set_param_stackid()
 
     @property
     def tags(self):
@@ -486,8 +487,8 @@ class Stack(collections.Mapping):
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
              use_stored_context=False, force_reload=False, cache_data=None,
-             service_check_defer=False,
-             resource_validate=True):
+             service_check_defer=False, resource_validate=True,
+             load_template=True):
         """Retrieve a Stack from the database."""
         if stack is None:
             stack = stack_object.Stack.get_by_id(
@@ -505,7 +506,8 @@ class Stack(collections.Mapping):
                             use_stored_context=use_stored_context,
                             cache_data=cache_data,
                             service_check_defer=service_check_defer,
-                            resource_validate=resource_validate)
+                            resource_validate=resource_validate,
+                            load_template=load_template)
 
     @classmethod
     def load_all(cls, context, limit=None, marker=None, sort_keys=None,
@@ -539,9 +541,13 @@ class Stack(collections.Mapping):
     @classmethod
     def _from_db(cls, context, stack,
                  use_stored_context=False, cache_data=None,
-                 service_check_defer=False, resource_validate=True):
-        template = tmpl.Template.load(
-            context, stack.raw_template_id, stack.raw_template)
+                 service_check_defer=False, resource_validate=True,
+                 load_template=True):
+        if load_template:
+            template = tmpl.Template.load(
+                context, stack.raw_template_id, stack.raw_template)
+        else:
+            template = None
         return cls(context, stack.name, template,
                    stack_id=stack.id,
                    action=stack.action, status=stack.status,
