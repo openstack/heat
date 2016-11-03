@@ -100,6 +100,9 @@ class FakeDBInstance(object):
     def delete(self):
         pass
 
+    def to_dict(self):
+        pass
+
 
 class FakeFlavor(object):
     def __init__(self, id, name):
@@ -126,7 +129,7 @@ class InstanceTest(common.HeatTestCase):
                          return_value=True)
         self.flavor_resolve = self.patchobject(trove.TroveClientPlugin,
                                                'find_flavor_by_name_or_id',
-                                               return_value=1)
+                                               return_value='1')
         self.fake_instance = FakeDBInstance()
         self.client.instances.create.return_value = self.fake_instance
         self.client.instances.get.return_value = self.fake_instance
@@ -245,7 +248,7 @@ class InstanceTest(common.HeatTestCase):
                       "character_set": "utf8",
                       "name": "validdb"}]
         self.client.instances.create.assert_called_once_with(
-            'test', 1, volume={'size': 30}, databases=databases, users=users,
+            'test', '1', volume={'size': 30}, databases=databases, users=users,
             restorePoint={"backupRef": "1234"}, availability_zone=None,
             datastore="SomeDStype", datastore_version="MariaDB-5.5", nics=[],
             replica_of=None, replica_count=None)
@@ -514,7 +517,7 @@ class InstanceTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.client.instances.create.assert_called_once_with(
-            'test', 1, volume={'size': 30}, databases=[], users=[],
+            'test', '1', volume={'size': 30}, databases=[], users=[],
             restorePoint=None, availability_zone=None, datastore=None,
             datastore_version=None, nics=[{'port-id': 'someportid',
                                            'v4-fixed-ip': '1.2.3.4'}],
@@ -533,7 +536,7 @@ class InstanceTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.client.instances.create.assert_called_once_with(
-            'test', 1, volume={'size': 30}, databases=[], users=[],
+            'test', '1', volume={'size': 30}, databases=[], users=[],
             restorePoint=None, availability_zone=None, datastore=None,
             datastore_version=None, nics=[{'net-id': net_id}], replica_of=None,
             replica_count=None)
@@ -555,7 +558,7 @@ class InstanceTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.client.instances.create.assert_called_once_with(
-            'test', 1, volume={'size': 30}, databases=[], users=[],
+            'test', '1', volume={'size': 30}, databases=[], users=[],
             restorePoint=None, availability_zone=None, datastore=None,
             datastore_version=None, nics=[{'net-id': 'somenetid'}],
             replica_of=None, replica_count=None)
@@ -567,10 +570,39 @@ class InstanceTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
         self.client.instances.create.assert_called_once_with(
-            'test', 1, volume={'size': 30}, databases=[], users=[],
+            'test', '1', volume={'size': 30}, databases=[], users=[],
             restorePoint=None, availability_zone=None, datastore=None,
             datastore_version=None, nics=[],
             replica_of="0e642916-dd64-43b3-933f-ff34fff69a7f", replica_count=2)
+
+    def test_instance_get_live_state(self):
+        self.fake_instance.to_dict = mock.Mock(return_value={
+            'name': 'test_instance',
+            'flavor': {'id': '1'},
+            'volume': {'size': 30}
+        })
+
+        fake_db1 = mock.Mock()
+        fake_db1.name = 'validdb'
+        fake_db2 = mock.Mock()
+        fake_db2.name = 'secondvaliddb'
+        self.client.databases.list.return_value = [fake_db1, fake_db2]
+
+        expected = {
+            'flavor': '1',
+            'name': 'test_instance',
+            'size': 30,
+            'databases': [{'name': 'validdb',
+                           'character_set': 'utf8',
+                           'collate': 'utf8_general_ci'},
+                          {'name': 'secondvaliddb'}]
+        }
+
+        t = template_format.parse(db_template)
+        instance = self._setup_test_instance('get_live_state_test', t)
+        reality = instance.get_live_state(instance.properties)
+
+        self.assertEqual(expected, reality)
 
 
 @mock.patch.object(resource.Resource, "client_plugin")
@@ -678,10 +710,10 @@ class InstanceUpdateTests(common.HeatTestCase):
         self.assertEqual(expected, trove.handle_update(None, None, prop_diff))
 
     def test_handle_update_flavor(self, mock_client, mock_plugin):
+        # Translation mechanism already resolved flavor name to id.
         prop_diff = {
-            "flavor": "changed"
+            "flavor": 1234
         }
-        mock_plugin().get_flavor_id.return_value = 1234
         trove = dbinstance.Instance('test', self._rdef, self._stack)
         expected = {
             "flavor": 1234
