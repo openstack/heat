@@ -31,7 +31,8 @@ flavor_template = {
                 'swap': 2,
                 'rxtx_factor': 1.0,
                 'ephemeral': 0,
-                'extra_specs': {"foo": "bar"}
+                'extra_specs': {"foo": "bar"},
+                'tenants': []
             }
         }
     }
@@ -45,11 +46,15 @@ class NovaFlavorTest(common.HeatTestCase):
                          return_value=True)
         self.ctx = utils.dummy_context()
 
-    def create_flavor(self, with_name_id=False):
+    def create_flavor(self, with_name_id=False, is_public=True):
         if with_name_id:
             props = flavor_template['resources']['my_flavor']['properties']
             props['name'] = 'test_flavor'
             props['flavorid'] = '1234'
+        if not is_public:
+            props = flavor_template['resources']['my_flavor']['properties']
+            props['is_public'] = False
+            props['tenants'] = ["foo", "bar"]
         self.stack = stack.Stack(
             self.ctx, 'nova_flavor_test_stack',
             template.Template(flavor_template)
@@ -108,17 +113,21 @@ class NovaFlavorTest(common.HeatTestCase):
         self.assertTrue(self.my_flavor.FnGetAtt('is_public'))
 
     def test_private_flavor_handle_create(self):
-        self.create_flavor()
+        self.create_flavor(is_public=False)
         value = mock.MagicMock()
         flavor_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         value.id = flavor_id
         value.is_public = False
+        self.my_flavor.IS_PUBLIC = False
         self.flavors.create.return_value = value
         self.flavors.get.return_value = value
         self.my_flavor.handle_create()
         value.set_keys.assert_called_once_with({"foo": "bar"})
         self.assertEqual(flavor_id, self.my_flavor.resource_id)
         self.assertFalse(self.my_flavor.FnGetAtt('is_public'))
+        client_test = self.my_flavor.client().flavor_access.add_tenant_access
+        test_tenants = [mock.call(value, 'foo'), mock.call(value, 'bar')]
+        self.assertEqual(test_tenants, client_test.call_args_list)
 
     def test_flavor_handle_update_keys(self):
         self.create_flavor()
@@ -132,6 +141,47 @@ class NovaFlavorTest(common.HeatTestCase):
                                      tmpl_diff=None, prop_diff=prop_diff)
         value.unset_keys.assert_called_once_with({})
         value.set_keys.assert_called_once_with(new_keys)
+
+    def test_flavor_handle_update_add_tenants(self):
+        self.create_flavor()
+        value = mock.MagicMock()
+
+        new_tenants = ["new_foo", "new_bar"]
+        prop_diff = {'tenants': new_tenants}
+        self.my_flavor.IS_PUBLIC = False
+        self.flavors.get.return_value = value
+
+        self.my_flavor.handle_update(json_snippet=None,
+                                     tmpl_diff=None, prop_diff=prop_diff)
+        test_tenants_add = [mock.call(value, 'new_foo'),
+                            mock.call(value, 'new_bar')]
+        test_add = self.my_flavor.client().flavor_access.add_tenant_access
+        self.assertItemsEqual(test_tenants_add,
+                              test_add.call_args_list)
+
+    def test_flavor_handle_update_remove_tenants(self):
+        self.create_flavor(is_public=False)
+        value = mock.MagicMock()
+
+        new_tenants = []
+        prop_diff = {'tenants': new_tenants}
+        self.my_flavor.IS_PUBLIC = False
+        self.flavors.get.return_value = value
+
+        itemFoo = mock.MagicMock()
+        itemFoo.tenant_id = 'foo'
+        itemBar = mock.MagicMock()
+        itemBar.tenant_id = 'bar'
+
+        self.my_flavor.client().flavor_access.list.return_value = [itemFoo,
+                                                                   itemBar]
+        self.my_flavor.handle_update(json_snippet=None,
+                                     tmpl_diff=None, prop_diff=prop_diff)
+        test_tenants_remove = [mock.call(value, 'foo'),
+                               mock.call(value, 'bar')]
+        test_rem = self.my_flavor.client().flavor_access.remove_tenant_access
+        self.assertItemsEqual(test_tenants_remove,
+                              test_rem.call_args_list)
 
     def test_flavor_show_resource(self):
         self.create_flavor()
