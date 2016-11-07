@@ -270,3 +270,56 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
                                            queue._show_resource()))
 
         self.m.VerifyAll()
+
+
+class ZaqarSignedQueueURLTest(common.HeatTestCase):
+    tmpl = '''
+heat_template_version: 2015-10-15
+resources:
+  signed_url:
+    type: OS::Zaqar::SignedQueueURL
+    properties:
+      queue: foo
+      ttl: 60
+      paths:
+        - messages
+        - subscription
+      methods:
+        - POST
+        - DELETE
+'''
+
+    @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
+    def test_create(self, mock_signed_url):
+        mock_signed_url.return_value = {
+            'expires': '2020-01-01',
+            'signature': 'secret',
+            'project': 'project_id',
+            'paths': ['/v2/foo/messages', '/v2/foo/sub'],
+            'methods': ['DELETE', 'POST']}
+
+        self.t = template_format.parse(self.tmpl)
+        self.stack = utils.parse_stack(self.t)
+        self.rsrc = self.stack['signed_url']
+        self.assertIsNone(self.rsrc.validate())
+        self.stack.create()
+        self.assertEqual(self.rsrc.CREATE, self.rsrc.action)
+        self.assertEqual(self.rsrc.COMPLETE, self.rsrc.status)
+        self.assertEqual(self.stack.CREATE, self.stack.action)
+        self.assertEqual(self.stack.COMPLETE, self.stack.status)
+
+        mock_signed_url.assert_called_once_with(
+            paths=['messages', 'subscription'],
+            methods=['POST', 'DELETE'],
+            ttl_seconds=60)
+
+        self.assertEqual('secret', self.rsrc.FnGetAtt('signature'))
+        self.assertEqual('2020-01-01', self.rsrc.FnGetAtt('expires'))
+        self.assertEqual(['/v2/foo/messages', '/v2/foo/sub'],
+                         self.rsrc.FnGetAtt('paths'))
+        self.assertEqual(['DELETE', 'POST'], self.rsrc.FnGetAtt('methods'))
+        self.assertEqual(
+            'zaqar://?signature=secret&expires=2020-01-01'
+            '&paths=/v2/foo/messages,/v2/foo/sub&methods=DELETE,POST'
+            '&project_id=project_id&queue_name=foo',
+            self.rsrc.resource_id)

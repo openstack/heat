@@ -11,8 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_serialization import jsonutils
+
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -129,7 +132,108 @@ class ZaqarQueue(resource.Resource):
         }
 
 
+class ZaqarSignedQueueURL(resource.Resource):
+    """A resource for managing signed URLs of Zaqar queues.
+
+    Signed URLs allow to give specific access to queues, for example to be used
+    as alarm notifications.
+    """
+
+    default_client_name = "zaqar"
+
+    support_status = support.SupportStatus(version='8.0.0')
+
+    PROPERTIES = (
+        QUEUE, PATHS, TTL, METHODS,
+    ) = (
+        'queue', 'paths', 'ttl', 'methods',
+    )
+
+    ATTRIBUTES = (
+        SIGNATURE, EXPIRES, PATHS_ATTR, METHODS_ATTR,
+    ) = (
+        'signature', 'expires', 'paths', 'methods',
+    )
+
+    properties_schema = {
+        QUEUE: properties.Schema(
+            properties.Schema.STRING,
+            _("Name of the queue instance to create a URL for."),
+            required=True),
+        PATHS: properties.Schema(
+            properties.Schema.LIST,
+            description=_("List of allowed paths to be accessed. "
+                          "Default to allow queue messages URL.")),
+        TTL: properties.Schema(
+            properties.Schema.INTEGER,
+            description=_("Time validity of the URL, in seconds. "
+                          "Default to one day.")),
+        METHODS: properties.Schema(
+            properties.Schema.LIST,
+            description=_("List of allowed HTTP methods to be used. "
+                          "Default to allow GET."),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                constraints=[
+                    constraints.AllowedValues(['GET', 'DELETE', 'PATCH',
+                                               'POST', 'PUT']),
+                ],
+            ))
+    }
+
+    attributes_schema = {
+        SIGNATURE: attributes.Schema(
+            _("Signature of the URL built by Zaqar.")
+        ),
+        EXPIRES: attributes.Schema(
+            _("Expiration date of the URL.")
+        ),
+        PATHS_ATTR: attributes.Schema(
+            _("Comma-delimited list of paths for convenience.")
+        ),
+        METHODS_ATTR: attributes.Schema(
+            _("Comma-delimited list of methods for convenience.")
+        ),
+    }
+
+    def handle_create(self):
+        queue = self.client().queue(self.properties[self.QUEUE])
+        signed_url = queue.signed_url(paths=self.properties[self.PATHS],
+                                      methods=self.properties[self.METHODS],
+                                      ttl_seconds=self.properties[self.TTL])
+        self.data_set(self.SIGNATURE, signed_url['signature'])
+        self.data_set(self.EXPIRES, signed_url['expires'])
+        self.data_set(self.PATHS, jsonutils.dumps(signed_url['paths']))
+        self.data_set(self.METHODS, jsonutils.dumps(signed_url['methods']))
+        self.resource_id_set(self._url(signed_url))
+
+    def _url(self, data):
+        """Return a URL that can be used for example for alarming."""
+        return ('zaqar://?signature={0}&expires={1}&paths={2}'
+                '&methods={3}&project_id={4}&queue_name={5}'.format(
+                    data['signature'], data['expires'],
+                    ','.join(data['paths']), ','.join(data['methods']),
+                    data['project'], self.properties[self.QUEUE]))
+
+    def handle_delete(self):
+        # We can't delete a signed URL
+        return True
+
+    def _resolve_attribute(self, name):
+        if not self.resource_id:
+            return
+        if name == self.SIGNATURE:
+            return self.data()[self.SIGNATURE]
+        elif name == self.EXPIRES:
+            return self.data()[self.EXPIRES]
+        elif name == self.PATHS:
+            return jsonutils.loads(self.data()[self.PATHS])
+        elif name == self.METHODS:
+            return jsonutils.loads(self.data()[self.METHODS])
+
+
 def resource_mapping():
     return {
         'OS::Zaqar::Queue': ZaqarQueue,
+        'OS::Zaqar::SignedQueueURL': ZaqarSignedQueueURL,
     }
