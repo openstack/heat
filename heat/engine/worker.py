@@ -114,7 +114,8 @@ class WorkerService(service.Service):
             if db_child.status == parser.Stack.IN_PROGRESS:
                 child = parser.Stack.load(stack.context,
                                           stack_id=db_child.id,
-                                          stack=db_child)
+                                          stack=db_child,
+                                          load_template=False)
                 _stop_traversal(child)
 
     def stop_all_workers(self, stack):

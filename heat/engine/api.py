@@ -421,10 +421,12 @@ def format_notification_body(stack):
         rpc_api.NOTIFY_STATE: state,
         rpc_api.NOTIFY_STATE_REASON: stack.status_reason,
         rpc_api.NOTIFY_CREATE_AT: heat_timeutils.isotime(stack.created_time),
-        rpc_api.NOTIFY_DESCRIPTION: stack.t[stack.t.DESCRIPTION],
         rpc_api.NOTIFY_TAGS: stack.tags,
         rpc_api.NOTIFY_UPDATE_AT: updated_at
     }
+    if stack.t is not None:
+        result[rpc_api.NOTIFY_DESCRIPTION] = stack.t[stack.t.DESCRIPTION]
+
     return result
 
 
