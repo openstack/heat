@@ -1773,11 +1773,11 @@ class EngineService(service.Service):
         return stack.access_allowed(access_key, resource_name)
 
     def _verify_stack_resource(self, stack, resource_name):
-        if resource_name not in stack:
+        resource = stack.resource_get(resource_name)
+        if not resource:
             raise exception.ResourceNotFound(resource_name=resource_name,
                                              stack_name=stack.name)
 
-        resource = stack[resource_name]
         if resource.id is None:
             raise exception.ResourceNotAvailable(resource_name=resource_name)
 
@@ -1834,7 +1834,7 @@ class EngineService(service.Service):
         stack = parser.Stack.load(cnxt, stack=s, use_stored_context=True)
         self._verify_stack_resource(stack, resource_name)
 
-        rsrc = stack[resource_name]
+        rsrc = stack.resource_get(resource_name)
 
         if callable(rsrc.signal):
             rsrc._signal_check_action()
