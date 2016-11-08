@@ -310,7 +310,7 @@ class Stack(collections.Mapping):
 
         return self._resources
 
-    def _find_filtered_resources(self, filters):
+    def _find_filtered_resources(self, filters=None):
         template_cache = {self.t.id: self.t}
         if filters:
             resources = resource_objects.Resource.get_all_by_stack(
@@ -328,12 +328,13 @@ class Stack(collections.Mapping):
         for res in self._find_filtered_resources(filters):
             yield res
 
-        for res in six.itervalues(self.resources):
+        resources = self._find_filtered_resources()
+        for res in resources:
             if not res.has_nested() or nested_depth == 0:
                 continue
 
             nested_stack = res.nested()
-            if not nested_stack:
+            if nested_stack is None:
                 continue
             for nested_res in nested_stack.iter_resources(nested_depth - 1,
                                                           filters):

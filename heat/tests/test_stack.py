@@ -327,8 +327,9 @@ class StackTest(common.HeatTestCase):
             yield 'Y'
             yield 'Z'
 
-        self.stack['A'].nested = mock.MagicMock()
-        self.stack['A'].nested.return_value.iter_resources = mock.MagicMock(
+        mock_nested = self.patchobject(generic_rsrc.StackResourceType,
+                                       'nested')
+        mock_nested.return_value.iter_resources = mock.MagicMock(
             side_effect=get_more)
 
         resource_generator = self.stack.iter_resources()
@@ -395,12 +396,9 @@ class StackTest(common.HeatTestCase):
         def get_more(nested_depth=0, filters=None):
             if filters:
                 yield 'X'
-
-        self.stack['A'].nested = mock.Mock()
-        self.stack['B'].nested = mock.Mock()
-        self.stack['A'].nested.return_value.iter_resources = mock.Mock(
-            side_effect=get_more)
-        self.stack['B'].nested.return_value.iter_resources = mock.Mock(
+        mock_nested = self.patchobject(generic_rsrc.StackResourceType,
+                                       'nested')
+        mock_nested.return_value.iter_resources = mock.MagicMock(
             side_effect=get_more)
 
         all_resources = list(self.stack.iter_resources(
@@ -410,8 +408,8 @@ class StackTest(common.HeatTestCase):
 
         # Verify, the db query is called with expected filter
         mock_db_call.assert_has_calls([
-            mock.call(self.ctx, self.stack.id),
             mock.call(self.ctx, self.stack.id, dict(name=['A'])),
+            mock.call(self.ctx, self.stack.id),
         ])
 
         # Returns three resources (1 first level + 2 second level)
