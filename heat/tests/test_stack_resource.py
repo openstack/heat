@@ -643,6 +643,18 @@ class StackResourceAttrTest(StackResourceBaseTest):
                           self.parent_resource.get_output,
                           "key")
 
+    def test_get_output_key_no_outputs_from_rpc(self):
+        self.parent_resource.nested_identifier = mock.Mock()
+        self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
+
+        self.parent_resource._rpc_client = mock.MagicMock()
+        output = {}
+        self.parent_resource._rpc_client.show_stack.return_value = [output]
+
+        self.assertRaises(exception.InvalidTemplateAttribute,
+                          self.parent_resource.get_output,
+                          "key")
+
     def test_resolve_attribute_string(self):
         self.parent_resource.nested_identifier = mock.Mock()
         self.parent_resource.nested_identifier.return_value = {'foo': 'bar'}
