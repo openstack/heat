@@ -495,7 +495,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         policy['MaxBatchSize'] = '3'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['InstanceType'] = 'm1.tiny'
+        config['Properties']['InstanceType'] = self.conf.minimal_instance_type
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=10,
@@ -516,7 +516,7 @@ class AutoscalingGroupUpdatePolicyTest(AutoscalingGroupTest):
         policy['MaxBatchSize'] = '4'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['InstanceType'] = 'm1.tiny'
+        config['Properties']['InstanceType'] = self.conf.minimal_instance_type
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=8,

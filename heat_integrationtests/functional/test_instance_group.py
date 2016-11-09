@@ -469,7 +469,7 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         policy['MaxBatchSize'] = '3'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['InstanceType'] = 'm1.tiny'
+        config['Properties']['InstanceType'] = self.conf.instance_type
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=5,
@@ -491,7 +491,7 @@ class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
         policy['MaxBatchSize'] = '4'
         policy['PauseTime'] = 'PT0S'
         config = updt_template['Resources']['JobServerConfig']
-        config['Properties']['InstanceType'] = 'm1.tiny'
+        config['Properties']['InstanceType'] = self.conf.instance_type
 
         self.update_instance_group(updt_template,
                                    num_updates_expected_on_updt=2,
