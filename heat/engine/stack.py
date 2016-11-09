@@ -391,7 +391,6 @@ class Stack(collections.Mapping):
     def dependencies(self):
         if self._dependencies is None:
             self._dependencies = self._get_dependencies(
-                six.itervalues(self.resources),
                 ignore_errors=self.id is not None)
         return self._dependencies
 
@@ -465,13 +464,13 @@ class Stack(collections.Mapping):
                                       for out in six.itervalues(outputs)))
         return set(itertools.chain.from_iterable(attr_lists))
 
-    @staticmethod
-    def _get_dependencies(resources, ignore_errors=True):
+    def _get_dependencies(self, ignore_errors=True):
         """Return the dependency graph for a list of resources."""
         deps = dependencies.Dependencies()
-        for res in resources:
+        for res in six.itervalues(self.resources):
             res.add_explicit_dependencies(deps)
 
+        for res in six.itervalues(self.resources):
             try:
                 res.add_dependencies(deps)
             except Exception as exc:
