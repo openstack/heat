@@ -114,3 +114,16 @@ class KeystoneDomainTest(common.HeatTestCase):
             enabled=prop_diff[domain.KeystoneDomain.ENABLED],
             name='test_domain_2'
         )
+
+    def test_get_live_state(self):
+        sample_domain = {
+            domain.KeystoneDomain.NAME: 'test',
+            domain.KeystoneDomain.ENABLED: True,
+            domain.KeystoneDomain.DESCRIPTION: 'test domain'
+        }
+        d = mock.Mock()
+        d.to_dict.return_value = sample_domain
+        self.domains.get.return_value = d
+
+        reality = self.test_domain.get_live_state(self.test_domain.properties)
+        self.assertEqual(sample_domain, reality)

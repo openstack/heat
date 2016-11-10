@@ -90,6 +90,11 @@ class KeystoneDomain(resource.Resource):
                 enabled=enabled
             )
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        return {self.NAME: resource_data.get(self.NAME),
+                self.DESCRIPTION: resource_data.get(self.DESCRIPTION),
+                self.ENABLED: resource_data.get(self.ENABLED)}
+
 
 def resource_mapping():
     return {
