@@ -38,9 +38,8 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
-from paste import deploy
-import routes
-import routes.middleware
+from paste.deploy import loadwsgi
+from routes import middleware
 import six
 import webob.dec
 import webob.exc
@@ -672,8 +671,7 @@ class Router(object):
           mapper.connect(None, "/v1.0/{path_info:.*}", controller=BlogApp())
         """
         self.map = mapper
-        self._router = routes.middleware.RoutesMiddleware(self._dispatch,
-                                                          self.map)
+        self._router = middleware.RoutesMiddleware(self._dispatch, self.map)
 
     @webob.dec.wsgify
     def __call__(self, req):
@@ -1082,6 +1080,6 @@ def paste_deploy_app(paste_config_file, app_name, conf):
     """
     setup_paste_factories(conf)
     try:
-        return deploy.loadapp("config:%s" % paste_config_file, name=app_name)
+        return loadwsgi.loadapp("config:%s" % paste_config_file, name=app_name)
     finally:
         teardown_paste_factories()
