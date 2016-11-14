@@ -16,7 +16,6 @@
 # - install_heat
 # - configure_heatclient
 # - configure_heat
-# - _config_heat_apache_wsgi
 # - init_heat
 # - start_heat
 # - stop_heat
@@ -96,6 +95,9 @@ function is_heat_enabled {
 # cleanup_heat() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_heat {
+    if [ "$HEAT_USE_MOD_WSGI" == "True" ]; then
+        _cleanup_heat_apache_wsgi
+    fi
     sudo rm -rf $HEAT_AUTH_CACHE_DIR
     sudo rm -rf $HEAT_ENV_DIR
     sudo rm -rf $HEAT_TEMPLATES_DIR
