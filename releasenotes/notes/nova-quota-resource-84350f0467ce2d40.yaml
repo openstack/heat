@@ -1,0 +1,4 @@
+---
+features:
+  - New resource ``OS::Nova::Quota`` is added to enable an admin to manage
+    Compute service quotas for a specific project.
