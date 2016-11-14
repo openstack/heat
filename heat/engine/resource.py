@@ -228,6 +228,8 @@ class Resource(object):
                      client_resolve=False)
         self.update_policy = self.t.update_policy(self.update_policy_schema,
                                                   self.context)
+        self._update_allowed_properties = self.calc_update_allowed(
+            self.properties)
         self.attributes_schema.update(self.base_attributes_schema)
         self.attributes = self._init_attributes()
 
@@ -373,6 +375,13 @@ class Resource(object):
                                             self.context)
         if translate:
             self.translate_properties(self.properties, client_resolve)
+
+    def calc_update_allowed(self, props):
+        update_allowed_set = set(self.update_allowed_properties)
+        for (psk, psv) in six.iteritems(props.props):
+            if psv.update_allowed():
+                update_allowed_set.add(psk)
+        return update_allowed_set
 
     def __eq__(self, other):
         """Allow == comparison of two resources."""
@@ -537,11 +546,9 @@ class Resource(object):
         If any properties have changed which are not in
         update_allowed_properties, raises UpdateReplace.
         """
-        update_allowed_set = set(self.update_allowed_properties)
+        update_allowed_set = self.calc_update_allowed(after_props)
         immutable_set = set()
         for (psk, psv) in six.iteritems(after_props.props):
-            if psv.update_allowed():
-                update_allowed_set.add(psk)
             if psv.immutable():
                 immutable_set.add(psk)
 
@@ -1916,7 +1923,11 @@ class Resource(object):
         :param resource_properties: properties of stored resource plugin.
         :param resource_data: data from current live state of a resource.
         """
-        return {}
+        resource_result = {}
+        for key in self._update_allowed_properties:
+            resource_result[key] = resource_data.get(key)
+
+        return resource_result
 
     def get_live_state(self, resource_properties):
         """Default implementation; should be overridden by resources.
