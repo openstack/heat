@@ -313,15 +313,22 @@ class Property(object):
                                                  validate)]
 
     def _get_bool(self, value):
+        """Get value for boolean property.
+
+        Explicitly checking for bool, or string with lower value
+        "true" or "false", to avoid integer values.
+        """
         if value is None:
             value = self.has_default() and self.default() or False
         if isinstance(value, bool):
             return value
-        normalised = value.lower()
-        if normalised not in ['true', 'false']:
-            raise ValueError(_('"%s" is not a valid boolean') % normalised)
+        if isinstance(value, six.string_types):
+            normalised = value.lower()
+            if normalised not in ['true', 'false']:
+                raise ValueError(_('"%s" is not a valid boolean') % normalised)
+            return normalised == 'true'
 
-        return normalised == 'true'
+        raise TypeError(_('"%s" is not a valid boolean') % value)
 
     def get_value(self, value, validate=False, template=None):
         """Get value from raw value and sanitize according to data type."""
