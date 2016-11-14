@@ -1271,3 +1271,49 @@ class Or(ConditionBoolean):
     def result(self):
         return any(self._get_condition(cd)
                    for cd in function.resolve(self.args))
+
+
+class Filter(function.Function):
+    """A function for filtering out values from lists.
+
+    Takes the form::
+
+        filter:
+          - <values>
+          - <list>
+
+    Returns a new list without the values.
+    """
+    def __init__(self, stack, fn_name, args):
+        super(Filter, self).__init__(stack, fn_name, args)
+
+        self._values, self._sequence = self._parse_args()
+
+    def _parse_args(self):
+        if (not isinstance(self.args, collections.Sequence) or
+                isinstance(self.args, six.string_types)):
+            raise TypeError(_('Argument to "%s" must be a list') %
+                            self.fn_name)
+
+        if len(self.args) != 2:
+            raise ValueError(_('"%(fn)s" expected 2 arguments of the form '
+                               '[values, sequence] but got %(len)d arguments '
+                               'instead') %
+                             {'fn': self.fn_name, 'len': len(self.args)})
+
+        return self.args[0], self.args[1]
+
+    def result(self):
+        sequence = function.resolve(self._sequence)
+        if not sequence:
+            return sequence
+        if not isinstance(sequence, list):
+            raise TypeError(_('"%s" only works with lists') % self.fn_name)
+
+        values = function.resolve(self._values)
+        if not values:
+            return sequence
+        if not isinstance(values, list):
+            raise TypeError(
+                _('"%(fn)s" filters a list of values') % self.fn_name)
+        return [i for i in sequence if i not in values]

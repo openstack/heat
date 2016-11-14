@@ -260,10 +260,12 @@ for the ``heat_template_version`` key:
     The key with value ``2017-02-24`` or ``ocata`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
     up until the Ocata release. This version adds the ``str_replace_strict``
-    function which raises errors for missing params. The complete list of
-    supported functions is::
+    function which raises errors for missing params and the ``filter`` function
+    which filters out values from lists. The complete list of supported
+    functions is::
 
       digest
+      filter
       get_attr
       get_file
       get_param
@@ -1782,3 +1784,33 @@ Another example reference other conditions
 
 This function returns true if any one of other_condition_1 or
 other_condition_2 evaluate to true, otherwise returns false.
+
+filter
+------
+The ``filter`` function removes values from lists.
+
+The syntax of the ``filter`` function is
+
+.. code-block:: yaml
+
+    filter:
+      - <values>
+      - <list>
+
+For example
+
+.. code-block:: yaml
+
+    parameters:
+      list_param:
+        type: comma_delimited_list
+        default: [1, 2, 3]
+
+    outputs:
+      output_list:
+        value:
+          filter:
+            - [3]
+            - {get_param: list_param}
+
+output_list will be evaluated to [1, 2].
