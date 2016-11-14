@@ -405,6 +405,7 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(return_server, 'interface_list',
                          return_value=interfaces)
+        self.patchobject(self.fc.servers, 'tag_list', return_value=['test'])
         public_ip = return_server.networks['public'][0]
         self.assertEqual('1234',
                          server.FnGetAtt('addresses')['public'][0]['port'])
@@ -430,6 +431,14 @@ class ServersTest(common.HeatTestCase):
 
         expected_name = utils.PhysName(stack_name, server.name)
         self.assertEqual(expected_name, server.FnGetAtt('name'))
+        self.assertEqual(['test'], server.FnGetAtt('tags'))
+        # test with unsupported version
+        server.client = mock.Mock(side_effect=[
+            self.fc,
+            exception.InvalidServiceVersion(service='a', version='0')])
+        if server.attributes._resolved_values.get('tags'):
+            del server.attributes._resolved_values['tags']
+        self.assertIsNone(server.FnGetAtt('tags'))
 
     def test_server_create_metadata(self):
         stack_name = 'create_metadata_test_stack'
@@ -2889,6 +2898,29 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(nova.NovaClientPlugin, 'get_flavor',
                          return_value=self.mock_flavor)
         self.assertIsNone(server.validate())
+
+    def test_server_unsupported_microversion_tags(self):
+        stack_name = 'srv_val_tags'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        tmpl.t['Resources']['WebServer']['Properties']['tags'] = ['a']
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         side_effect=[
+                             exception.InvalidServiceVersion(service='a',
+                                                             version='1')])
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        self.assertEqual("Property error: "
+                         "Resources.WebServer.Properties.key_name: Invalid "
+                         "service a version 1", six.text_type(exc))
 
     def test_server_validate_too_many_personality(self):
         stack_name = 'srv_val'
