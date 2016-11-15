@@ -284,14 +284,14 @@ class StackResource(resource.Resource):
             'parent_resource_name': self.name
         })
         with self.translate_remote_exceptions:
-            result = None
             try:
                 result = self.rpc_client()._create_stack(self.context,
                                                          **kwargs)
-            finally:
-                if adopt_data is None and not result:
-                    raw_template.RawTemplate.delete(self.context,
-                                                    kwargs['template_id'])
+            except exception.HeatException:
+                with excutils.save_and_reraise_exception():
+                    if adopt_data is None:
+                        raw_template.RawTemplate.delete(self.context,
+                                                        kwargs['template_id'])
 
         self.resource_id_set(result['stack_id'])
 
@@ -485,12 +485,10 @@ class StackResource(resource.Resource):
             'args': {rpc_api.PARAM_TIMEOUT: timeout_mins}
         })
         with self.translate_remote_exceptions:
-            result = None
             try:
-                result = self.rpc_client()._update_stack(self.context,
-                                                         **kwargs)
-            finally:
-                if not result:
+                self.rpc_client()._update_stack(self.context, **kwargs)
+            except exception.HeatException:
+                with excutils.save_and_reraise_exception():
                     raw_template.RawTemplate.delete(self.context,
                                                     kwargs['template_id'])
         return cookie
