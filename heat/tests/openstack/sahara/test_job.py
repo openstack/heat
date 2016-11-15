@@ -69,7 +69,7 @@ class SaharaJobTest(common.HeatTestCase):
                 return_value='fake_phys_name')
         value = mock.MagicMock(id='fake-resource-id')
         self.client.jobs.create.return_value = value
-        mock_get_res = mock.Mock(return_value='some res')
+        mock_get_res = mock.Mock(return_value='some res id')
         jb.client_plugin().find_resource_by_name_or_id = mock_get_res
         scheduler.TaskRunner(jb.create)()
         return jb
@@ -80,7 +80,7 @@ class SaharaJobTest(common.HeatTestCase):
         expected_args = {
             'name': 'test_name_job',
             'type': 'MapReduce',
-            'libs': ['fake-lib-id'],
+            'libs': ['some res id'],
             'description': 'test_description',
             'is_public': True,
             'is_protected': False,
@@ -100,7 +100,7 @@ class SaharaJobTest(common.HeatTestCase):
         expected_args = {
             'name': 'fake_phys_name',
             'type': 'MapReduce',
-            'libs': ['fake-lib-id'],
+            'libs': ['some res id'],
             'description': 'test_description',
             'is_public': True,
             'is_protected': False,
@@ -153,9 +153,9 @@ class SaharaJobTest(common.HeatTestCase):
         scheduler.TaskRunner(jb.handle_signal, None)()
         expected_args = {
             'job_id': 'fake-resource-id',
-            'cluster_id': 'fake-cluster-id',
-            'input_id': 'fake-input-id',
-            'output_id': 'fake-output-id',
+            'cluster_id': 'some res id',
+            'input_id': 'some res id',
+            'output_id': 'some res id',
             'is_public': True,
             'is_protected': False,
             'interface': {},

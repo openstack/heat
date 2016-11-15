@@ -22,6 +22,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import signal_responder
 from heat.engine import support
+from heat.engine import translation
 
 # NOTE(tlashchova): copied from sahara/utils/api_validator.py
 SAHARA_NAME_REGEX = r"^[a-zA-Z0-9][a-zA-Z0-9\-_\.]*$"
@@ -78,9 +79,9 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
         ),
         MAINS: properties.Schema(
             properties.Schema.LIST,
-            _("IDs of job's main job binary. In case of specific Sahara "
-              "service, this property designed as a list, but accepts only "
-              "one item."),
+            _("IDs or names of job's main job binary. In case of specific "
+              "Sahara service, this property designed as a list, but accepts "
+              "only one item."),
             schema=properties.Schema(
                 properties.Schema.STRING,
                 _("ID of job's main job binary."),
@@ -91,7 +92,7 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
         ),
         LIBS: properties.Schema(
             properties.Schema.LIST,
-            _("IDs of job's lib job binaries."),
+            _("IDs or names of job's lib job binaries."),
             schema=properties.Schema(
                 properties.Schema.STRING,
                 constraints=[
@@ -124,7 +125,7 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
             schema={
                 CLUSTER: properties.Schema(
                     properties.Schema.STRING,
-                    _('ID of the cluster to run the job in.'),
+                    _('ID or name of the cluster to run the job in.'),
                     constraints=[
                         constraints.CustomConstraint('sahara.cluster')
                     ],
@@ -132,14 +133,14 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
                 ),
                 INPUT: properties.Schema(
                     properties.Schema.STRING,
-                    _('ID of the input data source.'),
+                    _('ID or name of the input data source.'),
                     constraints=[
                         constraints.CustomConstraint('sahara.data_source')
                     ]
                 ),
                 OUTPUT: properties.Schema(
                     properties.Schema.STRING,
-                    _('ID of the output data source.'),
+                    _('ID or name of the output data source.'),
                     constraints=[
                         constraints.CustomConstraint('sahara.data_source')
                     ]
@@ -192,6 +193,50 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
     default_client_name = 'sahara'
 
     entity = 'jobs'
+
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.MAINS],
+                client_plugin=self.client_plugin(),
+                finder='find_resource_by_name_or_id',
+                entity='job_binaries'
+            ),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.LIBS],
+                client_plugin=self.client_plugin(),
+                finder='find_resource_by_name_or_id',
+                entity='job_binaries'
+            ),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.DEFAULT_EXECUTION_DATA, self.CLUSTER],
+                client_plugin=self.client_plugin(),
+                finder='find_resource_by_name_or_id',
+                entity='clusters'
+            ),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.DEFAULT_EXECUTION_DATA, self.INPUT],
+                client_plugin=self.client_plugin(),
+                finder='find_resource_by_name_or_id',
+                entity='data_sources'
+            ),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.DEFAULT_EXECUTION_DATA, self.OUTPUT],
+                client_plugin=self.client_plugin(),
+                finder='find_resource_by_name_or_id',
+                entity='data_sources'
+            )
+        ]
 
     def handle_create(self):
         args = {
