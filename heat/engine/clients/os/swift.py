@@ -113,7 +113,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         path = '/v1/AUTH_%s/%s/%s' % (self.context.tenant_id, container_name,
                                       obj_name)
         if timeout is None:
-            timeout = MAX_EPOCH - 60 - time.time()
+            timeout = int(MAX_EPOCH - 60 - time.time())
         tempurl = swiftclient_utils.generate_temp_url(path, timeout, key,
                                                       method)
         sw_url = parse.urlparse(self.client().url)
