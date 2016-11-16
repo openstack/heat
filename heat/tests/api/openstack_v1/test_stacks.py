@@ -551,6 +551,45 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                                        filters=mock.ANY,
                                                        show_nested=True)
 
+    def test_global_index_show_hidden_true(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_hidden': 'True'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       show_hidden=True)
+
+    def test_global_index_show_hidden_false(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_hidden': 'false'}
+        req = self._get('/stacks', params=params)
+        self.controller.index(req, tenant_id=self.tenant)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       show_hidden=False)
+
+    def test_index_show_deleted_True_with_count_false(self, mock_enforce):
+        rpc_client = self.controller.rpc_client
+        rpc_client.list_stacks = mock.Mock(return_value=[])
+        rpc_client.count_stacks = mock.Mock()
+
+        params = {'show_deleted': 'True',
+                  'with_count': 'false'}
+        req = self._get('/stacks', params=params)
+        result = self.controller.index(req, tenant_id=self.tenant)
+        self.assertNotIn('count', result)
+        rpc_client.list_stacks.assert_called_once_with(mock.ANY,
+                                                       filters=mock.ANY,
+                                                       show_deleted=True)
+        self.assertFalse(rpc_client.count_stacks.called)
+
     def test_index_show_deleted_True_with_count_True(self, mock_enforce):
         rpc_client = self.controller.rpc_client
         rpc_client.list_stacks = mock.Mock(return_value=[])
