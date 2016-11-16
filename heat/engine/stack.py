@@ -1991,8 +1991,7 @@ class Stack(collections.Mapping):
             resource_name, {}).get('attrs', {}).get(attribute_key)
 
     def cache_data_resource_all_attributes(self, resource_name):
-        attrs = self.cache_data.get(resource_name, {}).get('attributes', {})
-        return attrs
+        return self.cache_data.get(resource_name, {}).get('attrs', {})
 
     def mark_complete(self):
         """Mark the update as complete.
