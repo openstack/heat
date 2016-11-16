@@ -20,6 +20,7 @@ import itertools
 import re
 import warnings
 
+from keystoneauth1 import exceptions as ks_exceptions
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import encodeutils
@@ -1663,6 +1664,11 @@ class Stack(collections.Mapping):
                         else:
                             self.clients.client('keystone').delete_trust(
                                 trust_id)
+                    except ks_exceptions.Unauthorized:
+                        # ignore if unauthorized, don't to set FAILED
+                        LOG.warning(_LW("Unauthorized, including the cases: "
+                                        "the trustor is deleted or the trust "
+                                        "is expired."))
                     except Exception as ex:
                         LOG.exception(_LE("Error deleting trust"))
                         stack_status = self.FAILED
