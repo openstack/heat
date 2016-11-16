@@ -313,14 +313,14 @@ class Stack(collections.Mapping):
         return self._resources
 
     def _find_filtered_resources(self, filters=None):
-        template_cache = {self.t.id: self.t}
+        rsrc_def_cache = {self.t.id: self.t.resource_definitions(self)}
         if filters:
             resources = resource_objects.Resource.get_all_by_stack(
                 self.context, self.id, filters)
         else:
             resources = self._db_resources_get()
         for rsc in six.itervalues(resources):
-            yield self._resource_from_db_resource(rsc, template_cache)
+            yield self._resource_from_db_resource(rsc, rsrc_def_cache)
 
     def iter_resources(self, nested_depth=0, filters=None):
         """Iterates over all the resources in a stack.
@@ -361,19 +361,24 @@ class Stack(collections.Mapping):
             self._db_resources = _db_resources
         return self._db_resources
 
-    def _resource_from_db_resource(self, db_res, template_cache=None):
+    def _resource_from_db_resource(self, db_res, rsrc_def_cache=None):
         tid = db_res.current_template_id
-        if tid is None or tid == self.t.id:
-            t = self.t
-        elif template_cache and tid in template_cache:
-            t = template_cache[tid]
+        if tid is None:
+            tid = self.t.id
+
+        if rsrc_def_cache and tid in rsrc_def_cache:
+            rsrc_def = rsrc_def_cache[tid]
+        elif tid == self.t.id:
+            rsrc_def = self.t.resource_definitions(self)
+            if rsrc_def_cache:
+                rsrc_def_cache[tid] = rsrc_def
         else:
             t = tmpl.Template.load(self.context, tid)
-            if template_cache:
-                template_cache[tid] = t
+            rsrc_def = t.resource_definitions(self)
+            if rsrc_def_cache:
+                rsrc_def_cache[tid] = rsrc_def
 
-        res_defn = t.resource_definitions(self)[db_res.name]
-        return resource.Resource(db_res.name, res_defn, self)
+        return resource.Resource(db_res.name, rsrc_def[db_res.name], self)
 
     def resource_get(self, name):
         """Return a stack resource, even if not in the current template."""
