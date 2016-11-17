@@ -258,9 +258,17 @@ must overload `translation_rules` method, which should return a list of
 
 .. code-block:: python
 
-   def translation_rules(self):
-        return [properties.TranslationRule(
-            self.properties,
-            properties.TranslationRule.REPLACE,
+   def translation_rules(self, properties):
+        rules = [
+          translation.TranslationRule(
+            properties,
+            translation.TranslationRule.REPLACE,
             translation_path=[self.NETWORKS, self.NETWORK_ID],
-            value_name=self.NETWORK_UUID)]
+            value_name=self.NETWORK_UUID),
+          translation.TranslationRule(
+            properties,
+            translation.TranslationRule.RESOLVE,
+            translation_path=[self.FLAVOR],
+            client_plugin=self.client_plugin('nova'),
+            finder='find_flavor_by_name_or_id')]
+        return rules
