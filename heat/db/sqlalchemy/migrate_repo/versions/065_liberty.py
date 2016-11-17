@@ -31,9 +31,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('template', types.LongText),
         sqlalchemy.Column('files', types.Json),
         sqlalchemy.Column('environment', types.Json),
-        sqlalchemy.Column('predecessor', sqlalchemy.Integer,
-                          sqlalchemy.ForeignKey('raw_template.id',
-                                                name='predecessor_fkey_ref')),
+
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -93,6 +91,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('parent_resource_name', sqlalchemy.String(255)),
         sqlalchemy.Index('ix_stack_name', 'name', mysql_length=255),
         sqlalchemy.Index('ix_stack_tenant', 'tenant', mysql_length=255),
+
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -122,6 +121,13 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('replaced_by', sqlalchemy.Integer),
         sqlalchemy.Column('current_template_id', sqlalchemy.Integer,
                           sqlalchemy.ForeignKey('raw_template.id')),
+        sqlalchemy.Column('properties_data_encrypted',
+                          sqlalchemy.Boolean,
+                          default=False),
+        sqlalchemy.Column('root_stack_id', sqlalchemy.String(36)),
+        sqlalchemy.Index('ix_resource_root_stack_id',
+                         'root_stack_id',
+                         mysql_length=36),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
