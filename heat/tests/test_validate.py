@@ -20,7 +20,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine.clients.os import glance
-from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine.hot import template as hot_tmpl
 from heat.engine import resources
@@ -914,17 +913,13 @@ class ValidateTest(common.HeatTestCase):
         self.addCleanup(self.mock_isa.stop)
         self.engine = service.EngineService('a', 't')
 
-    def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin,
-                               'find_image_by_name_or_id')
-        glance.GlanceClientPlugin.find_image_by_name_or_id(
-            imageId_input).MultipleTimes().AndReturn(imageId)
+    def _mock_get_image_id_success(self, imageId):
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         return_value=imageId)
 
-    def _mock_get_image_id_fail(self, image_id, exp):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin,
-                               'find_image_by_name_or_id')
-        glance.GlanceClientPlugin.find_image_by_name_or_id(
-            image_id).AndRaise(exp)
+    def _mock_get_image_id_fail(self, exp):
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         side_effect=exp)
 
     def test_validate_volumeattach_valid(self):
         t = template_format.parse(test_template_volumeattach % 'vdq')
@@ -1337,11 +1332,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.stub_FlavorConstraint_validate()
         self.stub_ImageConstraint_validate()
-        self.m.ReplayAll()
 
         resource = stack['Instance']
         self.assertRaises(exception.StackValidationFailed, resource.validate)
-        self.m.VerifyAll()
 
     def test_unregistered_image(self):
         t = template_format.parse(test_template_image)
@@ -1351,18 +1344,14 @@ class ValidateTest(common.HeatTestCase):
 
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
-        self._mock_get_image_id_fail('image_name',
-                                     exception.EntityNotFound(
-                                         entity='Image',
-                                         name='image_name'))
+        self._mock_get_image_id_fail(exception.EntityNotFound(
+                                     entity='Image',
+                                     name='image_name'))
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         resource = stack['Instance']
         self.assertRaises(exception.StackValidationFailed, resource.validate)
-
-        self.m.VerifyAll()
 
     def test_duplicated_image(self):
         t = template_format.parse(test_template_image)
@@ -1372,66 +1361,56 @@ class ValidateTest(common.HeatTestCase):
 
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
-        self._mock_get_image_id_fail('image_name',
-                                     exception.PhysicalResourceNameAmbiguity(
-                                         name='image_name'))
+        self._mock_get_image_id_fail(exception.PhysicalResourceNameAmbiguity(
+                                     name='image_name'))
 
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         resource = stack['Instance']
         self.assertRaises(exception.StackValidationFailed,
                           resource.validate)
 
-        self.m.VerifyAll()
-
-    def test_invalid_security_groups_with_nics(self):
+    @mock.patch('heat.engine.clients.os.nova.NovaClientPlugin._create')
+    def test_invalid_security_groups_with_nics(self, mock_create):
         t = template_format.parse(test_template_invalid_secgroups)
         template = tmpl.Template(t,
                                  env=environment.Environment(
                                      {'KeyName': 'test'}))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
-        self._mock_get_image_id_success('image_name', 'image_id')
+        self._mock_get_image_id_success('image_id')
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.ReplayAll()
+        mock_create.return_value = self.fc
 
         resource = stack['Instance']
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
-        self.m.VerifyAll()
 
-    def test_invalid_security_group_ids_with_nics(self):
+    @mock.patch('heat.engine.clients.os.nova.NovaClientPlugin._create')
+    def test_invalid_security_group_ids_with_nics(self, mock_create):
         t = template_format.parse(test_template_invalid_secgroupids)
         template = tmpl.Template(
             t, env=environment.Environment({'KeyName': 'test'}))
         stack = parser.Stack(self.ctx, 'test_stack', template)
 
-        self._mock_get_image_id_success('image_name', 'image_id')
+        self._mock_get_image_id_success('image_id')
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.ReplayAll()
+        mock_create.return_value = self.fc
 
         resource = stack['Instance']
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
-        self.m.VerifyAll()
 
-    def test_client_exception_from_glance_client(self):
+    @mock.patch('heat.engine.clients.os.glance.GlanceClientPlugin.client')
+    def test_client_exception_from_glance_client(self, mock_client):
         t = template_format.parse(test_template_glance_client_exception)
         template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
-        self.m.StubOutWithMock(glance.GlanceClientPlugin, 'client')
-        glance.GlanceClientPlugin.client().AndReturn(self.gc)
+        mock_client.return_value = self.gc
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         self.assertRaises(exception.StackValidationFailed, stack.validate)
-        self.m.VerifyAll()
 
     def test_validate_unique_logical_name(self):
         t = template_format.parse(test_template_unique_logical_name)
