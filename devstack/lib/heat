@@ -44,9 +44,7 @@ GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 HEAT_USE_MOD_WSGI=${HEAT_USE_MOD_WSGI:-False}
 
 HEAT_DIR=$DEST/heat
-
-HEAT_PIP_REPO=$DATA_DIR/heat-pip-repo
-HEAT_PIP_REPO_PORT=${HEAT_PIP_REPO_PORT:-8899}
+HEAT_FILES_DIR=$HEAT_DIR/devstack/files
 
 HEAT_AUTH_CACHE_DIR=${HEAT_AUTH_CACHE_DIR:-/var/cache/heat}
 HEAT_STANDALONE=$(trueorfalse False HEAT_STANDALONE)
@@ -354,7 +352,7 @@ function _config_heat_apache_wsgi {
     local heat_cw_api_port=$HEAT_API_CW_PORT
     local venv_path=""
 
-    sudo cp $FILES/apache-heat-api.template $heat_apache_conf
+    sudo cp $HEAT_FILES_DIR/apache-heat-api.template $heat_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
@@ -366,7 +364,7 @@ function _config_heat_apache_wsgi {
         s|%VIRTUALENV%|$venv_path|g
     " -i $heat_apache_conf
 
-    sudo cp $FILES/apache-heat-api-cfn.template $heat_cfn_apache_conf
+    sudo cp $HEAT_FILES_DIR/apache-heat-api-cfn.template $heat_cfn_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_cfn_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
@@ -378,7 +376,7 @@ function _config_heat_apache_wsgi {
         s|%VIRTUALENV%|$venv_path|g
     " -i $heat_cfn_apache_conf
 
-    sudo cp $FILES/apache-heat-api-cloudwatch.template $heat_cloudwatch_apache_conf
+    sudo cp $HEAT_FILES_DIR/apache-heat-api-cloudwatch.template $heat_cloudwatch_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_cw_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
