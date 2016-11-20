@@ -15,9 +15,7 @@
 # limitations under the License.
 
 from keystoneauth1 import exceptions as keystone_exc
-from keystoneauth1.identity import generic as ks_auth
-from keystoneauth1 import session as ks_session
-import mox
+import mock
 from oslo_config import cfg
 import six
 import webob
@@ -100,70 +98,62 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
         self.response_status = int(status.split(' ', 1)[0])
         self.response_headers = dict(headers)
 
-    def test_valid_v2_request(self):
-        mock_auth = self.m.CreateMock(ks_auth.Password)
-        self.m.StubOutWithMock(ks_auth, 'Password')
+    @mock.patch('keystoneauth1.identity.generic.Password')
+    def test_valid_v2_request(self, mock_password):
+        mock_auth = mock.MagicMock()
+        mock_password.return_value = mock_auth
 
-        ks_auth.Password(
-            auth_url=self.config['auth_uri'],
-            password='goodpassword',
-            project_id='tenant_id1',
-            user_domain_id='domain1',
-            username='user_name1').AndReturn(mock_auth)
+        self.patchobject(mock_auth, 'get_access',
+                         return_value=FakeAccessInfo(**TOKEN_V2_RESPONSE))
 
-        m = mock_auth.get_access(mox.IsA(ks_session.Session))
-        m.AndReturn(FakeAccessInfo(**TOKEN_V2_RESPONSE))
-
-        self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'goodpassword'
         req.headers['X_AUTH_URL'] = self.config['auth_uri']
         req.headers['X_USER_DOMAIN_ID'] = 'domain1'
         self.middleware(req.environ, self._start_fake_response)
-        self.m.VerifyAll()
+        mock_password.assert_called_once_with(auth_url=self.config['auth_uri'],
+                                              password='goodpassword',
+                                              project_id='tenant_id1',
+                                              user_domain_id='domain1',
+                                              username='user_name1')
 
-    def test_valid_v3_request(self):
-        mock_auth = self.m.CreateMock(ks_auth.Password)
-        self.m.StubOutWithMock(ks_auth, 'Password')
+    @mock.patch('keystoneauth1.identity.generic.Password')
+    def test_valid_v3_request(self, mock_password):
+        mock_auth = mock.MagicMock()
+        mock_password.return_value = mock_auth
 
-        ks_auth.Password(auth_url=self.config['auth_uri'],
-                         password='goodpassword',
-                         project_id='tenant_id1',
-                         user_domain_id='domain1',
-                         username='user_name1').AndReturn(mock_auth)
+        self.patchobject(mock_auth, 'get_access',
+                         return_value=FakeAccessInfo(**TOKEN_V3_RESPONSE))
 
-        m = mock_auth.get_access(mox.IsA(ks_session.Session))
-        m.AndReturn(FakeAccessInfo(**TOKEN_V3_RESPONSE))
-
-        self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'goodpassword'
         req.headers['X_AUTH_URL'] = self.config['auth_uri']
         req.headers['X_USER_DOMAIN_ID'] = 'domain1'
         self.middleware(req.environ, self._start_fake_response)
-        self.m.VerifyAll()
+        mock_password.assert_called_once_with(auth_url=self.config['auth_uri'],
+                                              password='goodpassword',
+                                              project_id='tenant_id1',
+                                              user_domain_id='domain1',
+                                              username='user_name1')
 
-    def test_request_with_bad_credentials(self):
-        self.m.StubOutWithMock(ks_auth, 'Password')
+    @mock.patch('keystoneauth1.identity.generic.Password')
+    def test_request_with_bad_credentials(self, mock_password):
+        mock_password.side_effect = keystone_exc.Unauthorized(401)
 
-        m = ks_auth.Password(auth_url=self.config['auth_uri'],
-                             password='badpassword',
-                             project_id='tenant_id1',
-                             user_domain_id='domain1',
-                             username='user_name1')
-        m.AndRaise(keystone_exc.Unauthorized(401))
-
-        self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
         req.headers['X_AUTH_KEY'] = 'badpassword'
         req.headers['X_AUTH_URL'] = self.config['auth_uri']
         req.headers['X_USER_DOMAIN_ID'] = 'domain1'
         self.middleware(req.environ, self._start_fake_response)
-        self.m.VerifyAll()
         self.assertEqual(401, self.response_status)
+        mock_password.assert_called_once_with(auth_url=self.config['auth_uri'],
+                                              password='badpassword',
+                                              project_id='tenant_id1',
+                                              user_domain_id='domain1',
+                                              username='user_name1')
 
     def test_request_with_no_tenant_in_url_or_auth_headers(self):
         req = webob.Request.blank('/')
