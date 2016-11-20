@@ -39,7 +39,7 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             args['username'] = self.context.username
             args['password'] = self.context.password
 
-        return hc.Client('1', endpoint,
+        return hc.Client('1', endpoint_override=endpoint,
                          session=self.context.keystone_session,
                          **args)
 
