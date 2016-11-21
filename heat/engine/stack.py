@@ -1261,7 +1261,7 @@ class Stack(collections.Mapping):
 
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
 
-        self._converge_create_or_update()
+        self.thread_group_mgr.start(self.id, self._converge_create_or_update)
 
     def _converge_create_or_update(self):
         current_resources = self._update_or_store_resources()
@@ -1315,6 +1315,8 @@ class Stack(collections.Mapping):
                                                   self.current_traversal,
                                                   input_data, is_update,
                                                   self.adopt_stack_data)
+                if scheduler.ENABLE_SLEEP:
+                    eventlet.sleep(1)
 
     def rollback(self):
         old_tmpl_id = self.prev_raw_template_id

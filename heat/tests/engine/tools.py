@@ -164,6 +164,7 @@ def get_stack(stack_name, ctx, template=None, with_params=True,
         tmpl = templatem.Template(t)
     stack = parser.Stack(ctx, stack_name, tmpl, convergence=convergence,
                          **kwargs)
+    stack.thread_group_mgr = DummyThreadGroupManager()
     return stack
 
 
@@ -322,6 +323,11 @@ class DummyThreadGroupManager(object):
     def __init__(self):
         self.msg_queues = []
         self.messages = []
+
+    def start(self, stack, func, *args, **kwargs):
+        # Just run the function, so we know it's completed in the test
+        func(*args, **kwargs)
+        return DummyThread()
 
     def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
         # Just run the function, so we know it's completed in the test

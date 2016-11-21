@@ -52,6 +52,7 @@ from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_object
 from heat.objects import resource_properties_data as rpd_object
 from heat.tests import common
+from heat.tests.engine import tools
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
@@ -2074,6 +2075,7 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              tmpl)
+        stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
         res.requires = [2]
@@ -2112,6 +2114,7 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              tmpl)
+        stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
         res.store()
@@ -2206,6 +2209,7 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              tmpl)
+        stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
         res.requires = [2]
@@ -2249,6 +2253,7 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              tmpl)
+        stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
         res.requires = [2]

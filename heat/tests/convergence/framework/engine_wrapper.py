@@ -114,4 +114,5 @@ class Engine(message_processor.MessageProcessor):
         cntxt = utils.dummy_context()
         db_stack = db_api.stack_get_by_name(cntxt, stack_name)
         stk = stack.Stack.load(cntxt, stack=db_stack)
+        stk.thread_group_mgr = SynchronousThreadGroupManager()
         stk.rollback()
