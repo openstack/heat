@@ -211,6 +211,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
+        self.man.thread_group_mgr = tools.DummyThreadGroupManager()
 
     def _stub_update_mocks(self, stack_to_load, stack_to_return):
         self.m.StubOutWithMock(parser, 'Stack')

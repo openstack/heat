@@ -547,6 +547,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
             template=tools.string_template_five, convergence=True)
         tstack.converge_stack(tstack.t, action=tstack.CREATE)
         self.stack = stack.Stack.load(self.ctx, stack_id=tstack.id)
+        self.stack.thread_group_mgr = tools.DummyThreadGroupManager()
         self.stack.converge_stack(self.stack.t, action=self.stack.DELETE)
         self.resource = self.stack['A']
         self.is_update = False
