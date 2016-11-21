@@ -150,16 +150,20 @@ engine_opts = [
                help=_('Number of times to check whether an interface has '
                       'been attached or detached.')),
     cfg.IntOpt('event_purge_batch_size',
-               default=10,
+               min=1,
+               default=200,
                help=_("Controls how many events will be pruned whenever a "
-                      "stack's events exceed max_events_per_stack. Set this "
+                      "stack's events are purged. Set this "
                       "lower to keep more events at the expense of more "
                       "frequent purges.")),
     cfg.IntOpt('max_events_per_stack',
                default=1000,
-               help=_('Maximum events that will be available per stack. Older'
-                      ' events will be deleted when this is reached. Set to 0'
-                      ' for unlimited events per stack.')),
+               help=_('Rough number of maximum events that will be available '
+                      'per stack. Actual number of events can be a bit '
+                      'higher since purge checks take place randomly '
+                      '200/event_purge_batch_size percent of the time. '
+                      'Older events are deleted when events are purged. '
+                      'Set to 0 for unlimited events per stack.')),
     cfg.IntOpt('stack_action_timeout',
                default=3600,
                help=_('Timeout in seconds for stack action (ie. create or'

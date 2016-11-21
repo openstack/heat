@@ -14,6 +14,7 @@
 """Implementation of SQLAlchemy backend."""
 import datetime
 import itertools
+import random
 import sys
 
 from oslo_config import cfg
@@ -913,7 +914,11 @@ def _delete_event_rows(context, stack_id, limit):
 
 def event_create(context, values):
     if 'stack_id' in values and cfg.CONF.max_events_per_stack:
-        if ((event_count_all_by_stack(context, values['stack_id']) >=
+        # only count events and purge on average
+        # 200.0/cfg.CONF.event_purge_batch_size percent of the time.
+        check = (2.0 / cfg.CONF.event_purge_batch_size) > random.uniform(0, 1)
+        if (check and
+            (event_count_all_by_stack(context, values['stack_id']) >=
              cfg.CONF.max_events_per_stack)):
             # prune
             _delete_event_rows(
