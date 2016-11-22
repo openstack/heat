@@ -892,13 +892,16 @@ def _delete_event_rows(context, stack_id, limit):
     # So we must manually supply the IN() values.
     # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
     # confirmed via integration tests.
-    query = _query_all_by_stack(context, stack_id)
     session = context.session
-    ids = [r.id for r in query.order_by(
-        models.Event.id).limit(limit).all()]
-    q = session.query(models.Event).filter(
-        models.Event.id.in_(ids))
-    return q.delete(synchronize_session='fetch')
+    res = session.query(models.Event.id).filter_by(
+        stack_id=stack_id).order_by(models.Event.id).limit(limit).all()
+    if not res:
+        return 0
+    (max_id, ) = res[-1]
+    return session.query(models.Event).filter(
+        models.Event.id <= max_id).filter(
+            models.Event.stack_id == stack_id).delete(
+                synchronize_session=False)
 
 
 def event_create(context, values):
