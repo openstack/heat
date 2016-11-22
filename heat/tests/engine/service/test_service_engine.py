@@ -329,7 +329,7 @@ class ServiceEngineTest(common.HeatTestCase):
             self.eng.thread_group_mgr.stop.assert_has_calls(calls, True)
 
             # # Manage Thread group
-            self.eng.manage_thread_grp.stop.assert_called_with(False)
+            self.eng.manage_thread_grp.stop.assert_called_with()
 
             # Service delete
             admin_context_method.assert_called_once_with()
