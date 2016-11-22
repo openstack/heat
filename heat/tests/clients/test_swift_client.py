@@ -82,7 +82,7 @@ class SwiftUtilsTest(SwiftClientPluginTestCase):
         self.assertThat(url, matchers.MatchesRegex(regexp))
 
         timeout = int(url.split('=')[-1])
-        self.assertTrue(timeout < swift.MAX_EPOCH)
+        self.assertLess(timeout, swift.MAX_EPOCH)
 
     def test_get_temp_url_no_account_key(self):
         self.swift_client.url = ("http://fake-host.com:8080/v1/"

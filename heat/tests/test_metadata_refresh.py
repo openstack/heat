@@ -284,7 +284,7 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
             jsonutils.loads(inst.metadata_get(refresh=True)['test']))
 
         # Verify outgoing calls
-        self.assertTrue(mock_available.call_count > 0)
+        self.assertGreater(mock_available.call_count, 0)
         self.assertEqual(2, mock_handle.call_count)
         self.assertEqual(2, mock_check.call_count)
 

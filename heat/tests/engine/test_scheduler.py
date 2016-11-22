@@ -1283,8 +1283,8 @@ class TimeoutTest(common.HeatTestCase):
         eventlet.sleep(0.01)
         later = scheduler.Timeout(task, 10)
 
-        self.assertTrue(earlier < later)
-        self.assertTrue(later > earlier)
+        self.assertLess(earlier, later)
+        self.assertGreater(later, earlier)
         self.assertEqual(earlier, earlier)
         self.assertNotEqual(earlier, later)
 

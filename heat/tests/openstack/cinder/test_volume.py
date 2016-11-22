@@ -1019,7 +1019,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.patchobject(rsrc, '_store_config_default_properties')
         scheduler.TaskRunner(rsrc.create)()
         # this makes sure the auto increment worked on volume creation
-        self.assertTrue(rsrc.id > 0)
+        self.assertGreater(rsrc.id, 0)
 
         self.m.VerifyAll()
 

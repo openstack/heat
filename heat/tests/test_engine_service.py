@@ -122,7 +122,7 @@ class StackCreateTest(common.HeatTestCase):
         stack.create()
 
         self.assertIsNotNone(stack['WebServer'])
-        self.assertTrue(int(stack['WebServer'].resource_id) > 0)
+        self.assertGreater(int(stack['WebServer'].resource_id), 0)
         self.assertNotEqual(stack['WebServer'].ipaddress, '0.0.0.0')
 
     def test_wordpress_single_instance_stack_adopt(self):
@@ -188,7 +188,7 @@ class StackCreateTest(common.HeatTestCase):
         self.assertIsNotNone(db_s)
 
         self.assertIsNotNone(stack['WebServer'])
-        self.assertTrue(int(stack['WebServer'].resource_id) > 0)
+        self.assertGreater(int(stack['WebServer'].resource_id), 0)
 
         self.patchobject(fc.servers, 'delete',
                          side_effect=fakes_nova.fake_exception())

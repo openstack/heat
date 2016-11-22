@@ -153,7 +153,7 @@ class SwiftTest(common.HeatTestCase):
 
         # Verify Expected Calls
         mock_put.assert_called_once_with(container_name, {})
-        self.assertTrue(mock_head.call_count > 0)
+        self.assertGreater(mock_head.call_count, 0)
 
     @mock.patch('swiftclient.client.Connection.put_container')
     def test_public_read(self, mock_put):

@@ -58,7 +58,7 @@ class ResourceChainTests(functional_base.FunctionalTestsBase):
 
         # Verify
         stack = self.client.stacks.get(stack_id)
-        self.assertTrue(stack is not None)
+        self.assertIsNotNone(stack)
 
         # Top-level resource for chain
         expected = {'my-chain': 'OS::Heat::ResourceChain'}
@@ -74,15 +74,15 @@ class ResourceChainTests(functional_base.FunctionalTestsBase):
 
         # Outputs
         resource_ids = self._stack_output(stack, 'resource-ids')
-        self.assertTrue(resource_ids is not None)
+        self.assertIsNotNone(resource_ids)
         self.assertEqual(2, len(resource_ids))
 
         resource_value = self._stack_output(stack, 'resource-0-value')
-        self.assertTrue(resource_value is not None)
+        self.assertIsNotNone(resource_value)
         self.assertEqual(8, len(resource_value))  # from parameter
 
         resource_attrs = self._stack_output(stack, 'all-resource-attrs')
-        self.assertTrue(resource_attrs is not None)
+        self.assertIsNotNone(resource_attrs)
         self.assertIsInstance(resource_attrs, dict)
         self.assertEqual(2, len(resource_attrs))
         self.assertEqual(8, len(resource_attrs['0']))

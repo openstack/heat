@@ -92,7 +92,7 @@ Resources:
         return stack
 
     def assert_min(self, pattern, string, minimum):
-        self.assertTrue(len(re.findall(pattern, string)) >= minimum)
+        self.assertGreaterEqual(len(re.findall(pattern, string)), minimum)
 
     def test_random_string(self):
         stack = self.create_stack(self.template_random_string)

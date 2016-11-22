@@ -380,7 +380,7 @@ class JSONRequestDeserializerTest(common.HeatTestCase):
     def test_from_json_exceeds_max_json_mb(self):
         cfg.CONF.set_override('max_json_body_size', 10, enforce_type=True)
         body = json.dumps(['a'] * cfg.CONF.max_json_body_size)
-        self.assertTrue(len(body) > cfg.CONF.max_json_body_size)
+        self.assertGreater(len(body), cfg.CONF.max_json_body_size)
         error = self.assertRaises(exception.RequestLimitExceeded,
                                   wsgi.JSONRequestDeserializer().from_json,
                                   body)

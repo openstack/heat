@@ -175,7 +175,7 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'in_create')
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         expected_ip = return_server.networks['public'][0]
         expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
@@ -197,7 +197,7 @@ class InstancesTest(common.HeatTestCase):
         instance = self._create_test_instance(return_server,
                                               'create_with_bdm')
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         expected_ip = return_server.networks['public'][0]
         expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
@@ -375,7 +375,7 @@ class InstancesTest(common.HeatTestCase):
         scheduler.TaskRunner(instance.create)()
 
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         expected_ip = return_server.networks['public'][0]
         expected_az = getattr(return_server, 'OS-EXT-AZ:availability_zone')
@@ -638,7 +638,7 @@ class InstancesTest(common.HeatTestCase):
                 return_server)
         self.m.ReplayAll()
         scheduler.TaskRunner(instance.create)()
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
         self.m.VerifyAll()
 
     def test_instance_validate(self):
@@ -671,7 +671,7 @@ class InstancesTest(common.HeatTestCase):
         instance.status = vm_status
 
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
         d1['server']['status'] = vm_status
@@ -706,7 +706,7 @@ class InstancesTest(common.HeatTestCase):
         instance.resource_id = '1234'
 
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         self.m.StubOutWithMock(self.fc.client, 'delete_servers_1234')
         self.fc.client.delete_servers_1234().AndRaise(

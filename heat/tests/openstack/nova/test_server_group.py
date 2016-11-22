@@ -73,7 +73,7 @@ class NovaServerGroupTest(common.HeatTestCase):
             n = name
 
             def fake_create(name, policies):
-                self.assertTrue(len(name) > 1)
+                self.assertGreater(len(name), 1)
                 return FakeGroup(n)
             self.sg_mgr.create = fake_create
         scheduler.TaskRunner(self.sg.create)()

@@ -394,7 +394,7 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server, server_name)
 
         # this makes sure the auto increment worked on server creation
-        self.assertTrue(server.id > 0)
+        self.assertGreater(server.id, 0)
 
         interfaces = [
             self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),
@@ -1066,7 +1066,7 @@ class ServersTest(common.HeatTestCase):
         _, kwargs = mock_create.call_args
         self.assertEqual(kwargs['scheduler_hints'], scheduler_hints)
         # this makes sure the auto increment worked on server creation
-        self.assertTrue(server.id > 0)
+        self.assertGreater(server.id, 0)
 
     def test_check_maximum(self):
         msg = 'test_check_maximum'
@@ -1451,7 +1451,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
 
         # this makes sure the auto increment worked on server creation
-        self.assertTrue(server.id > 0)
+        self.assertGreater(server.id, 0)
 
         side_effect = [server, fakes_nova.fake_exception()]
         self.patchobject(self.fc.servers, 'get', side_effect=side_effect)
@@ -1465,7 +1465,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
 
         # this makes sure the auto increment worked on server creation
-        self.assertTrue(server.id > 0)
+        self.assertGreater(server.id, 0)
 
         self.patchobject(self.fc.client, 'delete_servers_1234',
                          side_effect=fakes_nova.fake_exception())
@@ -1479,7 +1479,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
 
         # this makes sure the auto increment worked on server creation
-        self.assertTrue(server.id > 0)
+        self.assertGreater(server.id, 0)
 
         def make_error(*args):
             return_server.status = "ERROR"
@@ -1525,7 +1525,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
 
         # this makes sure the auto increment worked on server creation
-        self.assertTrue(server.id > 0)
+        self.assertGreater(server.id, 0)
 
         def make_soft_delete(*args):
             return_server.status = "SOFT_DELETED"

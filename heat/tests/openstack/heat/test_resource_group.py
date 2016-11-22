@@ -992,7 +992,8 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         self.assertEqual(2, len(grp.update_policy))
         self.assertIn('rolling_update', grp.update_policy)
         policy = grp.update_policy['rolling_update']
-        self.assertTrue(policy and len(policy) > 0)
+        self.assertIsNotNone(policy)
+        self.assertGreater(len(policy), 0)
         self.assertEqual(1, int(policy['min_in_service']))
         self.assertEqual(tmpl_batch_sz, int(policy['max_batch_size']))
         self.assertEqual(1, policy['pause_time'])
@@ -1006,7 +1007,8 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         self.assertEqual(2, len(grp.update_policy))
         self.assertIn('rolling_update', grp.update_policy)
         policy = grp.update_policy['rolling_update']
-        self.assertTrue(policy and len(policy) > 0)
+        self.assertIsNotNone(policy)
+        self.assertGreater(len(policy), 0)
         self.assertEqual(0, int(policy['min_in_service']))
         self.assertEqual(1, int(policy['max_batch_size']))
         self.assertEqual(0, policy['pause_time'])

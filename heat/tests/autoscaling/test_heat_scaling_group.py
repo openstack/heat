@@ -523,7 +523,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         tmpl_batch_sz = int(tmpl_policy['max_batch_size'])
         policy = stack['my-group'].properties['rolling_updates']
         self.assertTrue(policy)
-        self.assertTrue(len(policy) == 3)
+        self.assertEqual(3, len(policy))
         self.assertEqual(1, int(policy['min_in_service']))
         self.assertEqual(tmpl_batch_sz, int(policy['max_batch_size']))
         self.assertEqual(1, policy['pause_time'])

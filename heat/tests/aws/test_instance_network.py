@@ -168,7 +168,7 @@ class instancesTest(common.HeatTestCase):
         instance.resource_id = '1234'
         instance.status = vm_status
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         expected_ip = return_server.networks['public'][0]
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
@@ -324,7 +324,7 @@ class instancesTest(common.HeatTestCase):
             return_server, 'in_create_wnic')
 
         # this makes sure the auto increment worked on instance creation
-        self.assertTrue(instance.id > 0)
+        self.assertGreater(instance.id, 0)
 
         expected_ip = return_server.networks['public'][0]
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicIp'))
