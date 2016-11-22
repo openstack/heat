@@ -828,7 +828,14 @@ class Stack(collections.Mapping):
         else:
             iter_rsc = six.itervalues(resources)
 
+        unique_definitions = set(res.t for res in six.itervalues(resources))
+        unique_defn_names = set(defn.name for defn in unique_definitions)
+
         for res in iter_rsc:
+            # Don't validate identical definitions multiple times
+            if res.name not in unique_defn_names:
+                continue
+
             try:
                 if self.resource_validate:
                     result = res.validate()
