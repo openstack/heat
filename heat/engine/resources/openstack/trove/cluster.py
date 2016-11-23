@@ -40,6 +40,12 @@ class TroveCluster(resource.Resource):
         'ERROR', 'FAILED', 'ACTIVE',
     )
 
+    DELETE_STATUSES = (
+        DELETING, NONE
+    ) = (
+        'DELETING', 'NONE'
+    )
+
     TROVE_STATUS_REASON = {
         FAILED: _('The database instance was created, but heat failed to set '
                   'up the datastore. If a database instance is in the FAILED '
@@ -199,6 +205,20 @@ class TroveCluster(resource.Resource):
         LOG.info(_LI("Cluster '%s' has been created"), cluster.name)
         return True
 
+    def cluster_delete(self, cluster_id):
+        try:
+            cluster = self.client().clusters.get(cluster_id)
+            cluster_status = cluster.task['name']
+            if cluster_status not in self.DELETE_STATUSES:
+                return False
+            if cluster_status != self.DELETING:
+                # If cluster already started to delete, don't send another one
+                # request for deleting.
+                cluster.delete()
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+        return True
+
     def handle_delete(self):
         if not self.resource_id:
             return
@@ -208,12 +228,14 @@ class TroveCluster(resource.Resource):
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
         else:
-            cluster.delete()
             return cluster.id
 
     def check_delete_complete(self, cluster_id):
         if not cluster_id:
             return True
+
+        if not self.cluster_delete(cluster_id):
+            return False
 
         try:
             # For some time trove cluster may continue to live
