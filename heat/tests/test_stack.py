@@ -2715,9 +2715,15 @@ class StackTest(common.HeatTestCase):
         with mock.patch('heat.engine.stack.dependencies',
                         new_callable=mock.PropertyMock) as mock_dependencies:
             mock_dependency = mock.MagicMock()
+            mock_dependency.name = 'res'
             mock_dependency.validate.side_effect = AssertionError(expected_msg)
             mock_dependencies.Dependencies.return_value = [mock_dependency]
             stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)
+            mock_res = mock.Mock()
+            mock_res.name = mock_dependency.name
+            mock_res.t = mock.Mock()
+            mock_res.t.name = mock_res.name
+            stc._resources = {mock_res.name: mock_res}
             expected_exception = self.assertRaises(AssertionError,
                                                    stc.validate)
             self.assertEqual(expected_msg, six.text_type(expected_exception))
