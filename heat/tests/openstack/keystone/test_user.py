@@ -280,3 +280,39 @@ class KeystoneUserTest(common.HeatTestCase):
         self.users.get.return_value = user
         res = self.test_user._show_resource()
         self.assertEqual({'attr': 'val'}, res)
+
+    def test_get_live_state(self):
+        user = mock.MagicMock()
+        user.to_dict.return_value = {
+            'description': '',
+            'enabled': True,
+            'domain_id': 'default',
+            'email': 'fake@312.com',
+            'default_project_id': '859aee961e30408e813853e1cffad089',
+            'id': '4060e773e26842a88b7490528d78de4f',
+            'name': 'user1-user-275g3vdmwuo5'}
+        self.users.get.return_value = user
+        role = mock.MagicMock()
+        role.to_dict.return_value = {
+            'scope': {'domain': {'id': '1234'}}, 'role': {'id': '4321'}
+        }
+        self.keystoneclient.role_assignments.list.return_value = [role]
+        group = mock.MagicMock()
+        group.id = '39393'
+        self.keystoneclient.groups.list.return_value = [group]
+        self.test_user.resource_id = '1111'
+
+        reality = self.test_user.get_live_state(self.test_user.properties)
+        expected = {
+            'description': '',
+            'enabled': True,
+            'domain': 'default',
+            'email': 'fake@312.com',
+            'default_project': '859aee961e30408e813853e1cffad089',
+            'name': 'user1-user-275g3vdmwuo5',
+            'groups': ['39393'],
+            'roles': [{'role': '4321', 'domain': '1234', 'project': None}]
+        }
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])
