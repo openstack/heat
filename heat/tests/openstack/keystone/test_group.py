@@ -59,6 +59,7 @@ class KeystoneGroupTest(common.HeatTestCase):
                          return_value=fakes.FakeKeystoneClient(
                              client=self.keystoneclient))
         self.groups = self.keystoneclient.groups
+        self.role_assignments = self.keystoneclient.role_assignments
 
         # Mock client plugin
         def _side_effect(value):
@@ -305,3 +306,36 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.groups.get.return_value = group
         res = self.test_group._show_resource()
         self.assertEqual({'attr': 'val'}, res)
+
+    def test_get_live_state(self):
+        group = mock.Mock()
+        group.to_dict.return_value = {
+            'id': '48ee1f94b77047e592de55a4934c198c',
+            'domain_id': 'default',
+            'name': 'fake',
+            'links': {'self': 'some_link'},
+            'description': ''}
+        roles = mock.MagicMock()
+        roles.to_dict.return_value = {
+            'scope': {
+                'project': {'id': 'fc0fe982401643368ff2eb11d9ca70f1'}},
+            'role': {'id': '3b8b253648f44256a457a5073b78021d'},
+            'group': {'id': '4147558a763046cfb68fb870d58ef4cf'}}
+        self.role_assignments.list.return_value = [roles]
+        self.groups.get.return_value = group
+        self.test_group.resource_id = '1234'
+
+        reality = self.test_group.get_live_state(self.test_group.properties)
+        expected = {
+            'domain': 'default',
+            'name': 'fake',
+            'description': '',
+            'roles': [{
+                'role': '3b8b253648f44256a457a5073b78021d',
+                'project': 'fc0fe982401643368ff2eb11d9ca70f1',
+                'domain': None
+            }]
+        }
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])
