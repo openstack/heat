@@ -139,8 +139,13 @@ class ImmutableParameterModified(HeatException):
 
 
 class InvalidMergeStrategyForParam(HeatException):
-    msg_fmt = _("Invalid merge strategy %(strategy)s for "
-                "parameter %(param)s.")
+    msg_fmt = _("Invalid merge strategy '%(strategy)s' for "
+                "parameter '%(param)s'.")
+
+
+class ConflictingMergeStrategyForParam(HeatException):
+    msg_fmt = _("Conflicting merge strategy '%(strategy)s' for "
+                "parameter '%(param)s' in file '%(env_file)s'.")
 
 
 class InvalidTemplateAttribute(HeatException):

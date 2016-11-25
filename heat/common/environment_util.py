@@ -88,8 +88,8 @@ def parse_param(p_val, p_schema):
     return p_val
 
 
-def merge_parameters(old, new, param_schemata,
-                     merge_strategies):
+def merge_parameters(old, new, param_schemata, strategies_in_file,
+                     available_strategies, env_file):
 
     def param_merge(p_key, p_value, p_schema, deep_merge=False):
         p_type = p_schema.type
@@ -106,14 +106,24 @@ def merge_parameters(old, new, param_schemata,
             raise exception.InvalidMergeStrategyForParam(strategy=MERGE,
                                                          param=p_key)
 
+    new_strategies = {}
+
     if not old:
-        return new
+        return new, new_strategies
 
     for key, value in new.items():
         # if key not in param_schemata ignore it
         if key in param_schemata and value:
-            param_merge_strategy = get_param_merge_strategy(merge_strategies,
-                                                            key)
+            param_merge_strategy = get_param_merge_strategy(
+                strategies_in_file, key)
+            if key not in available_strategies:
+                new_strategies[key] = param_merge_strategy
+
+            elif param_merge_strategy != available_strategies[key]:
+                raise exception.ConflictingMergeStrategyForParam(
+                    strategy=param_merge_strategy,
+                    param=key, env_file=env_file)
+
             if param_merge_strategy == DEEP_MERGE:
                 param_merge(key, value,
                             param_schemata[key],
@@ -123,7 +133,7 @@ def merge_parameters(old, new, param_schemata,
             else:
                 old[key] = value
 
-    return old
+    return old, new_strategies
 
 
 def merge_environments(environment_files, files,
@@ -149,20 +159,23 @@ def merge_environments(environment_files, files,
     if not environment_files:
         return
 
+    available_strategies = {}
+
     for filename in environment_files:
         raw_env = files[filename]
         parsed_env = env_fmt.parse(raw_env)
-        merge_strategies = parsed_env.pop(
+        strategies_in_file = parsed_env.pop(
             env_fmt.PARAMETER_MERGE_STRATEGIES, {})
 
         for section_key, section_value in parsed_env.items():
             if section_value:
                 if section_key in (env_fmt.PARAMETERS,
                                    env_fmt.PARAMETER_DEFAULTS):
-                    params[section_key] = merge_parameters(params[section_key],
-                                                           section_value,
-                                                           param_schemata,
-                                                           merge_strategies)
+                    params[section_key], new_strategies = merge_parameters(
+                        params[section_key], section_value,
+                        param_schemata, strategies_in_file,
+                        available_strategies, filename)
+                    available_strategies.update(new_strategies)
                 else:
                     params[section_key] = merge_map(params[section_key],
                                                     section_value)
