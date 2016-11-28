@@ -781,7 +781,8 @@ class Stack(collections.Mapping):
         return handler and handler(resource_name)
 
     @profiler.trace('Stack.validate', hide_args=False)
-    def validate(self, ignorable_errors=None, validate_by_deps=True):
+    def validate(self, ignorable_errors=None, validate_by_deps=True,
+                 validate_resources=True):
         """Validates the stack."""
         # TODO(sdake) Should return line number of invalid reference
 
@@ -828,33 +829,37 @@ class Stack(collections.Mapping):
         else:
             iter_rsc = six.itervalues(resources)
 
-        unique_definitions = set(res.t for res in six.itervalues(resources))
-        unique_defn_names = set(defn.name for defn in unique_definitions)
+        # Validate resources only for top-level stacks. Nested stacks have
+        # already had their resources validated by their parent.
+        if validate_resources:
+            unique_defns = set(res.t for res in six.itervalues(resources))
+            unique_defn_names = set(defn.name for defn in unique_defns)
 
-        for res in iter_rsc:
-            # Don't validate identical definitions multiple times
-            if res.name not in unique_defn_names:
-                continue
+            for res in iter_rsc:
+                # Don't validate identical definitions multiple times
+                if res.name not in unique_defn_names:
+                    continue
 
-            try:
-                if self.resource_validate:
-                    result = res.validate()
-                else:
-                    result = res.validate_template()
-            except exception.HeatException as ex:
-                LOG.debug('%s', ex)
-                if ignorable_errors and ex.error_code in ignorable_errors:
-                    result = None
-                else:
+                try:
+                    if self.resource_validate:
+                        result = res.validate()
+                    else:
+                        result = res.validate_template()
+                except exception.HeatException as ex:
+                    LOG.debug('%s', ex)
+                    if ignorable_errors and ex.error_code in ignorable_errors:
+                        result = None
+                    else:
+                        raise
+                except AssertionError:
                     raise
-            except AssertionError:
-                raise
-            except Exception as ex:
-                LOG.info(_LI("Exception in stack validation"), exc_info=True)
-                raise exception.StackValidationFailed(
-                    message=encodeutils.safe_decode(six.text_type(ex)))
-            if result:
-                raise exception.StackValidationFailed(message=result)
+                except Exception as ex:
+                    LOG.info(_LI("Exception in stack validation"),
+                             exc_info=True)
+                    raise exception.StackValidationFailed(
+                        message=encodeutils.safe_decode(six.text_type(ex)))
+                if result:
+                    raise exception.StackValidationFailed(message=result)
 
         for op_name, output in six.iteritems(self.outputs):
             try:

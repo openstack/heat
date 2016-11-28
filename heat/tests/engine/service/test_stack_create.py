@@ -73,7 +73,7 @@ class StackCreateTest(common.HeatTestCase):
         if environment_files:
             mock_merge.assert_called_once_with(environment_files, None,
                                                params, mock.ANY)
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=True)
 
     def test_stack_create(self):
         stack_name = 'service_create_test_stack'
@@ -277,16 +277,20 @@ class StackCreateTest(common.HeatTestCase):
     def test_stack_create_nested(self, mock_validate, mock_tg):
         convergence_engine = cfg.CONF.convergence_engine
         stack_name = 'service_create_nested_test_stack'
+        parent_stack = tools.get_stack(stack_name + '_parent', self.ctx)
+        owner_id = parent_stack.store()
         mock_tg.return_value = tools.DummyThreadGroup()
 
-        stk = tools.get_stack(stack_name, self.ctx, with_params=True)
+        stk = tools.get_stack(stack_name, self.ctx, with_params=True,
+                              owner_id=owner_id, nested_depth=1)
         tmpl_id = stk.t.store(self.ctx)
 
         mock_load = self.patchobject(templatem.Template, 'load',
                                      return_value=stk.t)
         mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
         result = self.man.create_stack(self.ctx, stack_name, None,
-                                       None, None, {}, nested_depth=1,
+                                       None, None, {},
+                                       owner_id=owner_id, nested_depth=1,
                                        template_id=tmpl_id)
         self.assertEqual(stk.identifier(), result)
         self.assertIsInstance(result, dict)
@@ -294,13 +298,13 @@ class StackCreateTest(common.HeatTestCase):
 
         mock_load.assert_called_once_with(self.ctx, tmpl_id)
         mock_stack.assert_called_once_with(self.ctx, stack_name, stk.t,
-                                           owner_id=None, nested_depth=1,
+                                           owner_id=owner_id, nested_depth=1,
                                            user_creds_id=None,
                                            stack_user_project_id=None,
                                            convergence=convergence_engine,
                                            parent_resource=None)
 
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=False)
 
     def test_stack_validate(self):
         stack_name = 'stack_create_test_validate'
