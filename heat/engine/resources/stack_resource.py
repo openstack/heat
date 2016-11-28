@@ -596,7 +596,7 @@ class StackResource(resource.Resource):
                                                  dict(stack_identity))
             if not stack:
                 return
-            outputs = stack[0][rpc_api.STACK_OUTPUTS]
+            outputs = stack[0].get(rpc_api.STACK_OUTPUTS) or {}
             self._outputs = {o[rpc_api.OUTPUT_KEY]: o[rpc_api.OUTPUT_VALUE]
                              for o in outputs if rpc_api.OUTPUT_ERROR not in o}
 
