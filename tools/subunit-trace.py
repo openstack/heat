@@ -268,7 +268,7 @@ def parse_args():
                         'debug information in realtime')
     parser.add_argument('--fails', '-f', action='store_true',
                         dest='post_fails', help='Print failure debug '
-                        'information after the stream is proccesed')
+                        'information after the stream is processed')
     parser.add_argument('--failonly', action='store_true',
                         dest='failonly', help="Don't print success items",
                         default=(
