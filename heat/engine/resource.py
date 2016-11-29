@@ -1068,12 +1068,11 @@ class Resource(object):
 
     def needs_replace_failed(self):
         """Needs replace if resource is in *_FAILED."""
-        if self.status == self.FAILED:
-            return True
+        return True
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
-        if self.needs_replace_failed():
+        if self.status == self.FAILED and self.needs_replace_failed():
             raise UpdateReplace(self)
 
         if (self.stack.convergence and

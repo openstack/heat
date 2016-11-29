@@ -621,6 +621,49 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         update_readonly_mock.assert_called_once_with(fv.id, True)
 
+    def test_cinder_volume_update_no_need_replace(self):
+        # update read only access mode
+        fv = vt_base.FakeVolume('creating')
+        stack_name = 'test_update_no_need_replace'
+        cinder.CinderClientPlugin._create().AndReturn(
+            self.cinder_fc)
+
+        vol_name = utils.PhysName(stack_name, 'volume2')
+        self.cinder_fc.volumes.create(
+            size=2, availability_zone='nova',
+            description=None,
+            name=vol_name,
+            multiattach=False
+        ).AndReturn(fv)
+
+        fv_ready = vt_base.FakeVolume('available', id=fv.id, size=2,
+                                      attachments=[])
+        self.cinder_fc.volumes.get(fv.id).MultipleTimes().AndReturn(fv_ready)
+        self.cinder_fc.volumes.extend(fv.id, 3)
+
+        self.m.ReplayAll()
+
+        stack = utils.parse_stack(self.t, stack_name=stack_name)
+
+        rsrc = self.create_volume(self.t, stack, 'volume2')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['size'] = 1
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        update_task = scheduler.TaskRunner(rsrc.update, after)
+        ex = self.assertRaises(exception.ResourceFailure, update_task)
+        self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
+        self.assertIn("NotSupported: resources.volume2: Shrinking volume is "
+                      "not supported", six.text_type(ex))
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['size'] = 3
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+        scheduler.TaskRunner(rsrc.update, after)()
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
     def _update_if_attached(self, stack_name, update_type='resize'):
         # create script
         self.stub_VolumeConstraint_validate()
