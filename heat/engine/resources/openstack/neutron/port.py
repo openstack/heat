@@ -263,7 +263,8 @@ class Port(neutron.NeutronResource):
               'that this only works for Neutron deployments that support '
               'the bindings extension.'),
             constraints=[
-                constraints.AllowedValues(['normal', 'direct', 'macvtap']),
+                constraints.AllowedValues(['normal', 'direct', 'macvtap',
+                                           'direct-physical', 'baremetal']),
             ],
             support_status=support.SupportStatus(version='2015.1'),
             update_allowed=True
