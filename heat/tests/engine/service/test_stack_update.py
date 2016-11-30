@@ -99,7 +99,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             user_creds_id=u'1',
             username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=True)
 
     def test_stack_update_with_environment_files(self):
         # Setup
@@ -136,7 +136,11 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
     def test_stack_update_nested(self):
         stack_name = 'service_update_nested_test_stack'
-        old_stack = tools.get_stack(stack_name, self.ctx)
+        parent_stack = tools.get_stack(stack_name + '_parent', self.ctx)
+        owner_id = parent_stack.store()
+        old_stack = tools.get_stack(stack_name, self.ctx,
+                                    owner_id=owner_id, nested_depth=1,
+                                    user_creds_id=parent_stack.user_creds_id)
         sid = old_stack.store()
         old_stack.set_stack_user_project_id('1234')
         s = stack_object.Stack.get_by_id(self.ctx, sid)
@@ -174,8 +178,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             prev_raw_template_id=None,
             current_deps=None,
             disable_rollback=True,
-            nested_depth=0,
-            owner_id=None,
+            nested_depth=1,
+            owner_id=owner_id,
             parent_resource=None,
             stack_user_project_id='1234',
             strict_validate=True,
@@ -184,7 +188,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             user_creds_id=u'1',
             username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=False)
 
     def test_stack_update_existing_parameters(self):
         # Use a template with existing parameters, then update the stack
@@ -458,7 +462,7 @@ resources:
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
 
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=True)
         mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
         mock_load.assert_called_once_with(self.ctx, stack=s)
@@ -606,7 +610,7 @@ resources:
             timeout_mins=60, user_creds_id=u'1',
             username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=True)
 
     def test_stack_update_stack_id_equal(self):
         stack_name = 'test_stack_update_stack_id_equal'
@@ -722,7 +726,7 @@ resources:
             timeout_mins=60, user_creds_id=u'1',
             username='test_username')
         mock_load.assert_called_once_with(self.ctx, stack=s)
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=True)
 
     def test_stack_update_nonexist(self):
         stack_name = 'service_update_nonexist_test_stack'
@@ -1039,7 +1043,7 @@ resources:
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_tmpl.assert_called_once_with(new_template, files=None)
         mock_env.assert_called_once_with(params)
-        mock_validate.assert_called_once_with()
+        mock_validate.assert_called_once_with(validate_resources=True)
 
         if environment_files:
             mock_merge.assert_called_once_with(environment_files, None,

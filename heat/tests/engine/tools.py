@@ -151,7 +151,7 @@ resources:
 
 
 def get_stack(stack_name, ctx, template=None, with_params=True,
-              convergence=False):
+              convergence=False, **kwargs):
     if template is None:
         t = template_format.parse(wp_template)
         if with_params:
@@ -162,7 +162,8 @@ def get_stack(stack_name, ctx, template=None, with_params=True,
     else:
         t = template_format.parse(template)
         tmpl = templatem.Template(t)
-    stack = parser.Stack(ctx, stack_name, tmpl, convergence=convergence)
+    stack = parser.Stack(ctx, stack_name, tmpl, convergence=convergence,
+                         **kwargs)
     return stack
 
 
