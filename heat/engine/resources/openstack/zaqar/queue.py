@@ -136,7 +136,9 @@ class ZaqarSignedQueueURL(resource.Resource):
     """A resource for managing signed URLs of Zaqar queues.
 
     Signed URLs allow to give specific access to queues, for example to be used
-    as alarm notifications.
+    as alarm notifications. To supply a signed queue URL to Aodh as an action
+    URL, pass "zaqar://?" followed by the query_str attribute of the signed
+    queue URL resource.
     """
 
     default_client_name = "zaqar"
@@ -150,9 +152,9 @@ class ZaqarSignedQueueURL(resource.Resource):
     )
 
     ATTRIBUTES = (
-        SIGNATURE, EXPIRES, PATHS_ATTR, METHODS_ATTR,
+        SIGNATURE, EXPIRES, PATHS_ATTR, METHODS_ATTR, PROJECT, QUERY_STR,
     ) = (
-        'signature', 'expires', 'paths', 'methods',
+        'signature', 'expires', 'paths', 'methods', 'project', 'query_str',
     )
 
     properties_schema = {
@@ -194,6 +196,12 @@ class ZaqarSignedQueueURL(resource.Resource):
         METHODS_ATTR: attributes.Schema(
             _("Comma-delimited list of methods for convenience.")
         ),
+        PROJECT: attributes.Schema(
+            _("The ID of the Keystone project containing the queue.")
+        ),
+        QUERY_STR: attributes.Schema(
+            _("An HTTP URI query fragment.")
+        ),
     }
 
     def handle_create(self):
@@ -203,17 +211,24 @@ class ZaqarSignedQueueURL(resource.Resource):
                                       ttl_seconds=self.properties[self.TTL])
         self.data_set(self.SIGNATURE, signed_url['signature'])
         self.data_set(self.EXPIRES, signed_url['expires'])
-        self.data_set(self.PATHS, jsonutils.dumps(signed_url['paths']))
-        self.data_set(self.METHODS, jsonutils.dumps(signed_url['methods']))
-        self.resource_id_set(self._url(signed_url))
+        self.data_set(self.PATHS_ATTR, jsonutils.dumps(signed_url['paths']))
+        self.data_set(self.METHODS_ATTR,
+                      jsonutils.dumps(signed_url['methods']))
+        self.data_set(self.PROJECT, signed_url['project'])
+        self.resource_id_set(self.physical_resource_name())
 
-    def _url(self, data):
-        """Return a URL that can be used for example for alarming."""
-        return ('zaqar://?signature={0}&expires={1}&paths={2}'
+    def _query_str(self, data):
+        """Return the query fragment of a signed URI.
+
+        This can be used, for example, for alarming.
+        """
+        paths = jsonutils.loads(data[self.PATHS_ATTR])
+        methods = jsonutils.loads(data[self.METHODS_ATTR])
+        return ('signature={0}&expires={1}&paths={2}'
                 '&methods={3}&project_id={4}&queue_name={5}'.format(
-                    data['signature'], data['expires'],
-                    ','.join(data['paths']), ','.join(data['methods']),
-                    data['project'], self.properties[self.QUEUE]))
+                    data[self.SIGNATURE], data[self.EXPIRES],
+                    ','.join(paths), ','.join(methods),
+                    data[self.PROJECT], self.properties[self.QUEUE]))
 
     def handle_delete(self):
         # We can't delete a signed URL
@@ -222,14 +237,12 @@ class ZaqarSignedQueueURL(resource.Resource):
     def _resolve_attribute(self, name):
         if not self.resource_id:
             return
-        if name == self.SIGNATURE:
-            return self.data()[self.SIGNATURE]
-        elif name == self.EXPIRES:
-            return self.data()[self.EXPIRES]
-        elif name == self.PATHS:
-            return jsonutils.loads(self.data()[self.PATHS])
-        elif name == self.METHODS:
-            return jsonutils.loads(self.data()[self.METHODS])
+        if name in (self.SIGNATURE, self.EXPIRES, self.PROJECT):
+            return self.data()[name]
+        elif name in (self.PATHS_ATTR, self.METHODS_ATTR):
+            return jsonutils.loads(self.data()[name])
+        elif name == self.QUERY_STR:
+            return self._query_str(self.data())
 
 
 def resource_mapping():
