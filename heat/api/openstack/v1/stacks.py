@@ -303,10 +303,10 @@ class StackController(object):
 
         if use_admin_cnxt:
             cnxt = context.get_admin_context()
-            include_project = True
         else:
             cnxt = req.context
-            include_project = False
+
+        include_project = True if cnxt.is_admin else False
 
         stacks = self.rpc_client.list_stacks(cnxt,
                                              filters=filter_params,
