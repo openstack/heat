@@ -30,6 +30,8 @@ class CircularDependencyException(exception.HeatException):
 class Node(object):
     """A node in a dependency graph."""
 
+    __slots__ = ('require', 'satisfy')
+
     def __init__(self, requires=None, required_by=None):
         """Initialisation of the node.
 
