@@ -218,7 +218,8 @@ SOFTWARE_CONFIG_KEYS = (
     SOFTWARE_CONFIG_INPUTS,
     SOFTWARE_CONFIG_OUTPUTS,
     SOFTWARE_CONFIG_OPTIONS,
-    SOFTWARE_CONFIG_CREATION_TIME
+    SOFTWARE_CONFIG_CREATION_TIME,
+    SOFTWARE_CONFIG_PROJECT
 ) = (
     'id',
     'name',
@@ -227,7 +228,8 @@ SOFTWARE_CONFIG_KEYS = (
     'inputs',
     'outputs',
     'options',
-    'creation_time'
+    'creation_time',
+    'project'
 )
 
 SOFTWARE_DEPLOYMENT_KEYS = (

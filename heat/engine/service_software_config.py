@@ -47,7 +47,9 @@ class SoftwareConfigService(object):
             cnxt,
             limit=limit,
             marker=marker)
-        result = [api.format_software_config(sc, detail=False) for sc in scs]
+        result = [api.format_software_config(sc, detail=False,
+                                             include_project=cnxt.is_admin)
+                  for sc in scs]
         return result
 
     def create_software_config(self, cnxt, group, name, config,

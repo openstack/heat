@@ -569,7 +569,7 @@ def format_validate_parameter(param):
     return res
 
 
-def format_software_config(sc, detail=True):
+def format_software_config(sc, detail=True, include_project=False):
     if sc is None:
         return
     result = {
@@ -584,6 +584,9 @@ def format_software_config(sc, detail=True):
         result[rpc_api.SOFTWARE_CONFIG_INPUTS] = sc.config['inputs']
         result[rpc_api.SOFTWARE_CONFIG_OUTPUTS] = sc.config['outputs']
         result[rpc_api.SOFTWARE_CONFIG_OPTIONS] = sc.config['options']
+
+    if include_project:
+        result[rpc_api.SOFTWARE_CONFIG_PROJECT] = sc.tenant
     return result
 
 
