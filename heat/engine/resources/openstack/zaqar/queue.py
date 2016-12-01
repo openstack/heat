@@ -49,8 +49,7 @@ class ZaqarQueue(resource.Resource):
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
-            _("Name of the queue instance to create."),
-            required=True),
+            _("Name of the queue instance to create.")),
         METADATA: properties.Schema(
             properties.Schema.MAP,
             description=_("Arbitrary key/value metadata to store "
@@ -81,7 +80,10 @@ class ZaqarQueue(resource.Resource):
     }
 
     def physical_resource_name(self):
-        return self.properties[self.NAME]
+        name = self.properties[self.NAME]
+        if name is not None:
+            return name
+        return super(ZaqarQueue, self).physical_resource_name()
 
     def handle_create(self):
         """Create a zaqar message queue."""
@@ -126,8 +128,11 @@ class ZaqarQueue(resource.Resource):
         return {self.METADATA: metadata}
 
     def parse_live_resource_data(self, resource_properties, resource_data):
+        name = self.resource_id
+        if name == super(ZaqarQueue, self).physical_resource_name():
+            name = None
         return {
-            self.NAME: self.resource_id,
+            self.NAME: name,
             self.METADATA: resource_data[self.METADATA]
         }
 

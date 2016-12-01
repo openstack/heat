@@ -107,6 +107,32 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
+    def test_create_default_name(self):
+        t = template_format.parse(wp_template)
+        del t['Resources']['MyQueue2']['Properties']['name']
+        self.parse_stack(t)
+
+        queue = self.stack['MyQueue2']
+        self.m.StubOutWithMock(queue, 'client')
+        queue.client().MultipleTimes().AndReturn(self.fc)
+
+        name_match = utils.PhysName(self.stack.name, 'MyQueue2')
+        self.m.StubOutWithMock(self.fc, 'queue')
+        self.fc.queue(name_match, auto_create=False).WithSideEffects(FakeQueue)
+
+        self.m.ReplayAll()
+
+        scheduler.TaskRunner(queue.create)()
+
+        queue_name = queue.physical_resource_name()
+        self.assertEqual(name_match, queue_name)
+
+        self.fc.api_url = 'http://127.0.0.1:8888/v1'
+        self.assertEqual('http://127.0.0.1:8888/v1/queues/' + queue_name,
+                         queue.FnGetAtt('href'))
+
+        self.m.VerifyAll()
+
     def test_delete(self):
         t = template_format.parse(wp_template)
         self.parse_stack(t)
