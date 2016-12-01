@@ -315,11 +315,12 @@ resources:
 
         self.assertEqual('secret', self.rsrc.FnGetAtt('signature'))
         self.assertEqual('2020-01-01', self.rsrc.FnGetAtt('expires'))
+        self.assertEqual('project_id', self.rsrc.FnGetAtt('project'))
         self.assertEqual(['/v2/foo/messages', '/v2/foo/sub'],
                          self.rsrc.FnGetAtt('paths'))
         self.assertEqual(['DELETE', 'POST'], self.rsrc.FnGetAtt('methods'))
         self.assertEqual(
-            'zaqar://?signature=secret&expires=2020-01-01'
+            'signature=secret&expires=2020-01-01'
             '&paths=/v2/foo/messages,/v2/foo/sub&methods=DELETE,POST'
             '&project_id=project_id&queue_name=foo',
-            self.rsrc.resource_id)
+            self.rsrc.get_attribute('query_str'))
