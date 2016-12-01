@@ -306,8 +306,6 @@ class StackController(object):
         else:
             cnxt = req.context
 
-        include_project = True if cnxt.is_admin else False
-
         stacks = self.rpc_client.list_stacks(cnxt,
                                              filters=filter_params,
                                              **params)
@@ -330,7 +328,7 @@ class StackController(object):
 
         return stacks_view.collection(req, stacks=stacks,
                                       count=count,
-                                      include_project=include_project)
+                                      include_project=cnxt.is_admin)
 
     @util.policy_enforce
     def global_index(self, req):
