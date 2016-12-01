@@ -123,6 +123,8 @@ class ClientManager(object):
                 password=self._password())
 
     def _get_identity_client(self):
+        user_domain_id = self.conf.user_domain_id
+        project_domain_id = self.conf.project_domain_id
         user_domain_name = self.conf.user_domain_name
         project_domain_name = self.conf.project_domain_name
         kwargs = {
@@ -134,6 +136,8 @@ class ClientManager(object):
         # keystone v2 can't ignore domain details
         if self.auth_version == '3':
             kwargs.update({
+                'user_domain_id': user_domain_id,
+                'project_domain_id': project_domain_id,
                 'user_domain_name': user_domain_name,
                 'project_domain_name': project_domain_name})
         auth = password.Password(**kwargs)

@@ -53,6 +53,12 @@ HeatGroup = [
     cfg.StrOpt('project_domain_name',
                help="Project domain name, if keystone v3 auth_url"
                     "is used"),
+    cfg.StrOpt('user_domain_id',
+               help="User domain id, if keystone v3 auth_url"
+                    "is used"),
+    cfg.StrOpt('project_domain_id',
+               help="Project domain id, if keystone v3 auth_url"
+                    "is used"),
     cfg.StrOpt('region',
                help="The region name to use"),
     cfg.StrOpt('instance_type',
