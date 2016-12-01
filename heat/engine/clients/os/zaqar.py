@@ -34,9 +34,8 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
     DEFAULT_TTL = 3600
 
     def _create(self):
-        return self.create_for_tenant(
-            self.context.tenant_id,
-            self.context.keystone_session.get_token())
+        return zaqarclient.Client(version=2,
+                                  session=self.context.keystone_session)
 
     def create_for_tenant(self, tenant_id, token):
         con = self.context
@@ -54,7 +53,6 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
                      'options': opts}
         conf = {'auth_opts': auth_opts}
         endpoint = self.url_for(service_type=self.MESSAGING)
-
         return zaqarclient.Client(url=endpoint, conf=conf, version=2)
 
     def create_from_signed_url(self, project_id, paths, expires, methods,
