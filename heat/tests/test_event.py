@@ -119,6 +119,39 @@ class EventTest(EventCommon):
         self.assertEqual(1, len(events))
         self.assertEqual('arizona', events[0].physical_resource_id)
 
+    def test_store_caps_events_random_purge(self):
+        cfg.CONF.set_override('event_purge_batch_size', 100, enforce_type=True)
+        cfg.CONF.set_override('max_events_per_stack', 1, enforce_type=True)
+        self.resource.resource_id_set('resource_physical_id')
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'arkansas', self.resource.properties,
+                        self.resource.name, self.resource.type())
+        e.store()
+
+        # purge happens
+        with mock.patch("random.uniform") as mock_random_uniform:
+            mock_random_uniform.return_value = 2.0 / 100 - .0001
+            e = event.Event(self.ctx, self.stack, 'TEST',
+                            'IN_PROGRESS', 'Testing',
+                            'alaska', self.resource.properties,
+                            self.resource.name, self.resource.type())
+            e.store()
+        events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
+        self.assertEqual(1, len(events))
+        self.assertEqual('alaska', events[0].physical_resource_id)
+
+        # no purge happens
+        with mock.patch("random.uniform") as mock_random_uniform:
+            mock_random_uniform.return_value = 2.0 / 100 + .0001
+            e = event.Event(self.ctx, self.stack, 'TEST',
+                            'IN_PROGRESS', 'Testing',
+                            'aardvark', self.resource.properties,
+                            self.resource.name, self.resource.type())
+            e.store()
+        events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
+        self.assertEqual(2, len(events))
+
     def test_identifier(self):
         event_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
