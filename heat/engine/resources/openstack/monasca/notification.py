@@ -108,8 +108,12 @@ class MonascaNotification(resource.Resource):
             msg = _('The period property can only be specified against a '
                     'Webhook Notification type.')
             raise exception.StackValidationFailed(message=msg)
+
+        address = self.properties[self.ADDRESS]
+        if not address:
+            return
+
         if self.properties[self.TYPE] == self.WEBHOOK:
-            address = self.properties[self.ADDRESS]
             try:
                 parsed_address = urllib.parse.urlparse(address)
             except Exception:
@@ -136,10 +140,10 @@ class MonascaNotification(resource.Resource):
                 }
                 raise exception.StackValidationFailed(message=msg)
         elif (self.properties[self.TYPE] == self.EMAIL and
-              not re.match('^.+@.+$', self.properties[self.ADDRESS])):
+              not re.match('^\S+@\S+$', address)):
             msg = _('Address "%(addr)s" doesn\'t satisfies allowed format for '
                     '"%(email)s" type of "%(type)s" property') % {
-                'addr': self.properties[self.ADDRESS],
+                'addr': address,
                 'email': self.EMAIL,
                 'type': self.TYPE}
             raise exception.StackValidationFailed(message=msg)

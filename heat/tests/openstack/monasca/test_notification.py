@@ -15,6 +15,7 @@ import mock
 import six
 
 from heat.common import exception
+from heat.engine.cfn import functions as cfn_funcs
 from heat.engine.clients.os import monasca as client_plugin
 from heat.engine.resources.openstack.monasca import notification
 from heat.engine import stack
@@ -80,6 +81,14 @@ class MonascaNotificationTest(common.HeatTestCase):
         self.test_resource.properties.data['type'] = self.test_resource.EMAIL
         self.assertRaises(exception.StackValidationFailed,
                           self.test_resource.validate)
+
+    def test_validate_no_scheme_address_for_get_attr(self):
+        self.test_resource.properties.data['type'] = self.test_resource.WEBHOOK
+        self.patchobject(cfn_funcs, 'GetAtt', return_value=None)
+        get_att = cfn_funcs.GetAtt(self.stack, 'Fn::GetAtt',
+                                   ["ResourceA", "abc"])
+        self.test_resource.properties.data['address'] = get_att
+        self.assertIsNone(self.test_resource.validate())
 
     def test_validate_no_scheme_address_for_webhook(self):
         self.test_resource.properties.data['type'] = self.test_resource.WEBHOOK
