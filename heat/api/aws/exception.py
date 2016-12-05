@@ -311,6 +311,7 @@ def map_remote_error(ex):
         'PropertyUnspecifiedError',
         'NotSupported',
         'InvalidBreakPointHook',
+        'PhysicalResourceIDAmbiguity',
     )
     denied_errors = ('Forbidden', 'NotAuthorized')
     already_exists_errors = ('StackExists')

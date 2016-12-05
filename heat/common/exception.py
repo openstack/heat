@@ -177,6 +177,11 @@ class PhysicalResourceNameAmbiguity(HeatException):
         "Multiple physical resources were found with name (%(name)s).")
 
 
+class PhysicalResourceIDAmbiguity(HeatException):
+    msg_fmt = _(
+        "Multiple resources were found with the physical ID (%(phys_id)s).")
+
+
 class InvalidTenant(HeatException):
     msg_fmt = _("Searching Tenant %(target)s "
                 "from Tenant %(actual)s forbidden.")

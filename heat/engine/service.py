@@ -1907,13 +1907,21 @@ class EngineService(service.ServiceBase):
         :param cnxt: RPC context.
         :param physical_resource_id: The physical resource ID to look up.
         """
-        rs = resource_objects.Resource.get_by_physical_resource_id(
+        rsrcs = resource_objects.Resource.get_all_by_physical_resource_id(
             cnxt,
             physical_resource_id)
-        if not rs:
+
+        if not rsrcs:
             raise exception.EntityNotFound(entity='Resource',
                                            name=physical_resource_id)
+        # This call is used only in the cfn API, which only cares about
+        # finding the stack anyway. So allow duplicate resource IDs within the
+        # same stack.
+        if len({rs.stack_id for rs in rsrcs}) > 1:
+            raise exception.PhysicalResourceIDAmbiguity(
+                phys_id=physical_resource_id)
 
+        rs = rsrcs[0]
         stack = parser.Stack.load(cnxt, stack_id=rs.stack_id)
         resource = stack[rs.name]
 

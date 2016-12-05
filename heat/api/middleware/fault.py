@@ -63,6 +63,7 @@ class FaultWrapper(wsgi.Middleware):
         'InvalidGlobalResource': webob.exc.HTTPInternalServerError,
         'ResourceNotAvailable': webob.exc.HTTPNotFound,
         'PhysicalResourceNameAmbiguity': webob.exc.HTTPBadRequest,
+        'PhysicalResourceIDAmbiguity': webob.exc.HTTPBadRequest,
         'InvalidTenant': webob.exc.HTTPForbidden,
         'Forbidden': webob.exc.HTTPForbidden,
         'StackExists': webob.exc.HTTPConflict,

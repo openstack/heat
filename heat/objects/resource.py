@@ -202,11 +202,12 @@ class Resource(
         return cls._from_db_object(cls(context), context, resource_db)
 
     @classmethod
-    def get_by_physical_resource_id(cls, context, physical_resource_id):
-        resource_db = db_api.resource_get_by_physical_resource_id(
+    def get_all_by_physical_resource_id(cls, context, physical_resource_id):
+        matches = db_api.resource_get_all_by_physical_resource_id(
             context,
             physical_resource_id)
-        return cls._from_db_object(cls(context), context, resource_db)
+        return [cls._from_db_object(cls(context), context, resource_db)
+                for resource_db in matches]
 
     @classmethod
     def update_by_id(cls, context, resource_id, values):
