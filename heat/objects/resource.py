@@ -18,7 +18,6 @@
 import collections
 
 from oslo_config import cfg
-from oslo_serialization import jsonutils
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 import six
@@ -104,13 +103,8 @@ class Resource(
                 resource[field] = db_resource[field]
 
         if resource.properties_data_encrypted and resource.properties_data:
-            properties_data = {}
-            for prop_name, prop_value in resource.properties_data.items():
-                method, value = prop_value
-                decrypted_value = crypt.decrypt(method, value)
-                prop_string = jsonutils.loads(decrypted_value)
-                properties_data[prop_name] = prop_string
-            resource.properties_data = properties_data
+            decrypted_data = crypt.decrypted_dict(resource.properties_data)
+            resource.properties_data = decrypted_data
 
         resource._context = context
         resource.obj_reset_changes()
@@ -237,11 +231,7 @@ class Resource(
     @staticmethod
     def encrypt_properties_data(data):
         if cfg.CONF.encrypt_parameters_and_properties and data:
-            result = {}
-            for prop_name, prop_value in data.items():
-                prop_string = jsonutils.dumps(prop_value)
-                encrypted_value = crypt.encrypt(prop_string)
-                result[prop_name] = encrypted_value
+            result = crypt.encrypted_dict(data)
             return (True, result)
         return (False, data)
 
