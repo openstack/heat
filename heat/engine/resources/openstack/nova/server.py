@@ -12,17 +12,14 @@
 #    under the License.
 
 import copy
-import uuid
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine import constraints
@@ -32,19 +29,18 @@ from heat.engine.resources.openstack.neutron import port as neutron_port
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine.resources.openstack.nova import server_network_mixin
 from heat.engine.resources import scheduler_hints as sh
-from heat.engine.resources import stack_user
+from heat.engine.resources import server_base
 from heat.engine import support
 from heat.engine import translation
 from heat.rpc import api as rpc_api
 
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
 cfg.CONF.import_opt('default_user_data_format', 'heat.common.config')
-cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
 
-class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
+class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
              server_network_mixin.ServerNetworkMixin):
     """A resource for managing Nova instances.
 
@@ -593,11 +589,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         )
     }
 
-    physical_resource_name_limit = cfg.CONF.max_server_name_length
-
     default_client_name = 'nova'
-
-    entity = 'servers'
 
     def translation_rules(self, props):
         rules = [
@@ -670,144 +662,9 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if self.user_data_software_config():
             self._register_access_key()
 
-    def _server_name(self):
-        name = self.properties[self.NAME]
-        if name:
-            return name
-
-        return self.physical_resource_name()
-
     def _config_drive(self):
         # This method is overridden by the derived CloudServer resource
         return self.properties[self.CONFIG_DRIVE]
-
-    def _populate_deployments_metadata(self, meta, props):
-        meta['deployments'] = meta.get('deployments', [])
-        meta['os-collect-config'] = meta.get('os-collect-config', {})
-        occ = meta['os-collect-config']
-        collectors = ['ec2']
-        occ['collectors'] = collectors
-
-        # set existing values to None to override any boot-time config
-        occ_keys = ('heat', 'zaqar', 'cfn', 'request')
-        for occ_key in occ_keys:
-            if occ_key not in occ:
-                continue
-            existing = occ[occ_key]
-            for k in existing:
-                existing[k] = None
-
-        if self.transport_poll_server_heat(props):
-            occ.update({'heat': {
-                'user_id': self._get_user_id(),
-                'password': self.password,
-                'auth_url': self.context.auth_url,
-                'project_id': self.stack.stack_user_project_id,
-                'stack_id': self.stack.identifier().stack_path(),
-                'resource_name': self.name}})
-            collectors.append('heat')
-
-        elif self.transport_zaqar_message(props):
-            queue_id = self.physical_resource_name()
-            self.data_set('metadata_queue_id', queue_id)
-            occ.update({'zaqar': {
-                'user_id': self._get_user_id(),
-                'password': self.password,
-                'auth_url': self.context.auth_url,
-                'project_id': self.stack.stack_user_project_id,
-                'queue_id': queue_id}})
-            collectors.append('zaqar')
-
-        elif self.transport_poll_server_cfn(props):
-            heat_client_plugin = self.stack.clients.client_plugin('heat')
-            config_url = heat_client_plugin.get_cfn_metadata_server_url()
-            occ.update({'cfn': {
-                'metadata_url': config_url,
-                'access_key_id': self.access_key,
-                'secret_access_key': self.secret_key,
-                'stack_name': self.stack.name,
-                'path': '%s.Metadata' % self.name}})
-            collectors.append('cfn')
-
-        elif self.transport_poll_temp_url(props):
-            container = self.physical_resource_name()
-            object_name = self.data().get('metadata_object_name')
-            if not object_name:
-                object_name = str(uuid.uuid4())
-
-            self.client('swift').put_container(container)
-
-            url = self.client_plugin('swift').get_temp_url(
-                container, object_name, method='GET')
-            put_url = self.client_plugin('swift').get_temp_url(
-                container, object_name)
-            self.data_set('metadata_put_url', put_url)
-            self.data_set('metadata_object_name', object_name)
-
-            collectors.append('request')
-            occ.update({'request': {
-                'metadata_url': url}})
-
-        collectors.append('local')
-        self.metadata_set(meta)
-
-        # push replacement polling config to any existing push-based sources
-        queue_id = self.data().get('metadata_queue_id')
-        if queue_id:
-            zaqar_plugin = self.client_plugin('zaqar')
-            zaqar = zaqar_plugin.create_for_tenant(
-                self.stack.stack_user_project_id, self._user_token())
-            queue = zaqar.queue(queue_id)
-            queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
-
-        object_name = self.data().get('metadata_object_name')
-        if object_name:
-            container = self.physical_resource_name()
-            self.client('swift').put_object(
-                container, object_name, jsonutils.dumps(meta))
-
-    def _register_access_key(self):
-        """Access is limited to this resource, which created the keypair."""
-        def access_allowed(resource_name):
-            return resource_name == self.name
-
-        if self.access_key is not None:
-            self.stack.register_access_allowed_handler(
-                self.access_key, access_allowed)
-        if self._get_user_id() is not None:
-            self.stack.register_access_allowed_handler(
-                self._get_user_id(), access_allowed)
-
-    def _create_transport_credentials(self, props):
-        if self.transport_poll_server_cfn(props):
-            self._create_user()
-            self._create_keypair()
-
-        elif (self.transport_poll_server_heat(props) or
-              self.transport_zaqar_message(props)):
-            self.password = uuid.uuid4().hex
-            self._create_user()
-
-        self._register_access_key()
-
-    @property
-    def access_key(self):
-        return self.data().get('access_key')
-
-    @property
-    def secret_key(self):
-        return self.data().get('secret_key')
-
-    @property
-    def password(self):
-        return self.data().get('password')
-
-    @password.setter
-    def password(self, password):
-        if password is None:
-            self.data_delete('password')
-        else:
-            self.data_set('password', password, True)
 
     def user_data_raw(self):
         return self.properties[self.USER_DATA_FORMAT] == self.RAW
@@ -815,22 +672,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
     def user_data_software_config(self):
         return self.properties[
             self.USER_DATA_FORMAT] == self.SOFTWARE_CONFIG
-
-    def transport_poll_server_cfn(self, props):
-        return props[
-            self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_SERVER_CFN
-
-    def transport_poll_server_heat(self, props):
-        return props[
-            self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_SERVER_HEAT
-
-    def transport_poll_temp_url(self, props):
-        return props[
-            self.SOFTWARE_CONFIG_TRANSPORT] == self.POLL_TEMP_URL
-
-    def transport_zaqar_message(self, props):
-        return props[
-            self.SOFTWARE_CONFIG_TRANSPORT] == self.ZAQAR_MESSAGE
 
     def get_software_config(self, ud_content):
         try:
@@ -1299,29 +1140,11 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
             return ud_update_policy == 'REPLACE'
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if tmpl_diff.metadata_changed():
-            # If SOFTWARE_CONFIG user_data_format is enabled we require
-            # the "deployments" and "os-collect-config" keys for Deployment
-            # polling.  We can attempt to merge the occ data, but any
-            # metadata update containing deployments will be discarded.
-            new_md = json_snippet.metadata()
-            if self.user_data_software_config():
-                metadata = self.metadata_get(True) or {}
-                new_occ_md = new_md.get('os-collect-config', {})
-                occ_md = metadata.get('os-collect-config', {})
-                occ_md.update(new_occ_md)
-                new_md['os-collect-config'] = occ_md
-                deployment_md = metadata.get('deployments', [])
-                new_md['deployments'] = deployment_md
-            self.metadata_set(new_md)
-
-        updaters = []
+        updaters = super(Server, self).handle_update(
+            json_snippet,
+            tmpl_diff,
+            prop_diff)
         server = None
-
-        if self.METADATA in prop_diff:
-            server = self.client_plugin().get_server(self.resource_id)
-            self.client_plugin().meta_update(server,
-                                             prop_diff[self.METADATA])
 
         if self.TAGS in prop_diff:
             self._update_server_tags(prop_diff[self.TAGS] or [])
@@ -1344,41 +1167,10 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if self.NETWORKS in prop_diff:
             updaters.extend(self._update_networks(server, prop_diff))
 
-        if self.SOFTWARE_CONFIG_TRANSPORT in prop_diff:
-            self._update_software_config_transport(prop_diff)
-
         # NOTE(pas-ha) optimization is possible (starting first task
         # right away), but we'd rather not, as this method already might
         # have called several APIs
         return updaters
-
-    def _update_software_config_transport(self, prop_diff):
-        if not self.user_data_software_config():
-            return
-        try:
-            metadata = self.metadata_get(True) or {}
-            self._create_transport_credentials(prop_diff)
-            self._populate_deployments_metadata(metadata, prop_diff)
-            # push new metadata to all sources by creating a dummy
-            # deployment
-            sc = self.rpc_client().create_software_config(
-                self.context, 'ignored', 'ignored', '')
-            sd = self.rpc_client().create_software_deployment(
-                self.context, self.resource_id, sc['id'])
-            self.rpc_client().delete_software_deployment(
-                self.context, sd['id'])
-            self.rpc_client().delete_software_config(
-                self.context, sc['id'])
-        except Exception:
-            # Updating the software config transport is on a best-effort
-            # basis as any raised exception here would result in the resource
-            # going into an ERROR state, which will be replaced on the next
-            # stack update. This is not desirable for a server. The old
-            # transport will continue to work, and the new transport may work
-            # despite exceptions in the above block.
-            LOG.exception(
-                _LE('Error while updating software config transport')
-            )
 
     def check_update_complete(self, updaters):
         """Push all updaters to completion in list order."""
@@ -1397,28 +1189,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         if status:
             self.store_external_ports()
         return status
-
-    def metadata_update(self, new_metadata=None):
-        """Refresh the metadata if new_metadata is None."""
-        if new_metadata is None:
-            # Re-resolve the template metadata and merge it with the
-            # current resource metadata.  This is necessary because the
-            # attributes referenced in the template metadata may change
-            # and the resource itself adds keys to the metadata which
-            # are not specified in the template (e.g the deployments data)
-            meta = self.metadata_get(refresh=True) or {}
-            tmpl_meta = self.t.metadata()
-            meta.update(tmpl_meta)
-            self.metadata_set(meta)
-
-    @staticmethod
-    def _check_maximum(count, maximum, msg):
-        """Check a count against a maximum.
-
-        Unless maximum is -1 which indicates that there is no limit.
-        """
-        if maximum != -1 and count > maximum:
-            raise exception.StackValidationFailed(message=msg)
 
     def _validate_block_device_mapping(self):
 
@@ -1592,29 +1362,6 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
                 self._check_maximum(len(bytes(contents.encode('utf-8'))
                                         ) if contents is not None else 0,
                                     limits['maxPersonalitySize'], msg)
-
-    def _delete_temp_url(self):
-        object_name = self.data().get('metadata_object_name')
-        if not object_name:
-            return
-        with self.client_plugin('swift').ignore_not_found:
-            container = self.physical_resource_name()
-            swift = self.client('swift')
-            swift.delete_object(container, object_name)
-            headers = swift.head_container(container)
-            if int(headers['x-container-object-count']) == 0:
-                swift.delete_container(container)
-
-    def _delete_queue(self):
-        queue_id = self.data().get('metadata_queue_id')
-        if not queue_id:
-            return
-        client_plugin = self.client_plugin('zaqar')
-        zaqar = client_plugin.create_for_tenant(
-            self.stack.stack_user_project_id, self._user_token())
-        with client_plugin.ignore_not_found:
-            zaqar.queue(queue_id).delete()
-        self.data_delete('metadata_queue_id')
 
     def _delete(self):
         if self.user_data_software_config():
