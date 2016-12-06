@@ -53,7 +53,7 @@ resources:
 
         stack_identifier = self.stack_create(template=self.template,
                                              parameters=parameters)
-        parameters['InstanceType'] = 'm1.large'
+        parameters['InstanceType'] = self.conf.instance_type
         self.update_stack(stack_identifier, self.template,
                           parameters=parameters,
                           expected_status='UPDATE_IN_PROGRESS')
