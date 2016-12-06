@@ -8,7 +8,6 @@ parameters:
   instance_type:
     type: string
     description: Type of the instance to be created.
-    default: m1.small
 
   image_id:
     type: string

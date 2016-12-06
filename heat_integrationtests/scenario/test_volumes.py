@@ -46,7 +46,7 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
         self.assertEqual(self.volume_description,
                          self._stack_output(stack, 'display_description'))
 
-    def check_stack(self, stack_id):
+    def check_stack(self, stack_id, parameters):
         stack = self.client.stacks.get(stack_id)
 
         # Verify with cinder that the volume exists, with matching details
@@ -75,6 +75,7 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
         try:
             stack_identifier2 = self.launch_stack(
                 template_name='test_volumes_create_from_backup.yaml',
+                parameters=parameters,
                 add_parameters={'backup_id': backup.id})
             stack2 = self.client.stacks.get(stack_identifier2)
         except exceptions.StackBuildErrorException:
@@ -125,4 +126,4 @@ class VolumeBackupRestoreIntegrationTest(scenario_base.ScenarioTestsBase):
         )
 
         # Check stack
-        self.check_stack(stack_id)
+        self.check_stack(stack_id, parameters)

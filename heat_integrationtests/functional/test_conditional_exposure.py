@@ -23,13 +23,16 @@ class ServiceBasedExposureTest(functional_base.FunctionalTestsBase):
     unavailable_service = 'Sahara'
     unavailable_template = """
 heat_template_version: 2015-10-15
+parameters:
+  instance_type:
+    type: string
 resources:
   not_available:
     type: OS::Sahara::NodeGroupTemplate
     properties:
       plugin_name: fake
       hadoop_version: 0.1
-      flavor: m1.large
+      flavor: {get_param: instance_type}
       node_processes: []
 """
 
@@ -56,9 +59,11 @@ resources:
 
     def test_unavailable_resources_not_created(self):
         stack_name = self._stack_rand_name()
+        parameters = {'instance_type': self.conf.minimal_instance_type}
         ex = self.assertRaises(exc.HTTPBadRequest,
                                self.client.stacks.create,
                                stack_name=stack_name,
+                               parameters=parameters,
                                template=self.unavailable_template)
         self.assertIn('ResourceTypeUnavailable', ex.message)
         self.assertIn('OS::Sahara::NodeGroupTemplate', ex.message)
