@@ -16,11 +16,18 @@
 
 set -ex
 
-export DEST=${DEST:-/opt/stack/new}
-sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
-sudo -E $DEST/heat/heat_integrationtests/prepare_test_network.sh
+source $DEST/devstack/openrc demo demo
 
-cd $DEST/tempest
-sudo tempest run --regex heat_integrationtests
+# delete the network created
+openstack router remove subnet router1 heat-subnet
+openstack subnet delete heat-subnet
+openstack network delete heat-net
 
-sudo -E $DEST/heat/heat_integrationtests/cleanup_test_env.sh
+source $DEST/devstack/openrc admin admin
+
+# delete the flavors created
+openstack flavor delete m1.heat_int
+openstack flavor delete m1.heat_micro
+
+# delete the image created
+openstack image delete fedora-heat-test-image
