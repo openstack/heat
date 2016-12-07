@@ -12,7 +12,6 @@
 #    under the License.
 
 import six
-import warnings
 
 from heat.common import exception
 from heat.common import template_format
@@ -282,45 +281,3 @@ class ResourceDefinitionDiffTest(common.HeatTestCase):
         self.assertFalse(diff.update_policy_changed())
         self.assertFalse(diff.metadata_changed())
         self.assertFalse(diff)
-
-
-class ResourceDefinitionSnippetTest(common.HeatTestCase):
-    scenarios = [
-        ('type',
-            dict(
-                defn={},
-                expected={})),
-        ('metadata',
-            dict(
-                defn={'metadata': {'Foo': 'bar'}},
-                expected={'Metadata': {'Foo': 'bar'}})),
-        ('properties',
-            dict(
-                defn={'properties': {'Foo': 'bar'}},
-                expected={'Properties': {'Foo': 'bar'}})),
-        ('deletion_policy',
-            dict(
-                defn={'deletion_policy': rsrc_defn.ResourceDefinition.RETAIN},
-                expected={'DeletionPolicy': 'Retain'})),
-        ('update_policy',
-            dict(
-                defn={'update_policy': {'Foo': 'bar'}},
-                expected={'UpdatePolicy': {'Foo': 'bar'}}))
-    ]
-
-    def test_resource_snippet(self):
-        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', **self.defn)
-        with warnings.catch_warnings(record=True) as ws:
-            warnings.filterwarnings('always')
-
-            # Work around http://bugs.python.org/issue4180
-            getattr(rsrc_defn, '__warningregistry__', {}).clear()
-
-            exp_result = {'Type': 'SomeType'}
-            exp_result.update(self.expected)
-
-            self.assertEqual(exp_result, rd)
-
-            self.assertTrue(ws)
-            for warn in ws:
-                self.assertTrue(issubclass(warn.category, DeprecationWarning))
