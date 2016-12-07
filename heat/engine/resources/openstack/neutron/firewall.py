@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -136,6 +137,22 @@ class Firewall(neutron.NeutronResource):
 
     def _show_resource(self):
         return self.client().show_firewall(self.resource_id)['firewall']
+
+    def check_create_complete(self, data):
+        attributes = self._show_resource()
+        status = attributes['status']
+        if status == 'PENDING_CREATE':
+            return False
+        elif status == 'ACTIVE':
+            return True
+        elif status == 'ERROR':
+            raise exception.ResourceInError(
+                resource_status=status,
+                status_reason=_('Error in Firewall'))
+        else:
+            raise exception.ResourceUnknownStatus(
+                resource_status=status,
+                result=_('Firewall creation failed'))
 
     def handle_create(self):
         props = self.prepare_properties(
