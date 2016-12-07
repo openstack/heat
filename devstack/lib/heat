@@ -240,13 +240,8 @@ function configure_heat {
     [ $err_count -eq 0 ] || die $LINENO "$err_count of the requested Heat plugins could not be installed."
 }
 
-# dummy function called by stack.sh, remove it once moved to plugin
-function init_heat {
-    :
-}
-
 # init_heat() - Initialize database
-function init_heat_with_plugin {
+function init_heat {
 
     # (re)create heat database
     recreate_database heat
@@ -284,13 +279,8 @@ function install_heat_other {
     :
 }
 
-# dummy function called by stack.sh, remove it once moved to plugin
-function start_heat {
-    :
-}
-
 # start_heat() - Start running processes, including screen
-function start_heat_with_plugin {
+function start_heat {
     run_process h-eng "$HEAT_BIN_DIR/heat-engine --config-file=$HEAT_CONF"
 
     # If the site is not enabled then we are in a grenade scenario
@@ -392,13 +382,8 @@ function _config_heat_apache_wsgi {
 }
 
 
-# dummy function called by stack.sh, remove it once moved to plugin
-function create_heat_accounts {
-    :
-}
-
 # create_heat_accounts() - Set up common required heat accounts
-function create_heat_accounts_with_plugin {
+function create_heat_accounts {
     if [[ "$HEAT_STANDALONE" != "True" ]]; then
 
         create_service_user "heat" "admin"
