@@ -3345,13 +3345,18 @@ class ServersTest(common.HeatTestCase):
 
         server = self._create_test_server(return_server, 'update_subnet')
         # set old properties for 'networks' and 'security_groups'
-        server.t['Properties']['networks'] = [
-            {'subnet': 'aaa09d50-8c23-4498-a542-aa0deb24f73e'}]
-        server.t['Properties']['security_groups'] = ['the_sg']
+        before_props = self.server_props.copy()
+        before_props['networks'] = [
+            {'subnet': 'aaa09d50-8c23-4498-a542-aa0deb24f73e'}
+        ]
+        before_props['security_groups'] = ['the_sg']
         # set new property 'networks'
         new_networks = [{'subnet': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
-        update_template = copy.deepcopy(server.t)
-        update_template['Properties']['networks'] = new_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = new_networks
+        update_props['security_groups'] = ['the_sg']
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
 
         sec_uuids = ['86c0f8ae-23a8-464f-8603-c54113ef5467']
 
