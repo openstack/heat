@@ -1985,13 +1985,6 @@ class Stack(collections.Mapping):
             'tags': self.tags,
         }
 
-    def resolve_static_data(self, snippet, path=''):
-        warnings.warn('Stack.resolve_static_data() is deprecated and '
-                      'will be removed in the Ocata release.',
-                      DeprecationWarning)
-
-        return self.t.parse(self, snippet, path=path)
-
     def reset_resource_attributes(self):
         # nothing is cached if no resources exist
         if not self._resources:
