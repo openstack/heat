@@ -101,8 +101,9 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         self.m.ReplayAll()
 
         scheduler.TaskRunner(queue.create)()
-        self.fc.api_url = 'http://127.0.0.1:8888/v1'
-        self.assertEqual('http://127.0.0.1:8888/v1/queues/myqueue',
+        self.fc.api_url = 'http://127.0.0.1:8888/'
+        self.fc.api_version = 1.1
+        self.assertEqual('http://127.0.0.1:8888/v1.1/queues/myqueue',
                          queue.FnGetAtt('href'))
 
         self.m.VerifyAll()
@@ -127,8 +128,9 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         queue_name = queue.physical_resource_name()
         self.assertEqual(name_match, queue_name)
 
-        self.fc.api_url = 'http://127.0.0.1:8888/v1'
-        self.assertEqual('http://127.0.0.1:8888/v1/queues/' + queue_name,
+        self.fc.api_url = 'http://127.0.0.1:8888'
+        self.fc.api_version = 2
+        self.assertEqual('http://127.0.0.1:8888/v2/queues/' + queue_name,
                          queue.FnGetAtt('href'))
 
         self.m.VerifyAll()

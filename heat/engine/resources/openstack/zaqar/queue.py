@@ -109,12 +109,11 @@ class ZaqarQueue(resource.Resource):
             self.client().queue(self.resource_id, auto_create=False).delete()
 
     def href(self):
-        api_endpoint = self.client().api_url
+        client = self.client()
         queue_name = self.physical_resource_name()
-        if api_endpoint.endswith('/'):
-            return '%squeues/%s' % (api_endpoint, queue_name)
-        else:
-            return '%s/queues/%s' % (api_endpoint, queue_name)
+        return '%s/v%s/queues/%s' % (client.api_url.rstrip('/'),
+                                     client.api_version,
+                                     queue_name)
 
     def _resolve_attribute(self, name):
         if name == self.QUEUE_ID:
