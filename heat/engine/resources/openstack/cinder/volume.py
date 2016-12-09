@@ -388,6 +388,16 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         LOG.info(_LI('Volume %(id)s backup restore complete'), {'id': vol.id})
         return True
 
+    def needs_replace_failed(self):
+        if not self.resource_id:
+            return True
+
+        with self.client_plugin().ignore_not_found:
+            vol = self.client().volumes.get(self.resource_id)
+            return vol.status in ('error', 'deleting')
+
+        return True
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         vol = None
         cinder = self.client()
