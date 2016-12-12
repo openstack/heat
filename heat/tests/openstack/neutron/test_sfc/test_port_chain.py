@@ -147,8 +147,8 @@ class PortChainTest(common.HeatTestCase):
     def test_resource_show_resource(self):
         mock_pc_get = self.test_client_plugin.show_sfc_resource
         mock_pc_get.return_value = None
-        self.assertEqual(None, self.test_resource._show_resource(),
-                         'Failed to show resource')
+        self.assertIsNone(self.test_resource._show_resource(),
+                          'Failed to show resource')
 
     def test_resource_handle_update(self):
         mock_ppg_patch = self.test_client_plugin.update_sfc_resource
