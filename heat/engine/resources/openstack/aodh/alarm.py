@@ -204,9 +204,10 @@ class AodhAlarm(alarm_base.BaseAlarm):
         record_reality = {}
         threshold_data = resource_data.get('threshold_rule').copy()
         threshold_data.update(resource_data)
-        props_upd_allowed = set(
-            self.PROPERTIES + alarm_base.COMMON_PROPERTIES) - {
-            self.METER_NAME, alarm_base.TIME_CONSTRAINTS}
+        props_upd_allowed = (set(self.PROPERTIES +
+                                 alarm_base.COMMON_PROPERTIES) -
+                             {self.METER_NAME, alarm_base.TIME_CONSTRAINTS} -
+                             set(alarm_base.INTERNAL_PROPERTIES))
         for key in props_upd_allowed:
             record_reality.update({key: threshold_data.get(key)})
 

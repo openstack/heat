@@ -134,6 +134,8 @@ class AodhGnocchiResourcesAlarm(alarm_base.BaseAlarm):
         threshold_data = resource_data.get(rule).copy()
         threshold_data.update(resource_data)
         for key in self.properties_schema.keys():
+            if key in alarm_base.INTERNAL_PROPERTIES:
+                continue
             if self.properties_schema[key].update_allowed:
                 record_reality.update({key: threshold_data.get(key)})
         return record_reality
