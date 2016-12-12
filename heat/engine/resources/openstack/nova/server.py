@@ -1184,6 +1184,16 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                 before_props.get(self.USER_DATA_UPDATE_POLICY))
             return ud_update_policy == 'REPLACE'
 
+    def needs_replace_failed(self):
+        if not self.resource_id:
+            return True
+
+        with self.client_plugin().ignore_not_found:
+            server = self.client().servers.get(self.resource_id)
+            return server.status in ('ERROR', 'DELETED', 'SOFT_DELETED')
+
+        return True
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         updaters = super(Server, self).handle_update(
             json_snippet,
