@@ -223,3 +223,13 @@ class ManilaShareTest(common.HeatTestCase):
         self.assertEqual('ca', share.FnGetAtt('created_at'))
         self.assertEqual('s', share.FnGetAtt('status'))
         self.assertEqual('p_id', share.FnGetAtt('project_id'))
+
+    def test_allowed_access_type(self):
+        tmp = template_format.parse(manila_template)
+        properties = tmp['resources']['test_share']['properties']
+        properties['access_rules'][0]['access_type'] = 'domain'
+        stack = utils.parse_stack(tmp, stack_name='access_type')
+        self.assertRaisesRegexp(
+            exception.StackValidationFailed,
+            ".* \"domain\" is not an allowed value \[ip, user, cert, cephx\]",
+            stack.validate)

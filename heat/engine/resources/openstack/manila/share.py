@@ -139,7 +139,7 @@ class ManilaShare(resource.Resource):
                         properties.Schema.STRING,
                         _('Type of access that should be provided to guest.'),
                         constraints=[constraints.AllowedValues(
-                            ['ip', 'domain'])],
+                            ['ip', 'user', 'cert', 'cephx'])],
                         required=True
                     ),
                     ACCESS_LEVEL: properties.Schema(
