@@ -100,6 +100,18 @@ class NeutronResource(resource.Resource):
         attributes = self._show_resource()
         return attributes[name]
 
+    def needs_replace_failed(self):
+        if not self.resource_id:
+            return True
+
+        with self.client_plugin().ignore_not_found:
+            res_attrs = self._show_resource()
+            if 'status' in res_attrs:
+                return res_attrs['status'] == 'ERROR'
+            return False
+
+        return True
+
     def get_reference_id(self):
         return self.resource_id
 
