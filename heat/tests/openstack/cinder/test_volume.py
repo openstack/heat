@@ -166,7 +166,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             description='ImageVolumeDescription',
             name='ImageVolume',
             imageRef=image_id,
-            multiattach=False).AndReturn(fv)
+            multiattach=False,
+            metadata={}).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -195,7 +196,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone='nova',
             description='ImageVolumeDescription',
             name='ImageVolume',
-            multiattach=False).AndReturn(fv)
+            multiattach=False,
+            metadata={}).AndReturn(fv)
 
         update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
                                                 'update_readonly_flag')
@@ -230,7 +232,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone='nova',
             description=None,
             name=vol_name,
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
@@ -633,7 +636,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=2, availability_zone='nova',
             description=None,
             name=vol_name,
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(fv)
 
         fv_ready = vt_base.FakeVolume('available', id=fv.id, size=2,
@@ -747,7 +751,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name',
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
@@ -786,7 +791,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name',
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
@@ -875,7 +881,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=2, availability_zone='nova',
             description=None,
             name=vol2_name,
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(fv2)
         self.cinder_fc.volumes.get(fv2.id).AndReturn(fv2)
         fv2 = vt_base.FakeVolume('available', id=fv2.id)
@@ -992,7 +999,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, name='test_name', description=None,
             availability_zone='nova',
             scheduler_hints={'hint1': 'good_advice'},
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
@@ -1014,7 +1022,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, name='test_name', description=None,
             availability_zone='nova',
-            multiattach=True).AndReturn(fv)
+            multiattach=True,
+            metadata={}).AndReturn(fv)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv_ready)
@@ -1047,6 +1056,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.cinder_fc.volumes.create(
             size=1, name='test_name', description='test_description',
             availability_zone=None,
+            metadata={},
             multiattach=False,
             scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
                              shm.HEAT_STACK_ID: stack.id,
@@ -1201,7 +1211,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name',
-            multiattach=False
+            multiattach=False,
+            metadata={}
         ).AndReturn(vt_base.FakeVolume('creating'))
         fv = vt_base.FakeVolume('available')
         self.cinder_fc.volumes.get(fv.id).AndReturn(fv)
