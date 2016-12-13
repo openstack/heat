@@ -223,10 +223,10 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, server_id=server.resource_id)
         self.assertEqual([deployment], deployments)
 
-        rs = resource_objects.Resource.get_by_physical_resource_id(
+        rsrcs = resource_objects.Resource.get_all_by_physical_resource_id(
             self.ctx, server_id)
         self.assertEqual(deployment['config_id'],
-                         rs.rsrc_metadata.get('deployments')[0]['id'])
+                         rsrcs[0].rsrc_metadata.get('deployments')[0]['id'])
 
     def test_metadata_software_deployments(self):
         stack_name = 'test_metadata_software_deployments'
@@ -271,9 +271,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         # assert that metadata via metadata_software_deployments matches
         # metadata via server resource
-        rs = resource_objects.Resource.get_by_physical_resource_id(
+        rsrcs = resource_objects.Resource.get_all_by_physical_resource_id(
             self.ctx, server_id)
-        self.assertEqual(metadata, rs.rsrc_metadata.get('deployments'))
+        self.assertEqual(metadata, rsrcs[0].rsrc_metadata.get('deployments'))
 
         deployments = self.engine.metadata_software_deployments(
             self.ctx, server_id=str(uuid.uuid4()))

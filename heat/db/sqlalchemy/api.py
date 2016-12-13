@@ -204,7 +204,7 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
     return result
 
 
-def resource_get_by_physical_resource_id(context, physical_resource_id):
+def resource_get_all_by_physical_resource_id(context, physical_resource_id):
     results = (context.session.query(models.Resource)
                .filter_by(physical_resource_id=physical_resource_id)
                .all())
@@ -212,8 +212,16 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
     for result in results:
         if context is None or context.tenant_id in (
                 result.stack.tenant, result.stack.stack_user_project_id):
-            return result
-    return None
+            yield result
+
+
+def resource_get_by_physical_resource_id(context, physical_resource_id):
+    results = resource_get_all_by_physical_resource_id(context,
+                                                       physical_resource_id)
+    try:
+        return next(results)
+    except StopIteration:
+        return None
 
 
 def resource_get_all(context):

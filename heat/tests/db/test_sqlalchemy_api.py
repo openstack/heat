@@ -2318,6 +2318,20 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertIsNone(db_api.resource_get_by_physical_resource_id(self.ctx,
                                                                       UUID2))
 
+    def test_resource_get_all_by_physical_resource_id(self):
+        create_resource(self.ctx, self.stack)
+        create_resource(self.ctx, self.stack)
+
+        ret_res = db_api.resource_get_all_by_physical_resource_id(self.ctx,
+                                                                  UUID1)
+        ret_list = list(ret_res)
+        self.assertTrue(ret_list)
+        for res in ret_list:
+            self.assertEqual(UUID1, res.physical_resource_id)
+
+        mt = db_api.resource_get_all_by_physical_resource_id(self.ctx, UUID2)
+        self.assertFalse(list(mt))
+
     def test_resource_get_all(self):
         values = [
             {'name': 'res1'},

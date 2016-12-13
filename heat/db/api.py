@@ -160,6 +160,11 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
                                                      physical_resource_id)
 
 
+def resource_get_all_by_physical_resource_id(context, physical_resource_id):
+    return IMPL.resource_get_all_by_physical_resource_id(context,
+                                                         physical_resource_id)
+
+
 def stack_get(context, stack_id, show_deleted=False, eager_load=True):
     return IMPL.stack_get(context, stack_id, show_deleted=show_deleted,
                           eager_load=eager_load)
