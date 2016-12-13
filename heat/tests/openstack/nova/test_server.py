@@ -458,7 +458,7 @@ class ServersTest(common.HeatTestCase):
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['meta'], {'a': "1"})
+        self.assertEqual({'a': "1"}, kwargs['meta'])
 
     def test_server_create_with_subnet_security_group(self):
         stack_name = 'server_with_subnet_security_group'
@@ -637,7 +637,7 @@ class ServersTest(common.HeatTestCase):
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['userdata'], 'wordpress')
+        self.assertEqual('wordpress', kwargs['userdata'])
         self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_raw_config_userdata(self):
@@ -665,7 +665,7 @@ class ServersTest(common.HeatTestCase):
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['userdata'], 'wordpress from config')
+        self.assertEqual('wordpress from config', kwargs['userdata'])
         self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_raw_config_userdata_None(self):
@@ -691,7 +691,7 @@ class ServersTest(common.HeatTestCase):
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['userdata'], sc_id)
+        self.assertEqual(sc_id, kwargs['userdata'])
         self.assertEqual({}, kwargs['meta'])
 
     def _server_create_software_config(self, md=None,
@@ -1035,7 +1035,7 @@ class ServersTest(common.HeatTestCase):
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
         _, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['admin_pass'], 'foo')
+        self.assertEqual('foo', kwargs['admin_pass'])
         self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_with_stack_scheduler_hints(self):
@@ -1074,7 +1074,7 @@ class ServersTest(common.HeatTestCase):
 
         scheduler.TaskRunner(server.create)()
         _, kwargs = mock_create.call_args
-        self.assertEqual(kwargs['scheduler_hints'], scheduler_hints)
+        self.assertEqual(scheduler_hints, kwargs['scheduler_hints'])
         self.assertEqual({}, kwargs['meta'])
         # this makes sure the auto increment worked on server creation
         self.assertGreater(server.id, 0)
@@ -1863,7 +1863,7 @@ class ServersTest(common.HeatTestCase):
                     break
 
         for key in six.iterkeys(reality):
-            self.assertEqual(reality[key], expected[key])
+            self.assertEqual(expected[key], reality[key])
 
     def test_server_update_server_flavor(self):
         """Tests update server changing the flavor.
