@@ -543,8 +543,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         if server:
             res = self.stack.resource_by_refid(server)
             if res:
-                if not (res.properties.get('user_data_format') ==
-                        'SOFTWARE_CONFIG'):
+                user_data_format = res.properties.get('user_data_format')
+                if user_data_format and \
+                   not (user_data_format == 'SOFTWARE_CONFIG'):
                     raise exception.StackValidationFailed(message=_(
                         "Resource %s's property user_data_format should be "
                         "set to SOFTWARE_CONFIG since there are software "
