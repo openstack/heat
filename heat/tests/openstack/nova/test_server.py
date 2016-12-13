@@ -486,7 +486,7 @@ class ServersTest(common.HeatTestCase):
         mock_create_port = self.patchobject(
             neutronclient.Client, 'create_port')
 
-        self.patchobject(
+        mock_create = self.patchobject(
             self.fc.servers, 'create', return_value=return_server)
 
         scheduler.TaskRunner(server.create)()
@@ -499,6 +499,8 @@ class ServersTest(common.HeatTestCase):
                   }
         mock_create_port.assert_called_with({'port': kwargs})
         self.assertEqual(1, mock_find.call_count)
+        args, kwargs = mock_create.call_args
+        self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
@@ -636,6 +638,7 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
         self.assertEqual(kwargs['userdata'], 'wordpress')
+        self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_raw_config_userdata(self):
         self.patchobject(nova.NovaClientPlugin, '_create',
@@ -663,6 +666,7 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
         self.assertEqual(kwargs['userdata'], 'wordpress from config')
+        self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_raw_config_userdata_None(self):
         self.patchobject(nova.NovaClientPlugin, '_create',
@@ -688,6 +692,7 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         args, kwargs = mock_create.call_args
         self.assertEqual(kwargs['userdata'], sc_id)
+        self.assertEqual({}, kwargs['meta'])
 
     def _server_create_software_config(self, md=None,
                                        stack_name='software_config_s',
@@ -1011,6 +1016,7 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         _, kwargs = mock_create.call_args
         self.assertIsNone(kwargs['admin_pass'])
+        self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_custom_admin_pass(self):
         return_server = self.fc.servers.list()[1]
@@ -1030,6 +1036,7 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         _, kwargs = mock_create.call_args
         self.assertEqual(kwargs['admin_pass'], 'foo')
+        self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_with_stack_scheduler_hints(self):
         self.patchobject(nova.NovaClientPlugin, '_create',
@@ -1068,6 +1075,7 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         _, kwargs = mock_create.call_args
         self.assertEqual(kwargs['scheduler_hints'], scheduler_hints)
+        self.assertEqual({}, kwargs['meta'])
         # this makes sure the auto increment worked on server creation
         self.assertGreater(server.id, 0)
 

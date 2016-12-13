@@ -436,7 +436,8 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
               'keys and values must be 255 characters or less. Non-string '
               'values will be serialized to JSON (and the serialized '
               'string must be 255 characters or less).'),
-            update_allowed=True
+            update_allowed=True,
+            default={}
         ),
         USER_DATA_FORMAT: properties.Schema(
             properties.Schema.STRING,
@@ -865,7 +866,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
 
         availability_zone = self.properties[self.AVAILABILITY_ZONE]
         instance_meta = self.properties[self.METADATA]
-        if instance_meta is not None:
+        if instance_meta:
             instance_meta = self.client_plugin().meta_serialize(
                 instance_meta)
 
@@ -1555,7 +1556,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties[self.METADATA]
         personality = self.properties[self.PERSONALITY]
-        if metadata is not None or personality:
+        if metadata or personality:
             limits = self.client_plugin().absolute_limits()
 
         # if 'security_groups' present for the server and explicit 'port'
@@ -1568,7 +1569,7 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         # verify that the number of metadata entries is not greater
         # than the maximum number allowed in the provider's absolute
         # limits
-        if metadata is not None:
+        if metadata:
             msg = _('Instance metadata must not contain greater than %s '
                     'entries.  This is the maximum number allowed by your '
                     'service provider') % limits['maxServerMeta']
