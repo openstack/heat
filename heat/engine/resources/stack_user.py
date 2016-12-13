@@ -165,3 +165,15 @@ class StackUser(resource.Resource):
 
         for data_key in ('access_key', 'secret_key', 'credential_id'):
             self.data_delete(data_key)
+
+    def _register_access_key(self):
+        """Access is limited to this resource, which created the keypair."""
+        def access_allowed(resource_name):
+            return resource_name == self.name
+
+        if self.access_key is not None:
+            self.stack.register_access_allowed_handler(
+                self.access_key, access_allowed)
+        if self._get_user_id() is not None:
+            self.stack.register_access_allowed_handler(
+                self._get_user_id(), access_allowed)
