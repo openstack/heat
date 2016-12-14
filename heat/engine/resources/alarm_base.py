@@ -164,25 +164,25 @@ class BaseAlarm(resource.Resource):
     alarm_type = 'threshold'
 
     def actions_to_urls(self, props):
-        kwargs = {}
-        for k, v in iter(props.items()):
-            if k in [ALARM_ACTIONS, OK_ACTIONS,
-                     INSUFFICIENT_DATA_ACTIONS]:
-                kwargs[k] = []
-                for act in v or []:
-                    # if the action is a resource name
-                    # we ask the destination resource for an alarm url.
-                    # the template writer should really do this in the
-                    # template if possible with:
-                    # {Fn::GetAtt: ['MyAction', 'AlarmUrl']}
-                    if act in self.stack:
-                        url = self.stack[act].FnGetAtt('AlarmUrl')
-                        kwargs[k].append(url)
-                    else:
-                        if act:
-                            kwargs[k].append(act)
-            else:
-                kwargs[k] = v
+        kwargs = dict(props)
+
+        def get_urls(action_type):
+            for act in kwargs.get(action_type) or []:
+                # if the action is a resource name
+                # we ask the destination resource for an alarm url.
+                # the template writer should really do this in the
+                # template if possible with:
+                # {Fn::GetAtt: ['MyAction', 'AlarmUrl']}
+                if act in self.stack:
+                    yield self.stack[act].FnGetAtt('AlarmUrl')
+                elif act:
+                    yield act
+
+        action_props = {action_type: list(get_urls(action_type))
+                        for action_type in (ALARM_ACTIONS,
+                                            OK_ACTIONS,
+                                            INSUFFICIENT_DATA_ACTIONS)}
+        kwargs.update(action_props)
         return kwargs
 
     def _reformat_properties(self, props):
