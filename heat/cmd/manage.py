@@ -26,8 +26,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import messaging
 from heat.common import service_utils
-from heat.db import api as db_api
-from heat.db import utils
+from heat.db.sqlalchemy import api as db_api
 from heat.objects import service as service_objects
 from heat.rpc import client as rpc_client
 from heat import version
@@ -131,10 +130,10 @@ def do_migrate():
 
 def purge_deleted():
     """Remove database records that have been previously soft deleted."""
-    utils.purge_deleted(CONF.command.age,
-                        CONF.command.granularity,
-                        CONF.command.project_id,
-                        CONF.command.batch_size)
+    db_api.purge_deleted(CONF.command.age,
+                         CONF.command.granularity,
+                         CONF.command.project_id,
+                         CONF.command.batch_size)
 
 
 def do_crypt_parameters_and_properties():
@@ -142,10 +141,10 @@ def do_crypt_parameters_and_properties():
     ctxt = context.get_admin_context()
     prev_encryption_key = CONF.command.previous_encryption_key
     if CONF.command.crypt_operation == "encrypt":
-        utils.encrypt_parameters_and_properties(
+        db_api.encrypt_parameters_and_properties(
             ctxt, prev_encryption_key, CONF.command.verbose_update_params)
     elif CONF.command.crypt_operation == "decrypt":
-        utils.decrypt_parameters_and_properties(
+        db_api.decrypt_parameters_and_properties(
             ctxt, prev_encryption_key, CONF.command.verbose_update_params)
 
 

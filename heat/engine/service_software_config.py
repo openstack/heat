@@ -24,7 +24,7 @@ from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LI
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import api
 from heat.engine import scheduler
 from heat.engine import software_config_io as swc_io

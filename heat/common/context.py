@@ -31,7 +31,7 @@ from heat.common import exception
 from heat.common.i18n import _LE, _LW
 from heat.common import policy
 from heat.common import wsgi
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import clients
 
 LOG = logging.getLogger(__name__)

@@ -25,7 +25,7 @@ from heat.common.i18n import _LE
 from heat.common.i18n import _LI
 from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.engine import check_resource
 from heat.engine import stack as parser
 from heat.engine import sync_point

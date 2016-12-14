@@ -17,7 +17,7 @@ import weakref
 
 from heat.common import context
 from heat.common.i18n import _
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.objects import raw_template_files
 
 _d = weakref.WeakValueDictionary()

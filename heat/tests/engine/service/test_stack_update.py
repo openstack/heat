@@ -23,7 +23,7 @@ from heat.common import exception
 from heat.common import messaging
 from heat.common import service_utils
 from heat.common import template_format
-from heat.db import api as db_api
+from heat.db.sqlalchemy import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
