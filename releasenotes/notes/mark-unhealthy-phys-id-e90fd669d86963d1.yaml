@@ -1,0 +1,3 @@
+---
+features:
+  - The ``resource mark unhealthy`` command now accepts either a logical resource name (as it did previously) or a physical resource ID to identify the resource to be marked unhealthy.

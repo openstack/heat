@@ -536,6 +536,28 @@ class StackResourcesServiceTest(common.HeatTestCase):
         self.assertIsInstance(stack_dependencies, dependencies.Dependencies)
         self.assertEqual(2, len(stack_dependencies.graph()))
 
+    @tools.stack_context('service_find_resource_logical_name')
+    def test_find_resource_logical_name(self):
+        rsrc = self.stack['WebServer']
+        physical_rsrc = self.eng._find_resource_in_stack(self.ctx,
+                                                         'WebServer',
+                                                         self.stack)
+        self.assertEqual(rsrc.id, physical_rsrc.id)
+
+    @tools.stack_context('service_find_resource_physical_id')
+    def test_find_resource_physical_id(self):
+        rsrc = self.stack['WebServer']
+        physical_rsrc = self.eng._find_resource_in_stack(self.ctx,
+                                                         rsrc.resource_id,
+                                                         self.stack)
+        self.assertEqual(rsrc.id, physical_rsrc.id)
+
+    @tools.stack_context('service_find_resource_not_found')
+    def test_find_resource_nonexist(self):
+        self.assertRaises(exception.ResourceNotFound,
+                          self.eng._find_resource_in_stack,
+                          self.ctx, 'wibble', self.stack)
+
     @tools.stack_context('service_mark_healthy_create_complete_test_stk')
     def test_mark_healthy_in_create_complete(self):
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),

@@ -263,7 +263,7 @@ This operation does not return a response body.
 Mark a resource as unhealthy
 ============================
 
-.. rest_method::  PATCH /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources/{resource_name}
+.. rest_method::  PATCH /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/resources/{resource_name_or_physical_id}
 
 Mark the specified resource in the stack as unhealthy.
 
@@ -288,7 +288,7 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_name: stack_name_url
    - stack_id: stack_id_url
-   - resource_name: resource_name_url
+   - resource_name_or_physical_id: resource_name_or_physical_id_url
    - mark_unhealthy: mark_unhealthy
    - resource_status_reason: resource_update_status_reason
 

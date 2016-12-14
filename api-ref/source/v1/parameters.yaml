@@ -54,6 +54,13 @@ resource_name_url:
   in: path
   required: false
   type: string
+resource_name_or_physical_id_url:
+  description: |
+    The name of a resource in the stack, or the ID of its underlying physical
+    resource.
+  in: path
+  required: true
+  type: string
 snapshot_id_url:
   description: |
     The UUID of the snapshot.

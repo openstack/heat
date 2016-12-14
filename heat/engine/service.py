@@ -1866,6 +1866,8 @@ class EngineService(service.ServiceBase):
            is false and the resource is in CHECK_FAILED state.
            Otherwise, make no change.
 
+        :param resource_name: either the logical name of the resource or the
+                              physical resource ID.
         :param mark_unhealthy: indicates whether the resource is unhealthy.
         :param resource_status_reason: reason for health change.
         """
@@ -1877,28 +1879,50 @@ class EngineService(service.ServiceBase):
                                             rsrc.stack.id,
                                             self.engine_id)
 
-        s = self._get_stack(cnxt, stack_identity)
-        stack = parser.Stack.load(cnxt, stack=s)
-        if resource_name not in stack:
-            raise exception.ResourceNotFound(resource_name=resource_name,
-                                             stack_name=stack.name)
-
         if not isinstance(mark_unhealthy, bool):
             raise exception.Invalid(reason="mark_unhealthy is not a boolean")
 
-        rsrc = stack[resource_name]
+        s = self._get_stack(cnxt, stack_identity)
+        stack = parser.Stack.load(cnxt, stack=s)
+
+        rsrc = self._find_resource_in_stack(cnxt, resource_name, stack)
+
         reason = (resource_status_reason or
                   "state changed by resource_mark_unhealthy api")
         try:
             with lock(rsrc):
                 if mark_unhealthy:
-                    rsrc.state_set(rsrc.CHECK, rsrc.FAILED, reason=reason)
+                    if rsrc.action != rsrc.DELETE:
+                        rsrc.state_set(rsrc.CHECK, rsrc.FAILED, reason=reason)
                 elif rsrc.state == (rsrc.CHECK, rsrc.FAILED):
                     rsrc.state_set(rsrc.CHECK, rsrc.COMPLETE, reason=reason)
 
         except exception.UpdateInProgress:
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)
+
+    @staticmethod
+    def _find_resource_in_stack(cnxt, resource_name, stack):
+        """Find a resource in a stack by either name or physical ID."""
+        if resource_name in stack:
+            return stack[resource_name]
+
+        rsrcs = resource_objects.Resource.get_all_by_physical_resource_id(
+            cnxt,
+            resource_name)
+
+        def in_stack(rs):
+            return rs.stack_id == stack.id and stack[rs.name].id == rs.id
+
+        matches = [stack[rs.name] for rs in rsrcs if in_stack(rs)]
+
+        if not matches:
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
+        if len(matches) > 1:
+            raise exception.PhysicalResourceIDAmbiguity(phys_id=resource_name)
+
+        return matches[0]
 
     @context.request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
