@@ -14,6 +14,8 @@
 import mock
 import six
 
+from six.moves.urllib import parse as urlparse
+
 from heat.common import template_format
 from heat.engine.clients import client_plugin
 from heat.engine import resource
@@ -347,8 +349,15 @@ resources:
         self.assertEqual(['/v2/foo/messages', '/v2/foo/sub'],
                          self.rsrc.FnGetAtt('paths'))
         self.assertEqual(['DELETE', 'POST'], self.rsrc.FnGetAtt('methods'))
-        self.assertEqual(
-            'signature=secret&expires=2020-01-01'
-            '&paths=/v2/foo/messages,/v2/foo/sub&methods=DELETE,POST'
-            '&project_id=project_id&queue_name=foo',
-            self.rsrc.get_attribute('query_str'))
+        expected_query = {
+            'queue_name': ['foo'],
+            'expires': ['2020-01-01'],
+            'signature': ['secret'],
+            'project_id': ['project_id'],
+            'paths': ['/v2/foo/messages,/v2/foo/sub'],
+            'methods': ['DELETE,POST']
+        }
+        query_str_attr = self.rsrc.get_attribute('query_str')
+        self.assertEqual(expected_query,
+                         urlparse.parse_qs(query_str_attr,
+                                           strict_parsing=True))
