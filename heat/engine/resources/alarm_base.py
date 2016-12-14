@@ -167,9 +167,9 @@ class BaseAlarm(resource.Resource):
         kwargs = {}
         for k, v in iter(props.items()):
             if k in [ALARM_ACTIONS, OK_ACTIONS,
-                     INSUFFICIENT_DATA_ACTIONS] and v is not None:
+                     INSUFFICIENT_DATA_ACTIONS]:
                 kwargs[k] = []
-                for act in v:
+                for act in v or []:
                     # if the action is a resource name
                     # we ask the destination resource for an alarm url.
                     # the template writer should really do this in the
@@ -187,10 +187,11 @@ class BaseAlarm(resource.Resource):
 
     def _reformat_properties(self, props):
         rule = {}
+        # Note that self.PROPERTIES includes only properties specific to the
+        # child class; BaseAlarm properties are not included.
         for name in self.PROPERTIES:
-            value = props.pop(name, None)
-            if value:
-                rule[name] = value
+            if name in props:
+                rule[name] = props.pop(name)
         if rule:
             props['%s_rule' % self.alarm_type] = rule
         return props

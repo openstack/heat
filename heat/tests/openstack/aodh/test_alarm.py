@@ -683,8 +683,8 @@ class CombinationAlarmTest(common.HeatTestCase):
             alarm_actions=[],
             description=u'Do stuff in combination',
             enabled=True,
-            insufficient_data_actions=None,
-            ok_actions=None,
+            insufficient_data_actions=[],
+            ok_actions=[],
             name=mox.IgnoreArg(), type='combination',
             repeat_actions=True,
             combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
@@ -726,7 +726,17 @@ class CombinationAlarmTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.alarms, 'update')
         self.fc.alarms.update(
             alarm_id='foo',
-            combination_rule={'alarm_ids': [u'alarm1', u'alarm3']})
+            alarm_actions=[],
+            description=u'Do stuff in combination',
+            enabled=True,
+            insufficient_data_actions=[],
+            ok_actions=[],
+            repeat_actions=True,
+            combination_rule={'alarm_ids': [u'alarm1', u'alarm3'],
+                              'operator': u'and'},
+            time_constraints=[],
+            severity='low'
+        )
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()

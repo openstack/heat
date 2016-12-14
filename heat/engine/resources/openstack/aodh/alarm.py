@@ -195,11 +195,10 @@ class AodhAlarm(alarm_base.BaseAlarm):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            kwargs = {}
-            kwargs.update(self.properties)
-            kwargs.update(prop_diff)
+            new_props = json_snippet.properties(self.properties_schema,
+                                                self.context)
             self.client().alarm.update(self.resource_id,
-                                       self.get_alarm_props(kwargs))
+                                       self.get_alarm_props(new_props))
 
     def parse_live_resource_data(self, resource_properties, resource_data):
         record_reality = {}
@@ -288,10 +287,12 @@ class CombinationAlarm(alarm_base.BaseAlarm):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             kwargs = {'alarm_id': self.resource_id}
-            kwargs.update(prop_diff)
+            new_props = json_snippet.properties(self.properties_schema,
+                                                self.context)
+            kwargs.update(self._reformat_properties(
+                self.actions_to_urls(new_props)))
             alarms_client = self.client().alarms
-            alarms_client.update(**self._reformat_properties(
-                self.actions_to_urls(kwargs)))
+            alarms_client.update(**kwargs)
 
     def handle_suspend(self):
         self.client().alarms.update(
@@ -397,11 +398,10 @@ class EventAlarm(alarm_base.BaseAlarm):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            kwargs = {}
-            kwargs.update(self.properties)
-            kwargs.update(prop_diff)
+            new_props = json_snippet.properties(self.properties_schema,
+                                                self.context)
             self.client().alarm.update(self.resource_id,
-                                       self.get_alarm_props(kwargs))
+                                       self.get_alarm_props(new_props))
 
     def _show_resource(self):
         return self.client().alarm.get(self.resource_id)
