@@ -23,6 +23,9 @@ parameters:
   dns_servers:
     type: comma_delimited_list
     default: ["8.8.8.8", "8.8.4.4"]
+  user_data_format:
+    type: string
+    default: RAW
 resources:
   sg:
     type: OS::Neutron::SecurityGroup
@@ -76,7 +79,7 @@ resources:
       - subnet: {get_resource: subnet}
       security_groups:
       - {get_resource: sg}
-      user_data_format: RAW
+      user_data_format: {get_param: user_data_format}
       user_data:
         str_replace:
           template: |

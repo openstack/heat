@@ -325,7 +325,9 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                 subtype = os.path.splitext(filename)[0]
             if content is None:
                 content = ''
-            msg = text.MIMEText(content, _subtype=subtype)
+            msg = (text.MIMEText(content, _subtype=subtype)
+                   if subtype else text.MIMEText(content))
+
             msg.add_header('Content-Disposition', 'attachment',
                            filename=filename)
             return msg
@@ -359,7 +361,6 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                        (cloudinit_boothook, 'boothook.sh', 'cloud-boothook'),
                        (read_cloudinit_file('part_handler.py'),
                         'part-handler.py')]
-
         if is_cfntools:
             attachments.append((userdata, 'cfn-userdata', 'x-cfninitdata'))
         elif is_software_config:
@@ -376,7 +377,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                                         part.get_filename(),
                                         part.get_content_subtype()))
             else:
-                attachments.append((userdata, 'userdata', 'x-shellscript'))
+                attachments.append((userdata, ''))
 
         if is_cfntools:
             attachments.append((read_cloudinit_file('loguserdata.py'),
