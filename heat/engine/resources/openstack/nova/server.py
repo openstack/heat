@@ -1147,16 +1147,16 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             updaters.append(
                 progress.ServerUpdateProgress(
                     self.resource_id, 'interface_detach',
-                    complete=True,
-                    handler_extra={'args': (port,)})
+                    handler_extra={'args': (port,)},
+                    checker_extra={'args': (port,)})
             )
 
         for args in add_nets:
             updaters.append(
                 progress.ServerUpdateProgress(
                     self.resource_id, 'interface_attach',
-                    complete=True,
-                    handler_extra={'kwargs': args})
+                    handler_extra={'kwargs': args},
+                    checker_extra={'args': (args['port_id'],)})
             )
 
         return updaters

@@ -731,6 +731,9 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         wait=tenacity.wait_fixed(0.5),
         retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
     def check_interface_attach(self, server_id, port_id):
+        if not port_id:
+            return True
+
         server = self.fetch_server(server_id)
         if server:
             interfaces = server.interface_list()

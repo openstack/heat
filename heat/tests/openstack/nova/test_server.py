@@ -3349,11 +3349,19 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
 
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(1, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(1, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
 
     def test_server_update_None_networks_with_network_id(self):
         return_server = self.fc.servers.list()[3]
@@ -3378,11 +3386,19 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
 
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(1, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(1, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
 
     def test_server_update_subnet_with_security_group(self):
         return_server = self.fc.servers.list()[3]
@@ -3427,11 +3443,19 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
 
         scheduler.TaskRunner(server.update, update_template, before=server.t)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(1, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(1, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
         self.assertEqual(3, mock_find.call_count)
         kwargs = {'network_id': '05d8e681-4b37-4570-bc8d-810089f706b2',
                   'fixed_ips': [
@@ -3461,10 +3485,18 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(1, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(1, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
 
     def test_server_update_networks_with_complex_parameters(self):
         return_server = self.fc.servers.list()[1]
@@ -3513,10 +3545,18 @@ class ServersTest(common.HeatTestCase):
                          return_value=poor_interfaces)
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(4, mock_detach.call_count)
         self.assertEqual(2, mock_attach.call_count)
+        self.assertEqual(4, mock_detach_check.call_count)
+        self.assertEqual(2, mock_attach_check.call_count)
 
     def test_server_update_networks_with_None(self):
         return_server = self.fc.servers.list()[1]
@@ -3553,11 +3593,18 @@ class ServersTest(common.HeatTestCase):
                          return_value=poor_interfaces)
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
-
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(3, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(3, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
 
     def test_server_update_networks_with_empty_list(self):
         return_server = self.fc.servers.list()[1]
@@ -3595,11 +3642,19 @@ class ServersTest(common.HeatTestCase):
                          return_value=poor_interfaces)
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        mock_attach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_attach',
+                                             return_value=True)
 
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
         self.assertEqual(3, mock_detach.call_count)
         self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(3, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
 
     def test_server_properties_validation_create_and_update(self):
         return_server = self.fc.servers.list()[1]
