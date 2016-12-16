@@ -1097,8 +1097,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         deps += (self, res)
                         break
 
-    def _update_flavor(self, prop_diff):
-        flavor = prop_diff[self.FLAVOR]
+    def _update_flavor(self, after_props):
+        flavor = after_props[self.FLAVOR]
         handler_args = checker_args = {'args': (flavor,)}
         prg_resize = progress.ServerUpdateProgress(self.resource_id,
                                                    'resize',
@@ -1108,28 +1108,34 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                                                    'verify_resize')
         return prg_resize, prg_verify
 
-    def _update_image(self, prop_diff):
-        image_update_policy = (
-            prop_diff.get(self.IMAGE_UPDATE_POLICY) or
-            self.properties[self.IMAGE_UPDATE_POLICY])
-        image = prop_diff[self.IMAGE]
+    def _update_image(self, after_props):
+        image_update_policy = after_props[self.IMAGE_UPDATE_POLICY]
+
+        instance_meta = after_props[self.METADATA]
+        if instance_meta is not None:
+            instance_meta = self.client_plugin().meta_serialize(
+                instance_meta)
+        personality_files = after_props[self.PERSONALITY]
+
+        image = after_props[self.IMAGE]
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
-        password = (prop_diff.get(self.ADMIN_PASS) or
-                    self.properties[self.ADMIN_PASS])
+        password = after_props[self.ADMIN_PASS]
         kwargs = {'password': password,
-                  'preserve_ephemeral': preserve_ephemeral}
+                  'preserve_ephemeral': preserve_ephemeral,
+                  'meta': instance_meta,
+                  'files': personality_files}
         prg = progress.ServerUpdateProgress(self.resource_id,
                                             'rebuild',
                                             handler_extra={'args': (image,),
                                                            'kwargs': kwargs})
         return prg
 
-    def _update_networks(self, server, prop_diff):
+    def _update_networks(self, server, after_props):
         updaters = []
-        new_networks = prop_diff.get(self.NETWORKS)
+        new_networks = after_props[self.NETWORKS]
         old_networks = self.properties[self.NETWORKS]
-        security_groups = self.properties[self.SECURITY_GROUPS]
+        security_groups = after_props[self.SECURITY_GROUPS]
 
         if not server:
             server = self.client().servers.get(self.resource_id)
@@ -1185,26 +1191,29 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             prop_diff)
         server = None
 
+        after_props = json_snippet.properties(self.properties_schema,
+                                              self.context)
+
         if self.TAGS in prop_diff:
-            self._update_server_tags(prop_diff[self.TAGS] or [])
+            self._update_server_tags(after_props[self.TAGS] or [])
 
         if self.FLAVOR in prop_diff:
-            updaters.extend(self._update_flavor(prop_diff))
+            updaters.extend(self._update_flavor(after_props))
 
         if self.IMAGE in prop_diff:
-            updaters.append(self._update_image(prop_diff))
+            updaters.append(self._update_image(after_props))
         elif self.ADMIN_PASS in prop_diff:
             if not server:
                 server = self.client_plugin().get_server(self.resource_id)
-            server.change_password(prop_diff[self.ADMIN_PASS])
+            server.change_password(after_props[self.ADMIN_PASS])
 
         if self.NAME in prop_diff:
             if not server:
                 server = self.client_plugin().get_server(self.resource_id)
-            self.client_plugin().rename(server, prop_diff[self.NAME])
+            self.client_plugin().rename(server, after_props[self.NAME])
 
         if self.NETWORKS in prop_diff:
-            updaters.extend(self._update_networks(server, prop_diff))
+            updaters.extend(self._update_networks(server, after_props))
 
         # NOTE(pas-ha) optimization is possible (starting first task
         # right away), but we'd rather not, as this method already might

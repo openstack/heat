@@ -2101,11 +2101,13 @@ class ServersTest(common.HeatTestCase):
         if 'REBUILD' == policy:
             mock_rebuild.assert_called_once_with(
                 return_server, '2', password=password,
-                preserve_ephemeral=False)
+                preserve_ephemeral=False,
+                meta={}, files={})
         else:
             mock_rebuild.assert_called_once_with(
                 return_server, '2', password=password,
-                preserve_ephemeral=True)
+                preserve_ephemeral=True,
+                meta={}, files={})
 
     def test_server_update_image_rebuild_status_rebuild(self):
         # Normally we will see 'REBUILD' first and then 'ACTIVE".
@@ -2166,7 +2168,8 @@ class ServersTest(common.HeatTestCase):
             six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         mock_rebuild.assert_called_once_with(
-            return_server, '2', password=None, preserve_ephemeral=False)
+            return_server, '2', password=None, preserve_ephemeral=False,
+            meta={}, files={})
 
     def test_server_update_properties(self):
         return_server = self.fc.servers.list()[1]
