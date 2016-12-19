@@ -1192,7 +1192,7 @@ def software_deployment_create(context, values):
 def software_deployment_get(context, deployment_id):
     result = context.session.query(
         models.SoftwareDeployment).get(deployment_id)
-    if (result is not None and context is not None and
+    if (result is not None and context is not None and not context.is_admin and
         context.tenant_id not in (result.tenant,
                                   result.stack_user_project_id)):
         result = None
@@ -1205,14 +1205,14 @@ def software_deployment_get(context, deployment_id):
 
 def software_deployment_get_all(context, server_id=None):
     sd = models.SoftwareDeployment
-    query = context.session.query(
-        sd
-    ).filter(sqlalchemy.or_(
-             sd.tenant == context.tenant_id,
-             sd.stack_user_project_id == context.tenant_id)
-             ).order_by(sd.created_at)
+    query = context.session.query(sd).order_by(sd.created_at)
+    if not context.is_admin:
+        query = query.filter(sqlalchemy.or_(
+            sd.tenant == context.tenant_id,
+            sd.stack_user_project_id == context.tenant_id))
     if server_id:
         query = query.filter_by(server_id=server_id)
+
     return query.all()
 
 

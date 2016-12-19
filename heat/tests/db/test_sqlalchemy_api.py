@@ -1165,6 +1165,12 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIsNotNone(deployment)
         self.assertEqual(values['tenant'], deployment.tenant)
 
+        # admin can get the deployments
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        deployment = db_api.software_deployment_get(admin_ctx, deployment_id)
+        self.assertIsNotNone(deployment)
+
     def test_software_deployment_get_all(self):
         self.assertEqual([], db_api.software_deployment_get_all(self.ctx))
         values = self._deployment_values()
@@ -1180,6 +1186,11 @@ class SqlAlchemyTest(common.HeatTestCase):
         deployments = db_api.software_deployment_get_all(
             self.ctx, server_id=str(uuid.uuid4()))
         self.assertEqual([], deployments)
+        # admin can get the deployments of other tenants
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        deployments = db_api.software_deployment_get_all(admin_ctx)
+        self.assertEqual(1, len(deployments))
 
     def test_software_deployment_update(self):
         deployment_id = str(uuid.uuid4())
@@ -1195,8 +1206,15 @@ class SqlAlchemyTest(common.HeatTestCase):
             self.ctx, deployment_id, values)
         self.assertIsNotNone(deployment)
         self.assertEqual(values['status'], deployment.status)
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        values = {'status': 'FAILED'}
+        deployment = db_api.software_deployment_update(
+            admin_ctx, deployment_id, values)
+        self.assertIsNotNone(deployment)
+        self.assertEqual(values['status'], deployment.status)
 
-    def test_software_deployment_delete(self):
+    def _test_software_deployment_delete(self, test_ctx=None):
         deployment_id = str(uuid.uuid4())
         err = self.assertRaises(exception.NotFound,
                                 db_api.software_deployment_delete,
@@ -1205,17 +1223,27 @@ class SqlAlchemyTest(common.HeatTestCase):
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         deployment_id = deployment.id
-        deployment = db_api.software_deployment_get(self.ctx, deployment_id)
+        test_ctx = test_ctx or self.ctx
+        deployment = db_api.software_deployment_get(test_ctx, deployment_id)
         self.assertIsNotNone(deployment)
-        db_api.software_deployment_delete(self.ctx, deployment_id)
+        db_api.software_deployment_delete(test_ctx, deployment_id)
 
         err = self.assertRaises(
             exception.NotFound,
             db_api.software_deployment_get,
-            self.ctx,
+            test_ctx,
             deployment_id)
 
         self.assertIn(deployment_id, six.text_type(err))
+
+    def test_software_deployment_delete(self):
+        self._test_software_deployment_delete()
+
+    def test_software_deployment_delete_by_admin(self):
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+
+        self._test_software_deployment_delete(test_ctx=admin_ctx)
 
     def test_snapshot_create(self):
         template = create_raw_template(self.ctx)
