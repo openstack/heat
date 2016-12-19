@@ -6,16 +6,17 @@
 # Mario Cho <hephaex@gmail.com>, 2014
 # Ying Chun Guo <daisy.ycguo@gmail.com>, 2015
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# jtjang <jang.jitae@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.1.dev7\n"
+"Project-Id-Version: heat 7.0.2.dev6\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-07 09:58+0000\n"
+"POT-Creation-Date: 2016-12-14 16:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-31 03:47+0000\n"
-"Last-Translator: Ian Y. Choi <ianyrchoi@gmail.com>\n"
+"PO-Revision-Date: 2016-12-13 04:14+0000\n"
+"Last-Translator: jtjang <jang.jitae@gmail.com>\n"
 "Language: ko-KR\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
@@ -2783,6 +2784,9 @@ msgstr "이 방화벽 규칙의 Ip_version입니다."
 msgid "It defines an executor to which task action should be sent to."
 msgstr "태스크 작업을 수신해야 하는 실행 프로그램을 정의합니다."
 
+msgid "It is advised to shutdown all Heat engines beforehand."
+msgstr "미리 모든 Heat 엔진을 shutdown 하는 것이 좋습니다."
+
 #, python-format
 msgid "Items to join must be string, map or list not %s"
 msgstr "결합할 항목은 %s이(가) 아니라 문자열 또는 목록이어야 함"
@@ -3136,6 +3140,9 @@ msgid ""
 msgstr ""
 "스택당 사용 가능한 최대 이벤트입니다. 최대 이벤트에 도달하면 이전 이벤트는 삭"
 "제됩니다. 스택당 무제한 이벤트는 0으로 설정하십시오."
+
+msgid "Maximum length of a server name to be used in nova."
+msgstr "nova에서 사용할 서버 이름의 최대 길이."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -5549,6 +5556,9 @@ msgstr ""
 msgid "The directory to search for environment files."
 msgstr "환경 파일을 검색할 디렉토리입니다."
 
+msgid "The directory to search for template files."
+msgstr "템플릿 파일을 검색 할 디렉토리입니다."
+
 msgid "The ebs volume to attach to the instance."
 msgstr "인스턴스에 접속할 ebs 볼륨입니다."
 
@@ -6987,6 +6997,13 @@ msgstr "WaitCondition 올바르지 않은 핸들 스택 %s"
 #, python-format
 msgid "WaitCondition invalid Handle tenant %s"
 msgstr "WaitCondition 올바르지 않은 핸들 테넌트 %s"
+
+msgid ""
+"Warning: this command is potentially destructive and only intended to "
+"recover from specific crashes."
+msgstr ""
+"경고 :이 명령은 잠재적으로 파괴적이며, 오직 특정 충돌로부터 복구하기위한 것입"
+"니다."
 
 msgid "Weight of pool member in the pool (default to 1)."
 msgstr "풀에서 풀 멤버의 중량입니다(기본값 1로 설정)."
