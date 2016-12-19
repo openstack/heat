@@ -3472,7 +3472,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         dec_result = db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
         self.assertEqual(len(dec_result), 1)
-        self.assertIs(TypeError, type(dec_result[0]))
+        self.assertIs(AttributeError, type(dec_result[0]))
         dec_tmpls = self.ctx.session.query(models.RawTemplate).all()
         self.assertEqual('', dec_tmpls[1].environment)
         self.assertEqual('bar',
@@ -3521,7 +3521,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             ctx, cfg.CONF.auth_encryption_key, verbose=True)
         self.assertIn("Processing raw_template 1", info_logger.output)
         self.assertIn("Processing resource 1", info_logger.output)
-        self.assertIn("Finished processing raw_template 1",
+        self.assertIn("Finished encrypt processing of raw_template 1",
                       info_logger.output)
         self.assertIn("Finished processing resource 1", info_logger.output)
 
@@ -3534,7 +3534,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
             ctx, cfg.CONF.auth_encryption_key, verbose=True)
         self.assertIn("Processing raw_template 1", info_logger2.output)
         self.assertIn("Processing resource 1", info_logger2.output)
-        self.assertIn("Finished processing raw_template 1",
+        self.assertIn("Finished decrypt processing of raw_template 1",
                       info_logger2.output)
         self.assertIn("Finished processing resource 1", info_logger2.output)
 
@@ -3615,7 +3615,7 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         self.assertEqual([], db_api.db_encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key))
         tmpl = db_api.raw_template_get(self.ctx, tmpl.id)
-        enc_params = tmpl.environment['parameters']
+        enc_params = copy.copy(tmpl.environment['parameters'])
 
         self.assertEqual([], db_api.db_decrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key, batch_size=50))

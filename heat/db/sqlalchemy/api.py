@@ -22,7 +22,6 @@ from oslo_db import options
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
-from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
@@ -1399,6 +1398,131 @@ def db_version(engine):
     return migration.db_version(engine)
 
 
+def _db_encrypt_or_decrypt_template_params(
+        ctxt, encryption_key, encrypt=False, batch_size=50, verbose=False):
+    from heat.engine import template
+    if encrypt:
+        crypt_action = _('encrypt')
+    else:
+        crypt_action = _('decrypt')
+
+    excs = []
+    with db_context.writer.independent.using(ctxt) as session:
+        query = session.query(models.RawTemplate)
+
+        for raw_template in _get_batch(
+                session=session, ctxt=ctxt, query=query,
+                model=models.RawTemplate, batch_size=batch_size):
+            try:
+                if verbose:
+                    LOG.info(_LI("Processing raw_template %(id)d..."),
+                             {'id': raw_template.id})
+                env = raw_template.environment
+                needs_update = False
+
+                # using "in env.keys()" so an exception is raised
+                # if env is something weird like a string.
+                if env is None or 'parameters' not in env.keys():
+                    continue
+                if 'encrypted_param_names' in env:
+                    encrypted_params = env['encrypted_param_names']
+                else:
+                    encrypted_params = []
+
+                if encrypt:
+                    tmpl = template.Template.load(
+                        ctxt, raw_template.id, raw_template)
+                    param_schemata = tmpl.param_schemata()
+                    if not param_schemata:
+                        continue
+
+                    for param_name, param_val in env['parameters'].items():
+                        if (param_name in encrypted_params or
+                                param_name not in param_schemata or
+                                not param_schemata[param_name].hidden):
+                            continue
+                        encrypted_val = crypt.encrypt(six.text_type(param_val),
+                                                      encryption_key)
+                        env['parameters'][param_name] = encrypted_val
+                        encrypted_params.append(param_name)
+                        needs_update = True
+                    if needs_update:
+                        environment = env.copy()
+                        environment['encrypted_param_names'] = encrypted_params
+                else:  # decrypt
+                    for param_name in encrypted_params:
+                        method, value = env['parameters'][param_name]
+                        decrypted_val = crypt.decrypt(method, value,
+                                                      encryption_key)
+                        env['parameters'][param_name] = decrypted_val
+                        needs_update = True
+                    if needs_update:
+                        environment = env.copy()
+                        environment['encrypted_param_names'] = []
+
+                if needs_update:
+                    raw_template_update(ctxt, raw_template.id,
+                                        {'environment': environment})
+            except Exception as exc:
+                LOG.exception(
+                    _LE('Failed to %(crypt_action)s parameters of raw '
+                        'template %(id)d'), {'id': raw_template.id,
+                                             'crypt_action': crypt_action})
+                excs.append(exc)
+                continue
+            finally:
+                if verbose:
+                    LOG.info(_LI("Finished %(crypt_action)s processing of "
+                                 "raw_template %(id)d."),
+                             {'id': raw_template.id,
+                              'crypt_action': crypt_action})
+    return excs
+
+
+def _db_encrypt_or_decrypt_resource_prop_data(
+        ctxt, encryption_key, encrypt=False, batch_size=50, verbose=False):
+    session = ctxt.session
+    excs = []
+    if encrypt:
+        crypt_action = _('encrypt')
+    else:
+        crypt_action = _('decrypt')
+    # Older resources may have properties_data in the legacy column,
+    # so update those as needed
+    query = session.query(models.Resource).filter(
+        models.Resource.properties_data_encrypted.isnot(encrypt))
+    for resource in _get_batch(
+            session=session, ctxt=ctxt, query=query, model=models.Resource,
+            batch_size=batch_size):
+        if not resource.properties_data:
+            continue
+        try:
+            if verbose:
+                LOG.info(_LI("Processing resource %(id)d..."),
+                         {'id': resource.id})
+            if encrypt:
+                result = crypt.encrypted_dict(resource.properties_data,
+                                              encryption_key)
+            else:
+                result = crypt.decrypted_dict(resource.properties_data,
+                                              encryption_key)
+            resource_update(ctxt, resource.id,
+                            {'properties_data': result,
+                             'properties_data_encrypted': encrypt},
+                            resource.atomic_key)
+        except Exception as exc:
+            LOG.exception(_LE('Failed to %(crypt_action)s properties_data of '
+                              'resource %(id)d') %
+                          {'id': resource.id, 'crypt_action': crypt_action})
+            excs.append(exc)
+            continue
+        finally:
+            if verbose:
+                LOG.info(_LI("Finished processing resource "
+                             "%(id)d."), {'id': resource.id})
+    return excs
+
+
 def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
                                          verbose=False):
     """Encrypt parameters and properties for all templates in db.
@@ -1413,91 +1537,12 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
                     resource begins or ends
     :return: list of exceptions encountered during encryption
     """
-    from heat.engine import template
-    with db_context.writer.independent.using(ctxt) as session:
-        query = session.query(models.RawTemplate)
-        excs = []
-        for raw_template in _get_batch(
-                session=session, ctxt=ctxt, query=query,
-                model=models.RawTemplate, batch_size=batch_size):
-            try:
-                if verbose:
-                    LOG.info(_LI("Processing raw_template %(id)d..."),
-                             {'id': raw_template.id})
-                tmpl = template.Template.load(
-                    ctxt, raw_template.id, raw_template)
-                param_schemata = tmpl.param_schemata()
-                env = raw_template.environment
-
-                if (not env or
-                        'parameters' not in env or
-                        not param_schemata):
-                    continue
-                if 'encrypted_param_names' in env:
-                    encrypted_params = env['encrypted_param_names']
-                else:
-                    encrypted_params = []
-
-                for param_name, param_val in env['parameters'].items():
-                    if (param_name in encrypted_params or
-                            param_name not in param_schemata or
-                            not param_schemata[param_name].hidden):
-                        continue
-                    encrypted_val = crypt.encrypt(six.text_type(param_val),
-                                                  encryption_key)
-                    env['parameters'][param_name] = encrypted_val
-                    encrypted_params.append(param_name)
-
-                if encrypted_params:
-                    environment = env.copy()
-                    environment['encrypted_param_names'] = encrypted_params
-                    raw_template_update(ctxt, raw_template.id,
-                                        {'environment': environment})
-            except Exception as exc:
-                LOG.exception(_LE('Failed to encrypt parameters of raw '
-                                  'template %(id)d'), {'id': raw_template.id})
-                excs.append(exc)
-                continue
-            finally:
-                if verbose:
-                    LOG.info(_LI("Finished processing raw_template "
-                                 "%(id)d."), {'id': raw_template.id})
-
-        query = session.query(models.Resource).filter(
-            ~models.Resource.properties_data.is_(None),
-            ~models.Resource.properties_data_encrypted.is_(True))
-        for resource in _get_batch(
-                session=session, ctxt=ctxt, query=query, model=models.Resource,
-                batch_size=batch_size):
-            try:
-                if verbose:
-                    LOG.info(_LI("Processing resource %(id)d..."),
-                             {'id': resource.id})
-                result = {}
-                if not resource.properties_data:
-                    continue
-                for prop_name, prop_value in resource.properties_data.items():
-                    prop_string = jsonutils.dumps(prop_value)
-                    encrypted_value = crypt.encrypt(prop_string,
-                                                    encryption_key)
-                    result[prop_name] = encrypted_value
-                resource.properties_data = result
-                resource.properties_data_encrypted = True
-                resource_update(ctxt, resource.id,
-                                {'properties_data': result,
-                                 'properties_data_encrypted': True},
-                                resource.atomic_key)
-            except Exception as exc:
-                LOG.exception(_LE('Failed to encrypt properties_data of '
-                                  'resource %(id)d'), {'id': resource.id})
-                excs.append(exc)
-                continue
-            finally:
-                if verbose:
-                    LOG.info(_LI("Finished processing resource "
-                                 "%(id)d."), {'id': resource.id})
-
-        return excs
+    excs = []
+    excs.extend(_db_encrypt_or_decrypt_template_params(
+        ctxt, encryption_key, True, batch_size, verbose))
+    excs.extend(_db_encrypt_or_decrypt_resource_prop_data(
+        ctxt, encryption_key, True, batch_size, verbose))
+    return excs
 
 
 def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
@@ -1515,71 +1560,11 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
     :return: list of exceptions encountered during decryption
     """
     excs = []
-    with db_context.writer.independent.using(ctxt) as session:
-        query = session.query(models.RawTemplate)
-        for raw_template in _get_batch(
-                session=session, ctxt=ctxt, query=query,
-                model=models.RawTemplate, batch_size=batch_size):
-            try:
-                if verbose:
-                    LOG.info(_LI("Processing raw_template %(id)d..."),
-                             {'id': raw_template.id})
-                parameters = raw_template.environment['parameters']
-                encrypted_params = raw_template.environment[
-                    'encrypted_param_names']
-                for param_name in encrypted_params:
-                    method, value = parameters[param_name]
-                    decrypted_val = crypt.decrypt(method, value,
-                                                  encryption_key)
-                    parameters[param_name] = decrypted_val
-
-                environment = raw_template.environment.copy()
-                environment['encrypted_param_names'] = []
-                raw_template_update(ctxt, raw_template.id,
-                                    {'environment': environment})
-            except Exception as exc:
-                LOG.exception(_LE('Failed to decrypt parameters of raw '
-                                  'template %(id)d'), {'id': raw_template.id})
-                excs.append(exc)
-                continue
-            finally:
-                if verbose:
-                    LOG.info(_LI("Finished processing raw_template "
-                                 "%(id)d."), {'id': raw_template.id})
-
-        query = session.query(models.Resource).filter(
-            ~models.Resource.properties_data.is_(None),
-            models.Resource.properties_data_encrypted.is_(True))
-        for resource in _get_batch(
-                session=session, ctxt=ctxt, query=query, model=models.Resource,
-                batch_size=batch_size):
-            try:
-                if verbose:
-                    LOG.info(_LI("Processing resource %(id)d..."),
-                             {'id': resource.id})
-                result = {}
-                for prop_name, prop_value in resource.properties_data.items():
-                    method, value = prop_value
-                    decrypted_value = crypt.decrypt(method, value,
-                                                    encryption_key)
-                    prop_string = jsonutils.loads(decrypted_value)
-                    result[prop_name] = prop_string
-                resource.properties_data = result
-                resource.properties_data_encrypted = False
-                resource_update(ctxt, resource.id,
-                                {'properties_data': result,
-                                 'properties_data_encrypted': False},
-                                resource.atomic_key)
-            except Exception as exc:
-                LOG.exception(_LE('Failed to decrypt properties_data of '
-                                  'resource %(id)d'), {'id': resource.id})
-                excs.append(exc)
-                continue
-            finally:
-                if verbose:
-                    LOG.info(_LI("Finished processing resource "
-                                 "%(id)d."), {'id': resource.id})
-        return excs
+    excs.extend(_db_encrypt_or_decrypt_template_params(
+        ctxt, encryption_key, False, batch_size, verbose))
+    excs.extend(_db_encrypt_or_decrypt_resource_prop_data(
+        ctxt, encryption_key, False, batch_size, verbose))
+    return excs
 
 
 def _get_batch(session, ctxt, query, model, batch_size=50):
