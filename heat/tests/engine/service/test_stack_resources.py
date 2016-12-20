@@ -20,6 +20,7 @@ from heat.common import identifier
 from heat.engine.clients.os import keystone
 from heat.engine import dependencies
 from heat.engine import resource as res
+from heat.engine.resources.aws.ec2 import instance as ins
 from heat.engine import service
 from heat.engine import stack
 from heat.engine import stack_lock
@@ -558,82 +559,77 @@ class StackResourcesServiceTest(common.HeatTestCase):
                           self.eng._find_resource_in_stack,
                           self.ctx, 'wibble', self.stack)
 
+    def _test_mark_healthy_asserts(self, action='CHECK', status='FAILED',
+                                   reason='state changed', meta=None):
+        rs = self.eng.describe_stack_resource(
+            self.ctx, self.stack.identifier(),
+            'WebServer', with_attr=None)
+        self.assertIn('resource_action', rs)
+        self.assertIn('resource_status', rs)
+        self.assertIn('resource_status_reason', rs)
+
+        self.assertEqual(action, rs['resource_action'])
+        self.assertEqual(status, rs['resource_status'])
+        self.assertEqual(reason, rs['resource_status_reason'])
+        if meta is not None:
+            self.assertIn('metadata', rs)
+            self.assertEqual(meta, rs['metadata'])
+
     @tools.stack_context('service_mark_healthy_create_complete_test_stk')
     def test_mark_healthy_in_create_complete(self):
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', False,
                                          resource_status_reason='noop')
 
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-        self.assertIn('resource_action', r)
-        self.assertIn('resource_status', r)
-        self.assertIn('resource_status_reason', r)
-
-        self.assertEqual(r['resource_action'], 'CREATE')
-        self.assertEqual(r['resource_status'], 'COMPLETE')
-        self.assertEqual(r['resource_status_reason'], 'state changed')
+        self._test_mark_healthy_asserts(action='CREATE',
+                                        status='COMPLETE')
 
     @tools.stack_context('service_mark_unhealthy_create_complete_test_stk')
     def test_mark_unhealthy_in_create_complete(self):
+
+        reason = 'Some Reason'
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True,
-                                         resource_status_reason='Some Reason')
+                                         resource_status_reason=reason)
 
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'FAILED')
-        self.assertEqual(r['resource_status_reason'], 'Some Reason')
+        self._test_mark_healthy_asserts(reason=reason)
 
     @tools.stack_context('service_mark_healthy_check_failed_test_stk')
     def test_mark_healthy_check_failed(self):
+        reason = 'Some Reason'
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True,
-                                         resource_status_reason='Some Reason')
+                                         resource_status_reason=reason)
+        self._test_mark_healthy_asserts(reason=reason)
 
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
+        meta = {'for_test': True}
 
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'FAILED')
-        self.assertEqual(r['resource_status_reason'], 'Some Reason')
+        def override_metadata_reset(rsrc):
+            rsrc.metadata_set(meta)
 
+        ins.Instance.handle_metadata_reset = override_metadata_reset
+
+        reason = 'Good Reason'
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', False,
-                                         resource_status_reason='Good Reason')
-
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'COMPLETE')
-        self.assertEqual(r['resource_status_reason'], 'Good Reason')
+                                         resource_status_reason=reason)
+        self._test_mark_healthy_asserts(status='COMPLETE',
+                                        reason=reason,
+                                        meta=meta)
 
     @tools.stack_context('service_mark_unhealthy_check_failed_test_stack')
     def test_mark_unhealthy_check_failed(self):
+        reason = 'Some Reason'
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True,
-                                         resource_status_reason='Some Reason')
+                                         resource_status_reason=reason)
+        self._test_mark_healthy_asserts(reason=reason)
 
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'FAILED')
-        self.assertEqual(r['resource_status_reason'], 'Some Reason')
-
+        new_reason = 'New Reason'
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True,
-                                         resource_status_reason='New Reason')
-
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'FAILED')
-        self.assertEqual(r['resource_status_reason'], 'New Reason')
+                                         resource_status_reason=new_reason)
+        self._test_mark_healthy_asserts(reason=new_reason)
 
     @tools.stack_context('service_mark_unhealthy_invalid_value_test_stk')
     def test_mark_unhealthy_invalid_value(self):
@@ -649,28 +645,16 @@ class StackResourcesServiceTest(common.HeatTestCase):
     def test_mark_unhealthy_none_reason(self):
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True)
-
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'FAILED')
-        self.assertEqual(r['resource_status_reason'],
-                         'state changed by resource_mark_unhealthy api')
+        default_reason = 'state changed by resource_mark_unhealthy api'
+        self._test_mark_healthy_asserts(reason=default_reason)
 
     @tools.stack_context('service_mark_unhealthy_empty_reason_test_stk')
     def test_mark_unhealthy_empty_reason(self):
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True,
                                          resource_status_reason="")
-
-        r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),
-                                             'WebServer', with_attr=None)
-
-        self.assertEqual(r['resource_action'], 'CHECK')
-        self.assertEqual(r['resource_status'], 'FAILED')
-        self.assertEqual(r['resource_status_reason'],
-                         'state changed by resource_mark_unhealthy api')
+        default_reason = 'state changed by resource_mark_unhealthy api'
+        self._test_mark_healthy_asserts(reason=default_reason)
 
     @tools.stack_context('service_mark_unhealthy_lock_no_converge_test_stk')
     def test_mark_unhealthy_lock_no_convergence(self):
