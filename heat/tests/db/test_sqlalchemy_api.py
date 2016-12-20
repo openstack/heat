@@ -1823,12 +1823,13 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertEqual('db_test_stack_name', ret_stack.name)
 
     def test_stack_get_can_return_a_stack_from_different_tenant(self):
+        # create a stack with the common tenant
         stack = create_stack(self.ctx, self.template, self.user_creds)
-        self.ctx.tenant_id = 'abc'
-
-        # with ctx.is_admin = True
-        self.ctx.is_admin = True
-        ret_stack = db_api.stack_get(self.ctx, stack.id,
+        # admin context can get the stack
+        admin_ctx = utils.dummy_context(user='admin_username',
+                                        tenant_id='admin_tenant',
+                                        is_admin=True)
+        ret_stack = db_api.stack_get(admin_ctx, stack.id,
                                      show_deleted=False)
         self.assertEqual(stack.id, ret_stack.id)
         self.assertEqual('db_test_stack_name', ret_stack.name)
@@ -1942,8 +1943,11 @@ class DBAPIStackTest(common.HeatTestCase):
         [create_stack(self.ctx, self.template, self.user_creds,
                       **val) for val in values]
 
-        self.ctx.is_admin = True
-        stacks = db_api.stack_get_all(self.ctx)
+        admin_ctx = utils.dummy_context(user='admin_user',
+                                        tenant_id='admin_tenant',
+                                        is_admin=True)
+
+        stacks = db_api.stack_get_all(admin_ctx)
         self.assertEqual(5, len(stacks))
 
     def test_stack_count_all_with_regular_tenant(self):
@@ -1973,9 +1977,10 @@ class DBAPIStackTest(common.HeatTestCase):
         ]
         [create_stack(self.ctx, self.template, self.user_creds,
                       **val) for val in values]
-        self.ctx.is_admin = True
-        self.assertEqual(5,
-                         db_api.stack_count_all(self.ctx))
+        admin_ctx = utils.dummy_context(user='admin_user',
+                                        tenant_id='admin_tenant',
+                                        is_admin=True)
+        self.assertEqual(5, db_api.stack_count_all(admin_ctx))
 
     def test_purge_deleted(self):
         now = timeutils.utcnow()
@@ -1992,19 +1997,20 @@ class DBAPIStackTest(common.HeatTestCase):
                                deleted_at=deleted[i]) for i in range(5)]
 
         db_api.purge_deleted(age=1, granularity='days')
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        admin_ctx = utils.dummy_context(is_admin=True)
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=22, granularity='hours')
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=1100, granularity='minutes')
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1), (2, 3, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds')
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (), (0, 1, 2, 3, 4))
 
     def test_purge_project_deleted(self):
@@ -2030,27 +2036,28 @@ class DBAPIStackTest(common.HeatTestCase):
                                ) for i in range(5)]
 
         db_api.purge_deleted(age=1, granularity='days', project_id=UUID1)
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        admin_ctx = utils.dummy_context(is_admin=True)
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1, 2, 3, 4), ())
 
         db_api.purge_deleted(age=22, granularity='hours', project_id=UUID1)
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1, 2, 3, 4), ())
 
         db_api.purge_deleted(age=1100, granularity='minutes', project_id=UUID1)
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1, 3, 4), (2,))
 
         db_api.purge_deleted(age=30, granularity='hours', project_id=UUID2)
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (0, 1, 3), (2, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID1)
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (3,), (0, 1, 2, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID2)
-        self._deleted_stack_existance(utils.dummy_context(), stacks,
+        self._deleted_stack_existance(admin_ctx, stacks,
                                       tmpl_files, (), (0, 1, 2, 3, 4))
 
     def test_purge_deleted_prev_raw_template(self):
@@ -2062,8 +2069,7 @@ class DBAPIStackTest(common.HeatTestCase):
                                prev_raw_template=templates[1])]
 
         db_api.purge_deleted(age=3600, granularity='seconds')
-        ctx = utils.dummy_context()
-        ctx.is_admin = True
+        ctx = utils.dummy_context(is_admin=True)
         self.assertIsNotNone(db_api.stack_get(ctx, stacks[0].id,
                                               show_deleted=True))
         self.assertIsNotNone(db_api.raw_template_get(ctx, templates[1].id))
@@ -2149,7 +2155,6 @@ class DBAPIStackTest(common.HeatTestCase):
 
     def _deleted_stack_existance(self, ctx, stacks,
                                  tmpl_files, existing, deleted):
-        ctx.is_admin = True
         for s in existing:
             self.assertIsNotNone(db_api.stack_get(ctx, stacks[s].id,
                                                   show_deleted=True))
