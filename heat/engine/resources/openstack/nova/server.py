@@ -90,6 +90,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         BLOCK_DEVICE_MAPPING_BOOT_INDEX,
         BLOCK_DEVICE_MAPPING_VOLUME_SIZE,
         BLOCK_DEVICE_MAPPING_DELETE_ON_TERM,
+        BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE,
+        BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT,
     ) = (
         'device_name',
         'volume_id',
@@ -102,6 +104,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         'boot_index',
         'volume_size',
         'delete_on_termination',
+        'ephemeral_size',
+        'ephemeral_format'
     )
 
     _NETWORK_KEYS = (
@@ -248,6 +252,24 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                     BLOCK_DEVICE_MAPPING_SWAP_SIZE: properties.Schema(
                         properties.Schema.INTEGER,
                         _('The size of the swap, in MB.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('The size of the local ephemeral block device, '
+                          'in GB.'),
+                        support_status=support.SupportStatus(version='8.0.0'),
+                        constraints=[constraints.Range(min=1)]
+                    ),
+                    BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The format of the local ephemeral block device. '
+                          'If no format is specified, uses default value, '
+                          'defined in nova configuration file.'),
+                        constraints=[
+                            constraints.AllowedValues(['ext2', 'ext3', 'ext4',
+                                                       'xfs', 'ntfs'])
+                        ],
+                        support_status=support.SupportStatus(version='8.0.0')
                     ),
                     BLOCK_DEVICE_MAPPING_DEVICE_TYPE: properties.Schema(
                         properties.Schema.STRING,
@@ -934,6 +956,22 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                     'volume_size': mapping.get(
                         cls.BLOCK_DEVICE_MAPPING_SWAP_SIZE),
                 }
+            elif (mapping.get(cls.BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE) or
+                  mapping.get(cls.BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT)):
+                bmd_dict = {
+                    'source_type': 'blank',
+                    'destination_type': 'local',
+                    'boot_index': -1,
+                    'delete_on_termination': True
+                }
+                ephemeral_size = mapping.get(
+                    cls.BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE)
+                if ephemeral_size:
+                    bmd_dict.update({'volume_size': ephemeral_size})
+                ephemeral_format = mapping.get(
+                    cls.BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT)
+                if ephemeral_format:
+                    bmd_dict.update({'guest_format': ephemeral_format})
 
             # NOTE(prazumovsky): In case of server doesn't take empty value of
             # device name, need to escape from such situation.
@@ -1222,19 +1260,27 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
             image_id = mapping.get(self.BLOCK_DEVICE_MAPPING_IMAGE)
             swap_size = mapping.get(self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
+            ephemeral = (mapping.get(
+                self.BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE) or mapping.get(
+                self.BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT))
 
-            property_tuple = (volume_id, snapshot_id, image_id, swap_size)
+            property_tuple = (volume_id, snapshot_id, image_id, swap_size,
+                              ephemeral)
 
-            if property_tuple.count(None) < 3:
+            if property_tuple.count(None) < 4:
                 raise exception.ResourcePropertyConflict(
                     self.BLOCK_DEVICE_MAPPING_VOLUME_ID,
                     self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID,
                     self.BLOCK_DEVICE_MAPPING_IMAGE,
-                    self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
+                    self.BLOCK_DEVICE_MAPPING_SWAP_SIZE,
+                    self.BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE,
+                    self.BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT
+                )
 
-            if property_tuple.count(None) == 4:
-                msg = _('Either volume_id, snapshot_id, image_id or '
-                        'swap_size must be specified.')
+            if property_tuple.count(None) == 5:
+                msg = _('Either volume_id, snapshot_id, image_id, swap_size, '
+                        'ephemeral_size or ephemeral_format must be '
+                        'specified.')
                 raise exception.StackValidationFailed(message=msg)
 
             if any((volume_id is not None, snapshot_id is not None,
