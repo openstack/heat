@@ -71,10 +71,10 @@ Resource Status and Action
 
 The base class handles reporting state of the resource back to the engine.
 A resource's state is the combination of the life cycle action and the status
-of that action. For example, if a resource is created successfully, the status
-of that resource will be ``CREATE COMPLETE``. Alternatively, if the plug-in
+of that action. For example, if a resource is created successfully, the state
+of that resource will be ``CREATE_COMPLETE``. Alternatively, if the plug-in
 encounters an error when attempting to create the physical resource, the
-status would be ``CREATE FAILED``. The base class handles the
+state would be ``CREATE_FAILED``. The base class handles the
 reporting and persisting of resource state, so a plug-in's handler
 methods only need to return data or raise exceptions as appropriate.
 
@@ -159,16 +159,16 @@ plug-in.
         }
 
 As shown above, some properties may themselves be complex and
-reference nested schema definitions.  Following are the parameters to the
+reference nested schema definitions. Following are the parameters to the
 ``Schema`` constructor; all but the first have defaults.
 
 *data_type*:
 
         Defines the type of the property's value. The valid types are
         the members of the list ``properties.Schema.TYPES``, currently
-        ``INTEGER``, ``STRING``, ``NUMBER``, ``BOOLEAN``, ``MAP``, and
-        ``LIST``; please use those symbolic names rather than the
-        literals to which they are equated.  For ``LIST`` and ``MAP``
+        ``INTEGER``, ``STRING``, ``NUMBER``, ``BOOLEAN``, ``MAP``, ``LIST``
+        and ``ANY``; please use those symbolic names rather than the
+        literals to which they are equated. For ``LIST`` and ``MAP``
         type properties, the ``schema`` referenced constrains the
         format of complex items in the list or map.
 
@@ -464,7 +464,7 @@ Note that there is a default implementation of ``handle_update`` in
 that updates require the engine to delete and re-create the resource
 (this is the default behavior) so implementing this is optional.
 
-.. py:function:: handle_update(self, json_snippet, templ_diff, prop_diff)
+.. py:function:: handle_update(self, json_snippet, tmpl_diff, prop_diff)
 
   Update the physical resources using updated information.
 
