@@ -2716,6 +2716,7 @@ class StackTest(common.HeatTestCase):
                         new_callable=mock.PropertyMock) as mock_dependencies:
             mock_dependency = mock.MagicMock()
             mock_dependency.name = 'res'
+            mock_dependency.external_id = None
             mock_dependency.validate.side_effect = AssertionError(expected_msg)
             mock_dependencies.Dependencies.return_value = [mock_dependency]
             stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)

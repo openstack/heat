@@ -353,14 +353,12 @@ class ResourceTest(common.HeatTestCase):
             external_id=external_id)
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.entity = 'test'
-        res.client = mock.Mock()
         res.client_plugin = mock.Mock()
-        test_obj = mock.Mock()
-        res.client().test = test_obj
-        test_obj.get.side_effect = exception.EntityNotFound
-
+        self.patchobject(res.client_plugin, 'is_not_found',
+                         return_value=True)
+        self.patchobject(res, '_show_resource', side_effect=Exception())
         e = self.assertRaises(exception.StackValidationFailed,
-                              scheduler.TaskRunner(res.create))
+                              res.validate_external)
         message = ("Invalid external resource: Resource %(external_id)s not "
                    "found in %(entity)s.") % {'external_id': external_id,
                                               'entity': res.entity}

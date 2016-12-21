@@ -299,6 +299,10 @@ class Resource(object):
         self.root_stack_id = resource.root_stack_id
 
     @property
+    def external_id(self):
+        return self.t.external_id()
+
+    @property
     def stack(self):
         stack = self._stackref()
         assert stack is not None, "Need a reference to the Stack object"
@@ -864,18 +868,17 @@ class Resource(object):
 
             runner(timeout=timeout, progress_callback=progress_callback)
 
-    def _validate_external_resource(self, external_id):
-        if self.entity:
+    def validate_external(self):
+        if self.external_id is not None and self.entity:
             try:
-                self.resource_id = external_id
+                self.resource_id = self.external_id
                 self._show_resource()
             except Exception as ex:
-                LOG.debug("%s", ex)
                 if self.client_plugin().is_not_found(ex):
                     error_message = _("Invalid external resource: Resource "
                                       "%(external_id)s not found in "
                                       "%(entity)s.") % {
-                                          'external_id': external_id,
+                                          'external_id': self.external_id,
                                           'entity': self.entity}
                     raise exception.StackValidationFailed(
                         message="%s" % error_message)
@@ -888,20 +891,18 @@ class Resource(object):
         Subclasses should provide a handle_create() method to customise
         creation.
         """
-        external = self.t.external_id()
-        if external is not None:
-            self._validate_external_resource(external_id=external)
-
-            yield self._do_action(self.ADOPT,
-                                  resource_data={'resource_id': external})
-            self.check()
-            return
-
         action = self.CREATE
         if (self.action, self.status) != (self.INIT, self.COMPLETE):
             exc = exception.Error(_('State %s invalid for create')
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
+
+        if self.external_id is not None:
+            yield self._do_action(self.ADOPT,
+                                  resource_data={
+                                      'resource_id': self.external_id})
+            self.check()
+            return
 
         # This method can be called when we replace a resource, too. In that
         # case, a hook has already been dealt with in `Resource.update` so we
@@ -1267,14 +1268,14 @@ class Resource(object):
         if before is None:
             before = self.frozen_definition()
 
-        external = after.external_id()
-        if before.external_id() != external:
+        after_external_id = after.external_id()
+        if self.external_id != after_external_id:
             msg = _("Update to property %(prop)s of %(name)s (%(res)s)"
                     ) % {'prop': hot_tmpl.HOTemplate20161014.RES_EXTERNAL_ID,
                          'res': self.type(), 'name': self.name}
             exc = exception.NotSupported(feature=msg)
             raise exception.ResourceFailure(exc, self, action)
-        elif external is not None:
+        elif after_external_id is not None:
             LOG.debug("Skip update on external resource.")
             return
 
