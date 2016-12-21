@@ -17,7 +17,7 @@ from heat.engine import constraints
 from manilaclient import client as manila_client
 from manilaclient import exceptions
 
-MANILACLIENT_VERSION = "1"
+MANILACLIENT_VERSION = "2"
 CLIENT_NAME = 'manila'
 
 
