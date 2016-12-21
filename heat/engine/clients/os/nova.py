@@ -59,9 +59,9 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
     exceptions_module = exceptions
 
     supported_versions = [
-        NOVA_API_VERSION, V2_26
+        NOVA_API_VERSION, V2_2, V2_26
     ] = [
-        '2.1', '2.26'
+        '2.1', '2.2', '2.26'
     ]
 
     service_types = [COMPUTE] = ['compute']
@@ -89,7 +89,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
         client = nc.Client(version, **args)
         # NOTE: check for microversion availability
-        if version == self.V2_26:
+        if version in [self.V2_2, self.V2_26]:
             try:
                 client.versions.get_current()
             except exceptions.NotAcceptable:

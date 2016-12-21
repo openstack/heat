@@ -12,6 +12,7 @@
 #    under the License.
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -40,9 +41,9 @@ class KeyPair(resource.Resource):
     required_service_extension = 'os-keypairs'
 
     PROPERTIES = (
-        NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY,
+        NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY, KEY_TYPE,
     ) = (
-        'name', 'save_private_key', 'public_key',
+        'name', 'save_private_key', 'public_key', 'type',
     )
 
     ATTRIBUTES = (
@@ -71,6 +72,13 @@ class KeyPair(resource.Resource):
             _('The optional public key. This allows users to supply the '
               'public key from a pre-existing key pair. If not supplied, a '
               'new key pair will be generated.')
+        ),
+        KEY_TYPE: properties.Schema(
+            properties.Schema.STRING,
+            _('Keypair type. Supported since Nova api version 2.2.'),
+            constraints=[
+                constraints.AllowedValues(['ssh', 'x509'])],
+            support_status=support.SupportStatus(version='8.0.0')
         ),
     }
 
@@ -113,10 +121,35 @@ class KeyPair(resource.Resource):
                 self._public_key = nova_key.public_key
         return self._public_key
 
+    def validate(self):
+        super(KeyPair, self).validate()
+
+        # Check if key_type is allowed to use
+        if self.properties[self.KEY_TYPE]:
+            try:
+                self.client(
+                    version=self.client_plugin().V2_2)
+            except exception.InvalidServiceVersion as ex:
+                msg = (_('Cannot use "%(type)s" property - nova does not '
+                         'support it: %(error)s') %
+                       {'error': six.text_type(ex), 'type': self.KEY_TYPE})
+                raise exception.StackValidationFailed(message=msg)
+
     def handle_create(self):
         pub_key = self.properties[self.PUBLIC_KEY] or None
-        new_keypair = self.client().keypairs.create(self.properties[self.NAME],
-                                                    public_key=pub_key)
+        key_type = self.properties[self.KEY_TYPE]
+        nc = self.client(
+            version=self.client_plugin().V2_2) if key_type else self.client()
+
+        create_kwargs = {
+            'name': self.properties[self.NAME],
+            'public_key': pub_key
+        }
+        if key_type:
+            create_kwargs[self.KEY_TYPE] = key_type
+
+        new_keypair = nc.keypairs.create(**create_kwargs)
+
         if (self.properties[self.SAVE_PRIVATE_KEY] and
                 hasattr(new_keypair, 'private_key')):
             self.data_set('private_key',

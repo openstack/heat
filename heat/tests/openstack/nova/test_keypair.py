@@ -67,7 +67,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         return kp_res
 
     def _get_mock_kp_for_create(self, key_name, public_key=None,
-                                priv_saved=False):
+                                priv_saved=False, key_type=None):
         template = copy.deepcopy(self.kp_template)
         template['resources']['kp']['properties']['name'] = key_name
         props = template['resources']['kp']['properties']
@@ -78,6 +78,8 @@ class NovaKeyPairTest(common.HeatTestCase):
         if priv_saved:
             nova_key.private_key = "private key for %s" % key_name
             props['save_private_key'] = True
+        if key_type:
+            props['type'] = key_type
         kp_res = self._get_test_resource(template)
         self.patchobject(self.fake_keypairs, 'create',
                          return_value=nova_key)
@@ -92,12 +94,25 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.patchobject(created_key, 'to_dict',
                          return_value=key_info)
         scheduler.TaskRunner(tp_test.create)()
+        self.fake_keypairs.create.assert_called_once_with(
+            name=key_name, public_key=None)
         self.assertEqual("", tp_test.FnGetAtt('private_key'))
         self.assertEqual("generated test public key",
                          tp_test.FnGetAtt('public_key'))
         self.assertEqual(key_info, tp_test.FnGetAtt('show'))
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
+
+    def test_create_key_with_type(self):
+        """Test basic create."""
+        key_name = "with_type"
+        tp_test, created_key = self._get_mock_kp_for_create(key_name,
+                                                            key_type='ssh')
+        scheduler.TaskRunner(tp_test.create)()
+        self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
+        self.assertEqual(tp_test.resource_id, created_key.name)
+        self.fake_keypairs.create.assert_called_once_with(
+            name=key_name, public_key=None, type='ssh')
 
     def test_create_key_empty_name(self):
         """Test creation of a keypair whose name is of length zero."""
@@ -126,6 +141,24 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertIn("Property error", six.text_type(error))
         self.assertIn("kp.properties.name: length (256) is out of "
                       "range (min: 1, max: 255)", six.text_type(error))
+
+    def test_validate(self):
+        template = copy.deepcopy(self.kp_template)
+        template['resources']['kp']['properties']['type'] = 'x509'
+        stack = utils.parse_stack(template)
+        definition = stack.t.resource_definitions(stack)['kp']
+        kp_res = keypair.KeyPair('kp', definition, stack)
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         side_effect=exception.InvalidServiceVersion(
+                             service='compute',
+                             version='2.2'
+                         ))
+
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  kp_res.validate)
+        self.assertIn('Cannot use "type" property - nova does not support it: '
+                      'Invalid service compute version 2.2',
+                      six.text_type(error))
 
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)
