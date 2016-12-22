@@ -1582,21 +1582,21 @@ def _get_batch(session, ctxt, query, model, batch_size=50):
 
 
 def reset_stack_status(context, stack_id, stack=None):
+    session = context.session
     if stack is None:
-        stack = context.session.query(models.Stack).get(stack_id)
+        stack = session.query(models.Stack).get(stack_id)
 
     if stack is None:
         raise exception.NotFound(_('Stack with id %s not found') % stack_id)
 
-    session = context.session
     with session.begin():
-        query = context.session.query(models.Resource).filter_by(
+        query = session.query(models.Resource).filter_by(
             status='IN_PROGRESS', stack_id=stack_id)
         query.update({'status': 'FAILED',
                       'status_reason': 'Stack status manually reset',
                       'engine_id': None})
 
-        query = context.session.query(models.ResourceData)
+        query = session.query(models.ResourceData)
         query = query.join(models.Resource)
         query = query.filter_by(stack_id=stack_id)
         query = query.filter(
@@ -1604,11 +1604,11 @@ def reset_stack_status(context, stack_id, stack=None):
         data_ids = [data.id for data in query]
 
         if data_ids:
-            query = context.session.query(models.ResourceData)
+            query = session.query(models.ResourceData)
             query = query.filter(models.ResourceData.id.in_(data_ids))
             query.delete(synchronize_session='fetch')
 
-    query = context.session.query(models.Stack).filter_by(owner_id=stack_id)
+    query = session.query(models.Stack).filter_by(owner_id=stack_id)
     for child in query:
         reset_stack_status(context, child.id, child)
 
