@@ -260,7 +260,7 @@ class ServersTest(common.HeatTestCase):
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              stack_id=uuidutils.generate_uuid(),
                              stack_user_project_id='8888')
-        return (templ, stack)
+        return templ, stack
 
     def _prepare_server_check(self, status='ACTIVE'):
         templ, self.stack = self._setup_test_stack('server_check')
@@ -269,7 +269,6 @@ class ServersTest(common.HeatTestCase):
         res = self.stack['WebServer']
         res.client = mock.Mock()
         res.client().servers.get.return_value = server
-        self.patchobject(res, 'store_external_ports')
         return res
 
     def test_check(self):
@@ -294,7 +293,7 @@ class ServersTest(common.HeatTestCase):
 
     def _get_test_template(self, stack_name, server_name=None,
                            image_id=None):
-        (tmpl, stack) = self._setup_test_stack(stack_name)
+        tmpl, stack = self._setup_test_stack(stack_name)
 
         tmpl.t['Resources']['WebServer']['Properties'][
             'image'] = image_id or 'CentOS 5.2'
@@ -349,8 +348,8 @@ class ServersTest(common.HeatTestCase):
         return fake_interface(port, mac, ip)
 
     def test_subnet_dependency_by_network_id(self):
-        template, stack = self._setup_test_stack('subnet-test',
-                                                 subnet_template)
+        templ, stack = self._setup_test_stack('subnet-test',
+                                              subnet_template)
         server_rsrc = stack['server']
         subnet_rsrc = stack['subnet']
         deps = []
@@ -363,8 +362,8 @@ class ServersTest(common.HeatTestCase):
     def test_subnet_dependency_unknown_network_id(self):
         # The use case here is creating a network + subnets + server
         # from within one stack
-        template, stack = self._setup_test_stack('subnet-test',
-                                                 mult_subnet_template)
+        templ, stack = self._setup_test_stack('subnet-test',
+                                              mult_subnet_template)
         server_rsrc = stack['server']
         subnet1_rsrc = stack['subnet1']
         subnet2_rsrc = stack['subnet2']
@@ -376,8 +375,8 @@ class ServersTest(common.HeatTestCase):
         self.assertIn(subnet2_rsrc, deps)
 
     def test_subnet_nodeps(self):
-        template, stack = self._setup_test_stack('subnet-test',
-                                                 no_subnet_template)
+        templ, stack = self._setup_test_stack('subnet-test',
+                                              no_subnet_template)
         server_rsrc = stack['server']
         subnet_rsrc = stack['subnet']
         deps = []
