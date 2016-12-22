@@ -3947,6 +3947,8 @@ class TestLiveStateUpdate(common.HeatTestCase):
         Need to revert changes of resource properties schema for correct work
         of other tests.
         """
+        res.update_allowed_properties = []
+        res.update_allowed_set = []
         for prop in six.itervalues(res.properties.props):
             prop.schema.update_allowed = False
 
@@ -3992,6 +3994,19 @@ class TestLiveStateUpdate(common.HeatTestCase):
                                res.get_live_resource_data)
         self.assertEqual('The Resource (test_resource) could not be found.',
                          six.text_type(ex))
+        self._clean_tests_after_resource_live_state(res)
+
+    def test_parse_live_resource_data(self):
+        res = self._prepare_resource_live_state()
+
+        res.update_allowed_props = mock.Mock(return_value=['Foo'])
+        resource_data = {
+            'Foo': 'brave new data',
+            'Something not so good': 'for all of us'
+        }
+        res._update_allowed_properties = ['Foo']
+        result = res.parse_live_resource_data(res.properties, resource_data)
+        self.assertEqual({'Foo': 'brave new data'}, result)
         self._clean_tests_after_resource_live_state(res)
 
     def test_get_live_resource_data_not_found_no_default_client_name(self):
