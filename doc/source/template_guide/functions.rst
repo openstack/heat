@@ -303,7 +303,7 @@ To use it
 
 ::
 
-  $ heat stack-create -f top.yaml -e env.yaml
+  $ openstack stack create -t top.yaml -e env.yaml mystack
 
 
 What happened is the metadata in ``top.yaml`` (key: value, some: more
