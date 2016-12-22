@@ -462,7 +462,7 @@ class Resource(object):
             self._add_event(self.action, self.status,
                             _("%(a)s paused until Hook %(h)s is cleared")
                             % {'a': action, 'h': hook})
-            LOG.info(_LI('Reached hook on %s'), six.text_type(self))
+            LOG.info(_LI('Reached hook on %s'), self)
 
             while self.has_hook(hook) and self.status != self.FAILED:
                 try:
@@ -917,7 +917,7 @@ class Resource(object):
             yield self._break_if_required(
                 self.CREATE, environment.HOOK_PRE_CREATE)
 
-        LOG.info(_LI('creating %s'), six.text_type(self))
+        LOG.info(_LI('creating %s'), self)
 
         # Re-resolve the template, since if the resource Ref's
         # the StackId pseudo parameter, it will change after
@@ -1233,7 +1233,7 @@ class Resource(object):
             except Exception as ex:
                 LOG.warning(_LW("Resource cannot be updated with it's "
                                 "live state in case of next "
-                                "error: %s"), six.text_type(ex))
+                                "error: %s"), ex)
         return after_props, before_props
 
     def _prepare_update_replace(self, action):
@@ -1314,7 +1314,7 @@ class Resource(object):
                     exc = Exception(_('Resource update already requested'))
                     raise exception.ResourceFailure(exc, self, action)
 
-            LOG.info(_LI('updating %s'), six.text_type(self))
+            LOG.info(_LI('updating %s'), self)
 
             self.updated_time = datetime.utcnow()
 
@@ -1376,7 +1376,7 @@ class Resource(object):
         original state with the added message that check was not performed.
         """
         action = self.CHECK
-        LOG.info(_LI('Checking %s'), six.text_type(self))
+        LOG.info(_LI('Checking %s'), self)
 
         if hasattr(self, 'handle_%s' % action.lower()):
             return self._do_action(action)
@@ -1417,7 +1417,7 @@ class Resource(object):
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_LI('suspending %s'), six.text_type(self))
+        LOG.info(_LI('suspending %s'), self)
         return self._do_action(action)
 
     def resume(self):
@@ -1436,12 +1436,12 @@ class Resource(object):
             exc = exception.Error(_('State %s invalid for resume')
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
-        LOG.info(_LI('resuming %s'), six.text_type(self))
+        LOG.info(_LI('resuming %s'), self)
         return self._do_action(action)
 
     def snapshot(self):
         """Snapshot the resource and return the created data, if any."""
-        LOG.info(_LI('snapshotting %s'), six.text_type(self))
+        LOG.info(_LI('snapshotting %s'), self)
         return self._do_action(self.SNAPSHOT)
 
     @scheduler.wrappertask
@@ -1491,7 +1491,7 @@ class Resource(object):
         This may be overridden by resource plugins to add extra
         validation logic specific to the resource implementation.
         """
-        LOG.info(_LI('Validating %s'), six.text_type(self))
+        LOG.info(_LI('Validating %s'), self)
         return self.validate_template()
 
     def validate_template(self):
@@ -1638,7 +1638,7 @@ class Resource(object):
             yield self._break_if_required(
                 self.DELETE, environment.HOOK_PRE_DELETE)
 
-        LOG.info(_LI('deleting %s'), six.text_type(self))
+        LOG.info(_LI('deleting %s'), self)
 
         if self._stored_properties_data is not None:
             # On delete we can't rely on re-resolving the properties
