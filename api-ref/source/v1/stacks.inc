@@ -633,7 +633,7 @@ Request Parameters
    - tenant_id: tenant_id
    - stack_identity: stack_identity
 
-Reponse Parameters
+Response Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
@@ -681,7 +681,7 @@ Request Parameters
    - stack_name: stack_name_url
    - stack_id: stack_id_url
 
-Reponse Parameters
+Response Parameters
 ------------------
 
 This request does not return anything in the response body.
