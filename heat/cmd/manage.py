@@ -159,8 +159,8 @@ def add_command_parsers(subparsers):
     # positional parameter, can be skipped. default=None
     parser.add_argument('version', nargs='?')
 
-    # migrate-stacks parser
-    parser = subparsers.add_parser('migrate-convergence-1')
+    # migrate_convergence_1 parser
+    parser = subparsers.add_parser('migrate_convergence_1')
     parser.set_defaults(func=do_migrate)
     parser.add_argument('stack_id')
 
