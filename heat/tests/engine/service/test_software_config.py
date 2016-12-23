@@ -81,12 +81,13 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     def _create_software_config(
             self, group='Heat::Shell', name='config_mysql', config=None,
-            inputs=None, outputs=None, options=None):
+            inputs=None, outputs=None, options=None, context=None):
+        cntx = context if context else self.ctx
         inputs = inputs or []
         outputs = outputs or []
         options = options or {}
         return self.engine.create_software_config(
-            self.ctx, group, name, config, inputs, outputs, options)
+            cntx, group, name, config, inputs, outputs, options)
 
     def _create_dummy_config_object(self):
         obj_config = software_config_object.SoftwareConfig()
@@ -107,13 +108,26 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
     def test_list_software_configs(self):
         config = self._create_software_config()
-        config_id = config['id']
         self.assertIsNotNone(config)
+        config_id = config['id']
 
         configs = self.engine.list_software_configs(self.ctx)
         self.assertIsNotNone(configs)
         config_ids = [x['id'] for x in configs]
         self.assertIn(config_id, config_ids)
+
+        admin_cntx = utils.dummy_context(is_admin=True)
+
+        admin_config = self._create_software_config(context=admin_cntx)
+        admin_config_id = admin_config['id']
+        configs = self.engine.list_software_configs(admin_cntx)
+        self.assertIsNotNone(configs)
+        config_ids = [x['id'] for x in configs]
+        project_ids = [x['project'] for x in configs]
+        self.assertEqual(2, len(project_ids))
+        self.assertEqual(2, len(config_ids))
+        self.assertIn(config_id, config_ids)
+        self.assertIn(admin_config_id, config_ids)
 
     def test_show_software_config(self):
         config_id = str(uuid.uuid4())

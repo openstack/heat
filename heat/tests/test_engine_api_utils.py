@@ -1028,6 +1028,7 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
             'options': {},
             'config': '#!/bin/bash\n'
         }
+        config.tenant = str(uuid.uuid4())
         return config
 
     def _dummy_software_deployment(self):
@@ -1055,6 +1056,17 @@ class FormatSoftwareConfigDeploymentTest(common.HeatTestCase):
         self.assertEqual({}, result['options'])
         self.assertEqual(heat_timeutils.isotime(self.now),
                          result['creation_time'])
+        self.assertNotIn('project', result)
+
+        result = api.format_software_config(config, include_project=True)
+        self.assertIsNotNone(result)
+        self.assertEqual([{'name': 'bar'}], result['inputs'])
+        self.assertEqual([{'name': 'result'}], result['outputs'])
+        self.assertEqual([{'name': 'result'}], result['outputs'])
+        self.assertEqual({}, result['options'])
+        self.assertEqual(heat_timeutils.isotime(self.now),
+                         result['creation_time'])
+        self.assertIn('project', result)
 
     def test_format_software_config_none(self):
         self.assertIsNone(api.format_software_config(None))
