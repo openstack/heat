@@ -80,7 +80,7 @@ Request Parameters
    - tenant_id: tenant_id
    - template_version: template_version_url
 
-Reponse Parameters
+Response Parameters
 ------------------
 
 .. rest_parameters:: parameters.yaml
