@@ -68,6 +68,7 @@ iniset $conf_file heat_plugin skip_functional_test_list 'CancelUpdateTest.test_c
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+# test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
+iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest, ServerSignalIntegrationTest.test_server_signal_userdata_format_software_config'
 
 cat $conf_file
