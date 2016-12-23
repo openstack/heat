@@ -39,19 +39,17 @@ def fake_exception(status_code=404, message=None, details=None):
 class FakeClient(fakes.FakeClient, Client):
 
     def __init__(self, *args, **kwargs):
-        super(FakeClient, self).__init__('username', 'password', 'project_id',
-                                         'auth_url', direct_use=False)
-        self.client = FakeHTTPClient(**kwargs)
+        super(FakeClient, self).__init__(direct_use=False)
+        self.client = FakeSessionClient(session=mock.Mock(), **kwargs)
 
 
-class FakeHTTPClient(base_client.HTTPClient):
+class FakeSessionClient(base_client.SessionClient):
 
-    def __init__(self, **kwargs):
-        super(FakeHTTPClient, self).__init__('username', 'password',
-                                             'project_id', 'auth_url')
+    def __init__(self,  *args, **kwargs):
+        super(FakeSessionClient, self).__init__(*args, **kwargs)
         self.callstack = []
 
-    def _cs_request(self, url, method, **kwargs):
+    def request(self, url, method, **kwargs):
         # Check that certain things are called correctly
         if method in ['GET', 'DELETE']:
             assert 'body' not in kwargs
