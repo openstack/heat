@@ -13,6 +13,7 @@
 
 from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
+from oslo_config import cfg
 import six
 
 from heat.common import exception
@@ -109,9 +110,29 @@ class FirewallTest(common.HeatTestCase):
 
     def test_create(self):
         rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.m.VerifyAll()
+
+    def test_create_failed_error_status(self):
+        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'PENDING_CREATE'}})
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ERROR'}})
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.create))
+        self.assertEqual(
+            'ResourceInError: resources.firewall: '
+            'Went to status ERROR due to "Error in Firewall"',
+            six.text_type(error))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
     def test_create_failed(self):
@@ -139,11 +160,14 @@ class FirewallTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete(self):
+        rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
+
         neutronclient.Client.delete_firewall('5678')
         neutronclient.Client.show_firewall('5678').AndRaise(
             exceptions.NeutronClientException(status_code=404))
 
-        rsrc = self.create_firewall()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
@@ -155,6 +179,8 @@ class FirewallTest(common.HeatTestCase):
             exceptions.NeutronClientException(status_code=404))
 
         rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
@@ -166,6 +192,8 @@ class FirewallTest(common.HeatTestCase):
             exceptions.NeutronClientException(status_code=400))
 
         rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.ResourceFailure,
@@ -179,6 +207,8 @@ class FirewallTest(common.HeatTestCase):
 
     def test_attribute(self):
         rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         neutronclient.Client.show_firewall('5678').MultipleTimes(
         ).AndReturn(
             {'firewall': {'admin_state_up': True,
@@ -194,6 +224,8 @@ class FirewallTest(common.HeatTestCase):
 
     def test_attribute_failed(self):
         rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.InvalidTemplateAttribute,
@@ -205,6 +237,8 @@ class FirewallTest(common.HeatTestCase):
 
     def test_update(self):
         rsrc = self.create_firewall()
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         neutronclient.Client.update_firewall(
             '5678', {'firewall': {'admin_state_up': False}})
         self.m.ReplayAll()
@@ -219,6 +253,8 @@ class FirewallTest(common.HeatTestCase):
 
     def test_update_with_value_specs(self):
         rsrc = self.create_firewall(value_specs=False)
+        neutronclient.Client.show_firewall('5678').AndReturn(
+            {'firewall': {'status': 'ACTIVE'}})
         neutronclient.Client.update_firewall(
             '5678', {'firewall': {'router_ids': ['router_1',
                                                  'router_2']}})
