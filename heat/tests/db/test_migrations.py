@@ -710,6 +710,29 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         self.assertEqual('resource', fk['referred_table'])
         self.assertEqual(['id'], fk['referred_columns'])
 
+    def _check_079(self, engine, data):
+        self.assertColumnExists(engine, 'resource',
+                                'rsrc_prop_data_id')
+        self.assertColumnExists(engine, 'event',
+                                'rsrc_prop_data_id')
+        column_list = [('id', False),
+                       ('data', True),
+                       ('encrypted', True),
+                       ('updated_at', True),
+                       ('created_at', True)]
+
+        for column in column_list:
+            self.assertColumnExists(engine,
+                                    'resource_properties_data', column[0])
+            if not column[1]:
+                self.assertColumnIsNotNullable(engine,
+                                               'resource_properties_data',
+                                               column[0])
+            else:
+                self.assertColumnIsNullable(engine,
+                                            'resource_properties_data',
+                                            column[0])
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):
