@@ -767,7 +767,7 @@ class MapReplace(function.Function):
             key = repl_keys.get(k)
             if key is None:
                 key = k
-            elif key in in_map:
+            elif key in in_map and key != k:
                 # Keys collide
                 msg = _('key replacement %s collides with '
                         'a key in the input map')
