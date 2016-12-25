@@ -11,7 +11,7 @@ source $DEST/heat/devstack/lib/heat
 if is_heat_enabled; then
     if [[ "$1" == "stack" && "$2" == "install" ]]; then
         echo_summary "Installing heat"
-        # Use stack_install_service here to account for vitualenv
+        # Use stack_install_service here to account for virtualenv
         stack_install_service heat
         echo_summary "Installing heatclient"
         install_heatclient
