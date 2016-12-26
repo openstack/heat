@@ -20,13 +20,13 @@ config_id_url:
   description: |
     The UUID of the configuration.
   in: path
-  required: false
+  required: true
   type: string
 deployment_id_url:
   description: |
     The UUID of the deployment.
   in: path
-  required: false
+  required: true
   type: string
 deployment_server_id_url:
   description: |
@@ -40,19 +40,19 @@ event_id_url:
     The UUID of the event that is related to the
     resource in the stack.
   in: path
-  required: false
+  required: true
   type: string
 output_key_url:
   description: |
     The key of a stack output.
   in: path
-  required: false
+  required: true
   type: string
 resource_name_url:
   description: |
     The name of a resource in the stack.
   in: path
-  required: false
+  required: true
   type: string
 resource_name_or_physical_id_url:
   description: |
@@ -65,7 +65,7 @@ snapshot_id_url:
   description: |
     The UUID of the snapshot.
   in: path
-  required: false
+  required: true
   type: string
 stack_id_url:
   description: |
@@ -83,7 +83,7 @@ stack_name_url:
   description: |
     The name of a stack.
   in: path
-  required: false
+  required: true
   type: string
 template_version_url:
   description: |
