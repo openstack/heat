@@ -186,11 +186,6 @@ class MonascaNotification(resource.Resource):
                 self.client().notifications.delete(
                     notification_id=self.resource_id)
 
-    # FIXME(kanagaraj-manickam) Remove this method once monasca defect 1484900
-    # is fixed.
-    def _show_resource(self):
-        return self.client().notifications.get(self.resource_id)
-
 
 def resource_mapping():
     return {
