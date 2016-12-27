@@ -1080,8 +1080,10 @@ class Resource(object):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
-        if self.status == self.FAILED and self.needs_replace_failed():
-            raise UpdateReplace(self)
+        if self.status == self.FAILED:
+            # always replace when a resource is in CHECK_FAILED
+            if self.action == self.CHECK or self.needs_replace_failed():
+                raise UpdateReplace(self)
 
         if (self.stack.convergence and
                 self.state == (self.DELETE, self.COMPLETE)):
