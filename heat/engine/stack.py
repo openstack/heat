@@ -839,8 +839,11 @@ class Stack(collections.Mapping):
                 # Don't validate identical definitions multiple times
                 if res.name not in unique_defn_names:
                     continue
-
                 try:
+                    if res.external_id is not None:
+                        res.validate_external()
+                        continue
+
                     if self.resource_validate:
                         result = res.validate()
                     else:
