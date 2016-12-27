@@ -33,14 +33,18 @@ Newer versions of OpenStack require enabling heat services in devstack
   #Enable heat services
   enable_service h-eng h-api h-api-cfn h-api-cw
 
-Since Newton release, users have the option to use the ``enable_service``
-directive as shown above or add the following to the `[[local|localrc]]`
-section of `local.conf`::
+Since Newton release, heat is available as a devstack plugin. To enable the 
+plugin add the following to the `[[local|localrc]]` section of `local.conf`::
 
   [[local|localrc]]
 
   #Enable heat plugin
   enable_plugin heat https://git.openstack.org/openstack/heat
+
+To use stable branches, make sure devstack is on that branch,
+and specify the branch name to enable_plugin, for example::
+
+  enable_plugin heat https://git.openstack.org/openstack/heat stable/newton
 
 It would also be useful to automatically download and register
 a VM image that heat can launch. To do that add the following to
