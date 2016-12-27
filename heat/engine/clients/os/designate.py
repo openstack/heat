@@ -56,6 +56,19 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
         raise heat_exception.EntityNotFound(entity='Designate Domain',
                                             name=domain_id_or_name)
 
+    def get_zone_id(self, zone_id_or_name):
+        try:
+            zone_obj = self.client(version=self.V2).zones.get(zone_id_or_name)
+            return zone_obj['id']
+        except exceptions.NotFound:
+            zones = self.client().zones.list(
+                criterion=dict(name=zone_id_or_name))
+            if len(zones) == 1:
+                    return zones[0]['id']
+
+        raise heat_exception.EntityNotFound(entity='Designate Zone',
+                                            name=zone_id_or_name)
+
     def domain_create(self, **kwargs):
         domain = domains.Domain(**kwargs)
         return self.client().domains.create(domain)
@@ -95,6 +108,10 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
 
 
 class DesignateDomainConstraint(constraints.BaseCustomConstraint):
-
     resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_domain_id'
+
+
+class DesignateZoneConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_zone_id'
