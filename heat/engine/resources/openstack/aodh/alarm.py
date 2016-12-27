@@ -41,23 +41,11 @@ class AodhAlarm(alarm_base.BaseAlarm):
         'statistic', 'threshold', 'matching_metadata', 'query',
     )
 
-    QUERY_FACTOR_FIELDS = (
-        QF_FIELD, QF_OP, QF_VALUE,
-    ) = (
-        'field', 'op', 'value',
-    )
-
-    QF_OP_VALS = constraints.AllowedValues(['le', 'ge', 'eq',
-                                            'lt', 'gt', 'ne'])
-
     properties_schema = {
         COMPARISON_OPERATOR: properties.Schema(
             properties.Schema.STRING,
             _('Operator used to compare specified statistic with threshold.'),
-            constraints=[
-                constraints.AllowedValues(['ge', 'gt', 'eq', 'ne', 'lt',
-                                           'le']),
-            ],
+            constraints=[alarm_base.BaseAlarm.QF_OP_VALS],
             update_allowed=True
         ),
         EVALUATION_PERIODS: properties.Schema(
@@ -107,7 +95,7 @@ class AodhAlarm(alarm_base.BaseAlarm):
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
-                    QF_FIELD: properties.Schema(
+                    alarm_base.BaseAlarm.QF_FIELD: properties.Schema(
                         properties.Schema.STRING,
                         _('Name of attribute to compare. '
                           'Names of the form metadata.user_metadata.X '
@@ -118,12 +106,12 @@ class AodhAlarm(alarm_base.BaseAlarm):
                           'To see the attributes of your Samples, '
                           'use `ceilometer --debug sample-list`.')
                     ),
-                    QF_OP: properties.Schema(
+                    alarm_base.BaseAlarm.QF_OP: properties.Schema(
                         properties.Schema.STRING,
                         _('Comparison operator.'),
-                        constraints=[QF_OP_VALS]
+                        constraints=[alarm_base.BaseAlarm.QF_OP_VALS]
                     ),
-                    QF_VALUE: properties.Schema(
+                    alarm_base.BaseAlarm.QF_VALUE: properties.Schema(
                         properties.Schema.STRING,
                         _('String value with which to compare.')
                     )
@@ -325,15 +313,6 @@ class EventAlarm(alarm_base.BaseAlarm):
         'event_type', 'query'
     )
 
-    QUERY_FACTOR_FIELDS = (
-        QF_FIELD, QF_OP, QF_VALUE,
-    ) = (
-        'field', 'op', 'value',
-    )
-
-    QF_OP_VALS = constraints.AllowedValues(['le', 'ge', 'eq',
-                                            'lt', 'gt', 'ne'])
-
     properties_schema = {
         EVENT_TYPE: properties.Schema(
             properties.Schema.STRING,
@@ -350,16 +329,16 @@ class EventAlarm(alarm_base.BaseAlarm):
             schema=properties.Schema(
                 properties.Schema.MAP,
                 schema={
-                    QF_FIELD: properties.Schema(
+                    alarm_base.BaseAlarm.QF_FIELD: properties.Schema(
                         properties.Schema.STRING,
                         _('Name of attribute to compare.')
                     ),
-                    QF_OP: properties.Schema(
+                    alarm_base.BaseAlarm.QF_OP: properties.Schema(
                         properties.Schema.STRING,
                         _('Comparison operator.'),
-                        constraints=[QF_OP_VALS]
+                        constraints=[alarm_base.BaseAlarm.QF_OP_VALS]
                     ),
-                    QF_VALUE: properties.Schema(
+                    alarm_base.BaseAlarm.QF_VALUE: properties.Schema(
                         properties.Schema.STRING,
                         _('String value with which to compare.')
                     )

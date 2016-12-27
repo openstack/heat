@@ -163,6 +163,15 @@ class BaseAlarm(resource.Resource):
 
     alarm_type = 'threshold'
 
+    QUERY_FACTOR_FIELDS = (
+        QF_FIELD, QF_OP, QF_VALUE,
+    ) = (
+        'field', 'op', 'value',
+    )
+
+    QF_OP_VALS = constraints.AllowedValues(['le', 'ge', 'eq',
+                                            'lt', 'gt', 'ne'])
+
     def actions_to_urls(self, props):
         kwargs = {}
         for k, v in iter(props.items()):
