@@ -11,8 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from designateclient import client
 from designateclient import exceptions
-from designateclient import v1 as client
 from designateclient.v1 import domains
 from designateclient.v1 import records
 
@@ -29,9 +29,14 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [DNS] = ['dns']
 
-    def _create(self):
+    supported_versions = [V1, V2] = ['1', '2']
+
+    default_version = V1
+
+    def _create(self, version=default_version):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        return client.Client(session=self.context.keystone_session,
+        return client.Client(version=version,
+                             session=self.context.keystone_session,
                              endpoint_type=endpoint_type,
                              service_type=self.DNS,
                              region_name=self._get_region_name())
