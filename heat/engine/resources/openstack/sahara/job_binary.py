@@ -32,7 +32,6 @@ class JobBinary(resource.Resource):
 
     PROPERTIES = (
         NAME, URL, DESCRIPTION, CREDENTIALS
-
     ) = (
         'name', 'url', 'description', 'credentials'
     )
