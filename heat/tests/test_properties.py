@@ -914,6 +914,14 @@ class PropertyTest(common.HeatTestCase):
         self.assertEqual(['foo', 'bar'], p.get_value('foo,bar'))
         self.assertEqual(['foo'], p.get_value('foo'))
 
+    def test_map_path(self):
+        p = properties.Property({'Type': 'Map'}, name='test', path='parent')
+        self.assertEqual('parent.test', p.path)
+
+    def test_list_path(self):
+        p = properties.Property({'Type': 'List'}, name='0', path='parent')
+        self.assertEqual('parent.0', p.path)
+
     def test_list_maxlength_good(self):
         schema = {'Type': 'List',
                   'MaxLength': '3'}
