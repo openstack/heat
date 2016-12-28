@@ -286,11 +286,3 @@ class MonascaNotificationTest(common.HeatTestCase):
             client_plugin.monasca_exc.NotFound)
 
         self.assertIsNone(self.test_resource.handle_delete())
-
-    def test_resource_show_resource(self):
-        mock_notification_get = self.test_client.notifications.get
-        mock_notification_get.return_value = {}
-
-        self.assertEqual({},
-                         self.test_resource._show_resource(),
-                         'Failed to show resource')

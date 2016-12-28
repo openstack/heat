@@ -198,11 +198,3 @@ class MonascaAlarmDefinitionTest(common.HeatTestCase):
         mock_alarm_delete = self.test_client.alarm_definitions.delete
         mock_alarm_delete.side_effect = client_plugin.monasca_exc.NotFound
         self.assertIsNone(self.test_resource.handle_delete())
-
-    def test_resource_show_resource(self):
-        mock_notification_get = self.test_client.alarm_definitions.get
-        mock_notification_get.return_value = {}
-
-        self.assertEqual({},
-                         self.test_resource._show_resource(),
-                         'Failed to show resource')

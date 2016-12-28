@@ -198,11 +198,6 @@ class MonascaAlarmDefinition(resource.Resource):
                 self.client().alarm_definitions.delete(
                     alarm_id=self.resource_id)
 
-    # FIXME(kanagaraj-manickam) Remove this method once monasca defect 1484900
-    # is fixed.
-    def _show_resource(self):
-        return self.client().alarm_definitions.get(self.resource_id)
-
 
 def resource_mapping():
     return {
