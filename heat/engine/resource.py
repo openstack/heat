@@ -969,6 +969,18 @@ class Resource(object):
                 else:
                     action = self.CREATE
             except exception.ResourceFailure as failure:
+                if isinstance(failure.exc, exception.StackValidationFailed):
+                    path = [self.t.name]
+                    path.extend(failure.exc.path)
+                    raise exception.ResourceFailure(
+                        exception_or_error=exception.StackValidationFailed(
+                            error=failure.exc.error,
+                            path=path,
+                            message=failure.exc.error_message
+                        ),
+                        resource=failure.resource,
+                        action=failure.action
+                    )
                 if not isinstance(failure.exc, exception.ResourceInError):
                     raise failure
 
@@ -1546,9 +1558,9 @@ class Resource(object):
                 with_value=self.stack.strict_validate,
                 template=self.t)
         except exception.StackValidationFailed as ex:
-            path = [self.stack.t.RESOURCES, ex.path[0],
-                    self.stack.t.get_section_name(ex.path[1])]
-            path.extend(ex.path[2:])
+            path = [self.stack.t.RESOURCES, self.t.name,
+                    self.stack.t.get_section_name(ex.path[0])]
+            path.extend(ex.path[1:])
             raise exception.StackValidationFailed(
                 error=ex.error,
                 path=path,

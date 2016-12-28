@@ -273,7 +273,8 @@ class Property(object):
                 keys = list(self.schema.schema)
             schemata = dict((k, self.schema.schema[k]) for k in keys)
             properties = Properties(schemata, dict(child_values),
-                                    context=self.context)
+                                    context=self.context,
+                                    parent_name=self.name)
             if validate:
                 properties.validate()
 
@@ -364,11 +365,8 @@ class Properties(collections.Mapping):
                           for k, s in schema.items())
         self.resolve = resolver
         self.data = data
-        self.error_prefix = []
-        if parent_name is not None:
-            self.error_prefix.append(parent_name)
-        if section is not None:
-            self.error_prefix.append(section)
+        self.error_prefix = [section] if section is not None else []
+        self.parent_name = parent_name
         self.context = context
 
     @staticmethod
