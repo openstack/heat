@@ -80,7 +80,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         args = {
             'session': self.context.keystone_session,
             'extensions': extensions,
-            'interface': endpoint_type,
+            'endpoint_type': endpoint_type,
             'service_type': self.COMPUTE,
             'region_name': self._get_region_name(),
             'http_log_debug': self._get_client_option(CLIENT_NAME,
