@@ -160,10 +160,12 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def _prepare_check_resource(self):
+    def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(gnocchi_resources_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['GnoResAlarm']
+        if for_check:
+            res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarm.get.return_value = mock_alarm
@@ -206,12 +208,12 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_check(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     def test_check_failure(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         res.client().alarm.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
@@ -220,7 +222,7 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.assertIn('Boom', res.status_reason)
 
     def test_show_resource(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource(for_check=False)
         res.client().alarm.create.return_value = FakeAodhAlarm
         res.client().alarm.get.return_value = FakeAodhAlarm
         scheduler.TaskRunner(res.create)()
@@ -350,18 +352,20 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
 
         self.m.VerifyAll()
 
-    def _prepare_check_resource(self):
+    def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(
             gnocchi_aggregation_by_metrics_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['GnoAggregationByMetricsAlarm']
+        if for_check:
+            res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarm.get.return_value = mock_alarm
         return res
 
     def test_show_resource(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource(for_check=False)
         res.client().alarm.create.return_value = FakeAodhAlarm
         res.client().alarm.get.return_value = FakeAodhAlarm
         scheduler.TaskRunner(res.create)()
@@ -492,18 +496,20 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
 
         self.m.VerifyAll()
 
-    def _prepare_check_resource(self):
+    def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(
             gnocchi_aggregation_by_resources_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['GnoAggregationByResourcesAlarm']
+        if for_check:
+            res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarm.get.return_value = mock_alarm
         return res
 
     def test_show_resource(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource(for_check=False)
         res.client().alarm.create.return_value = FakeAodhAlarm
         res.client().alarm.get.return_value = FakeAodhAlarm
         scheduler.TaskRunner(res.create)()

@@ -472,10 +472,12 @@ class AodhAlarmTest(common.HeatTestCase):
         # check that super method has been called and execute deleting
         self.assertEqual(1, self.fa.alarm.delete.call_count)
 
-    def _prepare_check_resource(self):
+    def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(not_string_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['MEMAlarmHigh']
+        if for_check:
+            res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarm.get.return_value = mock_alarm
@@ -483,13 +485,13 @@ class AodhAlarmTest(common.HeatTestCase):
 
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
     def test_check(self, mock_load):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
     def test_check_watchrule_failure(self, mock_load):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         exc = alarm.exception.EntityNotFound(entity='Watch Rule', name='Boom')
         mock_load.side_effect = exc
 
@@ -500,7 +502,7 @@ class AodhAlarmTest(common.HeatTestCase):
 
     @mock.patch.object(alarm.watchrule.WatchRule, 'load')
     def test_check_alarm_failure(self, mock_load):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         res.client().alarm.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
@@ -509,7 +511,7 @@ class AodhAlarmTest(common.HeatTestCase):
         self.assertIn('Boom', res.status_reason)
 
     def test_show_resource(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource(for_check=False)
         res.client().alarm.create.return_value = FakeAodhAlarm
         res.client().alarm.get.return_value = FakeAodhAlarm
         scheduler.TaskRunner(res.create)()
@@ -804,22 +806,24 @@ class CombinationAlarmTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def _prepare_check_resource(self):
+    def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(combination_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['CombinAlarm']
+        if for_check:
+            res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarms.get.return_value = mock_alarm
         return res
 
     def test_check(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     def test_check_failure(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         res.client().alarms.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
@@ -828,7 +832,7 @@ class CombinationAlarmTest(common.HeatTestCase):
         self.assertIn('Boom', res.status_reason)
 
     def test_show_resource(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource(for_check=False)
         res.client().alarms.create.return_value = mock.MagicMock(
             alarm_id='2')
         res.client().alarms.get.return_value = FakeCombinationAlarm()
@@ -898,22 +902,24 @@ class EventAlarmTest(common.HeatTestCase):
         self.assertEqual('12345', rsrc.handle_delete())
         self.assertEqual(1, self.fa.alarm.delete.call_count)
 
-    def _prepare_check_resource(self):
+    def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(event_alarm_template)
         self.stack = utils.parse_stack(snippet)
         res = self.stack['test_event_alarm']
+        if for_check:
+            res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         mock_alarm = mock.Mock(enabled=True, state='ok')
         res.client().alarm.get.return_value = mock_alarm
         return res
 
     def test_check(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     def test_check_alarm_failure(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource()
         res.client().alarm.get.side_effect = Exception('Boom')
 
         self.assertRaises(exception.ResourceFailure,
@@ -922,7 +928,7 @@ class EventAlarmTest(common.HeatTestCase):
         self.assertIn('Boom', res.status_reason)
 
     def test_show_resource(self):
-        res = self._prepare_check_resource()
+        res = self._prepare_resource(for_check=False)
         res.client().alarm.create.return_value = FakeAodhAlarm
         res.client().alarm.get.return_value = FakeAodhAlarm
         scheduler.TaskRunner(res.create)()

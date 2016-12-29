@@ -96,7 +96,9 @@ class CloudWatchAlarmTest(common.HeatTestCase):
 
     def _get_watch_rule(self):
         stack = self.parse_stack()
-        return stack['test_me']
+        res = stack['test_me']
+        res.state_set(res.CREATE, res.COMPLETE)
+        return res
 
     @mock.patch.object(cloud_watch.watchrule.WatchRule, 'load')
     def test_check(self, mock_lock):

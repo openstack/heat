@@ -1401,6 +1401,13 @@ class Resource(object):
         LOG.info(_LI('Checking %s'), self)
 
         if hasattr(self, 'handle_%s' % action.lower()):
+            if self.state == (self.INIT, self.COMPLETE):
+                reason = _('Can not check %s, resource not '
+                           'created yet.') % self.name
+                self.state_set(action, self.FAILED, reason)
+                exc = Exception(_('Resource %s not created yet.') % self.name)
+                failure = exception.ResourceFailure(exc, self, action)
+                raise failure
             return self._do_action(action)
         else:
             reason = '%s not supported for %s' % (action, self.type())

@@ -517,6 +517,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_check(self):
         stack = utils.parse_stack(self.t, stack_name='volume_check')
         res = stack['DataVolume']
+        res.state_set(res.CREATE, res.COMPLETE)
         fake_volume = vt_base.FakeVolume('available')
         cinder = mock.Mock()
         cinder.volumes.get.return_value = fake_volume
@@ -533,6 +534,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_check_not_available(self):
         stack = utils.parse_stack(self.t, stack_name='volume_check_na')
         res = stack['DataVolume']
+        res.state_set(res.CREATE, res.COMPLETE)
         cinder = mock.Mock()
         fake_volume = vt_base.FakeVolume('foobar')
         cinder.volumes.get.return_value = fake_volume
@@ -546,6 +548,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_check_fail(self):
         stack = utils.parse_stack(self.t, stack_name='volume_check_fail')
         res = stack['DataVolume']
+        res.state_set(res.CREATE, res.COMPLETE)
         cinder = mock.Mock()
         cinder.volumes.get.side_effect = Exception('boom')
         self.patchobject(res, 'client', return_value=cinder)
