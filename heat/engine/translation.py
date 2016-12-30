@@ -90,27 +90,30 @@ class TranslationRule(object):
                                'rules is: %(rules)s.') % {
                 'rule': self.rule,
                 'rules': ', '.join(self.RULE_KEYS)})
-        elif not isinstance(self.properties, properties.Properties):
+        if not isinstance(self.properties, properties.Properties):
             raise ValueError(_('Properties must be Properties type. '
                                'Found %s.') % type(self.properties))
-        elif not isinstance(self.translation_path, list):
-            raise ValueError(_('translation_path should be a list with path '
-                               'instead of %s.') % type(self.translation_path))
-        elif len(self.translation_path) == 0:
-            raise ValueError(_('translation_path must be non-empty list with '
-                               'path.'))
-        elif (self.rule == self.ADD and
-              ((self.value is not None) == (self.value_name is not None))):
-            raise ValueError(_('Either value or value_name should be '
-                               'specified for rule Add.'))
-        elif (self.rule == self.ADD and self.value is not None and
-              not isinstance(self.value, list)):
-            raise ValueError(_('value must be list type when rule is Add.'))
 
-        elif (self.rule == self.RESOLVE and not (self.client_plugin
-                                                 or self.finder)):
-            raise ValueError(_('client_plugin and finder should be specified '
-                               'for Resolve rule'))
+        if (not isinstance(self.translation_path, list) or
+                len(self.translation_path) == 0):
+            raise ValueError(_('"translation_path" should be non-empty list '
+                               'with path to translate.'))
+
+        args = [self.value_path is not None, self.value is not None,
+                self.value_name is not None]
+        if args.count(True) > 1:
+            raise ValueError(_('"value_path", "value" and "value_name" are '
+                               'mutually exclusive and cannot be specified '
+                               'at the same time.'))
+
+        if (self.rule == self.ADD and self.value is not None and
+                not isinstance(self.value, list)):
+            raise ValueError(_('"value" must be list type when rule is Add.'))
+
+        if (self.rule == self.RESOLVE and
+                not (self.client_plugin or self.finder)):
+            raise ValueError(_('"client_plugin" and "finder" should be '
+                               'specified for %s rule') % self.RESOLVE)
 
     def execute_rule(self, client_resolve=True):
         try:
