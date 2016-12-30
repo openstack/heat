@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import six
 
 from oslo_utils import encodeutils
@@ -23,6 +24,7 @@ from heat.engine.hot import functions as hot_funcs
 from heat.engine import properties
 
 
+@functools.total_ordering
 class TranslationRule(object):
     """Translating mechanism one properties to another.
 
@@ -50,6 +52,15 @@ class TranslationRule(object):
     RULE_KEYS = (ADD, REPLACE,
                  DELETE, RESOLVE) = ('Add', 'Replace',
                                      'Delete', 'Resolve')
+
+    def __lt__(self, other):
+        rules = [TranslationRule.ADD,
+                 TranslationRule.REPLACE,
+                 TranslationRule.RESOLVE,
+                 TranslationRule.DELETE]
+        idx1 = rules.index(self.rule)
+        idx2 = rules.index(other.rule)
+        return idx1 < idx2
 
     def __init__(self, properties, rule, translation_path, value=None,
                  value_name=None, value_path=None, client_plugin=None,
@@ -392,6 +403,7 @@ class Translation(object):
         self.resolved_translations = {}
         self.is_active = True
         self.store_translated_values = True
+        self._deleted_props = []
 
     def set_rules(self, rules, client_resolve=True):
         if not rules:
@@ -404,3 +416,34 @@ class Translation(object):
                 continue
             key = '.'.join(rule.translation_path)
             self._rules.setdefault(key, set()).add(rule)
+
+            if rule.rule == TranslationRule.DELETE:
+                self._deleted_props.append(key)
+
+    def is_deleted(self, key):
+        return (self.is_active and
+                self.cast_key_to_rule(key) in self._deleted_props)
+
+    def cast_key_to_rule(self, key):
+        return '.'.join([item for item in key.split('.')
+                         if not item.isdigit()])
+
+    def has_translation(self, key):
+        key = self.cast_key_to_rule(key)
+        return (self.is_active and
+                (key in self._rules or key in self.resolved_translations))
+
+    def translate(self, key, prop_value=None, prop_data=None):
+        if key in self.resolved_translations:
+            return self.resolved_translations[key]
+
+        result = prop_value
+        if self._rules.get(self.cast_key_to_rule(key)) is None:
+            return result
+        for rule in sorted(self._rules.get(self.cast_key_to_rule(key))):
+            if rule.rule == TranslationRule.DELETE:
+                if self.store_translated_values:
+                    self.resolved_translations[key] = None
+                result = None
+
+        return result
