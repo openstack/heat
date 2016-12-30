@@ -1087,3 +1087,40 @@ class TestTranslationRule(common.HeatTestCase):
         ex = self.assertRaises(ValueError, rule.execute_rule)
         self.assertEqual('Cannot use value_path for properties inside '
                          'list-type properties', six.text_type(ex))
+
+
+class TestTranslation(common.HeatTestCase):
+
+    def test_set_rules(self):
+        props = mock.Mock(spec=properties.Properties)
+        rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.REPLACE,
+                ['a'],
+                'b')
+        ]
+
+        tran = translation.Translation()
+        tran.set_rules(rules)
+        self.assertEqual({'a': {rules[0]}}, tran._rules)
+
+    def test_set_rules_none(self):
+        tran = translation.Translation()
+        self.assertEqual({}, tran._rules)
+
+    def test_set_no_resolve_rules(self):
+        props = mock.Mock(spec=properties.Properties)
+        rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                ['a'],
+                client_plugin=mock.ANY,
+                finder='finder'
+            )
+        ]
+
+        tran = translation.Translation()
+        tran.set_rules(rules, client_resolve=False)
+        self.assertEqual({}, tran._rules)
