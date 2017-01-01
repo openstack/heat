@@ -1749,8 +1749,8 @@ class ResourceTest(common.HeatTestCase):
         })
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
                              cache_data={
-                                 'res': {'attributes': {'Foo': 'res',
-                                                        'foo': 'res'},
+                                 'res': {'attrs': {'Foo': 'res',
+                                                   'foo': 'res'},
                                          'uuid': mock.ANY,
                                          'id': mock.ANY,
                                          'action': 'CREATE',
