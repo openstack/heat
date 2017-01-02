@@ -32,10 +32,7 @@ common_gnocchi_properties_schema = {
     COMPARISON_OPERATOR: properties.Schema(
         properties.Schema.STRING,
         _('Operator used to compare specified statistic with threshold.'),
-        constraints=[
-            constraints.AllowedValues(['ge', 'gt', 'eq', 'ne', 'lt',
-                                       'le']),
-        ],
+        constraints=[alarm_base.BaseAlarm.QF_OP_VALS],
         update_allowed=True
     ),
     EVALUATION_PERIODS: properties.Schema(
