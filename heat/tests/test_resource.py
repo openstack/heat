@@ -2025,7 +2025,7 @@ class ResourceTest(common.HeatTestCase):
                                  new_temp, stack_id=self.stack.id)
 
         res_data = {}
-        self.assertRaises(exception.UpdateReplace, res.update_convergence,
+        self.assertRaises(resource.UpdateReplace, res.update_convergence,
                           new_temp.id, res_data, 'engine-007',
                           -1, new_stack)
 

@@ -1162,7 +1162,7 @@ class Resource(object):
             try:
                 runner(timeout=timeout, progress_callback=progress_callback)
                 update_tmpl_id_and_requires()
-            except exception.UpdateReplace:
+            except UpdateReplace:
                 raise
             except BaseException:
                 with excutils.save_and_reraise_exception():
