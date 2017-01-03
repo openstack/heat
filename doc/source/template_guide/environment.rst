@@ -52,16 +52,18 @@ It also can contain some other sections:
     Merge strategies for merging parameters and parameter defaults from the
     environment file.
 
-Use the :option:`-e` option of the :command:`heat stack-create` command to
+Use the :option:`-e` option of the :command:`openstack stack create` command to
 create a stack using the environment defined in such a file.
 
 You can also provide environment parameters as a list of key/value pairs using
-the :option:`-P` option of the :command:`heat stack-create` command.
+the :option:`--parameter` option of the :command:`openstack stack create`
+command.
 
 In the following example the environment is read from the :file:`my_env.yaml`
-file and an extra parameter is provided using the :option:`-P` option::
+file and an extra parameter is provided using the :option:`--parameter`
+option::
 
-   $ heat stack-create my_stack -e my_env.yaml -P "param1=val1;param2=val2" -f my_tmpl.yaml
+   $ openstack stack create my_stack -e my_env.yaml --parameter "param1=val1;param2=val2" -t my_tmpl.yaml
 
 Environment Merging
 ~~~~~~~~~~~~~~~~~~~
@@ -116,7 +118,7 @@ which is the time when these files are read.
 If the :file:`my_env.yaml` file from the example above had been put in the
 ``environment_dir`` then the user's command line could be this::
 
-    heat stack-create my_stack -P "some_parm=bla" -f my_tmpl.yaml
+    openstack stack create my_stack --parameter "some_parm=bla" -t my_tmpl.yaml
 
 Global templates
 ----------------

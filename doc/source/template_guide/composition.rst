@@ -91,7 +91,7 @@ the ``key_name`` property of the new template.
 
 To create the stack run::
 
-  $ heat stack-create -f main.yaml stack1
+  $ openstack stack create -t main.yaml stack1
 
 
 Define a new resource type
@@ -128,7 +128,7 @@ You can now use the new ``OS::Nova::Server`` in your new template
 
 To create the stack run::
 
-  $ heat stack-create -f main.yaml -e env.yaml example-two
+  $ openstack stack create -t main.yaml -e env.yaml example-two
 
 Get access to nested attributes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

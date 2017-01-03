@@ -26,7 +26,7 @@ sourced::
 
 You can confirm that Heat is available with this command::
 
-    $ heat stack-list
+    $ openstack stack list
 
 This should return an empty line
 
@@ -50,7 +50,7 @@ Launching a stack
 -----------------
 Now lets launch a stack, using an example template from the heat-templates repository::
 
-    $ heat stack-create -u http://git.openstack.org/cgit/openstack/heat-templates/plain/hot/F20/WordPress_Native.yaml -P key_name=heat_key -P image_id=my-fedora-image -P instance_type=m1.small teststack
+    $ openstack stack create -t http://git.openstack.org/cgit/openstack/heat-templates/plain/hot/F20/WordPress_Native.yaml --parameter key_name=heat_key --parameter image_id=my-fedora-image --parameter instance_type=m1.small teststack
 
 Which will respond::
 
@@ -70,19 +70,19 @@ List stacks
 ~~~~~~~~~~~
 List the stacks in your tenant::
 
-    $ heat stack-list
+    $ openstack stack list
 
 List stack events
 ~~~~~~~~~~~~~~~~~
 List the events related to a particular stack::
 
-   $ heat event-list teststack
+   $ openstack stack event list teststack
 
 Describe the wordpress stack
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Show detailed state of a stack::
 
-   $ heat stack-show teststack
+   $ openstack stack show teststack
 
 Note: After a few seconds, the stack_status should change from ``IN_PROGRESS``
 to ``CREATE_COMPLETE``.
@@ -93,17 +93,17 @@ Because the software takes some time to install from the repository, it may be
 a few minutes before the Wordpress instance is in a running state.
 
 Point a web browser at the location given by the ``WebsiteURL`` output as shown
-by ``heat output-show``::
+by ``openstack stack output show``::
 
-    $ WebsiteURL=$(heat output-show --format raw teststack WebsiteURL)
+    $ WebsiteURL=$(openstack stack output show teststack WebsiteURL -c output_value -f value)
     $ curl $WebsiteURL
 
 Delete the instance when done
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Note: The list operation will show no running stack.::
 
-    $ heat stack-delete teststack
-    $ heat stack-list
+    $ openstack stack delete teststack
+    $ openstack stack list
 
 You can explore other heat commands by referring to the
 `Heat chapter
