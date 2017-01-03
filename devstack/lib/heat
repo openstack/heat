@@ -242,11 +242,12 @@ function configure_heat {
 
 # init_heat() - Initialize database
 function init_heat {
-
-    # (re)create heat database
-    recreate_database heat
-
-    $HEAT_BIN_DIR/heat-manage db_sync
+    # recreate db only if one of the db services is enabled
+    if is_service_enabled $DATABASE_BACKENDS; then
+        # (re)create heat database
+        recreate_database heat
+        $HEAT_BIN_DIR/heat-manage db_sync
+    fi
     create_heat_cache_dir
 }
 
