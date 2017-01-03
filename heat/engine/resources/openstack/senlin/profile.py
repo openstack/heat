@@ -83,7 +83,8 @@ class Profile(resource.Resource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            self.client().update_profile(self.resource_id, **prop_diff)
+            profile_obj = self.client().get_profile(self.resource_id)
+            self.client().update_profile(profile_obj, **prop_diff)
 
     def _show_resource(self):
         profile = self.client().get_profile(self.resource_id)

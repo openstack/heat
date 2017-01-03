@@ -124,8 +124,9 @@ class Node(resource.Resource):
         if prop_diff:
             if self.PROFILE in prop_diff:
                 prop_diff['profile_id'] = prop_diff.pop(self.PROFILE)
+            node_obj = self.client().get_node(self.resource_id)
             node = self.client().update_node(
-                self.resource_id, **prop_diff)
+                node_obj, **prop_diff)
             action_id = node.location.split('/')[-1]
 
         return action_id

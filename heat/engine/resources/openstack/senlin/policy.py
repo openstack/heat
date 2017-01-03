@@ -175,7 +175,8 @@ class Policy(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if self.NAME in prop_diff:
             param = {'name': prop_diff[self.NAME]}
-            self.client().update_policy(self.resource_id, **param)
+            policy_obj = self.client().get_policy(self.resource_id)
+            self.client().update_policy(policy_obj, **param)
         actions = dict()
         if self.BINDINGS in prop_diff:
             old = self.properties[self.BINDINGS] or []

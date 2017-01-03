@@ -164,10 +164,11 @@ class SenlinPolicyTest(common.HeatTestCase):
             'action': 'fake_action1'}
         self.senlin_mock.cluster_detach_policy.return_value = {
             'action': 'fake_action2'}
+        self.senlin_mock.get_policy.return_value = self.fake_p
         scheduler.TaskRunner(policy.update, new_cluster)()
         self.assertEqual((policy.UPDATE, policy.COMPLETE), policy.state)
         self.senlin_mock.update_policy.assert_called_once_with(
-            policy.resource_id, name='new_name')
+            self.fake_p, name='new_name')
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(
             'c1', policy.resource_id)
         self.senlin_mock.cluster_attach_policy.assert_called_with(

@@ -213,7 +213,8 @@ class Cluster(resource.Resource):
                                                     **params)
                 return resp['action']
             elif action == 'cluster_update':
-                resp = self.client().update_cluster(self.resource_id,
+                cluster_obj = self.client().get_cluster(self.resource_id)
+                resp = self.client().update_cluster(cluster_obj,
                                                     **params)
                 return resp.location.split('/')[-1]
 

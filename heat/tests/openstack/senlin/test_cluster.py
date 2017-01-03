@@ -171,7 +171,7 @@ class SenlinClusterTest(common.HeatTestCase):
             'name': 'new_name'
         }
         self.senlin_mock.update_cluster.assert_called_once_with(
-            cluster.resource_id, **cluster_update_kwargs)
+            self.fake_cl, **cluster_update_kwargs)
         self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_desire_capacity(self):
