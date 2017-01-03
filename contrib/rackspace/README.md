@@ -53,6 +53,6 @@ Note that some forward compatibility decisions had to be made for the Keystone V
 ### How it works
 
 By setting the `keystone_backend` option, the KeystoneBackend class in
-`heat/common/heat_keystoneclient.py` will instantiate the plugin
+`heat/engine/clients/os/keystone/heat_keystoneclient.py` will instantiate the plugin
 KeystoneClientV2 class and use that instead of the default client in
-`heat/common/heat_keystoneclient.py`.
+`heat/engine/clients/os/keystone/heat_keystoneclient.py`.
