@@ -37,6 +37,7 @@ resources:
     properties:
       name: SenlinNode
       profile: fake_profile
+      cluster: fake_cluster
       metadata:
         foo: bar
 """
@@ -99,6 +100,7 @@ class SenlinNodeTest(common.HeatTestCase):
             'name': 'SenlinNode',
             'profile_id': 'fake_profile',
             'metadata': {'foo': 'bar'},
+            'cluster_id': 'fake_cluster',
         }
         self.senlin_mock.create_node.assert_called_once_with(
             **expect_kwargs)
@@ -150,8 +152,28 @@ class SenlinNodeTest(common.HeatTestCase):
             'name': 'new_name'
         }
         self.senlin_mock.update_node.assert_called_once_with(
-            self.fake_node, **node_update_kwargs)
+            node=self.fake_node, **node_update_kwargs)
         self.assertEqual(2, self.senlin_mock.get_action.call_count)
+
+    def test_node_update_cluster(self):
+        node = self._create_node()
+        new_t = copy.deepcopy(self.t)
+        props = new_t['resources']['senlin-node']['properties']
+        props['cluster'] = 'new_cluster'
+        rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
+        new_node = rsrc_defns['senlin-node']
+        self.senlin_mock.cluster_del_nodes.return_value = {
+            'action': 'remove_node_from_cluster'
+        }
+        self.senlin_mock.cluster_add_nodes.return_value = {
+            'action': 'add_node_to_cluster'
+        }
+        scheduler.TaskRunner(node.update, new_node)()
+        self.assertEqual((node.UPDATE, node.COMPLETE), node.state)
+        self.senlin_mock.cluster_del_nodes.assert_called_once_with(
+            cluster='fake_cluster', nodes=[node.resource_id])
+        self.senlin_mock.cluster_add_nodes.assert_called_once_with(
+            cluster='new_cluster', nodes=[node.resource_id])
 
     def test_node_update_failed(self):
         node = self._create_node()
