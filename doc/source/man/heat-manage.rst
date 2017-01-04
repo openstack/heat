@@ -22,12 +22,8 @@ The standard pattern for executing a heat-manage command is:
 Run with -h to see a list of available commands:
 ``heat-manage -h``
 
-Commands are ``db_version``, ``db_sync``, ``purge_deleted`` and ``service``.
-Detailed descriptions are below.
-
-
-Heat Db version
-~~~~~~~~~~~~~~~
+Commands are ``db_version``, ``db_sync``, ``purge_deleted``, ``migrate_covergence_1``
+and ``service``. Detailed descriptions are below.
 
 ``heat-manage db_version``
 
@@ -41,6 +37,11 @@ Heat Db version
 
     Purge db entries marked as deleted and older than [age]. When project_id
     argument is provided, only entries belonging to this project will be purged.
+
+``heat-manage migrate_convergence_1 [stack_id]``
+
+    Migrates [stack_id] from non-convergence to convergence. This requires running
+    convergence enabled heat engine(s) and can't be done when they are offline.
 
 ``heat-manage service list``
 
