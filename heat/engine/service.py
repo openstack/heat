@@ -2397,17 +2397,6 @@ class EngineService(service.ServiceBase):
                 LOG.debug('Service %s was aborted' % service_ref['id'])
                 service_objects.Service.delete(cnxt, service_ref['id'])
 
-    def set_stack_and_resource_to_failed(self, stack):
-        for name, rsrc in six.iteritems(stack.resources):
-            if rsrc.status == rsrc.IN_PROGRESS:
-                status_reason = ('Engine went down '
-                                 'during resource %s' % rsrc.action)
-                rsrc.state_set(rsrc.action,
-                               rsrc.FAILED,
-                               six.text_type(status_reason))
-        reason = ('Engine went down during stack %s' % stack.action)
-        stack.state_set(stack.action, stack.FAILED, six.text_type(reason))
-
     def reset_stack_status(self):
         cnxt = context.get_admin_context()
         filters = {
@@ -2440,12 +2429,14 @@ class EngineService(service.ServiceBase):
                              {'engine': engine_id, 'action': stk.action,
                               'stack_id': stk.id})
 
+                    reason = _('Engine went down during stack %s') % stk.action
+
                     # Set stack and resources status to FAILED in sub thread
                     self.thread_group_mgr.start_with_acquired_lock(
                         stk,
                         lock,
-                        self.set_stack_and_resource_to_failed,
-                        stk
+                        stk.reset_stack_and_resources_in_progress,
+                        reason
                     )
             except exception.ActionInProgress:
                 continue
