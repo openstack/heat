@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from oslo_log import log as logging
 
 from heat.common.i18n import _LE
@@ -21,6 +23,7 @@ from zaqarclient.queues.v2 import client as zaqarclient
 from zaqarclient.transport import errors as zaqar_errors
 
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 CLIENT_NAME = 'zaqar'
 
@@ -75,6 +78,13 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
     def is_not_found(self, ex):
         return isinstance(ex, zaqar_errors.ResourceNotFound)
 
+    def get_queue(self, queue_name):
+        if not isinstance(queue_name, six.string_types):
+            raise TypeError('Queue name must be a string')
+        # Queues are created automatically starting with v1.1 of the Zaqar API,
+        # so any queue name is valid for the purposes of constraint validation.
+        return queue_name
+
 
 class ZaqarEventSink(object):
 
@@ -88,3 +98,8 @@ class ZaqarEventSink(object):
         queue = zaqar.queue(self._target, auto_create=False)
         ttl = self._ttl if self._ttl is not None else zaqar_plugin.DEFAULT_TTL
         queue.post({'body': event, 'ttl': ttl})
+
+
+class QueueConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_queue'

@@ -43,6 +43,7 @@ class ZaqarSubscription(resource.Resource):
         QUEUE_NAME: properties.Schema(
             properties.Schema.STRING,
             _("Name of the queue to subscribe to."),
+            constraints=[constraints.CustomConstraint('zaqar.queue')],
             required=True),
         SUBSCRIBER: properties.Schema(
             properties.Schema.STRING,
