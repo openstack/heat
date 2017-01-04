@@ -119,9 +119,9 @@ class AodhGnocchiResourcesAlarm(alarm_base.BaseAlarm):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
-            kwargs = {}
-            kwargs.update(prop_diff)
-            props = self.get_alarm_props(kwargs)
+            new_props = json_snippet.properties(self.properties_schema,
+                                                self.context)
+            props = self.get_alarm_props(new_props)
             self.client().alarm.update(self.resource_id, props)
 
     def parse_live_resource_data(self, resource_properties,

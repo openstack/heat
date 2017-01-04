@@ -98,8 +98,8 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
                 'alarm_actions': [],
                 'description': u'Do stuff with gnocchi',
                 'enabled': True,
-                'insufficient_data_actions': None,
-                'ok_actions': None,
+                'insufficient_data_actions': [],
+                'ok_actions': [],
                 'name': mox.IgnoreArg(),
                 'type': 'gnocchi_resources_threshold',
                 'repeat_actions': True,
@@ -127,8 +127,27 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
         self.m.StubOutWithMock(self.fc.alarm, 'update')
         self.fc.alarm.update(
             'foo',
-            {'gnocchi_resources_threshold_rule': {
-                'resource_id': 'd3d6c642-921e-4fc2-9c5f-15d9a5afb598'}})
+            {
+                'alarm_actions': [],
+                'description': u'Do stuff with gnocchi',
+                'enabled': True,
+                'insufficient_data_actions': [],
+                'ok_actions': [],
+                'repeat_actions': True,
+                'gnocchi_resources_threshold_rule': {
+                    "metric": "cpu_util",
+                    "aggregation_method": "mean",
+                    "granularity": 60,
+                    "evaluation_periods": 1,
+                    "threshold": 50,
+                    "resource_type": "instance",
+                    "resource_id": "d3d6c642-921e-4fc2-9c5f-15d9a5afb598",
+                    "comparison_operator": "gt",
+                },
+                'time_constraints': [],
+                'severity': 'low'
+            }
+        )
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -267,8 +286,8 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
                 'alarm_actions': [],
                 'description': u'Do stuff with gnocchi metrics',
                 'enabled': True,
-                'insufficient_data_actions': None,
-                'ok_actions': None,
+                'insufficient_data_actions': [],
+                'ok_actions': [],
                 'name': mox.IgnoreArg(),
                 'type': 'gnocchi_aggregation_by_metrics_threshold',
                 'repeat_actions': True,
@@ -297,9 +316,26 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
         self.m.StubOutWithMock(self.fc.alarm, 'update')
         self.fc.alarm.update(
             'foo',
-            {'gnocchi_aggregation_by_metrics_threshold_rule': {
-                'metrics': ['d3d6c642-921e-4fc2-9c5f-15d9a5afb598',
-                            'bc60f822-18a0-4a0c-94e7-94c554b00901']}})
+            {
+                'alarm_actions': [],
+                'description': u'Do stuff with gnocchi metrics',
+                'enabled': True,
+                'insufficient_data_actions': [],
+                'ok_actions': [],
+                'repeat_actions': True,
+                'gnocchi_aggregation_by_metrics_threshold_rule': {
+                    "aggregation_method": "mean",
+                    "granularity": 60,
+                    "evaluation_periods": 1,
+                    "threshold": 50,
+                    "comparison_operator": "gt",
+                    'metrics': ['d3d6c642-921e-4fc2-9c5f-15d9a5afb598',
+                                'bc60f822-18a0-4a0c-94e7-94c554b00901']
+                },
+                'time_constraints': [],
+                'severity': 'low'
+            }
+        )
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -391,8 +427,8 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
                 'alarm_actions': [],
                 'description': 'Do stuff with gnocchi aggregation by resource',
                 'enabled': True,
-                'insufficient_data_actions': None,
-                'ok_actions': None,
+                'insufficient_data_actions': [],
+                'ok_actions': [],
                 'name': mox.IgnoreArg(),
                 'type': 'gnocchi_aggregation_by_resources_threshold',
                 'repeat_actions': True,
@@ -422,8 +458,27 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
         self.m.StubOutWithMock(self.fc.alarm, 'update')
         self.fc.alarm.update(
             'foo',
-            {'gnocchi_aggregation_by_resources_threshold_rule': {
-                'query': '{"=": {"server_group": "my_new_group"}}'}})
+            {
+                'alarm_actions': [],
+                'description': 'Do stuff with gnocchi aggregation by resource',
+                'enabled': True,
+                'insufficient_data_actions': [],
+                'ok_actions': [],
+                'repeat_actions': True,
+                'gnocchi_aggregation_by_resources_threshold_rule': {
+                    "aggregation_method": "mean",
+                    "granularity": 60,
+                    "evaluation_periods": 1,
+                    "threshold": 50,
+                    "comparison_operator": "gt",
+                    "metric": "cpu_util",
+                    "resource_type": "instance",
+                    "query": '{"=": {"server_group": "my_new_group"}}',
+                },
+                'time_constraints': [],
+                'severity': 'low'
+            }
+        )
 
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
