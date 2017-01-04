@@ -32,6 +32,8 @@ class DesignateDomain(resource.Resource):
 
     entity = 'domains'
 
+    default_client_name = 'designate'
+
     PROPERTIES = (
         NAME, TTL, DESCRIPTION, EMAIL
     ) = (
@@ -81,10 +83,6 @@ class DesignateDomain(resource.Resource):
             type=attributes.Schema.STRING
         ),
     }
-
-    default_client_name = 'designate'
-
-    entity = 'domains'
 
     def handle_create(self):
         args = dict((k, v) for k, v in six.iteritems(self.properties) if v)
