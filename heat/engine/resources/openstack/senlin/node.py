@@ -224,6 +224,20 @@ class Node(resource.Resource):
         node = self.client().get_node(self.resource_id, details=True)
         return getattr(node, name, None)
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        reality = {}
+
+        for key in self._update_allowed_properties:
+            if key == self.PROFILE:
+                value = resource_data.get('profile_id')
+            elif key == self.CLUSTER:
+                value = resource_data.get('cluster_id')
+            else:
+                value = resource_data.get(key)
+            reality.update({key: value})
+
+        return reality
+
 
 def resource_mapping():
     return {
