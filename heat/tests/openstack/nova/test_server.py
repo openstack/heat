@@ -4368,7 +4368,8 @@ class ServerInternalPortTest(ServersTest):
         external_port_ids = [{'id': 5566}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
-        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach',
+                         return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
                          return_value=True)
 
@@ -4379,6 +4380,22 @@ class ServerInternalPortTest(ServersTest):
             mock.call('test_server', 1122),
             mock.call('test_server', 3344),
             mock.call('test_server', 5566)])
+
+    def test_prepare_ports_for_replace_not_found(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
+        server.resource_id = 'test_server'
+        port_ids = [{'id': 1122}, {'id': 3344}]
+        external_port_ids = [{'id': 5566}]
+        server._data = {"internal_ports": jsonutils.dumps(port_ids),
+                        "external_ports": jsonutils.dumps(external_port_ids)}
+        self.patchobject(nova.NovaClientPlugin, 'fetch_server',
+                         side_effect=nova_exceptions.NotFound(404))
+        check_detach = self.patchobject(nova.NovaClientPlugin,
+                                        'check_interface_detach')
+
+        server.prepare_for_replace()
+        check_detach.assert_not_called()
 
     @mock.patch.object(server_network_mixin.ServerNetworkMixin,
                        'store_external_ports')
@@ -4400,7 +4417,8 @@ class ServerInternalPortTest(ServersTest):
         stack._backup_stack().resources.get.return_value = old_server
         old_server._data_get_ports.side_effect = [port_ids, external_port_ids]
 
-        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach',
+                         return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
                          return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'interface_attach')
@@ -4493,7 +4511,8 @@ class ServerInternalPortTest(ServersTest):
         # mock previous resource was replaced by existing resource
         prev_rsrc.replaced_by = existing_rsrc.id
 
-        self.patchobject(nova.NovaClientPlugin, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach',
+                         return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
                          return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'interface_attach')

@@ -670,12 +670,11 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return False
 
     def interface_detach(self, server_id, port_id):
-        server = self.fetch_server(server_id)
-        if server:
-            server.interface_detach(port_id)
-            return True
-        else:
-            return False
+        with self.ignore_not_found:
+            server = self.fetch_server(server_id)
+            if server:
+                server.interface_detach(port_id)
+                return True
 
     def interface_attach(self, server_id, port_id=None, net_id=None, fip=None):
         server = self.fetch_server(server_id)
@@ -689,12 +688,13 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
            wait_fixed=500,
            retry_on_result=client_plugin.retry_if_result_is_false)
     def check_interface_detach(self, server_id, port_id):
-        server = self.fetch_server(server_id)
-        if server:
-            interfaces = server.interface_list()
-            for iface in interfaces:
-                if iface.port_id == port_id:
-                    return False
+        with self.ignore_not_found:
+            server = self.fetch_server(server_id)
+            if server:
+                interfaces = server.interface_list()
+                for iface in interfaces:
+                    if iface.port_id == port_id:
+                        return False
         return True
 
     @retry(stop_max_attempt_number=cfg.CONF.max_interface_check_attempts,
