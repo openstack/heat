@@ -55,6 +55,10 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
             )
         return False
 
+    def get_profile_id(self, profile_name):
+        profile = self.client().get_profile(profile_name)
+        return profile.id
+
     def is_not_found(self, ex):
         return isinstance(ex, exc.sdkexc.ResourceNotFound)
 

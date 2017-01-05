@@ -81,6 +81,9 @@ class SenlinClusterTest(common.HeatTestCase):
     def setUp(self):
         super(SenlinClusterTest, self).setUp()
         self.senlin_mock = mock.MagicMock()
+        self.senlin_mock.get_profile.return_value = mock.Mock(
+            id='fake_profile_id'
+        )
         self.patchobject(sc.Cluster, 'client', return_value=self.senlin_mock)
         self.patchobject(senlin.SenlinClientPlugin, 'client',
                          return_value=self.senlin_mock)
@@ -110,7 +113,7 @@ class SenlinClusterTest(common.HeatTestCase):
         self._create_cluster(self.t)
         expect_kwargs = {
             'name': 'SenlinCluster',
-            'profile_id': 'fake_profile',
+            'profile_id': 'fake_profile_id',
             'desired_capacity': 1,
             'min_size': 0,
             'max_size': -1,
@@ -154,6 +157,12 @@ class SenlinClusterTest(common.HeatTestCase):
 
     def test_cluster_update_profile(self):
         cluster = self._create_cluster(self.t)
+        # Mock translate rules
+        self.senlin_mock.get_profile.side_effect = [
+            mock.Mock(id='new_profile_id'),
+            mock.Mock(id='fake_profile_id'),
+            mock.Mock(id='new_profile_id'),
+        ]
         new_t = copy.deepcopy(self.t)
         props = new_t['resources']['senlin-cluster']['properties']
         props['profile'] = 'new_profile'
@@ -167,7 +176,7 @@ class SenlinClusterTest(common.HeatTestCase):
         scheduler.TaskRunner(cluster.update, new_cluster)()
         self.assertEqual((cluster.UPDATE, cluster.COMPLETE), cluster.state)
         cluster_update_kwargs = {
-            'profile_id': 'new_profile',
+            'profile_id': 'new_profile_id',
             'name': 'new_name'
         }
         self.senlin_mock.update_cluster.assert_called_once_with(
