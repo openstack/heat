@@ -33,6 +33,8 @@ class DesignateRecord(resource.Resource):
 
     entity = 'records'
 
+    default_client_name = 'designate'
+
     PROPERTIES = (
         NAME, TTL, DESCRIPTION, TYPE, DATA, PRIORITY, DOMAIN
     ) = (
@@ -103,8 +105,6 @@ class DesignateRecord(resource.Resource):
             constraints=[constraints.CustomConstraint('designate.domain')]
         ),
     }
-
-    default_client_name = 'designate'
 
     def handle_create(self):
         args = dict(
