@@ -20,6 +20,8 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 
+from six.moves.urllib import parse as urlparse
+
 
 class ZaqarQueue(resource.Resource):
     """A resource for managing Zaqar queues.
@@ -113,7 +115,7 @@ class ZaqarQueue(resource.Resource):
         queue_name = self.physical_resource_name()
         return '%s/v%s/queues/%s' % (client.api_url.rstrip('/'),
                                      client.api_version,
-                                     queue_name)
+                                     urlparse.quote(queue_name))
 
     def _resolve_attribute(self, name):
         if name == self.QUEUE_ID:
@@ -228,11 +230,15 @@ class ZaqarSignedQueueURL(resource.Resource):
         """
         paths = jsonutils.loads(data[self.PATHS_ATTR])
         methods = jsonutils.loads(data[self.METHODS_ATTR])
-        return ('signature={0}&expires={1}&paths={2}'
-                '&methods={3}&project_id={4}&queue_name={5}'.format(
-                    data[self.SIGNATURE], data[self.EXPIRES],
-                    ','.join(paths), ','.join(methods),
-                    data[self.PROJECT], self.properties[self.QUEUE]))
+        query = {
+            'signature': data[self.SIGNATURE],
+            'expires': data[self.EXPIRES],
+            'paths': ','.join(paths),
+            'methods': ','.join(methods),
+            'project_id': data[self.PROJECT],
+            'queue_name': self.properties[self.QUEUE],
+        }
+        return urlparse.urlencode(query)
 
     def handle_delete(self):
         # We can't delete a signed URL
