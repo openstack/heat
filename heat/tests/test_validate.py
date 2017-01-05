@@ -1425,8 +1425,6 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_glance_client_exception)
         template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
-        self.m.StubOutWithMock(self.gc.images, 'get')
-        self.gc.images.get('image_name').AndRaise(glance.exc.HTTPNotFound())
         self.m.StubOutWithMock(glance.GlanceClientPlugin, 'client')
         glance.GlanceClientPlugin.client().AndReturn(self.gc)
         self.stub_FlavorConstraint_validate()
