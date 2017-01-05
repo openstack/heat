@@ -52,6 +52,14 @@ class SenlinClientPluginTest(common.HeatTestCase):
         self.assertEqual('fake_profile_id', ret)
         mock_get.assert_called_once_with('fake_profile')
 
+    def test_get_cluster_id(self):
+        mock_cluster = mock.Mock(id='fake_cluster_id')
+        mock_get = self.patchobject(self.client, 'get_cluster',
+                                    return_value=mock_cluster)
+        ret = self.plugin.get_cluster_id('fake_cluster')
+        self.assertEqual('fake_cluster_id', ret)
+        mock_get.assert_called_once_with('fake_cluster')
+
 
 class ProfileConstraintTest(common.HeatTestCase):
 

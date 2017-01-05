@@ -59,6 +59,10 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         profile = self.client().get_profile(profile_name)
         return profile.id
 
+    def get_cluster_id(self, cluster_name):
+        cluster = self.client().get_cluster(cluster_name)
+        return cluster.id
+
     def is_not_found(self, ex):
         return isinstance(ex, exc.sdkexc.ResourceNotFound)
 

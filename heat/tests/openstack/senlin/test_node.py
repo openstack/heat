@@ -71,6 +71,12 @@ class SenlinNodeTest(common.HeatTestCase):
     def setUp(self):
         super(SenlinNodeTest, self).setUp()
         self.senlin_mock = mock.MagicMock()
+        self.senlin_mock.get_profile.return_value = mock.Mock(
+            id='fake_profile_id'
+        )
+        self.senlin_mock.get_cluster.return_value = mock.Mock(
+            id='fake_cluster_id'
+        )
         self.patchobject(sn.Node, 'client', return_value=self.senlin_mock)
         self.patchobject(senlin.SenlinClientPlugin, 'client',
                          return_value=self.senlin_mock)
@@ -98,9 +104,9 @@ class SenlinNodeTest(common.HeatTestCase):
         self._create_node()
         expect_kwargs = {
             'name': 'SenlinNode',
-            'profile_id': 'fake_profile',
+            'profile_id': 'fake_profile_id',
             'metadata': {'foo': 'bar'},
-            'cluster_id': 'fake_cluster',
+            'cluster_id': 'fake_cluster_id',
         }
         self.senlin_mock.create_node.assert_called_once_with(
             **expect_kwargs)
@@ -137,6 +143,12 @@ class SenlinNodeTest(common.HeatTestCase):
 
     def test_node_update_profile(self):
         node = self._create_node()
+        # Mock translate rules
+        self.senlin_mock.get_profile.side_effect = [
+            mock.Mock(id='new_profile_id'),
+            mock.Mock(id='fake_profile_id'),
+            mock.Mock(id='new_profile_id'),
+        ]
         new_t = copy.deepcopy(self.t)
         props = new_t['resources']['senlin-node']['properties']
         props['profile'] = 'new_profile'
@@ -148,7 +160,7 @@ class SenlinNodeTest(common.HeatTestCase):
         scheduler.TaskRunner(node.update, new_node)()
         self.assertEqual((node.UPDATE, node.COMPLETE), node.state)
         node_update_kwargs = {
-            'profile_id': 'new_profile',
+            'profile_id': 'new_profile_id',
             'name': 'new_name'
         }
         self.senlin_mock.update_node.assert_called_once_with(
@@ -157,6 +169,12 @@ class SenlinNodeTest(common.HeatTestCase):
 
     def test_node_update_cluster(self):
         node = self._create_node()
+        # Mock translate rules
+        self.senlin_mock.get_cluster.side_effect = [
+            mock.Mock(id='new_cluster_id'),
+            mock.Mock(id='fake_cluster_id'),
+            mock.Mock(id='new_cluster_id'),
+        ]
         new_t = copy.deepcopy(self.t)
         props = new_t['resources']['senlin-node']['properties']
         props['cluster'] = 'new_cluster'
@@ -171,9 +189,9 @@ class SenlinNodeTest(common.HeatTestCase):
         scheduler.TaskRunner(node.update, new_node)()
         self.assertEqual((node.UPDATE, node.COMPLETE), node.state)
         self.senlin_mock.cluster_del_nodes.assert_called_once_with(
-            cluster='fake_cluster', nodes=[node.resource_id])
+            cluster='fake_cluster_id', nodes=[node.resource_id])
         self.senlin_mock.cluster_add_nodes.assert_called_once_with(
-            cluster='new_cluster', nodes=[node.resource_id])
+            cluster='new_cluster_id', nodes=[node.resource_id])
 
     def test_node_update_failed(self):
         node = self._create_node()
