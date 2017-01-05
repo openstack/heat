@@ -20,6 +20,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class Policy(resource.Resource):
@@ -94,6 +95,17 @@ class Policy(resource.Resource):
             )
         )
     }
+
+    def translation_rules(self, props):
+        rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.BINDINGS, self.BD_CLUSTER],
+                client_plugin=self.client_plugin(),
+                finder='get_cluster_id'),
+        ]
+        return rules
 
     def remove_bindings(self, bindings):
         for bd in bindings:
