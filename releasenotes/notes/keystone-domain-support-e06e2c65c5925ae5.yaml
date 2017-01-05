@@ -1,0 +1,4 @@
+---
+features:
+  - A new resource plugin ``OS::Keystone::Domain`` is added to support
+    the lifecycle of keystone domain.
