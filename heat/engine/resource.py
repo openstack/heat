@@ -1895,7 +1895,10 @@ class Resource(object):
             try:
                 obj = getattr(self.client(), self.entity)
                 resource = obj.get(self.resource_id)
-                return resource.to_dict()
+                if type(resource) == dict:
+                    return resource
+                else:
+                    return resource.to_dict()
             except AttributeError as ex:
                 LOG.warning(_LW("Resolving 'show' attribute has failed : %s"),
                             ex)

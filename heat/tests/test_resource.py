@@ -2403,12 +2403,18 @@ class ResourceTest(common.HeatTestCase):
         res.resource_id = 'test_resource_id'
         res.entity = 'test'
 
-        # mock gettring resource info
+        # mock getting resource info
         res.client = mock.Mock()
         test_obj = mock.Mock()
         test_resource = mock.Mock()
         test_resource.to_dict.return_value = {'test': 'info'}
         test_obj.get.return_value = test_resource
+        res.client().test = test_obj
+
+        self.assertEqual({'test': 'info'}, res._show_resource())
+
+        # mock getting resource info as dict
+        test_obj.get.return_value = {'test': 'info'}
         res.client().test = test_obj
 
         self.assertEqual({'test': 'info'}, res._show_resource())
