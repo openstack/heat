@@ -422,8 +422,12 @@ class ServerNetworkMixin(object):
     def detach_ports(self, server):
         existing_server_id = server.resource_id
         for port in self.get_all_ports(server):
-            self.client_plugin().interface_detach(
+            detach_called = self.client_plugin().interface_detach(
                 existing_server_id, port['id'])
+
+            if not detach_called:
+                return
+
             try:
                 if self.client_plugin().check_interface_detach(
                         existing_server_id, port['id']):
