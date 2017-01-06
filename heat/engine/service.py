@@ -1895,6 +1895,7 @@ class EngineService(service.ServiceBase):
                     if rsrc.action != rsrc.DELETE:
                         rsrc.state_set(rsrc.CHECK, rsrc.FAILED, reason=reason)
                 elif rsrc.state == (rsrc.CHECK, rsrc.FAILED):
+                    rsrc.handle_metadata_reset()
                     rsrc.state_set(rsrc.CHECK, rsrc.COMPLETE, reason=reason)
 
         except exception.UpdateInProgress:

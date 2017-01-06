@@ -443,6 +443,16 @@ class Resource(object):
         db_res.update_metadata(metadata)
         self._rsrc_metadata = metadata
 
+    def handle_metadata_reset(self):
+        """Default implementation; should be overridden by resources.
+
+        Now we override this method to reset the metadata for scale-policy
+        and scale-group resources, because their metadata might hang in a
+        wrong state ('scaling_in_progress' is always True) if engine restarts
+        while scaling.
+        """
+        pass
+
     @classmethod
     def set_needed_by(cls, db_rsrc, needed_by, expected_engine_id=None):
         if db_rsrc:

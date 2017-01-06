@@ -69,3 +69,9 @@ class CooldownMixin(object):
             self.metadata_set(metadata)
         except exception.NotFound:
             pass
+
+    def handle_metadata_reset(self):
+        metadata = self.metadata_get()
+        if 'scaling_in_progress' in metadata:
+            metadata['scaling_in_progress'] = False
+            self.metadata_set(metadata)
