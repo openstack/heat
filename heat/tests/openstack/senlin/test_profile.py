@@ -108,8 +108,9 @@ class SenlinProfileTest(common.HeatTestCase):
     def test_profile_update(self):
         profile = self._create_profile(self.t)
         prop_diff = {'metadata': {'foo': 'bar'}}
+        self.senlin_mock.get_profile.return_value = self.fake_p
         profile.handle_update(json_snippet=None,
                               tmpl_diff=None,
                               prop_diff=prop_diff)
         self.senlin_mock.update_profile.assert_called_once_with(
-            profile.resource_id, **prop_diff)
+            self.fake_p, **prop_diff)

@@ -150,7 +150,7 @@ class SenlinNodeTest(common.HeatTestCase):
             'name': 'new_name'
         }
         self.senlin_mock.update_node.assert_called_once_with(
-            node.resource_id, **node_update_kwargs)
+            self.fake_node, **node_update_kwargs)
         self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_node_update_failed(self):
