@@ -28,7 +28,7 @@ import six
 from heat.common import config
 from heat.common import endpoint_utils
 from heat.common import exception
-from heat.common.i18n import _LE, _LW
+from heat.common.i18n import _LE
 from heat.common import policy
 from heat.common import wsgi
 from heat.db.sqlalchemy import api as db_api
@@ -242,33 +242,16 @@ class RequestContext(context.RequestContext):
 
     @property
     def trusts_auth_plugin(self):
-        if self._trusts_auth_plugin:
-            return self._trusts_auth_plugin
+        if not self._trusts_auth_plugin:
+            self._trusts_auth_plugin = ks_loading.load_auth_from_conf_options(
+                cfg.CONF, TRUSTEE_CONF_GROUP, trust_id=self.trust_id)
 
-        self._trusts_auth_plugin = ks_loading.load_auth_from_conf_options(
-            cfg.CONF, TRUSTEE_CONF_GROUP, trust_id=self.trust_id)
+        if not self._trusts_auth_plugin:
+            LOG.error(_LE('Please add the trustee credentials you need '
+                          'to the %s section of your heat.conf file.'),
+                      TRUSTEE_CONF_GROUP)
+            raise exception.AuthorizationFailure()
 
-        if self._trusts_auth_plugin:
-            return self._trusts_auth_plugin
-
-        LOG.warning(_LW('Using the keystone_authtoken user as the heat '
-                        'trustee user directly is deprecated. Please add the '
-                        'trustee credentials you need to the %s section of '
-                        'your heat.conf file.') % TRUSTEE_CONF_GROUP)
-
-        cfg.CONF.import_group('keystone_authtoken',
-                              'keystonemiddleware.auth_token')
-
-        trustee_user_domain = 'default'
-        if 'user_domain_id' in cfg.CONF.keystone_authtoken:
-            trustee_user_domain = cfg.CONF.keystone_authtoken.user_domain_id
-
-        self._trusts_auth_plugin = generic.Password(
-            username=cfg.CONF.keystone_authtoken.admin_user,
-            password=cfg.CONF.keystone_authtoken.admin_password,
-            user_domain_id=trustee_user_domain,
-            auth_url=self.keystone_v3_endpoint,
-            trust_id=self.trust_id)
         return self._trusts_auth_plugin
 
     def _create_auth_plugin(self):
