@@ -462,10 +462,23 @@ class ResourceTest(common.HeatTestCase):
     def test_update_replace(self):
         res, utmpl = self._setup_resource_for_update(
             res_name='test_update_replace')
+        self.assertEqual((res.INIT, res.COMPLETE), res.state)
         res.prepare_for_replace = mock.Mock()
+        # resource replaced if in INIT_COMPLETE
+        self.assertRaises(
+            resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+        self.assertTrue(res.prepare_for_replace.called)
+
+    def test_update_replace_in_check_failed(self):
+        res, utmpl = self._setup_resource_for_update(
+            res_name='test_update_replace')
+        res.state_set(res.CHECK, res.FAILED)
+        res.prepare_for_replace = mock.Mock()
+        res.needs_replace_failed = mock.MagicMock(return_value=False)
 
         self.assertRaises(
             resource.UpdateReplace, scheduler.TaskRunner(res.update, utmpl))
+        self.assertFalse(res.needs_replace_failed.called)
         self.assertTrue(res.prepare_for_replace.called)
 
     def test_update_replace_prepare_replace_error(self):
