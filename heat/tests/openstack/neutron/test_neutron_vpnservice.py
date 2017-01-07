@@ -17,6 +17,7 @@ import mox
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
+from oslo_config import cfg
 import six
 
 from heat.common import exception
@@ -156,7 +157,6 @@ class VPNServiceTest(common.HeatTestCase):
             del props['router_id']
         neutronclient.Client.create_vpnservice(
             self.VPN_SERVICE_CONF).AndReturn({'vpnservice': {'id': 'vpn123'}})
-
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return vpnservice.VPNService('vpnservice',
@@ -174,6 +174,8 @@ class VPNServiceTest(common.HeatTestCase):
 
     def _test_create(self, resolve_neutron=True, resolve_router=True):
         rsrc = self.create_vpnservice(resolve_neutron, resolve_router)
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -182,6 +184,25 @@ class VPNServiceTest(common.HeatTestCase):
         if not resolve_router:
             self.assertEqual('rou123', rsrc.properties.get(rsrc.ROUTER))
             self.assertIsNone(rsrc.properties.get(rsrc.ROUTER_ID))
+        self.m.VerifyAll()
+
+    def test_create_failed_error_status(self):
+        cfg.CONF.set_override('action_retry_limit', 0)
+        rsrc = self.create_vpnservice()
+
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'PENDING_CREATE'}})
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ERROR'}})
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.create))
+        self.assertEqual(
+            'ResourceInError: resources.vpnservice: '
+            'Went to status ERROR due to "Error in VPNService"',
+            six.text_type(error))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
     def test_create_failed(self):
@@ -218,10 +239,13 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete(self):
+        rsrc = self.create_vpnservice()
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
+
         neutronclient.Client.delete_vpnservice('vpn123')
         neutronclient.Client.show_vpnservice('vpn123').AndRaise(
             exceptions.NeutronClientException(status_code=404))
-        rsrc = self.create_vpnservice()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
@@ -229,6 +253,8 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_already_gone(self):
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
         neutronclient.Client.delete_vpnservice('vpn123').AndRaise(
             exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_vpnservice()
@@ -239,6 +265,8 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_failed(self):
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
         neutronclient.Client.delete_vpnservice('vpn123').AndRaise(
             exceptions.NeutronClientException(status_code=400))
         rsrc = self.create_vpnservice()
@@ -254,6 +282,8 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_attribute(self):
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
         rsrc = self.create_vpnservice()
         neutronclient.Client.show_vpnservice('vpn123').MultipleTimes(
         ).AndReturn(self.VPN_SERVICE_CONF)
@@ -267,6 +297,8 @@ class VPNServiceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_attribute_failed(self):
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
         rsrc = self.create_vpnservice()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
@@ -280,6 +312,8 @@ class VPNServiceTest(common.HeatTestCase):
 
     def test_update(self):
         rsrc = self.create_vpnservice()
+        neutronclient.Client.show_vpnservice('vpn123').AndReturn(
+            {'vpnservice': {'status': 'ACTIVE'}})
         self.patchobject(rsrc, 'physical_resource_name',
                          return_value='VPNService')
 
@@ -351,6 +385,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
 
     def test_create(self):
         rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -377,11 +413,32 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
+    def test_create_failed_error_status(self):
+        cfg.CONF.set_override('action_retry_limit', 0)
+        rsrc = self.create_ipsec_site_connection()
+
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'PENDING_CREATE'}})
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ERROR'}})
+        self.m.ReplayAll()
+
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(rsrc.create))
+        self.assertEqual(
+            'ResourceInError: resources.ipsec_site_connection: '
+            'Went to status ERROR due to "Error in IPsecSiteConnection"',
+            six.text_type(error))
+        self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
+        self.m.VerifyAll()
+
     def test_delete(self):
+        rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         neutronclient.Client.delete_ipsec_site_connection('con123')
         neutronclient.Client.show_ipsec_site_connection('con123').AndRaise(
             exceptions.NeutronClientException(status_code=404))
-        rsrc = self.create_ipsec_site_connection()
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
@@ -389,6 +446,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_already_gone(self):
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         neutronclient.Client.delete_ipsec_site_connection('con123').AndRaise(
             exceptions.NeutronClientException(status_code=404))
         rsrc = self.create_ipsec_site_connection()
@@ -399,6 +458,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_delete_failed(self):
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         neutronclient.Client.delete_ipsec_site_connection('con123').AndRaise(
             exceptions.NeutronClientException(status_code=400))
         rsrc = self.create_ipsec_site_connection()
@@ -415,6 +476,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
 
     def test_attribute(self):
         rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         neutronclient.Client.show_ipsec_site_connection(
             'con123').MultipleTimes().AndReturn(
                 self.IPSEC_SITE_CONNECTION_CONF)
@@ -438,6 +501,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
 
     def test_attribute_failed(self):
         rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.InvalidTemplateAttribute,
@@ -450,6 +515,8 @@ class IPsecSiteConnectionTest(common.HeatTestCase):
 
     def test_update(self):
         rsrc = self.create_ipsec_site_connection()
+        neutronclient.Client.show_ipsec_site_connection('con123').AndReturn(
+            {'ipsec_site_connection': {'status': 'ACTIVE'}})
         neutronclient.Client.update_ipsec_site_connection(
             'con123', {'ipsec_site_connection': {'admin_state_up': False}})
         self.m.ReplayAll()
