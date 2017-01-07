@@ -83,7 +83,7 @@ def parse_param(p_val, p_schema):
         elif not isinstance(p_val, collections.Sequence):
             raise ValueError()
     except (ValueError, TypeError) as err:
-        msg = _("Invalid parameter in environment %(s).") % six.text_type(err)
+        msg = _("Invalid parameter in environment %s.") % six.text_type(err)
         raise ValueError(msg)
     return p_val
 
