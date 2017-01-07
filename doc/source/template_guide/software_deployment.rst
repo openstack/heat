@@ -513,6 +513,10 @@ required in later examples:
     glance image-create --disk-format qcow2 --container-format bare \
         --name $IMAGE_NAME < $IMAGE_NAME.qcow2
 
+.. note:: Above script uses diskimage-builder, make sure the environment
+          already fulfill all requirements in requirements.txt of
+          diskimage-builder.
+
 
 Configuring with scripts
 ------------------------
