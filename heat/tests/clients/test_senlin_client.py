@@ -60,6 +60,14 @@ class SenlinClientPluginTest(common.HeatTestCase):
         self.assertEqual('fake_cluster_id', ret)
         mock_get.assert_called_once_with('fake_cluster')
 
+    def test_get_policy_id(self):
+        mock_policy = mock.Mock(id='fake_policy_id')
+        mock_get = self.patchobject(self.client, 'get_policy',
+                                    return_value=mock_policy)
+        ret = self.plugin.get_policy_id('fake_policy')
+        self.assertEqual('fake_policy_id', ret)
+        mock_get.assert_called_once_with('fake_policy')
+
 
 class ProfileConstraintTest(common.HeatTestCase):
 
@@ -107,6 +115,30 @@ class ClusterConstraintTest(common.HeatTestCase):
         self.mock_get_cluster.side_effect = exc.sdkexc.HttpException(
             'CLUSTER_ID')
         self.assertFalse(self.constraint.validate("CLUSTER_ID", self.ctx))
+
+
+class PolicyConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(PolicyConstraintTest, self).setUp()
+        self.senlin_client = mock.MagicMock()
+        self.ctx = utils.dummy_context()
+        self.mock_get_policy = mock.Mock()
+        self.ctx.clients.client(
+            'senlin').get_policy = self.mock_get_policy
+        self.constraint = senlin_plugin.PolicyConstraint()
+
+    def test_validate_true(self):
+        self.mock_get_policy.return_value = None
+        self.assertTrue(self.constraint.validate("POLICY_ID", self.ctx))
+
+    def test_validate_false(self):
+        self.mock_get_policy.side_effect = exc.sdkexc.ResourceNotFound(
+            'POLICY_ID')
+        self.assertFalse(self.constraint.validate("POLICY_ID", self.ctx))
+        self.mock_get_policy.side_effect = exc.sdkexc.HttpException(
+            'POLICY_ID')
+        self.assertFalse(self.constraint.validate("POLICY_ID", self.ctx))
 
 
 class ProfileTypeConstraintTest(common.HeatTestCase):

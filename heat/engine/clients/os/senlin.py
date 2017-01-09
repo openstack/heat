@@ -63,12 +63,36 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         cluster = self.client().get_cluster(cluster_name)
         return cluster.id
 
+    def get_policy_id(self, policy_name):
+        policy = self.client().get_policy(policy_name)
+        return policy.id
+
     def is_not_found(self, ex):
         return isinstance(ex, exc.sdkexc.ResourceNotFound)
 
     def is_bad_request(self, ex):
         return (isinstance(ex, exc.sdkexc.HttpException) and
                 ex.http_status == 400)
+
+    def execute_actions(self, actions):
+        all_executed = True
+        for action in actions:
+            if action['done']:
+                continue
+            all_executed = False
+            if action['action_id'] is None:
+                func = getattr(self.client(), action['func'])
+                ret = func(**action['params'])
+                if isinstance(ret, dict):
+                    action['action_id'] = ret['action']
+                else:
+                    action['action_id'] = ret.location.split('/')[-1]
+            else:
+                ret = self.check_action_status(action['action_id'])
+                action['done'] = ret
+            # Execute these actions one by one.
+            break
+        return all_executed
 
 
 class ProfileConstraint(constraints.BaseCustomConstraint):
@@ -85,6 +109,14 @@ class ClusterConstraint(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, value):
         client.client(CLIENT_NAME).get_cluster(value)
+
+
+class PolicyConstraint(constraints.BaseCustomConstraint):
+    #  If name is not unique, will raise exc.sdkexc.HttpException
+    expected_exceptions = (exc.sdkexc.HttpException,)
+
+    def validate_with_client(self, client, value):
+        client.client(CLIENT_NAME).get_policy(value)
 
 
 class ProfileTypeConstraint(constraints.BaseCustomConstraint):

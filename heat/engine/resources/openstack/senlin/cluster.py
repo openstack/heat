@@ -38,18 +38,24 @@ class Cluster(resource.Resource):
 
     PROPERTIES = (
         NAME, PROFILE, DESIRED_CAPACITY, MIN_SIZE, MAX_SIZE,
-        METADATA, TIMEOUT
+        METADATA, TIMEOUT, POLICIES,
     ) = (
         'name', 'profile', 'desired_capacity', 'min_size', 'max_size',
-        'metadata', 'timeout'
+        'metadata', 'timeout', 'policies',
     )
 
     ATTRIBUTES = (
         ATTR_NAME, ATTR_METADATA, ATTR_NODES, ATTR_DESIRED_CAPACITY,
-        ATTR_MIN_SIZE, ATTR_MAX_SIZE,
+        ATTR_MIN_SIZE, ATTR_MAX_SIZE, ATTR_POLICIES,
     ) = (
         "name", 'metadata', 'nodes', 'desired_capacity',
-        'min_size', 'max_size'
+        'min_size', 'max_size', 'policies',
+    )
+
+    _POLICIES = (
+        P_POLICY, P_ENABLED,
+    ) = (
+        "policy", "enabled",
     )
 
     _CLUSTER_STATUS = (
@@ -115,6 +121,30 @@ class Cluster(resource.Resource):
                 constraints.Range(min=0)
             ]
         ),
+        POLICIES: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of policies to attach to this cluster.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='8.0.0'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    P_POLICY: properties.Schema(
+                        properties.Schema.STRING,
+                        _("The name or ID of the policy."),
+                        required=True,
+                        constraints=[
+                            constraints.CustomConstraint('senlin.policy')
+                        ]
+                    ),
+                    P_ENABLED: properties.Schema(
+                        properties.Schema.BOOLEAN,
+                        _("Whether enable this policy on this cluster."),
+                        default=True,
+                    ),
+                }
+            )
+        ),
     }
 
     attributes_schema = {
@@ -142,6 +172,11 @@ class Cluster(resource.Resource):
             _("Max size of the cluster."),
             type=attributes.Schema.INTEGER
         ),
+        ATTR_POLICIES: attributes.Schema(
+            _("Policies attached to the cluster."),
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='8.0.0'),
+        ),
     }
 
     def translation_rules(self, props):
@@ -152,10 +187,17 @@ class Cluster(resource.Resource):
                 translation_path=[self.PROFILE],
                 client_plugin=self.client_plugin(),
                 finder='get_profile_id'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.POLICIES, self.P_POLICY],
+                client_plugin=self.client_plugin(),
+                finder='get_policy_id'),
         ]
         return rules
 
     def handle_create(self):
+        actions = []
         params = {
             'name': (self.properties[self.NAME] or
                      self.physical_resource_name()),
@@ -166,13 +208,38 @@ class Cluster(resource.Resource):
             'metadata': self.properties[self.METADATA],
             'timeout': self.properties[self.TIMEOUT]
         }
+        action = {
+            'func': 'create_cluster',
+            'params': params,
+            'action_id': None,
+            'done': False,
+        }
         cluster = self.client().create_cluster(**params)
         action_id = cluster.location.split('/')[-1]
         self.resource_id_set(cluster.id)
-        return action_id
+        action = {
+            'action_id': action_id,
+            'done': False,
+        }
+        actions.append(action)
+        if self.properties[self.POLICIES]:
+            for p in self.properties[self.POLICIES]:
+                params = {
+                    'cluster': cluster.id,
+                    'policy': p[self.P_POLICY],
+                    'enabled': p[self.P_ENABLED],
+                }
+                action = {
+                    'func': 'cluster_attach_policy',
+                    'params': params,
+                    'action_id': None,
+                    'done': False,
+                }
+                actions.append(action)
+        return actions
 
-    def check_create_complete(self, action_id):
-        return self.client_plugin().check_action_status(action_id)
+    def check_create_complete(self, actions):
+        return self.client_plugin().execute_actions(actions)
 
     def handle_delete(self):
         if self.resource_id is not None:
@@ -194,56 +261,94 @@ class Cluster(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         UPDATE_PROPS = (self.NAME, self.METADATA, self.TIMEOUT, self.PROFILE)
         RESIZE_PROPS = (self.MIN_SIZE, self.MAX_SIZE, self.DESIRED_CAPACITY)
-        updaters = {}
-        if prop_diff:
-            if any(p in prop_diff for p in UPDATE_PROPS):
-                params = dict((k, v) for k, v in six.iteritems(prop_diff)
-                              if k in UPDATE_PROPS)
-                if self.PROFILE in prop_diff:
-                    params.pop(self.PROFILE)
-                    params['profile_id'] = prop_diff[self.PROFILE]
-                    updaters['cluster_update'] = {
-                        'params': params,
-                        'start': False,
-                    }
-            if any(p in prop_diff for p in RESIZE_PROPS):
-                params = dict((k, v) for k, v in six.iteritems(prop_diff)
-                              if k in RESIZE_PROPS)
-                if self.DESIRED_CAPACITY in prop_diff:
-                    params.pop(self.DESIRED_CAPACITY)
-                    params['adjustment_type'] = 'EXACT_CAPACITY'
-                    params['number'] = prop_diff.pop(self.DESIRED_CAPACITY)
-                updaters['cluster_resize'] = {
-                    'params': params,
-                    'start': False,
+        actions = []
+        if not prop_diff:
+            return actions
+        cluster_obj = self.client().get_cluster(self.resource_id)
+        # Update Policies
+        if self.POLICIES in prop_diff:
+            old_policies = self.properties[self.POLICIES]
+            new_policies = prop_diff[self.POLICIES]
+            old_policy_ids = [p[self.P_POLICY] for p in old_policies]
+            update_policies = [p for p in new_policies
+                               if p[self.P_POLICY] in old_policy_ids]
+            update_policy_ids = [p[self.P_POLICY] for p in update_policies]
+            add_policies = [p for p in new_policies
+                            if p[self.P_POLICY] not in old_policy_ids]
+            remove_policies = [p for p in old_policies
+                               if p[self.P_POLICY] not in update_policy_ids]
+            for p in update_policies:
+                params = {
+                    'policy': p[self.P_POLICY],
+                    'cluster': self.resource_id,
+                    'enabled': p[self.P_ENABLED]
                 }
-            return updaters
+                action = {
+                    'func': 'cluster_update_policy',
+                    'params': params,
+                    'action_id': None,
+                    'done': False,
+                }
+                actions.append(action)
+            for p in remove_policies:
+                params = {
+                    'policy': p[self.P_POLICY],
+                    'cluster': self.resource_id,
+                    'enabled': p[self.P_ENABLED]
+                }
+                action = {
+                    'func': 'cluster_detach_policy',
+                    'params': params,
+                    'action_id': None,
+                    'done': False,
+                }
+                actions.append(action)
+            for p in add_policies:
+                params = {
+                    'policy': p[self.P_POLICY],
+                    'cluster': self.resource_id,
+                    'enabled': p[self.P_ENABLED]
+                }
+                action = {
+                    'func': 'cluster_attach_policy',
+                    'params': params,
+                    'action_id': None,
+                    'done': False,
+                }
+                actions.append(action)
+        # Update cluster
+        if any(p in prop_diff for p in UPDATE_PROPS):
+            params = dict((k, v) for k, v in six.iteritems(prop_diff)
+                          if k in UPDATE_PROPS)
+            params['cluster'] = cluster_obj
+            if self.PROFILE in params:
+                params['profile_id'] = params.pop(self.PROFILE)
+            action = {
+                'func': 'update_cluster',
+                'params': params,
+                'action_id': None,
+                'done': False,
+            }
+            actions.append(action)
+        # Resize Cluster
+        if any(p in prop_diff for p in RESIZE_PROPS):
+            params = dict((k, v) for k, v in six.iteritems(prop_diff)
+                          if k in RESIZE_PROPS)
+            if self.DESIRED_CAPACITY in params:
+                params['adjustment_type'] = 'EXACT_CAPACITY'
+                params['number'] = params.pop(self.DESIRED_CAPACITY)
+            params['cluster'] = self.resource_id
+            action = {
+                'func': 'cluster_resize',
+                'params': params,
+                'action_id': None,
+                'done': False,
+            }
+            actions.append(action)
+        return actions
 
-    def check_update_complete(self, updaters):
-        def start_action(action, params):
-            if action == 'cluster_resize':
-                resp = self.client().cluster_resize(self.resource_id,
-                                                    **params)
-                return resp['action']
-            elif action == 'cluster_update':
-                cluster_obj = self.client().get_cluster(self.resource_id)
-                resp = self.client().update_cluster(cluster_obj,
-                                                    **params)
-                return resp.location.split('/')[-1]
-
-        if not updaters:
-            return True
-        for k, updater in list(updaters.items()):
-            if not updater['start']:
-                action_id = start_action(k, updater['params'])
-                updater['action'] = action_id
-                updater['start'] = True
-            else:
-                ret = self.client_plugin().check_action_status(
-                    updater['action'])
-                if ret:
-                    del updaters[k]
-            return False
+    def check_update_complete(self, actions):
+        return self.client_plugin().execute_actions(actions)
 
     def validate(self):
         min_size = self.properties[self.MIN_SIZE]
@@ -271,11 +376,16 @@ class Cluster(resource.Resource):
         if self.resource_id is None:
             return
         cluster = self.client().get_cluster(self.resource_id)
+        if name == self.ATTR_POLICIES:
+            return self.client().cluster_policies(self.resource_id)
         return getattr(cluster, name, None)
 
     def _show_resource(self):
         cluster = self.client().get_cluster(self.resource_id)
-        return cluster.to_dict()
+        cluster_dict = cluster.to_dict()
+        cluster_dict[self.ATTR_POLICIES] = self.client().cluster_policies(
+            self.resource_id)
+        return cluster_dict
 
     def parse_live_resource_data(self, resource_properties, resource_data):
         reality = {}
@@ -283,6 +393,14 @@ class Cluster(resource.Resource):
         for key in self._update_allowed_properties:
             if key == self.PROFILE:
                 value = resource_data.get('profile_id')
+            elif key == self.POLICIES:
+                value = []
+                for p in resource_data.get(self.POLICIES):
+                    v = {
+                        'policy': p.get('policy_id'),
+                        'enabled': p.get('enabled'),
+                    }
+                    value.append(v)
             else:
                 value = resource_data.get(key)
             reality.update({key: value})
