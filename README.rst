@@ -28,6 +28,7 @@ If you'd like to run from the master branch, you can clone the git repo:
 * Wiki: http://wiki.openstack.org/Heat
 * Developer docs: http://docs.openstack.org/developer/heat
 * Template samples: https://git.openstack.org/cgit/openstack/heat-templates
+* Agents: https://git.openstack.org/cgit/openstack/heat-agents
 
 Python client
 -------------

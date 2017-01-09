@@ -476,10 +476,10 @@ required in later examples:
     # via pypi or as distro packages.
     git clone https://git.openstack.org/openstack/diskimage-builder.git
     git clone https://git.openstack.org/openstack/tripleo-image-elements.git
-    git clone https://git.openstack.org/openstack/heat-templates.git
+    git clone https://git.openstack.org/openstack/heat-agents.git
 
     # Required by diskimage-builder to discover element collections
-    export ELEMENTS_PATH=tripleo-image-elements/elements:heat-templates/hot/software-config/elements
+    export ELEMENTS_PATH=tripleo-image-elements/elements:heat-agents/
 
     # The base operating system element(s) provided by the diskimage-builder
     # elements collection. Other values which may work include:
@@ -510,8 +510,8 @@ required in later examples:
          $DEPLOYMENT_BASE_ELEMENTS $DEPLOYMENT_TOOL -o $IMAGE_NAME.qcow2
 
     # Upload the image, assuming valid credentials are already sourced
-    glance image-create --disk-format qcow2 --container-format bare \
-        --name $IMAGE_NAME < $IMAGE_NAME.qcow2
+    openstack image create --disk-format qcow2 --container-format bare \
+        $IMAGE_NAME < $IMAGE_NAME.qcow2
 
 
 Configuring with scripts

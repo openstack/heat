@@ -44,7 +44,7 @@ To create a heat-cfntools enabled image with the current release of Fedora x86_6
 The image may then be pushed to glance, e.g::
 
     source ~/.openstack/keystonerc
-    glance image-create --name fedora-heat-cfntools --visibility public --disk-format qcow2 --container-format bare < fedora-heat-cfntools.qcow2
+    openstack image create fedora-heat-cfntools --public --disk-format qcow2 --container-format bare < fedora-heat-cfntools.qcow2
 
 To create a heat-cfntools enabled image with the current release of Ubuntu i386::
 
@@ -65,8 +65,8 @@ you can follow the steps below to build a fedora based image::
 
     pip install git+https://git.openstack.org/openstack/diskimage-builder
     git clone https://git.openstack.org/openstack/tripleo-image-elements
-    git clone https://git.openstack.org/openstack/heat-templates
-    export ELEMENTS_PATH=tripleo-image-elements/elements:heat-templates/hot/software-config/elements
+    git clone https://git.openstack.org/openstack/heat-agents
+    export ELEMENTS_PATH=tripleo-image-elements/elements:heat-agents
     disk-image-create vm \
         fedora selinux-permissive \
         heat-config \
@@ -81,4 +81,4 @@ you can follow the steps below to build a fedora based image::
 The image may then be pushed to glance, e.g::
 
     source ~/.openstack/keystonerc
-    glance image-create --name=fedora-software-config --visibility public --disk-format=qcow2 --container-format=bare < fedora-software-config.qcow2
+    openstack image create fedora-software-config --public --disk-format=qcow2 --container-format=bare < fedora-software-config.qcow2
