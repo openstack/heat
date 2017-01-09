@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import uuidutils
+
 from glanceclient import client as gc
 from glanceclient import exc
 
@@ -91,10 +93,12 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         :param image_identifier: image name
         :returns: an image object with name/id :image_identifier:
         """
-        try:
-            return self.client().images.get(image_identifier)
-        except exc.HTTPNotFound:
-            return self._find_with_attr('images', name=image_identifier)
+        if uuidutils.is_uuid_like(image_identifier):
+            try:
+                return self.client().images.get(image_identifier)
+            except exc.HTTPNotFound:
+                pass
+        return self._find_with_attr('images', name=image_identifier)
 
 
 class ImageConstraint(constraints.BaseCustomConstraint):
