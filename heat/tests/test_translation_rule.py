@@ -262,6 +262,15 @@ class TestTranslationRule(common.HeatTestCase):
 
         self.assertEqual({'red': 'dak'}, props.get('far'))
 
+        # check for new translation
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.red', data['far']['red'])
+        self.assertEqual('dak', result)
+        self.assertEqual('dak', tran.resolved_translations['far.red'])
+
     def test_replace_rule_map_dont_exist(self):
         schema = {
             'far': properties.Schema(
@@ -289,6 +298,15 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertEqual({'red': 'dak'}, props.get('far'))
+
+        # check for new translation
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.red')
+        self.assertEqual('dak', result)
+        self.assertEqual('dak', tran.resolved_translations['far.red'])
 
     def test_replace_rule_list_different(self):
         schema = {
@@ -322,6 +340,15 @@ class TestTranslationRule(common.HeatTestCase):
         rule.execute_rule()
 
         self.assertEqual([{'red': 'dak'}, {'red': 'dak'}], props.get('far'))
+
+        # check for new translation
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.0.red', data['far'][0]['red'])
+        self.assertEqual('dak', result)
+        self.assertEqual('dak', tran.resolved_translations['far.0.red'])
 
     def test_replace_rule_list_same(self):
         schema = {
@@ -358,6 +385,23 @@ class TestTranslationRule(common.HeatTestCase):
                           {'blue': None, 'red': 'roses'}],
                          props.get('far'))
 
+        # check for new translation
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('far.0.red'))
+        result = tran.translate('far.0.red', data['far'][0]['red'],
+                                data['far'][0])
+        self.assertEqual('white', result)
+        self.assertEqual('white', tran.resolved_translations['far.0.red'])
+        self.assertIsNone(tran.resolved_translations['far.0.blue'])
+        self.assertTrue(tran.has_translation('far.1.red'))
+        result = tran.translate('far.1.red', data['far'][1]['red'],
+                                data['far'][1])
+        self.assertEqual('roses', result)
+        self.assertEqual('roses', tran.resolved_translations['far.1.red'])
+        self.assertIsNone(tran.resolved_translations['far.1.blue'])
+
     def test_replace_rule_str(self):
         schema = {
             'far': properties.Schema(properties.Schema.STRING),
@@ -377,6 +421,15 @@ class TestTranslationRule(common.HeatTestCase):
 
         self.assertEqual('one', props.get('bar'))
         self.assertEqual('one', props.get('far'))
+
+        # check for new translation
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('bar'))
+        result = tran.translate('bar', data['bar'])
+        self.assertEqual('one', result)
+        self.assertEqual('one', tran.resolved_translations['bar'])
 
     def test_replace_rule_str_value_path_error(self):
         schema = {
@@ -399,15 +452,23 @@ class TestTranslationRule(common.HeatTestCase):
                          "same time: ['bar', 'far'].",
                          six.text_type(ex))
 
+        # check for new translation
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('bar'))
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               tran.translate, 'bar', data['bar'])
+        self.assertEqual('Cannot define the following properties at '
+                         'the same time: bar, far', six.text_type(ex))
+
     def test_replace_rule_str_value_path(self):
         schema = {
             'far': properties.Schema(properties.Schema.STRING),
             'bar': properties.Schema(properties.Schema.STRING)
         }
 
-        data = {'far': 'one'}
-
-        props = properties.Properties(schema, data)
+        props = properties.Properties(schema, {'far': 'one'})
 
         rule = translation.TranslationRule(
             props,
@@ -418,6 +479,17 @@ class TestTranslationRule(common.HeatTestCase):
 
         self.assertEqual('one', props.get('bar'))
         self.assertIsNone(props.get('far'))
+
+        # check for new translation
+        props = properties.Properties(schema, {'far': 'one'})
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+
+        self.assertTrue(tran.has_translation('bar'))
+        result = tran.translate('bar')
+        self.assertEqual('one', result)
+        self.assertEqual('one', tran.resolved_translations['bar'])
+        self.assertIsNone(tran.resolved_translations['far'])
 
     def test_replace_rule_str_invalid(self):
         schema = {
@@ -780,13 +852,23 @@ class TestTranslationRule(common.HeatTestCase):
                 '{"dar": "rad"}').value()}
         data = {'far': param}
 
-        props = properties.Properties(schema, data)
+        props = properties.Properties(schema, data, resolver=function.resolve)
 
         rule = translation.TranslationRule(
             props,
             translation.TranslationRule.REPLACE,
             ['far', 'bar'],
             value_path=['far', 'dar'])
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.bar'))
+        prop_data = props['far']
+        result = tran.translate('far.bar', prop_data['bar'], prop_data)
+        self.assertEqual('rad', result)
+        self.assertEqual('rad', tran.resolved_translations['far.bar'])
 
         rule.execute_rule()
 
@@ -824,13 +906,24 @@ class TestTranslationRule(common.HeatTestCase):
                 '{"dar": "rad"}').value()}
         data = {'far': [param]}
 
-        props = properties.Properties(schema, data)
+        props = properties.Properties(schema, data, resolver=function.resolve)
 
         rule = translation.TranslationRule(
             props,
             translation.TranslationRule.REPLACE,
             ['far', 'bar'],
             value_name='dar')
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.0.bar'))
+        prop_data = props['far']
+        result = tran.translate('far.0.bar', prop_data[0]['bar'],
+                                prop_data[0])
+        self.assertEqual('rad', result)
+        self.assertEqual('rad', tran.resolved_translations['far.0.bar'])
 
         rule.execute_rule()
 
@@ -1010,6 +1103,15 @@ class TestTranslationRule(common.HeatTestCase):
             value_path=['bar'],
             custom_value_path=['red']
         )
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.red')
+        self.assertEqual('dak', result)
+        self.assertEqual('dak', tran.resolved_translations['far.red'])
+
         rule.execute_rule()
 
         self.assertEqual({'red': 'dak'}, props.get('far'))
@@ -1045,6 +1147,15 @@ class TestTranslationRule(common.HeatTestCase):
             value_name='blue',
             custom_value_path=['black', 'white']
         )
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.0.red'))
+        result = tran.translate('far.0.red', prop_data=data['far'][0])
+        self.assertEqual('daisy', result)
+        self.assertEqual('daisy', tran.resolved_translations['far.0.red'])
+
         rule.execute_rule()
 
         self.assertEqual([{'red': 'daisy', 'blue': {'black': {}}},
@@ -1154,7 +1265,7 @@ class TestTranslation(common.HeatTestCase):
                 'b')
         ]
 
-        tran = translation.Translation()
+        tran = translation.Translation(self.props)
         tran.set_rules(rules)
         self.assertEqual({'a': {rules[0]}}, tran._rules)
 

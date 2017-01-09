@@ -126,6 +126,19 @@ class TranslationRule(object):
             raise ValueError(_('"client_plugin" and "finder" should be '
                                'specified for %s rule') % self.RESOLVE)
 
+    def get_value_absolute_path(self, full_value_name=False):
+        path = []
+        if self.value_name:
+            if full_value_name:
+                path.extend(self.translation_path[:-1])
+            path.append(self.value_name)
+        elif self.value_path:
+            path.extend(self.value_path)
+
+        if self.custom_value_path:
+            path.extend(self.custom_value_path)
+        return path
+
     def execute_rule(self, client_resolve=True):
         try:
             self._prepare_data(self.properties.data, self.translation_path,
@@ -404,6 +417,7 @@ class Translation(object):
         self.is_active = True
         self.store_translated_values = True
         self._deleted_props = []
+        self._replaced_props = []
 
     def set_rules(self, rules, client_resolve=True):
         if not rules:
@@ -419,10 +433,17 @@ class Translation(object):
 
             if rule.rule == TranslationRule.DELETE:
                 self._deleted_props.append(key)
+            if rule.rule == TranslationRule.REPLACE:
+                path = '.'.join(rule.get_value_absolute_path(True))
+                self._replaced_props.append(path)
 
     def is_deleted(self, key):
         return (self.is_active and
                 self.cast_key_to_rule(key) in self._deleted_props)
+
+    def is_replaced(self, key):
+        return (self.is_active and
+                self.cast_key_to_rule(key) in self._replaced_props)
 
     def cast_key_to_rule(self, key):
         return '.'.join([item for item in key.split('.')
@@ -446,4 +467,65 @@ class Translation(object):
                     self.resolved_translations[key] = None
                 result = None
 
+            if rule.rule == TranslationRule.REPLACE:
+                result = self.replace(key, rule, result, prop_data)
+
         return result
+
+    def replace(self, key, replace_rule, prop_value=None, prop_data=None):
+        value = None
+        value_path = replace_rule.get_value_absolute_path(full_value_name=True)
+        short_path = replace_rule.get_value_absolute_path()
+
+        if value_path:
+            if replace_rule.value_name is not None:
+                prop_path = key.split('.')[:-1]
+                prop_path.extend(short_path)
+                prop_path = '.'.join(prop_path)
+                subpath = short_path
+            else:
+                prop_path = '.'.join(value_path)
+                subpath = value_path
+            props = prop_data if replace_rule.value_name else self.properties
+            self.is_active = False
+            value = get_value(subpath, props)
+            self.is_active = True
+
+            if self.has_translation(prop_path):
+                self.translate(prop_path, value, prop_data=prop_data)
+
+            if value and prop_value:
+                raise exception.StackValidationFailed(
+                    message=_('Cannot define the following properties at '
+                              'the same time: %s') % ', '.join(
+                        [self.cast_key_to_rule(key), '.'.join(value_path)]))
+        elif replace_rule.value is not None:
+            value = replace_rule.value
+
+        result = value if value is not None else prop_value
+        if self.store_translated_values:
+            self.resolved_translations[key] = result
+            if value_path:
+                if replace_rule.value_name:
+                    value_path = (key.split('.')[:-1] + short_path)
+                self.resolved_translations['.'.join(value_path)] = None
+        return result
+
+
+def get_value(path, props):
+    if not props:
+        return None
+
+    key = path[0]
+    prop = props.get(key)
+    if len(path[1:]) == 0:
+        return prop
+    elif prop is None:
+        return None
+    elif isinstance(prop, list):
+        values = []
+        for item in prop:
+            values.append(get_value(path[1:], item))
+        return values
+    elif isinstance(prop, dict):
+        return get_value(path[1:], prop)
