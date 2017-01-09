@@ -661,6 +661,16 @@ class TestTranslationRule(common.HeatTestCase):
             client_plugin=client_plugin,
             finder='find_name_id'
             )
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.0.red', data['far'][0]['red'])
+        self.assertEqual('yellow', result)
+        self.assertEqual('yellow', tran.resolved_translations['far.0.red'])
+
         rule.execute_rule()
         self.assertEqual([{'red': 'yellow'}, {'red': 'yellow'}],
                          props.get('far'))
@@ -682,6 +692,16 @@ class TestTranslationRule(common.HeatTestCase):
             client_plugin=client_plugin,
             finder='find_name_id'
             )
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.0.red', data['far'][0]['red'])
+        self.assertEqual('yellow', result)
+        self.assertEqual('yellow', tran.resolved_translations['far.0.red'])
+
         rule.execute_rule()
         self.assertEqual([{'red': 'yellow'}, {'red': 'yellow'}],
                          props.get('far'))
@@ -713,6 +733,16 @@ class TestTranslationRule(common.HeatTestCase):
             client_plugin=client_plugin,
             finder='find_name_id'
             )
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.red'))
+        result = tran.translate('far.0.red', data['far'][0]['red'])
+        self.assertEqual('yellow', result)
+        self.assertEqual('yellow', tran.resolved_translations['far.0.red'])
+
         rule.execute_rule()
         self.assertEqual(data, props.data)
 
@@ -732,6 +762,15 @@ class TestTranslationRule(common.HeatTestCase):
             ['far'],
             client_plugin=client_plugin,
             finder='find_name_id')
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far'))
+        result = tran.translate('far', data['far'])
+        self.assertEqual(['yellow', 'pink'], result)
+        self.assertEqual(['yellow', 'pink'], tran.resolved_translations['far'])
 
         rule.execute_rule()
         self.assertEqual(['yellow', 'pink'], props.get('far'))
@@ -764,6 +803,15 @@ class TestTranslationRule(common.HeatTestCase):
             client_plugin=client_plugin,
             finder='find_name_id')
 
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far'))
+        result = tran.translate('far', data['far'])
+        self.assertEqual('yellow', result)
+        self.assertEqual('yellow', tran.resolved_translations['far'])
+
         rule.execute_rule()
         self.assertEqual('yellow', props.get('far'))
 
@@ -791,6 +839,14 @@ class TestTranslationRule(common.HeatTestCase):
             client_plugin=client_plugin,
             finder='find_name_id')
 
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far'))
+        result = tran.translate('far', data['far'])
+        self.assertEqual('yellow', result)
+
         rule.execute_rule()
         self.assertEqual(data, props.data)
 
@@ -806,6 +862,15 @@ class TestTranslationRule(common.HeatTestCase):
             ['far'],
             client_plugin=client_plugin,
             finder='find_name_id')
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far'))
+        result = tran.translate('far', data['far'])
+        self.assertEqual('yellow', result)
+        self.assertEqual('yellow', tran.resolved_translations['far'])
 
         rule.execute_rule()
         self.assertEqual(data, props.data)
@@ -830,6 +895,17 @@ class TestTranslationRule(common.HeatTestCase):
             ['far'],
             client_plugin=client_plugin,
             finder='find_name_id')
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule], client_resolve=False)
+        self.assertFalse(tran.store_translated_values)
+        self.assertFalse(tran.has_translation('far'))
+        result = tran.translate('far', 'no_check', data['far'])
+        self.assertEqual('no_check', result)
+        self.assertIsNone(tran.resolved_translations.get('far'))
+
         rule.execute_rule(client_resolve=False)
         self.assertEqual(data, props.data)
 
@@ -850,6 +926,15 @@ class TestTranslationRule(common.HeatTestCase):
             client_plugin=client_plugin,
             finder='find_name_id',
             entity='rose')
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far'))
+        result = tran.translate('far', data['far'])
+        self.assertEqual('pink', result)
+        self.assertEqual('pink', tran.resolved_translations['far'])
 
         rule.execute_rule()
         self.assertEqual('pink', props.get('far'))

@@ -473,6 +473,15 @@ class Translation(object):
             if rule.rule == TranslationRule.ADD:
                 result = self.add(key, rule, result, prop_data)
 
+            if rule.rule == TranslationRule.RESOLVE:
+                resolved_value = resolve_and_find(result,
+                                                  rule.client_plugin,
+                                                  rule.finder,
+                                                  rule.entity)
+                if self.store_translated_values:
+                    self.resolved_translations[key] = resolved_value
+                result = resolved_value
+
         return result
 
     def add(self, key, add_rule, prop_value=None, prop_data=None):
@@ -562,3 +571,22 @@ def get_value(path, props):
         return values
     elif isinstance(prop, dict):
         return get_value(path[1:], prop)
+
+
+def resolve_and_find(value, cplugin, finder, entity=None):
+    if isinstance(value, function.Function):
+        value = function.resolve(value)
+    if value:
+        if isinstance(value, list):
+            resolved_value = []
+            for item in value:
+                resolved_value.append(resolve_and_find(item,
+                                                       cplugin,
+                                                       finder,
+                                                       entity))
+            return resolved_value
+        finder = getattr(cplugin, finder)
+        if entity:
+            return finder(entity, value)
+        else:
+            return finder(value)
