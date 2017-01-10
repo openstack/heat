@@ -122,6 +122,17 @@ class Attribute(object):
             }
 
 
+def _stack_id_output(resource_name, template_type='cfn'):
+    if template_type == 'hot':
+        return {
+            "value": {"get_resource": resource_name},
+        }
+    else:
+        return {
+            "Value": {"Ref": resource_name},
+        }
+
+
 @repr_wrapper
 class Attributes(collections.Mapping):
     """Models a collection of Resource Attributes."""
@@ -156,8 +167,10 @@ class Attributes(collections.Mapping):
         attr_schema.update(resource_class.base_attributes_schema)
         attribs = Attributes._make_attributes(attr_schema).items()
 
-        return dict((n, att.as_output(resource_name,
+        outp = dict((n, att.as_output(resource_name,
                                       template_type)) for n, att in attribs)
+        outp['OS::stack_id'] = _stack_id_output(resource_name, template_type)
+        return outp
 
     @staticmethod
     def schema_from_outputs(json_snippet):

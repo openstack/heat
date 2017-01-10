@@ -1442,6 +1442,9 @@ class ResourceTest(common.HeatTestCase):
                 'show': {
                     'Description': u'Detailed information about resource.',
                     'Value': {"Fn::GetAtt": ["TestResource", "show"]}
+                },
+                'OS::stack_id': {
+                    'Value': {"Ref": "TestResource"}
                 }
             }
         }
@@ -1526,6 +1529,9 @@ class ResourceTest(common.HeatTestCase):
                 'show': {
                     'description': u'Detailed information about resource.',
                     'value': {"get_attr": ["TestResource", "show"]}
+                },
+                'OS::stack_id': {
+                    'value': {"get_resource": "TestResource"}
                 }
             }
         }
