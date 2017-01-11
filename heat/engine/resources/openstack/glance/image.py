@@ -26,7 +26,13 @@ class GlanceImage(resource.Resource):
     services.
     """
 
-    support_status = support.SupportStatus(version='2014.2')
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        version='8.0.0',
+        message=_('Creating a Glance Image based on an existing URL location '
+                  'requires the Glance v1 API, which is deprecated.'),
+        previous_status=support.SupportStatus(version='2014.2')
+    )
 
     PROPERTIES = (
         NAME, IMAGE_ID, IS_PUBLIC, MIN_DISK, MIN_RAM, PROTECTED,
