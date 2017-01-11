@@ -150,7 +150,7 @@ HeatGroup = [
                help='Count of retries to edit config file during sighup. If '
                     'another worker already edit config file, file can be '
                     'busy, so need to wait and try edit file again.'),
-    cfg.StrOpt('heat-config-notify-script',
+    cfg.StrOpt('heat_config_notify_script',
                default=('heat-config-notify'),
                help="Path to the script heat-config-notify"),
 
