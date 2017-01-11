@@ -204,13 +204,15 @@ class BaseAlarm(resource.Resource):
     alarm_type = 'threshold'
 
     QUERY_FACTOR_FIELDS = (
-        QF_FIELD, QF_OP, QF_VALUE,
+        QF_FIELD, QF_OP, QF_VALUE, QF_TYPE,
     ) = (
-        'field', 'op', 'value',
+        'field', 'op', 'value', 'type',
     )
 
     QF_OP_VALS = constraints.AllowedValues(['le', 'ge', 'eq',
                                             'lt', 'gt', 'ne'])
+    QF_TYPE_VALS = constraints.AllowedValues(['integer', 'float', 'string',
+                                              'boolean', 'datetime'])
 
     def actions_to_urls(self, props):
         kwargs = dict(props)
