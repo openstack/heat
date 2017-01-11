@@ -1075,7 +1075,8 @@ class StackTest(common.HeatTestCase):
                 (rsrc.RESUME, rsrc.IN_PROGRESS),
                 (rsrc.RESUME, rsrc.COMPLETE),
                 (rsrc.UPDATE, rsrc.IN_PROGRESS),
-                (rsrc.UPDATE, rsrc.COMPLETE)):
+                (rsrc.UPDATE, rsrc.COMPLETE),
+                (rsrc.CHECK, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
             self.assertEqual(rsrc, self.stack.resource_by_refid('aaaa'))
 
