@@ -105,6 +105,7 @@ class Cluster(resource.Resource):
             properties.Schema.MAP,
             _('Metadata key-values defined for cluster.'),
             update_allowed=True,
+            default={},
         ),
         TIMEOUT: properties.Schema(
             properties.Schema.INTEGER,
@@ -275,6 +276,18 @@ class Cluster(resource.Resource):
     def _show_resource(self):
         cluster = self.client().get_cluster(self.resource_id)
         return cluster.to_dict()
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        reality = {}
+
+        for key in self._update_allowed_properties:
+            if key == self.PROFILE:
+                value = resource_data.get('profile_id')
+            else:
+                value = resource_data.get(key)
+            reality.update({key: value})
+
+        return reality
 
 
 def resource_mapping():

@@ -61,6 +61,8 @@ class FakeCluster(object):
         self.max_size = -1
         self.min_size = 0
         self.location = 'actions/fake-action'
+        self.profile_name = 'fake_profile'
+        self.profile_id = 'fake_profile_id'
 
     def to_dict(self):
         return {
@@ -73,7 +75,9 @@ class FakeCluster(object):
             'desired_capacity': self.desired_capacity,
             'max_size': self.max_size,
             'min_size': self.min_size,
-            'nodes': self.nodes
+            'nodes': self.nodes,
+            'profile_name': self.profile_name,
+            'profile_id': self.profile_id
         }
 
 
@@ -233,7 +237,9 @@ class SenlinClusterTest(common.HeatTestCase):
             'desired_capacity': 1,
             'max_size': -1,
             'min_size': 0,
-            'nodes': ['node1']
+            'nodes': ['node1'],
+            'profile_name': 'fake_profile',
+            'profile_id': 'fake_profile_id',
         }
         cluster = self._create_cluster(self.t)
         self.assertEqual(self.fake_cl.desired_capacity,
@@ -242,6 +248,23 @@ class SenlinClusterTest(common.HeatTestCase):
                          cluster._resolve_attribute('nodes'))
         self.assertEqual(excepted_show,
                          cluster._show_resource())
+
+    def test_cluster_get_live_state(self):
+        expected_reality = {
+            'name': 'SenlinCluster',
+            'metadata': {'foo': 'bar'},
+            'timeout': 3600,
+            'desired_capacity': 1,
+            'max_size': -1,
+            'min_size': 0,
+            'profile': 'fake_profile_id',
+        }
+        cluster = self._create_cluster(self.t)
+        self.senlin_mock.get_cluster.return_value = self.fake_cl
+
+        reality = cluster.get_live_state(cluster.properties)
+
+        self.assertEqual(expected_reality, reality)
 
 
 class TestSenlinClusterValidation(common.HeatTestCase):
