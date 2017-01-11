@@ -192,8 +192,7 @@ class DepAttrsTest(common.HeatTestCase):
         ('one_res_several_attrs',
             dict(tmpl=tmpl3,
                  expected={'AResource': {'attr_A1', 'attr_A2', 'attr_A3',
-                                         'meta_A1', 'meta_A2', 'out_A1',
-                                         'out_A2'},
+                                         'meta_A1', 'meta_A2'},
                            'BResource': set()})),
         ('several_res_one_attr',
             dict(tmpl=tmpl4,
@@ -203,25 +202,19 @@ class DepAttrsTest(common.HeatTestCase):
                            'DResource': set()})),
         ('several_res_several_attrs',
             dict(tmpl=tmpl5,
-                 expected={'AResource': {'attr_A1', 'attr_A2', 'meta_A1',
-                                         'attr_A3', 'attr_A4'},
-                           'BResource': {'attr_B1', 'attr_B2', 'meta_B2',
-                                         'attr_B3'},
+                 expected={'AResource': {'attr_A1', 'attr_A2', 'meta_A1'},
+                           'BResource': {'attr_B1', 'attr_B2', 'meta_B2'},
                            'CResource': set()})),
         ('nested_attr',
             dict(tmpl=tmpl6,
-                 expected={'AResource': set([(u'flat_dict', u'key2'),
-                                             (u'list', 1),
-                                             (u'nested_dict', u'dict', u'b'),
-                                             (u'nested_dict', u'string')]),
-                           'BResource': set(['attr_B3'])})),
+                 expected={'AResource': set([(u'list', 1),
+                                             (u'nested_dict', u'dict', u'b')]),
+                           'BResource': set([])})),
         ('several_res_several_attrs_and_all_attrs',
             dict(tmpl=tmpl7,
-                 expected={'AResource': {'attr_A1', 'attr_A2', 'meta_A1',
-                                         'attr_A3', 'attr_A4'},
-                           'BResource': {'attr_B1', 'attr_B2', 'meta_B2',
-                                         'attr_B3'},
-                           'CResource': {'foo', 'Foo', 'show'}}))
+                 expected={'AResource': {'attr_A1', 'attr_A2', 'meta_A1'},
+                           'BResource': {'attr_B1', 'attr_B2', 'meta_B2'},
+                           'CResource': set()}))
     ]
 
     def setUp(self):
@@ -234,11 +227,8 @@ class DepAttrsTest(common.HeatTestCase):
                                  template.Template(parsed_tmpl))
 
         for res in six.itervalues(self.stack):
-            outputs = self.stack.outputs
             resources = six.itervalues(self.stack.resources)
             self.assertEqual(self.expected[res.name],
                              self.stack.get_dep_attrs(
                                  resources,
-                                 outputs,
-                                 res.name,
-                                 self.stack.t.OUTPUT_VALUE))
+                                 res.name))
