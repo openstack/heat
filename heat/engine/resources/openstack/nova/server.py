@@ -1581,6 +1581,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         return defn.freeze(properties=props)
 
     def prepare_for_replace(self):
+        # if the server has not been created yet, do nothing
+        if self.resource_id is None:
+            return
+
         self.prepare_ports_for_replace()
 
     def restore_prev_rsrc(self, convergence=False):

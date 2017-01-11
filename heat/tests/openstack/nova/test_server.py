@@ -4567,6 +4567,16 @@ class ServerInternalPortTest(common.HeatTestCase):
         server.prepare_for_replace()
         check_detach.assert_not_called()
 
+    def test_prepare_ports_for_replace_not_created(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
+        prepare_mock = self.patchobject(server,
+                                        'prepare_ports_for_replace')
+        server.prepare_for_replace()
+
+        self.assertIsNone(server.resource_id)
+        self.assertEqual(0, prepare_mock.call_count)
+
     @mock.patch.object(server_network_mixin.ServerNetworkMixin,
                        'store_external_ports')
     def test_restore_ports_after_rollback(self, store_ports):
