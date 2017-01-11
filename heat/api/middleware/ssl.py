@@ -15,13 +15,15 @@ from debtcollector import removals
 from oslo_config import cfg
 from oslo_middleware import ssl
 
+from heat.common.i18n import _
+
 ssl_middleware_opts = [
     cfg.StrOpt('secure_proxy_ssl_header',
                default='X-Forwarded-Proto',
                deprecated_group='DEFAULT',
-               help="The HTTP Header that will be used to determine which "
-                    "the original request protocol scheme was, even if it was "
-                    "removed by an SSL terminator proxy.")
+               help=_("The HTTP Header that will be used to determine what "
+                      "the original request protocol scheme was, even if "
+                      "it was removed by an SSL terminator proxy."))
 ]
 
 

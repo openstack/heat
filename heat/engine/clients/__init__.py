@@ -32,7 +32,8 @@ _default_backend = "heat.engine.clients.OpenStackClients"
 cloud_opts = [
     cfg.StrOpt('cloud_backend',
                default=_default_backend,
-               help="Fully qualified class name to use as a client backend.")
+               help=_("Fully qualified class name to use as "
+                      "a client backend."))
 ]
 cfg.CONF.register_opts(cloud_opts)
 
