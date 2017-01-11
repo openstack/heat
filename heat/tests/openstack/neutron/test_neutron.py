@@ -109,3 +109,49 @@ class NeutronTest(common.HeatTestCase):
         # and return None due to resource_id is None
         res.attributes.reset_resolved_values()
         self.assertIsNone(res.FnGetAtt('show'))
+
+    def test_needs_replace_failed(self):
+        class SomeNeutronResource(nr.NeutronResource):
+            properties_schema = {}
+
+            @classmethod
+            def is_service_available(cls, context):
+                return (True, None)
+
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        stack = mock.MagicMock()
+        stack.has_cache_data = mock.Mock(return_value=False)
+        res = SomeNeutronResource('aresource', tmpl, stack)
+        res.state_set(res.CREATE, res.FAILED)
+        mock_show_resource = mock.MagicMock()
+        mock_show_resource.side_effect = [
+            {'attr1': 'val1', 'status': 'ACTIVE'},
+            {'attr1': 'val1', 'status': 'ERROR'},
+            {'attr1': 'val1', 'attr2': 'val2'},
+            qe.NotFound]
+        res._show_resource = mock_show_resource
+        nclientplugin = neutron.NeutronClientPlugin(mock.MagicMock())
+        res.client_plugin = mock.Mock(return_value=nclientplugin)
+
+        # needs replace because res not created yet
+        res.resource_id = None
+        self.assertTrue(res.needs_replace_failed())
+        self.assertEqual(0, mock_show_resource.call_count)
+
+        # no need to replace because res is ACTIVE underlying
+        res.resource_id = 'I am a resource'
+        self.assertFalse(res.needs_replace_failed())
+        self.assertEqual(1, mock_show_resource.call_count)
+
+        # needs replace because res is ERROR underlying
+        self.assertTrue(res.needs_replace_failed())
+        self.assertEqual(2, mock_show_resource.call_count)
+
+        # no need to replace because res exists and no status
+        # to check
+        self.assertFalse(res.needs_replace_failed())
+        self.assertEqual(3, mock_show_resource.call_count)
+
+        # needs replace because res can not be found
+        self.assertTrue(res.needs_replace_failed())
+        self.assertEqual(4, mock_show_resource.call_count)
