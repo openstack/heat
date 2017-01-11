@@ -203,9 +203,13 @@ class CheckResource(object):
             # for the next traversal.
             graph_key = (rsrc.replaces, is_update)
 
-        def _get_input_data(req, fwd):
+        def _get_input_data(req, fwd, input_forward_data=None):
             if fwd:
-                return construct_input_data(rsrc, stack)
+                if input_forward_data is None:
+                    return construct_input_data(rsrc, stack)
+                else:
+                    # do not re-resolve attrs
+                    return input_forward_data
             else:
                 # Don't send data if initiating clean-up for self i.e.
                 # initiating delete of a replaced resource
@@ -217,8 +221,11 @@ class CheckResource(object):
             return None
 
         try:
+            input_forward_data = None
             for req, fwd in deps.required_by(graph_key):
-                input_data = _get_input_data(req, fwd)
+                input_data = _get_input_data(req, fwd, input_forward_data)
+                if fwd:
+                    input_forward_data = input_data
                 propagate_check_resource(
                     cnxt, self._rpc_client, req, current_traversal,
                     set(graph[(req, fwd)]), graph_key, input_data, fwd,
@@ -311,9 +318,7 @@ def _resolve_attributes(dep_attrs, rsrc):
 def construct_input_data(rsrc, curr_stack):
     dep_attrs = curr_stack.get_dep_attrs(
         six.itervalues(curr_stack.resources),
-        curr_stack.outputs,
-        rsrc.name,
-        curr_stack.t.OUTPUT_VALUE)
+        rsrc.name)
     input_data = {'id': rsrc.id,
                   'name': rsrc.name,
                   'reference_id': rsrc.get_reference_id(),

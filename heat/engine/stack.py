@@ -462,17 +462,14 @@ class Stack(collections.Mapping):
             LOG.warning(_LW("Unable to set parameters StackId identifier"))
 
     @staticmethod
-    def get_dep_attrs(resources, outputs, resource_name, value_sec):
+    def get_dep_attrs(resources, resource_name):
         """Return the attributes of the specified resource that are referenced.
 
         Return an iterator over any attributes of the specified resource that
-        are referenced.
+        are referenced in resources.
         """
-        attr_lists = itertools.chain((res.dep_attrs(resource_name)
-                                      for res in resources),
-                                     (out.dep_attrs(resource_name)
-                                      for out in six.itervalues(outputs)))
-        return set(itertools.chain.from_iterable(attr_lists))
+        return set(itertools.chain.from_iterable(
+            res.dep_attrs(resource_name) for res in resources))
 
     def _get_dependencies(self, ignore_errors=True):
         """Return the dependency graph for a list of resources."""
