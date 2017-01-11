@@ -83,12 +83,22 @@ class AttributeTest(common.HeatTestCase):
     def test_as_output(self):
         """Test that Attribute looks right when viewed as an Output."""
         expected = {
-            "Value": '{"Fn::GetAtt": ["test_resource", "test1"]}',
+            "Value": {"Fn::GetAtt": ["test_resource", "test1"]},
             "Description": "The first test attribute"
         }
         attr = attributes.Attribute(
             "test1", attributes.Schema("The first test attribute"))
         self.assertEqual(expected, attr.as_output("test_resource"))
+
+    def test_as_output_hot(self):
+        """Test that Attribute looks right when viewed as an Output."""
+        expected = {
+            "value": {"get_attr": ["test_resource", "test1"]},
+            "description": "The first test attribute"
+        }
+        attr = attributes.Attribute(
+            "test1", attributes.Schema("The first test attribute"))
+        self.assertEqual(expected, attr.as_output("test_resource", "hot"))
 
 
 class AttributesTest(common.HeatTestCase):
@@ -152,15 +162,15 @@ class AttributesTest(common.HeatTestCase):
         """Test that Output format works as expected."""
         expected = {
             "test1": {
-                "Value": '{"Fn::GetAtt": ["test_resource", "test1"]}',
+                "Value": {"Fn::GetAtt": ["test_resource", "test1"]},
                 "Description": "Test attrib 1"
             },
             "test2": {
-                "Value": '{"Fn::GetAtt": ["test_resource", "test2"]}',
+                "Value": {"Fn::GetAtt": ["test_resource", "test2"]},
                 "Description": "Test attrib 2"
             },
             "test3": {
-                "Value": '{"Fn::GetAtt": ["test_resource", "test3"]}',
+                "Value": {"Fn::GetAtt": ["test_resource", "test3"]},
                 "Description": "Test attrib 3"
             }
         }
@@ -177,6 +187,37 @@ class AttributesTest(common.HeatTestCase):
             expected,
             attributes.Attributes.as_outputs("test_resource",
                                              MyTestResourceClass))
+
+    def test_as_outputs_hot(self):
+        """Test that Output format works as expected."""
+        expected = {
+            "test1": {
+                "value": {"get_attr": ["test_resource", "test1"]},
+                "description": "Test attrib 1"
+            },
+            "test2": {
+                "value": {"get_attr": ["test_resource", "test2"]},
+                "description": "Test attrib 2"
+            },
+            "test3": {
+                "value": {"get_attr": ["test_resource", "test3"]},
+                "description": "Test attrib 3"
+            }
+        }
+        MyTestResourceClass = mock.MagicMock()
+        MyTestResourceClass.attributes_schema = {
+            "test1": attributes.Schema("Test attrib 1"),
+            "test2": attributes.Schema("Test attrib 2"),
+            "test3": attributes.Schema("Test attrib 3"),
+            "test4": attributes.Schema(
+                "Test attrib 4",
+                support_status=support.SupportStatus(status=support.HIDDEN))
+        }
+        self.assertEqual(
+            expected,
+            attributes.Attributes.as_outputs("test_resource",
+                                             MyTestResourceClass,
+                                             "hot"))
 
     def test_caching_local(self):
         self.resolver.side_effect = ["value1", "value1 changed"]

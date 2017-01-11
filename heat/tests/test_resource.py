@@ -1433,15 +1433,15 @@ class ResourceTest(common.HeatTestCase):
             'Outputs': {
                 'output1': {
                     'Description': 'output1_desc',
-                    'Value': '{"Fn::GetAtt": ["TestResource", "output1"]}'
+                    'Value': {"Fn::GetAtt": ["TestResource", "output1"]}
                 },
                 'output2': {
                     'Description': 'output2_desc',
-                    'Value': '{"Fn::GetAtt": ["TestResource", "output2"]}'
+                    'Value': {"Fn::GetAtt": ["TestResource", "output2"]}
                 },
                 'show': {
                     'Description': u'Detailed information about resource.',
-                    'Value': '{"Fn::GetAtt": ["TestResource", "show"]}'
+                    'Value': {"Fn::GetAtt": ["TestResource", "show"]}
                 }
             }
         }
@@ -1517,15 +1517,15 @@ class ResourceTest(common.HeatTestCase):
             'outputs': {
                 'output1': {
                     'description': 'output1_desc',
-                    'value': '{"get_attr": ["TestResource", "output1"]}'
+                    'value': {"get_attr": ["TestResource", "output1"]}
                 },
                 'output2': {
                     'description': 'output2_desc',
-                    'value': '{"get_attr": ["TestResource", "output2"]}'
+                    'value': {"get_attr": ["TestResource", "output2"]}
                 },
                 'show': {
                     'description': u'Detailed information about resource.',
-                    'value': '{"get_attr": ["TestResource", "show"]}'
+                    'value': {"get_attr": ["TestResource", "show"]}
                 }
             }
         }

@@ -112,14 +112,12 @@ class Attribute(object):
         """
         if template_type == 'hot':
             return {
-                "value": '{"get_attr": ["%s", "%s"]}' % (resource_name,
-                                                         self.name),
+                "value": {"get_attr": [resource_name, self.name]},
                 "description": self.schema.description
             }
         else:
             return {
-                "Value": '{"Fn::GetAtt": ["%s", "%s"]}' % (resource_name,
-                                                           self.name),
+                "Value": {"Fn::GetAtt": [resource_name, self.name]},
                 "Description": self.schema.description
             }
 
