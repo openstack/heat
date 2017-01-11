@@ -32,7 +32,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
     supported_versions = [V1, V2] = ['1', '2']
 
-    default_version = V1
+    default_version = V2
 
     def _create(self, version=None):
         con = self.context

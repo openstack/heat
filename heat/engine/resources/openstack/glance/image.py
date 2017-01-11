@@ -180,22 +180,22 @@ class GlanceImage(resource.Resource):
         os_distro = args.pop(self.OS_DISTRO, None)
         ramdisk_id = args.pop(self.RAMDISK_ID, None)
 
-        image_id = self.client().images.create(**args).id
+        image_id = self.client(version=self.client_plugin().V1).images.create(
+            **args).id
         self.resource_id_set(image_id)
 
-        v2_images = self.client(version=self.client_plugin().V2).images
+        images = self.client().images
         if architecture is not None:
-            v2_images.update(image_id, architecture=architecture)
+            images.update(image_id, architecture=architecture)
         if kernel_id is not None:
-            v2_images.update(image_id, kernel_id=kernel_id)
+            images.update(image_id, kernel_id=kernel_id)
         if os_distro is not None:
-            v2_images.update(image_id, os_distro=os_distro)
+            images.update(image_id, os_distro=os_distro)
         if ramdisk_id is not None:
-            v2_images.update(image_id, ramdisk_id=ramdisk_id)
+            images.update(image_id, ramdisk_id=ramdisk_id)
 
         for tag in tags:
-            self.client(
-                version=self.client_plugin().V2).image_tags.update(
+            self.client().image_tags.update(
                 image_id,
                 tag)
 
@@ -212,20 +212,18 @@ class GlanceImage(resource.Resource):
 
             new_tags = set(diff_tags) - set(existing_tags)
             for tag in new_tags:
-                self.client(
-                    version=self.client_plugin().V2).image_tags.update(
+                self.client().image_tags.update(
                     self.resource_id,
                     tag)
 
             removed_tags = set(existing_tags) - set(diff_tags)
             for tag in removed_tags:
                 with self.client_plugin().ignore_not_found:
-                    self.client(
-                        version=self.client_plugin().V2).image_tags.delete(
+                    self.client().image_tags.delete(
                         self.resource_id,
                         tag)
 
-        v2_images = self.client(version=self.client_plugin().V2).images
+        images = self.client().images
 
         if self.EXTRA_PROPERTIES in prop_diff:
             old_properties = self.properties.get(self.EXTRA_PROPERTIES) or {}
@@ -236,9 +234,9 @@ class GlanceImage(resource.Resource):
             # Though remove_props defaults to None within the glanceclient,
             # setting it to a list (possibly []) every time ensures only one
             # calling format to images.update
-            v2_images.update(self.resource_id, remove_props, **prop_diff)
+            images.update(self.resource_id, remove_props, **prop_diff)
         else:
-            v2_images.update(self.resource_id, **prop_diff)
+            images.update(self.resource_id, **prop_diff)
 
     def _show_resource(self):
         if self.glance().version == 1.0:
