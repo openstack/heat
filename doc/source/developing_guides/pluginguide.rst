@@ -479,6 +479,16 @@ that updates require the engine to delete and re-create the resource
                     have values of ``None``
   :type prop_diff: collections.Mapping
 
+  *Note* Before calling ``handle_update`` we check whether need to replace
+  the resource, especially for resource in ``*_FAILED`` state, there is a
+  default implementation of ``needs_replace_failed`` in
+  ``heat.engine.resource.Resource`` that simply returns ``True`` indicating
+  that updates require replacement. And we override the implementation for
+  ``OS::Nova::Server``, ``OS::Cinder::Volume`` and all of neutron resources.
+  The base principle is that to check whether the resource exists underlying
+  and whether the real status is available. So override the method
+  ``needs_replace_failed`` for your resource plug-ins if needed.
+
 .. py:function:: check_update_complete(self, token)
 
   If defined, will be called with the return value of ``handle_update``
