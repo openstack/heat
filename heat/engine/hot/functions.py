@@ -472,7 +472,7 @@ class ReplaceJson(Replace):
                                   float, bool)):
             if isinstance(value, (collections.Mapping, collections.Sequence)):
                 try:
-                    return jsonutils.dumps(value, default=None)
+                    return jsonutils.dumps(value, default=None, sort_keys=True)
                 except TypeError:
                     raise TypeError(_('"%(name)s" params must be strings, '
                                       'numbers, list or map. '
@@ -651,7 +651,7 @@ class JoinMultiple(function.Function):
                 return s
             elif isinstance(s, (collections.Mapping, collections.Sequence)):
                 try:
-                    return jsonutils.dumps(s, default=None)
+                    return jsonutils.dumps(s, default=None, sort_keys=True)
                 except TypeError:
                     msg = _('Items to join must be string, map or list. '
                             '%s failed json serialization'
