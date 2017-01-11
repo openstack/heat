@@ -350,8 +350,12 @@ class KeystoneUserRoleAssignment(resource.Resource,
 
     @property
     def user_id(self):
-        return (self.client_plugin().get_user_id(
-                self.properties.get(self.USER)))
+        try:
+            return self.client_plugin().get_user_id(
+                self.properties.get(self.USER))
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return None
 
     def handle_create(self):
         self.create_assignment(user_id=self.user_id)
@@ -407,8 +411,12 @@ class KeystoneGroupRoleAssignment(resource.Resource,
 
     @property
     def group_id(self):
-        return (self.client_plugin().get_group_id(
-                self.properties.get(self.GROUP)))
+        try:
+            return self.client_plugin().get_group_id(
+                self.properties.get(self.GROUP))
+        except Exception as ex:
+            self.client_plugin().ignore_not_found(ex)
+            return None
 
     def handle_create(self):
         self.create_assignment(group_id=self.group_id)

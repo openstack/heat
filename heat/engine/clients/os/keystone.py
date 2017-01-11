@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from keystoneclient import exceptions
+from keystoneauth1 import exceptions as ks_exceptions
 
 from heat.common import exception
 from heat.common import heat_keystoneclient as hkc
@@ -23,7 +23,7 @@ CLIENT_NAME = 'keystone'
 
 class KeystoneClientPlugin(client_plugin.ClientPlugin):
 
-    exceptions_module = exceptions
+    exceptions_module = [ks_exceptions, exception]
 
     service_types = [IDENTITY] = ['identity']
 
@@ -31,19 +31,20 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         return hkc.KeystoneClient(self.context)
 
     def is_not_found(self, ex):
-        return isinstance(ex, exceptions.NotFound)
+        return isinstance(ex, (ks_exceptions.NotFound,
+                               exception.EntityNotFound))
 
     def is_over_limit(self, ex):
-        return isinstance(ex, exceptions.RequestEntityTooLarge)
+        return isinstance(ex, ks_exceptions.RequestEntityTooLarge)
 
     def is_conflict(self, ex):
-        return isinstance(ex, exceptions.Conflict)
+        return isinstance(ex, ks_exceptions.Conflict)
 
     def get_role_id(self, role):
         try:
             role_obj = self.client().client.roles.get(role)
             return role_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             role_list = self.client().client.roles.list(name=role)
             for role_obj in role_list:
                 if role_obj.name == role:
@@ -57,7 +58,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         try:
             project_obj = self.client().client.projects.get(project)
             return project_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             project_list = self.client().client.projects.list(name=project)
             for project_obj in project_list:
                 if project_obj.name == project:
@@ -72,7 +73,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         try:
             domain_obj = self.client().client.domains.get(domain)
             return domain_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             domain_list = self.client().client.domains.list(name=domain)
             for domain_obj in domain_list:
                 if domain_obj.name == domain:
@@ -86,7 +87,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         try:
             group_obj = self.client().client.groups.get(group)
             return group_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             group_list = self.client().client.groups.list(name=group)
             for group_obj in group_list:
                 if group_obj.name == group:
@@ -100,7 +101,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         try:
             service_obj = self.client().client.services.get(service)
             return service_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             service_list = self.client().client.services.list(name=service)
 
             if len(service_list) == 1:
@@ -117,7 +118,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         try:
             user_obj = self.client().client.users.get(user)
             return user_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             user_list = self.client().client.users.list(name=user)
             for user_obj in user_list:
                 if user_obj.name == user:
@@ -129,7 +130,7 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         try:
             region_obj = self.client().client.regions.get(region)
             return region_obj.id
-        except exceptions.NotFound:
+        except ks_exceptions.NotFound:
             raise exception.EntityNotFound(entity='KeystoneRegion',
                                            name=region)
 
