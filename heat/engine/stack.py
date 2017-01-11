@@ -840,13 +840,12 @@ class Stack(collections.Mapping):
                 if res.name not in unique_defn_names:
                     continue
                 try:
-                    if res.external_id is not None:
-                        res.validate_external()
-                        continue
-
                     if self.resource_validate:
+                        if res.external_id is not None:
+                            res.validate_external()
+                            continue
                         result = res.validate()
-                    else:
+                    elif res.external_id is None:
                         result = res.validate_template()
                 except exception.HeatException as ex:
                     LOG.debug('%s', ex)
