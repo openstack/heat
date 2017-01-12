@@ -36,6 +36,8 @@ class ZaqarQueue(resource.Resource):
 
     support_status = support.SupportStatus(version='2014.2')
 
+    physical_resource_name_limit = 64
+
     PROPERTIES = (
         NAME, METADATA,
     ) = (
@@ -51,7 +53,10 @@ class ZaqarQueue(resource.Resource):
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
-            _("Name of the queue instance to create.")),
+            _("Name of the queue instance to create."),
+            constraints=[
+                constraints.Length(max=physical_resource_name_limit)
+            ]),
         METADATA: properties.Schema(
             properties.Schema.MAP,
             description=_("Arbitrary key/value metadata to store "
@@ -242,7 +247,7 @@ class ZaqarSignedQueueURL(resource.Resource):
 
     def handle_delete(self):
         # We can't delete a signed URL
-        return True
+        return
 
     def _resolve_attribute(self, name):
         if not self.resource_id:

@@ -119,12 +119,10 @@ class ZaqarSubscription(resource.Resource):
         subscription.update(self._subscription_data())
 
     def handle_delete(self):
-        try:
+        if self.resource_id is None:
+            return
+        with self.client_plugin().ignore_not_found:
             self._get_subscription().delete()
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-        else:
-            return True
 
     def _show_resource(self):
         subscription = self._get_subscription()
