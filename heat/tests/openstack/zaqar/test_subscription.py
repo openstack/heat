@@ -92,7 +92,6 @@ class FakeSubscription(object):
         pass
 
 
-@mock.patch.object(resource.Resource, "client_plugin")
 @mock.patch.object(resource.Resource, "client")
 class ZaqarSubscriptionTest(common.HeatTestCase):
     def setUp(self):
@@ -107,7 +106,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.stack.validate()
         self.stack.store()
 
-    def test_validate_subscriber_type(self, mock_client, mock_plugin):
+    def test_validate_subscriber_type(self, mock_client):
         t = template_format.parse(subscr_template)
         t['Resources']['MySubscription']['Properties']['subscriber'] = "foo:ba"
         stack_name = 'test_stack'
@@ -120,7 +119,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
                          'mailto, trust+http, trust+https.',
                          six.text_type(exc))
 
-    def test_create(self, mock_client, mock_plugin):
+    def test_create(self, mock_client):
         t = template_format.parse(subscr_template)
         self.parse_stack(t)
 
@@ -145,7 +144,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_delete(self, mock_client, mock_plugin):
+    def test_delete(self, mock_client):
         t = template_format.parse(subscr_template)
         self.parse_stack(t)
 
@@ -175,7 +174,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_delete_not_found(self, mock_client, mock_plugin):
+    def test_delete_not_found(self, mock_client):
         t = template_format.parse(subscr_template)
         self.parse_stack(t)
 
@@ -203,7 +202,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_in_place(self, mock_client, mock_plugin):
+    def test_update_in_place(self, mock_client):
         t = template_format.parse(subscr_template)
         self.parse_stack(t)
 
@@ -239,7 +238,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_replace(self, mock_client, mock_plugin):
+    def test_update_replace(self, mock_client):
         t = template_format.parse(subscr_template)
         self.parse_stack(t)
 
@@ -273,7 +272,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_show_resource(self, mock_client, mock_plugin):
+    def test_show_resource(self, mock_client):
         t = template_format.parse(subscr_template)
         self.parse_stack(t)
 
@@ -330,7 +329,6 @@ class JsonString(object):
         return str(self)
 
 
-@mock.patch.object(resource.Resource, "client_plugin")
 @mock.patch.object(resource.Resource, "client")
 class ZaqarMistralTriggerTest(common.HeatTestCase):
     def setUp(self):
@@ -368,7 +366,7 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
             })
         }
 
-    def test_create(self, mock_client, mock_plugin):
+    def test_create(self, mock_client):
         subscr = self.subscr
         subscr_id = "58138648c1e2eb7355d62137"
 
@@ -387,7 +385,7 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_delete(self, mock_client, mock_plugin):
+    def test_delete(self, mock_client):
         subscr = self.subscr
         subscr_id = "58138648c1e2eb7355d62137"
 
@@ -411,7 +409,7 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_delete_not_found(self, mock_client, mock_plugin):
+    def test_delete_not_found(self, mock_client):
         subscr = self.subscr
         subscr_id = "58138648c1e2eb7355d62137"
 
@@ -433,7 +431,7 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_in_place(self, mock_client, mock_plugin):
+    def test_update_in_place(self, mock_client):
         subscr = self.subscr
         subscr_id = "58138648c1e2eb7355d62137"
 
@@ -463,7 +461,7 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_update_replace(self, mock_client, mock_plugin):
+    def test_update_replace(self, mock_client):
         subscr = self.subscr
         subscr_id = "58138648c1e2eb7355d62137"
 
@@ -491,7 +489,7 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_show_resource(self, mock_client, mock_plugin):
+    def test_show_resource(self, mock_client):
         subscr = self.subscr
         subscr_id = "58138648c1e2eb7355d62137"
 
