@@ -207,6 +207,10 @@ class ResourceDefinition(object):
 
         def get_resource(res_name):
             if res_name not in stack:
+                if res_name in stack.t.get(stack.t.RESOURCES):
+                    # The resource is conditionally defined, allow dependencies
+                    # on it
+                    return
                 raise exception.InvalidTemplateReference(resource=res_name,
                                                          key=self.name)
             return stack[res_name]
@@ -230,8 +234,9 @@ class ResourceDefinition(object):
                 )
             return itertools.chain()
 
-        return itertools.chain((get_resource(dep) for dep in explicit_depends),
-                               prop_deps, metadata_deps)
+        return itertools.chain(
+            filter(None, (get_resource(dep) for dep in explicit_depends)),
+            prop_deps, metadata_deps)
 
     def properties(self, schema, context=None):
         """Return a Properties object representing the resource properties.
