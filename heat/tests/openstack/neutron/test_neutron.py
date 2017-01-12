@@ -16,12 +16,14 @@ from neutronclient.common import exceptions as qe
 import six
 
 from heat.common import exception
-from heat.engine.clients.os import neutron
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import neutron as nr
 from heat.engine import rsrc_defn
+from heat.engine import stack
+from heat.engine import template
 from heat.tests import common
+from heat.tests import utils
 
 
 class NeutronTest(common.HeatTestCase):
@@ -73,7 +75,7 @@ class NeutronTest(common.HeatTestCase):
                          'FROBULATING due to "Unknown"',
                          six.text_type(e))
 
-    def test_resolve_attribute(self):
+    def _get_some_neutron_resource(self):
         class SomeNeutronResource(nr.NeutronResource):
             properties_schema = {}
 
@@ -81,20 +83,23 @@ class NeutronTest(common.HeatTestCase):
             def is_service_available(cls, context):
                 return (True, None)
 
+        empty_tmpl = {'heat_template_version': '2016-10-14'}
+        tmpl = template.Template(empty_tmpl)
+        stack_name = 'dummystack'
+        self.dummy_stack = stack.Stack(utils.dummy_context(), stack_name, tmpl)
+
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
-        stack = mock.MagicMock()
-        stack.has_cache_data = mock.Mock(return_value=False)
-        res = SomeNeutronResource('aresource', tmpl, stack)
+        self.dummy_stack.has_cache_data = mock.Mock(return_value=False)
+        return SomeNeutronResource('aresource', tmpl, self.dummy_stack)
 
-        mock_show_resource = mock.MagicMock()
-        mock_show_resource.side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
-                                          {'attr1': 'val1', 'attr2': 'val2'},
-                                          {'attr1': 'val1', 'attr2': 'val2'},
-                                          qe.NotFound]
-        res._show_resource = mock_show_resource
-        nclientplugin = neutron.NeutronClientPlugin(mock.MagicMock())
-        res.client_plugin = mock.Mock(return_value=nclientplugin)
-
+    def test_resolve_attribute(self):
+        res = self._get_some_neutron_resource()
+        side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
+                       {'attr1': 'val1', 'attr2': 'val2'},
+                       {'attr1': 'val1', 'attr2': 'val2'},
+                       qe.NotFound]
+        self.patchobject(res, '_show_resource', side_effect=side_effect)
+        res.resource_id = 'resource_id'
         self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
                          res.FnGetAtt('show'))
         self.assertEqual('val2', res._resolve_all_attributes('attr2'))
