@@ -46,9 +46,9 @@ class LoadBalancer(neutron.NeutronResource):
     )
 
     ATTRIBUTES = (
-        VIP_ADDRESS_ATTR, VIP_PORT_ATTR, VIP_SUBNET_ATTR
+        VIP_ADDRESS_ATTR, VIP_PORT_ATTR, VIP_SUBNET_ATTR, POOLS_ATTR
     ) = (
-        'vip_address', 'vip_port_id', 'vip_subnet_id'
+        'vip_address', 'vip_port_id', 'vip_subnet_id', 'pools'
     )
 
     properties_schema = {
@@ -115,7 +115,12 @@ class LoadBalancer(neutron.NeutronResource):
         VIP_SUBNET_ATTR: attributes.Schema(
             _('The VIP subnet of the LoadBalancer.'),
             type=attributes.Schema.STRING
-        )
+        ),
+        POOLS_ATTR: attributes.Schema(
+            _('Pools this LoadBalancer is associated with.'),
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     def translation_rules(self, props):
