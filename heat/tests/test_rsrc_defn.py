@@ -35,6 +35,16 @@ resources:
     type: OS::Heat::TestResource
 '''
 
+TEMPLATE_WITH_INVALID_EXPLICIT_DEPEND = '''
+heat_template_version: 2016-10-14
+resources:
+  test1:
+    type: OS::Heat::TestResource
+  test3:
+    type: OS::Heat::TestResource
+    depends_on: test2
+'''
+
 
 class ResourceDefinitionTest(common.HeatTestCase):
 
@@ -105,8 +115,9 @@ class ResourceDefinitionTest(common.HeatTestCase):
         self.assertEqual([], list(rsrc.t.dependencies(stack)))
 
     def test_dependencies_explicit_invalid(self):
-        rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', depends=['baz'])
-        stack = {'foo': 'FOO', 'bar': 'BAR'}
+        t = template_format.parse(TEMPLATE_WITH_INVALID_EXPLICIT_DEPEND)
+        stack = utils.parse_stack(t)
+        rd = stack.t.resource_definitions(stack)['test3']
         self.assertRaises(exception.InvalidTemplateReference,
                           lambda: list(rd.dependencies(stack)))
 

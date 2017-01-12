@@ -1665,6 +1665,25 @@ conditions:
 
         self.assertEqual(hot_tpl['resources'], empty.t['resources'])
 
+    def test_depends_condition(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2016-10-14
+        resources:
+          one:
+            type: OS::Heat::None
+          two:
+            type: OS::Heat::None
+            condition: False
+          three:
+            type: OS::Heat::None
+            depends_on: two
+        ''')
+
+        tmpl = template.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
+        stack.validate()
+        self.assertEqual({'one', 'three'}, set(stack.resources))
+
 
 class HotStackTest(common.HeatTestCase):
     """Test stack function when stack was created from HOT template."""
