@@ -34,11 +34,12 @@ class ProviderNet(net.Net):
     PROPERTIES = (
         NAME, PROVIDER_NETWORK_TYPE, PROVIDER_PHYSICAL_NETWORK,
         PROVIDER_SEGMENTATION_ID, ADMIN_STATE_UP, SHARED,
-        ROUTER_EXTERNAL,
+        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL,
     ) = (
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
-        'router_external',
+        'port_security_enabled', 'router_external',
+
     )
 
     ATTRIBUTES = (
@@ -77,6 +78,15 @@ class ProviderNet(net.Net):
             _('Whether this network should be shared across all tenants.'),
             default=True,
             update_allowed=True
+        ),
+        PORT_SECURITY_ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Flag to enable/disable port security on the network. It '
+              'provides the default value for the attribute of the ports '
+              'created on this network.'),
+            update_allowed=True,
+            default=True,
+            support_status=support.SupportStatus(version='8.0.0')
         ),
         ROUTER_EXTERNAL: properties.Schema(
             properties.Schema.BOOLEAN,
