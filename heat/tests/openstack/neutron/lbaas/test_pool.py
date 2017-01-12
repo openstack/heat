@@ -97,6 +97,7 @@ class PoolTest(common.HeatTestCase):
                 },
                 'lb_algorithm': 'ROUND_ROBIN',
                 'listener_id': '123',
+                'loadbalancer_id': 'my_lb',
                 'protocol': 'HTTP',
                 'admin_state_up': True
             }
@@ -114,11 +115,15 @@ class PoolTest(common.HeatTestCase):
     def test_create_missing_properties(self):
         for prop in ('lb_algorithm', 'listener', 'protocol'):
             tmpl = yaml.load(inline_templates.POOL_TEMPLATE)
+            del tmpl['resources']['pool']['properties']['loadbalancer']
             del tmpl['resources']['pool']['properties'][prop]
             self._create_stack(tmpl=yaml.dump(tmpl))
-
-            self.assertRaises(exception.StackValidationFailed,
-                              self.pool.validate)
+            if prop == 'listener':
+                self.assertRaises(exception.PropertyUnspecifiedError,
+                                  self.pool.validate)
+            else:
+                self.assertRaises(exception.StackValidationFailed,
+                                  self.pool.validate)
 
     def test_show_resource(self):
         self._create_stack()

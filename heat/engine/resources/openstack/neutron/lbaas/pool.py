@@ -38,12 +38,12 @@ class Pool(neutron.NeutronResource):
 
     PROPERTIES = (
         ADMIN_STATE_UP, DESCRIPTION, SESSION_PERSISTENCE, NAME,
-        LB_ALGORITHM, LISTENER, PROTOCOL, SESSION_PERSISTENCE_TYPE,
-        SESSION_PERSISTENCE_COOKIE_NAME,
+        LB_ALGORITHM, LISTENER, LOADBALANCER, PROTOCOL,
+        SESSION_PERSISTENCE_TYPE, SESSION_PERSISTENCE_COOKIE_NAME,
     ) = (
         'admin_state_up', 'description', 'session_persistence', 'name',
-        'lb_algorithm', 'listener', 'protocol', 'type',
-        'cookie_name'
+        'lb_algorithm', 'listener', 'loadbalancer', 'protocol',
+        'type', 'cookie_name'
     )
 
     SESSION_PERSISTENCE_TYPES = (
@@ -110,10 +110,18 @@ class Pool(neutron.NeutronResource):
         LISTENER: properties.Schema(
             properties.Schema.STRING,
             _('Listener name or ID to be associated with this pool.'),
-            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.lbaas.listener')
             ]
+        ),
+        LOADBALANCER: properties.Schema(
+            properties.Schema.STRING,
+            _('Loadbalancer name or ID to be associated with this pool. '
+              'Requires shared_pools service extension.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.lbaas.loadbalancer')
+            ],
+            support_status=support.SupportStatus(version='9.0.0')
         ),
         PROTOCOL: properties.Schema(
             properties.Schema.STRING,
@@ -150,6 +158,14 @@ class Pool(neutron.NeutronResource):
                 finder='find_resourceid_by_name_or_id',
                 entity='listener'
             ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.LOADBALANCER],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='loadbalancer'
+            ),
         ]
 
     def __init__(self, name, definition, stack):
@@ -158,6 +174,10 @@ class Pool(neutron.NeutronResource):
 
     @property
     def lb_id(self):
+        if self._lb_id:
+            return self._lb_id
+
+        self._lb_id = self.properties[self.LOADBALANCER]
         if self._lb_id is None:
             listener_id = self.properties[self.LISTENER]
             listener = self.client().show_listener(listener_id)['listener']
@@ -168,6 +188,11 @@ class Pool(neutron.NeutronResource):
         res = super(Pool, self).validate()
         if res:
             return res
+
+        if (self.properties[self.LISTENER] is None and
+                self.properties[self.LOADBALANCER] is None):
+                raise exception.PropertyUnspecifiedError(self.LISTENER,
+                                                         self.LOADBALANCER)
 
         if self.properties[self.SESSION_PERSISTENCE] is not None:
             session_p = self.properties[self.SESSION_PERSISTENCE]
@@ -197,7 +222,11 @@ class Pool(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        properties['listener_id'] = properties.pop(self.LISTENER)
+        if self.LISTENER in properties:
+            properties['listener_id'] = properties.pop(self.LISTENER)
+        if self.LOADBALANCER in properties:
+            properties['loadbalancer_id'] = properties.pop(self.LOADBALANCER)
+
         session_p = properties.get(self.SESSION_PERSISTENCE)
         if session_p is not None:
             session_props = self.prepare_properties(session_p, None)
