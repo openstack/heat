@@ -352,16 +352,16 @@ class ResourceTest(common.HeatTestCase):
             'test_resource', 'GenericResourceType',
             external_id=external_id)
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.entity = 'test'
         res.client_plugin = mock.Mock()
         self.patchobject(res.client_plugin, 'is_not_found',
                          return_value=True)
         self.patchobject(res, '_show_resource', side_effect=Exception())
         e = self.assertRaises(exception.StackValidationFailed,
                               res.validate_external)
-        message = ("Invalid external resource: Resource %(external_id)s not "
-                   "found in %(entity)s.") % {'external_id': external_id,
-                                              'entity': res.entity}
+        message = (("Invalid external resource: Resource %(external_id)s "
+                    "(%(type)s) can not be found.") %
+                   {'external_id': external_id,
+                    'type': res.type()})
         self.assertEqual(message, six.text_type(e))
 
     def test_updated_from_external(self):
