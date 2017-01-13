@@ -339,7 +339,7 @@ resources:
               count: 15
             wait_before: 5
             wait_after: 5
-            pause_before: 5
+            pause_before: true
             timeout: 42
             concurrency: 5
 """
@@ -769,13 +769,12 @@ class TestMistralWorkflow(common.HeatTestCase):
 
         rsrc_defns = stack.t.resource_definitions(stack)['workflow']
 
+        workflow_rsrc = workflow.Workflow('workflow', rsrc_defns, stack)
         ex = self.assertRaises(exception.StackValidationFailed,
-                               workflow.Workflow, 'workflow', rsrc_defns,
-                               stack)
-        error_msg = ("Property error: resources.workflow.properties: Cannot "
-                     "define the following properties at the same time: "
-                     "['retry', 'policies'].")
-        self.assertEqual(error_msg, six.text_type(ex))
+                               workflow_rsrc.validate)
+        error_msg = ("Cannot define the following properties at "
+                     "the same time: tasks.retry, tasks.policies.retry")
+        self.assertIn(error_msg, six.text_type(ex))
 
     def validate_json_inputs(self, actual_input, expected_input):
         actual_json_input = jsonutils.loads(actual_input)
@@ -837,11 +836,12 @@ class TestMistralWorkflow(common.HeatTestCase):
         rsrc_defns = stack.t.resource_definitions(stack)['workflow']
         wf = workflow.Workflow('workflow', rsrc_defns, stack)
 
-        self.assertEqual([{'name': 'check_dat_thing',
-                           'action': 'nova.servers_list',
-                           'retry': {'delay': 5, 'count': 15},
-                           'wait_before': 5,
-                           'wait_after': 5,
-                           'pause_before': 5,
-                           'timeout': 42,
-                           'concurrency': 5}], wf.properties.data['tasks'])
+        result = {k: v for k, v in wf.properties['tasks'][0].items() if v}
+        self.assertEqual({'name': 'check_dat_thing',
+                          'action': 'nova.servers_list',
+                          'retry': {'delay': 5, 'count': 15},
+                          'wait_before': 5,
+                          'wait_after': 5,
+                          'pause_before': True,
+                          'timeout': 42,
+                          'concurrency': 5}, result)

@@ -429,7 +429,7 @@ class NeutronPortTest(common.HeatTestCase):
         create_kwargs = props.copy()
         create_kwargs['admin_state_up'] = True
 
-        self.find_mock.side_effect = [net1] * 7 + [net2] * 2
+        self.find_mock.side_effect = [net1] * 8 + [net2] * 2 + [net1]
         self.create_mock.return_value = {'port': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -457,23 +457,23 @@ class NeutronPortTest(common.HeatTestCase):
         self.assertEqual((port.CREATE, port.COMPLETE), port.state)
         self.create_mock.assert_called_once_with({'port': create_kwargs})
 
-        # Switch from network_id=ID to network=ID (no replace and no upate)
+        # Switch from network_id=ID to network=ID (no replace)
         new_props = props.copy()
         new_props['network'] = new_props.pop('network_id')
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
 
         scheduler.TaskRunner(port.update, update_snippet)()
-        self.assertEqual((port.CREATE, port.COMPLETE), port.state)
+        self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
         self.assertEqual(0, self.update_mock.call_count)
 
-        # Switch from network=ID to network=NAME (no replace and no update)
+        # Switch from network=ID to network=NAME (no replace)
         new_props['network'] = 'net1234'
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       new_props)
 
         scheduler.TaskRunner(port.update, update_snippet)()
-        self.assertEqual((port.CREATE, port.COMPLETE), port.state)
+        self.assertEqual((port.UPDATE, port.COMPLETE), port.state)
         self.assertEqual(0, self.update_mock.call_count)
 
         # Switch to a different network (replace)
@@ -482,7 +482,7 @@ class NeutronPortTest(common.HeatTestCase):
                                                       new_props)
         updater = scheduler.TaskRunner(port.update, update_snippet)
         self.assertRaises(resource.UpdateReplace, updater)
-        self.assertEqual(9, self.find_mock.call_count)
+        self.assertEqual(11, self.find_mock.call_count)
 
     def test_get_port_attributes(self):
         t = template_format.parse(neutron_port_template)

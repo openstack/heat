@@ -485,14 +485,14 @@ class NeutronRouterTest(common.HeatTestCase):
             'router',
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             cmd_resource=None,
-        ).AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
+        ).MultipleTimes().AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
         router_key = 'router'
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
             '91e47a57-7508-46fe-afc9-fc454e8580e1',
             cmd_resource=None,
-        ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
+        ).MultipleTimes().AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
         subnet_key = 'subnet'
 
         self.m.ReplayAll()
@@ -724,7 +724,7 @@ class NeutronRouterTest(common.HeatTestCase):
             'network',
             'public',
             cmd_resource=None,
-        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
             'subnet',
@@ -886,22 +886,10 @@ class NeutronRouterTest(common.HeatTestCase):
         ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
         neutronV20.find_resourceid_by_name_or_id(
             mox.IsA(neutronclient.Client),
-            'network',
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            cmd_resource=None,
-        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
             'subnet',
             'sub1234',
             cmd_resource=None,
         ).AndReturn('sub1234')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            '91e47a57-7508-46fe-afc9-fc454e8580e1',
-            cmd_resource=None,
-        ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
         neutronclient.Client.update_router(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'router': {
@@ -913,7 +901,7 @@ class NeutronRouterTest(common.HeatTestCase):
         ).AndReturn(None)
 
         neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
+            '3e46229d-8fce-4733-819a-b5fe630550f8').MultipleTimes().AndReturn({
                 "router": {
                     "status": "ACTIVE",
                     "external_gateway_info": {
