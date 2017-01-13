@@ -33,6 +33,8 @@ class MeteringLabel(neutron.NeutronResource):
 
     support_status = support.SupportStatus(version='2014.1')
 
+    entity = 'metering_label'
+
     PROPERTIES = (
         NAME, DESCRIPTION, SHARED,
     ) = (
@@ -88,10 +90,6 @@ class MeteringLabel(neutron.NeutronResource):
 
         self.resource_id_set(metering_label['id'])
 
-    def _show_resource(self):
-        return self.client().show_metering_label(
-            self.resource_id)['metering_label']
-
     def handle_delete(self):
         try:
             self.client().delete_metering_label(self.resource_id)
@@ -109,6 +107,8 @@ class MeteringRule(neutron.NeutronResource):
     """
 
     support_status = support.SupportStatus(version='2014.1')
+
+    entity = 'metering_label_rule'
 
     PROPERTIES = (
         METERING_LABEL_ID, REMOTE_IP_PREFIX, DIRECTION, EXCLUDED,
@@ -181,10 +181,6 @@ class MeteringRule(neutron.NeutronResource):
             {'metering_label_rule': props})['metering_label_rule']
 
         self.resource_id_set(metering_label_rule['id'])
-
-    def _show_resource(self):
-        return self.client().show_metering_label_rule(
-            self.resource_id)['metering_label_rule']
 
     def handle_delete(self):
         try:

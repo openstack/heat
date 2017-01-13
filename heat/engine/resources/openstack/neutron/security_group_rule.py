@@ -28,6 +28,8 @@ class SecurityGroupRule(neutron.NeutronResource):
 
     required_service_extension = 'security-group'
 
+    entity = 'security_group_rule'
+
     support_status = support.SupportStatus(version='7.0.0')
 
     PROPERTIES = (
@@ -148,10 +150,6 @@ class SecurityGroupRule(neutron.NeutronResource):
                 entity='security_group'
             ),
         ]
-
-    def _show_resource(self):
-        return self.client().show_security_group_rule(
-            self.resource_id)['security_group_rule']
 
     def validate(self):
         super(SecurityGroupRule, self).validate()

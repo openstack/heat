@@ -33,6 +33,10 @@ class HealthMonitor(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'lbaas_healthmonitor'
+
+    res_info_key = 'healthmonitor'
+
     # Properties inputs for the resources create/update.
     PROPERTIES = (
         ADMIN_STATE_UP, DELAY, EXPECTED_CODES, HTTP_METHOD,
@@ -183,10 +187,6 @@ class HealthMonitor(neutron.NeutronResource):
                 raise
 
         return self._check_lb_status()
-
-    def _show_resource(self):
-        return self.client().show_lbaas_healthmonitor(
-            self.resource_id)['healthmonitor']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False

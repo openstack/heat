@@ -31,6 +31,8 @@ class SecurityGroup(neutron.NeutronResource):
 
     required_service_extension = 'security-group'
 
+    entity = 'security_group'
+
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
@@ -153,10 +155,6 @@ class SecurityGroup(neutron.NeutronResource):
         {"direction": "egress", "ethertype": "IPv4"},
         {"direction": "egress", "ethertype": "IPv6"}
     ]
-
-    def _show_resource(self):
-        return self.client().show_security_group(
-            self.resource_id)['security_group']
 
     def validate(self):
         super(SecurityGroup, self).validate()

@@ -35,6 +35,8 @@ class Listener(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'listener'
+
     PROPERTIES = (
         PROTOCOL_PORT, PROTOCOL, LOADBALANCER, NAME,
         ADMIN_STATE_UP, DESCRIPTION, DEFAULT_TLS_CONTAINER_REF,
@@ -186,10 +188,6 @@ class Listener(neutron.NeutronResource):
                 raise
 
         return self._check_lb_status()
-
-    def _show_resource(self):
-        return self.client().show_listener(
-            self.resource_id)['listener']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False

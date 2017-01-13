@@ -32,6 +32,8 @@ class Subnet(neutron.NeutronResource):
     CIDR, or from "allocation pools" that can be specified by the user.
     """
 
+    entity = 'subnet'
+
     PROPERTIES = (
         NETWORK_ID, NETWORK, SUBNETPOOL, PREFIXLEN, CIDR,
         VALUE_SPECS, NAME, IP_VERSION, DNS_NAMESERVERS, GATEWAY_IP,
@@ -368,9 +370,6 @@ class Subnet(neutron.NeutronResource):
             self.client_plugin().ignore_not_found(ex)
         else:
             return True
-
-    def _show_resource(self):
-        return self.client().show_subnet(self.resource_id)['subnet']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

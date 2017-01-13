@@ -40,6 +40,8 @@ class Port(neutron.NeutronResource):
     was taken from the allocation pool for a specific subnet.
     """
 
+    entity = 'port'
+
     PROPERTIES = (
         NAME, NETWORK_ID, NETWORK, FIXED_IPS, SECURITY_GROUPS,
         REPLACEMENT_POLICY, DEVICE_ID, DEVICE_OWNER, DNS_NAME,
@@ -468,10 +470,6 @@ class Port(neutron.NeutronResource):
 
         if self.REPLACEMENT_POLICY in props:
             del(props[self.REPLACEMENT_POLICY])
-
-    def _show_resource(self):
-        return self.client().show_port(
-            self.resource_id)['port']
 
     def check_create_complete(self, *args):
         attributes = self._show_resource()

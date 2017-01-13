@@ -36,6 +36,10 @@ class Pool(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'lbaas_pool'
+
+    res_info_key = 'pool'
+
     PROPERTIES = (
         ADMIN_STATE_UP, DESCRIPTION, SESSION_PERSISTENCE, NAME,
         LB_ALGORITHM, LISTENER, PROTOCOL, SESSION_PERSISTENCE_TYPE,
@@ -217,9 +221,6 @@ class Pool(neutron.NeutronResource):
                 raise
 
         return self._check_lb_status()
-
-    def _show_resource(self):
-        return self.client().show_lbaas_pool(self.resource_id)['pool']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False

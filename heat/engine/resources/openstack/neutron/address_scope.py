@@ -29,6 +29,8 @@ class AddressScope(neutron.NeutronResource):
 
     required_service_extension = 'address-scope'
 
+    entity = 'address_scope'
+
     support_status = support.SupportStatus(version='6.0.0')
 
     PROPERTIES = (
@@ -92,10 +94,6 @@ class AddressScope(neutron.NeutronResource):
             self.client().update_address_scope(
                 self.resource_id,
                 {'address_scope': prop_diff})
-
-    def _show_resource(self):
-        return self.client().show_address_scope(
-            self.resource_id)['address_scope']
 
 
 def resource_mapping():

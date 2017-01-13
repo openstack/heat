@@ -31,6 +31,8 @@ class RBACPolicy(neutron.NeutronResource):
 
     required_service_extension = 'rbac-policies'
 
+    entity = 'rbac_policy'
+
     PROPERTIES = (
         OBJECT_TYPE, TARGET_TENANT, ACTION, OBJECT_ID, TENANT_ID
     ) = (
@@ -98,9 +100,6 @@ class RBACPolicy(neutron.NeutronResource):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().delete_rbac_policy(self.resource_id)
-
-    def _show_resource(self):
-        return self.client().show_rbac_policy(self.resource_id)['rbac_policy']
 
     def validate(self):
         """Validate the provided params."""

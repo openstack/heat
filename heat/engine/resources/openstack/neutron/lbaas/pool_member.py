@@ -33,6 +33,10 @@ class PoolMember(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'lbaas_member'
+
+    res_info_key = 'member'
+
     PROPERTIES = (
         POOL, ADDRESS, PROTOCOL_PORT, WEIGHT, ADMIN_STATE_UP,
         SUBNET,
@@ -174,10 +178,8 @@ class PoolMember(neutron.NeutronResource):
 
         return self._check_lb_status()
 
-    def _show_resource(self):
-        member = self.client().show_lbaas_member(self.resource_id,
-                                                 self.pool_id)
-        return member['member']
+    def _res_get_args(self):
+        return [self.resource_id, self.pool_id]
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False

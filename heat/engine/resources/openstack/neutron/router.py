@@ -33,6 +33,8 @@ class Router(neutron.NeutronResource):
 
     required_service_extension = 'router'
 
+    entity = 'router'
+
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
         L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA,
@@ -301,10 +303,6 @@ class Router(neutron.NeutronResource):
 
         if l3_agent_ids:
             self._replace_agent(l3_agent_ids)
-
-    def _show_resource(self):
-        return self.client().show_router(
-            self.resource_id)['router']
 
     def check_create_complete(self, *args):
         attributes = self._show_resource()

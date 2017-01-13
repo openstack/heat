@@ -29,6 +29,8 @@ class VPNService(neutron.NeutronResource):
 
     required_service_extension = 'vpnaas'
 
+    entity = 'vpnservice'
+
     PROPERTIES = (
         NAME, DESCRIPTION, ADMIN_STATE_UP,
         SUBNET_ID, SUBNET, ROUTER_ID, ROUTER
@@ -180,9 +182,6 @@ class VPNService(neutron.NeutronResource):
 
         ]
 
-    def _show_resource(self):
-        return self.client().show_vpnservice(self.resource_id)['vpnservice']
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
@@ -216,6 +215,8 @@ class IPsecSiteConnection(neutron.NeutronResource):
     """
 
     required_service_extension = 'vpnaas'
+
+    entity = 'ipsec_site_connection'
 
     PROPERTIES = (
         NAME, DESCRIPTION, PEER_ADDRESS, PEER_ID, PEER_CIDRS, MTU,
@@ -430,10 +431,6 @@ class IPsecSiteConnection(neutron.NeutronResource):
         ),
     }
 
-    def _show_resource(self):
-        return self.client().show_ipsec_site_connection(self.resource_id)[
-            'ipsec_site_connection']
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
@@ -465,6 +462,8 @@ class IKEPolicy(neutron.NeutronResource):
     """
 
     required_service_extension = 'vpnaas'
+
+    entity = 'ikepolicy'
 
     PROPERTIES = (
         NAME, DESCRIPTION, AUTH_ALGORITHM, ENCRYPTION_ALGORITHM,
@@ -604,9 +603,6 @@ class IKEPolicy(neutron.NeutronResource):
         ),
     }
 
-    def _show_resource(self):
-        return self.client().show_ikepolicy(self.resource_id)['ikepolicy']
-
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
@@ -637,6 +633,8 @@ class IPsecPolicy(neutron.NeutronResource):
     """
 
     required_service_extension = 'vpnaas'
+
+    entity = 'ipsecpolicy'
 
     PROPERTIES = (
         NAME, DESCRIPTION, TRANSFORM_PROTOCOL, ENCAPSULATION_MODE,
@@ -777,9 +775,6 @@ class IPsecPolicy(neutron.NeutronResource):
             type=attributes.Schema.STRING
         ),
     }
-
-    def _show_resource(self):
-        return self.client().show_ipsecpolicy(self.resource_id)['ipsecpolicy']
 
     def handle_create(self):
         props = self.prepare_properties(
