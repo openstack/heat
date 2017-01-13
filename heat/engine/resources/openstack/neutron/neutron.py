@@ -11,14 +11,21 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LW
 from heat.engine import resource
+
+LOG = logging.getLogger(__name__)
 
 
 class NeutronResource(resource.Resource):
 
     default_client_name = 'neutron'
+
+    res_info_key = None
 
     def validate(self):
         """Validate any of the provided params."""
@@ -93,6 +100,21 @@ class NeutronResource(resource.Resource):
             raise exception.ResourceUnknownStatus(
                 resource_status=status,
                 result=_('Resource is not built'))
+
+    def _res_get_args(self):
+        return [self.resource_id]
+
+    def _show_resource(self):
+        try:
+            method_name = 'show_' + self.entity
+            client_method = getattr(self.client(), method_name)
+            args = self._res_get_args()
+            res_info = client_method(*args)
+            key = self.res_info_key if self.res_info_key else self.entity
+            return res_info[key]
+        except AttributeError as ex:
+            LOG.warning(_LW("Resolving 'show' attribute has failed : %s"),
+                        ex)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:
