@@ -216,9 +216,6 @@ class AodhAlarm(alarm_base.BaseAlarm):
         watchrule.WatchRule.load(self.context, watch_name=watch_name)
         self.client().alarm.get(self.resource_id)
 
-    def _show_resource(self):
-        return self.client().alarm.get(self.resource_id)
-
 
 class CombinationAlarm(alarm_base.BaseAlarm):
     """A resource that implements combination of Aodh alarms.
@@ -382,9 +379,6 @@ class EventAlarm(alarm_base.BaseAlarm):
                                                 self.context)
             self.client().alarm.update(self.resource_id,
                                        self.get_alarm_props(new_props))
-
-    def _show_resource(self):
-        return self.client().alarm.get(self.resource_id)
 
 
 def resource_mapping():

@@ -94,9 +94,6 @@ class CompositeAlarm(alarm_base.BaseAlarm):
                 self.parse_composite_rule(updated_props)
             self.client().alarm.update(self.resource_id, updated_props)
 
-    def _show_resource(self):
-        return self.client().alarm.get(self.resource_id)
-
 
 def resource_mapping():
     return {

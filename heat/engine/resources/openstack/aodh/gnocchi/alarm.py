@@ -137,9 +137,6 @@ class AodhGnocchiResourcesAlarm(alarm_base.BaseAlarm):
                 record_reality.update({key: threshold_data.get(key)})
         return record_reality
 
-    def _show_resource(self):
-        return self.client().alarm.get(self.resource_id)
-
 
 class AodhGnocchiAggregationByMetricsAlarm(
         AodhGnocchiResourcesAlarm):
