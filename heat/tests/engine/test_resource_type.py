@@ -50,6 +50,7 @@ class ResourceTypeTest(common.HeatTestCase):
                               'OS::Neutron::LoadBalancer',
                               'OS::Neutron::Pool',
                               'OS::Neutron::PoolMember',
+                              'OS::Glance::Image',
                               'OS::Aodh::CombinationAlarm']),
                          set(resources))
 
