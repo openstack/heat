@@ -80,7 +80,9 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
 
     def get_queue(self, queue_name):
         if not isinstance(queue_name, six.string_types):
-            raise TypeError('Queue name must be a string')
+            raise TypeError(_('Queue name must be a string'))
+        if not (0 < len(queue_name) <= 64):
+            raise ValueError(_('Queue name length must be 1-64'))
         # Queues are created automatically starting with v1.1 of the Zaqar API,
         # so any queue name is valid for the purposes of constraint validation.
         return queue_name
