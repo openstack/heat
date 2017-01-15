@@ -886,17 +886,17 @@ class Resource(object):
             runner(timeout=timeout, progress_callback=progress_callback)
 
     def validate_external(self):
-        if self.external_id is not None and self.entity:
+        if self.external_id is not None:
             try:
                 self.resource_id = self.external_id
                 self._show_resource()
             except Exception as ex:
                 if self.client_plugin().is_not_found(ex):
-                    error_message = _("Invalid external resource: Resource "
-                                      "%(external_id)s not found in "
-                                      "%(entity)s.") % {
-                                          'external_id': self.external_id,
-                                          'entity': self.entity}
+                    error_message = (_("Invalid external resource: Resource "
+                                       "%(external_id)s (%(type)s) can not "
+                                       "be found.") %
+                                     {'external_id': self.external_id,
+                                      'type': self.type()})
                     raise exception.StackValidationFailed(
                         message="%s" % error_message)
                 raise
