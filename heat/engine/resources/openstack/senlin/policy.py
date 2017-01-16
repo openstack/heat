@@ -18,21 +18,18 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
-from heat.engine import support
+from heat.engine.resources.openstack.senlin import res_base
 from heat.engine import translation
 
 
-class Policy(resource.Resource):
+class Policy(res_base.BaseSenlinResource):
     """A resource that creates a Senlin Policy.
 
     A policy is a set of rules that can be checked and/or enforced when
     an action is performed on a Cluster.
     """
 
-    support_status = support.SupportStatus(version='6.0.0')
-
-    default_client_name = 'senlin'
+    entity = 'policy'
 
     PROPERTIES = (
         NAME, TYPE, POLICY_PROPS, BINDINGS,
@@ -208,10 +205,6 @@ class Policy(resource.Resource):
                 actions['add_started'] = True
             ret = self.check_action_done(actions['add'])
         return ret
-
-    def _show_resource(self):
-        policy = self.client().get_policy(self.resource_id)
-        return policy.to_dict()
 
 
 def resource_mapping():

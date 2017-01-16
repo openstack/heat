@@ -17,21 +17,19 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
+from heat.engine.resources.openstack.senlin import res_base
 from heat.engine import support
 from heat.engine import translation
 
 
-class Node(resource.Resource):
+class Node(res_base.BaseSenlinResource):
     """A resource that creates a Senlin Node.
 
     Node is an object that belongs to at most one Cluster, it can be created
     based on a profile.
     """
 
-    support_status = support.SupportStatus(version='6.0.0')
-
-    default_client_name = 'senlin'
+    entity = 'node'
 
     PROPERTIES = (
         NAME, METADATA, PROFILE, CLUSTER
@@ -144,10 +142,6 @@ class Node(resource.Resource):
             self.client_plugin().ignore_not_found(ex)
             return True
         return False
-
-    def _show_resource(self):
-        node = self.client().get_node(self.resource_id)
-        return node.to_dict()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         actions = []

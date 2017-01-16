@@ -15,20 +15,17 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
-from heat.engine import support
+from heat.engine.resources.openstack.senlin import res_base
 
 
-class Receiver(resource.Resource):
+class Receiver(res_base.BaseSenlinResource):
     """A resource that creates Senlin Receiver.
 
     Receiver is an abstract resource created at the senlin engine
     that can be used to hook the engine to some external event/alarm sources.
     """
 
-    support_status = support.SupportStatus(version='6.0.0')
-
-    default_client_name = 'senlin'
+    entity = 'receiver'
 
     PROPERTIES = (
         CLUSTER, ACTION, NAME, TYPE, PARAMS,
@@ -115,16 +112,6 @@ class Receiver(resource.Resource):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().delete_receiver(self.resource_id)
-
-    def _show_resource(self):
-        recv = self.client().get_receiver(self.resource_id)
-        return recv.to_dict()
-
-    def _resolve_attribute(self, name):
-        if self.resource_id is None:
-            return
-        recv = self.client().get_receiver(self.resource_id)
-        return getattr(recv, name, None)
 
 
 def resource_mapping():

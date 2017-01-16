@@ -16,20 +16,17 @@
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
-from heat.engine import support
+from heat.engine.resources.openstack.senlin import res_base
 
 
-class Profile(resource.Resource):
+class Profile(res_base.BaseSenlinResource):
     """A resource that creates a Senlin Profile.
 
     Profile resource in senlin is a template describing how to create nodes in
     cluster.
     """
 
-    support_status = support.SupportStatus(version='6.0.0')
-
-    default_client_name = 'senlin'
+    entity = 'profile'
 
     PROPERTIES = (
         NAME, TYPE, METADATA, PROFILE_PROPERTIES,
@@ -85,10 +82,6 @@ class Profile(resource.Resource):
         if prop_diff:
             profile_obj = self.client().get_profile(self.resource_id)
             self.client().update_profile(profile_obj, **prop_diff)
-
-    def _show_resource(self):
-        profile = self.client().get_profile(self.resource_id)
-        return profile.to_dict()
 
 
 def resource_mapping():
