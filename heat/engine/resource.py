@@ -259,11 +259,11 @@ class Resource(object):
         self.current_template_id = None
         self.root_stack_id = None
 
-        if not stack.has_cache_data(name):
+        if stack.cache_data is None:
             resource = stack.db_resource_get(name)
             if resource:
                 self._load_data(resource)
-        else:
+        elif stack.has_cache_data(name):
             self.action = stack.cache_data[name]['action']
             self.status = stack.cache_data[name]['status']
             self.id = stack.cache_data[name]['id']
