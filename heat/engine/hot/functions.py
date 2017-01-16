@@ -169,8 +169,11 @@ class GetAttThenSelect(function.Function):
 
         return self.args[0], self.args[1], self.args[2:]
 
+    def _res_name(self):
+        return function.resolve(self._resource_name)
+
     def _resource(self, path='unknown'):
-        resource_name = function.resolve(self._resource_name)
+        resource_name = self._res_name()
 
         try:
             return self.stack[resource_name]
@@ -179,7 +182,7 @@ class GetAttThenSelect(function.Function):
                                                      key=path)
 
     def dep_attrs(self, resource_name):
-        if self._resource().name == resource_name:
+        if self._res_name() == resource_name:
             attrs = [function.resolve(self._attribute)]
         else:
             attrs = []
@@ -263,7 +266,7 @@ class GetAtt(GetAttThenSelect):
             return None
 
     def dep_attrs(self, resource_name):
-        if self._resource().name == resource_name:
+        if self._res_name() == resource_name:
             path = function.resolve(self._path_components)
             attr = [function.resolve(self._attribute)]
             if path:
@@ -311,7 +314,7 @@ class GetAttAllAttributes(GetAtt):
         """Check if there is no attribute_name defined, return empty chain."""
         if self._attribute is not None:
             return super(GetAttAllAttributes, self).dep_attrs(resource_name)
-        elif self._resource().name == resource_name:
+        elif self._res_name() == resource_name:
             res = self._resource()
             attrs = six.iterkeys(res.attributes_schema)
         else:
