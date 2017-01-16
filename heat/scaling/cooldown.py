@@ -11,9 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
+
 from heat.common import exception
+from heat.common.i18n import _
+from heat.common.i18n import _LI
+from heat.engine import resource
 from oslo_utils import timeutils
 import six
+
+LOG = logging.getLogger(__name__)
 
 
 class CooldownMixin(object):
@@ -23,10 +30,14 @@ class CooldownMixin(object):
     This logic includes both cooldown timestamp comparing and scaling in
     progress checking.
     """
-    def _is_scaling_allowed(self):
+    def _check_scaling_allowed(self):
         metadata = self.metadata_get()
         if metadata.get('scaling_in_progress'):
-            return False
+            LOG.info(_LI("Can not perform scaling action: resource %s "
+                         "is already in scaling.") % self.name)
+            reason = _('due to scaling activity')
+            raise resource.NoActionRequired(res_name=self.name,
+                                            reason=reason)
         try:
             # Negative values don't make sense, so they are clamped to zero
             cooldown = max(0, self.properties[self.COOLDOWN])
@@ -40,12 +51,10 @@ class CooldownMixin(object):
                     # Note: this is for supporting old version cooldown logic
                     if metadata:
                         last_adjust = next(six.iterkeys(metadata))
-                        if not timeutils.is_older_than(last_adjust, cooldown):
-                            return False
+                        self._cooldown_check(cooldown, last_adjust)
                 else:
                     last_adjust = next(six.iterkeys(metadata['cooldown']))
-                    if not timeutils.is_older_than(last_adjust, cooldown):
-                        return False
+                    self._cooldown_check(cooldown, last_adjust)
             except ValueError:
                 # occurs when metadata has only {scaling_in_progress: False}
                 pass
@@ -54,7 +63,17 @@ class CooldownMixin(object):
         # after the scaling operation completes
         metadata['scaling_in_progress'] = True
         self.metadata_set(metadata)
-        return True
+
+    def _cooldown_check(self, cooldown, last_adjust):
+        if not timeutils.is_older_than(last_adjust, cooldown):
+            LOG.info(_LI("Can not perform scaling action: "
+                         "resource %(name)s is in cooldown (%(cooldown)s).") %
+                     {'name': self.name,
+                      'cooldown': cooldown})
+            reason = _('due to cooldown, '
+                       'cooldown %s') % cooldown
+            raise resource.NoActionRequired(
+                res_name=self.name, reason=reason)
 
     def _finished_scaling(self, cooldown_reason, size_changed=True):
         # If we wanted to implement the AutoScaling API like AWS does,

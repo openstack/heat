@@ -174,12 +174,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder,
                                        ) % {'alarm': self.name,
                                             'group': asgn_id})
 
-        if not self._is_scaling_allowed():
-            LOG.info(_LI("%(name)s NOT performing scaling action, "
-                         "cooldown %(cooldown)s") % {
-                'name': self.name,
-                'cooldown': self.properties[self.COOLDOWN]})
-            raise resource.NoActionRequired
+        self._check_scaling_allowed()
 
         LOG.info(_LI('%(name)s alarm, adjusting group %(group)s with id '
                      '%(asgn_id)s by %(filter)s') % {

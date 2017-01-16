@@ -295,12 +295,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                          "as there is no change in capacity.") % self.name)
             raise resource.NoActionRequired
 
-        if not self._is_scaling_allowed():
-            LOG.info(_LI("%(name)s NOT performing scaling adjustment, "
-                         "cooldown %(cooldown)s") % {
-                'name': self.name,
-                'cooldown': self.properties[self.COOLDOWN]})
-            raise resource.NoActionRequired
+        self._check_scaling_allowed()
 
         # send a notification before, on-error and on-success.
         notif = {

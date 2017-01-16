@@ -71,7 +71,11 @@ class NoActionRequired(Exception):
     Resource subclasses should raise this exception from handle_signal() to
     suppress recording of an event corresponding to the signal.
     """
-    pass
+    def __init__(self, res_name='Unknown', reason=''):
+        msg = (_("The resource %(res)s could not perform "
+                 "scaling action: %(reason)s") %
+               {'res': res_name, 'reason': reason})
+        super(Exception, self).__init__(six.text_type(msg))
 
 
 class PollDelay(Exception):
@@ -2162,7 +2166,8 @@ class Resource(object):
             pass
         except Exception as ex:
             LOG.info(_LI('signal %(name)s : %(msg)s'),
-                     {'name': six.text_type(self), 'msg': ex},
+                     {'name': six.text_type(self),
+                      'msg': six.text_type(ex)},
                      exc_info=True)
             failure = exception.ResourceFailure(ex, self)
             raise failure
