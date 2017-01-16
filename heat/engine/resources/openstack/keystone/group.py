@@ -120,11 +120,6 @@ class KeystoneGroup(resource.Resource,
             self.update_assignment(prop_diff=prop_diff,
                                    group_id=self.resource_id)
 
-    def handle_delete(self):
-        if self.resource_id is not None:
-            with self.client_plugin().ignore_not_found:
-                self.client().groups.delete(self.resource_id)
-
     def parse_live_resource_data(self, resource_properties, resource_data):
         return {
             self.NAME: resource_data.get(self.NAME),

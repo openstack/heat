@@ -285,7 +285,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.test_group.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         self.groups.delete.return_value = None
 
-        self.assertIsNone(self.test_group.handle_delete())
+        self.test_group.handle_delete()
         self.groups.delete.assert_called_once_with(
             self.test_group.resource_id
         )
