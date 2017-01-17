@@ -20,7 +20,7 @@ from oslo_versionedobjects import fields
 from heat.common import identifier
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import base as heat_base
-from heat.objects import fields as heat_fields
+from heat.objects import resource_properties_data as rpd
 
 
 class Event(
@@ -37,7 +37,8 @@ class Event(
         'physical_resource_id': fields.StringField(nullable=True),
         'resource_status_reason': fields.StringField(nullable=True),
         'resource_type': fields.StringField(nullable=True),
-        'resource_properties': heat_fields.JsonField(nullable=True),
+        'rsrc_prop_data': fields.ObjectField(
+            rpd.ResourcePropertiesData),
         'created_at': fields.DateTimeField(read_only=True),
         'updated_at': fields.DateTimeField(nullable=True),
     }
@@ -45,10 +46,22 @@ class Event(
     @staticmethod
     def _from_db_object(context, event, db_event):
         for field in event.fields:
-            event[field] = db_event[field]
+                event[field] = db_event[field]
+        if db_event['rsrc_prop_data']:
+            event['rsrc_prop_data'] = \
+                rpd.ResourcePropertiesData._from_db_object(
+                    rpd.ResourcePropertiesData(context), context,
+                    db_event['rsrc_prop_data'])
+            event._resource_properties = event['rsrc_prop_data'].data
+        else:
+            event._resource_properties = db_event['resource_properties'] or {}
         event._context = context
         event.obj_reset_changes()
         return event
+
+    @property
+    def resource_properties(self):
+        return self._resource_properties
 
     @classmethod
     def get_by_id(cls, context, event_id):

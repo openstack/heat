@@ -18,6 +18,7 @@
 import collections
 
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 import six
@@ -26,12 +27,16 @@ import tenacity
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 from heat.objects import resource_data
+from heat.objects import resource_properties_data as rpd
 
 cfg.CONF.import_opt('encrypt_parameters_and_properties', 'heat.common.config')
+
+LOG = logging.getLogger(__name__)
 
 
 def retry_on_conflict(func):
@@ -74,12 +79,14 @@ class Resource(
         'status_reason': fields.StringField(nullable=True),
         'action': fields.StringField(nullable=True),
         'rsrc_metadata': heat_fields.JsonField(nullable=True),
-        'properties_data': heat_fields.JsonField(nullable=True),
-        'properties_data_encrypted': fields.BooleanField(default=False),
         'data': fields.ListOfObjectsField(
             resource_data.ResourceData,
             nullable=True
         ),
+        'rsrc_prop_data': fields.ObjectField(
+            rpd.ResourcePropertiesData, nullable=True),
+        'rsrc_prop_data_id': fields.ObjectField(
+            fields.IntegerField(nullable=True)),
         'engine_id': fields.StringField(nullable=True),
         'atomic_key': fields.IntegerField(nullable=True),
         'current_template_id': fields.IntegerField(),
@@ -102,13 +109,37 @@ class Resource(
             else:
                 resource[field] = db_resource[field]
 
-        if resource.properties_data_encrypted and resource.properties_data:
-            decrypted_data = crypt.decrypted_dict(resource.properties_data)
-            resource.properties_data = decrypted_data
+        if db_resource['rsrc_prop_data'] is not None:
+            resource['rsrc_prop_data'] = \
+                rpd.ResourcePropertiesData._from_db_object(
+                    rpd.ResourcePropertiesData(context), context,
+                    db_resource['rsrc_prop_data'])
+            resource._properties_data = resource['rsrc_prop_data'].data
+            if db_resource['properties_data']:
+                LOG.error(
+                    _LE('Unexpected condition where resource.rsrc_prop_data '
+                        'and resource.properties_data are both not null. '
+                        'rsrc_prop_data.id: %(rsrc_prop_data_id)s ,'
+                        'resource id: %(res_id)s')
+                    % {'rsrc_prop_data_id': resource['rsrc_prop_data'].id,
+                       'res_id': resource['id']})
+        elif db_resource['properties_data']:  # legacy field
+            if db_resource['properties_data_encrypted']:
+                decrypted_data = crypt.decrypted_dict(
+                    db_resource['properties_data'])
+                resource._properties_data = decrypted_data
+            else:
+                resource._properties_data = db_resource['properties_data']
+        else:
+            resource._properties_data = {}
 
         resource._context = context
         resource.obj_reset_changes()
         return resource
+
+    @property
+    def properties_data(self):
+        return self._properties_data
 
     @classmethod
     def get_obj(cls, context, resource_id, refresh=False):
