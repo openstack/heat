@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -31,9 +33,9 @@ class Node(resource.Resource):
     default_client_name = 'senlin'
 
     PROPERTIES = (
-        NAME, METADATA, PROFILE,
+        NAME, METADATA, PROFILE, CLUSTER
     ) = (
-        'name', 'metadata', 'profile',
+        'name', 'metadata', 'profile', 'cluster'
     )
 
     _NODE_STATUS = (
@@ -69,6 +71,15 @@ class Node(resource.Resource):
                 constraints.CustomConstraint('senlin.profile')
             ]
         ),
+        CLUSTER: properties.Schema(
+            properties.Schema.STRING,
+            _('The name of senlin cluster to attach to.'),
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('senlin.cluster')
+            ],
+            support_status=support.SupportStatus(version='8.0.0'),
+        ),
     }
 
     attributes_schema = {
@@ -88,6 +99,7 @@ class Node(resource.Resource):
                      self.physical_resource_name()),
             'metadata': self.properties[self.METADATA],
             'profile_id': self.properties[self.PROFILE],
+            'cluster_id': self.properties[self.CLUSTER],
         }
 
         node = self.client().create_node(**params)
@@ -120,21 +132,73 @@ class Node(resource.Resource):
         return node.to_dict()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        action_id = None
+        actions = []
         if prop_diff:
+            old_cluster = None
+            new_cluster = None
             if self.PROFILE in prop_diff:
                 prop_diff['profile_id'] = prop_diff.pop(self.PROFILE)
-            node_obj = self.client().get_node(self.resource_id)
-            node = self.client().update_node(
-                node_obj, **prop_diff)
-            action_id = node.location.split('/')[-1]
+            if self.CLUSTER in prop_diff:
+                old_cluster = self.properties[self.CLUSTER]
+                new_cluster = prop_diff.pop(self.CLUSTER)
+            if old_cluster:
+                params = {
+                    'cluster': old_cluster,
+                    'nodes': [self.resource_id],
+                }
+                action = {
+                    'func': 'cluster_del_nodes',
+                    'action_id': None,
+                    'params': params,
+                    'done': False,
+                }
+                actions.append(action)
+            if prop_diff:
+                node = self.client().get_node(self.resource_id)
+                params = copy.deepcopy(prop_diff)
+                params['node'] = node
+                action = {
+                    'func': 'update_node',
+                    'action_id': None,
+                    'params': params,
+                    'done': False,
+                }
+                actions.append(action)
+            if new_cluster:
+                params = {
+                    'cluster': new_cluster,
+                    'nodes': [self.resource_id],
+                }
+                action = {
+                    'func': 'cluster_add_nodes',
+                    'action_id': None,
+                    'params': params,
+                    'done': False,
+                }
+                actions.append(action)
 
-        return action_id
+        return actions
 
-    def check_update_complete(self, action_id):
-        if action_id is None:
-            return True
-        return self.client_plugin().check_action_status(action_id)
+    def check_update_complete(self, actions):
+        update_complete = True
+        for action in actions:
+            if action['done']:
+                continue
+            update_complete = False
+            if action['action_id'] is None:
+                func = getattr(self.client(), action['func'])
+                ret = func(**action['params'])
+                if isinstance(ret, dict):
+                    action['action_id'] = ret['action']
+                else:
+                    action['action_id'] = ret.location.split('/')[-1]
+            else:
+                ret = self.client_plugin().check_action_status(
+                    action['action_id'])
+                action['done'] = ret
+            # Execute these actions one by one.
+            break
+        return update_complete
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:
