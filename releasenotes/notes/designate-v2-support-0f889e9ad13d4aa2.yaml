@@ -1,0 +1,7 @@
+---
+features:
+  - Designate v2 resource plugins OS::Designate::Zone and
+    OS::Designate::RecordSet are newly added.
+deprecations:
+  - Designate v1 resource plugins OS::Designate::Domain and
+    OS::Designate::Record are deprecated.
