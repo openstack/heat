@@ -607,7 +607,7 @@ class Stack(collections.Mapping):
             stack.update({
                 'action': self.action,
                 'status': self.status,
-                'status_reason': self.status_reason})
+                'status_reason': str(self.status_reason)})
 
         if only_db:
             stack['parent_resource_name'] = self.parent_resource_name
@@ -951,7 +951,7 @@ class Stack(collections.Mapping):
         if stack is not None:
             values = {'action': self.action,
                       'status': self.status,
-                      'status_reason': self.status_reason}
+                      'status_reason': str(self.status_reason)}
             self._send_notification_and_add_event()
             if self.convergence:
                 # do things differently for convergence
@@ -983,7 +983,7 @@ class Stack(collections.Mapping):
         if stack is not None:
             values = {'action': self.action,
                       'status': self.status,
-                      'status_reason': self.status_reason}
+                      'status_reason': str(self.status_reason)}
             self._send_notification_and_add_event()
             stack.persist_state_and_release_lock(self.context, self.id,
                                                  engine_id, values)
