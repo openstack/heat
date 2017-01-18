@@ -71,12 +71,12 @@ def get_facade():
         # to talk to each other, however one needs to be added to oslo.db
         # to allow access to the Engine once constructed.
         db_context.configure(**CONF.database)
+        _facade = db_context.get_legacy_facade()
         if CONF.profiler.enabled:
             if CONF.profiler.trace_sqlalchemy:
                 osprofiler.sqlalchemy.add_tracing(sqlalchemy,
                                                   _facade.get_engine(),
                                                   "db")
-        _facade = db_context.get_legacy_facade()
     return _facade
 
 
