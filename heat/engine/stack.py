@@ -315,6 +315,8 @@ class Stack(collections.Mapping):
     def _find_filtered_resources(self, filters=None):
         rsrc_def_cache = {self.t.id: self.t.resource_definitions(self)}
         if filters:
+            assert self.cache_data is None, \
+                "Resources should not be loaded from the DB"
             resources = resource_objects.Resource.get_all_by_stack(
                 self.context, self.id, filters)
         else:
@@ -354,6 +356,8 @@ class Stack(collections.Mapping):
 
     def _db_resources_get(self):
         if self._db_resources is None:
+            assert self.cache_data is None, \
+                "Resources should not be loaded from the DB"
             _db_resources = resource_objects.Resource.get_all_by_stack(
                 self.context, self.id)
             if not _db_resources:
@@ -1219,6 +1223,7 @@ class Stack(collections.Mapping):
         self.t = template
         self.reset_dependencies()
         self._resources = None
+        self.cache_data = None
 
         if action is not self.CREATE:
             self.updated_time = oslo_timeutils.utcnow()
