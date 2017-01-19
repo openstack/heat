@@ -30,6 +30,9 @@ def load_tests(loader, tests, pattern):
     test_dir = os.path.join(os.path.dirname(__file__), TESTS_DIR)
 
     conf = config.CONF.heat_plugin
+    if conf.auth_url is None:
+        # It's not configured, let's not load tests
+        return
     manager = clients.ClientManager(conf)
     endpoint = manager.identity_client.get_endpoint_url(
         'orchestration', conf.region)
