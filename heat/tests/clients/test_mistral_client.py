@@ -27,7 +27,7 @@ class MistralClientPluginTest(common.HeatTestCase):
         client = plugin.client()
         self.assertIsNotNone(client.workflows)
         self.assertEqual('http://server.test:5000/v3',
-                         client.http_client.base_url)
+                         client.actions.http_client.base_url)
 
 
 class WorkflowConstraintTest(common.HeatTestCase):
