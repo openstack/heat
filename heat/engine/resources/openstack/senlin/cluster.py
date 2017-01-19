@@ -125,6 +125,7 @@ class Cluster(resource.Resource):
             properties.Schema.LIST,
             _('A list of policies to attach to this cluster.'),
             update_allowed=True,
+            default=[],
             support_status=support.SupportStatus(version='8.0.0'),
             schema=properties.Schema(
                 properties.Schema.MAP,
@@ -208,15 +209,12 @@ class Cluster(resource.Resource):
             'metadata': self.properties[self.METADATA],
             'timeout': self.properties[self.TIMEOUT]
         }
-        action = {
-            'func': 'create_cluster',
-            'params': params,
-            'action_id': None,
-            'done': False,
-        }
+
         cluster = self.client().create_cluster(**params)
         action_id = cluster.location.split('/')[-1]
         self.resource_id_set(cluster.id)
+        # for cluster creation, we just to check the action status
+        # the action is executed above
         action = {
             'action_id': action_id,
             'done': False,
@@ -375,9 +373,10 @@ class Cluster(resource.Resource):
     def _resolve_attribute(self, name):
         if self.resource_id is None:
             return
-        cluster = self.client().get_cluster(self.resource_id)
+
         if name == self.ATTR_POLICIES:
             return self.client().cluster_policies(self.resource_id)
+        cluster = self.client().get_cluster(self.resource_id)
         return getattr(cluster, name, None)
 
     def _show_resource(self):
