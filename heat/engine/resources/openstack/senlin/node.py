@@ -198,25 +198,7 @@ class Node(resource.Resource):
         return actions
 
     def check_update_complete(self, actions):
-        update_complete = True
-        for action in actions:
-            if action['done']:
-                continue
-            update_complete = False
-            if action['action_id'] is None:
-                func = getattr(self.client(), action['func'])
-                ret = func(**action['params'])
-                if isinstance(ret, dict):
-                    action['action_id'] = ret['action']
-                else:
-                    action['action_id'] = ret.location.split('/')[-1]
-            else:
-                ret = self.client_plugin().check_action_status(
-                    action['action_id'])
-                action['done'] = ret
-            # Execute these actions one by one.
-            break
-        return update_complete
+        return self.client_plugin().execute_actions(actions)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:
