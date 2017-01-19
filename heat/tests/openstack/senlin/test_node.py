@@ -50,8 +50,8 @@ class FakeNode(object):
         self.id = id
         self.name = "SenlinNode"
         self.metadata = {'foo': 'bar'}
-        self.profile_id = "fake_profile"
-        self.cluster_id = "fake_cluster"
+        self.profile_id = "fake_profile_id"
+        self.cluster_id = "fake_cluster_id"
         self.details = {'id': 'physical_object_id'}
         self.location = "actions/fake_action"
 
@@ -219,8 +219,8 @@ class SenlinNodeTest(common.HeatTestCase):
             'status_reason': 'Unknown',
             'name': 'SenlinNode',
             'metadata': {'foo': 'bar'},
-            'profile_id': 'fake_profile',
-            'cluster_id': 'fake_cluster'
+            'profile_id': 'fake_profile_id',
+            'cluster_id': 'fake_cluster_id'
         }
         node = self._create_node()
         self.assertEqual(excepted_show,
@@ -229,3 +229,14 @@ class SenlinNodeTest(common.HeatTestCase):
                          node._resolve_attribute('details'))
         self.senlin_mock.get_node.assert_called_with(
             node.resource_id, details=True)
+
+    def test_node_get_live_state(self):
+        expected_reality = {
+            'name': 'SenlinNode',
+            'metadata': {'foo': 'bar'},
+            'profile': 'fake_profile_id',
+            'cluster': 'fake_cluster_id'
+        }
+        node = self._create_node()
+        reality = node.get_live_state(node.properties)
+        self.assertEqual(expected_reality, reality)
