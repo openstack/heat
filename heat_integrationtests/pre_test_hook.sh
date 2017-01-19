@@ -42,6 +42,8 @@ echo -e '[heat_api_cloudwatch]\nworkers=2\n' >> $localconf
 
 echo -e '[cache]\nenabled=True\n' >> $localconf
 
+echo -e '[eventlet_opts]\nclient_socket_timeout=120\n' >> $localconf
+
 # Use the lbaas v2 namespace driver for devstack integration testing since
 # octavia uses nested vms.
 if [[ $OVERRIDE_ENABLED_SERVICES =~ "q-lbaasv2" ]]
