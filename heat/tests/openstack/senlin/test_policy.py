@@ -72,7 +72,11 @@ class SenlinPolicyTest(common.HeatTestCase):
         self.patchobject(senlin.PolicyTypeConstraint, 'validate',
                          return_value=True)
         self.senlin_mock = mock.MagicMock()
+        self.senlin_mock.get_cluster.return_value = mock.Mock(
+            id='c1_id')
         self.patchobject(policy.Policy, 'client',
+                         return_value=self.senlin_mock)
+        self.patchobject(senlin.SenlinClientPlugin, 'client',
                          return_value=self.senlin_mock)
         self.fake_p = FakePolicy()
         self.t = template_format.parse(policy_stack_template)
@@ -94,7 +98,7 @@ class SenlinPolicyTest(common.HeatTestCase):
                          policy.state)
         self.assertEqual(self.fake_p.id, policy.resource_id)
         self.senlin_mock.cluster_attach_policy.assert_called_once_with(
-            'c1', policy.resource_id, enabled=True)
+            'c1_id', policy.resource_id, enabled=True)
         self.senlin_mock.get_action.assert_called_once_with('fake_action')
         return policy
 
@@ -122,7 +126,7 @@ class SenlinPolicyTest(common.HeatTestCase):
                          policy.state)
         err_msg = ('ResourceInError: resources.senlin-policy: Went to status '
                    'FAILED due to "Failed to execute CLUSTER_ATTACH_POLICY '
-                   'for c1: oops"')
+                   'for c1_id: oops"')
         self.assertEqual(err_msg, policy.status_reason)
 
     def test_policy_delete_not_found(self):
@@ -134,7 +138,7 @@ class SenlinPolicyTest(common.HeatTestCase):
         ]
         scheduler.TaskRunner(policy.delete)()
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(
-            'c1', policy.resource_id)
+            'c1_id', policy.resource_id)
         self.senlin_mock.delete_policy.assert_called_once_with(
             policy.resource_id)
 
@@ -148,12 +152,18 @@ class SenlinPolicyTest(common.HeatTestCase):
         ]
         scheduler.TaskRunner(policy.delete)()
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(
-            'c1', policy.resource_id)
+            'c1_id', policy.resource_id)
         self.senlin_mock.delete_policy.assert_called_once_with(
             policy.resource_id)
 
     def test_policy_update(self):
         policy = self._create_policy(self.t)
+        # Mock translate rules
+        self.senlin_mock.get_cluster.side_effect = [
+            mock.Mock(id='c2_id'),
+            mock.Mock(id='c1_id'),
+            mock.Mock(id='c2_id'),
+        ]
         new_t = copy.deepcopy(self.t)
         props = new_t['resources']['senlin-policy']['properties']
         props['bindings'] = [{'cluster': 'c2'}]
@@ -170,9 +180,9 @@ class SenlinPolicyTest(common.HeatTestCase):
         self.senlin_mock.update_policy.assert_called_once_with(
             self.fake_p, name='new_name')
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(
-            'c1', policy.resource_id)
+            'c1_id', policy.resource_id)
         self.senlin_mock.cluster_attach_policy.assert_called_with(
-            'c2', policy.resource_id, enabled=True)
+            'c2_id', policy.resource_id, enabled=True)
 
     def test_policy_resolve_attribute(self):
         excepted_show = {
