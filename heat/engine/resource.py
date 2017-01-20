@@ -1093,8 +1093,8 @@ class Resource(object):
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
-        if self.status == self.FAILED or (self.stack.convergence and (
-                self.action, self.status) == (self.DELETE, self.COMPLETE)):
+        if (self.status == self.FAILED or
+                self.state == (self.DELETE, self.COMPLETE)):
             raise UpdateReplace(self)
 
         if check_init_complete and (self.action == self.INIT
