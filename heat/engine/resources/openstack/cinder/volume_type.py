@@ -132,7 +132,8 @@ class CinderVolumeType(resource.Resource):
         if self.PROJECTS in prop_diff and not is_public:
             old_access_list = self.client().volume_type_access.list(
                 self.resource_id)
-            old_projects = [ac._info['project_id'] for ac in old_access_list]
+            old_projects = [ac.to_dict()['project_id'] for
+                            ac in old_access_list]
             new_projects = prop_diff.get(self.PROJECTS)
             # first remove the old projects access
             for project_id in (set(old_projects) - set(new_projects)):
@@ -179,7 +180,7 @@ class CinderVolumeType(resource.Resource):
         if not is_public:
             accesses = self.client().volume_type_access.list(self.resource_id)
             for access in accesses:
-                projects.append(access._info.get('project_id'))
+                projects.append(access.to_dict().get('project_id'))
         resource_reality.update({self.PROJECTS: projects})
 
         return resource_reality

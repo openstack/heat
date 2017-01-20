@@ -151,8 +151,8 @@ class CinderVolumeTypeTest(common.HeatTestCase):
             def __init__(self, idx, project):
                 self.volume_type_id = idx
                 self.project_id = project
-                self._info = {'volume_type_id': idx,
-                              'project_id': project}
+                info = {'volume_type_id': idx, 'project_id': project}
+                self.to_dict = mock.Mock(return_value=info)
 
         old_access = [Access(self.my_volume_type.resource_id, 'id1'),
                       Access(self.my_volume_type.resource_id, 'id2')]
@@ -240,7 +240,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
             def __init__(self, idx, project, info):
                 self.volumetype_id = idx
                 self.project_id = project
-                self._info = info
+                self.to_dict = mock.Mock(return_value=info)
 
         volume_type_access.list.return_value = [
             Access('1234', '1', {'volumetype_id': '1234', 'project_id': '1'}),
