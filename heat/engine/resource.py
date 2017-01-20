@@ -1253,7 +1253,7 @@ class Resource(object):
         try:
             if (self.stack.action == 'ROLLBACK' and
                     self.stack.status == 'IN_PROGRESS' and
-                    not cfg.CONF.convergence_engine):
+                    not self.stack.convergence):
                 # handle case, when it's rollback and we should restore
                 # old resource
                 self.restore_prev_rsrc()
@@ -1319,7 +1319,7 @@ class Resource(object):
                                           prev_resource):
                     return
 
-            if not cfg.CONF.convergence_engine:
+            if not self.stack.convergence:
                 if (self.action, self.status) in (
                         (self.CREATE, self.IN_PROGRESS),
                         (self.UPDATE, self.IN_PROGRESS),
