@@ -158,7 +158,7 @@ class ClientManager(object):
             service_type='compute',
             endpoint_type='publicURL',
             region_name=region,
-            no_cache=True,
+            os_cache=False,
             insecure=self.insecure,
             cacert=self.ca_file,
             http_log_debug=True)
