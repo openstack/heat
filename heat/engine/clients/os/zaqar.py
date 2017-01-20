@@ -14,16 +14,15 @@
 import six
 
 from oslo_log import log as logging
-
-from heat.common.i18n import _LE
-
-LOG = logging.getLogger(__name__)
-
 from zaqarclient.queues.v2 import client as zaqarclient
 from zaqarclient.transport import errors as zaqar_errors
 
+from heat.common.i18n import _
+from heat.common.i18n import _LE
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+
+LOG = logging.getLogger(__name__)
 
 CLIENT_NAME = 'zaqar'
 
