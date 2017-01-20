@@ -9,7 +9,7 @@ coverage>=4.0 # Apache-2.0
 fixtures>=3.0.0 # Apache-2.0/BSD
 kombu<4.0.0,>=3.0.25 # BSD
 mock>=2.0 # BSD
-mox3>=0.7.0 # Apache-2.0
+mox3!=0.19.0,>=0.7.0 # Apache-2.0
 PyMySQL>=0.7.6 # MIT License
 openstackdocstheme>=1.5.0 # Apache-2.0
 os-api-ref>=1.0.0 # Apache-2.0
@@ -27,4 +27,4 @@ reno>=1.8.0 # Apache-2.0
 os-collect-config # Apache-2.0
 paramiko>=2.0 # LGPLv2.1+
 tempest>=12.1.0 # Apache-2.0
-gabbi>=1.26.1  # Apache-2.0
+gabbi>=1.26.1 # Apache-2.0
