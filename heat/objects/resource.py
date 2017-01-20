@@ -78,6 +78,9 @@ class Resource(
         'status': fields.StringField(nullable=True),
         'status_reason': fields.StringField(nullable=True),
         'action': fields.StringField(nullable=True),
+        'attr_data': fields.ObjectField(
+            rpd.ResourcePropertiesData, nullable=True),
+        'attr_data_id': fields.IntegerField(nullable=True),
         'rsrc_metadata': heat_fields.JsonField(nullable=True),
         'data': fields.ListOfObjectsField(
             resource_data.ResourceData,
@@ -132,6 +135,12 @@ class Resource(
                 resource._properties_data = db_resource['properties_data']
         else:
             resource._properties_data = {}
+
+        if db_resource['attr_data'] is not None:
+            resource['attr_data'] = \
+                rpd.ResourcePropertiesData._from_db_object(
+                    rpd.ResourcePropertiesData(context), context,
+                    db_resource['attr_data'])
 
         resource._context = context
         resource.obj_reset_changes()

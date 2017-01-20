@@ -733,6 +733,10 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                                             'resource_properties_data',
                                             column[0])
 
+    def _check_080(self, engine, data):
+        self.assertColumnExists(engine, 'resource',
+                                'attr_data_id')
+
 
 class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
                               test_base.MySQLOpportunisticTestCase):

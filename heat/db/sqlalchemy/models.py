@@ -278,7 +278,12 @@ class Resource(BASE, HeatBase, StateAware):
                                           sqlalchemy.ForeignKey(
                                               'resource_properties_data.id'))
     rsrc_prop_data = relationship(ResourcePropertiesData,
-                                  backref=backref('resource'))
+                                  foreign_keys=[rsrc_prop_data_id])
+    attr_data_id = sqlalchemy.Column(sqlalchemy.Integer,
+                                     sqlalchemy.ForeignKey(
+                                         'resource_properties_data.id'))
+    attr_data = relationship(ResourcePropertiesData,
+                             foreign_keys=[attr_data_id])
 
     # Override timestamp column to store the correct value: it should be the
     # time the create/update call was issued, not the time the DB entry is
