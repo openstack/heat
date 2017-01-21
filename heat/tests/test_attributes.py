@@ -172,6 +172,9 @@ class AttributesTest(common.HeatTestCase):
             "test3": {
                 "Value": {"Fn::GetAtt": ["test_resource", "test3"]},
                 "Description": "Test attrib 3"
+            },
+            "OS::stack_id": {
+                "Value": {"Ref": "test_resource"},
             }
         }
         MyTestResourceClass = mock.MagicMock()
@@ -202,6 +205,9 @@ class AttributesTest(common.HeatTestCase):
             "test3": {
                 "value": {"get_attr": ["test_resource", "test3"]},
                 "description": "Test attrib 3"
+            },
+            "OS::stack_id": {
+                "value": {"get_resource": "test_resource"},
             }
         }
         MyTestResourceClass = mock.MagicMock()
