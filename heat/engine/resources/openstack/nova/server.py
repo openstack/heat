@@ -305,7 +305,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                     ),
                     BLOCK_DEVICE_MAPPING_BOOT_INDEX: properties.Schema(
                         properties.Schema.INTEGER,
-                        _('Integer used for ordering the boot disks.'),
+                        _('Integer used for ordering the boot disks. If '
+                          'it is not specified, value "0" will be set '
+                          'for bootable sources (volume, snapshot, image); '
+                          'value "-1" will be set for non-bootable sources.'),
                     ),
                     BLOCK_DEVICE_MAPPING_VOLUME_SIZE: properties.Schema(
                         properties.Schema.INTEGER,
@@ -1287,11 +1290,16 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         # either volume_id or snapshot_id needs to be specified, but not both
         # for block device mapping.
         bdm = self.properties[self.BLOCK_DEVICE_MAPPING] or []
-        bootable_vol = False
+        bdm_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2] or []
+        image = self.properties[self.IMAGE]
+        if bdm and bdm_v2:
+            raise exception.ResourcePropertyConflict(
+                self.BLOCK_DEVICE_MAPPING, self.BLOCK_DEVICE_MAPPING_V2)
+        bootable = image is not None
         for mapping in bdm:
             device_name = mapping[self.BLOCK_DEVICE_MAPPING_DEVICE_NAME]
             if device_name == 'vda':
-                bootable_vol = True
+                bootable = True
 
             volume_id = mapping.get(self.BLOCK_DEVICE_MAPPING_VOLUME_ID)
             snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
@@ -1304,15 +1312,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         ' device mapping %s') % device_name
                 raise exception.StackValidationFailed(message=msg)
 
-        bdm_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2] or []
-        if bdm and bdm_v2:
-            raise exception.ResourcePropertyConflict(
-                self.BLOCK_DEVICE_MAPPING, self.BLOCK_DEVICE_MAPPING_V2)
-
+        bootable_devs = [image]
         for mapping in bdm_v2:
             volume_id = mapping.get(self.BLOCK_DEVICE_MAPPING_VOLUME_ID)
             snapshot_id = mapping.get(self.BLOCK_DEVICE_MAPPING_SNAPSHOT_ID)
             image_id = mapping.get(self.BLOCK_DEVICE_MAPPING_IMAGE)
+            boot_index = mapping.get(self.BLOCK_DEVICE_MAPPING_BOOT_INDEX)
             swap_size = mapping.get(self.BLOCK_DEVICE_MAPPING_SWAP_SIZE)
             ephemeral = (mapping.get(
                 self.BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE) or mapping.get(
@@ -1339,9 +1344,21 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
             if any((volume_id is not None, snapshot_id is not None,
                     image_id is not None)):
-                bootable_vol = True
-
-        return bootable_vol
+                # boot_index is not specified, set boot_index=0 when
+                # build_block_device_mapping for volume, snapshot, image
+                if boot_index is None or boot_index == 0:
+                    bootable = True
+                    bootable_devs.append(volume_id)
+                    bootable_devs.append(snapshot_id)
+                    bootable_devs.append(image_id)
+        if not bootable:
+            msg = _('Neither image nor bootable volume is specified for '
+                    'instance %s') % self.name
+            raise exception.StackValidationFailed(message=msg)
+        if bdm_v2 and len(list(
+                dev for dev in bootable_devs if dev is not None)) != 1:
+            msg = _('Multiple bootable sources for instance %s.') % self.name
+            raise exception.StackValidationFailed(message=msg)
 
     def _validate_image_flavor(self, image, flavor):
         try:
@@ -1389,15 +1406,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         'with user_data_format of SOFTWARE_CONFIG')
                 raise exception.StackValidationFailed(message=msg)
 
-        bootable_vol = self._validate_block_device_mapping()
+        self._validate_block_device_mapping()
 
         # make sure the image exists if specified.
         image = self.properties[self.IMAGE]
-        if image is None and not bootable_vol:
-            msg = _('Neither image nor bootable volume is specified for'
-                    ' instance %s') % self.name
-            raise exception.StackValidationFailed(message=msg)
-
         flavor = self.properties[self.FLAVOR]
         if image:
             self._validate_image_flavor(image, flavor)
