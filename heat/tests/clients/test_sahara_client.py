@@ -42,7 +42,11 @@ class SaharaUtilsTest(common.HeatTestCase):
         img_name = 'myfakeimage'
         self.my_image.id = img_id
         self.my_image.name = img_name
-        self.sahara_client.images.get.return_value = self.my_image
+        self.sahara_client.images.get.side_effect = [
+            self.my_image,
+            sahara_base.APIException(404),
+            sahara_base.APIException(404)
+        ]
         self.sahara_client.images.find.side_effect = [[self.my_image], []]
 
         self.assertEqual(img_id, self.sahara_plugin.get_image_id(img_id))
@@ -52,7 +56,6 @@ class SaharaUtilsTest(common.HeatTestCase):
 
         calls = [mock.call(name=img_name),
                  mock.call(name='noimage')]
-        self.sahara_client.images.get.assert_called_once_with(img_id)
         self.sahara_client.images.find.assert_has_calls(calls)
 
     def test_get_image_id_by_name_in_uuid(self):
@@ -78,10 +81,10 @@ class SaharaUtilsTest(common.HeatTestCase):
         self.sahara_client.images.find.side_effect = [
             sahara_base.APIException(error_message="Error", error_code=404)]
 
-        expected_error = "Error retrieving image list from sahara: Error"
+        expected_error = "Error retrieving images list from sahara: Error"
         e = self.assertRaises(exception.Error,
-                              self.sahara_plugin.get_image_id_by_name,
-                              img_name)
+                              self.sahara_plugin.find_resource_by_name,
+                              'images', img_name)
         self.assertEqual(expected_error, six.text_type(e))
 
         self.sahara_client.images.find.assert_called_once_with(name=img_name)
@@ -106,6 +109,7 @@ class SaharaUtilsTest(common.HeatTestCase):
         img_name = 'ambiguity_name'
         self.my_image.name = img_name
 
+        self.sahara_client.images.get.side_effect = sahara_base.APIException()
         self.sahara_client.images.find.return_value = [self.my_image,
                                                        self.my_image]
         self.assertRaises(exception.PhysicalResourceNameAmbiguity,
@@ -152,41 +156,60 @@ class SaharaUtilsTest(common.HeatTestCase):
         self.sahara_client.plugins.get.assert_has_calls(calls)
 
 
-class ImageConstraintTest(common.HeatTestCase):
+class SaharaConstraintsTest(common.HeatTestCase):
+    scenarios = [
+        ('JobType', dict(
+            constraint=sahara.JobTypeConstraint(),
+            resource_name='job_types'
+        )),
+        ('ClusterTemplate', dict(
+            constraint=sahara.ClusterTemplateConstraint(),
+            resource_name='cluster_templates'
+        )),
+        ('DataSource', dict(
+            constraint=sahara.DataSourceConstraint(),
+            resource_name='data_sources'
+        )),
+        ('Cluster', dict(
+            constraint=sahara.ClusterConstraint(),
+            resource_name='clusters'
+        )),
+        ('JobBinary', dict(
+            constraint=sahara.JobBinaryConstraint(),
+            resource_name='job_binaries'
+        )),
+        ('Plugin', dict(
+            constraint=sahara.PluginConstraint(),
+            resource_name=None
+        )),
+        ('Image', dict(
+            constraint=sahara.ImageConstraint(),
+            resource_name='images'
+        )),
+    ]
 
     def setUp(self):
-        super(ImageConstraintTest, self).setUp()
+        super(SaharaConstraintsTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.mock_get_image = mock.Mock()
-        self.ctx.clients.client_plugin(
-            'sahara').get_image_id = self.mock_get_image
-        self.constraint = sahara.ImageConstraint()
+        self.mock_get = mock.Mock()
+        cl_plgn = self.ctx.clients.client_plugin('sahara')
+        cl_plgn.find_resource_by_name_or_id = self.mock_get
+        cl_plgn.get_image_id = self.mock_get
+        cl_plgn.get_plugin_id = self.mock_get
 
     def test_validation(self):
-        self.mock_get_image.return_value = "id1"
+        self.mock_get.return_value = "fake_val"
         self.assertTrue(self.constraint.validate("foo", self.ctx))
+        if self.resource_name is None:
+            self.mock_get.assert_called_once_with("foo")
+        else:
+            self.mock_get.assert_called_once_with(self.resource_name, "foo")
 
     def test_validation_error(self):
-        self.mock_get_image.side_effect = exception.EntityNotFound(
-            entity='Image', name='bar')
+        self.mock_get.side_effect = exception.EntityNotFound(
+            entity='Fake entity', name='bar')
         self.assertFalse(self.constraint.validate("bar", self.ctx))
-
-
-class PluginConstraintTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(PluginConstraintTest, self).setUp()
-        self.ctx = utils.dummy_context()
-        self.mock_get_plugin = mock.Mock()
-        self.ctx.clients.client_plugin(
-            'sahara').get_plugin_id = self.mock_get_plugin
-        self.constraint = sahara.PluginConstraint()
-
-    def test_validation(self):
-        self.mock_get_plugin.return_value = "id1"
-        self.assertTrue(self.constraint.validate("foo", self.ctx))
-
-    def test_validation_error(self):
-        self.mock_get_plugin.side_effect = exception.EntityNotFound(
-            entity='Plugin', name='bar')
-        self.assertFalse(self.constraint.validate("bar", self.ctx))
+        if self.resource_name is None:
+            self.mock_get.assert_called_once_with("bar")
+        else:
+            self.mock_get.assert_called_once_with(self.resource_name, "bar")

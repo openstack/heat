@@ -58,9 +58,6 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
         'executions', 'default_execution_url'
     )
 
-    JOB_TYPES = ['Hive', 'Java', 'MapReduce', 'MapReduce.Streaming',
-                 'Pig', 'Shell', 'Spark', 'Storm', 'Storm.Pyleus']
-
     properties_schema = {
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -74,7 +71,9 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
         TYPE: properties.Schema(
             properties.Schema.STRING,
             _("Type of the job."),
-            constraints=[constraints.AllowedValues(JOB_TYPES)],
+            constraints=[
+                constraints.CustomConstraint('sahara.job_type')
+            ],
             required=True
         ),
         MAINS: properties.Schema(
@@ -84,18 +83,20 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
               "one item."),
             schema=properties.Schema(
                 properties.Schema.STRING,
-                _("ID of job's main job binary.")
+                _("ID of job's main job binary."),
+                constraints=[constraints.CustomConstraint('sahara.job_binary')]
             ),
-            constraints=[
-                constraints.Length(max=1)
-            ],
+            constraints=[constraints.Length(max=1)],
             default=[]
         ),
         LIBS: properties.Schema(
             properties.Schema.LIST,
             _("IDs of job's lib job binaries."),
             schema=properties.Schema(
-                properties.Schema.STRING
+                properties.Schema.STRING,
+                constraints=[
+                    constraints.CustomConstraint('sahara.job_binary')
+                ]
             ),
             default=[]
         ),
@@ -124,15 +125,24 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
                 CLUSTER: properties.Schema(
                     properties.Schema.STRING,
                     _('ID of the cluster to run the job in.'),
+                    constraints=[
+                        constraints.CustomConstraint('sahara.cluster')
+                    ],
                     required=True
                 ),
                 INPUT: properties.Schema(
                     properties.Schema.STRING,
-                    _('ID of the input data source.')
+                    _('ID of the input data source.'),
+                    constraints=[
+                        constraints.CustomConstraint('sahara.data_source')
+                    ]
                 ),
                 OUTPUT: properties.Schema(
                     properties.Schema.STRING,
-                    _('ID of the output data source.')
+                    _('ID of the output data source.'),
+                    constraints=[
+                        constraints.CustomConstraint('sahara.data_source')
+                    ]
                 ),
                 CONFIGS: properties.Schema(
                     properties.Schema.MAP,
