@@ -44,10 +44,10 @@ class Cluster(res_base.BaseSenlinResource):
 
     ATTRIBUTES = (
         ATTR_NAME, ATTR_METADATA, ATTR_NODES, ATTR_DESIRED_CAPACITY,
-        ATTR_MIN_SIZE, ATTR_MAX_SIZE, ATTR_POLICIES,
+        ATTR_MIN_SIZE, ATTR_MAX_SIZE, ATTR_POLICIES, ATTR_COLLECT,
     ) = (
         "name", 'metadata', 'nodes', 'desired_capacity',
-        'min_size', 'max_size', 'policies',
+        'min_size', 'max_size', 'policies', 'collect',
     )
 
     _POLICIES = (
@@ -176,6 +176,13 @@ class Cluster(res_base.BaseSenlinResource):
             type=attributes.Schema.LIST,
             support_status=support.SupportStatus(version='8.0.0'),
         ),
+        ATTR_COLLECT: attributes.Schema(
+            _("Attributes collected from cluster. According to the jsonpath "
+              "following this attribute, it will return a list of attributes "
+              "collected from the nodes of this cluster."),
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='8.0.0'),
+        )
     }
 
     def translation_rules(self, props):
@@ -367,6 +374,21 @@ class Cluster(res_base.BaseSenlinResource):
                 'max_size': self.MAX_SIZE,
             }
             raise exception.StackValidationFailed(message=msg)
+
+    def get_attribute(self, key, *path):
+        if self.resource_id is None:
+            return None
+
+        if key == self.ATTR_COLLECT:
+            if not path:
+                raise exception.InvalidTemplateAttribute(
+                    resource=self.name, key=key)
+            attrs = self.client().collect_cluster_attrs(
+                self.resource_id, path[0])
+            attr = [attr.attr_value for attr in attrs]
+            return attributes.select_from_attribute(attr, path[1:])
+        else:
+            return super(Cluster, self).get_attribute(key, *path)
 
     def _show_resource(self):
         cluster_dict = super(Cluster, self)._show_resource()
