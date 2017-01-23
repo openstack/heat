@@ -290,7 +290,6 @@ class KeystoneRoleAssignmentMixin(object):
                         current_assignments)
 
     def delete_assignment(self, user_id=None, group_id=None):
-        self._stored_properties_data
         if self.properties[self.ROLES] is not None:
             current_assignments = self.parse_list_assignments(
                 user_id=user_id, group_id=group_id)
