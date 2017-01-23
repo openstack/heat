@@ -484,17 +484,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def _test_floating_dependancy(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            'subnet_uuid',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('subnet_uuid')
-        self.m.ReplayAll()
-
     def test_floatip_port_dependency_subnet(self):
-        self._test_floating_dependancy()
         t = template_format.parse(neutron_floating_no_assoc_template)
         stack = utils.parse_stack(t)
 
@@ -507,7 +497,6 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_floatip_port_dependency_network(self):
-        self._test_floating_dependancy()
         t = template_format.parse(neutron_floating_no_assoc_template)
         del t['resources']['port_floating']['properties']['fixed_ips']
         stack = utils.parse_stack(t)
