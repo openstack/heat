@@ -19,12 +19,12 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
+from heat.engine.resources.openstack.senlin import res_base
 from heat.engine import support
 from heat.engine import translation
 
 
-class Cluster(resource.Resource):
+class Cluster(res_base.BaseSenlinResource):
     """A resource that creates a Senlin Cluster.
 
     Cluster resource in senlin can create and manage objects of
@@ -32,9 +32,7 @@ class Cluster(resource.Resource):
     The collection of these objects is referred to as a cluster.
     """
 
-    support_status = support.SupportStatus(version='6.0.0')
-
-    default_client_name = 'senlin'
+    entity = 'cluster'
 
     PROPERTIES = (
         NAME, PROFILE, DESIRED_CAPACITY, MIN_SIZE, MAX_SIZE,
@@ -370,18 +368,8 @@ class Cluster(resource.Resource):
             }
             raise exception.StackValidationFailed(message=msg)
 
-    def _resolve_attribute(self, name):
-        if self.resource_id is None:
-            return
-
-        if name == self.ATTR_POLICIES:
-            return self.client().cluster_policies(self.resource_id)
-        cluster = self.client().get_cluster(self.resource_id)
-        return getattr(cluster, name, None)
-
     def _show_resource(self):
-        cluster = self.client().get_cluster(self.resource_id)
-        cluster_dict = cluster.to_dict()
+        cluster_dict = super(Cluster, self)._show_resource()
         cluster_dict[self.ATTR_POLICIES] = self.client().cluster_policies(
             self.resource_id)
         return cluster_dict
