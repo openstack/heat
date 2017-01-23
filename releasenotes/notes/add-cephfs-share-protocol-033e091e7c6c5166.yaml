@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    'CEPHFS' can be used as a share protocol when using OS::Manila::Share
+    resource.
