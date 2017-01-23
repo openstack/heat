@@ -1397,9 +1397,12 @@ def create_stack(ctx, template, user_creds, **kwargs):
 
 
 def create_resource(ctx, stack, **kwargs):
+    phy_res_id = UUID1
+    if 'phys_res_id' in kwargs:
+        phy_res_id = kwargs.pop('phys_res_id')
     values = {
         'name': 'test_resource_name',
-        'physical_resource_id': UUID1,
+        'physical_resource_id': phy_res_id,
         'action': 'create',
         'status': 'complete',
         'status_reason': 'create_complete',
@@ -2330,12 +2333,29 @@ class DBAPIResourceTest(common.HeatTestCase):
         ret_res = db_api.resource_get_all_by_physical_resource_id(self.ctx,
                                                                   UUID1)
         ret_list = list(ret_res)
-        self.assertTrue(ret_list)
+        self.assertEqual(2, len(ret_list))
         for res in ret_list:
             self.assertEqual(UUID1, res.physical_resource_id)
 
         mt = db_api.resource_get_all_by_physical_resource_id(self.ctx, UUID2)
         self.assertFalse(list(mt))
+
+    def test_resource_get_all_by_with_admin_context(self):
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        create_resource(self.ctx, self.stack, phys_res_id=UUID1)
+        create_resource(self.ctx, self.stack, phys_res_id=UUID2)
+
+        ret_res = db_api.resource_get_all_by_physical_resource_id(admin_ctx,
+                                                                  UUID1)
+        ret_list = list(ret_res)
+        self.assertEqual(1, len(ret_list))
+        self.assertEqual(UUID1, ret_list[0].physical_resource_id)
+
+        mt = db_api.resource_get_all_by_physical_resource_id(admin_ctx, UUID2)
+        ret_list = list(mt)
+        self.assertEqual(1, len(ret_list))
+        self.assertEqual(UUID2, ret_list[0].physical_resource_id)
 
     def test_resource_get_all(self):
         values = [
