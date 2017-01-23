@@ -1095,8 +1095,7 @@ class Resource(object):
             if self.action == self.CHECK or self.needs_replace_failed():
                 raise UpdateReplace(self)
 
-        if (self.stack.convergence and
-                self.state == (self.DELETE, self.COMPLETE)):
+        if self.state == (self.DELETE, self.COMPLETE):
             raise UpdateReplace(self)
 
         if (check_init_complete and
