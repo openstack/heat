@@ -130,18 +130,15 @@ class Node(res_base.BaseSenlinResource):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().delete_node(self.resource_id)
-        return self.resource_id
+                return self.resource_id
 
     def check_delete_complete(self, res_id):
-        if not res_id:
-            return True
+        if res_id:
+            with self.client_plugin().ignore_not_found:
+                self.client().get_node(self.resource_id)
+                return False
 
-        try:
-            self.client().get_node(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-            return True
-        return False
+        return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         actions = []

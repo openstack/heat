@@ -154,9 +154,10 @@ class DesignateRecordSet(resource.Resource):
                     recordset=self.resource_id,
                     zone=self.properties[self.ZONE]
                 )
+                return self.resource_id
 
     def check_delete_complete(self, handler_data=None):
-        if self.resource_id is not None:
+        if handler_data:
             with self.client_plugin().ignore_not_found:
                 return self._check_status_complete()
 

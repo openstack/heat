@@ -169,10 +169,13 @@ class Policy(res_base.BaseSenlinResource):
         return self.check_action_done(bindings)
 
     def handle_delete(self):
+        if not self.resource_id:
+            return
+
         return copy.deepcopy(self.properties[self.BINDINGS])
 
     def check_delete_complete(self, bindings):
-        if not self.resource_id:
+        if not bindings:
             return True
         self.remove_bindings(bindings)
         if self.check_action_done(bindings):

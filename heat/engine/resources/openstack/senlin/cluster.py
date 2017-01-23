@@ -249,18 +249,15 @@ class Cluster(res_base.BaseSenlinResource):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().delete_cluster(self.resource_id)
-        return self.resource_id
+                return self.resource_id
 
     def check_delete_complete(self, resource_id):
-        if not resource_id:
-            return True
+        if resource_id:
+            with self.client_plugin().ignore_not_found:
+                self.client().get_cluster(self.resource_id)
+                return False
 
-        try:
-            self.client().get_cluster(self.resource_id)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-            return True
-        return False
+        return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         UPDATE_PROPS = (self.NAME, self.METADATA, self.TIMEOUT, self.PROFILE)

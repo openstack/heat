@@ -314,6 +314,8 @@ class RemoteStack(resource.Resource):
                 with TempCACertFile(self.cacert) as cacert_path:
                     self.heat(
                         cacert_path).stacks.delete(stack_id=self.resource_id)
+                    return self.resource_id
+        return None
 
     def handle_resume(self):
         if self.resource_id is None:
@@ -414,15 +416,12 @@ class RemoteStack(resource.Resource):
     def check_create_complete(self, *args):
         return self._check_action_complete(action=self.CREATE)
 
-    def check_delete_complete(self, *args):
-        if self.resource_id is None:
-            return True
+    def check_delete_complete(self, deleting_resource_id=None):
+        if deleting_resource_id is not None:
+            with self.client_plugin().ignore_not_found:
+                return self._check_action_complete(action=self.DELETE)
 
-        try:
-            return self._check_action_complete(action=self.DELETE)
-        except Exception as ex:
-            self.client_plugin().ignore_not_found(ex)
-            return True
+        return True
 
     def check_resume_complete(self, *args):
         return self._check_action_complete(action=self.RESUME)
