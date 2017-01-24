@@ -494,12 +494,13 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 result=msg, resource_status=status)
 
     def rebuild(self, server_id, image_id, password=None,
-                preserve_ephemeral=False):
+                preserve_ephemeral=False, meta=None, files=None):
         """Rebuild the server and call check_rebuild to verify."""
         server = self.fetch_server(server_id)
         if server:
             server.rebuild(image_id, password=password,
-                           preserve_ephemeral=preserve_ephemeral)
+                           preserve_ephemeral=preserve_ephemeral,
+                           meta=meta, files=files)
             return True
         else:
             return False

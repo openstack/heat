@@ -1122,13 +1122,23 @@ class Server(stack_user.StackUser, sh.SchedulerHintsMixin,
         image_update_policy = (
             prop_diff.get(self.IMAGE_UPDATE_POLICY) or
             self.properties[self.IMAGE_UPDATE_POLICY])
+
+        instance_meta = prop_diff.get(self.METADATA,
+                                      self.properties[self.METADATA])
+
+        if instance_meta is not None:
+            instance_meta = self.client_plugin().meta_serialize(instance_meta)
+        personality_files = self.properties[self.PERSONALITY]
+
         image = prop_diff[self.IMAGE]
         preserve_ephemeral = (
             image_update_policy == 'REBUILD_PRESERVE_EPHEMERAL')
         password = (prop_diff.get(self.ADMIN_PASS) or
                     self.properties[self.ADMIN_PASS])
         kwargs = {'password': password,
-                  'preserve_ephemeral': preserve_ephemeral}
+                  'preserve_ephemeral': preserve_ephemeral,
+                  'meta': instance_meta,
+                  'files': personality_files}
         prg = progress.ServerUpdateProgress(self.resource_id,
                                             'rebuild',
                                             handler_extra={'args': (image,),
