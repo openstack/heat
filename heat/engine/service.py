@@ -1917,13 +1917,18 @@ class EngineService(service.ServiceBase):
 
         matches = [stack[rs.name] for rs in rsrcs if in_stack(rs)]
 
-        if not matches:
-            raise exception.ResourceNotFound(resource_name=resource_name,
-                                             stack_name=stack.name)
-        if len(matches) > 1:
+        if matches:
+            if len(matches) == 1:
+                return matches[0]
             raise exception.PhysicalResourceIDAmbiguity(phys_id=resource_name)
 
-        return matches[0]
+        # Try it the slow way
+        match = stack.resource_by_refid(resource_name)
+        if match is not None:
+            return match
+
+        raise exception.ResourceNotFound(resource_name=resource_name,
+                                         stack_name=stack.name)
 
     @context.request_context
     def find_physical_resource(self, cnxt, physical_resource_id):
