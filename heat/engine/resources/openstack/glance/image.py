@@ -244,13 +244,6 @@ class GlanceImage(resource.Resource):
         else:
             images.update(self.resource_id, **prop_diff)
 
-    def _show_resource(self):
-        if self.glance().version == 1.0:
-            return super(GlanceImage, self)._show_resource()
-        else:
-            image = self.glance().images.get(self.resource_id)
-            return dict(image)
-
     def validate(self):
         super(GlanceImage, self).validate()
         container_format = self.properties[self.CONTAINER_FORMAT]

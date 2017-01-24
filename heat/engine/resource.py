@@ -1906,7 +1906,7 @@ class Resource(object):
             try:
                 obj = getattr(self.client(), self.entity)
                 resource = obj.get(self.resource_id)
-                if type(resource) == dict:
+                if isinstance(resource, dict):
                     return resource
                 else:
                     return resource.to_dict()
