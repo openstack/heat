@@ -154,8 +154,15 @@ class MultipartMime(software_config.SoftwareConfig):
 
     @staticmethod
     def _create_message(part, subtype, filename):
-        msg = (text.MIMEText(part, _subtype=subtype)
-               if subtype else text.MIMEText(part))
+        charset = 'us-ascii'
+        try:
+            part.encode(charset)
+        except UnicodeEncodeError:
+            charset = 'utf-8'
+        msg = (text.MIMEText(part, _subtype=subtype,
+                             _charset=charset)
+               if subtype else text.MIMEText(part, _charset=charset))
+
         if filename:
             msg.add_header('Content-Disposition', 'attachment',
                            filename=filename)

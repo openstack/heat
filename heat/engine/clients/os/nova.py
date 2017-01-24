@@ -311,7 +311,15 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
                 subtype = os.path.splitext(filename)[0]
             if content is None:
                 content = ''
-            msg = text.MIMEText(content, _subtype=subtype)
+
+            try:
+                content.encode('us-ascii')
+                charset = 'us-ascii'
+            except UnicodeEncodeError:
+                charset = 'utf-8'
+            msg = (text.MIMEText(content, _subtype=subtype, _charset=charset)
+                   if subtype else text.MIMEText(content, _charset=charset))
+
             msg.add_header('Content-Disposition', 'attachment',
                            filename=filename)
             return msg
