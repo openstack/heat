@@ -1125,3 +1125,41 @@ resources:
                                         environment_files=environment_files)
 
         # Assertions done in _test_stack_update_preview
+
+    def test_reset_stack_and_resources_in_progress(self):
+
+        def mock_stack_resource(name, action, status):
+            rs = mock.MagicMock()
+            rs.name = name
+            rs.action = action
+            rs.status = status
+            rs.IN_PROGRESS = 'IN_PROGRESS'
+            rs.FAILED = 'FAILED'
+
+            def mock_resource_state_set(a, s, reason='engine_down'):
+                rs.status = s
+                rs.action = a
+                rs.status_reason = reason
+
+            rs.state_set = mock_resource_state_set
+
+            return rs
+
+        stk_name = 'test_stack'
+        stk = tools.get_stack(stk_name, self.ctx)
+        stk.action = 'CREATE'
+        stk.status = 'IN_PROGRESS'
+
+        resources = {'r1': mock_stack_resource('r1', 'UPDATE', 'COMPLETE'),
+                     'r2': mock_stack_resource('r2', 'UPDATE', 'IN_PROGRESS'),
+                     'r3': mock_stack_resource('r3', 'UPDATE', 'FAILED')}
+
+        stk._resources = resources
+
+        reason = 'Test resetting stack and resources in progress'
+
+        stk.reset_stack_and_resources_in_progress(reason)
+        self.assertEqual('FAILED', stk.status)
+        self.assertEqual('COMPLETE', stk.resources.get('r1').status)
+        self.assertEqual('FAILED', stk.resources.get('r2').status)
+        self.assertEqual('FAILED', stk.resources.get('r3').status)

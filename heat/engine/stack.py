@@ -1428,6 +1428,14 @@ class Stack(collections.Mapping):
 
         return self._convg_deps
 
+    def reset_stack_and_resources_in_progress(self, reason):
+        for name, rsrc in six.iteritems(self.resources):
+            if rsrc.status == rsrc.IN_PROGRESS:
+                rsrc.state_set(rsrc.action,
+                               rsrc.FAILED,
+                               six.text_type(reason))
+        self.state_set(self.action, self.FAILED, six.text_type(reason))
+
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE, msg_queue=None):
         if action not in (self.UPDATE, self.ROLLBACK, self.RESTORE):
@@ -1447,8 +1455,9 @@ class Stack(collections.Mapping):
             if action == self.ROLLBACK:
                 LOG.debug("Starting update rollback for %s" % self.name)
             else:
-                self.state_set(action, self.FAILED,
-                               'State invalid for %s' % action)
+                reason = _('Attempted to %s an IN_PROGRESS '
+                           'stack') % action
+                self.reset_stack_and_resources_in_progress(reason)
                 return
 
         # Save a copy of the new template.  To avoid two DB writes
