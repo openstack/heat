@@ -1396,10 +1396,13 @@ def create_stack(ctx, template, user_creds, **kwargs):
     return db_api.stack_create(ctx, values)
 
 
-def create_resource(ctx, stack, **kwargs):
+def create_resource(ctx, stack, legacy_prop_data=False, **kwargs):
     phy_res_id = UUID1
     if 'phys_res_id' in kwargs:
         phy_res_id = kwargs.pop('phys_res_id')
+    if not legacy_prop_data:
+        rpd = db_api.resource_prop_data_create(ctx, {'data': {'foo1': 'bar1'},
+                                                     'encrypted': False})
     values = {
         'name': 'test_resource_name',
         'physical_resource_id': phy_res_id,
@@ -1408,8 +1411,11 @@ def create_resource(ctx, stack, **kwargs):
         'status_reason': 'create_complete',
         'rsrc_metadata': json.loads('{"foo": "123"}'),
         'stack_id': stack.id,
-        'properties_data': {'foo1': 'bar1'}
     }
+    if not legacy_prop_data:
+        values['rsrc_prop_data'] = rpd
+    else:
+        values['properties_data'] = {'foo1': 'bar1'}
     values.update(kwargs)
     return db_api.resource_create(ctx, values)
 
@@ -1424,7 +1430,18 @@ def create_resource_data(ctx, resource, **kwargs):
     return db_api.resource_data_set(ctx, resource.id, **values)
 
 
+def create_resource_prop_data(ctx, **kwargs):
+    values = {
+        'data': {'foo1': 'bar1'},
+        'encrypted': False
+    }
+    values.update(kwargs)
+    return db_api.resource_prop_data_create(ctx, **values)
+
+
 def create_event(ctx, **kwargs):
+    rpd = db_api.resource_prop_data_create(ctx, {'data': {'name': 'foo'},
+                                                 'encrypted': False})
     values = {
         'stack_id': 'test_stack_id',
         'resource_action': 'create',
@@ -1432,7 +1449,7 @@ def create_event(ctx, **kwargs):
         'resource_name': 'res',
         'physical_resource_id': UUID1,
         'resource_status_reason': "create_complete",
-        'resource_properties': {'name': 'foo'}
+        'rsrc_prop_data': rpd,
     }
     values.update(kwargs)
     return db_api.event_create(ctx, values)
@@ -1998,23 +2015,26 @@ class DBAPIStackTest(common.HeatTestCase):
         creds = [create_user_creds(self.ctx) for i in range(5)]
         stacks = [create_stack(self.ctx, templates[i], creds[i],
                                deleted_at=deleted[i]) for i in range(5)]
+        resources = [create_resource(self.ctx, stacks[i]) for i in range(5)]
+        events = [create_event(self.ctx, stack_id=stacks[i].id)
+                  for i in range(5)]
 
         db_api.purge_deleted(age=1, granularity='days')
         admin_ctx = utils.dummy_context(is_admin=True)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1, 2), (3, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=22, granularity='hours')
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1, 2), (3, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=1100, granularity='minutes')
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1), (2, 3, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1), (2, 3, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds')
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (), (0, 1, 2, 3, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (), (0, 1, 2, 3, 4))
 
     def test_purge_project_deleted(self):
         now = timeutils.utcnow()
@@ -2037,31 +2057,34 @@ class DBAPIStackTest(common.HeatTestCase):
         stacks = [create_stack(self.ctx, templates[i], creds[i],
                                deleted_at=deleted[i], **values[i]
                                ) for i in range(5)]
+        resources = [create_resource(self.ctx, stacks[i]) for i in range(5)]
+        events = [create_event(self.ctx, stack_id=stacks[i].id)
+                  for i in range(5)]
 
         db_api.purge_deleted(age=1, granularity='days', project_id=UUID1)
         admin_ctx = utils.dummy_context(is_admin=True)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1, 2, 3, 4), ())
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1, 2, 3, 4), ())
 
         db_api.purge_deleted(age=22, granularity='hours', project_id=UUID1)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1, 2, 3, 4), ())
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1, 2, 3, 4), ())
 
         db_api.purge_deleted(age=1100, granularity='minutes', project_id=UUID1)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1, 3, 4), (2,))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1, 3, 4), (2,))
 
         db_api.purge_deleted(age=30, granularity='hours', project_id=UUID2)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (0, 1, 3), (2, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (0, 1, 3), (2, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID1)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (3,), (0, 1, 2, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (3,), (0, 1, 2, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID2)
-        self._deleted_stack_existance(admin_ctx, stacks,
-                                      tmpl_files, (), (0, 1, 2, 3, 4))
+        self._deleted_stack_existance(admin_ctx, stacks, resources,
+                                      events, tmpl_files, (), (0, 1, 2, 3, 4))
 
     def test_purge_deleted_prev_raw_template(self):
         now = timeutils.utcnow()
@@ -2156,13 +2179,23 @@ class DBAPIStackTest(common.HeatTestCase):
                           db_api.raw_template_files_get,
                           self.ctx, tmpl_files[2].files_id)
 
-    def _deleted_stack_existance(self, ctx, stacks,
+    def _deleted_stack_existance(self, ctx, stacks, resources, events,
                                  tmpl_files, existing, deleted):
         for s in existing:
             self.assertIsNotNone(db_api.stack_get(ctx, stacks[s].id,
                                                   show_deleted=True))
             self.assertIsNotNone(db_api.raw_template_files_get(
                 ctx, tmpl_files[s].files_id))
+            self.assertIsNotNone(db_api.resource_get(
+                ctx, resources[s].id))
+            self.assertIsNotNone(db_api.event_get(
+                ctx, events[s].id))
+            self.assertIsNotNone(ctx.session.query(
+                models.ResourcePropertiesData).filter_by(
+                    id=resources[s].rsrc_prop_data.id).first())
+            self.assertIsNotNone(ctx.session.query(
+                models.ResourcePropertiesData).filter_by(
+                    id=events[s].rsrc_prop_data.id).first())
         for s in deleted:
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
                                                show_deleted=True))
@@ -2174,6 +2207,16 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertRaises(exception.NotFound,
                               db_api.raw_template_files_get,
                               ctx, tmpl_files[s].files_id)
+            self.assertEqual([],
+                             db_api.event_get_all_by_stack(ctx,
+                                                           stacks[s].id))
+            self.assertIsNone(db_api.event_get(ctx, events[s].id))
+            self.assertIsNone(ctx.session.query(
+                models.ResourcePropertiesData).filter_by(
+                    id=resources[s].rsrc_prop_data.id).first())
+            self.assertIsNone(ctx.session.query(
+                models.ResourcePropertiesData).filter_by(
+                    id=events[s].rsrc_prop_data.id).first())
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
@@ -2220,6 +2263,7 @@ class DBAPIStackTest(common.HeatTestCase):
                 create_resource(
                     self.ctx,
                     stack,
+                    False,
                     name='%s-%s' % (stack.name, i),
                     root_stack_id=root_stack_id
                 )
@@ -2363,7 +2407,8 @@ class DBAPIResourceTest(common.HeatTestCase):
             {'name': 'res2'},
             {'name': 'res3'},
         ]
-        [create_resource(self.ctx, self.stack, **val) for val in values]
+        [create_resource(self.ctx, self.stack, False, **val)
+         for val in values]
 
         resources = db_api.resource_get_all(self.ctx)
         self.assertEqual(3, len(resources))
@@ -2380,7 +2425,8 @@ class DBAPIResourceTest(common.HeatTestCase):
             {'name': 'res3', 'stack_id': self.stack.id},
             {'name': 'res4', 'stack_id': self.stack1.id},
         ]
-        [create_resource(self.ctx, self.stack, **val) for val in values]
+        [create_resource(self.ctx, self.stack, False, **val)
+         for val in values]
 
         # Test for all resources in a stack
         resources = db_api.resource_get_all_by_stack(self.ctx, self.stack.id)
@@ -2675,7 +2721,7 @@ class DBAPIEventTest(common.HeatTestCase):
         self.assertEqual('res', ret_event.resource_name)
         self.assertEqual(UUID1, ret_event.physical_resource_id)
         self.assertEqual('create_complete', ret_event.resource_status_reason)
-        self.assertEqual({'name': 'foo'}, ret_event.resource_properties)
+        self.assertEqual({'name': 'foo'}, ret_event.rsrc_prop_data.data)
 
     def test_event_get_all(self):
         self.stack1 = create_stack(self.ctx, self.template, self.user_creds,
@@ -2965,7 +3011,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        self.resource = create_resource(self.ctx, stack,
+        self.resource = create_resource(self.ctx, stack, False,
                                         atomic_key=0)
 
     def test_unlocked_resource_update(self):
@@ -3324,7 +3370,8 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
         return db_api.raw_template_create(self.ctx, template)
 
-    def encrypt(self, enc_key=None, batch_size=50):
+    def encrypt(self, enc_key=None, batch_size=50,
+                legacy_prop_data=False):
         session = self.ctx.session
         if enc_key is None:
             enc_key = cfg.CONF.auth_encryption_key
@@ -3345,14 +3392,20 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         enc_resources = session.query(models.Resource).all()
         self.assertNotEqual([], enc_resources)
         for enc_resource in enc_resources:
-            self.assertEqual('cryptography_decrypt_v1',
-                             enc_resource.properties_data['foo1'][0])
+            if legacy_prop_data:
+                self.assertEqual(
+                    'cryptography_decrypt_v1',
+                    enc_resource.properties_data['foo1'][0])
+            else:
+                self.assertEqual(
+                    'cryptography_decrypt_v1',
+                    enc_resource.rsrc_prop_data.data['foo1'][0])
 
         ev = enc_tmpl.environment['parameters']['param2'][1]
         return ev
 
     def decrypt(self, encrypt_value, enc_key=None,
-                batch_size=50):
+                batch_size=50, legacy_prop_data=False):
         session = self.ctx.session
         if enc_key is None:
             enc_key = cfg.CONF.auth_encryption_key
@@ -3383,11 +3436,16 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         dec_resources = session.query(models.Resource).all()
         self.assertNotEqual([], dec_resources)
         for dec_resource in dec_resources:
-            self.assertEqual('bar1', dec_resource.properties_data['foo1'])
+            if legacy_prop_data:
+                self.assertEqual(
+                    'bar1', dec_resource.properties_data['foo1'])
+            else:
+                self.assertEqual(
+                    'bar1', dec_resource.rsrc_prop_data.data['foo1'])
 
         return decrypt_value
 
-    def _test_db_encrypt_decrypt(self, batch_size=50):
+    def _test_db_encrypt_decrypt(self, batch_size=50, legacy_prop_data=False):
         session = self.ctx.session
         raw_templates = session.query(models.RawTemplate).all()
         self.assertNotEqual([], raw_templates)
@@ -3403,50 +3461,74 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         self.assertEqual(len(resources), len(raw_templates))
         for resource in resources:
             resource = db_api.resource_get(self.ctx, resource.id)
-            self.assertEqual('bar1', resource.properties_data['foo1'])
+            if legacy_prop_data:
+                self.assertEqual(
+                    'bar1', resource.properties_data['foo1'])
+            else:
+                self.assertEqual(
+                    'bar1', resource.rsrc_prop_data.data['foo1'])
 
         # Test encryption
-        encrypt_value = self.encrypt(batch_size=batch_size)
+        encrypt_value = self.encrypt(batch_size=batch_size,
+                                     legacy_prop_data=legacy_prop_data)
 
         # Test that encryption is idempotent
-        encrypt_value2 = self.encrypt(batch_size=batch_size)
+        encrypt_value2 = self.encrypt(batch_size=batch_size,
+                                      legacy_prop_data=legacy_prop_data)
         self.assertEqual(encrypt_value, encrypt_value2)
 
         # Test decryption
-        decrypt_value = self.decrypt(encrypt_value, batch_size=batch_size)
+        decrypt_value = self.decrypt(encrypt_value, batch_size=batch_size,
+                                     legacy_prop_data=legacy_prop_data)
 
         # Test that decryption is idempotent
-        decrypt_value2 = self.decrypt(encrypt_value, batch_size=batch_size)
+        decrypt_value2 = self.decrypt(encrypt_value, batch_size=batch_size,
+                                      legacy_prop_data=legacy_prop_data)
         self.assertEqual(decrypt_value, decrypt_value2)
 
         # Test using a different encryption key to encrypt & decrypt
         encrypt_value3 = self.encrypt(
             enc_key='774c15be099ea74123a9b9592ff12680',
-            batch_size=batch_size)
+            batch_size=batch_size, legacy_prop_data=legacy_prop_data)
         decrypt_value3 = self.decrypt(
             encrypt_value3, enc_key='774c15be099ea74123a9b9592ff12680',
-            batch_size=batch_size)
+            batch_size=batch_size, legacy_prop_data=legacy_prop_data)
         self.assertEqual(decrypt_value, decrypt_value3)
         self.assertNotEqual(encrypt_value, decrypt_value)
         self.assertNotEqual(encrypt_value3, decrypt_value3)
         self.assertNotEqual(encrypt_value, encrypt_value3)
 
     def test_db_encrypt_decrypt(self):
-        """Test encryption and decryption for single template"""
+        """Test encryption and decryption for single template and resource."""
         self._test_db_encrypt_decrypt()
 
-    def test_db_encrypt_decrypt_in_batches(self):
-        """Test encryption and decryption in for several templates.
+    def test_db_encrypt_decrypt_legacy_prop_data(self):
+        """Test encryption and decryption for res with legacy prop data."""
+        # delete what setUp created
+        [self.ctx.session.delete(r) for r in
+         self.ctx.session.query(models.Resource).all()]
+        [self.ctx.session.delete(s) for s in
+         self.ctx.session.query(models.Stack).all()]
+        [self.ctx.session.delete(t) for t in
+         self.ctx.session.query(models.RawTemplate).all()]
 
-        Test encryption and decryption when heat requests templates in batch:
-        predefined amount records.
+        tmpl = self._create_template()
+        stack = create_stack(self.ctx, tmpl, self.user_creds)
+        create_resource(self.ctx, stack, True, name='res1')
+        self._test_db_encrypt_decrypt(legacy_prop_data=True)
+
+    def test_db_encrypt_decrypt_in_batches(self):
+        """Test encryption and decryption in for several templates and resources.
+
+        Test encryption and decryption with set batch size of
+        templates and resources.
         """
         tmpl1 = self._create_template()
         tmpl2 = self._create_template()
         stack = create_stack(self.ctx, tmpl1, self.user_creds)
-        create_resource(self.ctx, stack, name='res1')
+        create_resource(self.ctx, stack, False, name='res1')
         stack2 = create_stack(self.ctx, tmpl2, self.user_creds)
-        create_resource(self.ctx, stack2, name='res2')
+        create_resource(self.ctx, stack2, False, name='res2')
 
         self._test_db_encrypt_decrypt(batch_size=1)
 
@@ -3540,15 +3622,20 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         template = self._create_template()
         user_creds = create_user_creds(ctx)
         stack = create_stack(ctx, template, user_creds)
-        create_resource(ctx, stack, name='res1')
+        create_resource(ctx, stack, legacy_prop_data=True, name='res2')
 
         db_api.db_encrypt_parameters_and_properties(
             ctx, cfg.CONF.auth_encryption_key, verbose=True)
         self.assertIn("Processing raw_template 1", info_logger.output)
-        self.assertIn("Processing resource 1", info_logger.output)
         self.assertIn("Finished encrypt processing of raw_template 1",
                       info_logger.output)
-        self.assertIn("Finished processing resource 1", info_logger.output)
+        self.assertIn("Processing resource_properties_data 1",
+                      info_logger.output)
+        self.assertIn("Finished processing resource_properties_data 1",
+                      info_logger.output)
+        # only the resource with legacy properties data is processed
+        self.assertIn("Processing resource 2", info_logger.output)
+        self.assertIn("Finished processing resource 2", info_logger.output)
 
         info_logger2 = self.useFixture(
             fixtures.FakeLogger(level=logging.INFO,
@@ -3558,10 +3645,15 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         db_api.db_decrypt_parameters_and_properties(
             ctx, cfg.CONF.auth_encryption_key, verbose=True)
         self.assertIn("Processing raw_template 1", info_logger2.output)
-        self.assertIn("Processing resource 1", info_logger2.output)
         self.assertIn("Finished decrypt processing of raw_template 1",
                       info_logger2.output)
-        self.assertIn("Finished processing resource 1", info_logger2.output)
+        self.assertIn("Processing resource_properties_data 1",
+                      info_logger.output)
+        self.assertIn("Finished processing resource_properties_data 1",
+                      info_logger.output)
+        # only the resource with legacy properties data is processed
+        self.assertIn("Processing resource 2", info_logger2.output)
+        self.assertIn("Finished processing resource 2", info_logger2.output)
 
     def test_db_encrypt_decrypt_verbose_off(self):
         info_logger = self.useFixture(

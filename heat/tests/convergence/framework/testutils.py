@@ -34,7 +34,7 @@ def verify(test, reality, tmpl):
 
             if isinstance(prop_def, scenario_template.GetAtt):
                 targs = reality.resources_by_logical_name(prop_def.target_name)
-                att_value = targs[0].properties_data[prop_def.attr]
+                att_value = targs[0].rsrc_prop_data.data[prop_def.attr]
                 test.assertEqual(att_value, real_value)
 
             elif isinstance(prop_def, scenario_template.GetRes):
@@ -44,7 +44,11 @@ def verify(test, reality, tmpl):
             else:
                 test.assertEqual(prop_def, real_value)
 
-        test.assertEqual(len(defn.properties), len(phys_rsrc.properties_data))
+        len_rsrc_prop_data = 0
+        if phys_rsrc.rsrc_prop_data:
+            len_rsrc_prop_data = len(phys_rsrc.rsrc_prop_data.data)
+        test.assertEqual(len(defn.properties),
+                         len_rsrc_prop_data)
 
     test.assertEqual(len(tmpl.resources), len(all_rsrcs))
 

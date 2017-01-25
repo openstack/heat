@@ -87,6 +87,7 @@ class NeutronTest(common.HeatTestCase):
         tmpl = template.Template(empty_tmpl)
         stack_name = 'dummystack'
         self.dummy_stack = stack.Stack(utils.dummy_context(), stack_name, tmpl)
+        self.dummy_stack.store()
 
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         self.dummy_stack.has_cache_data = mock.Mock(return_value=False)

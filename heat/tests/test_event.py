@@ -13,19 +13,17 @@
 
 import mock
 from oslo_config import cfg
-import oslo_db.exception
 import uuid
 
+from heat.db.sqlalchemy import api as db_api
 from heat.db.sqlalchemy import models
 from heat.engine import event
-from heat.engine import rsrc_defn
 from heat.engine import stack
 from heat.engine import template
 from heat.objects import event as event_object
 from heat.objects import resource_properties_data as rpd_object
 from heat.objects import stack as stack_object
 from heat.tests import common
-from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
 cfg.CONF.import_opt('event_purge_batch_size', 'heat.common.config')
@@ -53,34 +51,13 @@ tmpl_multiple = {
     }
 }
 
-tmpl_multiple_too_large = {
-    'HeatTemplateFormatVersion': '2012-12-12',
-    'Resources': {
-        'EventTestResource': {
-            'Type': 'ResourceWithMultipleRequiredProps',
-            'Properties': {'Foo1': 'zoo',
-                           'Foo2': 'A' * (1 << 16),
-                           'Foo3': '99999'}
-        }
-    }
-}
-
-tmpl_multiple_srsly_too_large = {
-    'HeatTemplateFormatVersion': '2012-12-12',
-    'Resources': {
-        'EventTestResource': {
-            'Type': 'ResourceWithMultipleRequiredProps',
-            'Properties': {'Foo1': 'Z' * (1 << 16),
-                           'Foo2': 'A' * (1 << 16),
-                           'Foo3': '99999'}
-        }
-    }
-}
-
 
 class EventCommon(common.HeatTestCase):
 
-    def _setup_stack(self, the_tmpl):
+    def _setup_stack(self, the_tmpl, encrypted=False):
+        if encrypted:
+            cfg.CONF.set_override('encrypt_parameters_and_properties', True)
+
         self.username = 'event_test_user'
 
         self.ctx = utils.dummy_context()
@@ -92,6 +69,7 @@ class EventCommon(common.HeatTestCase):
         self.stack.store()
 
         self.resource = self.stack['EventTestResource']
+        self.resource._update_stored_properties()
         self.resource._store()
         self.addCleanup(stack_object.Stack.delete, self.ctx, self.stack.id)
 
@@ -108,14 +86,14 @@ class EventTest(EventCommon):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'alabama', self.resource.properties,
+                        'alabama', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type())
         e.store()
         self.assertEqual(1, len(event_object.Event.get_all_by_stack(
             self.ctx,
             self.stack.id)))
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arizona', self.resource.properties,
+                        'arizona', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type())
         e.store()
         events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
@@ -128,7 +106,7 @@ class EventTest(EventCommon):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arkansas', self.resource.properties,
+                        'arkansas', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type())
         e.store()
 
@@ -137,7 +115,7 @@ class EventTest(EventCommon):
             mock_random_uniform.return_value = 2.0 / 100 - .0001
             e = event.Event(self.ctx, self.stack, 'TEST',
                             'IN_PROGRESS', 'Testing',
-                            'alaska', self.resource.properties,
+                            'alaska', self.resource._rsrc_prop_data,
                             self.resource.name, self.resource.type())
             e.store()
         events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
@@ -149,16 +127,68 @@ class EventTest(EventCommon):
             mock_random_uniform.return_value = 2.0 / 100 + .0001
             e = event.Event(self.ctx, self.stack, 'TEST',
                             'IN_PROGRESS', 'Testing',
-                            'aardvark', self.resource.properties,
+                            'aardvark', self.resource._rsrc_prop_data,
                             self.resource.name, self.resource.type())
             e.store()
         events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
         self.assertEqual(2, len(events))
 
+    def test_store_caps_resource_props_data(self):
+        cfg.CONF.set_override('event_purge_batch_size', 2, enforce_type=True)
+        cfg.CONF.set_override('max_events_per_stack', 3, enforce_type=True)
+        self.resource.resource_id_set('resource_physical_id')
+
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'alabama', self.resource._rsrc_prop_data,
+                        self.resource.name, self.resource.type())
+        e.store()
+        rpd1_id = self.resource._rsrc_prop_data.id
+
+        rpd2 = rpd_object.ResourcePropertiesData.create(
+            self.ctx, {'encrypted': False, 'data': {'foo': 'bar'}})
+        rpd2_id = rpd2.id
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'arizona', rpd2,
+                        self.resource.name, self.resource.type())
+        e.store()
+
+        rpd3 = rpd_object.ResourcePropertiesData.create(
+            self.ctx, {'encrypted': False, 'data': {'foo': 'bar'}})
+        rpd3_id = rpd3.id
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'arkansas', rpd3,
+                        self.resource.name, self.resource.type())
+        e.store()
+
+        rpd4 = rpd_object.ResourcePropertiesData.create(
+            self.ctx, {'encrypted': False, 'data': {'foo': 'bar'}})
+        rpd4_id = rpd4.id
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'arkansas', rpd4,
+                        self.resource.name, self.resource.type())
+        e.store()
+
+        events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
+        self.assertEqual(2, len(events))
+        self.assertEqual('arkansas', events[0].physical_resource_id)
+        # rpd1 should still exist since that is still referred to by
+        # the resource. rpd2 shoud have been deleted along with the
+        # 2nd event.
+        self.assertIsNotNone(self.ctx.session.query(
+            models.ResourcePropertiesData).get(rpd1_id))
+        self.assertIsNone(self.ctx.session.query(
+            models.ResourcePropertiesData).get(rpd2_id))
+        # We didn't purge the last two events, so we ought to have
+        # kept rsrc_prop_data for both.
+        self.assertIsNotNone(self.ctx.session.query(
+            models.ResourcePropertiesData).get(rpd3_id))
+        self.assertIsNotNone(self.ctx.session.query(
+            models.ResourcePropertiesData).get(rpd4_id))
+
     def test_identifier(self):
         event_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties,
+                        'wibble', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type(),
                         uuid=event_uuid)
 
@@ -173,27 +203,16 @@ class EventTest(EventCommon):
 
     def test_identifier_is_none(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties,
+                        'wibble', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type())
 
         self.assertIsNone(e.identifier())
         e.store()
         self.assertIsNotNone(e.identifier())
 
-    def test_badprop(self):
-        rname = 'bad_resource'
-        defn = rsrc_defn.ResourceDefinition(rname,
-                                            'ResourceWithRequiredProps',
-                                            {'IntFoo': False})
-
-        res = generic_rsrc.ResourceWithRequiredProps(rname, defn, self.stack)
-        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', res.properties, res.name, res.type())
-        self.assertIn('Error', e.resource_properties)
-
     def test_as_dict(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource.properties,
+                        'wibble', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type())
 
         e.store()
@@ -212,6 +231,23 @@ class EventTest(EventCommon):
                         'stack_id': self.stack.id,
                         'version': '0.1'}}
         self.assertEqual(expected, e.as_dict())
+
+    def test_load_deprecated_prop_data(self):
+        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
+                        'wibble', self.resource._rsrc_prop_data,
+                        self.resource.name, self.resource.type())
+        e.store()
+
+        # for test purposes, dress up the event to have the deprecated
+        # properties_data field populated
+        e_obj = db_api.event_get(self.resource.context, e.id)
+        with self.ctx.session.begin():
+            e_obj['resource_properties'] = {'Time': 'not enough'}
+            e_obj['rsrc_prop_data'] = None
+
+        # verify the deprecated data gets loaded
+        ev = event_object.Event.get_by_id(self.ctx, e.id)
+        self.assertEqual({'Time': 'not enough'}, ev.resource_properties)
 
     def test_event_object_resource_properties_data(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', True,
@@ -232,78 +268,29 @@ class EventTest(EventCommon):
         self.assertEqual(data, e_obj.rsrc_prop_data.data)
 
 
-class EventTestSingleLargeProp(EventCommon):
+class EventEncryptedTest(EventCommon):
 
     def setUp(self):
-        super(EventTestSingleLargeProp, self).setUp()
-        self._setup_stack(tmpl_multiple_too_large)
+        super(EventEncryptedTest, self).setUp()
+        self._setup_stack(tmpl, encrypted=True)
 
-    def test_too_large_single_prop(self):
-        self.resource.resource_id_set('resource_physical_id')
-
+    def test_props_encrypted(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'alabama', self.resource.properties,
+                        'wibble', self.resource._rsrc_prop_data,
                         self.resource.name, self.resource.type())
         e.store()
-        self.assertIsNotNone(e.id)
+
+        # verify the resource_properties_data db data is encrypted
+        e_obj = event_object.Event.get_by_id(self.resource.context, e.id)
+        rpd_id = e_obj['rsrc_prop_data'].id
+        results = self.resource.context.session.query(
+            models.ResourcePropertiesData).filter_by(
+                id=rpd_id)
+        self.assertNotEqual('goo',
+                            results[0]['data']['Foo'])
+        self.assertTrue(results[0]['encrypted'])
+
+        # verify encrypted data is decrypted when retrieved through
+        # heat object layer
         ev = event_object.Event.get_by_id(self.ctx, e.id)
-
-        self.assertEqual(
-            {'Foo1': 'zoo',
-             'Foo2': '<Deleted, too large>',
-             'Foo3': '99999',
-             'Error': 'Resource properties are too large to store fully'},
-            ev['resource_properties'])
-
-
-class EventTestMultipleLargeProp(EventCommon):
-
-    def setUp(self):
-        super(EventTestMultipleLargeProp, self).setUp()
-        self._setup_stack(tmpl_multiple_srsly_too_large)
-
-    def test_too_large_multiple_prop(self):
-        self.resource.resource_id_set('resource_physical_id')
-
-        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'alabama', self.resource.properties,
-                        self.resource.name, self.resource.type())
-        e.store()
-        self.assertIsNotNone(e.id)
-        ev = event_object.Event.get_by_id(self.ctx, e.id)
-
-        self.assertEqual(
-            {'Error': 'Resource properties are too large to attempt to store'},
-            ev['resource_properties'])
-
-
-class EventTestStoreProps(EventCommon):
-
-    def setUp(self):
-        super(EventTestStoreProps, self).setUp()
-        self._setup_stack(tmpl_multiple)
-
-    def test_store_fail_all_props(self):
-        self.resource.resource_id_set('resource_physical_id')
-
-        e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'alabama', self.resource.properties,
-                        self.resource.name, self.resource.type())
-        e.store()
-        self.assertIsNotNone(e.id)
-        ev = event_object.Event.get_by_id(self.ctx, e.id)
-
-        errors = [oslo_db.exception.DBError]
-
-        def side_effect(*args):
-            try:
-                raise errors.pop()
-            except IndexError:
-                self.assertEqual(
-                    {'Error': 'Resource properties are too large to store'},
-                    args[1]['resource_properties'])
-                return ev
-
-        with mock.patch("heat.objects.event.Event") as mock_event:
-            mock_event.create.side_effect = side_effect
-            e.store()
+        self.assertEqual({'Foo': 'goo'}, ev.rsrc_prop_data.data)
