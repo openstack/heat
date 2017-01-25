@@ -1,0 +1,7 @@
+---
+features:
+  - A new resource ``OS::Sahara::Job`` has been added, which allows to create
+    and launch sahara jobs. Job can be launched with resource-signal.
+  - Custom constraints for all sahara resources added - sahara.cluster,
+    sahara.cluster_template, sahara.data_source, sahara.job_binary,
+    sahara.job_type.
