@@ -20,7 +20,7 @@ from heat.tests import utils
 class CeilometerClientPluginTest(common.HeatTestCase):
 
     def test_create(self):
-        self.patchobject(cc.Client, '_get_alarm_client')
+        self.patchobject(cc.Client, '_get_redirect_client')
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('ceilometer')
         client = plugin.client()
