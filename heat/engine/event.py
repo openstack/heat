@@ -44,8 +44,8 @@ class Event(object):
             self.resource_properties = {}
         else:
             raise AssertionError(
-                _('resource_properties is unexpected type %s'),
-                type(resource_properties))
+                'resource_properties is unexpected type %s' %
+                type(resource_properties).__name__)
         self.uuid = uuid
         self.timestamp = timestamp
         self.id = id
