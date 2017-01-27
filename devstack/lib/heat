@@ -350,6 +350,7 @@ function _config_heat_apache_wsgi {
         s|%PUBLICPORT%|$heat_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
         s|%HEAT_BIN_DIR%|$HEAT_BIN_DIR|g;
+        s|%API_WORKERS%|$API_WORKERS|g;
         s|%SSLENGINE%|$heat_ssl|g;
         s|%SSLCERTFILE%|$heat_certfile|g;
         s|%SSLKEYFILE%|$heat_keyfile|g;
@@ -362,6 +363,7 @@ function _config_heat_apache_wsgi {
         s|%PUBLICPORT%|$heat_cfn_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
         s|%HEAT_BIN_DIR%|$HEAT_BIN_DIR|g;
+        s|%API_WORKERS%|$API_WORKERS|g;
         s|%SSLENGINE%|$heat_ssl|g;
         s|%SSLCERTFILE%|$heat_certfile|g;
         s|%SSLKEYFILE%|$heat_keyfile|g;
@@ -374,6 +376,7 @@ function _config_heat_apache_wsgi {
         s|%PUBLICPORT%|$heat_cw_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
         s|%HEAT_BIN_DIR%|$HEAT_BIN_DIR|g;
+        s|%API_WORKERS%|$API_WORKERS|g;
         s|%SSLENGINE%|$heat_ssl|g;
         s|%SSLCERTFILE%|$heat_certfile|g;
         s|%SSLKEYFILE%|$heat_keyfile|g;

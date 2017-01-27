@@ -1,7 +1,7 @@
 Listen %PUBLICPORT%
 
 <VirtualHost *:%PUBLICPORT%>
-    WSGIDaemonProcess heat-api-cfn processes=2 threads=1 user=%USER% display-name=%{GROUP} %VIRTUALENV%
+    WSGIDaemonProcess heat-api-cfn processes=%API_WORKERS% threads=1 user=%USER% display-name=%{GROUP} %VIRTUALENV%
     WSGIProcessGroup heat-api-cfn
     WSGIScriptAlias / %HEAT_BIN_DIR%/heat-wsgi-api-cfn
     WSGIApplicationGroup %{GLOBAL}
@@ -10,7 +10,8 @@ Listen %PUBLICPORT%
     <IfVersion >= 2.4>
       ErrorLogFormat "%{cu}t %M"
     </IfVersion>
-    ErrorLog /var/log/%APACHE_NAME%/heat-api-cfn.log
+    ErrorLog /var/log/%APACHE_NAME%/heat_api_cfn.log
+    CustomLog /var/log/%APACHE_NAME%/heat_api_cfn_access.log combined
     %SSLENGINE%
     %SSLCERTFILE%
     %SSLKEYFILE%
