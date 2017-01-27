@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mox
-
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
@@ -106,13 +104,6 @@ class NeutronNetTest(common.HeatTestCase):
     def test_net(self):
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            '792ff887-6c85-4a56-b518-23f24fa65581',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('792ff887-6c85-4a56-b518-23f24fa65581')
 
         # Create script
         neutronclient.Client.create_network({

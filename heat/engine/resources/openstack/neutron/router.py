@@ -595,13 +595,7 @@ class RouterGateway(neutron.NeutronResource):
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if resource.has_interface('OS::Neutron::RouterInterface'):
-                # Since RouterInterface translates router_id property to
-                # router, we should correctly resolve it for RouterGateway.
-                dep_router_id = self.client_plugin().resolve_router({
-                    RouterInterface.ROUTER: resource.properties.get(
-                        RouterInterface.ROUTER),
-                    RouterInterface.ROUTER_ID: None}, RouterInterface.ROUTER,
-                    RouterInterface.ROUTER_ID)
+                dep_router_id = resource.properties[RouterInterface.ROUTER]
                 router_id = self.properties[self.ROUTER_ID]
                 if dep_router_id == router_id:
                     deps += (self, resource)
@@ -609,8 +603,7 @@ class RouterGateway(neutron.NeutronResource):
             # as this network_id, as the gateway implicitly creates a port
             # on that subnet
             if resource.has_interface('OS::Neutron::Subnet'):
-                dep_network = resource.properties.get(
-                    subnet.Subnet.NETWORK)
+                dep_network = resource.properties[subnet.Subnet.NETWORK]
                 network = self.properties[self.NETWORK]
                 if dep_network == network:
                     deps += (self, resource)
