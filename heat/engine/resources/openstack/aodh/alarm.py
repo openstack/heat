@@ -106,6 +106,13 @@ class AodhAlarm(alarm_base.BaseAlarm):
                           'To see the attributes of your Samples, '
                           'use `ceilometer --debug sample-list`.')
                     ),
+                    alarm_base.BaseAlarm.QF_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The type of the attribute.'),
+                        default='string',
+                        constraints=[alarm_base.BaseAlarm.QF_TYPE_VALS],
+                        support_status=support.SupportStatus(version='8.0.0')
+                    ),
                     alarm_base.BaseAlarm.QF_OP: properties.Schema(
                         properties.Schema.STRING,
                         _('Comparison operator.'),
@@ -331,6 +338,12 @@ class EventAlarm(alarm_base.BaseAlarm):
                     alarm_base.BaseAlarm.QF_FIELD: properties.Schema(
                         properties.Schema.STRING,
                         _('Name of attribute to compare.')
+                    ),
+                    alarm_base.BaseAlarm.QF_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The type of the attribute.'),
+                        default='string',
+                        constraints=[alarm_base.BaseAlarm.QF_TYPE_VALS]
                     ),
                     alarm_base.BaseAlarm.QF_OP: properties.Schema(
                         properties.Schema.STRING,
