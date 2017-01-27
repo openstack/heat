@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from ceilometerclient.v2 import client as cc
+from ceilometerclient import client as cc
 
 from heat.tests import common
 from heat.tests import utils
@@ -20,7 +20,7 @@ from heat.tests import utils
 class CeilometerClientPluginTest(common.HeatTestCase):
 
     def test_create(self):
-        self.patchobject(cc.Client, '_get_redirect_client')
+        self.patchobject(cc.SessionClient, 'request')
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('ceilometer')
         client = plugin.client()
