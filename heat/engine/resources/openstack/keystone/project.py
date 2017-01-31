@@ -16,6 +16,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class KeystoneProject(resource.Resource):
@@ -76,6 +77,24 @@ class KeystoneProject(resource.Resource):
         ),
     }
 
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.DOMAIN],
+                client_plugin=self.client_plugin(),
+                finder='get_domain_id'
+            ),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.PARENT],
+                client_plugin=self.client_plugin(),
+                finder='get_project_id'
+            ),
+        ]
+
     def client(self):
         return super(KeystoneProject, self).client().client
 
@@ -83,11 +102,9 @@ class KeystoneProject(resource.Resource):
         project_name = (self.properties[self.NAME] or
                         self.physical_resource_name())
         description = self.properties[self.DESCRIPTION]
-        domain = self.client_plugin().get_domain_id(
-            self.properties[self.DOMAIN])
+        domain = self.properties[self.DOMAIN]
         enabled = self.properties[self.ENABLED]
-        pp = self.properties[self.PARENT]
-        parent = self.client_plugin().get_project_id(pp)
+        parent = self.properties[self.PARENT]
 
         project = self.client().projects.create(
             name=project_name,
@@ -107,17 +124,21 @@ class KeystoneProject(resource.Resource):
 
             description = prop_diff.get(self.DESCRIPTION)
             enabled = prop_diff.get(self.ENABLED)
-            domain = (prop_diff.get(self.DOMAIN) or
-                      self.properties[self.DOMAIN])
-            domain_id = self.client_plugin().get_domain_id(domain)
+            domain = prop_diff.get(self.DOMAIN, self.properties[self.DOMAIN])
 
             self.client().projects.update(
                 project=self.resource_id,
                 name=name,
                 description=description,
                 enabled=enabled,
-                domain=domain_id
+                domain=domain
             )
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(KeystoneProject, self).parse_live_resource_data(
+            resource_properties, resource_data)
+        result[self.DOMAIN] = resource_data.get('domain_id')
+        return result
 
 
 def resource_mapping():
