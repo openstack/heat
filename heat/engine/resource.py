@@ -1736,7 +1736,7 @@ class Resource(object):
         try:
             rs = {'action': self.action,
                   'status': self.status,
-                  'status_reason': self.status_reason,
+                  'status_reason': str(self.status_reason),
                   'stack_id': self.stack.id,
                   'physical_resource_id': self.resource_id,
                   'name': self.name,
@@ -1777,7 +1777,7 @@ class Resource(object):
         data = {
             'action': self.action,
             'status': self.status,
-            'status_reason': reason,
+            'status_reason': str(reason),
             'stack_id': self.stack.id,
             'updated_at': self.updated_time,
             'needed_by': self.needed_by,

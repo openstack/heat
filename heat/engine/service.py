@@ -1041,11 +1041,13 @@ class EngineService(service.ServiceBase):
                 return api.format_stack_resource(current.resources.get(k))
 
             return {
-                'unchanged': map(fmt_updated_res, act.get('unchanged', [])),
-                'updated': map(fmt_current_res, act.get('updated', [])),
-                'replaced': map(fmt_updated_res, act.get('replaced', [])),
-                'added': map(fmt_updated_res, act.get('added', [])),
-                'deleted': map(fmt_current_res, act.get('deleted', [])),
+                'unchanged': list(
+                    map(fmt_updated_res, act.get('unchanged', []))),
+                'updated': list(map(fmt_current_res, act.get('updated', []))),
+                'replaced': list(
+                    map(fmt_updated_res, act.get('replaced', []))),
+                'added': list(map(fmt_updated_res, act.get('added', []))),
+                'deleted': list(map(fmt_current_res, act.get('deleted', []))),
             }
 
         updated_stack.id = current_stack.id
