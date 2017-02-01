@@ -477,7 +477,8 @@ class ServerNetworkMixin(object):
 
         # In case of convergence, during rollback, the previous rsrc is
         # already selected and is being acted upon.
-        backup_res = self.stack._backup_stack().resources.get(self.name)
+        backup_stack = self.stack._backup_stack()
+        backup_res = backup_stack.resources.get(self.name)
         prev_server = self if convergence else backup_res
 
         if convergence:
