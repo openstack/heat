@@ -65,8 +65,9 @@ resources:
                                stack_name=stack_name,
                                parameters=parameters,
                                template=self.unavailable_template)
-        self.assertIn('ResourceTypeUnavailable', ex.message)
-        self.assertIn('OS::Sahara::NodeGroupTemplate', ex.message)
+        self.assertIn('ResourceTypeUnavailable', ex.message.decode('utf-8'))
+        self.assertIn('OS::Sahara::NodeGroupTemplate',
+                      ex.message.decode('utf-8'))
 
 
 class RoleBasedExposureTest(functional_base.FunctionalTestsBase):
@@ -148,7 +149,7 @@ resources:
                                    self.client.stacks.create,
                                    stack_name=self.stack_name,
                                    template=self.template)
-            self.assertIn(self.forbidden_r_type, ex.message)
+            self.assertIn(self.forbidden_r_type, ex.message.decode('utf-8'))
 
     def test_forbidden_resource_not_listed(self):
         resources = self.client.resource_types.list()
