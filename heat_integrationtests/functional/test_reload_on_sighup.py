@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
+import subprocess
 import time
 
 import eventlet
@@ -25,6 +27,13 @@ class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
     def setUp(self):
         self.config_file = "/etc/heat/heat.conf"
         super(ReloadOnSighupTest, self).setUp()
+
+    def _is_mod_wsgi_daemon(self, service):
+        process = ''.join(['wsgi:', service[:9]]).replace('_', '-')
+        s = subprocess.Popen(["ps", "ax"], stdout=subprocess.PIPE)
+        for x in s.stdout:
+            if re.search(process, x):
+                return True
 
     def _set_config_value(self, service, key, value):
         config = configparser.ConfigParser()
@@ -116,11 +125,17 @@ class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
         # revert all the changes made
         self._change_config(service, new_workers, old_workers)
 
+    def _reload_on_sighup(self, service):
+        if not self._is_mod_wsgi_daemon(service):
+            self._reload(service)
+        else:
+            self.skipTest('Skipping Test, Service running under httpd.')
+
     def test_api_reload_on_sighup(self):
-        self._reload('heat_api')
+        self._reload_on_sighup('heat_api')
 
     def test_api_cfn_reload_on_sighup(self):
-        self._reload('heat_api_cfn')
+        self._reload_on_sighup('heat_api_cfn')
 
     def test_api_cloudwatch_on_sighup(self):
-        self._reload('heat_api_cloudwatch')
+        self._reload_on_sighup('heat_api_cloudwatch')

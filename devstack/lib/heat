@@ -40,7 +40,7 @@ GITREPO["python-heatclient"]=${HEATCLIENT_REPO:-${GIT_BASE}/openstack/python-hea
 GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 
 # Toggle for deploying Heat-API under HTTPD + mod_wsgi
-HEAT_USE_MOD_WSGI=${HEAT_USE_MOD_WSGI:-False}
+HEAT_USE_MOD_WSGI=${HEAT_USE_MOD_WSGI:-True}
 
 HEAT_DIR=$DEST/heat
 HEAT_FILES_DIR=$HEAT_DIR/devstack/files
