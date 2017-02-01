@@ -24,8 +24,8 @@ from heat.common import template_format
 from heat.common import timeutils as heat_timeutils
 from heat.db.sqlalchemy import models
 from heat.engine import api
+from heat.engine.cfn import parameters as cfn_param
 from heat.engine import event
-from heat.engine import parameters
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.objects import event as event_object
@@ -1033,7 +1033,7 @@ class FormatValidateParameterTest(common.HeatTestCase):
         t = template_format.parse(self.template % self.param)
         tmpl = template.Template(t)
 
-        tmpl_params = parameters.Parameters(None, tmpl)
+        tmpl_params = cfn_param.CfnParameters(None, tmpl)
         tmpl_params.validate(validate_value=False)
         param = tmpl_params.params[self.param_name]
         param_formated = api.format_validate_parameter(param)

@@ -18,6 +18,7 @@ import six
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
+from heat.engine.cfn import parameters as cfn_params
 from heat.engine import function
 from heat.engine import parameters
 from heat.engine import rsrc_defn
@@ -105,9 +106,9 @@ class CfnTemplateBase(template_common.CommonTemplate):
         return section
 
     def parameters(self, stack_identifier, user_params, param_defaults=None):
-        return parameters.Parameters(stack_identifier, self,
-                                     user_params=user_params,
-                                     param_defaults=param_defaults)
+        return cfn_params.CfnParameters(stack_identifier, self,
+                                        user_params=user_params,
+                                        param_defaults=param_defaults)
 
     def resource_definitions(self, stack):
         resources = self.t.get(self.RESOURCES) or {}
