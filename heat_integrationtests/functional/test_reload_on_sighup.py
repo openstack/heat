@@ -49,7 +49,7 @@ class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
         while True:
             config.read(self.config_file)
             try:
-                config.set(service, key, value)
+                config.set(service, key, str(value))
             except configparser.NoSectionError:
                 if retries_count <= 0:
                     raise
@@ -58,7 +58,7 @@ class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
             else:
                 break
 
-        with open(self.config_file, 'wb') as f:
+        with open(self.config_file, 'w') as f:
             config.write(f)
 
     def _get_config_value(self, service, key):
