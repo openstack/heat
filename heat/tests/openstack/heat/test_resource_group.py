@@ -531,6 +531,18 @@ class ResourceGroupTest(common.HeatTestCase):
         checkers = resgrp.handle_create()
         self.assertEqual(4, len(checkers))
 
+    def test_handle_create_with_batching_zero_count(self):
+        stack = utils.parse_stack(tmpl_with_default_updt_policy())
+        defn = stack.t.resource_definitions(stack)['group1']
+        props = stack.t.t['resources']['group1']['properties'].copy()
+        props['count'] = 0
+        update_policy = {'batch_create': {'max_batch_size': 1}}
+        snip = defn.freeze(properties=props, update_policy=update_policy)
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        self.patchobject(scheduler.TaskRunner, 'start')
+        checkers = resgrp.handle_create()
+        self.assertEqual(0, len(checkers))
+
     def test_run_to_completion(self):
         stack = utils.parse_stack(template2)
         snip = stack.t.resource_definitions(stack)['group1']
