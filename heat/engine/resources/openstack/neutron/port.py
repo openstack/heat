@@ -538,8 +538,9 @@ class Port(neutron.NeutronResource):
     def restore_prev_rsrc(self, convergence=False):
         # In case of convergence, during rollback, the previous rsrc is
         # already selected and is being acted upon.
-        bakup_resources = self.stack._backup_stack().resources
-        prev_port = self if convergence else bakup_resources.get(self.name)
+        backup_stack = self.stack._backup_stack()
+        backup_res = backup_stack.resources.get(self.name)
+        prev_port = self if convergence else backup_res
         fixed_ips = prev_port.data().get('port_fip', [])
 
         props = {'fixed_ips': []}
