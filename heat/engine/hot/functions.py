@@ -704,7 +704,7 @@ class MapMerge(function.Function):
 
     And resolves to::
 
-        {"<k1>": "<v2>", "<k2>": "<v3>"}
+        {"<k1>": "<v3>", "<k2>": "<v2>"}
 
     """
 
