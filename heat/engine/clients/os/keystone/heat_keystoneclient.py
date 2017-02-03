@@ -120,6 +120,10 @@ class KsClientWrapper(object):
         return self._client
 
     @property
+    def region_name(self):
+        return self.context.region_name or cfg.CONF.region_name_for_services
+
+    @property
     def domain_admin_auth(self):
         if not self._domain_admin_auth:
             # Note we must specify the domain when getting the token
@@ -148,12 +152,14 @@ class KsClientWrapper(object):
         if not self._domain_admin_client:
             self._domain_admin_client = kc_v3.Client(
                 session=self.session,
-                auth=self.domain_admin_auth)
+                auth=self.domain_admin_auth,
+                region_name=self.region_name)
 
         return self._domain_admin_client
 
     def _v3_client_init(self):
-        client = kc_v3.Client(session=self.session)
+        client = kc_v3.Client(session=self.session,
+                              region_name=self.region_name)
 
         if hasattr(self.context.auth_plugin, 'get_access'):
             # NOTE(jamielennox): get_access returns the current token without
