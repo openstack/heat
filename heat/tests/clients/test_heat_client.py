@@ -91,7 +91,8 @@ class KeystoneClientTest(common.HeatTestCase):
         m.AndReturn(mock_ks_auth)
 
         n = kc_v3.Client(session=mox.IsA(ks_session.Session),
-                         auth=mock_ks_auth)
+                         auth=mock_ks_auth,
+                         region_name=None)
         n.AndReturn(self.mock_admin_client)
 
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
@@ -131,7 +132,8 @@ class KeystoneClientTest(common.HeatTestCase):
 
         if client:
             c = kc_v3.Client(session=mox.IsA(ks_session.Session),
-                             auth=mock_ks_auth)
+                             auth=mock_ks_auth,
+                             region_name=None)
             c.AndReturn(self.mock_ks_v3_client)
 
             if stub_trust_context:
@@ -1482,7 +1484,8 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         m.AndReturn(mock_ks_auth)
 
         n = kc_v3.Client(session=mox.IsA(ks_session.Session),
-                         auth=mock_ks_auth)
+                         auth=mock_ks_auth,
+                         region_name=None)
         n.AndReturn(self.mock_admin_client)
 
         self.mock_admin_client.domains = self.mock_ks_v3_client_domain_mngr
