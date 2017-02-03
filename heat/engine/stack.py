@@ -918,6 +918,7 @@ class Stack(collections.Mapping):
         self.action = action
         self.status = status
         self.status_reason = reason
+        self._log_status()
 
         if self.convergence and action in (
                 self.UPDATE, self.DELETE, self.CREATE,
@@ -942,6 +943,14 @@ class Stack(collections.Mapping):
                 self.UPDATE, self.DELETE, self.ROLLBACK):
             self._persist_state()
 
+    def _log_status(self):
+        LOG.info(_LI('Stack %(action)s %(status)s (%(name)s): '
+                     '%(reason)s'),
+                 {'action': self.action,
+                  'status': self.status,
+                  'name': self.name,
+                  'reason': self.status_reason})
+
     def _persist_state(self):
         """Persist stack state to database"""
         if self.id is None:
@@ -965,14 +974,12 @@ class Stack(collections.Mapping):
                 stack.update_and_save(values)
 
     def _send_notification_and_add_event(self):
+        LOG.debug('Persisting stack %(name)s status %(action)s %(status)s',
+                  {'action': self.action,
+                   'status': self.status,
+                   'name': self.name})
         notification.send(self)
         self._add_event(self.action, self.status, self.status_reason)
-        LOG.info(_LI('Stack %(action)s %(status)s (%(name)s): '
-                     '%(reason)s'),
-                 {'action': self.action,
-                  'status': self.status,
-                  'name': self.name,
-                  'reason': self.status_reason})
 
     def persist_state_and_release_lock(self, engine_id):
         """Persist stack state to database and release stack lock"""
@@ -1549,6 +1556,7 @@ class Stack(collections.Mapping):
             # condition with the COMPLETE status
             self.action = action
 
+            self._log_status()
             self._send_notification_and_add_event()
             if self.status == self.FAILED:
                 # Since template was incrementally updated based on existing
