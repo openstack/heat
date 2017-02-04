@@ -41,6 +41,9 @@ run --parallel` will run it in parallel (this is the default incantation tox
 uses.) More information about testr can be found at:
 http://wiki.openstack.org/testr
 
+Note that unit tests use a database if available. See
+``tools/test-setup.sh`` on how to set up the databases the same way as
+done in the OpenStack CI systems.
 
 Heat Specific Commandments
 --------------------------
