@@ -1,0 +1,5 @@
+---
+other:
+  - |
+    Introduce a Zun client plugin module that will be used by the
+    Zun's resources that are under development.
