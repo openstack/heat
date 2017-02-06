@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import datetime
 import eventlet
 import itertools
 import json
@@ -280,11 +281,25 @@ class ResourceTest(common.HeatTestCase):
     def test_state_set(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.state_set(res.CREATE, res.COMPLETE, 'wibble')
+        res.state_set(res.CREATE, res.IN_PROGRESS, 'test_state_set')
+        self.assertIsNotNone(res.id)
+        self.assertEqual(res.CREATE, res.action)
+        self.assertEqual(res.IN_PROGRESS, res.status)
+        self.assertEqual('test_state_set', res.status_reason)
+
+        db_res = resource_objects.Resource.get_obj(res.context, res.id)
+        self.assertEqual(res.CREATE, db_res.action)
+        self.assertEqual(res.IN_PROGRESS, db_res.status)
+        self.assertEqual('test_state_set', db_res.status_reason)
+
+        res.state_set(res.CREATE, res.COMPLETE, 'test_update')
         self.assertEqual(res.CREATE, res.action)
         self.assertEqual(res.COMPLETE, res.status)
-        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
-        self.assertEqual('wibble', res.status_reason)
+        self.assertEqual('test_update', res.status_reason)
+        db_res.refresh()
+        self.assertEqual(res.CREATE, db_res.action)
+        self.assertEqual(res.COMPLETE, db_res.status)
+        self.assertEqual('test_update', db_res.status_reason)
 
     def test_physical_resource_name_or_FnGetRefId(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
@@ -429,14 +444,14 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_res_new', tmpl, self.stack)
         self.assertIsNone(res.created_time)
-        res._store()
+        res.store()
         self.assertIsNotNone(res.created_time)
 
     def test_updated_time(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res._store()
+        res.store()
         stored_time = res.updated_time
 
         utmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
@@ -542,43 +557,20 @@ class ResourceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_updated_time_changes_only_on_update_calls(self):
+    def test_updated_time_changes_only_when_it_changed(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
                                             'GenericResourceType')
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res._store()
+        res.store()
         self.assertIsNone(res.updated_time)
-
-        res._store_or_update(res.UPDATE, res.COMPLETE, 'should not change')
-        self.assertIsNone(res.updated_time)
-
-    def test_store_or_update(self):
-        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
-        res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
-        res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
-        self.assertIsNotNone(res.id)
-        self.assertEqual(res.CREATE, res.action)
-        self.assertEqual(res.IN_PROGRESS, res.status)
-        self.assertEqual('test_store', res.status_reason)
-
-        db_res = resource_objects.Resource.get_obj(res.context, res.id)
-        self.assertEqual(res.CREATE, db_res.action)
-        self.assertEqual(res.IN_PROGRESS, db_res.status)
-        self.assertEqual('test_store', db_res.status_reason)
-
-        res._store_or_update(res.CREATE, res.COMPLETE, 'test_update')
-        self.assertEqual(res.CREATE, res.action)
-        self.assertEqual(res.COMPLETE, res.status)
-        self.assertEqual('test_update', res.status_reason)
-        db_res.refresh()
-        self.assertEqual(res.CREATE, db_res.action)
-        self.assertEqual(res.COMPLETE, db_res.status)
-        self.assertEqual('test_update', db_res.status_reason)
+        res.updated_time = datetime.datetime.utcnow()
+        res.store()
+        self.assertIsNotNone(res.updated_time)
 
     def test_make_replacement(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         res = generic_rsrc.GenericResource('test_res_upd', tmpl, self.stack)
-        res._store()
+        res.store()
         new_tmpl_id = 2
         self.assertIsNotNone(res.id)
         new_id = res.make_replacement(new_tmpl_id)
@@ -1797,15 +1789,15 @@ class ResourceTest(common.HeatTestCase):
         # The db data should be encrypted when _store_or_update() is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
-        res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
+        res.state_set(res.CREATE, res.IN_PROGRESS, 'test_store')
         db_res = db_api.resource_get(res.context, res.id)
         self.assertNotEqual('string',
                             db_res.properties_data['prop1'])
 
-        # The db data should be encrypted when _store() is called
+        # The db data should be encrypted when state_set is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
-        res._store()
+        res.state_set(res.CREATE, res.IN_PROGRESS, 'test_store')
         db_res = db_api.resource_get(res.context, res.id)
         self.assertNotEqual('string',
                             db_res.properties_data['prop1'])
@@ -1839,18 +1831,18 @@ class ResourceTest(common.HeatTestCase):
                                   'prop4': ['a', 'list'],
                                   'prop5': True}
 
-        # The db data should not be encrypted when _store_or_update()
+        # The db data should not be encrypted when state_set()
         # is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
-        res._store_or_update(res.CREATE, res.IN_PROGRESS, 'test_store')
+        res.state_set(res.CREATE, res.IN_PROGRESS, 'test_store')
         db_res = db_api.resource_get(res.context, res.id)
         self.assertEqual('string', db_res.properties_data['prop1'])
 
         # The db data should not be encrypted when _store() is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
-        res._store()
+        res.store()
         db_res = db_api.resource_get(res.context, res.id)
         self.assertEqual('string', db_res.properties_data['prop1'])
 
@@ -1876,7 +1868,7 @@ class ResourceTest(common.HeatTestCase):
     def test_release_ignores_not_found_error(self, mock_sau, mock_get_obj):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res._store()
+        res.store()
         res._acquire('engine-id')
         mock_get_obj.side_effect = exception.NotFound()
         res._release('engine-id')
@@ -1886,7 +1878,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
-        res._store()
+        res.store()
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
@@ -1904,7 +1896,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
-        res._store()
+        res.store()
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
 
@@ -1920,7 +1912,7 @@ class ResourceTest(common.HeatTestCase):
         """
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res._store()
+        res.store()
         dummy_ex = exception.ResourceNotAvailable(resource_name=res.name)
         res.create = mock.Mock(side_effect=dummy_ex)
         self._assert_resource_lock(res.id, None, None)
@@ -1937,7 +1929,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.ADOPT
-        res._store()
+        res.store()
         self.stack.adopt_stack_data = {'resources': {'test_res': {
             'resource_id': 'fluffy'}}}
         self._assert_resource_lock(res.id, None, None)
@@ -1956,7 +1948,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.ADOPT
-        res._store()
+        res.store()
         self.stack.adopt_stack_data = {'resources': {}}
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
@@ -1979,7 +1971,7 @@ class ResourceTest(common.HeatTestCase):
         res = stack.resources['test_res']
         res.requires = [2]
         res.action = res.CREATE
-        res._store()
+        res.store()
         self._assert_resource_lock(res.id, None, None)
 
         new_temp = template.Template({
@@ -2015,7 +2007,7 @@ class ResourceTest(common.HeatTestCase):
                              tmpl)
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
-        res._store()
+        res.store()
 
         new_temp = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
@@ -2037,7 +2029,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res',
                                             'GenericResourceType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res._store()
+        res.store()
 
         new_temp = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
@@ -2058,7 +2050,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res',
                                             'GenericResourceType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res._store()
+        res.store()
 
         new_temp = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
@@ -2081,7 +2073,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.requires = [1, 2]
-        res._store()
+        res.store()
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
         rs.update_and_save({'engine_id': 'not-this'})
         self._assert_resource_lock(res.id, 'not-this', None)
@@ -2110,7 +2102,7 @@ class ResourceTest(common.HeatTestCase):
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
         res.requires = [2]
-        res._store()
+        res.store()
         self._assert_resource_lock(res.id, None, None)
 
         new_temp = template.Template({
@@ -2153,7 +2145,7 @@ class ResourceTest(common.HeatTestCase):
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
         res.requires = [2]
-        res._store()
+        res.store()
         self._assert_resource_lock(res.id, None, None)
 
         new_temp = template.Template({
@@ -2187,7 +2179,7 @@ class ResourceTest(common.HeatTestCase):
                                                 'ResourceWithPropsType')
         res = generic_rsrc.ResourceWithProps('test_res', rsrc_def, self.stack)
         res.replaced_by = 'dummy'
-        res._store()
+        res.store()
 
         new_temp = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
@@ -2211,7 +2203,7 @@ class ResourceTest(common.HeatTestCase):
                                                 'ResourceWithPropsType')
         res = generic_rsrc.ResourceWithProps('test_res', rsrc_def, self.stack)
         res.replaced_by = 'dummy'
-        res._store()
+        res.store()
 
         new_temp = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
@@ -2237,7 +2229,7 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = 1
         res.status = res.COMPLETE
         res.action = res.CREATE
-        res._store()
+        res.store()
         res.handle_delete = mock.Mock(return_value=None)
         res._update_replacement_data = mock.Mock()
         self._assert_resource_lock(res.id, None, None)
@@ -2254,7 +2246,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 'same-template'
-        res._store()
+        res.store()
         res.delete = mock.Mock()
         tr = scheduler.TaskRunner(res.delete_convergence, 'same-template', {},
                                   'engine-007', self.dummy_timeout,
@@ -2268,7 +2260,7 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = 1
         res.status = res.COMPLETE
         res.action = res.CREATE
-        res._store()
+        res.store()
         res_id = res.id
         res.handle_delete = mock.Mock(side_effect=ValueError('test'))
         self._assert_resource_lock(res.id, None, None)
@@ -2289,7 +2281,7 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = 1
         res.status = res.COMPLETE
         res.action = res.CREATE
-        res._store()
+        res.store()
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
         rs.update_and_save({'engine_id': 'not-this'})
         self._assert_resource_lock(res.id, 'not-this', None)
@@ -2307,7 +2299,7 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = 1
         res.status = res.COMPLETE
         res.action = res.CREATE
-        res._store()
+        res.store()
         res.destroy = mock.Mock()
         input_data = {(1, False): 4, (2, False): 5}  # needed_by resource ids
         self._assert_resource_lock(res.id, None, None)
@@ -2322,7 +2314,7 @@ class ResourceTest(common.HeatTestCase):
         r = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         r.replaced_by = 4
         r.needed_by = [4, 5]
-        r._store()
+        r.store()
         db_res = mock.MagicMock()
         db_res.current_template_id = 'same_tmpl'
         mock_get_obj.return_value = db_res
@@ -2451,7 +2443,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         # action is INIT by default
-        res._store()
+        res.store()
         with mock.patch.object(resource_objects.Resource,
                                'delete') as resource_del:
             tr = scheduler.TaskRunner(res.delete_convergence, 1, {},
@@ -2463,7 +2455,7 @@ class ResourceTest(common.HeatTestCase):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
-        res._store()
+        res.store()
         timeout = -1  # to emulate timeout
         tr = scheduler.TaskRunner(res.delete_convergence, 1, {}, 'engine-007',
                                   timeout, self.dummy_event)
@@ -2489,7 +2481,7 @@ class ResourceTest(common.HeatTestCase):
         mock_tmpl_load.return_value = tmpl
         res = stack['res']
         res.current_template_id = stack.t.id
-        res._store()
+        res.store()
         data = {'bar': {'atrr1': 'baz', 'attr2': 'baz2'}}
         mock_stack_load.return_value = stack
         resource.Resource.load(stack.context, res.id, True, data)
@@ -3402,6 +3394,7 @@ class ResourceHookTest(common.HeatTestCase):
         res = resource.Resource('res', snippet, self.stack)
         res.id = '1234'
         res.uuid = uuid.uuid4()
+        res.store = mock.Mock()
         task = scheduler.TaskRunner(res.create)
         task.start()
         task.step()
@@ -3419,6 +3412,7 @@ class ResourceHookTest(common.HeatTestCase):
         res.id = '1234'
         res.action = 'CREATE'
         res.uuid = uuid.uuid4()
+        res.store = mock.Mock()
         self.stack.action = 'DELETE'
         task = scheduler.TaskRunner(res.delete)
         task.start()
@@ -3436,6 +3430,7 @@ class ResourceHookTest(common.HeatTestCase):
         res = resource.Resource('res', snippet, self.stack)
         res.id = '1234'
         res.uuid = uuid.uuid4()
+        res.store = mock.Mock()
         task = scheduler.TaskRunner(res.create)
         task.start()
         task.step()
@@ -3454,6 +3449,7 @@ class ResourceHookTest(common.HeatTestCase):
         res.uuid = uuid.uuid4()
         res.action = 'CREATE'
         self.stack.action = 'DELETE'
+        res.store = mock.Mock()
         task = scheduler.TaskRunner(res.delete)
         task.start()
         task.step()

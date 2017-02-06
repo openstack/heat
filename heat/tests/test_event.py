@@ -92,7 +92,7 @@ class EventCommon(common.HeatTestCase):
         self.stack.store()
 
         self.resource = self.stack['EventTestResource']
-        self.resource._store()
+        self.resource.store()
         self.addCleanup(stack_object.Stack.delete, self.ctx, self.stack.id)
 
 
