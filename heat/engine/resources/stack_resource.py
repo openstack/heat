@@ -442,7 +442,7 @@ class StackResource(resource.Resource):
                              timeout_mins=None):
         """Update the nested stack with the new template."""
         if self.id is None:
-            self._store()
+            self.store()
 
         if self.stack.action == self.stack.ROLLBACK:
             if self._try_rollback():
