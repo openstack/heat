@@ -1729,34 +1729,44 @@ class Resource(object):
             except Exception as ex:
                 LOG.warning(_LW('db error %s'), ex)
 
-    def _store(self, metadata=None):
-        """Create the resource in the database."""
+    def store(self, set_metadata=False):
+        """Create the resource in the database.
+
+        If self.id is set, we update the existing stack.
+        """
         if not self.root_stack_id:
             self.root_stack_id = self.stack.root_stack_id()
-        try:
-            rs = {'action': self.action,
-                  'status': self.status,
-                  'status_reason': str(self.status_reason),
-                  'stack_id': self.stack.id,
-                  'physical_resource_id': self.resource_id,
-                  'name': self.name,
-                  'rsrc_metadata': metadata,
-                  'rsrc_prop_data_id':
-                      self._create_or_replace_rsrc_prop_data(),
-                  'needed_by': self.needed_by,
-                  'requires': self.requires,
-                  'replaces': self.replaces,
-                  'replaced_by': self.replaced_by,
-                  'current_template_id': self.current_template_id,
-                  'stack_name': self.stack.name,
-                  'root_stack_id': self.root_stack_id}
+
+        rs = {'action': self.action,
+              'status': self.status,
+              'status_reason': str(self.status_reason),
+              'stack_id': self.stack.id,
+              'physical_resource_id': self.resource_id,
+              'name': self.name,
+              'rsrc_prop_data_id':
+                  self._create_or_replace_rsrc_prop_data(),
+              'needed_by': self.needed_by,
+              'requires': self.requires,
+              'replaces': self.replaces,
+              'replaced_by': self.replaced_by,
+              'current_template_id': self.current_template_id,
+              'root_stack_id': self.root_stack_id,
+              'updated_at': self.updated_time,
+              'properties_data': None}
+
+        if set_metadata:
+            metadata = self.t.metadata()
+            rs['rsrc_metadata'] = metadata
+            self._rsrc_metadata = metadata
+
+        if self.id is not None:
+            resource_objects.Resource.update_by_id(
+                self.context, self.id, rs)
+        else:
             new_rs = resource_objects.Resource.create(self.context, rs)
             self.id = new_rs.id
             self.uuid = new_rs.uuid
             self.created_time = new_rs.created_at
-            self._rsrc_metadata = metadata
-        except Exception as ex:
-            LOG.error(_LE('DB error %s'), ex)
 
     def _add_event(self, action, status, reason):
         """Add a state change event to the database."""
@@ -1767,47 +1777,6 @@ class Resource(object):
 
         ev.store()
         self.stack.dispatch_event(ev)
-
-    def _store_or_update(self, action, status, reason):
-        prev_action = self.action
-        self.action = action
-        self.status = status
-        self.status_reason = reason
-
-        data = {
-            'action': self.action,
-            'status': self.status,
-            'status_reason': str(reason),
-            'stack_id': self.stack.id,
-            'updated_at': self.updated_time,
-            'needed_by': self.needed_by,
-            'rsrc_prop_data_id': self._create_or_replace_rsrc_prop_data(),
-            'properties_data': None,
-            'requires': self.requires,
-            'replaces': self.replaces,
-            'replaced_by': self.replaced_by,
-            'current_template_id': self.current_template_id,
-            'physical_resource_id': self.resource_id,
-            'root_stack_id': self.root_stack_id
-        }
-        if prev_action == self.INIT:
-            metadata = self.t.metadata()
-            data['rsrc_metadata'] = metadata
-        else:
-            metadata = self._rsrc_metadata
-
-        if self.id is not None:
-            try:
-                resource_objects.Resource.update_by_id(self.context, self.id,
-                                                       data)
-            except Exception as ex:
-                LOG.error(_LE('DB error %s'), ex)
-            else:
-                self._rsrc_metadata = metadata
-        else:
-            # This should only happen in unit tests
-            LOG.warning(_LW('Resource "%s" not pre-stored in DB'), self)
-            self._store(metadata)
 
     @contextlib.contextmanager
     def lock(self, engine_id):
@@ -2010,7 +1979,11 @@ class Resource(object):
 
         old_state = (self.action, self.status)
         new_state = (action, status)
-        self._store_or_update(action, status, reason)
+        set_metadata = self.action == self.INIT
+        self.action = action
+        self.status = status
+        self.status_reason = reason
+        self.store(set_metadata)
 
         if new_state != old_state:
             self._add_event(action, status, reason)
