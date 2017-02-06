@@ -62,6 +62,7 @@ class StackTest(common.HeatTestCase):
 
         self.tmpl = template.Template(copy.deepcopy(empty_template))
         self.ctx = utils.dummy_context()
+        self.stub_auth()
 
     def test_stack_reads_tenant(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
@@ -175,14 +176,10 @@ class StackTest(common.HeatTestCase):
     def test_no_auth_token(self):
         ctx = utils.dummy_context()
         ctx.auth_token = None
-        self.stub_auth()
 
-        self.m.ReplayAll()
         self.stack = stack.Stack(ctx, 'test_stack', self.tmpl)
         self.assertEqual('abcd1234',
-                         self.stack.clients.client('keystone').auth_token)
-
-        self.m.VerifyAll()
+                         ctx.auth_plugin.auth_token)
 
     def test_state_deleted(self):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
@@ -1482,6 +1479,11 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(user_creds.get('password'))
         self.assertEqual('atrust', user_creds.get('trust_id'))
         self.assertEqual('auser123', user_creds.get('trustor_user_id'))
+
+        auth = self.patchobject(context.RequestContext,
+                                'trusts_auth_plugin')
+        self.patchobject(auth, 'get_access',
+                         return_value=fakes.FakeAccessInfo([], None, None))
 
         # Check the stored_context is as expected
         expected_context = context.RequestContext(
