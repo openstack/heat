@@ -46,16 +46,16 @@ TEST_DEFAULT_LOGLEVELS = {'migrate': logging.WARN,
                           'sqlalchemy': logging.WARN,
                           'heat.engine.environment': logging.ERROR}
 _LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
-_FALSE_VALUES = {'False', 'false', '0', 'no'}
+_TRUE_VALUES = ('True', 'true', '1', 'yes')
 
 
 class FakeLogMixin(object):
     def setup_logging(self, quieten=True):
         # Assign default logs to self.LOG so we can still
         # assert on heat logs.
-        default_level = logging.DEBUG
-        if os.environ.get('OS_DEBUG') in _FALSE_VALUES:
-            default_level = logging.INFO
+        default_level = logging.INFO
+        if os.environ.get('OS_DEBUG') in _TRUE_VALUES:
+            default_level = logging.DEBUG
 
         self.LOG = self.useFixture(
             fixtures.FakeLogger(level=default_level, format=_LOG_FORMAT))
