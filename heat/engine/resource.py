@@ -1942,7 +1942,8 @@ class Resource(object):
         """
         resource_result = {}
         for key in self._update_allowed_properties:
-            resource_result[key] = resource_data.get(key)
+            if key in resource_data:
+                resource_result[key] = resource_data.get(key)
 
         return resource_result
 

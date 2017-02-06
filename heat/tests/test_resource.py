@@ -4135,12 +4135,12 @@ class TestLiveStateUpdate(common.HeatTestCase):
     def test_parse_live_resource_data(self):
         res = self._prepare_resource_live_state()
 
-        res.update_allowed_props = mock.Mock(return_value=['Foo'])
+        res.update_allowed_props = mock.Mock(return_value=['Foo', 'Bar'])
         resource_data = {
             'Foo': 'brave new data',
             'Something not so good': 'for all of us'
         }
-        res._update_allowed_properties = ['Foo']
+        res._update_allowed_properties = ['Foo', 'Bar']
         result = res.parse_live_resource_data(res.properties, resource_data)
         self.assertEqual({'Foo': 'brave new data'}, result)
         self._clean_tests_after_resource_live_state(res)
