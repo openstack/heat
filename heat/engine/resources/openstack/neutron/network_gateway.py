@@ -32,6 +32,8 @@ class NetworkGateway(neutron.NeutronResource):
 
     support_status = support.SupportStatus(version='2014.1')
 
+    entity = 'network_gateway'
+
     PROPERTIES = (
         NAME, DEVICES, CONNECTIONS,
     ) = (
@@ -166,10 +168,6 @@ class NetworkGateway(neutron.NeutronResource):
                 entity='network'
             )
         ]
-
-    def _show_resource(self):
-        return self.client().show_network_gateway(
-            self.resource_id)['network_gateway']
 
     def validate(self):
         """Validate any of the provided params."""

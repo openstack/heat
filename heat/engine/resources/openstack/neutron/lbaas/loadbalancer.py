@@ -37,6 +37,8 @@ class LoadBalancer(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'loadbalancer'
+
     PROPERTIES = (
         DESCRIPTION, NAME, PROVIDER, VIP_ADDRESS, VIP_SUBNET,
         ADMIN_STATE_UP, TENANT_ID
@@ -142,10 +144,6 @@ class LoadBalancer(neutron.NeutronResource):
 
     def check_create_complete(self, data):
         return self.client_plugin().check_lb_status(self.resource_id)
-
-    def _show_resource(self):
-        return self.client().show_loadbalancer(
-            self.resource_id)['loadbalancer']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

@@ -34,6 +34,9 @@ class FloatingIP(neutron.NeutronResource):
     user to have a "static" IP address that can be reassigned when an instance
     is upgraded or moved.
     """
+
+    entity = 'floatingip'
+
     PROPERTIES = (
         FLOATING_NETWORK_ID, FLOATING_NETWORK, VALUE_SPECS,
         PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
@@ -264,9 +267,6 @@ class FloatingIP(neutron.NeutronResource):
         fip = self.client().create_floatingip({
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])
-
-    def _show_resource(self):
-        return self.client().show_floatingip(self.resource_id)['floatingip']
 
     def handle_delete(self):
         with self.client_plugin().ignore_not_found:

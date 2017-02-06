@@ -26,6 +26,9 @@ class Net(neutron.NeutronResource):
     reserved to the tenant who created it, unless the network has been
     explicitly configured to be shared.
     """
+
+    entity = 'network'
+
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
         DHCP_AGENT_IDS, PORT_SECURITY_ENABLED, QOS_POLICY,
@@ -168,10 +171,6 @@ class Net(neutron.NeutronResource):
 
         if dhcp_agent_ids:
             self._replace_dhcp_agents(dhcp_agent_ids)
-
-    def _show_resource(self):
-        return self.client().show_network(
-            self.resource_id)['network']
 
     def check_create_complete(self, *args):
         attributes = self._show_resource()

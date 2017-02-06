@@ -32,6 +32,10 @@ class QoSPolicy(neutron.NeutronResource):
 
     required_service_extension = 'qos'
 
+    entity = 'qos_policy'
+
+    res_info_key = 'policy'
+
     support_status = support.SupportStatus(version='6.0.0')
 
     PROPERTIES = (
@@ -98,10 +102,6 @@ class QoSPolicy(neutron.NeutronResource):
                 self.resource_id,
                 {'policy': prop_diff})
 
-    def _show_resource(self):
-        return self.client().show_qos_policy(
-            self.resource_id)['policy']
-
 
 class QoSRule(neutron.NeutronResource):
     """A resource for Neutron QoS base rule."""
@@ -152,6 +152,8 @@ class QoSBandwidthLimitRule(QoSRule):
     The default policy usage of this resource is limited to
     administrators only.
     """
+
+    entity = 'bandwidth_limit_rule'
 
     PROPERTIES = (
         MAX_BANDWIDTH, MAX_BURST_BANDWIDTH,
@@ -208,9 +210,8 @@ class QoSBandwidthLimitRule(QoSRule):
                 self.policy_id,
                 {'bandwidth_limit_rule': prop_diff})
 
-    def _show_resource(self):
-        return self.client().show_bandwidth_limit_rule(
-            self.resource_id, self.policy_id)['bandwidth_limit_rule']
+    def _res_get_args(self):
+        return [self.resource_id, self.policy_id]
 
 
 class QoSDscpMarkingRule(QoSRule):
@@ -225,6 +226,8 @@ class QoSDscpMarkingRule(QoSRule):
     """
 
     support_status = support.SupportStatus(version='7.0.0')
+
+    entity = 'dscp_marking_rule'
 
     PROPERTIES = (
         DSCP_MARK,
@@ -275,9 +278,8 @@ class QoSDscpMarkingRule(QoSRule):
                 self.policy_id,
                 {'dscp_marking_rule': prop_diff})
 
-    def _show_resource(self):
-        return self.client().show_dscp_marking_rule(
-            self.resource_id, self.policy_id)['dscp_marking_rule']
+    def _res_get_args(self):
+        return [self.resource_id, self.policy_id]
 
 
 def resource_mapping():

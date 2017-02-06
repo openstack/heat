@@ -31,6 +31,10 @@ class L7Rule(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'lbaas_l7rule'
+
+    res_info_key = 'rule'
+
     PROPERTIES = (
         ADMIN_STATE_UP, L7POLICY, TYPE, COMPARE_TYPE,
         INVERT, KEY, VALUE
@@ -157,9 +161,8 @@ class L7Rule(neutron.NeutronResource):
 
         return self._check_lb_status()
 
-    def _show_resource(self):
-        return self.client().show_lbaas_l7rule(
-            self.resource_id, self.l7policy_id)['rule']
+    def _res_get_args(self):
+        return [self.resource_id, self.l7policy_id]
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False

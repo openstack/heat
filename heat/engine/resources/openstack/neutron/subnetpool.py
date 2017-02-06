@@ -31,6 +31,8 @@ class SubnetPool(neutron.NeutronResource):
 
     required_service_extension = 'subnet_allocation'
 
+    entity = 'subnetpool'
+
     PROPERTIES = (
         NAME, PREFIXES, ADDRESS_SCOPE, DEFAULT_QUOTA,
         DEFAULT_PREFIXLEN, MIN_PREFIXLEN, MAX_PREFIXLEN,
@@ -183,9 +185,6 @@ class SubnetPool(neutron.NeutronResource):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
                 self.client().delete_subnetpool(self.resource_id)
-
-    def _show_resource(self):
-        return self.client().show_subnetpool(self.resource_id)['subnetpool']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # check that new prefixes are superset of existing prefixes

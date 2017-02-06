@@ -39,6 +39,10 @@ class L7Policy(neutron.NeutronResource):
 
     required_service_extension = 'lbaasv2'
 
+    entity = 'lbaas_l7policy'
+
+    res_info_key = 'l7policy'
+
     PROPERTIES = (
         NAME, DESCRIPTION, ADMIN_STATE_UP, ACTION,
         REDIRECT_POOL, REDIRECT_URL, POSITION, LISTENER
@@ -213,9 +217,6 @@ class L7Policy(neutron.NeutronResource):
                 raise
 
         return self._check_lb_status()
-
-    def _show_resource(self):
-        return self.client().show_lbaas_l7policy(self.resource_id)['l7policy']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False

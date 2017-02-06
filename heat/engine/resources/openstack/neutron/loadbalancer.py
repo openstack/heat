@@ -43,6 +43,8 @@ class HealthMonitor(neutron.NeutronResource):
 
     required_service_extension = 'lbaas'
 
+    entity = 'health_monitor'
+
     support_status = support.SupportStatus(
         support.DEPRECATED, DEPR_MSG, version='7.0.0'
     )
@@ -172,10 +174,6 @@ class HealthMonitor(neutron.NeutronResource):
             {'health_monitor': properties})['health_monitor']
         self.resource_id_set(health_monitor['id'])
 
-    def _show_resource(self):
-        return self.client().show_health_monitor(
-            self.resource_id)['health_monitor']
-
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.client().update_health_monitor(
@@ -201,6 +199,8 @@ class Pool(neutron.NeutronResource):
     """
 
     required_service_extension = 'lbaas'
+
+    entity = 'pool'
 
     support_status = support.SupportStatus(
         support.DEPRECATED, DEPR_MSG, version='7.0.0'
@@ -502,9 +502,6 @@ class Pool(neutron.NeutronResource):
 
         self.metadata_set({'vip': vip['id']})
 
-    def _show_resource(self):
-        return self.client().show_pool(self.resource_id)['pool']
-
     def check_create_complete(self, data):
         attributes = self._show_resource()
         status = attributes['status']
@@ -603,6 +600,8 @@ class PoolMember(neutron.NeutronResource):
     """
 
     required_service_extension = 'lbaas'
+
+    entity = 'member'
 
     support_status = support.SupportStatus(
         support.DEPRECATED, DEPR_MSG, version='7.0.0',
@@ -709,9 +708,6 @@ class PoolMember(neutron.NeutronResource):
 
         member = self.client().create_member({'member': params})['member']
         self.resource_id_set(member['id'])
-
-    def _show_resource(self):
-        return self.client().show_member(self.resource_id)['member']
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
