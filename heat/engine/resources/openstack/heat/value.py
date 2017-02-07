@@ -65,8 +65,10 @@ class Value(resource.Resource):
     }
 
     def _resolve_attribute(self, name):
+        props = self.frozen_definition().properties(self.properties_schema,
+                                                    self.context)
         if name == self.VALUE_ATTR:
-            return self.properties[self.VALUE]
+            return props[self.VALUE]
 
     def handle_create(self):
         self.resource_id_set(self.physical_resource_name())
@@ -76,9 +78,9 @@ class Value(resource.Resource):
         # the resource properties are updated appropriately in parent class.
         pass
 
-    def __init__(self, name, definition, stack):
-        super(Value, self).__init__(name, definition, stack)
-        value_type = self.properties.get(self.TYPE)
+    def reparse(self, *args, **kwargs):
+        super(Value, self).reparse(*args, **kwargs)
+        value_type = self.properties[self.TYPE]
         if value_type is None:
             # We don't know what type the value is, anything goes
             return
