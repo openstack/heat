@@ -22,8 +22,9 @@ The standard pattern for executing a heat-manage command is:
 Run with -h to see a list of available commands:
 ``heat-manage -h``
 
-Commands are ``db_version``, ``db_sync``, ``purge_deleted``, ``migrate_covergence_1``
-and ``service``. Detailed descriptions are below.
+Commands are ``db_version``, ``db_sync``, ``purge_deleted``,
+``migrate_covergence_1``, ``migrate_properties_data``, and
+``service``. Detailed descriptions are below.
 
 ``heat-manage db_version``
 
@@ -37,6 +38,12 @@ and ``service``. Detailed descriptions are below.
 
     Purge db entries marked as deleted and older than [age]. When project_id
     argument is provided, only entries belonging to this project will be purged.
+
+``heat-manage migrate_properties_data``
+
+    Migrates properties data from the legacy locations in the db
+    (resource.properties_data and event.resource_properties) to the
+    modern location, the resource_properties_data table.
 
 ``heat-manage migrate_convergence_1 [stack_id]``
 

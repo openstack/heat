@@ -37,6 +37,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
+from heat.common.i18n import _LW
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
@@ -1690,6 +1691,73 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
     excs.extend(_db_encrypt_or_decrypt_resource_prop_data_legacy(
         ctxt, encryption_key, False, batch_size, verbose))
     return excs
+
+
+def db_properties_data_migrate(ctxt, batch_size=50):
+    """Migrate properties data from legacy columns to new location in db.
+
+    :param ctxt: RPC context
+    :param batch_size: number of templates requested from db in each iteration.
+                       50 means that heat requests 50 templates, encrypt them
+                       and proceed with next 50 items.
+    """
+    session = ctxt.session
+
+    query = session.query(models.Resource).filter(and_(
+        models.Resource.properties_data.isnot(None),
+        models.Resource.rsrc_prop_data_id.is_(None)))
+    resource_batches = _get_batch(
+        session=session, ctxt=ctxt, query=query,
+        model=models.Resource, batch_size=batch_size)
+    next_batch = list(itertools.islice(resource_batches, batch_size))
+    while next_batch:
+        with session.begin():
+            for resource in next_batch:
+                try:
+                    encrypted = resource.properties_data_encrypted
+                    if encrypted is None:
+                        LOG.warning(
+                            _LW('Unexpected: resource.encrypted is None for '
+                                'resource id %(id)d for legacy '
+                                'resource.properties_data, assuming False.'),
+                            {'id': resource.id})
+                        encrypted = False
+                    rsrc_prop_data = resource_prop_data_create(
+                        ctxt, {'encrypted': encrypted,
+                               'data': resource.properties_data})
+                    resource_update(ctxt, resource.id,
+                                    {'properties_data_encrypted': None,
+                                     'properties_data': None,
+                                     'rsrc_prop_data_id': rsrc_prop_data.id},
+                                    resource.atomic_key)
+                except Exception:
+                    LOG.exception(_LE('Failed to migrate properties_data for '
+                                      'resource %(id)d'), {'id': resource.id})
+                    continue
+        next_batch = list(itertools.islice(resource_batches, batch_size))
+
+    query = session.query(models.Event).filter(and_(
+        models.Event.resource_properties.isnot(None),
+        models.Event.rsrc_prop_data_id.is_(None)))
+    event_batches = _get_batch(
+        session=session, ctxt=ctxt, query=query,
+        model=models.Event, batch_size=batch_size)
+    next_batch = list(itertools.islice(event_batches, batch_size))
+    while next_batch:
+        with session.begin():
+            for event in next_batch:
+                try:
+                    prop_data = event.resource_properties
+                    rsrc_prop_data = resource_prop_data_create(
+                        ctxt, {'encrypted': False,
+                               'data': prop_data})
+                    event.update({'resource_properties': None,
+                                  'rsrc_prop_data_id': rsrc_prop_data.id})
+                except Exception:
+                    LOG.exception(_LE('Failed to migrate resource_properties '
+                                      'for event %(id)d'), {'id': event.id})
+                    continue
+        next_batch = list(itertools.islice(event_batches, batch_size))
 
 
 def _get_batch(session, ctxt, query, model, batch_size=50):
