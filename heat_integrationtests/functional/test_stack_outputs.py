@@ -46,7 +46,8 @@ outputs:
 
         actual_list = self.client.stacks.output_list(
             stack_identifier)['outputs']
-        self.assertEqual(expected_list, actual_list)
+        sorted_actual_list = sorted(actual_list, key=lambda x: x['output_key'])
+        self.assertEqual(expected_list, sorted_actual_list)
 
         expected_output_a = {
             u'output_value': u'a', u'output_key': u'resource_output_a',

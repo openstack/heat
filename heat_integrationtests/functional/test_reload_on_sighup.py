@@ -29,7 +29,8 @@ class ReloadOnSighupTest(functional_base.FunctionalTestsBase):
         super(ReloadOnSighupTest, self).setUp()
 
     def _is_mod_wsgi_daemon(self, service):
-        process = ''.join(['wsgi:', service[:9]]).replace('_', '-')
+        process = ''.join(['wsgi:',
+                           service[:9]]).replace('_', '-').encode('utf-8')
         s = subprocess.Popen(["ps", "ax"], stdout=subprocess.PIPE)
         for x in s.stdout:
             if re.search(process, x):
