@@ -313,9 +313,12 @@ class ServerNetworkMixin(object):
 
         for iface in interfaces:
             # get interface properties
+            ipaddr = None
+            if len(iface.fixed_ips) > 0:
+                ipaddr = iface.fixed_ips[0]['ip_address']
             props = {'port': iface.port_id,
                      'net_id': iface.net_id,
-                     'ip': iface.fixed_ips[0]['ip_address'],
+                     'ip': ipaddr,
                      'nets': nets}
             # try to match by port or network_id with fixed_ip
             net = find_equal(**props)
