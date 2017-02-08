@@ -275,11 +275,6 @@ function install_heat {
     fi
 }
 
-# dummy function called by stack.sh, remove it once moved to plugin
-function install_heat_other {
-    :
-}
-
 # start_heat() - Start running processes, including screen
 function start_heat {
     run_process h-eng "$HEAT_BIN_DIR/heat-engine --config-file=$HEAT_CONF"
