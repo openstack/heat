@@ -1,3 +1,6 @@
 ---
 features:
-    - New ``OS::Zaqar::Notification`` and ``OS::Zaqar::MistralTrigger`` resource types allow users to attach to Zaqar queues (respectively) notifications in general, and notifications that trigger Mistral workflow executions in particular.
+    - New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger``
+      resource types allow users to attach to Zaqar queues (respectively)
+      notifications in general, and notifications that trigger Mistral
+      workflow executions in particular.
