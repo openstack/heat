@@ -46,7 +46,14 @@ class HealthMonitor(neutron.NeutronResource):
     entity = 'health_monitor'
 
     support_status = support.SupportStatus(
-        support.DEPRECATED, DEPR_MSG, version='7.0.0'
+        status=support.HIDDEN,
+        version='9.0.0',
+        message=_('Use LBaaS V2 instead.'),
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            message=DEPR_MSG,
+            version='7.0.0'
+        )
     )
 
     PROPERTIES = (
@@ -203,7 +210,14 @@ class Pool(neutron.NeutronResource):
     entity = 'pool'
 
     support_status = support.SupportStatus(
-        support.DEPRECATED, DEPR_MSG, version='7.0.0'
+        status=support.HIDDEN,
+        version='9.0.0',
+        message=_('Use LBaaS V2 instead.'),
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            message=DEPR_MSG,
+            version='7.0.0'
+        )
     )
 
     PROPERTIES = (
@@ -604,8 +618,15 @@ class PoolMember(neutron.NeutronResource):
     entity = 'member'
 
     support_status = support.SupportStatus(
-        support.DEPRECATED, DEPR_MSG, version='7.0.0',
-        previous_status=support.SupportStatus(version='2014.1')
+        status=support.HIDDEN,
+        version='9.0.0',
+        message=_('Use LBaaS V2 instead.'),
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            message=DEPR_MSG,
+            version='7.0.0',
+            previous_status=support.SupportStatus(version='2014.1')
+        )
     )
 
     PROPERTIES = (
@@ -733,8 +754,15 @@ class LoadBalancer(resource.Resource):
     required_service_extension = 'lbaas'
 
     support_status = support.SupportStatus(
-        support.DEPRECATED, DEPR_MSG, version='7.0.0',
-        previous_status=support.SupportStatus(version='2014.1')
+        status=support.HIDDEN,
+        version='9.0.0',
+        message=_('Use LBaaS V2 instead.'),
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            message=DEPR_MSG,
+            version='7.0.0',
+            previous_status=support.SupportStatus(version='2014.1')
+        )
     )
 
     PROPERTIES = (

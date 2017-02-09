@@ -221,12 +221,16 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         properties.Schema.STRING,
                         _('The ID of the image to create a volume from.'),
                         support_status=support.SupportStatus(
-                            status=support.DEPRECATED,
-                            version='7.0.0',
+                            status=support.HIDDEN,
+                            version='9.0.0',
                             message=_('Use property %s.') %
                                     BLOCK_DEVICE_MAPPING_IMAGE,
                             previous_status=support.SupportStatus(
-                                version='5.0.0')
+                                status=support.DEPRECATED,
+                                version='7.0.0',
+                                previous_status=support.SupportStatus(
+                                    version='5.0.0')
+                            )
                         ),
                         constraints=[
                             constraints.CustomConstraint('glance.image')

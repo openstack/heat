@@ -189,12 +189,17 @@ class Port(neutron.NeutronResource):
             ],
             update_allowed=True,
             support_status=support.SupportStatus(
-                status=support.DEPRECATED,
-                version='6.0.0',
-                message=_('Replacement policy used to work around flawed '
-                          'nova/neutron port interaction which has been '
-                          'fixed since Liberty.'),
-                previous_status=support.SupportStatus(version='2014.2'))
+                status=support.HIDDEN,
+                version='9.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.DEPRECATED,
+                    version='6.0.0',
+                    message=_('Replacement policy used to work around flawed '
+                              'nova/neutron port interaction which has been '
+                              'fixed since Liberty.'),
+                    previous_status=support.SupportStatus(version='2014.2')
+                )
+            )
         ),
         DNS_NAME: properties.Schema(
             properties.Schema.STRING,

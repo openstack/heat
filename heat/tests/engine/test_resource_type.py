@@ -46,12 +46,7 @@ class ResourceTypeTest(common.HeatTestCase):
         self.assertEqual(set(['OS::Designate::Domain',
                               'OS::Designate::Record',
                               'OS::Heat::HARestarter',
-                              'OS::Neutron::HealthMonitor',
-                              'OS::Neutron::LoadBalancer',
-                              'OS::Neutron::Pool',
-                              'OS::Neutron::PoolMember',
-                              'OS::Glance::Image',
-                              'OS::Aodh::CombinationAlarm']),
+                              'OS::Glance::Image']),
                          set(resources))
 
     @mock.patch.object(res.Resource, 'is_service_available')
