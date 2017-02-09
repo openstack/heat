@@ -25,12 +25,15 @@ set -o xtrace
 HEAT_USER=heat_grenade
 HEAT_PROJECT=heat_grenade
 HEAT_PASS=pass
+DEFAULT_DOMAIN=default
 
 function _heat_set_user {
     OS_TENANT_NAME=$HEAT_PROJECT
     OS_PROJECT_NAME=$HEAT_PROJECT
     OS_USERNAME=$HEAT_USER
     OS_PASSWORD=$HEAT_PASS
+    OS_USER_DOMAIN_ID=$DEFAULT_DOMAIN
+    OS_PROJECT_DOMAIN_ID=$DEFAULT_DOMAIN
 }
 
 function create {
@@ -42,6 +45,8 @@ function create {
     iniset $conf_file heat_plugin password $OS_PASSWORD
     iniset $conf_file heat_plugin tenant_name $OS_PROJECT_NAME
     iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
+    iniset $conf_file heat_plugin user_domain_id $OS_USER_DOMAIN_ID
+    iniset $conf_file heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
     iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
@@ -54,6 +59,7 @@ function create {
         die $LINENO "Didn't create $HEAT_PROJECT project"
     fi
     resource_save heat project_id $id
+    local project_id=$id
 
     # creates the user, and sets $id locally
     eval $(openstack user create $HEAT_USER \
@@ -64,6 +70,10 @@ function create {
         die $LINENO "Didn't create $HEAT_USER user"
     fi
     resource_save heat user_id $id
+    # with keystone v3 user created in a project is not assigned a role
+    # https://bugs.launchpad.net/keystone/+bug/1662911
+    openstack role add Member --user $id --project $project_id
+
     _heat_set_user
 
     local stack_name='grenadine'

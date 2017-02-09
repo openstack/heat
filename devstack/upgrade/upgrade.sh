@@ -85,7 +85,8 @@ $HEAT_BIN_DIR/heat-manage --config-file $HEAT_CONF db_sync || die $LINENO "DB sy
 start_heat
 
 # Don't succeed unless the services come up
-ensure_services_started heat-api heat-engine heat-api-cloudwatch heat-api-cfn
+# Truncating some service names to 11 characters
+ensure_services_started heat-api heat-engine heat-api-cl heat-api-cf
 
 set +o xtrace
 echo "*********************************************************************"
