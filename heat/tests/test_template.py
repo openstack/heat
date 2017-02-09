@@ -142,6 +142,9 @@ class TestTemplatePluginManager(common.HeatTestCase):
             def add_resource(self, definition, name=None):
                 pass
 
+            def outputs(self, stack):
+                pass
+
             def __getitem__(self, section):
                 return {}
 

@@ -12,7 +12,6 @@
 #    under the License.
 
 import json
-import warnings
 import weakref
 
 from oslo_config import cfg
@@ -335,12 +334,6 @@ class StackResource(resource.Resource):
                 'params': child_env.user_env_as_dict(),
                 'files': parsed_template.files,
             }
-
-    def raise_local_exception(self, ex):
-        warnings.warn('raise_local_exception() is deprecated. Use the '
-                      'translate_remote_exceptions context manager instead.',
-                      DeprecationWarning)
-        return self.translate_remote_exceptions(ex)
 
     @excutils.exception_filter
     def translate_remote_exceptions(self, ex):
