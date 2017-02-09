@@ -317,11 +317,11 @@ class StoredContext(RequestContext):
     def user_domain(self):
         if not getattr(self, '_keystone_loaded', False):
             self._load_keystone_data()
-        return self._user_domain
+        return self._user_domain_id
 
     @user_domain.setter
     def user_domain(self, user_domain):
-        self._user_domain = user_domain
+        self._user_domain_id = user_domain
 
     @property
     def project_domain(self):
