@@ -540,12 +540,6 @@ class KsClientWrapper(object):
         self._check_stack_domain_user(user_id, project_id, 'enable')
         self.domain_admin_client.users.update(user=user_id, enabled=True)
 
-    def url_for(self, **kwargs):
-        default_region_name = (self.context.region_name or
-                               cfg.CONF.region_name_for_services)
-        kwargs.setdefault('region_name', default_region_name)
-        return self.context.auth_plugin.get_endpoint(self.session, **kwargs)
-
     @property
     def auth_token(self):
         return self.context.auth_plugin.get_token(self.session)
