@@ -130,14 +130,13 @@ class ClientsTest(common.HeatTestCase):
         con.tenant_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = None
         con.auth_plugin = fakes.FakeAuth(auth_token='anewtoken')
-        self.stub_keystoneclient(context=con)
         c = clients.Clients(con)
         con.clients = c
 
         obj = c.client_plugin('heat')
         obj.url_for = mock.Mock(name="url_for")
         obj.url_for.return_value = "url_from_keystone"
-        self.assertEqual('anewtoken', c.client('keystone').auth_token)
+        self.assertEqual('url_from_keystone', obj.get_heat_url())
 
     @mock.patch.object(heatclient, 'Client')
     def test_clients_heat_cached(self, mock_call):

@@ -540,14 +540,6 @@ class KsClientWrapper(object):
         self._check_stack_domain_user(user_id, project_id, 'enable')
         self.domain_admin_client.users.update(user=user_id, enabled=True)
 
-    @property
-    def auth_token(self):
-        return self.context.auth_plugin.get_token(self.session)
-
-    @property
-    def auth_ref(self):
-        return self.context.auth_plugin.get_access(self.session)
-
 
 class KeystoneClient(object):
     """Keystone Auth Client.

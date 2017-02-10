@@ -297,7 +297,7 @@ class RequestContext(context.RequestContext):
 class StoredContext(RequestContext):
     def _load_keystone_data(self):
         self._keystone_loaded = True
-        auth_ref = self.clients.client('keystone').auth_ref
+        auth_ref = self.auth_plugin.get_access(self.keystone_session)
 
         self.roles = auth_ref.role_names
         self.user_domain = auth_ref.user_domain_id

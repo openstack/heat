@@ -91,16 +91,17 @@ class FakeAuth(plugin.BaseAuthPlugin):
         return 'http://example.com:1234/v1'
 
     def get_auth_ref(self, session):
-        auth_ref = mock.Mock()
-        return auth_ref
+        return mock.Mock()
+
+    def get_access(self, sesssion):
+        return FakeAccessInfo([], None, None)
 
 
 class FakeKeystoneClient(object):
     def __init__(self, username='test_username', password='password',
                  user_id='1234', access='4567', secret='8901',
                  credential_id='abcdxyz', auth_token='abcd1234',
-                 context=None, stack_domain_id='4321', roles=None,
-                 user_domain_id=None, project_domain_id=None, client=None):
+                 context=None, stack_domain_id='4321', client=None):
         self.username = username
         self.password = password
         self.user_id = user_id
@@ -112,9 +113,6 @@ class FakeKeystoneClient(object):
         self.context = context
         self.v3_endpoint = 'http://localhost:5000/v3'
         self.stack_domain_id = stack_domain_id
-        self.roles = roles or []
-        self.user_domain_id = user_domain_id
-        self.project_domain_id = project_domain_id
         self.client = client
 
         class FakeCred(object):
@@ -193,19 +191,6 @@ class FakeKeystoneClient(object):
 
     def stack_domain_user_token(self, user_id, project_id, password):
         return 'adomainusertoken'
-
-    @property
-    def auth_token(self):
-        if self.context is not None:
-            return self.context.auth_plugin.get_token(self.session)
-        else:
-            return self.token
-
-    @property
-    def auth_ref(self):
-        return FakeAccessInfo(roles=self.roles,
-                              user_domain=self.user_domain_id,
-                              project_domain=self.project_domain_id)
 
 
 class FakeAccessInfo(object):
