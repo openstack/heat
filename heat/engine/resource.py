@@ -1326,6 +1326,12 @@ class Resource(object):
                 if not self._needs_update(after, before,
                                           after_props, before_props,
                                           prev_resource):
+                    if self.status == self.FAILED:
+                        status_reason = _('Update status to COMPLETE for '
+                                          'FAILED resource neither update '
+                                          'nor replace.')
+                        self.state_set(self.action, self.COMPLETE,
+                                       status_reason)
                     return
 
             if not self.stack.convergence:
