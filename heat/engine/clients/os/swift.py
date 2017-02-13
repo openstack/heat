@@ -45,23 +45,13 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
     service_types = [OBJECT_STORE] = ['object-store']
 
     def _create(self):
-
-        con = self.context
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        args = {
-            'auth_version': '2.0',
-            'tenant_name': con.project_name,
-            'user': con.username,
-            'key': None,
-            'authurl': None,
-            'preauthtoken': con.keystone_session.get_token(),
-            'preauthurl': self.url_for(service_type=self.OBJECT_STORE,
-                                       endpoint_type=endpoint_type),
-            'os_options': {'endpoint_type': endpoint_type},
-            'cacert': self._get_client_option(CLIENT_NAME, 'ca_file'),
-            'insecure': self._get_client_option(CLIENT_NAME, 'insecure')
-        }
-        return sc.Connection(**args)
+        os_options = {'endpoint_type': endpoint_type,
+                      'service_type': self.OBJECT_STORE,
+                      'region_name': self._get_region_name()}
+        return sc.Connection(auth_version=3,
+                             session=self.context.keystone_session,
+                             os_options=os_options)
 
     def is_client_exception(self, ex):
         return isinstance(ex, exceptions.ClientException)

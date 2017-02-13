@@ -16,6 +16,8 @@ from heat.common.i18n import _
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
+from openstack import profile
+from openstack import session
 from senlinclient import client
 from senlinclient.common import exc
 
@@ -28,16 +30,15 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
     VERSION = '1'
 
     def _create(self):
-        con = self.context
-        args = {
-            'auth_url': con.auth_url,
-            'project_id': con.tenant_id,
-            'token': con.keystone_session.get_token(),
-            'user_id': con.user_id,
-            'auth_plugin': 'token',
-
-        }
-        return client.Client(self.VERSION, **args)
+        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
+        prof = profile.Profile()
+        prof.set_interface(self.CLUSTERING, interface)
+        prof.set_region(self.CLUSTERING, self._get_region_name())
+        keystone_session = self.context.keystone_session
+        s = session.Session(session=keystone_session,
+                            auth=keystone_session.auth,
+                            profile=prof)
+        return client.Client(self.VERSION, session=s)
 
     def generate_spec(self, spec_type, spec_props):
         spec = {'properties': spec_props}
