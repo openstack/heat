@@ -500,6 +500,22 @@ class ResourceTest(common.HeatTestCase):
         self.assertFalse(res.needs_replace_failed.called)
         self.assertTrue(res.prepare_for_replace.called)
 
+    def test_no_update_or_replace_in_failed(self):
+        res, utmpl = self._setup_resource_for_update(
+            res_name='test_failed_res_no_update_or_replace')
+        res.state_set(res.CREATE, res.FAILED)
+        res.prepare_for_replace = mock.Mock()
+        res.needs_replace_failed = mock.MagicMock(return_value=False)
+
+        scheduler.TaskRunner(res.update, res.t)()
+        self.assertTrue(res.needs_replace_failed.called)
+        self.assertFalse(res.prepare_for_replace.called)
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+        status_reason = _('Update status to COMPLETE for '
+                          'FAILED resource neither update '
+                          'nor replace.')
+        self.assertEqual(status_reason, res.status_reason)
+
     def test_update_replace_prepare_replace_error(self):
         # test if any error happened when prepare_for_replace,
         # whether the resource will go to FAILED
