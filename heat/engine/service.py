@@ -1498,20 +1498,25 @@ class EngineService(service.ServiceBase):
         if not cfg.CONF.enable_stack_abandon:
             raise exception.NotSupported(feature='Stack Abandon')
 
+        def _stack_abandon(stk, abandon):
+            if abandon:
+                LOG.info('abandoning stack %s', stk.name)
+                stk.delete(abandon=abandon)
+            else:
+                LOG.info('exporting stack %s', stk.name)
+
         st = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=st)
         lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
         with lock.thread_lock():
             # Get stack details before deleting it.
             stack_info = stack.prepare_abandon()
-            if abandon:
-                LOG.info('abandoning stack %s', st.name)
-                self.thread_group_mgr.start_with_acquired_lock(stack,
-                                                               lock,
-                                                               stack.delete,
-                                                               abandon=True)
-            else:
-                LOG.info('exporting stack %s', st.name)
+            self.thread_group_mgr.start_with_acquired_lock(stack,
+                                                           lock,
+                                                           _stack_abandon,
+                                                           stack,
+                                                           abandon)
+
             return stack_info
 
     def list_resource_types(self,
