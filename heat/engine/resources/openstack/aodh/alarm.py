@@ -242,11 +242,16 @@ class CombinationAlarm(alarm_base.BaseAlarm):
     entity = 'alarms'
 
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
-        version='7.0.0',
-        message=_('The combination alarm is deprecated and '
-                  'disabled by default in Aodh.'),
-        previous_status=support.SupportStatus(version='2014.1'))
+        status=support.HIDDEN,
+        message=_('OS::Aodh::CombinationAlarm is deprecated, '
+                  'use OS::Aodh::CompositeAlarm instead.'),
+        version='9.0.0',
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            version='7.0.0',
+            previous_status=support.SupportStatus(version='2014.1')
+        )
+    )
 
     PROPERTIES = (
         ALARM_IDS, OPERATOR,

@@ -201,7 +201,7 @@ status should be moved to *previous_status*, e.g.:
 
     support.SupportStatus(
         status=support.HIDDEN,
-        version='5.0.0',
+        version='6.0.0',
         message=_('Some message'),
         previous_status=support.SupportStatus(
             status=support.DEPRECATED,
