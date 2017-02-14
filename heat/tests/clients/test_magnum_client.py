@@ -22,4 +22,4 @@ class MagnumClientPluginTest(common.HeatTestCase):
         plugin = context.clients.client_plugin('magnum')
         client = plugin.client()
         self.assertEqual('http://server.test:5000/v3',
-                         client.baymodels.api.session.auth.endpoint)
+                         client.cluster_templates.api.session.auth.endpoint)
