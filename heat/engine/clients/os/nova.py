@@ -56,11 +56,15 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
-    supported_versions = [
-        NOVA_API_VERSION, V2_2, V2_15, V2_26
+    NOVA_API_VERSION = '2.1'
+
+    validate_versions = [
+        V2_2, V2_15, V2_26, V2_8
     ] = [
-        '2.1', '2.2', '2.15', '2.26'
+        '2.2', '2.15', '2.26', '2.8'
     ]
+
+    supported_versions = [NOVA_API_VERSION] + validate_versions
 
     service_types = [COMPUTE] = ['compute']
 
@@ -87,7 +91,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
         client = nc.Client(version, **args)
         # NOTE: check for microversion availability
-        if version in [self.V2_2, self.V2_15, self.V2_26]:
+        if version in self.validate_versions:
             try:
                 client.versions.get_current()
             except exceptions.NotAcceptable:
@@ -590,19 +594,25 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         The actual console url is lazily resolved on access.
         """
+        nc = self.client
+        mks_version = self.V2_8
 
         class ConsoleUrls(collections.Mapping):
             def __init__(self, server):
                 self.console_method = server.get_console_url
                 self.support_console_types = ['novnc', 'xvpvnc',
                                               'spice-html5', 'rdp-html5',
-                                              'serial']
+                                              'serial', 'webmks']
 
             def __getitem__(self, key):
                 try:
                     if key not in self.support_console_types:
                         raise exceptions.UnsupportedConsoleType(key)
-                    data = self.console_method(key)
+                    if key == 'webmks':
+                        data = nc(mks_version).servers.get_console_url(
+                            server, key)
+                    else:
+                        data = self.console_method(key)
                     console_data = data.get(
                         'remote_console', data.get('console'))
                     url = console_data['url']
@@ -614,6 +624,9 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                         url = e.message
                     else:
                         raise
+                except exception.InvalidServiceVersion:
+                    url = _('Nova service version %s is '
+                            'unavailable') % mks_version
                 return url
 
             def __len__(self):

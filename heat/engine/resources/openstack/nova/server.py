@@ -605,7 +605,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
               "can be specified as parameter to the get_attr function, "
               "e.g. get_attr: [ <server>, console_urls, novnc ]. "
               "Currently supported types are "
-              "novnc, xvpvnc, spice-html5, rdp-html5, serial."),
+              "novnc, xvpvnc, spice-html5, rdp-html5, serial and webmks."),
             support_status=support.SupportStatus(version='2015.1'),
             type=attributes.Schema.MAP
         ),

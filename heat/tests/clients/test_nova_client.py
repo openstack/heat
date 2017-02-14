@@ -637,11 +637,12 @@ class KeypairConstraintTest(common.HeatTestCase):
 class ConsoleUrlsTest(common.HeatTestCase):
 
     scenarios = [
-        ('novnc', dict(console_type='novnc')),
-        ('xvpvnc', dict(console_type='xvpvnc')),
-        ('spice', dict(console_type='spice-html5')),
-        ('rdp', dict(console_type='rdp-html5')),
-        ('serial', dict(console_type='serial')),
+        ('novnc', dict(console_type='novnc', res_obj=True)),
+        ('xvpvnc', dict(console_type='xvpvnc', res_obj=True)),
+        ('spice', dict(console_type='spice-html5', res_obj=True)),
+        ('rdp', dict(console_type='rdp-html5', res_obj=True)),
+        ('serial', dict(console_type='serial', res_obj=True)),
+        ('mks', dict(console_type='webmks', res_obj=False)),
     ]
 
     def setUp(self):
@@ -650,9 +651,14 @@ class ConsoleUrlsTest(common.HeatTestCase):
         con = utils.dummy_context()
         c = con.clients
         self.nova_plugin = c.client_plugin('nova')
-        self.nova_plugin.client = lambda: self.nova_client
+        self.patchobject(self.nova_plugin, 'client',
+                         return_value=self.nova_client)
         self.server = mock.Mock()
-        self.console_method = getattr(self.server, 'get_console_url')
+        if self.res_obj:
+            self.console_method = getattr(self.server, 'get_console_url')
+        else:
+            self.console_method = getattr(self.nova_client.servers,
+                                          'get_console_url')
 
     def test_get_console_url(self):
         console = {
@@ -667,13 +673,20 @@ class ConsoleUrlsTest(common.HeatTestCase):
             self.console_type]
 
         self.assertEqual(console['console']['url'], console_url)
-        self.console_method.assert_called_once_with(self.console_type)
+        self._assert_console_method_called()
+
+    def _assert_console_method_called(self):
+        if self.console_type == 'webmks':
+            self.console_method.assert_called_once_with(self.server,
+                                                        self.console_type)
+        else:
+            self.console_method.assert_called_once_with(self.console_type)
 
     def _test_get_console_url_tolerate_exception(self, msg):
         console_url = self.nova_plugin.get_console_urls(self.server)[
             self.console_type]
 
-        self.console_method.assert_called_once_with(self.console_type)
+        self._assert_console_method_called()
         self.assertEqual(msg, console_url)
 
     def test_get_console_url_tolerate_unavailable(self):
@@ -698,7 +711,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
         urls = self.nova_plugin.get_console_urls(self.server)
         e = self.assertRaises(exc, urls.__getitem__, self.console_type)
         self.assertIn('spam', encodeutils.exception_to_unicode(e))
-        self.console_method.assert_called_once_with(self.console_type)
+        self._assert_console_method_called()
 
     def test_get_console_urls_reraises_other(self):
         exc = Exception
@@ -706,8 +719,9 @@ class ConsoleUrlsTest(common.HeatTestCase):
 
         urls = self.nova_plugin.get_console_urls(self.server)
         e = self.assertRaises(exc, urls.__getitem__, self.console_type)
+
         self.assertIn('spam', e.args)
-        self.console_method.assert_called_once_with(self.console_type)
+        self._assert_console_method_called()
 
 
 class NovaClientPluginExtensionsTest(NovaClientPluginTestCase):

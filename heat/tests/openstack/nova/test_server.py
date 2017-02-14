@@ -3097,7 +3097,7 @@ class ServersTest(common.HeatTestCase):
         console_urls = ws._resolve_all_attributes('console_urls')
         self.assertIsInstance(console_urls, collections.Mapping)
         supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5',
-                              'serial')
+                              'serial', 'webmks')
         self.assertEqual(set(supported_consoles),
                          set(console_urls))
 
