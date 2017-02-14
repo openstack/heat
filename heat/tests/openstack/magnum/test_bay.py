@@ -12,7 +12,6 @@
 #    under the License.
 
 import copy
-from magnumclient import exceptions as mc_exc
 import mock
 from oslo_config import cfg
 import six
@@ -156,21 +155,3 @@ class TestMagnumBay(common.HeatTestCase):
         self.client.bays.get.return_value = value
         reality = b.get_live_state(b.properties)
         self.assertEqual({'node_count': 5, 'master_count': 1}, reality)
-
-
-class BaymodelConstraintTest(common.HeatTestCase):
-    def setUp(self):
-        super(BaymodelConstraintTest, self).setUp()
-        self.ctx = utils.dummy_context()
-        self.mock_baymodel_get = mock.Mock()
-        self.ctx.clients.client_plugin(
-            'magnum').client().baymodels.get = self.mock_baymodel_get
-        self.constraint = mc.BaymodelConstraint()
-
-    def test_validate(self):
-        self.mock_baymodel_get.return_value = None
-        self.assertTrue(self.constraint.validate("mybaymodel", self.ctx))
-
-    def test_validate_fail(self):
-        self.mock_baymodel_get.side_effect = mc_exc.NotFound()
-        self.assertFalse(self.constraint.validate("badbaymodel", self.ctx))
