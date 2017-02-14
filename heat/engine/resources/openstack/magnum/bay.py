@@ -24,11 +24,18 @@ from heat.engine import support
 class Bay(resource.Resource):
     """A resource that creates a Magnum Bay.
 
-    This resource creates a Magnum bay, which is a
-    collection of node objects where work is scheduled.
+    This resource has been deprecated in favor of OS::Magnum::Cluster.
     """
 
-    support_status = support.SupportStatus(version='6.0.0')
+    deprecation_msg = _('Please use OS::Magnum::Cluster instead.')
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        message=deprecation_msg,
+        version='9.0.0',
+        previous_status=support.SupportStatus(
+            status=support.SUPPORTED,
+            version='6.0.0')
+    )
 
     PROPERTIES = (
         NAME, BAYMODEL, NODE_COUNT, MASTER_COUNT, DISCOVERY_URL,

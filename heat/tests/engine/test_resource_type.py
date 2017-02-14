@@ -46,6 +46,7 @@ class ResourceTypeTest(common.HeatTestCase):
         self.assertEqual(set(['OS::Designate::Domain',
                               'OS::Designate::Record',
                               'OS::Heat::HARestarter',
+                              'OS::Magnum::Bay',
                               'OS::Glance::Image']),
                          set(resources))
 
