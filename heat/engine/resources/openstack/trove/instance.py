@@ -27,7 +27,7 @@ from heat.engine import support
 LOG = logging.getLogger(__name__)
 
 
-class OSDBInstance(resource.Resource):
+class Instance(resource.Resource):
     """OpenStack cloud database instance resource.
 
     Trove is Database as a Service for OpenStack. It's designed to run entirely
@@ -293,7 +293,7 @@ class OSDBInstance(resource.Resource):
     entity = 'instances'
 
     def __init__(self, name, json_snippet, stack):
-        super(OSDBInstance, self).__init__(name, json_snippet, stack)
+        super(Instance, self).__init__(name, json_snippet, stack)
         self._href = None
         self._dbinstance = None
 
@@ -617,7 +617,7 @@ class OSDBInstance(resource.Resource):
 
     def validate(self):
         """Validate any of the provided params."""
-        res = super(OSDBInstance, self).validate()
+        res = super(Instance, self).validate()
         if res:
             return res
 
@@ -684,5 +684,5 @@ class OSDBInstance(resource.Resource):
 
 def resource_mapping():
     return {
-        'OS::Trove::Instance': OSDBInstance,
+        'OS::Trove::Instance': Instance,
     }
