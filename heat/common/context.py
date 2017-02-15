@@ -145,10 +145,8 @@ class RequestContext(context.RequestContext):
 
     @property
     def keystone_session(self):
-        if self.auth_needs_refresh():
-            self.reload_auth_plugin()
-            self.clients.invalidate_plugins()
-        self._keystone_session.auth = self.auth_plugin
+        if not self._keystone_session.auth:
+            self._keystone_session.auth = self.auth_plugin
         return self._keystone_session
 
     @property
@@ -156,12 +154,6 @@ class RequestContext(context.RequestContext):
         if self._clients is None:
             self._clients = clients.Clients(self)
         return self._clients
-
-    def auth_needs_refresh(self):
-        auth_ref = self.auth_plugin.get_auth_ref(self._keystone_session)
-        return (cfg.CONF.reauthentication_auth_method == 'trusts'
-                and auth_ref.will_expire_soon(
-                    cfg.CONF.stale_token_duration))
 
     def to_dict(self):
         user_idt = '{user} {tenant}'.format(user=self.user_id or '-',

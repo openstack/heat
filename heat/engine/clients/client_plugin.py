@@ -48,7 +48,7 @@ class ClientPlugin(object):
     def __init__(self, context):
         self._context = weakref.ref(context)
         self._clients = weakref.ref(context.clients)
-        self.invalidate()
+        self._client_instances = {}
 
     @property
     def context(self):
@@ -62,16 +62,11 @@ class ClientPlugin(object):
 
     _get_client_option = staticmethod(config.get_client_option)
 
-    def invalidate(self):
-        """Invalidate/clear any cached client."""
-        self._client_instances = {}
-
     def client(self, version=None):
         if not version:
             version = self.default_version
 
-        if (version in self._client_instances
-                and not self.context.auth_needs_refresh()):
+        if version in self._client_instances:
             return self._client_instances[version]
 
         # Back-ward compatibility

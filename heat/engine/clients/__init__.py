@@ -51,11 +51,6 @@ class OpenStackClients(object):
         assert ctxt is not None, "Need a reference to the context"
         return ctxt
 
-    def invalidate_plugins(self):
-        """Used to force plugins to clear any cached client."""
-        for name in self._client_plugins:
-            self._client_plugins[name].invalidate()
-
     def client_plugin(self, name):
         global _mgr
         if name in self._client_plugins:

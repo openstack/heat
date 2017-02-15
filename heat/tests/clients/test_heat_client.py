@@ -107,7 +107,6 @@ class KeystoneClientTest(common.HeatTestCase):
         mock_auth_ref = self.m.CreateMockAnything()
         mock_ks_auth = self.m.CreateMockAnything()
 
-        self.patchobject(mock_ks_auth, 'get_auth_ref')
         if method == 'token':
             p = ks_token_endpoint.Token(token='abcd1234',
                                         endpoint='http://server.test:5000/v3')

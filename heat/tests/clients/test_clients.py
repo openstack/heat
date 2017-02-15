@@ -37,7 +37,6 @@ from heat.engine.clients import client_plugin
 from heat.tests import common
 from heat.tests import fakes
 from heat.tests.openstack.nova import fakes as fakes_nova
-from heat.tests import utils
 
 
 class ClientsTest(common.HeatTestCase):
@@ -296,42 +295,6 @@ class ClientPluginTest(common.HeatTestCase):
 
         self.assertRaises(TypeError, client_plugin.ClientPlugin, c)
 
-    def test_create_client_on_token_expiration(self):
-        cfg.CONF.set_override('reauthentication_auth_method', 'trusts',
-                              enforce_type=True)
-        con = utils.dummy_context()
-        auth_ref = mock.Mock()
-        self.patchobject(con.auth_plugin, 'get_auth_ref',
-                         return_value=auth_ref)
-        auth_ref.will_expire_soon.return_value = False
-        plugin = FooClientsPlugin(con)
-        plugin._create = mock.Mock()
-        plugin.client()
-        self.assertEqual(1, plugin._create.call_count)
-        plugin.client()
-        self.assertEqual(1, plugin._create.call_count)
-        auth_ref.will_expire_soon.return_value = True
-        plugin.client()
-        self.assertEqual(2, plugin._create.call_count)
-
-    def test_create_client_on_invalidate(self):
-        cfg.CONF.set_override('reauthentication_auth_method', 'trusts',
-                              enforce_type=True)
-        con = utils.dummy_context()
-        auth_ref = mock.Mock()
-        self.patchobject(con.auth_plugin, 'get_auth_ref',
-                         return_value=auth_ref)
-        auth_ref.will_expire_soon.return_value = False
-        plugin = FooClientsPlugin(con)
-        plugin._create = mock.Mock()
-        plugin.client()
-        self.assertEqual(1, plugin._create.call_count)
-        plugin.client()
-        self.assertEqual(1, plugin._create.call_count)
-        plugin.invalidate()
-        plugin.client()
-        self.assertEqual(2, plugin._create.call_count)
-
 
 class TestClientPluginsInitialise(common.HeatTestCase):
 
@@ -366,20 +329,6 @@ class TestClientPluginsInitialise(common.HeatTestCase):
             self.assertIsInstance(plugin.service_types, list)
             self.assertGreaterEqual(len(plugin.service_types), 1,
                                     'service_types is not defined for plugin')
-
-    @mock.patch.object(client_plugin.ClientPlugin, 'invalidate')
-    def test_invalidate_all_clients(self, mock_invalidate):
-        plugin_types = clients._mgr.names()
-        con = mock.Mock()
-        c = clients.Clients(con)
-        con.clients = c
-        for plugin_name in plugin_types:
-            plugin = c.client_plugin(plugin_name)
-            self.assertIsNotNone(plugin)
-        c.invalidate_plugins()
-        # while client plugin is initialized and while client is invoked
-        # its being invalidated, so the count will be doubled
-        self.assertEqual(len(plugin_types) * 2, mock_invalidate.call_count)
 
 
 class TestIsNotFound(common.HeatTestCase):
