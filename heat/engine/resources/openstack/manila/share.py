@@ -78,7 +78,7 @@ class ManilaShare(resource.Resource):
             _('Share protocol supported by shared filesystem.'),
             required=True,
             constraints=[constraints.AllowedValues(
-                ['NFS', 'CIFS', 'GlusterFS', 'HDFS'])]
+                ['NFS', 'CIFS', 'GlusterFS', 'HDFS', 'CEPHFS'])]
         ),
         SIZE: properties.Schema(
             properties.Schema.INTEGER,
