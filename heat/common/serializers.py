@@ -37,7 +37,11 @@ class JSONResponseSerializer(object):
             return six.text_type(obj)
 
         response = jsonutils.dumps(data, default=sanitizer)
-        LOG.debug("JSON response : %s" % response)
+
+        # TODO(ricolin): Fix response through private credential information,
+        # before enable below debug message.
+        # LOG.debug("JSON response : %s" % response)
+
         return response
 
     def default(self, response, result):
