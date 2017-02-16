@@ -61,7 +61,7 @@ fi
 iniset $conf_file heat_plugin image_ref fedora-heat-test-image
 iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
-iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.4-x86_64-uec
+iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
 
 # Skip test_cancel_update_server_with_port till bug #1607714 is fixed in nova
 iniset $conf_file heat_plugin skip_functional_test_list 'CancelUpdateTest.test_cancel_update_server_with_port'
