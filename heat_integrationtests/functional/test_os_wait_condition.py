@@ -76,7 +76,7 @@ resources:
     type: OS::Heat::WaitCondition
     depends_on: instance1
     properties:
-      count: 25
+      count: 12
       handle: {get_resource: wait_handle}
       timeout: {get_param: timeout}
 
