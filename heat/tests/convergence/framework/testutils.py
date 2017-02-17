@@ -16,8 +16,14 @@ import functools
 from heat.tests.convergence.framework import reality
 from heat.tests.convergence.framework import scenario_template
 
+from oslo_log import log as logging
+
+LOG = logging.getLogger(__name__)
+
 
 def verify(test, reality, tmpl):
+    LOG.info('Verifying %s', tmpl)
+
     for name in tmpl.resources:
         rsrc_count = len(reality.resources_by_logical_name(name))
         test.assertEqual(1, rsrc_count,
@@ -34,15 +40,13 @@ def verify(test, reality, tmpl):
 
             if isinstance(prop_def, scenario_template.GetAtt):
                 targs = reality.resources_by_logical_name(prop_def.target_name)
-                att_value = targs[0].rsrc_prop_data.data[prop_def.attr]
-                test.assertEqual(att_value, real_value)
-
+                prop_def = targs[0].rsrc_prop_data.data[prop_def.attr]
             elif isinstance(prop_def, scenario_template.GetRes):
                 targs = reality.resources_by_logical_name(prop_def.target_name)
-                test.assertEqual(targs[0].physical_resource_id, real_value)
-
-            else:
-                test.assertEqual(prop_def, real_value)
+                prop_def = targs[0].physical_resource_id
+            test.assertEqual(prop_def, real_value,
+                             'Unexpected value for %s prop %s' % (name,
+                                                                  prop_name))
 
         len_rsrc_prop_data = 0
         if phys_rsrc.rsrc_prop_data:
@@ -50,7 +54,7 @@ def verify(test, reality, tmpl):
         test.assertEqual(len(defn.properties),
                          len_rsrc_prop_data)
 
-    test.assertEqual(len(tmpl.resources), len(all_rsrcs))
+    test.assertEqual(set(tmpl.resources), set(r.name for r in all_rsrcs))
 
 
 def scenario_globals(procs, testcase):
