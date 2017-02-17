@@ -135,6 +135,10 @@ def _stack_id_output(resource_name, template_type='cfn'):
 
 BASE_ATTRIBUTES = (SHOW_ATTR, ) = ('show', )
 
+# Returned by function.dep_attrs() to indicate that all attributes are
+# referenced
+ALL_ATTRIBUTES = '*'
+
 
 @repr_wrapper
 class Attributes(collections.Mapping):
@@ -145,6 +149,9 @@ class Attributes(collections.Mapping):
         self._resolver = resolver
         self._attributes = Attributes._make_attributes(schema)
         self.reset_resolved_values()
+
+        assert ALL_ATTRIBUTES not in schema, \
+            "Invalid attribute name '%s'" % ALL_ATTRIBUTES
 
     def reset_resolved_values(self):
         self._resolved_values = {}

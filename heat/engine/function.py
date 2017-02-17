@@ -73,6 +73,9 @@ class Function(object):
 
         Return an iterator over any attributes of the specified resource that
         this function references.
+
+        The special value heat.engine.attributes.ALL_ATTRIBUTES may be used to
+        indicate that all attributes of the resource are required.
         """
         return dep_attrs(self.args, resource_name)
 
@@ -179,6 +182,9 @@ class Macro(Function):
 
         Return an iterator over any attributes of the specified resource that
         this function references.
+
+        The special value heat.engine.attributes.ALL_ATTRIBUTES may be used to
+        indicate that all attributes of the resource are required.
         """
         return dep_attrs(self.parsed, resource_name)
 
