@@ -267,6 +267,7 @@ class ServersTest(common.HeatTestCase):
         server = self.fc.servers.list()[1]
         server.status = status
         res = self.stack['WebServer']
+        res.state_set(res.CREATE, res.COMPLETE)
         res.client = mock.Mock()
         res.client().servers.get.return_value = server
         return res

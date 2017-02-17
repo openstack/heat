@@ -162,12 +162,14 @@ class NovaKeyPairTest(common.HeatTestCase):
 
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)
+        res.state_set(res.CREATE, res.COMPLETE, 'for test')
         res.client = mock.Mock()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
     def test_check_key_fail(self):
         res = self._get_test_resource(self.kp_template)
+        res.state_set(res.CREATE, res.COMPLETE, 'for test')
         res.client = mock.Mock()
         res.client().keypairs.get.side_effect = Exception("boom")
         exc = self.assertRaises(exception.ResourceFailure,

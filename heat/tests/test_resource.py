@@ -1320,10 +1320,18 @@ class ResourceTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_check_supported(self):
+    def _mock_check_res(self, mock_check=True):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'GenericResourceType')
         res = generic_rsrc.ResourceWithProps('test_res', tmpl, self.stack)
-        res.handle_check = mock.Mock()
+        res.state_set(res.CREATE, res.COMPLETE)
+        if mock_check:
+            res.handle_check = mock.Mock()
+
+        return res
+
+    def test_check_supported(self):
+        res = self._mock_check_res()
+
         scheduler.TaskRunner(res.check)()
 
         self.assertTrue(res.handle_check.called)
@@ -1332,8 +1340,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertNotIn('not supported', res.status_reason)
 
     def test_check_not_supported(self):
-        tmpl = rsrc_defn.ResourceDefinition('test_res', 'GenericResourceType')
-        res = generic_rsrc.ResourceWithProps('test_res', tmpl, self.stack)
+        res = self._mock_check_res(mock_check=False)
         scheduler.TaskRunner(res.check)()
 
         self.assertIn('not supported', res.status_reason)
@@ -1341,9 +1348,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res.COMPLETE, res.status)
 
     def test_check_failed(self):
-        tmpl = rsrc_defn.ResourceDefinition('test_res', 'GenericResourceType')
-        res = generic_rsrc.ResourceWithProps('test_res', tmpl, self.stack)
-        res.handle_check = mock.Mock()
+        res = self._mock_check_res()
         res.handle_check.side_effect = Exception('boom')
 
         self.assertRaises(exception.ResourceFailure,

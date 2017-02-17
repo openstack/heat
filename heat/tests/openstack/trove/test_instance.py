@@ -274,6 +274,7 @@ class InstanceTest(common.HeatTestCase):
     def _get_db_instance(self):
         t = template_format.parse(db_template)
         res = self._setup_test_instance('trove_check', t)
+        res.state_set(res.CREATE, res.COMPLETE)
         res.flavor = 'Foo Flavor'
         res.volume = 'Foo Volume'
         res.datastore_type = 'Foo Type'

@@ -922,6 +922,8 @@ class StackTest(common.HeatTestCase):
 
     def test_check_supported(self):
         stack1 = self._get_stack_to_check('check-supported')
+        stack1['A'].state_set(stack1['A'].CREATE, stack1['A'].COMPLETE)
+        stack1['B'].state_set(stack1['B'].CREATE, stack1['B'].COMPLETE)
         stack1.check()
 
         self.assertEqual(stack1.COMPLETE, stack1.status)
@@ -933,6 +935,7 @@ class StackTest(common.HeatTestCase):
     def test_check_not_supported(self):
         stack1 = self._get_stack_to_check('check-not-supported')
         del stack1['B'].handle_check
+        stack1['A'].state_set(stack1['A'].CREATE, stack1['A'].COMPLETE)
         stack1.check()
 
         self.assertEqual(stack1.COMPLETE, stack1.status)
@@ -942,8 +945,21 @@ class StackTest(common.HeatTestCase):
 
     def test_check_fail(self):
         stk = self._get_stack_to_check('check-fail')
+        # if resource not created, check fail
+        stk.check()
+        self.assertEqual(stk.FAILED, stk.status)
+        self.assertEqual(stk.CHECK, stk.action)
+        self.assertFalse(stk['A'].handle_check.called)
+        self.assertFalse(stk['B'].handle_check.called)
+        self.assertIn('Resource A not created yet',
+                      stk.status_reason)
+        self.assertIn('Resource B not created yet',
+                      stk.status_reason)
+        # check if resource created
         stk['A'].handle_check.side_effect = Exception('fail-A')
         stk['B'].handle_check.side_effect = Exception('fail-B')
+        stk['A'].state_set(stk['A'].CREATE, stk['A'].COMPLETE)
+        stk['B'].state_set(stk['B'].CREATE, stk['B'].COMPLETE)
         stk.check()
 
         self.assertEqual(stk.FAILED, stk.status)
