@@ -42,6 +42,7 @@ from heat.engine import properties
 from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import status
 from heat.engine import support
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
@@ -95,18 +96,7 @@ class PollDelay(Exception):
 
 
 @six.python_2_unicode_compatible
-class Resource(object):
-    ACTIONS = (
-        INIT, CREATE, DELETE, UPDATE, ROLLBACK,
-        SUSPEND, RESUME, ADOPT, SNAPSHOT, CHECK,
-    ) = (
-        'INIT', 'CREATE', 'DELETE', 'UPDATE', 'ROLLBACK',
-        'SUSPEND', 'RESUME', 'ADOPT', 'SNAPSHOT', 'CHECK',
-    )
-
-    STATUSES = (IN_PROGRESS, FAILED, COMPLETE
-                ) = ('IN_PROGRESS', 'FAILED', 'COMPLETE')
-
+class Resource(status.ResourceStatus):
     BASE_ATTRIBUTES = (SHOW, ) = ('show', )
 
     # If True, this resource must be created before it can be referenced.
@@ -153,7 +143,8 @@ class Resource(object):
     required_service_extension = None
 
     # no signal actions
-    no_signal_actions = (SUSPEND, DELETE)
+    no_signal_actions = (status.ResourceStatus.SUSPEND,
+                         status.ResourceStatus.DELETE)
 
     # Whether all other resources need a metadata_update() after
     # a signal to this resource
