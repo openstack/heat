@@ -888,7 +888,7 @@ class TemplateTest(common.HeatTestCase):
         tmpl = template.Template(parameter_template, env=env)
         stk = stack.Stack(self.ctx, 'test', tmpl)
         tmpl.env = environment.Environment({})
-        stk.parameters = cfn_p.CfnParameters(stk.identifier(), tmpl)
+        stk.defn.parameters = cfn_p.CfnParameters(stk.identifier(), tmpl)
         snippet = {"Ref": "foo"}
         self.assertRaises(exception.UserParameterMissing,
                           self.resolve,

@@ -283,7 +283,7 @@ class FormatTest(common.HeatTestCase):
 
     def test_format_stack_resource_with_parent_stack(self):
         res = self.stack['generic1']
-        res.stack._parent_info = parent_rsrc.ParentResourceProxy(
+        res.stack.defn._parent_info = parent_rsrc.ParentResourceProxy(
             self.stack.context, 'foobar', None)
 
         formatted = api.format_stack_resource(res, False)
