@@ -133,6 +133,9 @@ def _stack_id_output(resource_name, template_type='cfn'):
         }
 
 
+BASE_ATTRIBUTES = (SHOW_ATTR, ) = ('show', )
+
+
 @repr_wrapper
 class Attributes(collections.Mapping):
     """Models a collection of Resource Attributes."""
