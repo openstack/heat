@@ -45,6 +45,7 @@ from heat.engine import environment
 from heat.engine import event
 from heat.engine.notification import stack as notification
 from heat.engine import parameter_groups as param_groups
+from heat.engine import parent_rsrc
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
@@ -166,8 +167,9 @@ class Stack(collections.Mapping):
         self.status_reason = status_reason
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
-        self.parent_resource_name = parent_resource
-        self._parent_stack = None
+        self._parent_info = parent_rsrc.ParentResourceProxy(context,
+                                                            parent_resource,
+                                                            owner_id)
         self._outputs = None
         self._resources = None
         self._dependencies = None
@@ -255,26 +257,21 @@ class Stack(collections.Mapping):
         return self.t.env
 
     @property
+    def parent_resource_name(self):
+        if self._parent_info is None:
+            return None
+        return self._parent_info.name
+
+    @property
     def parent_resource(self):
         """Dynamically load up the parent_resource.
 
         Note: this should only be used by "Fn::ResourceFacade"
         """
-        if self._parent_stack is None:
-            # we need both parent name and owner id.
-            if self.parent_resource_name is None or self.owner_id is None:
-                return None
-
-            try:
-                owner = self.load(self.context, stack_id=self.owner_id)
-            except exception.NotFound:
-                return None
-            self._parent_stack = owner
-
-        return self._parent_stack[self.parent_resource_name]
+        return self._parent_info
 
     def set_parent_stack(self, parent_stack):
-        self._parent_stack = parent_stack
+        parent_rsrc.use_parent_stack(self._parent_info, parent_stack)
 
     def stored_context(self):
         if self.user_creds_id:
@@ -418,12 +415,17 @@ class Stack(collections.Mapping):
         If this is not nested return (None, self), else return stack resources
         and stacks in path from the root stack and including this stack.
 
+        Note that this is horribly inefficient, as it requires us to load every
+        stack in the chain back to the root in memory at the same time.
+
         :returns: a list of (stack_resource, stack) tuples.
         """
-        if self.parent_resource and self.parent_resource.stack:
-            path = self.parent_resource.stack.object_path_in_stack()
-            path.extend([(self.parent_resource, self)])
-            return path
+        if self.parent_resource:
+            parent_stack = self.parent_resource._stack()
+            if parent_stack is not None:
+                path = parent_stack.object_path_in_stack()
+                path.extend([(self.parent_resource, self)])
+                return path
         return [(None, self)]
 
     def path_in_stack(self):

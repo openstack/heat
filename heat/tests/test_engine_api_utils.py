@@ -26,6 +26,7 @@ from heat.db.sqlalchemy import models
 from heat.engine import api
 from heat.engine.cfn import parameters as cfn_param
 from heat.engine import event
+from heat.engine import parent_rsrc
 from heat.engine import stack as parser
 from heat.engine import template
 from heat.objects import event as event_object
@@ -282,7 +283,8 @@ class FormatTest(common.HeatTestCase):
 
     def test_format_stack_resource_with_parent_stack(self):
         res = self.stack['generic1']
-        res.stack.parent_resource_name = 'foobar'
+        res.stack._parent_info = parent_rsrc.ParentResourceProxy(
+            self.stack.context, 'foobar', None)
 
         formatted = api.format_stack_resource(res, False)
         self.assertEqual('foobar', formatted[rpc_api.RES_PARENT_RESOURCE])
