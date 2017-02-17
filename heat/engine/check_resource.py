@@ -23,7 +23,6 @@ from oslo_log import log as logging
 from heat.common import exception
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
-from heat.engine import node_data
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -209,7 +208,7 @@ class CheckResource(object):
         def _get_input_data(req, fwd, input_forward_data=None):
             if fwd:
                 if input_forward_data is None:
-                    return construct_input_data(rsrc, stack)
+                    return rsrc.node_data().as_dict()
                 else:
                     # do not re-resolve attrs
                     return input_forward_data
@@ -295,30 +294,6 @@ def load_resource(cnxt, resource_id, resource_data, is_update):
     except (exception.ResourceNotFound, exception.NotFound):
         # can be ignored
         return None, None, None
-
-
-def _resolve_attributes(dep_attrs, rsrc):
-    resolved_attributes = {}
-    for attr in dep_attrs:
-        try:
-            if isinstance(attr, six.string_types):
-                resolved_attributes[attr] = rsrc.get_attribute(attr)
-            else:
-                resolved_attributes[attr] = rsrc.get_attribute(*attr)
-        except exception.InvalidTemplateAttribute as ita:
-            LOG.info(six.text_type(ita))
-    return resolved_attributes
-
-
-def construct_input_data(rsrc, curr_stack):
-    dep_attrs = curr_stack.get_dep_attrs(
-        six.itervalues(curr_stack.resources),
-        rsrc.name)
-    input_data = node_data.NodeData(rsrc.id, rsrc.name, rsrc.uuid,
-                                    rsrc.get_reference_id(),
-                                    _resolve_attributes(dep_attrs, rsrc),
-                                    rsrc.action, rsrc.status)
-    return input_data.as_dict()
 
 
 def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,

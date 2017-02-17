@@ -20,14 +20,12 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.engine.cfn import functions as cfn_functions
 from heat.engine.cfn import parameters as cfn_param
-from heat.engine import check_resource as cr
 from heat.engine import conditions
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import functions as hot_functions
 from heat.engine.hot import parameters as hot_param
 from heat.engine.hot import template as hot_template
-from heat.engine import node_data
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
@@ -2349,14 +2347,15 @@ class StackGetAttributesTestConvergence(common.HeatTestCase):
     ]
 
     def _prepare_cache_data(self, rsrc):
-        attributes = function.dep_attrs(
+        dep_attrs = function.dep_attrs(
             self.stack.t.parse(self.stack, self.snippet),
             self.resource_name)
+        with mock.patch.object(rsrc.stack, 'get_dep_attrs') as mock_da:
+            mock_da.return_value = dep_attrs
+            rsrc_data = rsrc.node_data()
         # store as cache data
         self.stack.cache_data = {
-            rsrc.name: node_data.NodeData.from_dict({
-                'attrs': cr._resolve_attributes(attributes, rsrc)
-            })
+            rsrc.name: rsrc_data
         }
 
     def test_get_attr_convergence(self):
