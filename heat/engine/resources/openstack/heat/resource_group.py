@@ -358,7 +358,8 @@ class ResourceGroup(stack_resource.StackResource):
             max_batch_size = batch_create[self.MAX_BATCH_SIZE]
             pause_sec = batch_create[self.PAUSE_TIME]
             checkers = self._replace(0, max_batch_size, pause_sec)
-            checkers[0].start()
+            if checkers:
+                checkers[0].start()
             return checkers
         else:
             names = self._resource_names()
