@@ -219,6 +219,17 @@ class ResourceProxy(status.ResourceStatus):
                     if k != attributes.SHOW_ATTR)
 
 
+def update_resource_data(stack_definition, resource_name, resource_data):
+    """Store new resource state data for the specified resource.
+
+    This function enables the legacy (non-convergence) path to store updated
+    NodeData as resources are created/updated in a single StackDefinition
+    that lasts for the entire lifetime of the stack operation.
+    """
+    stack_definition._resource_data[resource_name] = resource_data
+    stack_definition._resources.pop(resource_name, None)
+
+
 def add_resource(stack_definition, resource_definition):
     """Insert the given resource definition into the stack definition.
 

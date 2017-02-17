@@ -1092,11 +1092,15 @@ class Stack(collections.Mapping):
                                 lambda x: {})
 
         @functools.wraps(getattr(resource.Resource, action_method))
+        @scheduler.wrappertask
         def resource_action(r):
             # Find e.g resource.create and call it
             handle = getattr(r, action_method)
 
-            return handle(**handle_kwargs(r))
+            yield handle(**handle_kwargs(r))
+
+            if action == self.CREATE:
+                stk_defn.update_resource_data(self.defn, r.name, r.node_data())
 
         def get_error_wait_time(resource):
             return resource.cancel_grace_period()

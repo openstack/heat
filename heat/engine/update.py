@@ -19,6 +19,7 @@ from heat.common.i18n import repr_wrapper
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import stk_defn
 from heat.objects import resource as resource_objects
 
 LOG = logging.getLogger(__name__)
@@ -173,11 +174,19 @@ class StackUpdate(object):
                              "%(stack_name)s updated",
                              {'res_name': res_name,
                               'stack_name': self.existing_stack.name})
+
+                    stk_defn.update_resource_data(self.existing_stack.defn,
+                                                  res_name,
+                                                  existing_res.node_data())
                     return
             else:
                 self._check_replace_restricted(new_res)
 
         yield self._create_resource(new_res)
+
+        node_data = self.existing_stack[res_name].node_data()
+        stk_defn.update_resource_data(self.existing_stack.defn, res_name,
+                                      node_data)
 
     def _update_in_place(self, existing_res, new_res, is_substituted=False):
         existing_snippet = self.existing_snippets[existing_res.name]
