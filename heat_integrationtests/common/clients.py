@@ -149,51 +149,39 @@ class ClientManager(object):
         return KeystoneWrapperClient(auth, verify_cert)
 
     def _get_compute_client(self):
-
-        region = self.conf.region
         # Create our default Nova client to use in testing
         return nova_client.Client(
             self.NOVA_API_VERSION,
             session=self.identity_client.session,
             service_type='compute',
             endpoint_type='publicURL',
-            region_name=region,
+            region_name=self.conf.region,
             os_cache=False,
-            insecure=self.insecure,
-            cacert=self.ca_file,
             http_log_debug=True)
 
     def _get_network_client(self):
 
         return neutron_client.Client(
             session=self.identity_client.session,
-            endpoint_type='publicURL',
-            insecure=self.insecure,
-            ca_cert=self.ca_file)
+            service_type='network',
+            region_name=self.conf.region,
+            endpoint_type='publicURL')
 
     def _get_volume_client(self):
-        region = self.conf.region
-        endpoint_type = 'publicURL'
         return cinder_client.Client(
             self.CINDERCLIENT_VERSION,
             session=self.identity_client.session,
-            region_name=region,
-            endpoint_type=endpoint_type,
-            insecure=self.insecure,
-            cacert=self.ca_file,
+            endpoint_type='publicURL',
+            region_name=self.conf.region,
             http_log_debug=True)
 
     def _get_object_client(self):
-        # swiftclient does not support keystone sessions yet
         args = {
             'auth_version': self.auth_version,
-            'tenant_name': self._tenant_name(),
-            'user': self._username(),
-            'key': self.conf.password,
-            'authurl': self.conf.auth_url,
-            'os_options': {'endpoint_type': 'publicURL'},
-            'insecure': self.insecure,
-            'cacert': self.ca_file,
+            'session': self.identity_client.session,
+            'os_options': {'endpoint_type': 'publicURL',
+                           'region_name': self.conf.region,
+                           'service_type': 'object-store'},
         }
         return swift_client.Connection(**args)
 
@@ -206,8 +194,6 @@ class ClientManager(object):
         else:
             args = {
                 'session': self.identity_client.session,
-                'insecure': self.insecure,
-                'cacert': self.ca_file,
                 'region_name': self.conf.region,
                 'endpoint_type': 'publicURL',
                 'service_type': 'metering',
