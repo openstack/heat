@@ -15,7 +15,6 @@ import os
 from cinderclient import client as cinder_client
 from heat.common.i18n import _
 from heatclient import client as heat_client
-from keystoneauth1 import exceptions as kc_exceptions
 from keystoneauth1.identity.generic import password
 from keystoneauth1 import session
 from neutronclient.v2_0 import client as neutron_client
@@ -104,22 +103,19 @@ class ClientManager(object):
     def _get_orchestration_client(self):
         endpoint = os.environ.get('HEAT_URL')
         if os.environ.get('OS_NO_CLIENT_AUTH') == 'True':
-            token = None
+            session = None
         else:
-            token = self.identity_client.auth_token
-        try:
-            if endpoint is None:
-                endpoint = self.identity_client.get_endpoint_url(
-                    'orchestration', self.conf.region)
-        except kc_exceptions.EndpointNotFound:
-            return None
-        else:
-            return heat_client.Client(
-                self.HEATCLIENT_VERSION,
-                endpoint,
-                token=token,
-                username=self._username(),
-                password=self._password())
+            session = self.identity_client.session
+
+        return heat_client.Client(
+            self.HEATCLIENT_VERSION,
+            endpoint,
+            session=session,
+            endpoint_type='publicURL',
+            service_type='orchestration',
+            region_name=self.conf.region,
+            username=self._username(),
+            password=self._password())
 
     def _get_identity_client(self):
         user_domain_id = self.conf.user_domain_id
