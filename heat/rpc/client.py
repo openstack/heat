@@ -139,14 +139,16 @@ class EngineClient(object):
         :param show_deleted: if true, show soft-deleted stacks
         :param show_nested: if true, show nested stacks
         :param show_hidden: if true, show hidden stacks
-        :param tags: show stacks containing these tags, combine multiple
-            tags using the boolean AND expression
-        :param tags_any: show stacks containing these tags, combine multiple
-            tags using the boolean OR expression
-        :param not_tags: show stacks not containing these tags, combine
-            multiple tags using the boolean AND expression
-        :param not_tags_any: show stacks not containing these tags, combine
-            multiple tags using the boolean OR expression
+        :param tags: show stacks containing these tags. If multiple tags
+            are passed, they will be combined using the boolean AND expression
+        :param tags_any: show stacks containing these tags. If multiple tags
+            are passed, they will be combined using the boolean OR expression
+        :param not_tags: show stacks not containing these tags. If multiple
+            tags are passed, they will be combined using the boolean AND
+            expression
+        :param not_tags_any: show stacks not containing these tags. If
+            multiple tags are passed, they will be combined using the boolean
+            OR expression
         :returns: a list of stacks
         """
         return self.call(ctxt,
@@ -172,14 +174,16 @@ class EngineClient(object):
         :param show_deleted: if true, count will include the deleted stacks
         :param show_nested: if true, count will include nested stacks
         :param show_hidden: if true, count will include hidden stacks
-        :param tags: count stacks containing these tags, combine multiple tags
-            using the boolean AND expression
-        :param tags_any: count stacks containing these tags, combine multiple
-            tags using the boolean OR expression
-        :param not_tags: count stacks not containing these tags, combine
-            multiple tags using the boolean AND expression
-        :param not_tags_any: count stacks not containing these tags, combine
-            multiple tags using the boolean OR expression
+        :param tags: count stacks containing these tags. If multiple tags are
+            passed, they will be combined using the boolean AND expression
+        :param tags_any: count stacks containing these tags. If multiple tags
+            are passed, they will be combined using the boolean OR expression
+        :param not_tags: count stacks not containing these tags. If multiple
+            tags are passed, they will be combined using the boolean AND
+            expression
+        :param not_tags_any: count stacks not containing these tags. If
+            multiple tags are passed, they will be combined using the boolean
+            OR expression
         :returns: an integer representing the number of matched stacks
         """
         return self.call(ctxt, self.make_msg('count_stacks',
