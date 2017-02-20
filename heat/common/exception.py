@@ -154,6 +154,10 @@ class InvalidTemplateReference(HeatException):
                 ' is incorrect.')
 
 
+class TemplateOutputError(HeatException):
+    msg_fmt = _('Error in %(resource)s output %(attribute)s: %(message)s')
+
+
 class InvalidExternalResourceDependency(HeatException):
     msg_fmt = _("Invalid dependency with external %(resource_type)s "
                 "resource: %(external_id)s")
