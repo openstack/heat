@@ -78,6 +78,9 @@ class UpdatePortTest(functional_base.FunctionalTestsBase):
         self.assertEqual(_mac, new_mac)
 
     def test_update_with_mac_address(self):
+        if not self.conf.admin_username or not self.conf.admin_password:
+            self.skipTest('No admin creds found, skipping')
+
         # Setup admin clients for updating mac_address
         self.setup_clients_for_admin()
 
