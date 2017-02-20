@@ -75,7 +75,7 @@ Outputs:
         self.object_container_name = test.rand_name()
         self.project_id = self.identity_client.project_id
         self.swift_key = hashlib.sha224(
-            str(random.getrandbits(256))).hexdigest()[:32]
+            str(random.getrandbits(256)).encode('ascii')).hexdigest()[:32]
         key_header = 'x-container-meta-temp-url-key'
         self.object_client.put_container(self.object_container_name,
                                          {key_header: self.swift_key})
