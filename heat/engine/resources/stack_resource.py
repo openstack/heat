@@ -585,8 +585,10 @@ class StackResource(resource.Resource):
         particular exception, not KeyError, being raised if the key does not
         exist.)
         """
-        if self._outputs is None or self._outputs.get(op,
-                                                      NotImplemented) is None:
+        if (self._outputs is None or
+                (op in self._outputs and
+                 rpc_api.OUTPUT_ERROR not in self._outputs[op] and
+                 self._outputs[op].get(rpc_api.OUTPUT_VALUE) is None)):
             stack_identity = self.nested_identifier()
             if stack_identity is None:
                 return
@@ -595,14 +597,20 @@ class StackResource(resource.Resource):
             if not stack:
                 return
             outputs = stack[0].get(rpc_api.STACK_OUTPUTS) or {}
-            self._outputs = {o[rpc_api.OUTPUT_KEY]: o[rpc_api.OUTPUT_VALUE]
-                             for o in outputs if rpc_api.OUTPUT_ERROR not in o}
+            self._outputs = {o[rpc_api.OUTPUT_KEY]: o for o in outputs}
 
-        try:
-            return self._outputs[op]
-        except KeyError:
+        if op not in self._outputs:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=op)
+
+        output_data = self._outputs[op]
+        if rpc_api.OUTPUT_ERROR in output_data:
+            raise exception.TemplateOutputError(
+                resource=self.name,
+                attribute=op,
+                message=output_data[rpc_api.OUTPUT_ERROR])
+
+        return output_data[rpc_api.OUTPUT_VALUE]
 
     def _resolve_attribute(self, name):
         return self.get_output(name)
