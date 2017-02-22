@@ -705,36 +705,38 @@ class KeystoneClientTest(common.HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertIsNotNone(heat_ks_client._client)
 
-    def test_delete_trust(self):
-
-        """Test delete_trust when deleting trust."""
-
+    def _test_delete_trust(self, raise_ext=None):
         self._stubs_auth()
         cfg.CONF.set_override('deferred_auth_method', 'trusts',
                               enforce_type=True)
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
-
+        if raise_ext is None:
+            self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
+        else:
+            self.mock_ks_v3_client.trusts.delete('atrust123').AndRaise(
+                raise_ext)
         self.m.ReplayAll()
         ctx = utils.dummy_context()
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         self.assertIsNone(heat_ks_client.delete_trust(trust_id='atrust123'))
+
+    def test_delete_trust(self):
+
+        """Test delete_trust when deleting trust."""
+
+        self._test_delete_trust()
 
     def test_delete_trust_not_found(self):
 
         """Test delete_trust when trust already deleted."""
 
-        self._stubs_auth()
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
-        self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
-        self.mock_ks_v3_client.trusts.delete('atrust123').AndRaise(
-            kc_exception.NotFound)
+        self._test_delete_trust(raise_ext=kc_exception.NotFound)
 
-        self.m.ReplayAll()
-        ctx = utils.dummy_context()
-        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertIsNone(heat_ks_client.delete_trust(trust_id='atrust123'))
+    def test_delete_trust_unauthorized(self):
+
+        """Test delete_trust when trustor is deleted or trust is expired."""
+
+        self._test_delete_trust(raise_ext=kc_exception.Unauthorized)
 
     def test_disable_stack_user(self):
 

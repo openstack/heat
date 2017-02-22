@@ -230,7 +230,7 @@ class KsClientWrapper(object):
         """Delete the specified trust."""
         try:
             self.client.trusts.delete(trust_id)
-        except ks_exception.NotFound:
+        except (ks_exception.NotFound, ks_exception.Unauthorized):
             pass
 
     def _get_username(self, username):
