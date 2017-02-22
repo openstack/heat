@@ -108,7 +108,7 @@ resources:
         type: OS::Heat::UpdateWaitConditionHandle
 '''
 
-test_template_bad_waithandle = '''
+test_template_waithandle_bad_type = '''
 heat_template_version: 2013-05-23
 resources:
     wait_condition:
@@ -118,6 +118,20 @@ resources:
             timeout: 5
     wait_handle:
         type: OS::Heat::RandomString
+'''
+
+test_template_waithandle_bad_reference = '''
+heat_template_version: pike
+resources:
+    wait_condition:
+        type: OS::Heat::WaitCondition
+        properties:
+            handle: wait_handel
+            timeout: 5
+    wait_handle:
+        type: OS::Heat::WaitConditionHandle
+        properties:
+            signal_transport: NO_SIGNAL
 '''
 
 
@@ -206,17 +220,24 @@ class HeatWaitConditionTest(common.HeatTestCase):
         self.assertEqual('wait_handle', r.name)
         self.m.VerifyAll()
 
-    def test_bad_wait_handle(self):
-        self.stack = self.create_stack(
-            template=test_template_bad_waithandle)
+    def _test_wait_handle_invalid(self, tmpl, handle_name):
+        self.stack = self.create_stack(template=tmpl)
         self.m.ReplayAll()
         self.stack.create()
         rsrc = self.stack['wait_condition']
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         reason = rsrc.status_reason
-        self.assertEqual(reason, 'ValueError: resources.wait_condition: '
-                                 'wait_handle is not a valid wait condition '
-                                 'handle.')
+        error_msg = ('ValueError: resources.wait_condition: '
+                     '%s is not a valid wait condition handle.') % handle_name
+        self.assertEqual(reason, error_msg)
+
+    def test_wait_handle_bad_type(self):
+        self._test_wait_handle_invalid(test_template_waithandle_bad_type,
+                                       'wait_handle')
+
+    def test_wait_handle_bad_reference(self):
+        self._test_wait_handle_invalid(
+            test_template_waithandle_bad_reference, 'wait_handel')
 
     def test_timeout(self):
         self.stack = self.create_stack()
