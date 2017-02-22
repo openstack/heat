@@ -2006,15 +2006,6 @@ class Stack(collections.Mapping):
             'tags': self.tags,
         }
 
-    def reset_resource_attributes(self):
-        # nothing is cached if no resources exist
-        if not self._resources:
-            return
-        # a change in some resource may have side-effects in the attributes
-        # of other resources, so ensure that attributes are re-calculated
-        for res in six.itervalues(self.resources):
-            res.attributes.reset_resolved_values()
-
     def has_cache_data(self, resource_name):
         return (self.cache_data is not None and
                 self.cache_data.get(resource_name) is not None)
