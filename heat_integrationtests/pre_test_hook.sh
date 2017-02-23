@@ -16,11 +16,7 @@
 
 set -x
 
-localrc_path=$BASE/new/devstack/localrc
 localconf=$BASE/new/devstack/local.conf
-
-echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localrc_path
-echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localrc_path
 
 echo -e '[[post-config|$HEAT_CONF]]\n[DEFAULT]\n' >> $localconf
 
@@ -44,9 +40,13 @@ echo -e '[cache]\nenabled=True\n' >> $localconf
 
 echo -e '[eventlet_opts]\nclient_socket_timeout=120\n' >> $localconf
 
+
+echo "[[local|localrc]]" >> $localconf
+echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
+echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
 # Use the lbaas v2 namespace driver for devstack integration testing since
 # octavia uses nested vms.
 if [[ $OVERRIDE_ENABLED_SERVICES =~ "q-lbaasv2" ]]
 then
-  echo "NEUTRON_LBAAS_SERVICE_PROVIDERV2=LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default" >> $localrc_path
+  echo "NEUTRON_LBAAS_SERVICE_PROVIDERV2=LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default" >> $localconf
 fi
