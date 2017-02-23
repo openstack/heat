@@ -68,16 +68,6 @@ class Event(
         return self._resource_properties
 
     @classmethod
-    def get_by_id(cls, context, event_id):
-        db_event = db_api.event_get(context, event_id)
-        return cls._from_db_object(context, cls(context), db_event)
-
-    @classmethod
-    def get_all(cls, context):
-        return [cls._from_db_object(context, cls(), db_event)
-                for db_event in db_api.event_get_all(context)]
-
-    @classmethod
     def get_all_by_tenant(cls, context, **kwargs):
         return [cls._from_db_object(context, cls(), db_event)
                 for db_event in db_api.event_get_all_by_tenant(context,
