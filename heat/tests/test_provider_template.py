@@ -319,7 +319,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         output = {'outputs': [{'output_key': 'Foo', 'output_value': None,
                                'output_error': 'it is all bad'}]}
         temp_res._rpc_client.show_stack.return_value = [output]
-        self.assertRaises(exception.InvalidTemplateAttribute,
+        self.assertRaises(exception.TemplateOutputError,
                           temp_res.FnGetAtt, 'Foo')
 
     def test_properties_normal(self):
