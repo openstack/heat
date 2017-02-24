@@ -613,7 +613,7 @@ For example
        description: User name to be configured for the application
        constraints:
          - allowed_pattern: "[A-Z]+[a-zA-Z0-9]*"
-          description: User name must start with an uppercase character
+           description: User name must start with an uppercase character
 
 
 custom_constraint
@@ -1034,7 +1034,7 @@ The following example demonstrates how to use the :code:`get_attr` function:
         value: { get_attr: [my_instance, first_address] }
       instance_private_ip:
         description: Private IP address of the deployed compute instance
-       value: { get_attr: [my_instance, networks, private, 0] }
+        value: { get_attr: [my_instance, networks, private, 0] }
 
 In this example, if the ``networks`` attribute contained the following data::
 
