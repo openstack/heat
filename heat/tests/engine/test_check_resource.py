@@ -52,7 +52,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.cr = check_resource.CheckResource(self.worker.engine_id,
                                                self.worker._rpc_client,
                                                self.worker.thread_group_mgr,
-                                               mock.Mock())
+                                               mock.Mock(), {})
         self.worker._rpc_client = worker_client.WorkerClient()
         self.ctx = utils.dummy_context()
         self.stack = tools.get_stack(

@@ -27,6 +27,7 @@ from heat.engine import function
 from heat.engine.hot import functions as hot_functions
 from heat.engine.hot import parameters as hot_param
 from heat.engine.hot import template as hot_template
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
@@ -2353,9 +2354,9 @@ class StackGetAttributesTestConvergence(common.HeatTestCase):
             self.resource_name)
         # store as cache data
         self.stack.cache_data = {
-            rsrc.name: {
+            rsrc.name: node_data.NodeData.from_dict({
                 'attrs': cr._resolve_attributes(attributes, rsrc)
-            }
+            })
         }
 
     def test_get_attr_convergence(self):

@@ -24,6 +24,7 @@ from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import remote_stack
 from heat.engine import rsrc_defn
@@ -668,13 +669,13 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
     def test_remote_stack_refid_convergence_cache_data(self):
         t = template_format.parse(parent_stack_template)
-        cache_data = {'remote_stack': {
+        cache_data = {'remote_stack': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'reference_id': 'convg_xyz'
-        }}
+        })}
         stack = utils.parse_stack(t, cache_data=cache_data)
         rsrc = stack['remote_stack']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())

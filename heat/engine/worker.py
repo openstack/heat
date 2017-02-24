@@ -27,6 +27,7 @@ from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import check_resource
+from heat.engine import node_data
 from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.objects import stack as stack_objects
@@ -157,7 +158,9 @@ class WorkerService(object):
         The node may be associated with either an update or a cleanup of its
         associated resource.
         """
-        resource_data = dict(sync_point.deserialize_input_data(data))
+        in_data = sync_point.deserialize_input_data(data)
+        resource_data = node_data.load_resources_data(in_data if is_update
+                                                      else {})
         rsrc, rsrc_owning_stack, stack = check_resource.load_resource(
             cnxt, resource_id, resource_data, is_update)
 
@@ -175,7 +178,7 @@ class WorkerService(object):
                 cr = check_resource.CheckResource(self.engine_id,
                                                   self._rpc_client,
                                                   self.thread_group_mgr,
-                                                  msg_queue)
+                                                  msg_queue, in_data)
                 cr.check(cnxt, resource_id, current_traversal, resource_data,
                          is_update, adopt_stack_data, rsrc, stack)
         finally:

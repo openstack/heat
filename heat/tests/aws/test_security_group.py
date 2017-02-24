@@ -24,6 +24,7 @@ from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine.resources.aws.ec2 import security_group
 from heat.engine import rsrc_defn
@@ -1132,13 +1133,13 @@ Resources:
 
     def test_security_group_refid_convg_cache_data(self):
         t = template_format.parse(self.test_template_nova)
-        cache_data = {'the_sg': {
+        cache_data = {'the_sg': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'reference_id': 'convg_xyz'
-        }}
+        })}
         stack = utils.parse_stack(t, cache_data=cache_data)
         rsrc = stack['the_sg']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())

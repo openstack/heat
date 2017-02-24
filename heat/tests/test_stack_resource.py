@@ -23,6 +23,7 @@ import six
 from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine.resources import stack_resource
 from heat.engine import stack as parser
@@ -448,13 +449,13 @@ class StackResourceTest(StackResourceBaseTest):
     def test_get_attribute_autoscaling_convg(self):
         t = template_format.parse(heat_autoscaling_group_template)
         tmpl = templatem.Template(t)
-        cache_data = {'my_autoscaling_group': {
+        cache_data = {'my_autoscaling_group': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'attrs': {'current_size': 4}
-        }}
+        })}
         stack = parser.Stack(utils.dummy_context(), 'test_att', tmpl,
                              cache_data=cache_data)
         rsrc = stack['my_autoscaling_group']
