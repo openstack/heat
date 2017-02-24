@@ -463,15 +463,6 @@ class ServerNetworkMixin(object):
         if not self.is_using_neutron():
             return
 
-        data = {'external_ports': [],
-                'internal_ports': []}
-        port_data = list(itertools.chain(
-            [('internal_ports', port) for port in self._data_get_ports()],
-            [('external_ports', port)
-             for port in self._data_get_ports('external_ports')]))
-        for port_type, port in port_data:
-            data[port_type].append({'id': port['id']})
-
         self.detach_ports(self)
 
     def restore_ports_after_rollback(self, convergence):
