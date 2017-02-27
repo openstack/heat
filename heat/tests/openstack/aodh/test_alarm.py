@@ -565,7 +565,7 @@ class AodhAlarmTest(common.HeatTestCase):
         )
         self.assertEqual(
             "StackValidationFailed: resources.MEMAlarmHigh: Property error: "
-            "MEMAlarmHigh.Properties.time_constraints[0].start: Error "
+            "Properties.time_constraints[0].start: Error "
             "validating value '%s': Invalid CRON expression: "
             "[%s] is not acceptable, out of range" % (start_time, start_time),
             error.message)
@@ -618,7 +618,7 @@ class AodhAlarmTest(common.HeatTestCase):
         )
         self.assertEqual(
             "StackValidationFailed: resources.MEMAlarmHigh: Property error: "
-            "MEMAlarmHigh.Properties.time_constraints[0].timezone: Error "
+            "Properties.time_constraints[0].timezone: Error "
             "validating value '%s': Invalid timezone: '%s'"
             % (timezone, timezone),
             error.message)
