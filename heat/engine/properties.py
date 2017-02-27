@@ -213,10 +213,11 @@ def schemata(schema_dicts):
 
 class Property(object):
 
-    def __init__(self, schema, name=None, context=None):
+    def __init__(self, schema, name=None, context=None, path=None):
         self.schema = Schema.from_legacy(schema)
         self.name = name
         self.context = context
+        self.path = self.make_path(name, path)
 
     def required(self):
         return self.schema.required
@@ -241,6 +242,18 @@ class Property(object):
 
     def support_status(self):
         return self.schema.support_status
+
+    def make_path(self, name, path=None):
+        if path is None:
+            path = ''
+        if name is None:
+            name = ''
+
+        if isinstance(name, int) or name.isdigit():
+            name = str(name)
+
+        delim = '' if not path or path.endswith('.') else '.'
+        return delim.join([path, name])
 
     def _get_integer(self, value):
         if value is None:
@@ -274,7 +287,7 @@ class Property(object):
             schemata = dict((k, self.schema.schema[k]) for k in keys)
             properties = Properties(schemata, dict(child_values),
                                     context=self.context,
-                                    parent_name=self.name)
+                                    parent_name=self.path)
             if validate:
                 properties.validate()
 
@@ -361,7 +374,7 @@ class Properties(collections.Mapping):
 
     def __init__(self, schema, data, resolver=lambda d: d, parent_name=None,
                  context=None, section=None):
-        self.props = dict((k, Property(s, k, context))
+        self.props = dict((k, Property(s, k, context, path=parent_name))
                           for k, s in schema.items())
         self.resolve = resolver
         self.data = data
