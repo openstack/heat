@@ -83,12 +83,17 @@ class KeystoneUserTest(common.HeatTestCase):
         value = mock.MagicMock()
         user_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         value.id = user_id
-
+        value.name = 'test_user_1'
+        value.default_project_id = 'project_1'
+        value.domain_id = 'default'
+        value.enabled = True
+        value.password_expires_at = '2016-12-10T17:28:49.000000'
         return value
 
     def test_user_handle_create(self):
         mock_user = self._get_mock_user()
         self.users.create.return_value = mock_user
+        self.users.get.return_value = mock_user
         self.users.add_to_group = mock.MagicMock()
 
         # validate the properties
@@ -316,3 +321,23 @@ class KeystoneUserTest(common.HeatTestCase):
         self.assertEqual(set(expected.keys()), set(reality.keys()))
         for key in expected:
             self.assertEqual(expected[key], reality[key])
+
+    def test_resolve_attributes(self):
+        mock_user = self._get_mock_user()
+        self.test_user.resource_id = mock_user['id']
+        self.users.get.return_value = mock_user
+        self.assertEqual(
+            mock_user.name,
+            self.test_user._resolve_attribute('name'))
+        self.assertEqual(
+            mock_user.default_project_id,
+            self.test_user._resolve_attribute('default_project_id'))
+        self.assertEqual(
+            mock_user.domain_id,
+            self.test_user._resolve_attribute('domain_id'))
+        self.assertEqual(
+            mock_user.enabled,
+            self.test_user._resolve_attribute('enabled'))
+        self.assertEqual(
+            mock_user.password_expires_at,
+            self.test_user._resolve_attribute('password_expires_at'))
