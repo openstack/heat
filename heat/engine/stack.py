@@ -1345,7 +1345,7 @@ class Stack(collections.Mapping):
     def _get_best_existing_rsrc_db(self, rsrc_name):
         candidate = None
         if self.ext_rsrcs_db:
-            for id, ext_rsrc in self.ext_rsrcs_db.items():
+            for ext_rsrc in self.ext_rsrcs_db.values():
                 if ext_rsrc.name != rsrc_name:
                     continue
                 if ext_rsrc.current_template_id == self.t.id:

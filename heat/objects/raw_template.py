@@ -90,7 +90,7 @@ class RawTemplate(
     @classmethod
     def encrypt_hidden_parameters(cls, tmpl):
         if cfg.CONF.encrypt_parameters_and_properties:
-            for param_name, param in tmpl.env.params.items():
+            for param_name in tmpl.env.params.keys():
                 if not tmpl.param_schemata()[param_name].hidden:
                     continue
                 clear_text_val = tmpl.env.params.get(param_name)
