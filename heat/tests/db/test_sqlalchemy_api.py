@@ -3661,8 +3661,8 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
     def test_db_encrypt_decrypt_verbose_on(self):
         info_logger = self.useFixture(
             fixtures.FakeLogger(level=logging.INFO,
-                                format="%(levelname)8s [%(name)s] %("
-                                "message)s"))
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
         ctx = utils.dummy_context()
         template = self._create_template()
         user_creds = create_user_creds(ctx)
@@ -3684,8 +3684,8 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
         info_logger2 = self.useFixture(
             fixtures.FakeLogger(level=logging.INFO,
-                                format="%(levelname)8s [%(name)s] %("
-                                "message)s"))
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
 
         db_api.db_decrypt_parameters_and_properties(
             ctx, cfg.CONF.auth_encryption_key, verbose=True)
@@ -3703,8 +3703,8 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
     def test_db_encrypt_decrypt_verbose_off(self):
         info_logger = self.useFixture(
             fixtures.FakeLogger(level=logging.INFO,
-                                format="%(levelname)8s [%(name)s] %("
-                                "message)s"))
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
         ctx = utils.dummy_context()
         template = self._create_template()
         user_creds = create_user_creds(ctx)
@@ -3722,8 +3722,8 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
 
         info_logger2 = self.useFixture(
             fixtures.FakeLogger(level=logging.INFO,
-                                format="%(levelname)8s [%(name)s] %("
-                                "message)s"))
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
 
         db_api.db_decrypt_parameters_and_properties(
             ctx, cfg.CONF.auth_encryption_key, verbose=False)

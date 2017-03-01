@@ -48,16 +48,16 @@ HeatGroup = [
     cfg.StrOpt('auth_url',
                help="Full URI of the OpenStack Identity API (Keystone)"),
     cfg.StrOpt('user_domain_name',
-               help="User domain name, if keystone v3 auth_url"
+               help="User domain name, if keystone v3 auth_url "
                     "is used"),
     cfg.StrOpt('project_domain_name',
-               help="Project domain name, if keystone v3 auth_url"
+               help="Project domain name, if keystone v3 auth_url "
                     "is used"),
     cfg.StrOpt('user_domain_id',
-               help="User domain id, if keystone v3 auth_url"
+               help="User domain id, if keystone v3 auth_url "
                     "is used"),
     cfg.StrOpt('project_domain_id',
-               help="Project domain id, if keystone v3 auth_url"
+               help="Project domain id, if keystone v3 auth_url "
                     "is used"),
     cfg.StrOpt('region',
                help="The region name to use"),
@@ -125,7 +125,7 @@ HeatGroup = [
                 help="Skip all functional tests"),
     cfg.ListOpt('skip_functional_test_list',
                 help="List of functional test class or class.method "
-                     "names to skip ex. AutoscalingGroupTest,"
+                     "names to skip ex. AutoscalingGroupTest, "
                      "InstanceGroupBasicTest.test_size_updates_work"),
     cfg.ListOpt('skip_scenario_test_list',
                 help="List of scenario test class or class.method "
@@ -143,7 +143,7 @@ HeatGroup = [
                     "server."),
     cfg.IntOpt('sighup_timeout',
                default=120,
-               help="Timeout in seconds to wait for adding or removing child"
+               help="Timeout in seconds to wait for adding or removing child "
                     "process after receiving of sighup signal"),
     cfg.IntOpt('sighup_config_edit_retries',
                default=10,

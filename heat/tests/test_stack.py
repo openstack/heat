@@ -2562,8 +2562,8 @@ class StackTest(common.HeatTestCase):
         ''')
         warning_logger = self.useFixture(
             fixtures.FakeLogger(level=logging.WARNING,
-                                format="%(levelname)8s [%(name)s] %("
-                                "message)s"))
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
 
         cfg.CONF.set_override('encrypt_parameters_and_properties', False,
                               enforce_type=True)

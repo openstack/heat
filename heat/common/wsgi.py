@@ -248,7 +248,7 @@ def get_socket(conf, default_port):
                 raise
             eventlet.sleep(0.1)
     if not sock:
-        raise RuntimeError(_("Could not bind to %(bind_addr)s"
+        raise RuntimeError(_("Could not bind to %(bind_addr)s "
                              "after trying for 30 seconds")
                            % {'bind_addr': bind_addr})
 

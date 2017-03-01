@@ -182,7 +182,7 @@ class ResourceGroup(stack_resource.StackResource):
                           "the 'refs' attribute. "
                           "Note this is destructive on update when specified; "
                           "even if the count is not being reduced, and once "
-                          "a resource name is removed, it's name is never "
+                          "a resource name is removed, its name is never "
                           "reused in subsequent updates."
                           ),
                         default=[]
