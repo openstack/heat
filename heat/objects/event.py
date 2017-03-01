@@ -14,13 +14,17 @@
 
 """Event object."""
 
+from oslo_log import log as logging
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
+from heat.common.i18n import _LI
 from heat.common import identifier
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import resource_properties_data as rpd
+
+LOG = logging.getLogger(__name__)
 
 
 class Event(
@@ -45,16 +49,30 @@ class Event(
 
     @staticmethod
     def _from_db_object(context, event, db_event):
+        event._resource_properties = None
         for field in event.fields:
             if field == 'resource_status_reason':
                 # this works whether db_event is a dict or db ref
                 event[field] = db_event['_resource_status_reason']
             else:
                 event[field] = db_event[field]
-        if db_event['rsrc_prop_data_id'] is not None:
-            event._resource_properties = None
-        else:
+        if db_event['rsrc_prop_data_id'] is None:
             event._resource_properties = db_event['resource_properties'] or {}
+        else:
+            if hasattr(db_event, '__dict__'):
+                rpd_obj = db_event.__dict__.get('rsrc_prop_data')
+            elif hasattr(db_event, 'rsrc_prop_data'):
+                rpd_obj = db_event['rsrc_prop_data']
+            else:
+                rpd_obj = None
+            if rpd_obj is not None:
+                # Object is already eager loaded
+                rpd_obj = (
+                    rpd.ResourcePropertiesData._from_db_object(
+                        rpd.ResourcePropertiesData(),
+                        context,
+                        rpd_obj))
+                event._resource_properties = rpd_obj.data
         event._context = context
         event.obj_reset_changes()
         return event
@@ -62,6 +80,7 @@ class Event(
     @property
     def resource_properties(self):
         if self._resource_properties is None:
+            LOG.info(_LI('rsrp_prop_data lazy load'))
             rpd_obj = rpd.ResourcePropertiesData.get_by_id(
                 self._context, self.rsrc_prop_data_id)
             self._resource_properties = rpd_obj.data or {}

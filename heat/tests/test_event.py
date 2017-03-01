@@ -254,13 +254,11 @@ class EventTest(EventCommon):
         data = {'p1': 'hello',
                 'p2': 'too soon?'}
         rpd_obj = rpd_object.ResourcePropertiesData().create(self.ctx, data)
-        rpd_db_obj = self.ctx.session.query(
-            models.ResourcePropertiesData).get(rpd_obj.id)
         e_obj = event_object.Event().create(
             self.ctx,
             {'stack_id': self.stack.id,
              'uuid': str(uuid.uuid4()),
-             'rsrc_prop_data_id': rpd_db_obj.id})
+             'rsrc_prop_data_id': rpd_obj.id})
         e_obj = event_object.Event.get_all_by_stack(utils.dummy_context(),
                                                     self.stack.id)[0]
         # properties data appears unencrypted to event object
@@ -290,8 +288,19 @@ class EventEncryptedTest(EventCommon):
                             results[0]['data']['Foo'])
         self.assertTrue(results[0]['encrypted'])
 
-        # verify encrypted data is decrypted when retrieved through
-        # heat object layer
         ev = event_object.Event.get_all_by_stack(self.ctx,
                                                  self.stack.id)[0]
+        # verify not eager loaded
+        self.assertIsNone(ev._resource_properties)
+        # verify encrypted data is decrypted when retrieved through
+        # heat object layer (normally it would be eager loaded)
+        self.assertEqual({'Foo': 'goo'}, ev.resource_properties)
+
+        # verify eager load case (uuid is specified)
+        filters = {'uuid': ev.uuid}
+        ev = event_object.Event.get_all_by_stack(self.ctx,
+                                                 self.stack.id,
+                                                 filters=filters)[0]
+        # verify eager loaded
+        self.assertIsNotNone(ev._resource_properties)
         self.assertEqual({'Foo': 'goo'}, ev.resource_properties)
