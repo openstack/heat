@@ -54,17 +54,6 @@ class StackEventTest(common.HeatTestCase):
 
             self.assertIn('physical_resource_id', ev)
 
-            self.assertIn('resource_properties', ev)
-            # Big long user data field.. it mentions 'wordpress'
-            # a few times so this should work.
-            if ev.get('resource_properties'):
-                user_data = ev['resource_properties']['UserData']
-                self.assertIn('wordpress', user_data)
-                self.assertEqual('F17-x86_64-gold',
-                                 ev['resource_properties']['ImageId'])
-                self.assertEqual('m1.large',
-                                 ev['resource_properties']['InstanceType'])
-
             self.assertEqual('CREATE', ev['resource_action'])
             self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
 
@@ -144,7 +133,6 @@ class StackEventTest(common.HeatTestCase):
 
             self.assertIn('resource_name', ev)
             self.assertIn('physical_resource_id', ev)
-            self.assertIn('resource_properties', ev)
             self.assertIn('resource_status_reason', ev)
 
             self.assertIn(ev['resource_action'],
@@ -186,17 +174,6 @@ class StackEventTest(common.HeatTestCase):
 
             self.assertIn('physical_resource_id', ev)
 
-            self.assertIn('resource_properties', ev)
-            # Big long user data field.. it mentions 'wordpress'
-            # a few times so this should work.
-            if ev.get('resource_properties'):
-                user_data = ev['resource_properties']['UserData']
-                self.assertIn('wordpress', user_data)
-                self.assertEqual('F17-x86_64-gold',
-                                 ev['resource_properties']['ImageId'])
-                self.assertEqual('m1.large',
-                                 ev['resource_properties']['InstanceType'])
-
             self.assertEqual('CREATE', ev['resource_action'])
             self.assertIn(ev['resource_status'], ('IN_PROGRESS', 'COMPLETE'))
 
@@ -224,7 +201,7 @@ class StackEventTest(common.HeatTestCase):
         marker = object()
         sort_keys = object()
         sort_dir = object()
-        filters = object()
+        filters = {}
         mock_get.return_value = mock.Mock(id=1)
         self.eng.list_events(self.ctx, 1, limit=limit, marker=marker,
                              sort_keys=sort_keys, sort_dir=sort_dir,
@@ -241,7 +218,7 @@ class StackEventTest(common.HeatTestCase):
         marker = object()
         sort_keys = object()
         sort_dir = object()
-        filters = object()
+        filters = {}
 
         self.eng.list_events(self.ctx, None, limit=limit, marker=marker,
                              sort_keys=sort_keys, sort_dir=sort_dir,
@@ -251,3 +228,26 @@ class StackEventTest(common.HeatTestCase):
                                              marker=marker,
                                              sort_dir=sort_dir,
                                              filters=filters)
+
+    @tools.stack_context('service_event_list_single_event')
+    @mock.patch.object(service.EngineService, '_get_stack')
+    def test_event_list_single_has_rsrc_prop_data(self, mock_get):
+        mock_get.return_value = stack_object.Stack.get_by_id(self.ctx,
+                                                             self.stack.id)
+        events = self.eng.list_events(self.ctx, self.stack.identifier())
+        self.assertEqual(4, len(events))
+        for ev in events:
+            self.assertNotIn('resource_properties', ev)
+
+        event_objs = event_object.Event.get_all_by_stack(
+            self.ctx,
+            self.stack.id)
+
+        for i in range(2):
+            event_uuid = event_objs[i]['uuid']
+            events = self.eng.list_events(self.ctx, self.stack.identifier(),
+                                          filters={'uuid': event_uuid})
+            self.assertEqual(1, len(events))
+            self.assertIn('resource_properties', events[0])
+            if i > 0:
+                self.assertEqual(4, len(events[0]['resource_properties']))

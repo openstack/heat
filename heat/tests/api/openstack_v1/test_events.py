@@ -87,7 +87,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_action': u'CREATE',
                 u'resource_status': u'IN_PROGRESS',
                 u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
@@ -161,7 +160,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_action': u'CREATE',
                 u'resource_status': u'IN_PROGRESS',
                 u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
@@ -209,7 +207,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_action': u'CREATE',
                 u'resource_status': u'IN_PROGRESS',
                 u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
@@ -260,7 +257,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_action': u'CREATE',
                 u'resource_status': u'IN_PROGRESS',
                 u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
@@ -662,7 +658,6 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_action': u'CREATE',
                 u'resource_status': u'IN_PROGRESS',
                 u'physical_resource_id': None,
-                u'resource_properties': {u'UserData': u'blah'},
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
