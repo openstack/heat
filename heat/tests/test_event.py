@@ -15,7 +15,6 @@ import mock
 from oslo_config import cfg
 import uuid
 
-from heat.db.sqlalchemy import api as db_api
 from heat.db.sqlalchemy import models
 from heat.engine import event
 from heat.engine import stack
@@ -240,13 +239,13 @@ class EventTest(EventCommon):
 
         # for test purposes, dress up the event to have the deprecated
         # properties_data field populated
-        e_obj = db_api.event_get(self.resource.context, e.id)
+        e_obj = self.ctx.session.query(models.Event).get(e.id)
         with self.ctx.session.begin():
             e_obj['resource_properties'] = {'Time': 'not enough'}
             e_obj['rsrc_prop_data'] = None
 
         # verify the deprecated data gets loaded
-        ev = event_object.Event.get_by_id(self.ctx, e.id)
+        ev = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)[0]
         self.assertEqual({'Time': 'not enough'}, ev.resource_properties)
 
     def test_event_object_resource_properties_data(self):
@@ -262,8 +261,8 @@ class EventTest(EventCommon):
             {'stack_id': self.stack.id,
              'uuid': str(uuid.uuid4()),
              'rsrc_prop_data_id': rpd_db_obj.id})
-        e_obj = event_object.Event().get_by_id(utils.dummy_context(),
-                                               e_obj.id)
+        e_obj = event_object.Event.get_all_by_stack(utils.dummy_context(),
+                                                    self.stack.id)[0]
         # properties data appears unencrypted to event object
         self.assertEqual(data, e_obj.resource_properties)
 
@@ -281,7 +280,8 @@ class EventEncryptedTest(EventCommon):
         e.store()
 
         # verify the resource_properties_data db data is encrypted
-        e_obj = event_object.Event.get_by_id(self.resource.context, e.id)
+        e_obj = event_object.Event.get_all_by_stack(self.resource.context,
+                                                    self.stack.id)[0]
         rpd_id = e_obj['rsrc_prop_data_id']
         results = self.resource.context.session.query(
             models.ResourcePropertiesData).filter_by(
@@ -292,5 +292,6 @@ class EventEncryptedTest(EventCommon):
 
         # verify encrypted data is decrypted when retrieved through
         # heat object layer
-        ev = event_object.Event.get_by_id(self.ctx, e.id)
+        ev = event_object.Event.get_all_by_stack(self.ctx,
+                                                 self.stack.id)[0]
         self.assertEqual({'Foo': 'goo'}, ev.resource_properties)

@@ -826,20 +826,6 @@ def user_creds_delete(context, user_creds_id):
         context.session.delete(creds)
 
 
-def event_get(context, event_id):
-    result = context.session.query(models.Event).get(event_id)
-    return result
-
-
-def event_get_all(context):
-    stacks = soft_delete_aware_query(context, models.Stack)
-    stack_ids = [stack.id for stack in stacks]
-    results = context.session.query(
-        models.Event
-    ).filter(models.Event.stack_id.in_(stack_ids)).all()
-    return results
-
-
 def event_get_all_by_tenant(context, limit=None, marker=None,
                             sort_keys=None, sort_dir=None, filters=None):
     query = context.session.query(models.Event)

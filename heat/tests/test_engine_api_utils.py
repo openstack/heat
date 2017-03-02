@@ -63,8 +63,9 @@ class FormatTest(common.HeatTestCase):
                          'z3455xyc-9f88-404d-a85b-5315293e67de',
                          res_properties, resource.name, resource.type(),
                          uuid='abc123yc-9f88-404d-a85b-531529456xyz')
-        event_id = ev.store()
-        return event_object.Event.get_by_id(self.context, event_id)
+        ev.store()
+        return event_object.Event.get_all_by_stack(self.context,
+                                                   self.stack.id)[0]
 
     def test_format_stack_resource(self):
         self.stack.created_time = datetime(2015, 8, 3, 17, 5, 1)
@@ -329,7 +330,8 @@ class FormatTest(common.HeatTestCase):
             models.Event).filter_by(id=event.id).first()
         db_obj.update({'resource_properties': {'legacy_k1': 'legacy_v1'}})
         db_obj.save(self.stack.context.session)
-        event_legacy = event_object.Event.get_by_id(self.context, event.id)
+        event_legacy = event_object.Event.get_all_by_stack(self.context,
+                                                           self.stack.id)[0]
         formatted = api.format_event(event_legacy, self.stack.identifier())
         self.assertEqual({'legacy_k1': 'legacy_v1'},
                          formatted[rpc_api.EVENT_RES_PROPERTIES])

@@ -936,27 +936,6 @@ class SqlAlchemyTest(common.HeatTestCase):
 
         self.m.VerifyAll()
 
-    def test_event_get_all(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
-
-        self._mock_create(self.m)
-        self.m.ReplayAll()
-        [s.create() for s in stacks]
-        [s._persist_state() for s in stacks]
-        self.m.UnsetStubs()
-
-        events = db_api.event_get_all(self.ctx)
-        self.assertEqual(12, len(events))
-
-        self._mock_delete(self.m)
-        self.m.ReplayAll()
-        stacks[0].delete()
-
-        events = db_api.event_get_all(self.ctx)
-        self.assertEqual(8, len(events))
-
-        self.m.VerifyAll()
-
     def test_user_creds_password(self):
         self.ctx.trust_id = None
         self.ctx.region_name = 'RegionOne'
@@ -2193,8 +2172,8 @@ class DBAPIStackTest(common.HeatTestCase):
                 ctx, tmpl_files[s].files_id))
             self.assertIsNotNone(db_api.resource_get(
                 ctx, resources[s].id))
-            self.assertIsNotNone(db_api.event_get(
-                ctx, events[s].id))
+            self.assertIsNotNone(ctx.session.query(
+                models.Event).get(events[s].id))
             self.assertIsNotNone(ctx.session.query(
                 models.ResourcePropertiesData).filter_by(
                     id=resources[s].rsrc_prop_data.id).first())
@@ -2215,7 +2194,8 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
-            self.assertIsNone(db_api.event_get(ctx, events[s].id))
+            self.assertIsNone(ctx.session.query(
+                models.Event).get(events[s].id))
             self.assertIsNone(ctx.session.query(
                 models.ResourcePropertiesData).filter_by(
                     id=resources[s].rsrc_prop_data.id).first())
@@ -2715,10 +2695,10 @@ class DBAPIEventTest(common.HeatTestCase):
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
 
-    def test_event_create_get(self):
+    def test_event_create(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         event = create_event(self.ctx, stack_id=stack.id)
-        ret_event = db_api.event_get(self.ctx, event.id)
+        ret_event = self.ctx.session.query(models.Event).get(event.id)
         self.assertIsNotNone(ret_event)
         self.assertEqual(stack.id, ret_event.stack_id)
         self.assertEqual('create', ret_event.resource_action)
@@ -2727,26 +2707,6 @@ class DBAPIEventTest(common.HeatTestCase):
         self.assertEqual(UUID1, ret_event.physical_resource_id)
         self.assertEqual('create_complete', ret_event.resource_status_reason)
         self.assertEqual({'foo2': 'ev_bar'}, ret_event.rsrc_prop_data.data)
-
-    def test_event_get_all(self):
-        self.stack1 = create_stack(self.ctx, self.template, self.user_creds,
-                                   tenant='tenant1')
-        self.stack2 = create_stack(self.ctx, self.template, self.user_creds,
-                                   tenant='tenant2')
-        values = [
-            {'stack_id': self.stack1.id, 'resource_name': 'res1'},
-            {'stack_id': self.stack1.id, 'resource_name': 'res2'},
-            {'stack_id': self.stack2.id, 'resource_name': 'res3'},
-        ]
-        [create_event(self.ctx, **val) for val in values]
-
-        events = db_api.event_get_all(self.ctx)
-        self.assertEqual(3, len(events))
-
-        stack_ids = [event.stack_id for event in events]
-        res_names = [event.resource_name for event in events]
-        [(self.assertIn(val['stack_id'], stack_ids),
-          self.assertIn(val['resource_name'], res_names)) for val in values]
 
     def test_event_get_all_by_tenant(self):
         self.stack1 = create_stack(self.ctx, self.template, self.user_creds,
