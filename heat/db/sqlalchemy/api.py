@@ -685,7 +685,7 @@ def stack_update(context, stack_id, values, exp_trvsl=None):
 
 
 def stack_delete(context, stack_id):
-    s = stack_get(context, stack_id)
+    s = stack_get(context, stack_id, eager_load=False)
     if not s:
         raise exception.NotFound(_('Attempt to delete a stack with id: '
                                  '%(id)s %(msg)s') % {
@@ -752,11 +752,11 @@ def stack_lock_release(context, stack_id, engine_id):
 
 
 def stack_get_root_id(context, stack_id):
-    s = stack_get(context, stack_id)
+    s = stack_get(context, stack_id, eager_load=False)
     if not s:
         return None
     while s.owner_id:
-        s = stack_get(context, s.owner_id)
+        s = stack_get(context, s.owner_id, eager_load=False)
     return s.id
 
 
