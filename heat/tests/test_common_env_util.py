@@ -248,3 +248,33 @@ class TestMergeEnvironments(common.HeatTestCase):
                     'parameter_defaults': {}}
 
         self.assertEqual(expected, self.params)
+
+    def test_merge_envs_with_zeros(self):
+        env1 = {'parameter_defaults': {'value1': 1}}
+        env2 = {'parameter_defaults': {'value1': 0}}
+        files = {'env_1': json.dumps(env1),
+                 'env_2': json.dumps(env2)}
+        environment_files = ['env_1', 'env_2']
+
+        param_schemata = {
+            'value1': parameters.Schema(parameters.Schema.NUMBER)}
+        env_util.merge_environments(environment_files, files, self.params,
+                                    param_schemata)
+
+        self.assertEqual({'value1': 0}, self.params['parameter_defaults'])
+
+    def test_merge_envs_with_zeros_in_maps(self):
+        env1 = {'parameter_defaults': {'value1': {'foo': 1}}}
+        env2 = {'parameter_defaults': {'value1': {'foo': 0}},
+                'parameter_merge_strategies': {'value1': 'deep_merge'}}
+        files = {'env_1': json.dumps(env1),
+                 'env_2': json.dumps(env2)}
+        environment_files = ['env_1', 'env_2']
+
+        param_schemata = {
+            'value1': parameters.Schema(parameters.Schema.MAP)}
+        env_util.merge_environments(environment_files, files, self.params,
+                                    param_schemata)
+
+        self.assertEqual({'value1': {'foo': 0}},
+                         self.params['parameter_defaults'])
