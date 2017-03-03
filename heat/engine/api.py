@@ -378,7 +378,8 @@ def format_stack_preview(stack):
     return fmt_stack
 
 
-def format_event(event, stack_identifier, root_stack_identifier=None):
+def format_event(event, stack_identifier, root_stack_identifier=None,
+                 include_rsrc_prop_data=True):
     result = {
         rpc_api.EVENT_ID: dict(event.identifier(stack_identifier)),
         rpc_api.EVENT_STACK_ID: dict(stack_identifier),
@@ -390,10 +391,11 @@ def format_event(event, stack_identifier, root_stack_identifier=None):
         rpc_api.EVENT_RES_STATUS: event.resource_status,
         rpc_api.EVENT_RES_STATUS_DATA: event.resource_status_reason,
         rpc_api.EVENT_RES_TYPE: event.resource_type,
-        rpc_api.EVENT_RES_PROPERTIES: event.resource_properties,
     }
     if root_stack_identifier:
         result[rpc_api.EVENT_ROOT_STACK_ID] = dict(root_stack_identifier)
+    if include_rsrc_prop_data:
+        result[rpc_api.EVENT_RES_PROPERTIES] = event.resource_properties
 
     return result
 

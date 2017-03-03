@@ -320,7 +320,8 @@ class FormatTest(common.HeatTestCase):
         resource._update_stored_properties()
         resource.store()
         event = self._dummy_event(res_properties=resource._rsrc_prop_data)
-        formatted = api.format_event(event, self.stack.identifier())
+        formatted = api.format_event(event, self.stack.identifier(),
+                                     include_rsrc_prop_data=True)
         self.assertEqual({'k1': 'v1'}, formatted[rpc_api.EVENT_RES_PROPERTIES])
 
     def test_format_event_legacy_prop_data(self):

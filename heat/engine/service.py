@@ -1763,8 +1763,12 @@ class EngineService(service.ServiceBase):
                                                 show_nested=True)
             stack_identifiers = {s.id: s.identifier() for s in stacks}
 
+        # a 'uuid' in filters indicates we are showing a full event, i.e.
+        # the only time we need to load the event's rsrc prop data.
+        include_rsrc_prop_data = (filters and 'uuid' in filters)
         return [api.format_event(e, stack_identifiers.get(e.stack_id),
-                root_stack_identifier) for e in events]
+                                 root_stack_identifier, include_rsrc_prop_data)
+                for e in events]
 
     def _authorize_stack_user(self, cnxt, stack, resource_name):
         """Filter access to describe_stack_resource for in-instance users.
