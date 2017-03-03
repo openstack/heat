@@ -55,7 +55,7 @@ def merge_map(old, new, deep_merge=False):
         return new
 
     for k, v in new.items():
-        if v:
+        if v is not None:
             if not deep_merge:
                 old[k] = v
             elif isinstance(v, collections.Mapping):
@@ -113,7 +113,7 @@ def merge_parameters(old, new, param_schemata, strategies_in_file,
 
     for key, value in new.items():
         # if key not in param_schemata ignore it
-        if key in param_schemata and value:
+        if key in param_schemata and value is not None:
             param_merge_strategy = get_param_merge_strategy(
                 strategies_in_file, key)
             if key not in available_strategies:
