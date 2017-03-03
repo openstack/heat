@@ -485,7 +485,7 @@ class Resource(object):
                             % {'a': action, 'h': hook})
             LOG.info(_LI('Reached hook on %s'), self)
 
-            while self.has_hook(hook) and self.status != self.FAILED:
+            while self.has_hook(hook):
                 try:
                     yield
                 except BaseException as exc:
