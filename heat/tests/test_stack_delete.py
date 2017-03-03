@@ -433,8 +433,8 @@ class StackTest(common.HeatTestCase):
     def test_delete_stack_with_resource_log_is_clear(self):
         debug_logger = self.useFixture(
             fixtures.FakeLogger(level=logging.DEBUG,
-                                format="%(levelname)8s [%(name)s] %("
-                                       "message)s"))
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'delete_log_test',

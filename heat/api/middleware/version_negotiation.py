@@ -90,14 +90,14 @@ class VersionNegotiationFilter(wsgi.Middleware):
                     return None
                 else:
                     LOG.debug("Unknown version in accept header: "
-                              "%(major_version)d.%(minor_version)d..."
+                              "%(major_version)d.%(minor_version)d... "
                               "returning version choices."
                               % {'major_version': major_version,
                                   'minor_version': minor_version})
                     return self.versions_app
         else:
             if req.accept not in ('*/*', ''):
-                LOG.debug("Unknown accept header: %s..."
+                LOG.debug("Unknown accept header: %s... "
                           "returning HTTP not found.", req.accept)
             return webob.exc.HTTPNotFound()
         return None

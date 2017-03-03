@@ -405,10 +405,10 @@ class Instance(resource.Resource):
 
         if instance.status != self.ACTIVE:
             return False
-        LOG.info(_LI("Database instance %(database)s created (flavor:%("
-                     "flavor)s,volume:%(volume)s, datastore:%("
-                     "datastore_type)s, datastore_version:%("
-                     "datastore_version)s)"),
+        LOG.info(_LI("Database instance %(database)s created "
+                     "(flavor:%(flavor)s, volume:%(volume)s, "
+                     "datastore:%(datastore_type)s, "
+                     "datastore_version:%(datastore_version)s)"),
                  {'database': self._dbinstance_name(),
                   'flavor': self.flavor,
                   'volume': self.volume,

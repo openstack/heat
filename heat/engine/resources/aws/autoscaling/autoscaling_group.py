@@ -333,7 +333,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                 })
                 notification.send(**notif)
         except Exception:
-            LOG.error(_LE("Error in performing scaling adjustment for"
+            LOG.error(_LE("Error in performing scaling adjustment for "
                           "group %s.") % self.name)
             raise
         finally:
