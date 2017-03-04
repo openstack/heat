@@ -48,16 +48,16 @@ output_key_url:
   in: path
   required: true
   type: string
-resource_name_url:
-  description: |
-    The name of a resource in the stack.
-  in: path
-  required: true
-  type: string
 resource_name_or_physical_id_url:
   description: |
     The name of a resource in the stack, or the ID of its underlying physical
     resource.
+  in: path
+  required: true
+  type: string
+resource_name_url:
+  description: |
+    The name of a resource in the stack.
   in: path
   required: true
   type: string
@@ -717,7 +717,7 @@ files:
     value provides the contents of the file. The following code shows
     the general structure of this parameter.
 
-    .. code-block:: json
+    .. code-block:: none
 
        { ...
            "files": {
@@ -734,7 +734,7 @@ files:
     map with the path to the file as the name and the file contents as
     the value. So, a simple example looks like this:
 
-    .. code-block:: json
+    .. code-block:: none
 
        {
           "files": {
@@ -943,7 +943,7 @@ parameters:
     In the example, ``a`` and ``b`` would be the names of two
     parameters defined in the template.
 
-    .. code-block:: json
+    .. code-block:: none
 
        { ...
            "parameters": {
@@ -982,7 +982,7 @@ parameters:
     map with the path to the file as the name and the file contents as
     the value. So, a simple example looks like this:
 
-    .. code-block:: json
+    .. code-block:: none
 
        {
           "files": {
@@ -1463,7 +1463,7 @@ template:
     The content of the string is a JSON- or YAML-formatted Orchestration
     template. For example:
 
-    .. code-block:: json
+    .. code-block:: none
 
        "template": {
            "heat_template_version": "2013-05-23",

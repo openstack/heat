@@ -24,7 +24,7 @@ Request Parameters
 This operation does not accept a request body.
 
 Response Parameters
-------------------
+-------------------
 
 .. rest_parameters:: parameters.yaml
 

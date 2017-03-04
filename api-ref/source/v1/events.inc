@@ -97,7 +97,7 @@ Request Parameters
    - stack_name: stack_name_url
 
 Response Parameters
-------------------
+-------------------
 
 .. rest_parameters:: parameters.yaml
 
