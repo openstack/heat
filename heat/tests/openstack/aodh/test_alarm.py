@@ -15,13 +15,11 @@ import copy
 import json
 
 import mock
-import mox
 import six
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import aodh
-from heat.engine.clients.os import ceilometer
 from heat.engine import resource
 from heat.engine.resources.openstack.aodh import alarm
 from heat.engine import rsrc_defn
@@ -121,24 +119,6 @@ not_string_alarm_template = '''
 }
 '''
 
-combination_alarm_template = '''
-{
-  "AWSTemplateFormatVersion" : "2010-09-09",
-  "Description" : "Combination Alarm Test",
-  "Resources" : {
-    "CombinAlarm": {
-     "Type": "OS::Aodh::CombinationAlarm",
-     "Properties": {
-        "description": "Do stuff in combination",
-        "alarm_ids": ["alarm1", "alarm2"],
-        "operator": "and",
-        "alarm_actions": [],
-      }
-    }
-  }
-}
-'''
-
 event_alarm_template = '''
 {
   "heat_template_version" : "newton",
@@ -162,13 +142,6 @@ event_alarm_template = '''
   }
 }
 '''
-
-
-class FakeCombinationAlarm(object):
-    alarm_id = 'foo'
-
-    def __init__(self):
-        self.to_dict = lambda: {'attr': 'val'}
 
 
 FakeAodhAlarm = {'other_attrs': 'val',
@@ -696,148 +669,6 @@ class AodhAlarmTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, alarm.actions_to_urls(props))
-
-
-class CombinationAlarmTest(common.HeatTestCase):
-
-    def setUp(self):
-        super(CombinationAlarmTest, self).setUp()
-        self.fc = mock.Mock()
-        self.m.StubOutWithMock(ceilometer.CeilometerClientPlugin, '_create')
-
-    def create_alarm(self):
-        ceilometer.CeilometerClientPlugin._create().AndReturn(
-            self.fc)
-        self.m.StubOutWithMock(self.fc.alarms, 'create')
-        self.fc.alarms.create(
-            alarm_actions=[],
-            description=u'Do stuff in combination',
-            enabled=True,
-            insufficient_data_actions=[],
-            ok_actions=[],
-            name=mox.IgnoreArg(), type='combination',
-            repeat_actions=True,
-            combination_rule={'alarm_ids': [u'alarm1', u'alarm2'],
-                              'operator': u'and'},
-            time_constraints=[],
-            severity='low'
-        ).AndReturn(FakeCombinationAlarm())
-        self.tmpl = template_format.parse(combination_alarm_template)
-        self.stack = utils.parse_stack(self.tmpl)
-        resource_defns = self.stack.t.resource_definitions(self.stack)
-        return alarm.CombinationAlarm(
-            'CombinAlarm', resource_defns['CombinAlarm'], self.stack)
-
-    def test_create(self):
-        rsrc = self.create_alarm()
-
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual('foo', rsrc.resource_id)
-        self.m.VerifyAll()
-
-    def test_invalid_alarm_list(self):
-        snippet = template_format.parse(combination_alarm_template)
-        snippet['Resources']['CombinAlarm']['Properties']['alarm_ids'] = []
-        stack = utils.parse_stack(snippet)
-        resource_defns = stack.t.resource_definitions(stack)
-        rsrc = alarm.CombinationAlarm(
-            'CombinAlarm', resource_defns['CombinAlarm'], stack)
-        error = self.assertRaises(exception.StackValidationFailed,
-                                  rsrc.validate)
-        self.assertEqual(
-            "Property error: Resources.CombinAlarm.Properties.alarm_ids: "
-            "length (0) is out of range (min: 1, max: None)",
-            six.text_type(error))
-
-    def test_update(self):
-        rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarms, 'update')
-        self.fc.alarms.update(
-            alarm_id='foo',
-            alarm_actions=[],
-            description=u'Do stuff in combination',
-            enabled=True,
-            insufficient_data_actions=[],
-            ok_actions=[],
-            repeat_actions=True,
-            combination_rule={'alarm_ids': [u'alarm1', u'alarm3'],
-                              'operator': u'and'},
-            time_constraints=[],
-            severity='low'
-        )
-
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-
-        props = self.tmpl['Resources']['CombinAlarm']['Properties'].copy()
-        props['alarm_ids'] = ['alarm1', 'alarm3']
-        update_template = rsrc.t.freeze(properties=props)
-        scheduler.TaskRunner(rsrc.update, update_template)()
-        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def test_suspend(self):
-        rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarms, 'update')
-        self.fc.alarms.update(alarm_id='foo', enabled=False)
-
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-
-        scheduler.TaskRunner(rsrc.suspend)()
-        self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def test_resume(self):
-        rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarms, 'update')
-        self.fc.alarms.update(alarm_id='foo', enabled=True)
-
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
-
-        scheduler.TaskRunner(rsrc.resume)()
-        self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def _prepare_resource(self, for_check=True):
-        snippet = template_format.parse(combination_alarm_template)
-        self.stack = utils.parse_stack(snippet)
-        res = self.stack['CombinAlarm']
-        if for_check:
-            res.state_set(res.CREATE, res.COMPLETE)
-        res.client = mock.Mock()
-        mock_alarm = mock.Mock(enabled=True, state='ok')
-        res.client().alarms.get.return_value = mock_alarm
-        return res
-
-    def test_check(self):
-        res = self._prepare_resource()
-        scheduler.TaskRunner(res.check)()
-        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
-
-    def test_check_failure(self):
-        res = self._prepare_resource()
-        res.client().alarms.get.side_effect = Exception('Boom')
-
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(res.check))
-        self.assertEqual((res.CHECK, res.FAILED), res.state)
-        self.assertIn('Boom', res.status_reason)
-
-    def test_show_resource(self):
-        res = self._prepare_resource(for_check=False)
-        res.client().alarms.create.return_value = mock.MagicMock(
-            alarm_id='2')
-        res.client().alarms.get.return_value = FakeCombinationAlarm()
-        scheduler.TaskRunner(res.create)()
-        self.assertEqual({'attr': 'val'}, res.FnGetAtt('show'))
 
 
 class EventAlarmTest(common.HeatTestCase):

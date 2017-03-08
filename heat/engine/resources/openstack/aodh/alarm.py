@@ -18,6 +18,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources import alarm_base
+from heat.engine.resources.openstack.heat import none_resource
 from heat.engine import support
 from heat.engine import watchrule
 
@@ -224,27 +225,23 @@ class AodhAlarm(alarm_base.BaseAlarm):
         self.client().alarm.get(self.resource_id)
 
 
-class CombinationAlarm(alarm_base.BaseAlarm):
+class CombinationAlarm(none_resource.NoneResource):
     """A resource that implements combination of Aodh alarms.
 
-    Allows to use alarm as a combination of other alarms with some operator:
-    activate this alarm if any alarm in combination has been activated or
-    if all alarms in combination have been activated.
+    This resource is now deleted from Aodh, so will directly inherit from
+    NoneResource (placeholder resource). For old resources (which not a
+    placeholder resource), still can be deleted through client. Any newly
+    created resources will be considered as placeholder resources like none
+    resource. We will schedule to delete it from heat resources list.
     """
 
-    alarm_type = 'combination'
-
-    # aodhclient doesn't support to manage combination-alarm,
-    # so we use ceilometerclient to manage this resource as before,
-    # after two release cycles, to hidden this resource.
-    default_client_name = 'ceilometer'
-
-    entity = 'alarms'
+    default_client_name = 'aodh'
+    entity = 'alarm'
 
     support_status = support.SupportStatus(
         status=support.HIDDEN,
-        message=_('OS::Aodh::CombinationAlarm is deprecated, '
-                  'use OS::Aodh::CompositeAlarm instead.'),
+        message=_('OS::Aodh::CombinationAlarm is deprecated and has been '
+                  'removed from Aodh, use OS::Aodh::CompositeAlarm instead.'),
         version='9.0.0',
         previous_status=support.SupportStatus(
             status=support.DEPRECATED,
@@ -252,56 +249,6 @@ class CombinationAlarm(alarm_base.BaseAlarm):
             previous_status=support.SupportStatus(version='2014.1')
         )
     )
-
-    PROPERTIES = (
-        ALARM_IDS, OPERATOR,
-    ) = (
-        'alarm_ids', 'operator',
-    )
-
-    properties_schema = {
-        ALARM_IDS: properties.Schema(
-            properties.Schema.LIST,
-            _('List of alarm identifiers to combine.'),
-            required=True,
-            constraints=[constraints.Length(min=1)],
-            update_allowed=True),
-        OPERATOR: properties.Schema(
-            properties.Schema.STRING,
-            _('Operator used to combine the alarms.'),
-            constraints=[constraints.AllowedValues(['and', 'or'])],
-            update_allowed=True)
-    }
-    properties_schema.update(alarm_base.common_properties_schema)
-
-    def handle_create(self):
-        props = self.actions_to_urls(self.properties)
-        props['name'] = self.physical_resource_name()
-        props['type'] = self.alarm_type
-        alarm = self.client().alarms.create(
-            **self._reformat_properties(props))
-        self.resource_id_set(alarm.alarm_id)
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            kwargs = {'alarm_id': self.resource_id}
-            new_props = json_snippet.properties(self.properties_schema,
-                                                self.context)
-            kwargs.update(self._reformat_properties(
-                self.actions_to_urls(new_props)))
-            alarms_client = self.client().alarms
-            alarms_client.update(**kwargs)
-
-    def handle_suspend(self):
-        self.client().alarms.update(
-            alarm_id=self.resource_id, enabled=False)
-
-    def handle_resume(self):
-        self.client().alarms.update(
-            alarm_id=self.resource_id, enabled=True)
-
-    def handle_check(self):
-        self.client().alarms.get(self.resource_id)
 
 
 class EventAlarm(alarm_base.BaseAlarm):

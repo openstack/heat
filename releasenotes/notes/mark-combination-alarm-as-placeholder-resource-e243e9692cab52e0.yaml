@@ -1,0 +1,10 @@
+---
+critical:
+  - Since Aodh drop support for combination alarm, therefore
+    OS::Aodh::CombinationAlarm is now mark as hidden resource with
+    directly inheriting from None resource which will make the
+    resource do nothing when handling any actions (other than delete).
+    And please don't use it. Old resource which created with that
+    resource type still able to delete. It's recommand to switch
+    that resource type ASAP, since we will remove that resource
+    soon.
