@@ -594,13 +594,18 @@ class IKEPolicyTest(common.HeatTestCase):
 
     def test_update(self):
         rsrc = self.create_ikepolicy()
-        neutronclient.Client.update_ikepolicy('ike123',
-                                              {'ikepolicy': {
-                                                  'name': 'New IKEPolicy'}})
+        update_body = {
+            'ikepolicy': {
+                'name': 'New IKEPolicy',
+                'auth_algorithm': 'sha512'
+            }
+        }
+        neutronclient.Client.update_ikepolicy('ike123', update_body)
         self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         props = dict(rsrc.properties)
         props['name'] = 'New IKEPolicy'
+        props['auth_algorithm'] = 'sha512'
         update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.m.VerifyAll()
