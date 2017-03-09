@@ -327,11 +327,11 @@ class StoredContext(RequestContext):
     def project_domain(self):
         if not getattr(self, '_keystone_loaded', False):
             self._load_keystone_data()
-        return self._project_domain
+        return self._project_domain_id
 
     @project_domain.setter
     def project_domain(self, project_domain):
-        self._project_domain = project_domain
+        self._project_domain_id = project_domain
 
 
 def get_admin_context(show_deleted=False):
