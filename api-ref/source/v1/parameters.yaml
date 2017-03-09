@@ -1342,7 +1342,7 @@ stack_name:
     A name for the stack. The value must be unique within a project.
     The name must start with an ASCII letter and can contain ASCII letters,
     digits, underscores, periods, and hyphens. Specifically, the name must
-    match the ``^[a-zA-Z][a-zA-Z0-9_.-]*$`` regular expression.
+    match the ``^[a-zA-Z][a-zA-Z0-9_.-]{0,254}$`` regular expression.
 
     When you delete or abandon a stack, its name will not become available
     for reuse until the deletion completes successfully.
@@ -1354,7 +1354,7 @@ stack_name_request:
     A name for the stack. The value must be unique within a project.
     The name must start with an ASCII letter and can contain ASCII letters,
     digits, underscores, periods, and hyphens. Specifically, the name must
-    match the ``^[a-zA-Z][a-zA-Z0-9_.-]*$`` regular expression.
+    match the ``^[a-zA-Z][a-zA-Z0-9_.-]{0,254}$`` regular expression.
 
     When you delete or abandon a stack, its name will not become available
     for reuse until the deletion completes successfully.
