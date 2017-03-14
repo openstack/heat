@@ -91,6 +91,7 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('parent_resource_name', sqlalchemy.String(255)),
         sqlalchemy.Index('ix_stack_name', 'name', mysql_length=255),
         sqlalchemy.Index('ix_stack_tenant', 'tenant', mysql_length=255),
+        sqlalchemy.Index('ix_stack_owner_id', 'owner_id', mysql_length=36),
 
         mysql_engine='InnoDB',
         mysql_charset='utf8'
