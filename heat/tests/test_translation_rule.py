@@ -33,7 +33,7 @@ class TestTranslationRule(common.HeatTestCase):
                 props,
                 r,
                 ['any'],
-                ['value'] if r == 'Add' else 'value',
+                ['value'] if r == 'Add' else None,
                 'value_name' if r == 'Replace' else None,
                 'client_plugin' if r == 'Resolve' else None,
                 'finder' if r == 'Resolve' else None)
@@ -41,8 +41,6 @@ class TestTranslationRule(common.HeatTestCase):
             self.assertEqual(rule.rule, r)
             if r == 'Add':
                 self.assertEqual(['value'], rule.value)
-            else:
-                self.assertEqual('value', rule.value)
             if r == 'Replace':
                 self.assertEqual('value_name', rule.value_name)
             else:
@@ -73,8 +71,9 @@ class TestTranslationRule(common.HeatTestCase):
                                 translation.TranslationRule.ADD,
                                 'networks.network',
                                 'value')
-        self.assertEqual('translation_path should be a list with path instead '
-                         'of %s.' % str, six.text_type(exc))
+        self.assertEqual('"translation_path" should be non-empty list '
+                         'with path to translate.',
+                         six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -82,7 +81,8 @@ class TestTranslationRule(common.HeatTestCase):
                                 translation.TranslationRule.ADD,
                                 [],
                                 mock.ANY)
-        self.assertEqual('translation_path must be non-empty list with path.',
+        self.assertEqual('"translation_path" should be non-empty list '
+                         'with path to translate.',
                          six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
@@ -91,10 +91,11 @@ class TestTranslationRule(common.HeatTestCase):
                                 translation.TranslationRule.ADD,
                                 ['any'],
                                 'value',
-                                'value_name')
-        self.assertEqual('Either value or value_name should be specified for '
-                         'rule Add.',
-                         six.text_type(exc))
+                                'value_name',
+                                'some_path')
+        self.assertEqual('"value_path", "value" and "value_name" are '
+                         'mutually exclusive and cannot be specified '
+                         'at the same time.', six.text_type(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -102,7 +103,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 translation.TranslationRule.ADD,
                                 ['any'],
                                 'value')
-        self.assertEqual('value must be list type when rule is Add.',
+        self.assertEqual('"value" must be list type when rule is Add.',
                          six.text_type(exc))
 
     def test_add_rule_exist(self):
