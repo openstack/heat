@@ -728,7 +728,8 @@ class TemplateTest(common.HeatTestCase):
                                     template.Template, invalid_hot_version_tmp)
         valid_versions = ['2013-05-23', '2014-10-16',
                           '2015-04-30', '2015-10-15', '2016-04-08',
-                          '2016-10-14', '2017-02-24', 'newton', 'ocata']
+                          '2016-10-14', '2017-02-24', '2017-09-01',
+                          'newton', 'ocata', 'pike']
         ex_error_msg = ('The template version is invalid: '
                         '"heat_template_version: 2012-12-12". '
                         '"heat_template_version" should be one of: %s'

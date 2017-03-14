@@ -52,7 +52,8 @@ class TemplateAPITest(functional_base.FunctionalTestsBase):
                                        "2015-04-30", "2015-10-15",
                                        "2012-12-12", "2010-09-09",
                                        "2016-04-08", "2016-10-14", "newton",
-                                       "2017-02-24", "ocata"]
+                                       "2017-02-24", "ocata",
+                                       "2017-09-01", "pike"]
         for template in template_versions:
             self.assertIn(template.version.split(".")[1],
                           supported_template_versions)

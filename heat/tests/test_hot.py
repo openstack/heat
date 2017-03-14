@@ -68,6 +68,10 @@ hot_ocata_tpl_empty = template_format.parse('''
 heat_template_version: 2017-02-24
 ''')
 
+hot_pike_tpl_empty = template_format.parse('''
+heat_template_version: 2017-09-01
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
