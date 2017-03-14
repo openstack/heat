@@ -46,6 +46,38 @@ class TestTranslationRule(common.HeatTestCase):
             else:
                 self.assertIsNone(rule.value_name)
 
+    def test_cmp_rules(self):
+        rules = [
+            translation.TranslationRule(
+                mock.Mock(spec=properties.Properties),
+                translation.TranslationRule.DELETE,
+                ['any']
+            ),
+            translation.TranslationRule(
+                mock.Mock(spec=properties.Properties),
+                translation.TranslationRule.ADD,
+                ['any']
+            ),
+            translation.TranslationRule(
+                mock.Mock(spec=properties.Properties),
+                translation.TranslationRule.RESOLVE,
+                ['any'],
+                client_plugin=mock.ANY,
+                finder=mock.ANY
+            ),
+            translation.TranslationRule(
+                mock.Mock(spec=properties.Properties),
+                translation.TranslationRule.REPLACE,
+                ['any']
+            )
+        ]
+        expected = [translation.TranslationRule.ADD,
+                    translation.TranslationRule.REPLACE,
+                    translation.TranslationRule.RESOLVE,
+                    translation.TranslationRule.DELETE]
+        result = [rule.rule for rule in sorted(rules)]
+        self.assertEqual(expected, result)
+
     def test_invalid_translation_rule(self):
         props = properties.Properties({}, {})
         exc = self.assertRaises(ValueError,
@@ -436,6 +468,15 @@ class TestTranslationRule(common.HeatTestCase):
             props,
             translation.TranslationRule.DELETE,
             ['far', 'red'])
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far.red'))
+        self.assertIsNone(tran.translate('far.red'))
+        self.assertIsNone(tran.resolved_translations['far.red'])
+
         rule.execute_rule()
 
         self.assertEqual([{'check': None, 'red': None},
@@ -462,6 +503,15 @@ class TestTranslationRule(common.HeatTestCase):
             props,
             translation.TranslationRule.DELETE,
             ['far'])
+
+        # check for new translation (before old translation, because old style
+        # change data)
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('far'))
+        self.assertIsNone(tran.translate('far'))
+        self.assertIsNone(tran.resolved_translations['far'])
+
         rule.execute_rule()
 
         self.assertIsNone(props.get('far'))
@@ -1091,11 +1141,14 @@ class TestTranslationRule(common.HeatTestCase):
 
 class TestTranslation(common.HeatTestCase):
 
+    def setUp(self):
+        super(TestTranslation, self).setUp()
+        self.props = mock.Mock(spec=properties.Properties)
+
     def test_set_rules(self):
-        props = mock.Mock(spec=properties.Properties)
         rules = [
             translation.TranslationRule(
-                props,
+                self.props,
                 translation.TranslationRule.REPLACE,
                 ['a'],
                 'b')
@@ -1110,10 +1163,9 @@ class TestTranslation(common.HeatTestCase):
         self.assertEqual({}, tran._rules)
 
     def test_set_no_resolve_rules(self):
-        props = mock.Mock(spec=properties.Properties)
         rules = [
             translation.TranslationRule(
-                props,
+                self.props,
                 translation.TranslationRule.RESOLVE,
                 ['a'],
                 client_plugin=mock.ANY,
@@ -1124,3 +1176,25 @@ class TestTranslation(common.HeatTestCase):
         tran = translation.Translation()
         tran.set_rules(rules, client_resolve=False)
         self.assertEqual({}, tran._rules)
+
+    def test_translate_delete(self):
+        rules = [
+            translation.TranslationRule(
+                self.props,
+                translation.TranslationRule.DELETE,
+                ['a']
+            )
+        ]
+
+        tran = translation.Translation()
+        tran.set_rules(rules)
+
+        self.assertIsNone(tran.translate('a'))
+        self.assertIsNone(tran.resolved_translations['a'])
+
+        # Test without storing
+        tran.resolved_translations = {}
+        tran.store_translated_values = False
+        self.assertIsNone(tran.translate('a'))
+        self.assertEqual({}, tran.resolved_translations)
+        tran.store_translated_values = True
