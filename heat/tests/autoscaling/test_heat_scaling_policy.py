@@ -124,6 +124,17 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                 mock_cip.assert_called_once_with()
             self.assertEqual([], dont_call.call_args_list)
 
+    def test_policy_metadata_reset(self):
+        t = template_format.parse(as_template)
+        stack = utils.parse_stack(t, params=as_params)
+        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        metadata = {'scaling_in_progress': True}
+        pol.metadata_set(metadata)
+        pol.handle_metadata_reset()
+
+        new_metadata = pol.metadata_get()
+        self.assertEqual({'scaling_in_progress': False}, new_metadata)
+
     def test_scaling_policy_cooldown_ok(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
