@@ -39,10 +39,7 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             args['username'] = self.context.username
             args['password'] = self.context.password
 
-        # Note: Remove 'endpoint' from args when requirements
-        # changes to python-heatclient>=1.6.0
         return hc.Client('1', endpoint_override=endpoint,
-                         endpoint=endpoint,
                          session=self.context.keystone_session,
                          **args)
 
