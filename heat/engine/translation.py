@@ -362,3 +362,45 @@ class TranslationRule(object):
                     del item[translation_key]
         elif translation_data.get(translation_key) is not None:
             del translation_data[translation_key]
+
+
+class Translation(object):
+    """Mechanism for translating one properties to other.
+
+    Mechanism allows to handle properties - update deprecated/hidden properties
+    to new, resolve values, remove unnecessary. It uses list of TranslationRule
+    objects as rules for translation.
+    """
+
+    def __init__(self, properties=None):
+        """Initialise translation mechanism.
+
+        :param properties: Properties class object to resolve rule pathes.
+
+        :var _rules: store specified rules by set_rules method.
+        :var resolves_translations: key-pair dict, where key is string-type
+             full path of property, value is a resolved value.
+        :var is_active: indicate to not translate property, if property already
+             in translation and just tries to get property value. This
+             indicator escapes from infinite loop.
+        :var store_translated_values: define storing resolved values. Useful
+             for validation phase, where not all functions can be resolved
+             (``get_attr`` for not created resource, for example).
+        """
+        self.properties = properties
+        self._rules = {}
+        self.resolved_translations = {}
+        self.is_active = True
+        self.store_translated_values = True
+
+    def set_rules(self, rules, client_resolve=True):
+        if not rules:
+            return
+
+        self._rules = {}
+        self.store_translated_values = client_resolve
+        for rule in rules:
+            if not client_resolve and rule.rule == TranslationRule.RESOLVE:
+                continue
+            key = '.'.join(rule.translation_path)
+            self._rules.setdefault(key, set()).add(rule)
