@@ -17,6 +17,7 @@ import mock
 import six
 
 from heat.common import exception
+from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import resource
 from heat.engine.resources.openstack.nova import keypair
@@ -47,6 +48,8 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.fake_nova.keypairs = self.fake_keypairs
         self.patchobject(nova.NovaClientPlugin, 'has_extension',
                          return_value=True)
+        self.cp_mock = self.patchobject(nova.NovaClientPlugin, '_create',
+                                        return_value=self.fake_nova)
 
     def _mock_key(self, name, pub=None, priv=None):
         mkey = mock.MagicMock()
@@ -62,12 +65,11 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.stack = utils.parse_stack(template)
         definition = self.stack.t.resource_definitions(self.stack)['kp']
         kp_res = keypair.KeyPair('kp', definition, self.stack)
-        self.patchobject(nova.NovaClientPlugin, '_create',
-                         return_value=self.fake_nova)
         return kp_res
 
     def _get_mock_kp_for_create(self, key_name, public_key=None,
-                                priv_saved=False, key_type=None):
+                                priv_saved=False, key_type=None,
+                                user=None):
         template = copy.deepcopy(self.kp_template)
         template['resources']['kp']['properties']['name'] = key_name
         props = template['resources']['kp']['properties']
@@ -80,6 +82,8 @@ class NovaKeyPairTest(common.HeatTestCase):
             props['save_private_key'] = True
         if key_type:
             props['type'] = key_type
+        if user:
+            props['user'] = user
         kp_res = self._get_test_resource(template)
         self.patchobject(self.fake_keypairs, 'create',
                          return_value=nova_key)
@@ -113,6 +117,35 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.fake_keypairs.create.assert_called_once_with(
             name=key_name, public_key=None, type='ssh')
+        self.cp_mock.assert_called_once_with(version='2.2')
+
+    def test_create_key_with_user_id(self):
+        key_name = "create_with_user_id"
+        tp_test, created_key = self._get_mock_kp_for_create(key_name,
+                                                            user='userA')
+        self.patchobject(keystone.KeystoneClientPlugin, 'get_user_id',
+                         return_value='userA_ID')
+        scheduler.TaskRunner(tp_test.create)()
+        self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
+        self.assertEqual(tp_test.resource_id, created_key.name)
+        self.fake_keypairs.create.assert_called_once_with(
+            name=key_name, public_key=None, user_id='userA_ID')
+        self.cp_mock.assert_called_once_with(version='2.10')
+
+    def test_create_key_with_user_and_type(self):
+        key_name = "create_with_user_id_and_type"
+        tp_test, created_key = self._get_mock_kp_for_create(key_name,
+                                                            user='userA',
+                                                            key_type='x509')
+        self.patchobject(keystone.KeystoneClientPlugin, 'get_user_id',
+                         return_value='userA_ID')
+        scheduler.TaskRunner(tp_test.create)()
+        self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
+        self.assertEqual(tp_test.resource_id, created_key.name)
+        self.fake_keypairs.create.assert_called_once_with(
+            name=key_name, public_key=None, user_id='userA_ID',
+            type='x509')
+        self.cp_mock.assert_called_once_with(version='2.10')
 
     def test_create_key_empty_name(self):
         """Test creation of a keypair whose name is of length zero."""
@@ -142,23 +175,38 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertIn("kp.properties.name: length (256) is out of "
                       "range (min: 1, max: 255)", six.text_type(error))
 
-    def test_validate(self):
+    def _test_validate(self, key_type=None, user=None, nc_version=None):
         template = copy.deepcopy(self.kp_template)
-        template['resources']['kp']['properties']['type'] = 'x509'
+        validate_props = []
+        if key_type:
+            template['resources']['kp']['properties']['type'] = key_type
+            validate_props.append('type')
+        if user:
+            template['resources']['kp']['properties']['user'] = user
+            validate_props.append('user')
         stack = utils.parse_stack(template)
         definition = stack.t.resource_definitions(stack)['kp']
         kp_res = keypair.KeyPair('kp', definition, stack)
         self.patchobject(nova.NovaClientPlugin, '_create',
                          side_effect=exception.InvalidServiceVersion(
                              service='compute',
-                             version='2.2'
+                             version=nc_version
                          ))
 
         error = self.assertRaises(exception.StackValidationFailed,
                                   kp_res.validate)
-        self.assertIn('Cannot use "type" property - nova does not support it: '
-                      'Invalid service compute version 2.2',
-                      six.text_type(error))
+        msg = (('Cannot use "%(prop)s" properties - nova does not support: '
+                'Invalid service compute version %(ver)s') %
+               {'prop': validate_props, 'ver': nc_version})
+        self.assertIn(msg, six.text_type(error))
+
+    def test_validate_key_type(self):
+        self._test_validate(key_type='x509', nc_version='2.2')
+
+    def test_validate_user(self):
+        self.patchobject(keystone.KeystoneClientPlugin, 'get_user_id',
+                         return_value='user_A')
+        self._test_validate(user='user_A', nc_version='2.10')
 
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)
