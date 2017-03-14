@@ -18,6 +18,7 @@ import itertools
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 import six
+from six.moves.urllib import parse as urlparse
 import yaql
 from yaql.language import exceptions
 
@@ -1320,3 +1321,119 @@ class Filter(function.Function):
             raise TypeError(
                 _('"%(fn)s" filters a list of values') % self.fn_name)
         return [i for i in sequence if i not in values]
+
+
+class MakeURL(function.Function):
+    """A function for performing substitutions on maps.
+
+    Takes the form::
+
+        make_url:
+          scheme: <protocol>
+          username: <username>
+          password: <password>
+          host: <hostname or IP>
+          port: <port>
+          path: <path>
+          query:
+            <key1>: <value1>
+          fragment: <fragment>
+
+    And resolves to a correctly-escaped URL constructed from the various
+    components.
+    """
+
+    _ARG_KEYS = (
+        SCHEME, USERNAME, PASSWORD, HOST, PORT,
+        PATH, QUERY, FRAGMENT,
+    ) = (
+        'scheme', 'username', 'password', 'host', 'port',
+        'path', 'query', 'fragment',
+    )
+
+    def _check_args(self, args):
+        for arg in self._ARG_KEYS:
+            if arg in args:
+                if arg == self.QUERY:
+                    if not isinstance(args[arg], (function.Function,
+                                                  collections.Mapping)):
+                        raise TypeError(_('The "%(arg)s" argument to '
+                                          '"(fn_name)%s" must be a map') %
+                                        {'arg': arg,
+                                         'fn_name': self.fn_name})
+                    return
+                elif arg == self.PORT:
+                    port = args[arg]
+                    if not isinstance(port, function.Function):
+                        if not isinstance(port, six.integer_types):
+                            try:
+                                port = int(port)
+                            except ValueError:
+                                raise ValueError(_('Invalid URL port "%s"') %
+                                                 port)
+                        if not (0 < port <= 65535):
+                            raise ValueError(_('Invalid URL port %d') % port)
+                else:
+                    if not isinstance(args[arg], (function.Function,
+                                                  six.string_types)):
+                        raise TypeError(_('The "%(arg)s" argument to '
+                                          '"(fn_name)%s" must be a string') %
+                                        {'arg': arg,
+                                         'fn_name': self.fn_name})
+
+    def validate(self):
+        super(MakeURL, self).validate()
+
+        if not isinstance(self.args, collections.Mapping):
+            raise TypeError(_('The arguments to "%s" must '
+                              'be a map') % self.fn_name)
+
+        invalid_keys = set(self.args) - set(self._ARG_KEYS)
+        if invalid_keys:
+            raise ValueError(_('Invalid arguments to "%(fn)s": %(args)s') %
+                             {'fn': self.fn_name,
+                              'args': ', '.join(invalid_keys)})
+
+        self._check_args(self.args)
+
+    def result(self):
+        args = function.resolve(self.args)
+        self._check_args(args)
+
+        scheme = args.get(self.SCHEME, '')
+        if ':' in scheme:
+            raise ValueError(_('URL "%s" should not contain \':\'') %
+                             self.SCHEME)
+
+        def netloc():
+            username = urlparse.quote(args.get(self.USERNAME, ''), safe='')
+            password = urlparse.quote(args.get(self.PASSWORD, ''), safe='')
+            if username or password:
+                yield username
+                if password:
+                    yield ':'
+                    yield password
+                yield '@'
+
+            host = args.get(self.HOST, '')
+            if host.startswith('[') and host.endswith(']'):
+                host = host[1:-1]
+            host = urlparse.quote(host, safe=':')
+            if ':' in host:
+                host = '[%s]' % host
+            yield host
+
+            port = args.get(self.PORT, '')
+            if port:
+                yield ':'
+                yield six.text_type(port)
+
+        path = urlparse.quote(args.get(self.PATH, ''))
+
+        query_dict = args.get(self.QUERY, {})
+        query = urlparse.urlencode(query_dict)
+
+        fragment = urlparse.quote(args.get(self.FRAGMENT, ''))
+
+        return urlparse.urlunsplit((scheme, ''.join(netloc()),
+                                    path, query, fragment))
