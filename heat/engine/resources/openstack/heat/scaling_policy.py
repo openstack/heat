@@ -30,8 +30,8 @@ from heat.scaling import scalingutil as sc_util
 LOG = logging.getLogger(__name__)
 
 
-class AutoScalingPolicy(signal_responder.SignalResponder,
-                        cooldown.CooldownMixin):
+class AutoScalingPolicy(cooldown.CooldownMixin,
+                        signal_responder.SignalResponder):
     """A resource to manage scaling of `OS::Heat::AutoScalingGroup`.
 
     **Note** while it may incidentally support
