@@ -94,11 +94,6 @@ class StackResource(resource.Resource):
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
 
-        # If stack resource is in CHECK_FAILED state, raise UpdateReplace
-        # to replace the failed stack.
-        if self.state == (self.CHECK, self.FAILED):
-            raise resource.UpdateReplace(self)
-
         # If the nested stack has not been created, use the default
         # implementation to determine if we need to replace the resource. Note
         # that we do *not* return the result.
@@ -107,6 +102,21 @@ class StackResource(resource.Resource):
                                                      after_props, before_props,
                                                      prev_resource,
                                                      check_init_complete)
+        else:
+            if self.state == (self.CHECK, self.FAILED):
+                nested_stack = self.rpc_client().show_stack(
+                    self.context, self.nested_identifier())[0]
+                nested_stack_state = (nested_stack[rpc_api.STACK_ACTION],
+                                      nested_stack[rpc_api.STACK_STATUS])
+                if nested_stack_state == (self.stack.CHECK, self.stack.FAILED):
+                    # The stack-check action marked the stack resource
+                    # CHECK_FAILED, so return True to allow the individual
+                    # CHECK_FAILED resources decide if they need updating.
+                    return True
+                # The mark-unhealthy action marked the stack resource
+                # CHECK_FAILED, so raise UpdateReplace to replace the
+                # entire failed stack.
+                raise resource.UpdateReplace(self)
 
         # Always issue an update to the nested stack and let the individual
         # resources in it decide if they need updating.
