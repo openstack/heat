@@ -637,11 +637,11 @@ class KeypairConstraintTest(common.HeatTestCase):
 class ConsoleUrlsTest(common.HeatTestCase):
 
     scenarios = [
-        ('novnc', dict(console_type='novnc', srv_method='vnc')),
-        ('xvpvnc', dict(console_type='xvpvnc', srv_method='vnc')),
-        ('spice', dict(console_type='spice-html5', srv_method='spice')),
-        ('rdp', dict(console_type='rdp-html5', srv_method='rdp')),
-        ('serial', dict(console_type='serial', srv_method='serial')),
+        ('novnc', dict(console_type='novnc')),
+        ('xvpvnc', dict(console_type='xvpvnc')),
+        ('spice', dict(console_type='spice-html5')),
+        ('rdp', dict(console_type='rdp-html5')),
+        ('serial', dict(console_type='serial')),
     ]
 
     def setUp(self):
@@ -652,8 +652,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
         self.nova_plugin = c.client_plugin('nova')
         self.nova_plugin.client = lambda: self.nova_client
         self.server = mock.Mock()
-        self.console_method = getattr(self.server,
-                                      'get_%s_console' % self.srv_method)
+        self.console_method = getattr(self.server, 'get_console_url')
 
     def test_get_console_url(self):
         console = {
@@ -670,16 +669,27 @@ class ConsoleUrlsTest(common.HeatTestCase):
         self.assertEqual(console['console']['url'], console_url)
         self.console_method.assert_called_once_with(self.console_type)
 
-    def test_get_console_url_tolerate_unavailable(self):
-        msg = 'Unavailable console type %s.' % self.console_type
-        self.console_method.side_effect = nova_exceptions.BadRequest(
-            400, message=msg)
-
+    def _test_get_console_url_tolerate_exception(self, msg):
         console_url = self.nova_plugin.get_console_urls(self.server)[
             self.console_type]
 
         self.console_method.assert_called_once_with(self.console_type)
         self.assertEqual(msg, console_url)
+
+    def test_get_console_url_tolerate_unavailable(self):
+        msg = 'Unavailable console type %s.' % self.console_type
+        self.console_method.side_effect = nova_exceptions.BadRequest(
+            400, message=msg)
+
+        self._test_get_console_url_tolerate_exception(msg)
+
+    def test_get_console_url_tolerate_unsupport(self):
+        msg = 'Unsupported console_type "%s"' % self.console_type
+        self.console_method.side_effect = (
+            nova_exceptions.UnsupportedConsoleType(
+                console_type=self.console_type))
+
+        self._test_get_console_url_tolerate_exception(msg)
 
     def test_get_console_urls_reraises_other_400(self):
         exc = nova_exceptions.BadRequest

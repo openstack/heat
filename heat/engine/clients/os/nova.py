@@ -595,30 +595,34 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         class ConsoleUrls(collections.Mapping):
             def __init__(self, server):
-                self.console_methods = {
-                    'novnc': server.get_vnc_console,
-                    'xvpvnc': server.get_vnc_console,
-                    'spice-html5': server.get_spice_console,
-                    'rdp-html5': server.get_rdp_console,
-                    'serial': server.get_serial_console
-                }
+                self.console_method = server.get_console_url
+                self.support_console_types = ['novnc', 'xvpvnc',
+                                              'spice-html5', 'rdp-html5',
+                                              'serial']
 
             def __getitem__(self, key):
                 try:
-                    url = self.console_methods[key](key)['console']['url']
-                except exceptions.BadRequest as e:
+                    if key not in self.support_console_types:
+                        raise exceptions.UnsupportedConsoleType(key)
+                    data = self.console_method(key)
+                    console_data = data.get(
+                        'remote_console', data.get('console'))
+                    url = console_data['url']
+                except (exceptions.BadRequest,
+                        exceptions.UnsupportedConsoleType) as e:
                     unavailable = 'Unavailable console type'
-                    if unavailable in e.message:
+                    unsupport = 'Unsupported console_type'
+                    if unavailable in e.message or unsupport in e.message:
                         url = e.message
                     else:
                         raise
                 return url
 
             def __len__(self):
-                return len(self.console_methods)
+                return len(self.support_console_types)
 
             def __iter__(self):
-                return (key for key in self.console_methods)
+                return (key for key in self.support_console_types)
 
         return ConsoleUrls(server)
 
