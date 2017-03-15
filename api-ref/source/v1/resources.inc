@@ -26,7 +26,7 @@ Response Codes
 
    - 302
 
-.. rest_status_code:: success status.yaml
+.. rest_status_code:: error status.yaml
 
    - 401
    - 404
@@ -70,7 +70,7 @@ Response Codes
 
    - 200
 
-.. rest_status_code:: success status.yaml
+.. rest_status_code:: error status.yaml
 
    - 400
    - 401
@@ -132,7 +132,7 @@ Response Codes
 
    - 200
 
-.. rest_status_code:: success status.yaml
+.. rest_status_code:: error status.yaml
 
    - 400
    - 401
@@ -190,7 +190,7 @@ Response Codes
 
    - 200
 
-.. rest_status_code:: success status.yaml
+.. rest_status_code:: error status.yaml
 
    - 400
    - 401
@@ -235,7 +235,7 @@ Response Codes
 
    - 200
 
-.. rest_status_code:: success status.yaml
+.. rest_status_code:: error status.yaml
 
    - 400: resource_signal
    - 401
@@ -274,7 +274,7 @@ Response Codes
 
    - 200
 
-.. rest_status_code:: success status.yaml
+.. rest_status_code:: error status.yaml
 
    - 400
    - 401
