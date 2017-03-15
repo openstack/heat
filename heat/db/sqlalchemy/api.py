@@ -846,6 +846,9 @@ def _query_all_by_stack(context, stack_id):
 def event_get_all_by_stack(context, stack_id, limit=None, marker=None,
                            sort_keys=None, sort_dir=None, filters=None):
     query = _query_all_by_stack(context, stack_id)
+    if filters and 'uuid' in filters:
+        # retrieving a single event, so eager load its rsrc_prop_data detail
+        query = query.options(orm.joinedload("rsrc_prop_data"))
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
 

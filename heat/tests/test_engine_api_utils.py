@@ -58,14 +58,15 @@ class FormatTest(common.HeatTestCase):
 
     def _dummy_event(self, res_properties=None):
         resource = self.stack['generic1']
+        ev_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
         ev = event.Event(self.context, self.stack, 'CREATE',
                          'COMPLETE', 'state changed',
                          'z3455xyc-9f88-404d-a85b-5315293e67de',
                          res_properties, resource.name, resource.type(),
-                         uuid='abc123yc-9f88-404d-a85b-531529456xyz')
+                         uuid=ev_uuid)
         ev.store()
-        return event_object.Event.get_all_by_stack(self.context,
-                                                   self.stack.id)[0]
+        return event_object.Event.get_all_by_stack(
+            self.context, self.stack.id, filters={'uuid': ev_uuid})[0]
 
     def test_format_stack_resource(self):
         self.stack.created_time = datetime(2015, 8, 3, 17, 5, 1)
