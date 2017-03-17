@@ -933,7 +933,7 @@ class Resource(object):
 
 
 def log_exception(err, exc_info):
-    args = {'exc_info': exc_info} if cfg.CONF.verbose or cfg.CONF.debug else {}
+    args = {'exc_info': exc_info} if cfg.CONF.debug else {}
     LOG.error(_LE("Unexpected error occurred serving API: %s"), err,
               **args)
 
