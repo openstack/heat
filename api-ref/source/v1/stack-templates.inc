@@ -81,7 +81,7 @@ Request Parameters
    - template_version: template_version_url
 
 Response Parameters
-------------------
+-------------------
 
 .. rest_parameters:: parameters.yaml
 

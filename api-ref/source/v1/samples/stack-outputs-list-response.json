@@ -2,7 +2,7 @@
     "outputs": [
         {
             "output_key": "output name",
-            "description": "output description",
+            "description": "output description"
         }
     ]
 }

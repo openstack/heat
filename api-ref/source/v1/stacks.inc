@@ -634,7 +634,7 @@ Request Parameters
    - stack_identity: stack_identity
 
 Response Parameters
-------------------
+-------------------
 
 .. rest_parameters:: parameters.yaml
 
@@ -682,7 +682,7 @@ Request Parameters
    - stack_id: stack_id_url
 
 Response Parameters
-------------------
+-------------------
 
 This request does not return anything in the response body.
 
