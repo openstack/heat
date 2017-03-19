@@ -588,6 +588,9 @@ class HOTemplate20170901(HOTemplate20170224):
         'filter': hot_funcs.Filter,
         'str_replace_strict': hot_funcs.ReplaceJsonStrict,
 
+        # functions added in 2017-09-01
+        'make_url': hot_funcs.MakeURL,
+
         # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
 

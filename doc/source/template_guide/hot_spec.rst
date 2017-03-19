@@ -293,7 +293,8 @@ for the ``heat_template_version`` key:
 -------------------
     The key with value ``2017-09-01`` or ``pike`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
-    up until the Pike release. The complete list of supported functions is::
+    up until the Pike release. This version adds the ``make_url`` function for
+    assembling URLs. The complete list of supported functions is::
 
       digest
       filter
@@ -302,6 +303,7 @@ for the ``heat_template_version`` key:
       get_param
       get_resource
       list_join
+      make_url
       map_merge
       map_replace
       repeat
@@ -1845,3 +1847,47 @@ For example
             - {get_param: list_param}
 
 output_list will be evaluated to [1, 2].
+
+make_url
+--------
+
+The ``make_url`` function builds URLs.
+
+The syntax of the ``make_url`` function is
+
+.. code-block:: yaml
+
+    make_url:
+      scheme: <protocol>
+      username: <username>
+      password: <password>
+      host: <hostname or IP>
+      port: <port>
+      path: <path>
+      query:
+        <key1>: <value1>
+        <key2>: <value2>
+      fragment: <fragment>
+
+
+All parameters are optional.
+
+For example
+
+.. code-block:: yaml
+
+    outputs:
+      server_url:
+        value:
+          make_url:
+            scheme: http
+            host: {get_attr: [server, networks, <network_name>, 0]}
+            port: 8080
+            path: /hello
+            query:
+              recipient: world
+            fragment: greeting
+
+``server_url`` will be evaluated to a URL in the form::
+
+    http://[<server IP>]:8080/hello?recipient=world#greeting

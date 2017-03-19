@@ -1,0 +1,5 @@
+---
+features:
+  - The Pike version of HOT (2017-09-01) adds a make_url function to simplify
+    combining data from different sources into a URL with correct handling for
+    escaping and IPv6 addresses.

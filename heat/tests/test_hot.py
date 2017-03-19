@@ -1810,6 +1810,231 @@ conditions:
         stack = parser.Stack(utils.dummy_context(), 'test_stack', tmpl)
         self.assertRaises(TypeError, self.resolve, snippet, tmpl, stack=stack)
 
+    def test_make_url_basic(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'host': 'example.com',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        func = tmpl.parse(None, snippet)
+        function.validate(func)
+        resolved = function.resolve(func)
+
+        self.assertEqual('http://example.com/foo/bar',
+                         resolved)
+
+    def test_make_url_ipv6(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'host': '::1',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('http://[::1]/foo/bar',
+                         resolved)
+
+    def test_make_url_ipv6_ready(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'host': '[::1]',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('http://[::1]/foo/bar',
+                         resolved)
+
+    def test_make_url_port_string(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'https',
+                'host': 'example.com',
+                'port': '80',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('https://example.com:80/foo/bar',
+                         resolved)
+
+    def test_make_url_port_int(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'https',
+                'host': 'example.com',
+                'port': 80,
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('https://example.com:80/foo/bar',
+                         resolved)
+
+    def test_make_url_port_invalid_high(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'https',
+                'host': 'example.com',
+                'port': 100000,
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+
+    def test_make_url_port_invalid_low(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'https',
+                'host': 'example.com',
+                'port': '0',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+
+    def test_make_url_port_invalid_string(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'https',
+                'host': 'example.com',
+                'port': '1.1',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+
+    def test_make_url_username(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'username': 'wibble',
+                'host': 'example.com',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('http://wibble@example.com/foo/bar',
+                         resolved)
+
+    def test_make_url_username_password(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'username': 'wibble',
+                'password': 'blarg',
+                'host': 'example.com',
+                'path': '/foo/bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('http://wibble:blarg@example.com/foo/bar',
+                         resolved)
+
+    def test_make_url_query(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'host': 'example.com',
+                'path': '/foo/?bar',
+                'query': {
+                    'foo': 'bar&baz',
+                    'blarg': 'wib=ble',
+                },
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertIn(resolved,
+                      ['http://example.com/foo/%3Fbar'
+                       '?foo=bar%26baz&blarg=wib%3Dble',
+                       'http://example.com/foo/%3Fbar'
+                       '?blarg=wib%3Dble&foo=bar%26baz'])
+
+    def test_make_url_fragment(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'host': 'example.com',
+                'path': 'foo/bar',
+                'fragment': 'baz'
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('http://example.com/foo/bar#baz',
+                         resolved)
+
+    def test_make_url_file(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'file',
+                'path': 'foo/bar'
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('file:///foo/bar',
+                         resolved)
+
+    def test_make_url_file_leading_slash(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'file',
+                'path': '/foo/bar'
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual('file:///foo/bar',
+                         resolved)
+
+    def test_make_url_bad_args_type(self):
+        snippet = {
+            'make_url': 'http://example.com/foo/bar'
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        func = tmpl.parse(None, snippet)
+        self.assertRaises(exception.StackValidationFailed, function.validate,
+                          func)
+
+    def test_make_url_invalid_key(self):
+        snippet = {
+            'make_url': {
+                'scheme': 'http',
+                'host': 'example.com',
+                'foo': 'bar',
+            }
+        }
+        tmpl = template.Template(hot_pike_tpl_empty)
+        func = tmpl.parse(None, snippet)
+        self.assertRaises(exception.StackValidationFailed, function.validate,
+                          func)
+
     def test_depends_condition(self):
         hot_tpl = template_format.parse('''
         heat_template_version: 2016-10-14
