@@ -27,12 +27,6 @@ TRANSPORT = None
 NOTIFICATIONS_TRANSPORT = None
 NOTIFIER = None
 
-_ALIASES = {
-    'heat.openstack.common.rpc.impl_kombu': 'rabbit',
-    'heat.openstack.common.rpc.impl_qpid': 'qpid',
-    'heat.openstack.common.rpc.impl_zmq': 'zmq',
-}
-
 
 class RequestContextSerializer(oslo_messaging.Serializer):
     def __init__(self, base):
@@ -79,10 +73,10 @@ def get_specific_transport(url, optional, exmods, is_for_notifications=False):
     try:
         if is_for_notifications:
             return oslo_messaging.get_notification_transport(
-                cfg.CONF, url, allowed_remote_exmods=exmods, aliases=_ALIASES)
+                cfg.CONF, url, allowed_remote_exmods=exmods)
         else:
             return oslo_messaging.get_transport(
-                cfg.CONF, url, allowed_remote_exmods=exmods, aliases=_ALIASES)
+                cfg.CONF, url, allowed_remote_exmods=exmods)
     except oslo_messaging.InvalidTransportURL as e:
         if not optional or e.url:
             # NOTE(sileht): oslo_messaging is configured but unloadable
