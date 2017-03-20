@@ -470,7 +470,40 @@ class Translation(object):
             if rule.rule == TranslationRule.REPLACE:
                 result = self.replace(key, rule, result, prop_data)
 
+            if rule.rule == TranslationRule.ADD:
+                result = self.add(key, rule, result, prop_data)
+
         return result
+
+    def add(self, key, add_rule, prop_value=None, prop_data=None):
+        value_path = add_rule.get_value_absolute_path()
+        if prop_value is None:
+            prop_value = []
+
+        if not isinstance(prop_value, list):
+            raise ValueError(_('Incorrect translation rule using - cannot '
+                               'resolve Add rule for non-list translation '
+                               'value "%s".') % key)
+
+        translation_value = prop_value
+        if add_rule.value:
+            translation_value.extend(add_rule.value)
+        elif value_path:
+            if self.has_translation('.'.join(value_path)):
+                self.translate('.'.join(value_path),
+                               prop_data=prop_data)
+            self.is_active = False
+            value = get_value(value_path,
+                              prop_data if add_rule.value_name else
+                              self.properties)
+            self.is_active = True
+            if value is not None:
+                translation_value.extend(value if isinstance(value, list)
+                                         else [value])
+
+        if self.store_translated_values:
+            self.resolved_translations[key] = translation_value
+        return translation_value
 
     def replace(self, key, replace_rule, prop_value=None, prop_data=None):
         value = None
