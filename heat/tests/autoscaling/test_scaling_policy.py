@@ -19,6 +19,7 @@ import six
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine.resources.aws.autoscaling import scaling_policy as aws_sp
 from heat.engine import scheduler
@@ -157,13 +158,13 @@ class TestAutoScalingPolicy(common.HeatTestCase):
 
     def test_refid_convergence_cache_data(self):
         t = template_format.parse(as_template)
-        cache_data = {'WebServerScaleUpPolicy': {
+        cache_data = {'WebServerScaleUpPolicy': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'reference_id': 'http://convg_signed_url'
-        }}
+        })}
         stack = utils.parse_stack(t, cache_data=cache_data)
         rsrc = stack['WebServerScaleUpPolicy']
         self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())

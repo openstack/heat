@@ -25,6 +25,7 @@ from heat.common import context
 from heat.db.sqlalchemy import api as db_api
 from heat.db.sqlalchemy import models
 from heat.engine import environment
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine import stack
 from heat.engine import template
@@ -99,6 +100,9 @@ def parse_stack(t, params=None, files=None, stack_name=None,
     templ.store(ctx)
     if stack_name is None:
         stack_name = random_name()
+    if cache_data is not None:
+        cache_data = {n: node_data.NodeData.from_dict(d)
+                      for n, d in cache_data.items()}
     stk = stack.Stack(ctx, stack_name, templ, stack_id=stack_id,
                       timeout_mins=timeout_mins, cache_data=cache_data)
     stk.store()

@@ -19,6 +19,7 @@ import six
 from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
+from heat.engine import node_data
 from heat.engine.resources.openstack.heat import resource_group
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -832,13 +833,13 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertEqual(['0', '1'], rsrc.FnGetAtt(rsrc.REFS))
 
     def test_get_attribute_convg(self):
-        cache_data = {'group1': {
+        cache_data = {'group1': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'attrs': {'refs': ['rsrc1', 'rsrc2']}
-        }}
+        })}
         stack = utils.parse_stack(template, cache_data=cache_data)
         rsrc = stack['group1']
         self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))

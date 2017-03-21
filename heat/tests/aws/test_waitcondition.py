@@ -25,6 +25,7 @@ from heat.common import exception
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import environment
+from heat.engine import node_data
 from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -272,13 +273,13 @@ class WaitConditionTest(common.HeatTestCase):
         template = tmpl.Template(t)
         stack = parser.Stack(utils.dummy_context(), 'test', template,
                              cache_data={
-                                 'WaitHandle': {
+                                 'WaitHandle': node_data.NodeData.from_dict({
                                      'uuid': mock.ANY,
                                      'id': mock.ANY,
                                      'action': 'CREATE',
                                      'status': 'COMPLETE',
                                      'reference_id': 'http://convg_signed_url'
-                                 }})
+                                 })})
 
         rsrc = stack['WaitHandle']
         self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())

@@ -24,6 +24,7 @@ from heat.common import template_format
 from heat.common import timeutils
 from heat.engine.clients.os import neutron
 from heat.engine.hot import functions as hot_funcs
+from heat.engine import node_data
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -287,12 +288,12 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         template = tmpl.Template(t)
         stack = parser.Stack(utils.dummy_context(), 'test', template,
                              cache_data={
-                                 'floating_ip': {
+                                 'floating_ip': node_data.NodeData.from_dict({
                                      'uuid': mock.ANY,
                                      'id': mock.ANY,
                                      'action': 'CREATE',
                                      'status': 'COMPLETE',
-                                     'reference_id': 'abc'}})
+                                     'reference_id': 'abc'})})
 
         rsrc = stack['floating_ip']
         self.assertEqual('abc', rsrc.FnGetRefId())

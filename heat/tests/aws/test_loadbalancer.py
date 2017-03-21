@@ -19,6 +19,7 @@ from oslo_config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import nova
+from heat.engine import node_data
 from heat.engine.resources.aws.lb import loadbalancer as lb
 from heat.engine import rsrc_defn
 from heat.tests import common
@@ -177,13 +178,13 @@ class LoadBalancerTest(common.HeatTestCase):
         self.assertEqual('LoadBalancer', rsrc.FnGetRefId())
 
     def test_loadbalancer_refid_convergence_cache_data(self):
-        cache_data = {'LoadBalancer': {
+        cache_data = {'LoadBalancer': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'reference_id': 'LoadBalancer_convg_mock'
-        }}
+        })}
         rsrc = self.setup_loadbalancer(cache_data=cache_data)
         self.assertEqual('LoadBalancer_convg_mock', rsrc.FnGetRefId())
 

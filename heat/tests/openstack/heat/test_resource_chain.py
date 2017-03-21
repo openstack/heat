@@ -16,6 +16,7 @@ import mock
 
 from heat.common import exception
 from heat.common import grouputils
+from heat.engine import node_data
 from heat.engine.resources.openstack.heat import resource_chain
 from heat.engine import rsrc_defn
 from heat.tests import common
@@ -216,13 +217,13 @@ class ResourceChainTest(common.HeatTestCase):
         self.assertEqual(['0', '1'], rsrc.FnGetAtt(rsrc.REFS))
 
     def test_get_attribute_convg(self):
-        cache_data = {'test-chain': {
+        cache_data = {'test-chain': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'attrs': {'refs': ['rsrc1', 'rsrc2']}
-        }}
+        })}
         stack = utils.parse_stack(TEMPLATE, cache_data=cache_data)
         rsrc = stack['test-chain']
         self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))

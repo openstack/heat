@@ -23,6 +23,7 @@ from oslo_log import log as logging
 from heat.common import exception
 from heat.common.i18n import _LE
 from heat.common.i18n import _LI
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -49,11 +50,13 @@ class CheckResource(object):
                  engine_id,
                  rpc_client,
                  thread_group_mgr,
-                 msg_queue):
+                 msg_queue,
+                 input_data):
         self.engine_id = engine_id
         self._rpc_client = rpc_client
         self.thread_group_mgr = thread_group_mgr
         self.msg_queue = msg_queue
+        self.input_data = input_data
 
     def _try_steal_engine_lock(self, cnxt, resource_id):
         rs_obj = resource_objects.Resource.get_obj(cnxt,
@@ -113,7 +116,7 @@ class CheckResource(object):
                     new_res_id = rsrc.make_replacement(tmpl.id)
                     LOG.info(_LI("Replacing resource with new id %s"),
                              new_res_id)
-                    rpc_data = sync_point.serialize_input_data(resource_data)
+                    rpc_data = sync_point.serialize_input_data(self.input_data)
                     self._rpc_client.check_resource(cnxt,
                                                     new_res_id,
                                                     current_traversal,
@@ -129,7 +132,7 @@ class CheckResource(object):
             return True
         except exception.UpdateInProgress:
             if self._try_steal_engine_lock(cnxt, rsrc.id):
-                rpc_data = sync_point.serialize_input_data(resource_data)
+                rpc_data = sync_point.serialize_input_data(self.input_data)
                 # set the resource state as failed
                 status_reason = ('Worker went down '
                                  'during resource %s' % rsrc.action)
@@ -286,17 +289,9 @@ class CheckResource(object):
 
 
 def load_resource(cnxt, resource_id, resource_data, is_update):
-    if is_update:
-        cache_data = {in_data.get(
-            'name'): in_data for in_data in resource_data.values()
-            if in_data is not None}
-    else:
-        # no data to resolve in cleanup phase
-        cache_data = {}
-
     try:
         return resource.Resource.load(cnxt, resource_id,
-                                      is_update, cache_data)
+                                      is_update, resource_data)
     except (exception.ResourceNotFound, exception.NotFound):
         # can be ignored
         return None, None, None
@@ -319,14 +314,11 @@ def construct_input_data(rsrc, curr_stack):
     dep_attrs = curr_stack.get_dep_attrs(
         six.itervalues(curr_stack.resources),
         rsrc.name)
-    input_data = {'id': rsrc.id,
-                  'name': rsrc.name,
-                  'reference_id': rsrc.get_reference_id(),
-                  'attrs': _resolve_attributes(dep_attrs, rsrc),
-                  'status': rsrc.status,
-                  'action': rsrc.action,
-                  'uuid': rsrc.uuid}
-    return input_data
+    input_data = node_data.NodeData(rsrc.id, rsrc.name, rsrc.uuid,
+                                    rsrc.get_reference_id(),
+                                    _resolve_attributes(dep_attrs, rsrc),
+                                    rsrc.action, rsrc.status)
+    return input_data.as_dict()
 
 
 def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,

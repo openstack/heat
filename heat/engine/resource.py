@@ -271,10 +271,11 @@ class Resource(object):
             if resource:
                 self._load_data(resource)
         elif stack.has_cache_data(name):
-            self.action = stack.cache_data[name]['action']
-            self.status = stack.cache_data[name]['status']
-            self.id = stack.cache_data[name]['id']
-            self.uuid = stack.cache_data[name]['uuid']
+            cached_data = stack.cache_data[name]
+            self.action = cached_data.action
+            self.status = cached_data.status
+            self.id = cached_data.primary_key
+            self.uuid = cached_data.uuid
 
     def rpc_client(self):
         """Return a client for making engine RPC calls."""
@@ -883,8 +884,8 @@ class Resource(object):
         """Creates the resource by invoking the scheduler TaskRunner."""
         with self.lock(engine_id):
             self.requires = list(
-                set(data[u'id'] for data in resource_data.values()
-                    if data)
+                set(data.primary_key for data in resource_data.values()
+                    if data is not None)
             )
             self.current_template_id = template_id
             if self.stack.adopt_stack_data is None:
@@ -1156,7 +1157,7 @@ class Resource(object):
         def update_tmpl_id_and_requires():
             self.current_template_id = template_id
             self.requires = list(
-                set(data[u'id'] for data in resource_data.values()
+                set(data.primary_key for data in resource_data.values()
                     if data is not None)
             )
 

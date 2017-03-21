@@ -2004,18 +2004,16 @@ class Stack(collections.Mapping):
 
     def has_cache_data(self, resource_name):
         return (self.cache_data is not None and
-                self.cache_data.get(resource_name) is not None)
+                resource_name in self.cache_data)
 
     def cache_data_reference_id(self, resource_name):
-        return self.cache_data.get(
-            resource_name, {}).get('reference_id')
+        return self.cache_data[resource_name].reference_id()
 
     def cache_data_resource_attribute(self, resource_name, attribute_key):
-        return self.cache_data.get(
-            resource_name, {}).get('attrs', {}).get(attribute_key)
+        return self.cache_data[resource_name].attribute(attribute_key)
 
     def cache_data_resource_all_attributes(self, resource_name):
-        return self.cache_data.get(resource_name, {}).get('attrs', {})
+        return self.cache_data[resource_name].attributes()
 
     def mark_complete(self):
         """Mark the update as complete.

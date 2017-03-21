@@ -34,6 +34,7 @@ from heat.engine.clients.os import keystone
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
+from heat.engine import node_data
 from heat.engine import output
 from heat.engine import resource
 from heat.engine import scheduler
@@ -2354,13 +2355,15 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        cache_data = {'foo': {'reference_id': 'foo-id',
+        rsrcs_data = {'foo': {'reference_id': 'foo-id',
                               'attrs': {'bar': 'baz'}, 'uuid': mock.ANY,
                               'id': mock.ANY, 'action': 'CREATE',
                               'status': 'COMPLETE'},
                       'bar': {'reference_id': 'bar-id', 'uuid': mock.ANY,
                               'id': mock.ANY, 'action': 'CREATE',
                               'status': 'COMPLETE'}}
+        cache_data = {n: node_data.NodeData.from_dict(d)
+                      for n, d in rsrcs_data.items()}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
         lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,
@@ -2393,12 +2396,14 @@ class StackTest(common.HeatTestCase):
             }
         })
 
-        cache_data = {'foo': {'reference_id': 'physical-resource-id',
+        rsrcs_data = {'foo': {'reference_id': 'physical-resource-id',
                               'uuid': mock.ANY, 'id': mock.ANY,
                               'action': 'CREATE', 'status': 'COMPLETE'},
                       'bar': {'reference_id': 'bar-id', 'uuid': mock.ANY,
                               'id': mock.ANY, 'action': 'CREATE',
                               'status': 'COMPLETE'}}
+        cache_data = {n: node_data.NodeData.from_dict(d)
+                      for n, d in rsrcs_data.items()}
         tmpl_stack = stack.Stack(self.ctx, 'test', tmpl)
         tmpl_stack.store()
         lightweight_stack = stack.Stack.load(self.ctx, stack_id=tmpl_stack.id,

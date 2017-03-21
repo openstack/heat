@@ -36,6 +36,7 @@ from heat.engine import clients
 from heat.engine import constraints
 from heat.engine import dependencies
 from heat.engine import environment
+from heat.engine import node_data
 from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import resource
@@ -1812,12 +1813,13 @@ class ResourceTest(common.HeatTestCase):
         })
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
                              cache_data={
-                                 'res': {'attrs': {'Foo': 'Res',
-                                                   'foo': 'res'},
-                                         'uuid': mock.ANY,
-                                         'id': mock.ANY,
-                                         'action': 'CREATE',
-                                         'status': 'COMPLETE'}})
+                                 'res': node_data.NodeData.from_dict({
+                                     'attrs': {'Foo': 'Res',
+                                               'foo': 'res'},
+                                     'uuid': mock.ANY,
+                                     'id': mock.ANY,
+                                     'action': 'CREATE',
+                                     'status': 'COMPLETE'})})
 
         res = stack['res']
         self.assertEqual('Res', res.FnGetAtt('Foo'))
@@ -1834,12 +1836,12 @@ class ResourceTest(common.HeatTestCase):
         })
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
                              cache_data={
-                                 'res': {
+                                 'res': node_data.NodeData.from_dict({
                                      'attrs': {('nested', 'string'): 'abc'},
                                      'uuid': mock.ANY,
                                      'id': mock.ANY,
                                      'action': 'CREATE',
-                                     'status': 'COMPLETE'}})
+                                     'status': 'COMPLETE'})})
 
         res = stack['res']
         self.assertEqual('abc', res.FnGetAtt('nested', 'string'))
@@ -1875,12 +1877,13 @@ class ResourceTest(common.HeatTestCase):
         })
         stack = parser.Stack(utils.dummy_context(), 'test', tmpl,
                              cache_data={
-                                 'res': {'attrs': {'Foo': 'res',
-                                                   'foo': 'res'},
-                                         'uuid': mock.ANY,
-                                         'id': mock.ANY,
-                                         'action': 'CREATE',
-                                         'status': 'COMPLETE'}})
+                                 'res': node_data.NodeData.from_dict({
+                                     'attrs': {'Foo': 'res',
+                                               'foo': 'res'},
+                                     'uuid': mock.ANY,
+                                     'id': mock.ANY,
+                                     'action': 'CREATE',
+                                     'status': 'COMPLETE'})})
         res = stack['res']
         self.assertEqual({'foo': 'res', 'Foo': 'res'}, res.FnGetAtts())
 
@@ -1995,6 +1998,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         pcb = mock.Mock()
 
         with mock.patch.object(resource.Resource, 'create') as mock_create:
@@ -2012,6 +2016,7 @@ class ResourceTest(common.HeatTestCase):
         res.store()
         res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
 
         pcb = mock.Mock()
         self.assertRaises(scheduler.Timeout, res.create_convergence,
@@ -2031,6 +2036,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         self.assertRaises(exception.ResourceNotAvailable,
                           res.create_convergence, self.stack.t.id, res_data,
                           'engine-007', self.dummy_timeout, self.dummy_event)
@@ -2048,6 +2054,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         tr = scheduler.TaskRunner(res.create_convergence, self.stack.t.id,
                                   res_data, 'engine-007', self.dummy_timeout,
                                   self.dummy_event)
@@ -2066,6 +2073,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         tr = scheduler.TaskRunner(res.create_convergence, self.stack.t.id,
                                   res_data, 'engine-007', self.dummy_timeout,
                                   self.dummy_event)
@@ -2100,6 +2108,7 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         pcb = mock.Mock()
         with mock.patch.object(resource.Resource, 'update') as mock_update:
             tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
@@ -2195,6 +2204,7 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         tr = scheduler.TaskRunner(res.update_convergence, 'template_key',
                                   res_data, 'engine-007', self.dummy_timeout,
                                   mock.ANY, self.dummy_event)
@@ -2231,6 +2241,7 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         exc = Exception(_('Resource update failed'))
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
@@ -2275,6 +2286,7 @@ class ResourceTest(common.HeatTestCase):
 
         res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
                     (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = node_data.load_resources_data(res_data)
         mock_update.side_effect = resource.UpdateReplace
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)

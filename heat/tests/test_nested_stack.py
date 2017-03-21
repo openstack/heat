@@ -23,6 +23,7 @@ from heat.common import identifier
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine import api
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine.resources.aws.cfn import stack as stack_res
 from heat.engine import rsrc_defn
@@ -276,13 +277,13 @@ Resources:
         t = template_format.parse(self.test_template)
         tmpl = template.Template(t)
         ctx = utils.dummy_context()
-        cache_data = {'the_nested': {
+        cache_data = {'the_nested': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
             'id': mock.ANY,
             'action': 'CREATE',
             'status': 'COMPLETE',
             'reference_id': 'the_nested_convg_mock'
-        }}
+        })}
         stack = parser.Stack(ctx, 'test_stack', tmpl, cache_data=cache_data)
         nested_stack = stack['the_nested']
         self.assertEqual('the_nested_convg_mock', nested_stack.FnGetRefId())
