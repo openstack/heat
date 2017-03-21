@@ -16,8 +16,6 @@ from oslo_utils import timeutils
 import six
 
 from heat.common import context
-from heat.common.i18n import _LE
-from heat.common.i18n import _LW
 from heat.engine import stack
 from heat.engine import watchrule
 from heat.objects import stack as stack_object
@@ -64,13 +62,12 @@ class StackWatch(object):
     def check_stack_watches(self, sid):
         # Use admin_context for stack_get to defeat tenant
         # scoping otherwise we fail to retrieve the stack
-        LOG.debug("Periodic watcher task for stack %s" % sid)
+        LOG.debug("Periodic watcher task for stack %s", sid)
         admin_context = context.get_admin_context()
         db_stack = stack_object.Stack.get_by_id(admin_context,
                                                 sid)
         if not db_stack:
-            LOG.error(_LE("Unable to retrieve stack %s for periodic task"),
-                      sid)
+            LOG.error("Unable to retrieve stack %s for periodic task", sid)
             return
         stk = stack.Stack.load(admin_context, stack=db_stack,
                                use_stored_context=True)
@@ -85,8 +82,7 @@ class StackWatch(object):
             wrs = watch_rule_object.WatchRule.get_all_by_stack(admin_context,
                                                                sid)
         except Exception as ex:
-            LOG.warning(_LW('periodic_task db error watch rule'
-                            ' removed? %(ex)s'),
+            LOG.warning('periodic_task db error watch rule removed? %(ex)s',
                         ex)
             return
 

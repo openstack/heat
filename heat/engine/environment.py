@@ -26,9 +26,6 @@ import six
 from heat.common import environment_format as env_fmt
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import policy
 from heat.engine import support
 
@@ -321,13 +318,13 @@ class ResourceRegistry(object):
                 for res_name, reg_info in list(registry.items()):
                     if (isinstance(reg_info, ResourceInfo) and
                             res_name.startswith(name[:-1])):
-                        LOG.warning(_LW('Removing %(item)s from %(path)s'), {
+                        LOG.warning('Removing %(item)s from %(path)s', {
                             'item': res_name,
                             'path': descriptive_path})
                         del registry[res_name]
             else:
                 # delete this entry.
-                LOG.warning(_LW('Removing %(item)s from %(path)s'), {
+                LOG.warning('Removing %(item)s from %(path)s', {
                     'item': name,
                     'path': descriptive_path})
                 registry.pop(name, None)
@@ -340,8 +337,7 @@ class ResourceRegistry(object):
                 'path': descriptive_path,
                 'was': str(registry[name].value),
                 'now': str(info.value)}
-            LOG.warning(_LW('Changing %(path)s from %(was)s to %(now)s'),
-                        details)
+            LOG.warning('Changing %(path)s from %(was)s to %(now)s', details)
 
         if isinstance(info, ClassResourceInfo):
             if info.value.support_status.status != support.SUPPORTED:
@@ -353,7 +349,7 @@ class ResourceRegistry(object):
                         'message': six.text_type(
                             info.value.support_status.message)
                         }
-                    LOG.warning(_LW('%(name)s is %(status)s. %(message)s'),
+                    LOG.warning('%(name)s is %(status)s. %(message)s',
                                 details)
 
         info.user_resource = (self.global_registry is not None)
@@ -366,7 +362,7 @@ class ResourceRegistry(object):
             if name == 'resources':
                 continue
             if show_all or isinstance(registry[name], TemplateResourceInfo):
-                msg = (_LI('%(p)sRegistered: %(t)s') %
+                msg = ('%(p)sRegistered: %(t)s' %
                        {'p': prefix,
                         't': six.text_type(registry[name])})
                 LOG.info(msg)
@@ -842,17 +838,17 @@ def read_global_environment(env, env_dir=None):
     try:
         env_files = glob.glob(os.path.join(env_dir, '*'))
     except OSError:
-        LOG.exception(_LE('Failed to read %s'), env_dir)
+        LOG.exception('Failed to read %s', env_dir)
         return
 
     for file_path in env_files:
         try:
             with open(file_path) as env_fd:
-                LOG.info(_LI('Loading %s'), file_path)
+                LOG.info('Loading %s', file_path)
                 env_body = env_fmt.parse(env_fd.read())
                 env_fmt.default_for_missing(env_body)
                 env.load(env_body)
         except ValueError:
-            LOG.exception(_LE('Failed to parse %s'), file_path)
+            LOG.exception('Failed to parse %s', file_path)
         except IOError:
-            LOG.exception(_LE('Failed to read %s'), file_path)
+            LOG.exception('Failed to read %s', file_path)

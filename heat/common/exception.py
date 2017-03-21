@@ -24,7 +24,6 @@ from oslo_utils import excutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 
 _FATAL_EXCEPTION_FORMAT_ERRORS = False
 
@@ -69,9 +68,9 @@ class HeatException(Exception):
                     reraise=_FATAL_EXCEPTION_FORMAT_ERRORS):
                 # kwargs doesn't match a variable in the message
                 # log the issue and the kwargs
-                LOG.exception(_LE('Exception in string format operation'))
+                LOG.exception('Exception in string format operation')
                 for name, value in six.iteritems(kwargs):
-                    LOG.error(_LE("%(name)s: %(value)s"),
+                    LOG.error("%(name)s: %(value)s",
                               {'name': name, 'value': value})  # noqa
 
         if self.error_code:

@@ -15,7 +15,6 @@ from oslo_log import log as logging
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -108,8 +107,8 @@ class CloudNetwork(resource.Resource):
             try:
                 self._network = self.cloud_networks().get(self.resource_id)
             except NotFound:
-                LOG.warning(_LW("Could not find network %s but resource id is"
-                                " set."), self.resource_id)
+                LOG.warning("Could not find network %s but resource id is"
+                            " set.", self.resource_id)
         return self._network
 
     def cloud_networks(self):
@@ -139,7 +138,7 @@ class CloudNetwork(resource.Resource):
             try:
                 network.delete()
             except NetworkInUse:
-                LOG.warning(_LW("Network '%s' still in use."), network.id)
+                LOG.warning("Network '%s' still in use.", network.id)
             else:
                 self._delete_issued = True
             return False

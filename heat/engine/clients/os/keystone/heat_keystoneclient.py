@@ -29,8 +29,6 @@ from oslo_utils import importutils
 from heat.common import context
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LW
 
 LOG = logging.getLogger('heat.engine.clients.keystoneclient')
 
@@ -96,7 +94,7 @@ class KsClientWrapper(object):
         self.domain_admin_user = cfg.CONF.stack_domain_admin
         self.domain_admin_password = cfg.CONF.stack_domain_admin_password
 
-        LOG.debug('Using stack domain %s' % self.stack_domain)
+        LOG.debug('Using stack domain %s', self.stack_domain)
 
     @property
     def context(self):
@@ -140,7 +138,7 @@ class KsClientWrapper(object):
             try:
                 auth.get_token(self.session)
             except ks_exception.Unauthorized:
-                LOG.error(_LE("Domain admin client authentication failed"))
+                LOG.error("Domain admin client authentication failed")
                 raise exception.AuthorizationFailure()
 
             self._domain_admin_auth = auth
@@ -167,17 +165,17 @@ class KsClientWrapper(object):
             try:
                 auth_ref = self.context.auth_plugin.get_access(self.session)
             except ks_exception.Unauthorized:
-                LOG.error(_LE("Keystone client authentication failed"))
+                LOG.error("Keystone client authentication failed")
                 raise exception.AuthorizationFailure()
 
             if self.context.trust_id:
                 # Sanity check
                 if not auth_ref.trust_scoped:
-                    LOG.error(_LE("trust token re-scoping failed!"))
+                    LOG.error("trust token re-scoping failed!")
                     raise exception.AuthorizationFailure()
                 # Sanity check that impersonation is effective
                 if self.context.trustor_user_id != auth_ref.user_id:
-                    LOG.error(_LE("Trust impersonation failed"))
+                    LOG.error("Trust impersonation failed")
                     raise exception.AuthorizationFailure()
 
         return client
@@ -202,7 +200,7 @@ class KsClientWrapper(object):
             trustee_user_id = self.context.trusts_auth_plugin.get_user_id(
                 self.session)
         except ks_exception.Unauthorized:
-            LOG.error(_LE("Domain admin client authentication failed"))
+            LOG.error("Domain admin client authentication failed")
             raise exception.AuthorizationFailure()
 
         trustor_user_id = self.context.auth_plugin.get_user_id(self.session)
@@ -241,8 +239,8 @@ class KsClientWrapper(object):
 
     def _get_username(self, username):
         if(len(username) > 64):
-            LOG.warning(_LW("Truncating the username %s to the last 64 "
-                            "characters."), username)
+            LOG.warning("Truncating the username %s to the last 64 "
+                        "characters.", username)
         # get the last 64 characters of the username
         return username[-64:]
 
@@ -268,15 +266,15 @@ class KsClientWrapper(object):
                 name=self._get_username(username), password=password,
                 default_project=self.context.tenant_id)
             # Add user to heat_stack_user_role
-            LOG.debug("Adding user %(user)s to role %(role)s" % {
-                      'user': user.id, 'role': role_id})
+            LOG.debug("Adding user %(user)s to role %(role)s",
+                      {'user': user.id, 'role': role_id})
             self.client.roles.grant(role=role_id, user=user.id,
                                     project=self.context.tenant_id)
         else:
-            LOG.error(_LE("Failed to add user %(user)s to role %(role)s, "
-                          "check role exists!"), {
-                      'user': username,
-                      'role': cfg.CONF.heat_stack_user_role})
+            LOG.error("Failed to add user %(user)s to role %(role)s, "
+                      "check role exists!",
+                      {'user': username,
+                       'role': cfg.CONF.heat_stack_user_role})
             raise exception.Error(_("Can't find role %s")
                                   % cfg.CONF.heat_stack_user_role)
 
@@ -331,13 +329,13 @@ class KsClientWrapper(object):
                 name=self._get_username(username), password=password,
                 default_project=project_id, domain=self.stack_domain_id)
             # Add to stack user role
-            LOG.debug("Adding user %(user)s to role %(role)s" % {
-                      'user': user.id, 'role': role_id})
+            LOG.debug("Adding user %(user)s to role %(role)s",
+                      {'user': user.id, 'role': role_id})
             self.domain_admin_client.roles.grant(role=role_id, user=user.id,
                                                  project=project_id)
         else:
-            LOG.error(_LE("Failed to add user %(user)s to role %(role)s, "
-                          "check role exists!"),
+            LOG.error("Failed to add user %(user)s to role %(role)s, "
+                      "check role exists!",
                       {'user': username,
                        'role': cfg.CONF.heat_stack_user_role})
             raise exception.Error(_("Can't find role %s")
@@ -351,7 +349,7 @@ class KsClientWrapper(object):
             try:
                 access = self.domain_admin_auth.get_access(self.session)
             except ks_exception.Unauthorized:
-                LOG.error(_LE("Keystone client authentication failed"))
+                LOG.error("Keystone client authentication failed")
                 raise exception.AuthorizationFailure()
 
             self._stack_domain_id = access.domain_id
@@ -417,12 +415,12 @@ class KsClientWrapper(object):
         except ks_exception.NotFound:
             return
         except ks_exception.Forbidden:
-            LOG.warning(_LW('Unable to get details for project %s, '
-                            'not deleting'), project_id)
+            LOG.warning('Unable to get details for project %s, '
+                        'not deleting', project_id)
             return
 
         if project.domain_id != self.stack_domain_id:
-            LOG.warning(_LW('Not deleting non heat-domain project'))
+            LOG.warning('Not deleting non heat-domain project')
             return
 
         try:

@@ -18,8 +18,6 @@ import six
 from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
@@ -282,8 +280,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                min_adjustment_step=None):
         """Adjust the size of the scaling group if the cooldown permits."""
         if self.status != self.COMPLETE:
-            LOG.info(_LI("%s NOT performing scaling adjustment, "
-                         "when status is not COMPLETE") % self.name)
+            LOG.info("%s NOT performing scaling adjustment, "
+                     "when status is not COMPLETE", self.name)
             raise resource.NoActionRequired
 
         capacity = grouputils.get_size(self)
@@ -291,8 +289,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                               adjustment_type,
                                               min_adjustment_step)
         if new_capacity == capacity:
-            LOG.info(_LI("%s NOT performing scaling adjustment, "
-                         "as there is no change in capacity.") % self.name)
+            LOG.info("%s NOT performing scaling adjustment, "
+                     "as there is no change in capacity.", self.name)
             raise resource.NoActionRequired
 
         self._check_scaling_allowed()
@@ -322,7 +320,7 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                                       })
                         notification.send(**notif)
                     except Exception:
-                        LOG.exception(_LE('Failed sending error notification'))
+                        LOG.exception('Failed sending error notification')
             else:
                 size_changed = True
                 notif.update({
@@ -333,8 +331,8 @@ class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
                 })
                 notification.send(**notif)
         except Exception:
-            LOG.error(_LE("Error in performing scaling adjustment for "
-                          "group %s.") % self.name)
+            LOG.error("Error in performing scaling adjustment for "
+                      "group %s.", self.name)
             raise
         finally:
             self._finished_scaling("%s : %s" % (adjustment_type, adjustment),

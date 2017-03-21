@@ -19,7 +19,6 @@ from oslo_config import cfg
 from oslo_log import log
 import six
 
-from heat.common.i18n import _LE
 from heat.common import plugin_loader
 
 LOG = log.getLogger(__name__)
@@ -92,15 +91,15 @@ class PluginMapping(object):
                 try:
                     mapping_dict = mapping_func(*self.args, **self.kwargs)
                 except Exception:
-                    LOG.error(_LE('Failed to load %(mapping_name)s '
-                                  'from %(module)s'), fmt_data)
+                    LOG.error('Failed to load %(mapping_name)s '
+                              'from %(module)s', fmt_data)
                     raise
                 else:
                     if isinstance(mapping_dict, collections.Mapping):
                         return mapping_dict
                     elif mapping_dict is not None:
-                        LOG.error(_LE('Invalid type for %(mapping_name)s '
-                                      'from %(module)s'), fmt_data)
+                        LOG.error('Invalid type for %(mapping_name)s '
+                                  'from %(module)s', fmt_data)
 
         return {}
 

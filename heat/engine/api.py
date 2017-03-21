@@ -18,7 +18,6 @@ from oslo_utils import timeutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 from heat.common import param_utils
 from heat.common import template_format
 from heat.common import timeutils as heat_timeutils
@@ -41,7 +40,7 @@ def extract_args(params):
         try:
             timeout = int(timeout_mins)
         except (ValueError, TypeError):
-            LOG.exception(_LE('Timeout conversion failed'))
+            LOG.exception('Timeout conversion failed')
         else:
             if timeout > 0:
                 kwargs[rpc_api.PARAM_TIMEOUT] = timeout
@@ -481,7 +480,7 @@ def format_watch_data(wd, rule_names):
     if len(metric) == 1:
         metric_name, metric_data = metric[0]
     else:
-        LOG.error(_LE("Unexpected number of keys in watch_data.data!"))
+        LOG.error("Unexpected number of keys in watch_data.data!")
         return
 
     result = {

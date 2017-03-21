@@ -17,7 +17,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -234,7 +233,7 @@ class ManilaShare(resource.Resource):
         if share_status == self.STATUS_CREATING:
             return False
         elif share_status == self.STATUS_AVAILABLE:
-            LOG.info(_LI('Applying access rules to created Share.'))
+            LOG.info('Applying access rules to created Share.')
             # apply access rules to created share. please note that it is not
             # possible to define rules for share with share_status = creating
             access_rules = self.properties.get(self.ACCESS_RULES)

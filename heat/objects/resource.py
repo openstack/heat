@@ -27,7 +27,6 @@ import tenacity
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
@@ -120,12 +119,12 @@ class Resource(
             resource._properties_data = resource['rsrc_prop_data'].data
             if db_resource['properties_data']:
                 LOG.error(
-                    _LE('Unexpected condition where resource.rsrc_prop_data '
-                        'and resource.properties_data are both not null. '
-                        'rsrc_prop_data.id: %(rsrc_prop_data_id)s ,'
-                        'resource id: %(res_id)s')
-                    % {'rsrc_prop_data_id': resource['rsrc_prop_data'].id,
-                       'res_id': resource['id']})
+                    'Unexpected condition where resource.rsrc_prop_data '
+                    'and resource.properties_data are both not null. '
+                    'rsrc_prop_data.id: %(rsrc_prop_data_id)s, '
+                    'resource id: %(res_id)s',
+                    {'rsrc_prop_data_id': resource['rsrc_prop_data'].id,
+                     'res_id': resource['id']})
         elif db_resource['properties_data']:  # legacy field
             if db_resource['properties_data_encrypted']:
                 decrypted_data = crypt.decrypted_dict(

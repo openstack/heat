@@ -17,7 +17,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine import constraints
@@ -345,18 +344,18 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
     def _check_extend_volume_complete(self):
         vol = self.client().volumes.get(self.resource_id)
         if vol.status == 'extending':
-            LOG.debug("Volume %s is being extended" % vol.id)
+            LOG.debug("Volume %s is being extended", vol.id)
             return False
 
         if vol.status != 'available':
-            LOG.info(_LI("Resize failed: Volume %(vol)s "
-                         "is in %(status)s state."),
+            LOG.info("Resize failed: Volume %(vol)s "
+                     "is in %(status)s state.",
                      {'vol': vol.id, 'status': vol.status})
             raise exception.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume resize failed'))
 
-        LOG.info(_LI('Volume %(id)s resize complete'), {'id': vol.id})
+        LOG.info('Volume %(id)s resize complete', {'id': vol.id})
         return True
 
     def _backup_restore(self, vol_id, backup_id):
@@ -376,17 +375,17 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
     def _check_backup_restore_complete(self):
         vol = self.client().volumes.get(self.resource_id)
         if vol.status == 'restoring-backup':
-            LOG.debug("Volume %s is being restoring from backup" % vol.id)
+            LOG.debug("Volume %s is being restoring from backup", vol.id)
             return False
 
         if vol.status != 'available':
-            LOG.info(_LI("Restore failed: Volume %(vol)s is in %(status)s "
-                         "state."), {'vol': vol.id, 'status': vol.status})
+            LOG.info("Restore failed: Volume %(vol)s is in %(status)s "
+                     "state.", {'vol': vol.id, 'status': vol.status})
             raise exception.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume backup restore failed'))
 
-        LOG.info(_LI('Volume %(id)s backup restore complete'), {'id': vol.id})
+        LOG.info('Volume %s backup restore complete', vol.id)
         return True
 
     def needs_replace_failed(self):

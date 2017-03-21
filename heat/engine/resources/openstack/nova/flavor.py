@@ -14,7 +14,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -170,8 +169,8 @@ class NovaFlavor(resource.Resource):
 
         if not self.IS_PUBLIC:
             if not tenants:
-                LOG.info(_LI('Tenant property is recommended if IS_PUBLIC'
-                             'is false.'))
+                LOG.info('Tenant property is recommended if IS_PUBLIC '
+                         'is false.')
                 tenant = self.stack.context.tenant_id
                 self.client().flavor_access.add_tenant_access(flavor, tenant)
             else:

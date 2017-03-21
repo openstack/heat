@@ -21,7 +21,6 @@ from oslo_utils import encodeutils
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -286,7 +285,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
         props = dict((k, v) for k, v in six.iteritems(self.properties))
         args = self._prepare_properties(props)
         node_group_template = self.client().node_group_templates.create(**args)
-        LOG.info(_LI("Node Group Template '%s' has been created"),
+        LOG.info("Node Group Template '%s' has been created",
                  node_group_template.name)
         self.resource_id_set(node_group_template.id)
         return self.resource_id
@@ -573,7 +572,7 @@ class SaharaClusterTemplate(resource.Resource):
         props = dict((k, v) for k, v in six.iteritems(self.properties))
         args = self._prepare_properties(props)
         cluster_template = self.client().cluster_templates.create(**args)
-        LOG.info(_LI("Cluster Template '%s' has been created"),
+        LOG.info("Cluster Template '%s' has been created",
                  cluster_template.name)
         self.resource_id_set(cluster_template.id)
         return self.resource_id

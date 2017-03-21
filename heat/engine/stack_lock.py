@@ -17,8 +17,6 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 
 from heat.common import exception
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import service_utils
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock as stack_lock_object
@@ -77,8 +75,8 @@ class StackLock(object):
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)
         else:
-            LOG.info(_LI("Stale lock detected on stack %(stack)s.  Engine "
-                         "%(engine)s will attempt to steal the lock"),
+            LOG.info("Stale lock detected on stack %(stack)s.  Engine "
+                     "%(engine)s will attempt to steal the lock",
                      {'stack': self.stack_id, 'engine': self.engine_id})
 
             result = stack_lock_object.StackLock.steal(self.context,
@@ -87,22 +85,22 @@ class StackLock(object):
                                                        self.engine_id)
 
             if result is None:
-                LOG.info(_LI("Engine %(engine)s successfully stole the lock "
-                             "on stack %(stack)s"),
+                LOG.info("Engine %(engine)s successfully stole the lock "
+                         "on stack %(stack)s",
                          {'engine': self.engine_id,
                           'stack': self.stack_id})
                 return
             elif result is True:
                 if retry:
-                    LOG.info(_LI("The lock on stack %(stack)s was released "
-                                 "while engine %(engine)s was stealing it. "
-                                 "Trying again"), {'stack': self.stack_id,
-                                                   'engine': self.engine_id})
+                    LOG.info("The lock on stack %(stack)s was released "
+                             "while engine %(engine)s was stealing it. "
+                             "Trying again", {'stack': self.stack_id,
+                                              'engine': self.engine_id})
                     return self.acquire(retry=False)
             else:
                 new_lock_engine_id = result
-                LOG.info(_LI("Failed to steal lock on stack %(stack)s. "
-                             "Engine %(engine)s stole the lock first"),
+                LOG.info("Failed to steal lock on stack %(stack)s. "
+                         "Engine %(engine)s stole the lock first",
                          {'stack': self.stack_id,
                           'engine': new_lock_engine_id})
 
@@ -117,7 +115,7 @@ class StackLock(object):
                                                      self.stack_id,
                                                      self.engine_id)
         if result is True:
-            LOG.warning(_LW("Lock was already released on stack %s!"),
+            LOG.warning("Lock was already released on stack %s!",
                         self.stack_id)
         else:
             LOG.debug("Engine %(engine)s released lock on stack "

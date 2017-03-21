@@ -21,9 +21,6 @@ from oslo_utils import uuidutils
 from osprofiler import profiler
 
 from heat.common import context
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import messaging as rpc_messaging
 from heat.db.sqlalchemy import api as db_api
 from heat.engine import check_resource
@@ -72,7 +69,7 @@ class WorkerService(object):
             server=self.engine_id,
             topic=self.topic)
         self.target = target
-        LOG.info(_LI("Starting %(topic)s (%(version)s) in engine %(engine)s."),
+        LOG.info("Starting %(topic)s (%(version)s) in engine %(engine)s.",
                  {'topic': self.topic,
                   'version': self.RPC_API_VERSION,
                   'engine': self.engine_id})
@@ -84,13 +81,13 @@ class WorkerService(object):
         if self._rpc_server is None:
             return
         # Stop rpc connection at first for preventing new requests
-        LOG.info(_LI("Stopping %(topic)s in engine %(engine)s."),
+        LOG.info("Stopping %(topic)s in engine %(engine)s.",
                  {'topic': self.topic, 'engine': self.engine_id})
         try:
             self._rpc_server.stop()
             self._rpc_server.wait()
         except Exception as e:
-            LOG.error(_LE("%(topic)s is failed to stop, %(exc)s"),
+            LOG.error("%(topic)s is failed to stop, %(exc)s",
                       {'topic': self.topic, 'exc': e})
 
     def stop_traversal(self, stack):
@@ -122,13 +119,12 @@ class WorkerService(object):
         cancelled = _cancel_workers(stack, self.thread_group_mgr,
                                     self.engine_id, self._rpc_client)
         if not cancelled:
-            LOG.error(_LE("Failed to stop all workers of stack %(name)s "
-                          ", stack cancel not complete"),
-                      {'name': stack.name})
+            LOG.error("Failed to stop all workers of stack %s, "
+                      "stack cancel not complete", stack.name)
             return False
 
-        LOG.info(_LI('[%(name)s(%(id)s)] Stopped all active workers for stack '
-                     '%(action)s'),
+        LOG.info('[%(name)s(%(id)s)] Stopped all active workers for stack '
+                 '%(action)s',
                  {'name': stack.name, 'id': stack.id, 'action': stack.action})
 
         return True
@@ -199,18 +195,17 @@ def _stop_traversal(stack):
     old_trvsl = stack.current_traversal
     updated = _update_current_traversal(stack)
     if not updated:
-        LOG.warning(_LW("Failed to update stack %(name)s with new "
-                        "traversal, aborting stack cancel"),
-                    {'name': stack.name})
+        LOG.warning("Failed to update stack %(name)s with new "
+                    "traversal, aborting stack cancel", stack.name)
         return
 
     reason = 'Stack %(action)s cancelled' % {'action': stack.action}
     updated = stack.state_set(stack.action, stack.FAILED, reason)
     if not updated:
-        LOG.warning(_LW("Failed to update stack %(name)s status "
-                        "to %(action)s_%(state)s"),
+        LOG.warning("Failed to update stack %(name)s status "
+                    "to %(action)s_%(state)s",
                     {'name': stack.name, 'action': stack.action,
-                    'state': stack.FAILED})
+                     'state': stack.FAILED})
         return
 
     sync_point.delete_all(stack.context, stack.id, old_trvsl)

@@ -18,7 +18,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
 from heat.engine import constraints
@@ -137,16 +136,16 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             return True
 
         if vol.status in ('in-use', 'detaching'):
-            LOG.debug('%s - volume still in use' % vol_id)
+            LOG.debug('%s - volume still in use', vol_id)
             return False
 
-        LOG.debug('Volume %(id)s - status: %(status)s' % {
+        LOG.debug('Volume %(id)s - status: %(status)s', {
             'id': vol.id, 'status': vol.status})
 
         if vol.status not in ('available', 'deleting'):
             LOG.debug("Detachment failed - volume %(vol)s "
-                      "is in %(status)s status" % {"vol": vol.id,
-                                                   "status": vol.status})
+                      "is in %(status)s status",
+                      {"vol": vol.id, "status": vol.status})
             raise exception.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume detachment failed'))
@@ -157,19 +156,19 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         vol = self.client().volumes.get(vol_id)
         if vol.status in ('available', 'attaching'):
             LOG.debug("Volume %(id)s is being attached - "
-                      "volume status: %(status)s" % {'id': vol_id,
-                                                     'status': vol.status})
+                      "volume status: %(status)s",
+                      {'id': vol_id, 'status': vol.status})
             return False
 
         if vol.status != 'in-use':
             LOG.debug("Attachment failed - volume %(vol)s is "
-                      "in %(status)s status" % {"vol": vol_id,
-                                                "status": vol.status})
+                      "in %(status)s status",
+                      {"vol": vol_id, "status": vol.status})
             raise exception.ResourceUnknownStatus(
                 resource_status=vol.status,
                 result=_('Volume attachment failed'))
 
-        LOG.info(_LI('Attaching volume %(id)s complete'), {'id': vol_id})
+        LOG.info('Attaching volume %(id)s complete', {'id': vol_id})
         return True
 
 

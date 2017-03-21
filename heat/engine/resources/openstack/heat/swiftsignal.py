@@ -19,7 +19,6 @@ from six.moves.urllib import parse
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine.clients.os import swift
 from heat.engine import constraints
@@ -245,12 +244,12 @@ class SwiftSignal(resource.Resource):
             container = self.client().get_container(self.stack.id)
         except Exception as exc:
             self.client_plugin().ignore_not_found(exc)
-            LOG.debug("Swift container %s was not found" % self.stack.id)
+            LOG.debug("Swift container %s was not found", self.stack.id)
             return []
 
         index = container[1]
         if not index:
-            LOG.debug("Swift objects in container %s were not found" %
+            LOG.debug("Swift objects in container %s were not found",
                       self.stack.id)
             return []
 
@@ -332,14 +331,14 @@ class SwiftSignal(resource.Resource):
         for status in statuses:
             if status == self.STATUS_FAILURE:
                 failure = SwiftSignalFailure(self)
-                LOG.info(_LI('%(name)s Failed (%(failure)s)'),
+                LOG.info('%(name)s Failed (%(failure)s)',
                          {'name': str(self), 'failure': str(failure)})
                 raise failure
             elif status != self.STATUS_SUCCESS:
                 raise exception.Error(_("Unknown status: %s") % status)
 
         if len(statuses) >= self.properties[self.COUNT]:
-            LOG.info(_LI("%s Succeeded"), str(self))
+            LOG.info("%s Succeeded", str(self))
             return True
         return False
 

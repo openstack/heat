@@ -15,8 +15,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -176,9 +174,9 @@ class TroveCluster(resource.Resource):
             return cluster
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
-                LOG.warning(_LW("Stack %(name)s (%(id)s) received an "
-                                "OverLimit response during clusters.get():"
-                                " %(exception)s"),
+                LOG.warning("Stack %(name)s (%(id)s) received an "
+                            "OverLimit response during clusters.get():"
+                            " %(exception)s",
                             {'name': self.stack.name,
                              'id': self.stack.id,
                              'exception': exc})
@@ -202,7 +200,7 @@ class TroveCluster(resource.Resource):
             if instance['status'] != self.ACTIVE:
                 return False
 
-        LOG.info(_LI("Cluster '%s' has been created"), cluster.name)
+        LOG.info("Cluster '%s' has been created", cluster.name)
         return True
 
     def cluster_delete(self, cluster_id):

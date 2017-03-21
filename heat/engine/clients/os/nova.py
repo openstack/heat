@@ -31,8 +31,6 @@ import tenacity
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
 from heat.engine import constraints
@@ -144,15 +142,15 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         try:
             server = self.client().servers.get(server_id)
         except exceptions.OverLimit as exc:
-            LOG.warning(_LW("Received an OverLimit response when "
-                            "fetching server (%(id)s) : %(exception)s"),
+            LOG.warning("Received an OverLimit response when "
+                        "fetching server (%(id)s) : %(exception)s",
                         {'id': server_id,
                          'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                LOG.warning(_LW("Received the following exception when "
-                            "fetching server (%(id)s) : %(exception)s"),
+                LOG.warning("Received the following exception when "
+                            "fetching server (%(id)s) : %(exception)s",
                             {'id': server_id,
                              'exception': exc})
             else:
@@ -167,17 +165,17 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
         try:
             server.get()
         except exceptions.OverLimit as exc:
-            LOG.warning(_LW("Server %(name)s (%(id)s) received an OverLimit "
-                            "response during server.get(): %(exception)s"),
+            LOG.warning("Server %(name)s (%(id)s) received an OverLimit "
+                        "response during server.get(): %(exception)s",
                         {'name': server.name,
                          'id': server.id,
                          'exception': exc})
         except exceptions.ClientException as exc:
             if ((getattr(exc, 'http_status', getattr(exc, 'code', None)) in
                  (500, 503))):
-                LOG.warning(_LW('Server "%(name)s" (%(id)s) received the '
-                                'following exception during server.get(): '
-                                '%(exception)s'),
+                LOG.warning('Server "%(name)s" (%(id)s) received the '
+                            'following exception during server.get(): '
+                            '%(exception)s',
                             {'name': server.name,
                              'id': server.id,
                              'exception': exc})
@@ -568,7 +566,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         try:
             server = self.client().servers.get(server)
         except exceptions.NotFound as ex:
-            LOG.warning(_LW('Instance (%(server)s) not found: %(ex)s'),
+            LOG.warning('Instance (%(server)s) not found: %(ex)s',
                         {'server': server, 'ex': ex})
         else:
             for n in sorted(server.networks, reverse=True):
@@ -691,12 +689,12 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             self.client().volumes.get_server_volume(server_id, attach_id)
         except Exception as ex:
             self.ignore_not_found(ex)
-            LOG.info(_LI("Volume %(vol)s is detached from server %(srv)s"),
+            LOG.info("Volume %(vol)s is detached from server %(srv)s",
                      {'vol': attach_id, 'srv': server_id})
             return True
         else:
-            LOG.debug("Server %(srv)s still has attachment %(att)s." % {
-                'att': attach_id, 'srv': server_id})
+            LOG.debug("Server %(srv)s still has attachment %(att)s.",
+                      {'att': attach_id, 'srv': server_id})
             return False
 
     def interface_detach(self, server_id, port_id):

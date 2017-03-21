@@ -18,7 +18,6 @@ from oslo_log import log as logging
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
-from heat.common.i18n import _LI
 from heat.common import identifier
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import base as heat_base
@@ -80,7 +79,7 @@ class Event(
     @property
     def resource_properties(self):
         if self._resource_properties is None:
-            LOG.info(_LI('rsrp_prop_data lazy load'))
+            LOG.info('rsrp_prop_data lazy load')
             rpd_obj = rpd.ResourcePropertiesData.get_by_id(
                 self._context, self.rsrc_prop_data_id)
             self._resource_properties = rpd_obj.data or {}

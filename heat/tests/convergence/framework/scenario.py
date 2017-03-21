@@ -14,7 +14,6 @@
 import os
 from oslo_log import log as logging
 
-from heat.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ LOG = logging.getLogger(__name__)
 def list_all():
     scenario_dir = os.path.join(os.path.dirname(__file__), '../scenarios')
     if not os.path.isdir(scenario_dir):
-        LOG.error(_LE('Scenario directory "%s" not found'), scenario_dir)
+        LOG.error('Scenario directory "%s" not found', scenario_dir)
         return
 
     for root, dirs, files in os.walk(scenario_dir):

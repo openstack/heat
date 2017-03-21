@@ -16,7 +16,7 @@ import eventlet
 from oslo_utils import timeutils
 import six
 
-from heat.common.i18n import _, _LI
+from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -161,7 +161,7 @@ class TestResource(resource.Resource):
             secs = self.properties[self.ACTION_WAIT_SECS][self.action.lower()]
         if secs is None:
             secs = self.properties[self.WAIT_SECS]
-        LOG.info(_LI('%(name)s wait_secs:%(wait)s, action:%(action)s'),
+        LOG.info('%(name)s wait_secs:%(wait)s, action:%(action)s',
                  {'name': self.name,
                   'wait': secs,
                   'action': self.action.lower()})
@@ -228,7 +228,7 @@ class TestResource(resource.Resource):
 
         started_at = timeutils.normalize_time(started_at)
         waited = timeutils.utcnow() - started_at
-        LOG.info(_LI("Resource %(name)s waited %(waited)s/%(sec)s seconds"),
+        LOG.info("Resource %(name)s waited %(waited)s/%(sec)s seconds",
                  {'name': self.name,
                   'waited': waited,
                   'sec': wait_secs})

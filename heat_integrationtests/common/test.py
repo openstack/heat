@@ -118,7 +118,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         try:
             linux_client.validate_authentication()
         except exceptions.SSHTimeout:
-            LOG.exception('ssh connection to %s failed' % ip)
+            LOG.exception('ssh connection to %s failed', ip)
             raise
 
         return linux_client
@@ -637,7 +637,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 rsrc_events = self.client.events.list(stack_identifier,
                                                       resource_name=rsrc_name)
             except heat_exceptions.HTTPNotFound:
-                LOG.debug("No events yet found for %s" % rsrc_name)
+                LOG.debug("No events yet found for %s", rsrc_name)
             else:
                 matched = [e for e in rsrc_events
                            if e.resource_status_reason == reason]

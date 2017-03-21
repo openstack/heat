@@ -17,7 +17,6 @@ from oslo_utils import timeutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -100,7 +99,7 @@ class HeatWaitCondition(resource.Resource):
     def _wait(self, handle, started_at, timeout_in):
         if timeutils.is_older_than(started_at, timeout_in):
             exc = wc_base.WaitConditionTimeout(self, handle)
-            LOG.info(_LI('%(name)s Timed out (%(timeout)s)'),
+            LOG.info('%(name)s Timed out (%(timeout)s)',
                      {'name': str(self), 'timeout': str(exc)})
             raise exc
 
@@ -108,12 +107,12 @@ class HeatWaitCondition(resource.Resource):
 
         if any(s != handle.STATUS_SUCCESS for s in handle_status):
             failure = wc_base.WaitConditionFailure(self, handle)
-            LOG.info(_LI('%(name)s Failed (%(failure)s)'),
+            LOG.info('%(name)s Failed (%(failure)s)',
                      {'name': str(self), 'failure': str(failure)})
             raise failure
 
         if len(handle_status) >= self.properties[self.COUNT]:
-            LOG.info(_LI("%s Succeeded"), str(self))
+            LOG.info("%s Succeeded", str(self))
             return True
         return False
 

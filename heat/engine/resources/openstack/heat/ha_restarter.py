@@ -15,7 +15,6 @@ from oslo_log import log as logging
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -81,7 +80,7 @@ class Restarter(signal_responder.SignalResponder):
         else:
             alarm_state = details.get('state', 'alarm').lower()
 
-        LOG.info(_LI('%(name)s Alarm, new state %(state)s'),
+        LOG.info('%(name)s Alarm, new state %(state)s',
                  {'name': self.name, 'state': alarm_state})
 
         if alarm_state != 'alarm':
@@ -90,13 +89,13 @@ class Restarter(signal_responder.SignalResponder):
         target_id = self.properties[self.INSTANCE_ID]
         victim = self.stack.resource_by_refid(target_id)
         if victim is None:
-            LOG.info(_LI('%(name)s Alarm, can not find instance '
-                         '%(instance)s'),
+            LOG.info('%(name)s Alarm, can not find instance '
+                     '%(instance)s',
                      {'name': self.name,
                       'instance': target_id})
             return
 
-        LOG.info(_LI('%(name)s Alarm, restarting resource: %(victim)s'),
+        LOG.info('%(name)s Alarm, restarting resource: %(victim)s',
                  {'name': self.name, 'victim': victim.name})
         self.stack.restart_resource(victim.name)
 

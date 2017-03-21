@@ -26,7 +26,6 @@ import types
 from oslo_log import log as logging
 import six
 
-from heat.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ def load_modules(package, ignore_error=False):
         try:
             module = _import_module(importer, module_name, package)
         except ImportError:
-            LOG.error(_LE('Failed to import module %s'), module_name)
+            LOG.error('Failed to import module %s', module_name)
             if not ignore_error:
                 raise
         else:

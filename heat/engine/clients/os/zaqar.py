@@ -18,7 +18,6 @@ from zaqarclient.queues.v2 import client as zaqarclient
 from zaqarclient.transport import errors as zaqar_errors
 
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
@@ -42,7 +41,7 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
     def create_for_tenant(self, tenant_id, token):
         con = self.context
         if token is None:
-            LOG.error(_LE("Zaqar connection failed, no auth_token!"))
+            LOG.error("Zaqar connection failed, no auth_token!")
             return None
 
         opts = {

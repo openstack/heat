@@ -22,7 +22,6 @@ from oslo_utils import excutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.common.i18n import repr_wrapper
 from heat.common import timeutils
 
@@ -153,7 +152,7 @@ class TaskRunner(object):
     def _sleep(self, wait_time):
         """Sleep for the specified number of seconds."""
         if ENABLE_SLEEP and wait_time is not None:
-            LOG.debug('%s sleeping' % six.text_type(self))
+            LOG.debug('%s sleeping', six.text_type(self))
             eventlet.sleep(wait_time)
 
     def __call__(self, wait_time=1, timeout=None, progress_callback=None):
@@ -180,7 +179,7 @@ class TaskRunner(object):
         assert self._runner is None, "Task already started"
         assert not self._done, "Task already cancelled"
 
-        LOG.debug('%s starting' % six.text_type(self))
+        LOG.debug('%s starting', six.text_type(self))
 
         if timeout is not None:
             self._timeout = Timeout(self, timeout)
@@ -192,7 +191,7 @@ class TaskRunner(object):
         else:
             self._runner = False
             self._done = True
-            LOG.debug('%s done (not resumable)' % six.text_type(self))
+            LOG.debug('%s done (not resumable)', six.text_type(self))
 
     def step(self):
         """Run another step of the task.
@@ -207,18 +206,18 @@ class TaskRunner(object):
                 return False
 
             if self._timeout is not None and self._timeout.expired():
-                LOG.info(_LI('%s timed out'), self)
+                LOG.info('%s timed out', self)
                 self._done = True
 
                 self._timeout.trigger(self._runner)
             else:
-                LOG.debug('%s running' % six.text_type(self))
+                LOG.debug('%s running', six.text_type(self))
 
                 try:
                     poll_period = next(self._runner)
                 except StopIteration:
                     self._done = True
-                    LOG.debug('%s complete' % six.text_type(self))
+                    LOG.debug('%s complete', six.text_type(self))
                 else:
                     if isinstance(poll_period, six.integer_types):
                         self._poll_period = max(poll_period, 1)
@@ -276,7 +275,7 @@ class TaskRunner(object):
             return
 
         if not self.started() or grace_period is None:
-            LOG.debug('%s cancelled' % six.text_type(self))
+            LOG.debug('%s cancelled', six.text_type(self))
             self._done = True
             if self.started():
                 self._runner.close()
@@ -477,13 +476,13 @@ class DependencyTaskGroup(object):
             try:
                 r.cancel(grace_period=gp)
             except Exception as ex:
-                LOG.debug('Exception cancelling task: %s' % six.text_type(ex))
+                LOG.debug('Exception cancelling task: %s', six.text_type(ex))
 
     def _cancel_recursively(self, key, runner):
         try:
             runner.cancel()
         except Exception as ex:
-            LOG.debug('Exception cancelling task: %s' % six.text_type(ex))
+            LOG.debug('Exception cancelling task: %s', six.text_type(ex))
         node = self._graph[key]
         for dependent_node in node.required_by():
             node_runner = self._runners[dependent_node]

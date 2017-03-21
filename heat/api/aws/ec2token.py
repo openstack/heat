@@ -22,8 +22,6 @@ import webob
 from heat.api.aws import exception
 from heat.common import endpoint_utils
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
 from heat.common import wsgi
 
 LOG = logging.getLogger(__name__)
@@ -161,14 +159,14 @@ class EC2Token(wsgi.Middleware):
         # here so that we can use both authentication methods.
         # Returning here just means the user didn't supply AWS
         # authentication and we'll let the app try native keystone next.
-        LOG.info(_LI("Checking AWS credentials.."))
+        LOG.info("Checking AWS credentials..")
 
         signature = self._get_signature(req)
         if not signature:
             if 'X-Auth-User' in req.headers:
                 return self.application
             else:
-                LOG.info(_LI("No AWS Signature found."))
+                LOG.info("No AWS Signature found.")
                 raise exception.HeatIncompleteSignatureError()
 
         access = self._get_access(req)
@@ -176,14 +174,14 @@ class EC2Token(wsgi.Middleware):
             if 'X-Auth-User' in req.headers:
                 return self.application
             else:
-                LOG.info(_LI("No AWSAccessKeyId/Authorization Credential"))
+                LOG.info("No AWSAccessKeyId/Authorization Credential")
                 raise exception.HeatMissingAuthenticationTokenError()
 
-        LOG.info(_LI("AWS credentials found, checking against keystone."))
+        LOG.info("AWS credentials found, checking against keystone.")
 
         if not auth_uri:
-            LOG.error(_LE("Ec2Token authorization failed, no auth_uri "
-                          "specified in config file"))
+            LOG.error("Ec2Token authorization failed, no auth_uri "
+                      "specified in config file")
             raise exception.HeatInternalFailureError(_('Service '
                                                        'misconfigured'))
         # Make a copy of args for authentication and signature verification.
@@ -207,7 +205,7 @@ class EC2Token(wsgi.Middleware):
         headers = {'Content-Type': 'application/json'}
 
         keystone_ec2_uri = self._conf_get_keystone_ec2_uri(auth_uri)
-        LOG.info(_LI('Authenticating with %s'), keystone_ec2_uri)
+        LOG.info('Authenticating with %s', keystone_ec2_uri)
         response = requests.post(keystone_ec2_uri, data=creds_json,
                                  headers=headers,
                                  verify=self.ssl_options['verify'],
@@ -220,7 +218,7 @@ class EC2Token(wsgi.Middleware):
             roles = [role['name']
                      for role in result['token'].get('roles', [])]
         except (AttributeError, KeyError):
-            LOG.info(_LI("AWS authentication failure."))
+            LOG.info("AWS authentication failure.")
             # Try to extract the reason for failure so we can return the
             # appropriate AWS error via raising an exception
             try:
@@ -235,7 +233,7 @@ class EC2Token(wsgi.Middleware):
             else:
                 raise exception.HeatAccessDeniedError()
         else:
-            LOG.info(_LI("AWS authentication successful."))
+            LOG.info("AWS authentication successful.")
 
         # Authenticated!
         ec2_creds = {'ec2Credentials': {'access': access,

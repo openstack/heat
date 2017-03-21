@@ -28,7 +28,6 @@ import six
 from heat.common import config
 from heat.common import endpoint_utils
 from heat.common import exception
-from heat.common.i18n import _LE
 from heat.common import policy
 from heat.common import wsgi
 from heat.db.sqlalchemy import api as db_api
@@ -235,9 +234,9 @@ class RequestContext(context.RequestContext):
             if auth_uri:
                 return auth_uri
             else:
-                LOG.error(_LE('Keystone API endpoint not provided. Set '
-                              'auth_uri in section [clients_keystone] '
-                              'of the configuration file.'))
+                LOG.error('Keystone API endpoint not provided. Set '
+                          'auth_uri in section [clients_keystone] '
+                          'of the configuration file.')
                 raise exception.AuthorizationFailure()
 
     @property
@@ -247,8 +246,8 @@ class RequestContext(context.RequestContext):
                 cfg.CONF, TRUSTEE_CONF_GROUP, trust_id=self.trust_id)
 
         if not self._trusts_auth_plugin:
-            LOG.error(_LE('Please add the trustee credentials you need '
-                          'to the %s section of your heat.conf file.'),
+            LOG.error('Please add the trustee credentials you need '
+                      'to the %s section of your heat.conf file.',
                       TRUSTEE_CONF_GROUP)
             raise exception.AuthorizationFailure()
 
@@ -276,8 +275,8 @@ class RequestContext(context.RequestContext):
                                     user_domain_id=self.user_domain,
                                     auth_url=self.keystone_v3_endpoint)
 
-        LOG.error(_LE("Keystone API connection failed, no password "
-                      "trust or auth_token!"))
+        LOG.error("Keystone API connection failed, no password "
+                  "trust or auth_token!")
         raise exception.AuthorizationFailure()
 
     def reload_auth_plugin(self):

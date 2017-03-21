@@ -25,7 +25,6 @@ import six
 from heat.common import cache
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import resources
 
 # decorator that allows to cache the value
@@ -101,8 +100,8 @@ class Schema(collections.Mapping):
                 message=_('Invalid type (%s)') % self.type)
 
         if required and default is not None:
-            LOG.warning(_LW("Option 'required=True' should not be used with "
-                            "any 'default' value (%s)") % default)
+            LOG.warning("Option 'required=True' should not be used with "
+                        "any 'default' value (%s)", default)
 
         self.description = description
         self.required = required

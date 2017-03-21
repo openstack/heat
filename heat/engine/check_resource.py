@@ -21,8 +21,6 @@ import functools
 from oslo_log import log as logging
 
 from heat.common import exception
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -69,7 +67,7 @@ class CheckResource(object):
         return False
 
     def _trigger_rollback(self, stack):
-        LOG.info(_LI("Triggering rollback of %(stack_name)s %(action)s "),
+        LOG.info("Triggering rollback of %(stack_name)s %(action)s ",
                  {'action': stack.action, 'stack_name': stack.name})
         stack.rollback()
 
@@ -113,7 +111,7 @@ class CheckResource(object):
                                           stack, self.msg_queue)
                 except resource.UpdateReplace:
                     new_res_id = rsrc.make_replacement(tmpl.id)
-                    LOG.info(_LI("Replacing resource with new id %s"),
+                    LOG.info("Replacing resource with new id %s",
                              new_res_id)
                     rpc_data = sync_point.serialize_input_data(self.input_data)
                     self._rpc_client.check_resource(cnxt,
@@ -177,7 +175,7 @@ class CheckResource(object):
             if (resource_id, True) in graph:
                 # not is_update evaluates to True below, which means update
                 key = (resource_id, not is_update)
-        LOG.info(_LI('Re-trigger resource: (%(key1)s, %(key2)s)'),
+        LOG.info('Re-trigger resource: (%(key1)s, %(key2)s)',
                  {'key1': key[0], 'key2': key[1]})
         predecessors = set(graph[key])
 
@@ -340,7 +338,7 @@ def _check_for_message(msg_queue):
     if message == rpc_api.THREAD_CANCEL:
         raise CancelOperation
 
-    LOG.error(_LE('Unknown message "%s" received'), message)
+    LOG.error('Unknown message "%s" received', message)
 
 
 def check_resource_update(rsrc, template_id, resource_data, engine_id,

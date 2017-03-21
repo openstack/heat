@@ -18,7 +18,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import constraints
@@ -505,7 +504,7 @@ backend servers
         nova_cp = self.client_plugin('nova')
         for i in instances or []:
             ip = nova_cp.server_to_ipaddress(i) or '0.0.0.0'
-            LOG.debug('haproxy server:%s' % ip)
+            LOG.debug('haproxy server:%s', ip)
             servers.append('%sserver server%d %s:%s%s' % (spaces, n,
                                                           ip, inst_port,
                                                           check))
@@ -526,7 +525,7 @@ backend servers
     def get_parsed_template(self):
         if cfg.CONF.loadbalancer_template:
             with open(cfg.CONF.loadbalancer_template) as templ_fd:
-                LOG.info(_LI('Using custom loadbalancer template %s'),
+                LOG.info('Using custom loadbalancer template %s',
                          cfg.CONF.loadbalancer_template)
                 contents = templ_fd.read()
         else:

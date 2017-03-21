@@ -48,9 +48,6 @@ import webob.exc
 from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import serializers
 
 
@@ -275,7 +272,7 @@ class Server(object):
 
     def kill_children(self, *args):
         """Kills the entire process group."""
-        LOG.error(_LE('SIGTERM received'))
+        LOG.error('SIGTERM received')
         signal.signal(signal.SIGTERM, signal.SIG_IGN)
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         self.running = False
@@ -283,7 +280,7 @@ class Server(object):
 
     def hup(self, *args):
         """Reloads configuration files with zero down time."""
-        LOG.error(_LE('SIGHUP received'))
+        LOG.error('SIGHUP received')
         signal.signal(signal.SIGHUP, signal.SIG_IGN)
         raise exception.SIGHUPInterrupt
 
@@ -315,7 +312,7 @@ class Server(object):
         else:
             childs_num = workers
 
-        LOG.info(_LI("Starting %d workers"), workers)
+        LOG.info("Starting %d workers", workers)
         signal.signal(signal.SIGTERM, self.kill_children)
         signal.signal(signal.SIGINT, self.kill_children)
         signal.signal(signal.SIGHUP, self.hup)
@@ -333,7 +330,7 @@ class Server(object):
                 if err.errno not in (errno.EINTR, errno.ECHILD):
                     raise
             except KeyboardInterrupt:
-                LOG.info(_LI('Caught keyboard interrupt. Exiting.'))
+                LOG.info('Caught keyboard interrupt. Exiting.')
                 os.killpg(0, signal.SIGTERM)
                 break
             except exception.SIGHUPInterrupt:
@@ -417,22 +414,22 @@ class Server(object):
     def _remove_children(self, pid):
         if pid in self.children:
             self.children.remove(pid)
-            LOG.info(_LI('Removed dead child %s'), pid)
+            LOG.info('Removed dead child %s', pid)
         elif pid in self.stale_children:
             self.stale_children.remove(pid)
-            LOG.info(_LI('Removed stale child %s'), pid)
+            LOG.info('Removed stale child %s', pid)
         else:
-            LOG.warning(_LW('Unrecognised child %s'), pid)
+            LOG.warning('Unrecognised child %s', pid)
 
     def _verify_and_respawn_children(self, pid, status):
         if len(self.stale_children) == 0:
             LOG.debug('No stale children')
         if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
-            LOG.error(_LE('Not respawning child %d, cannot '
-                          'recover from termination'), pid)
+            LOG.error('Not respawning child %d, cannot '
+                      'recover from termination', pid)
             if not self.children and not self.stale_children:
                 LOG.info(
-                    _LI('All workers have terminated. Exiting'))
+                    'All workers have terminated. Exiting')
                 self.running = False
         else:
             if len(self.children) < self.conf.workers:
@@ -509,12 +506,12 @@ class Server(object):
             # exit on sighup
             self._sock = None
             self.run_server()
-            LOG.info(_LI('Child %d exiting normally'), os.getpid())
+            LOG.info('Child %d exiting normally', os.getpid())
             # self.pool.waitall() is now called in wsgi's server so
             # it's safe to exit here
             sys.exit(0)
         else:
-            LOG.info(_LI('Started child %s'), pid)
+            LOG.info('Started child %s', pid)
             self.children.add(pid)
 
     def run_server(self):
@@ -541,7 +538,7 @@ class Server(object):
 
     def _single_run(self, application, sock):
         """Start a WSGI server in a new green thread."""
-        LOG.info(_LI("Starting single process server"))
+        LOG.info("Starting single process server")
         eventlet.wsgi.server(sock, application,
                              custom_pool=self.pool,
                              url_length_limit=URL_LENGTH_LIMIT,
@@ -838,7 +835,7 @@ class Resource(object):
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
         except TypeError as err:
-            LOG.error(_LE('Exception handling resource: %s'), err)
+            LOG.error('Exception handling resource: %s', err)
             msg = _('The server could not comply with the request since '
                     'it is either malformed or otherwise incorrect.')
             err = webob.exc.HTTPBadRequest(msg)
@@ -860,7 +857,7 @@ class Resource(object):
                 raise
             if isinstance(err, webob.exc.HTTPServerError):
                 LOG.error(
-                    _LE("Returning %(code)s to user: %(explanation)s"),
+                    "Returning %(code)s to user: %(explanation)s",
                     {'code': err.code, 'explanation': err.explanation})
             http_exc = translate_exception(err, request.best_match_language())
             raise exception.HTTPExceptionDisguise(http_exc)
@@ -899,8 +896,7 @@ class Resource(object):
                     err_body = action_result.get_unserialized_body()
                     serializer.default(action_result, err_body)
                 except Exception:
-                    LOG.warning(_LW("Unable to serialize exception "
-                                    "response"))
+                    LOG.warning("Unable to serialize exception response")
 
             return action_result
 
@@ -934,7 +930,7 @@ class Resource(object):
 
 def log_exception(err, exc_info):
     args = {'exc_info': exc_info} if cfg.CONF.debug else {}
-    LOG.error(_LE("Unexpected error occurred serving API: %s"), err,
+    LOG.error("Unexpected error occurred serving API: %s", err,
               **args)
 
 
