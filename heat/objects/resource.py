@@ -85,8 +85,6 @@ class Resource(
             resource_data.ResourceData,
             nullable=True
         ),
-        'rsrc_prop_data': fields.ObjectField(
-            rpd.ResourcePropertiesData, nullable=True),
         'rsrc_prop_data_id': fields.ObjectField(
             fields.IntegerField(nullable=True)),
         'engine_id': fields.StringField(nullable=True),
@@ -114,12 +112,21 @@ class Resource(
             elif field != 'attr_data':
                 resource[field] = db_resource[field]
 
-        if db_resource['rsrc_prop_data'] is not None:
-            resource['rsrc_prop_data'] = \
-                rpd.ResourcePropertiesData._from_db_object(
-                    rpd.ResourcePropertiesData(context), context,
-                    db_resource['rsrc_prop_data'])
-            resource._properties_data = resource['rsrc_prop_data'].data
+        if db_resource['rsrc_prop_data_id'] is not None:
+            if hasattr(db_resource, '__dict__'):
+                rpd_obj = db_resource.__dict__.get('rsrc_prop_data')
+            else:
+                rpd_obj = None
+            if rpd_obj is not None:
+                # Object is already eager loaded
+                rpd_obj = (
+                    rpd.ResourcePropertiesData._from_db_object(
+                        rpd.ResourcePropertiesData(),
+                        context,
+                        rpd_obj))
+                resource._properties_data = rpd_obj.data
+            else:
+                resource._properties_data = {}
             if db_resource['properties_data']:
                 LOG.error(
                     'Unexpected condition where resource.rsrc_prop_data '
@@ -155,6 +162,12 @@ class Resource(
 
     @property
     def properties_data(self):
+        if (not self._properties_data and
+                self.rsrc_prop_data_id is not None):
+            LOG.info('rsrp_prop_data lazy load')
+            rpd_obj = rpd.ResourcePropertiesData.get_by_id(
+                self._context, self.rsrc_prop_data_id)
+            self._properties_data = rpd_obj.data or {}
         return self._properties_data
 
     @classmethod

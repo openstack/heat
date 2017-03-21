@@ -240,7 +240,7 @@ class Resource(status.ResourceStatus):
         self._data = None
         self._attr_data_id = None
         self._rsrc_metadata = None
-        self._rsrc_prop_data = None
+        self._rsrc_prop_data_id = None
         self._stored_properties_data = None
         self.created_time = stack.created_time
         self.updated_time = stack.updated_time
@@ -289,7 +289,7 @@ class Resource(status.ResourceStatus):
         self._attr_data_id = resource.attr_data_id
         self._rsrc_metadata = resource.rsrc_metadata
         self._stored_properties_data = resource.properties_data
-        self._rsrc_prop_data = resource.rsrc_prop_data
+        self._rsrc_prop_data_id = resource.rsrc_prop_data_id
         self.created_time = resource.created_at
         self.updated_time = resource.updated_at
         self.needed_by = resource.needed_by
@@ -944,7 +944,7 @@ class Resource(status.ResourceStatus):
         old_props = self._stored_properties_data
         self._stored_properties_data = function.resolve(self.properties.data)
         if self._stored_properties_data != old_props:
-            self._rsrc_prop_data = None
+            self._rsrc_prop_data_id = None
             self.attributes.reset_resolved_values()
 
     def referenced_attrs(self, stk_defn=None,
@@ -2022,8 +2022,8 @@ class Resource(status.ResourceStatus):
         """Add a state change event to the database."""
         physical_res_id = self.resource_id or self.physical_resource_name()
         ev = event.Event(self.context, self.stack, action, status, reason,
-                         physical_res_id, self._rsrc_prop_data,
-                         self.name, self.type())
+                         physical_res_id, self._rsrc_prop_data_id,
+                         self._stored_properties_data, self.name, self.type())
 
         ev.store()
         self.stack.dispatch_event(ev)
@@ -2487,16 +2487,16 @@ class Resource(status.ResourceStatus):
             return True
 
     def _create_or_replace_rsrc_prop_data(self):
-        if self._rsrc_prop_data is not None:
-            return self._rsrc_prop_data.id
+        if self._rsrc_prop_data_id is not None:
+            return self._rsrc_prop_data_id
 
         if not self._stored_properties_data:
             return None
 
-        self._rsrc_prop_data = \
+        self._rsrc_prop_data_id = \
             rpd_objects.ResourcePropertiesData(self.context).create(
-                self.context, self._stored_properties_data)
-        return self._rsrc_prop_data.id
+                self.context, self._stored_properties_data).id
+        return self._rsrc_prop_data_id
 
     def is_using_neutron(self):
         try:

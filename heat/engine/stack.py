@@ -922,7 +922,7 @@ class Stack(collections.Mapping):
     def _add_event(self, action, status, reason):
         """Add a state change event to the database."""
         ev = event.Event(self.context, self, action, status, reason,
-                         self.id, None,
+                         self.id, None, None,
                          self.name, 'OS::Heat::Stack')
 
         ev.store()
