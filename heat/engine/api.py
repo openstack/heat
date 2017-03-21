@@ -288,7 +288,7 @@ def format_resource_attributes(resource, with_attr=None):
             return resolver._resolver(attr)
         except Exception:
             return None
-    # if 'show' in attribute_schema, will resolve all attributes of resource
+    # if 'show' in attributes_schema, will resolve all attributes of resource
     # including the ones are not represented in response of show API, such as
     # 'console_urls' for nova server, user can view it by taking with_attr
     # parameter

@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -101,6 +102,41 @@ class KeystoneUser(resource.Resource,
     properties_schema.update(
         role_assignments.KeystoneRoleAssignmentMixin.mixin_properties_schema)
 
+    ATTRIBUTES = (
+        NAME_ATTR, DEFAULT_PROJECT_ATTR, DOMAIN_ATTR, ENABLED_ATTR,
+        PASSWORD_EXPIRES_AT_ATTR
+    ) = (
+        'name', 'default_project_id', 'domain_id',
+        'enabled', 'password_expires_at'
+    )
+    attributes_schema = {
+        NAME_ATTR: attributes.Schema(
+            _('User name.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            type=attributes.Schema.STRING
+        ),
+        DEFAULT_PROJECT_ATTR: attributes.Schema(
+            _('Default project id for user.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            type=attributes.Schema.STRING
+        ),
+        DOMAIN_ATTR: attributes.Schema(
+            _('Domain id for user.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            type=attributes.Schema.STRING
+        ),
+        ENABLED_ATTR: attributes.Schema(
+            _('Flag of enable user.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            type=attributes.Schema.BOOLEAN
+        ),
+        PASSWORD_EXPIRES_AT_ATTR: attributes.Schema(
+            _('Show user password expiration time.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            type=attributes.Schema.STRING
+        ),
+    }
+
     def translation_rules(self, properties):
         return [
             translation.TranslationRule(
@@ -187,6 +223,12 @@ class KeystoneUser(resource.Resource,
                                  set(updated_prps or []))
 
         return new_group_ids, removed_group_ids
+
+    def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
+        user = self.client().users.get(self.resource_id)
+        return getattr(user, name, None)
 
     def handle_create(self):
         user_name = (self.properties[self.NAME] or
