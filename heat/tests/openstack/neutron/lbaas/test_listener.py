@@ -75,6 +75,7 @@ class ListenerTest(common.HeatTestCase):
                 'protocol_port': 80,
                 'protocol': 'TCP',
                 'loadbalancer_id': '123',
+                'default_pool_id': 'my_pool',
                 'name': 'my_listener',
                 'description': 'my listener',
                 'admin_state_up': True,
@@ -93,6 +94,21 @@ class ListenerTest(common.HeatTestCase):
         self.neutron_client.create_listener.assert_called_with(expected)
         self.assertFalse(self.listener.check_create_complete(props))
         self.assertTrue(self.listener.check_create_complete(props))
+
+    @mock.patch('heat.engine.clients.os.neutron.'
+                'NeutronClientPlugin.has_extension', return_value=True)
+    def test_create_missing_properties(self, ext_func):
+        for prop in ('protocol', 'protocol_port', 'loadbalancer'):
+            tmpl = yaml.load(inline_templates.LISTENER_TEMPLATE)
+            del tmpl['resources']['listener']['properties'][prop]
+            del tmpl['resources']['listener']['properties']['default_pool']
+            self._create_stack(tmpl=yaml.dump(tmpl))
+            if prop == 'loadbalancer':
+                self.assertRaises(exception.PropertyUnspecifiedError,
+                                  self.listener.validate)
+            else:
+                self.assertRaises(exception.StackValidationFailed,
+                                  self.listener.validate)
 
     def test_show_resource(self):
         self._create_stack()
@@ -120,7 +136,8 @@ class ListenerTest(common.HeatTestCase):
             'name': 'your_listener',
         }
 
-        prop_diff = self.listener.handle_update(None, None, prop_diff)
+        prop_diff = self.listener.handle_update(self.listener.t,
+                                                None, prop_diff)
 
         self.assertFalse(self.listener.check_update_complete(prop_diff))
         self.assertFalse(self.listener._update_called)

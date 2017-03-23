@@ -82,6 +82,7 @@ resources:
       protocol_port: 80
       protocol: TCP
       loadbalancer: 123
+      default_pool: my_pool
       name: my_listener
       description: my listener
       admin_state_up: True

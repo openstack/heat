@@ -38,11 +38,11 @@ class Listener(neutron.NeutronResource):
     entity = 'listener'
 
     PROPERTIES = (
-        PROTOCOL_PORT, PROTOCOL, LOADBALANCER, NAME,
+        PROTOCOL_PORT, PROTOCOL, LOADBALANCER, DEFAULT_POOL, NAME,
         ADMIN_STATE_UP, DESCRIPTION, DEFAULT_TLS_CONTAINER_REF,
         SNI_CONTAINER_REFS, CONNECTION_LIMIT, TENANT_ID
     ) = (
-        'protocol_port', 'protocol', 'loadbalancer', 'name',
+        'protocol_port', 'protocol', 'loadbalancer', 'default_pool', 'name',
         'admin_state_up', 'description', 'default_tls_container_ref',
         'sni_container_refs', 'connection_limit', 'tenant_id'
     )
@@ -80,10 +80,19 @@ class Listener(neutron.NeutronResource):
             properties.Schema.STRING,
             _('ID or name of the load balancer with which listener '
               'is associated.'),
-            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.lbaas.loadbalancer')
             ]
+        ),
+        DEFAULT_POOL: properties.Schema(
+            properties.Schema.STRING,
+            _('ID or name of the default pool for the listener. Requires '
+              'shared_pools service extension.'),
+            update_allowed=True,
+            constraints=[
+                constraints.CustomConstraint('neutron.lbaas.pool')
+            ],
+            support_status=support.SupportStatus(version='9.0.0')
         ),
         NAME: properties.Schema(
             properties.Schema.STRING,
@@ -140,6 +149,10 @@ class Listener(neutron.NeutronResource):
         )
     }
 
+    def __init__(self, name, definition, stack):
+        super(Listener, self).__init__(name, definition, stack)
+        self._lb_id = None
+
     def translation_rules(self, props):
         return [
             translation.TranslationRule(
@@ -150,12 +163,25 @@ class Listener(neutron.NeutronResource):
                 finder='find_resourceid_by_name_or_id',
                 entity='loadbalancer'
             ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.DEFAULT_POOL],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='pool'
+            ),
         ]
 
     def validate(self):
         res = super(Listener, self).validate()
         if res:
             return res
+
+        if (self.properties[self.LOADBALANCER] is None
+                and self.properties[self.DEFAULT_POOL] is None):
+            raise exception.PropertyUnspecifiedError(self.LOADBALANCER,
+                                                     self.DEFAULT_POOL)
 
         if self.properties[self.PROTOCOL] == self.TERMINATED_HTTPS:
             if self.properties[self.DEFAULT_TLS_CONTAINER_REF] is None:
@@ -164,16 +190,30 @@ class Listener(neutron.NeutronResource):
                                        'term': self.TERMINATED_HTTPS})
                 raise exception.StackValidationFailed(message=msg)
 
+    @property
+    def lb_id(self):
+        if self._lb_id:
+            return self._lb_id
+
+        self._lb_id = self.properties[self.LOADBALANCER]
+        if self._lb_id is None:
+            pool_id = self.properties[self.DEFAULT_POOL]
+            pool = self.client().show_pool(pool_id)['pool']
+            self._lb_id = pool['loadbalancers'][0]['id']
+        return self._lb_id
+
     def _check_lb_status(self):
-        lb_id = self.properties[self.LOADBALANCER]
-        return self.client_plugin().check_lb_status(lb_id)
+        return self.client_plugin().check_lb_status(self.lb_id)
 
     def handle_create(self):
         properties = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
 
-        properties['loadbalancer_id'] = properties.pop(self.LOADBALANCER)
+        if self.LOADBALANCER in properties:
+            properties['loadbalancer_id'] = properties.pop(self.LOADBALANCER)
+        if self.DEFAULT_POOL in properties:
+            properties['default_pool_id'] = properties.pop(self.DEFAULT_POOL)
         return properties
 
     def check_create_complete(self, properties):
@@ -191,12 +231,16 @@ class Listener(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self._update_called = False
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
         return prop_diff
 
     def check_update_complete(self, prop_diff):
         if not prop_diff:
             return True
 
+        if self.DEFAULT_POOL in prop_diff:
+            prop_diff['default_pool_id'] = prop_diff.pop(self.DEFAULT_POOL)
         if not self._update_called:
             try:
                 self.client().update_listener(self.resource_id,
