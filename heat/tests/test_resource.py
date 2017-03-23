@@ -635,6 +635,23 @@ class ResourceTest(common.HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         self.assertEqual({}, res.metadata_get())
 
+    def test_metadata_set_when_deleted(self):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+        res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
+        res.store()
+        md = {"don't": "care"}
+        res.action = 'CREATE'
+        res.metadata_set(md)
+        self.assertFalse(hasattr(res, '_db_res_is_deleted'))
+
+        res_obj = self.stack.context.session.query(
+            models.Resource).get(res.id)
+        res_obj.update({'action': 'DELETE'})
+
+        self.assertRaises(exception.ResourceNotAvailable,
+                          res.metadata_set, md)
+        self.assertTrue(res._db_res_is_deleted)
+
     def test_equals_different_stacks(self):
         tmpl1 = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         tmpl2 = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
