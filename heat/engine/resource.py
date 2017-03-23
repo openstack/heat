@@ -37,6 +37,7 @@ from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
 from heat.engine.hot import template as hot_tmpl
+from heat.engine import node_data
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import rsrc_defn
@@ -870,6 +871,23 @@ class Resource(object):
         self._stored_properties_data = function.resolve(self.properties.data)
         if self._stored_properties_data != old_props:
             self._rsrc_prop_data = None
+
+    def node_data(self):
+        def get_attrs(attrs):
+            for attr in attrs:
+                path = (attr,) if isinstance(attr, six.string_types) else attr
+                try:
+                    yield attr, self.get_attribute(*path)
+                except exception.InvalidTemplateAttribute as ita:
+                    LOG.info('%s', ita)
+
+        dep_attrs = self.stack.get_dep_attrs(
+            six.itervalues(self.stack.resources),
+            self.name)
+        return node_data.NodeData(self.id, self.name, self.uuid,
+                                  self.get_reference_id(),
+                                  dict(get_attrs(dep_attrs)),
+                                  self.action, self.status)
 
     def preview(self):
         """Default implementation of Resource.preview.
