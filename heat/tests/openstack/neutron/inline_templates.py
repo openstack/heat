@@ -105,6 +105,7 @@ resources:
       session_persistence:
         type: HTTP_COOKIE
       lb_algorithm: ROUND_ROBIN
+      loadbalancer: my_lb
       listener: 123
       protocol: HTTP
       admin_state_up: True
