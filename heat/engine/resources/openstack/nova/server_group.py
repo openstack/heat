@@ -49,7 +49,9 @@ class ServerGroup(resource.Resource):
               'Defaults to anti-affinity.'),
             default=['anti-affinity'],
             constraints=[
-                constraints.AllowedValues(["anti-affinity", "affinity"])
+                constraints.AllowedValues(["anti-affinity", "affinity",
+                                           "soft-anti-affinity",
+                                           "soft-affinity"])
             ],
             schema=properties.Schema(
                 properties.Schema.STRING,
@@ -60,8 +62,13 @@ class ServerGroup(resource.Resource):
     def handle_create(self):
         name = self.physical_resource_name()
         policies = self.properties[self.POLICIES]
-        server_group = self.client().server_groups.create(name=name,
-                                                          policies=policies)
+        if 'soft-affinity' in policies or 'soft-anti-affinity' in policies:
+            client = self.client(
+                version=self.client_plugin().V2_15)
+        else:
+            client = self.client()
+        server_group = client.server_groups.create(name=name,
+                                                   policies=policies)
         self.resource_id_set(server_group.id)
 
     def physical_resource_name(self):
