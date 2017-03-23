@@ -237,6 +237,19 @@ class ManilaShareNetwork(resource.Resource):
                 nova_net_id=prop_diff.get(self.NOVA_NETWORK),
                 description=prop_diff.get(self.DESCRIPTION))
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(ManilaShareNetwork, self).parse_live_resource_data(
+            resource_properties, resource_data)
+        sec_list = self.client().security_services.list(
+            search_opts={'share_network_id': self.resource_id})
+        result.update({
+            self.NOVA_NETWORK: resource_data.get('nova_net_id'),
+            self.NEUTRON_NETWORK: resource_data.get('neutron_net_id'),
+            self.NEUTRON_SUBNET: resource_data.get('neutron_subnet_id'),
+            self.SECURITY_SERVICES: [service.id for service in sec_list]}
+        )
+        return result
+
 
 def resource_mapping():
     return {'OS::Manila::ShareNetwork': ManilaShareNetwork}

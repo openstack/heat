@@ -55,9 +55,6 @@ class ManilaShareTypeTest(common.HeatTestCase):
         mock_client = mock.MagicMock()
         client = mock.MagicMock(return_value=mock_client)
         share_type.client = client
-        mock_plugin = mock.MagicMock()
-        client_plugin = mock.MagicMock(return_value=mock_plugin)
-        share_type.client_plugin = client_plugin
 
         return share_type
 
@@ -89,3 +86,27 @@ class ManilaShareTypeTest(common.HeatTestCase):
         fake_share_type.unset_keys.assert_called_once_with({"test": "test"})
         fake_share_type.set_keys.assert_called_with(
             updated_props[mshare_type.ManilaShareType.EXTRA_SPECS])
+
+    def test_get_live_state(self):
+        share_type = self._init_share("stack_share_type_update")
+
+        value = mock.MagicMock()
+        value.to_dict.return_value = {
+            'os-share-type-access:is_public': True,
+            'required_extra_specs': {},
+            'extra_specs': {'test': 'test',
+                            'snapshot_support': 'True',
+                            'driver_handles_share_servers': 'True'},
+            'id': 'cc76cb22-75fe-4e6e-b618-7c345b2444e3',
+            'name': 'test'}
+
+        share_type.client().share_types.get.return_value = value
+
+        reality = share_type.get_live_state(share_type.properties)
+        expected = {
+            'extra_specs': {'test': 'test'}
+        }
+
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])

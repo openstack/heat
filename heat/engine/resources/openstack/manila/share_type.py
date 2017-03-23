@@ -96,6 +96,12 @@ class ManilaShareType(resource.Resource):
                 share_type.unset_keys(extra_specs_old)
             share_type.set_keys(prop_diff.get(self.EXTRA_SPECS))
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        extra_specs = resource_data.pop(self.EXTRA_SPECS)
+        extra_specs.pop(self.SNAPSHOT_SUPPORT)
+        extra_specs.pop(self.DRIVER_HANDLES_SHARE_SERVERS)
+        return {self.EXTRA_SPECS: extra_specs}
+
 
 def resource_mapping():
     return {

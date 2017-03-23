@@ -338,6 +338,18 @@ class ManilaShare(resource.Resource):
                         access_level=rule.get(self.ACCESS_LEVEL)
                     )
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(ManilaShare, self).parse_live_resource_data(
+            resource_properties, resource_data)
+
+        rules = self.client().shares.access_list(self.resource_id)
+        result[self.ACCESS_RULES] = []
+        for rule in rules:
+            result[self.ACCESS_RULES].append(
+                {(k, v) for (k, v) in six.iteritems(rule)
+                 if k in self._ACCESS_RULE_PROPERTIES})
+        return result
+
 
 def resource_mapping():
     return {'OS::Manila::Share': ManilaShare}
