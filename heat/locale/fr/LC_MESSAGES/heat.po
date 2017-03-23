@@ -8,18 +8,18 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-03-23 04:57+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-29 08:13+0000\n"
-"Last-Translator: Angelique Pillal <pillal@fr.ibm.com>\n"
+"PO-Revision-Date: 2016-04-12 05:27+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: French\n"
 
 #, python-format
@@ -844,9 +844,6 @@ msgstr ""
 "informations sur les réseaux connectés, les adresses IP fixes, les ports, "
 "etc."
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "Une erreur inconnue s'est produite avec les outils crypto."
-
 msgid "An unknown exception occurred."
 msgstr "Une exception inconnue s'est produite."
 
@@ -1037,10 +1034,6 @@ msgstr "Mappages d'unité par bloc à connecter à l'instance."
 
 msgid "Block device mappings v2 for this server."
 msgstr "Mappages d'unités par bloc v2 pour ce serveur."
-
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "La taille du block %(given)d est trop grande. max = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1261,16 +1254,6 @@ msgid "Controls DPD protocol mode."
 msgstr "Contrôle le mode de protocole de détection d'homologue inactif (DPD)."
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"Contrôle le nombre d'événements élagués chaque fois que les événements d'une "
-"pile dépassent max_events_per_stack. Définissez ce paramètre avec une valeur "
-"inférieure pour conserver plus d'événements au prix de purges plus "
-"fréquentes."
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1308,10 +1291,6 @@ msgstr ""
 
 msgid "Cooldown period, in seconds."
 msgstr "Période de Cooldown, en secondes."
-
-#, python-format
-msgid "Could not bind to %(bind_addr)safter trying for 30 seconds"
-msgstr "Liaison impossible à %(bind_addr)s après une tentative de 30 secondes"
 
 #, python-format
 msgid "Could not confirm resize of server %s"
@@ -1442,9 +1421,6 @@ msgstr ""
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr ""
 "Nom par défaut ou UUID de l'image utilisée pour amorcer les noeuds Hadoop."
-
-msgid "Default project of keystone user."
-msgstr "Projet par défaut de l'utilisateur Keystone."
 
 msgid "Default region name used to get services endpoints."
 msgstr ""
@@ -1831,9 +1807,6 @@ msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 "volume_id ou snapshot_id doit être spécifié pour le mappage d'unités %s"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr "volume_id, snapshot_id, image_id ou swap_size doit être indiqué."
-
 msgid "Email address of keystone user."
 msgstr "Adresse e-mail de l'utilisateur Keystone."
 
@@ -1932,10 +1905,6 @@ msgstr "Erreur lors de la suppression du partage \"{0}\"."
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "Erreur lors de l'analyse syntaxique du modèle : %s"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "Erreur lors de l'extraction de la liste d'images depuis sahara : %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -3108,10 +3077,6 @@ msgstr ""
 "Fournisseur LBaaS pour l'implémentation de cette instance de l'équilibreur "
 "de charge."
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "%(given)d est trop longue. max = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 "La longueur d'OS_PASSWORD après le chiffrement dépasse la limite Heat (255 "
@@ -3188,24 +3153,6 @@ msgstr "Liste de processus pour lesquels l'anti-affinité doit être activée."
 
 msgid "List of processes to run on every node."
 msgstr "Liste de processus à exécuter sur chaque noeud."
-
-msgid ""
-"List of resources to be removed when doing an update which requires removal "
-"of specific resources. The resource may be specified several ways: (1) The "
-"resource name, as in the nested stack, (2) The resource reference returned "
-"from get_resource in a template, as available via the 'refs' attribute. Note "
-"this is destructive on update when specified; even if the count is not being "
-"reduced, and once a resource name is removed, it's name is never reused in "
-"subsequent updates."
-msgstr ""
-"Liste des ressources à retirer lors d'une mise à jour qui nécessite le "
-"retrait de ressources spécifiques. La ressource peut être indiquée de "
-"plusieurs manières : (1) par le nom de ressource tel qu'indiqué dans la pile "
-"imbriquée ; (2) par la référence de ressource renvoyée par get_resource dans "
-"un modèle et disponible dans l'attribut 'refs'. Cette option a un effet "
-"réducteur sur la mise à jour : même si le décompte reste inchangé, une fois "
-"qu'un nom de ressource est retiré, celui-ci n'est jamais réutilisé dans les "
-"mises à jour ultérieures."
 
 msgid "List of role assignments."
 msgstr "Liste des affectations de rôle."
@@ -3314,9 +3261,6 @@ msgstr "Adresse MAC du port."
 msgid "MAC address to allow through this port."
 msgstr "Adresse MAC à autoriser via ce port."
 
-msgid "MAC address to give to this port."
-msgstr "Adresse MAC à donner à ce port."
-
 msgid "Make the baymodel public."
 msgstr "Rendre le modèle de baie public."
 
@@ -3359,14 +3303,6 @@ msgstr "La valeur maximale pour %s est 1 heure."
 
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "Profondeur maximale admise lors de l'utilisation de piles imbriquées."
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"Nombre maximal d'événements qui seront disponibles par pile. Les événements "
-"plus anciens seront supprimés lorsque cette valeur sera atteinte. Définir "
-"sur 0 pour un nombre illimité d'événements par pile."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3617,9 +3553,6 @@ msgstr ""
 
 msgid "Name of keypair to inject into the server."
 msgstr "Nom de la paire de clés à injecter dans le serveur."
-
-msgid "Name of keystone domain."
-msgstr "Nom du domaine Keystone."
 
 msgid "Name of keystone endpoint."
 msgstr "Nom du noeud final Keystone."
@@ -7670,16 +7603,6 @@ msgstr ""
 "Vous avez atteint le nombre maximal de piles par locataire : %d. Supprimez "
 "quelques piles."
 
-msgid "age should be a positive integer"
-msgstr "age doit etre un entier positif"
-
-msgid "age should be an integer"
-msgstr "age doit etre un entier"
-
-msgid "client_plugin and finder should be specified for Resolve rule"
-msgstr ""
-"client_plugin et finder doivent être spécifiés pour la règle de résolution"
-
 #, python-format
 msgid "could not find user %s"
 msgstr "Ne peut pas trouver l'utilisateur %s"
@@ -7794,6 +7717,3 @@ msgstr ""
 "La tâche %(task)s contient la propriété 'requires' dans le cas d'un flux de "
 "travail direct. Seuls les flux de travail de type inversé peuvent contenir "
 "la propriété 'requires'."
-
-msgid "value must be list type when rule is Add."
-msgstr "La valeur doit être de type liste quand la règle est Ajouter (Add)."

@@ -7,18 +7,18 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-03-23 04:57+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-31 03:31+0000\n"
-"Last-Translator: Linda <duleish@cn.ibm.com>\n"
+"PO-Revision-Date: 2016-04-12 05:32+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: zh-CN\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: Chinese (China)\n"
 
 #, python-format
@@ -748,9 +748,6 @@ msgstr ""
 "要对此服务器添加的 nic 的有序列表，包含有关已连接的网络、固定 IP 以及端口等的"
 "信息。"
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "在加密工具中出现未知错误。"
-
 msgid "An unknown exception occurred."
 msgstr "发生未知异常。"
 
@@ -921,10 +918,6 @@ msgstr "要连接至实例的块设备映射。"
 
 msgid "Block device mappings v2 for this server."
 msgstr "此服务器的块设备映射 V2。"
-
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "块尺寸 %(given)d 过大， 最大值 = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1125,14 +1118,6 @@ msgid "Controls DPD protocol mode."
 msgstr "控制 DPD 协议方式。"
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"控制每当堆栈的事件超过 max_events_per_stack 时将删减的事件数。请将此项设置为"
-"较小，以通过较频繁的清除保留较多事件。"
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1164,10 +1149,6 @@ msgstr ""
 
 msgid "Cooldown period, in seconds."
 msgstr "冷却时间段，以秒计。"
-
-#, python-format
-msgid "Could not bind to %(bind_addr)safter trying for 30 seconds"
-msgstr "在尝试时间达到 30 秒之后未能绑定至 %(bind_addr)s"
 
 #, python-format
 msgid "Could not confirm resize of server %s"
@@ -1283,9 +1264,6 @@ msgstr "缺省值必须是以逗号定界的列表字符串：%s"
 
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr "用于引导 Hadoop 节点的映像的缺省名称或 UUID。"
-
-msgid "Default project of keystone user."
-msgstr "keystone 用户的缺省项目。"
 
 msgid "Default region name used to get services endpoints."
 msgstr "用于获取服务端点的缺省区域名称。"
@@ -1638,9 +1616,6 @@ msgstr "必须对角色 %s 指定项目或域"
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr "必须为设备映射 %s 指定 volume_id 或 snapshot_id"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr "必须指定 volume_id、snapshot_id、image_id 或 swap_size。"
-
 msgid "Email address of keystone user."
 msgstr "keystone 用户的电子邮件地址。"
 
@@ -1731,10 +1706,6 @@ msgstr "删除共享“{0}”时出错"
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "解析模板 %s 时出错"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "从 Sahara 检索映像列表时出错：%s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -2787,10 +2758,6 @@ msgstr "网络网关外端上的 L2 分段策略。"
 msgid "LBaaS provider to implement this load balancer instance."
 msgstr "用于实现此负载均衡器实例的 LBaaS 提供程序。"
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "长度 %(given)d 过长， 最大值 = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr "在加密超过 Heat 限制（255 个字符）之后，OS_PASSWORD 的长度"
 
@@ -2857,21 +2824,6 @@ msgstr "要对其启用反亲缘关系的进程的列表。"
 
 msgid "List of processes to run on every node."
 msgstr "要在每个节点上运行的进程的列表。"
-
-msgid ""
-"List of resources to be removed when doing an update which requires removal "
-"of specific resources. The resource may be specified several ways: (1) The "
-"resource name, as in the nested stack, (2) The resource reference returned "
-"from get_resource in a template, as available via the 'refs' attribute. Note "
-"this is destructive on update when specified; even if the count is not being "
-"reduced, and once a resource name is removed, it's name is never reused in "
-"subsequent updates."
-msgstr ""
-"执行更新（需要移除特定资源）时要移除的资源列表。可通过若干方式指定这些资源："
-"(1) 资源名称（在嵌套堆栈中），(2) 模板中从 get_resource 中返回的资源引用，通"
-"过“refs”属性提供。请注意，在更新时，这是破坏性操作（如果以此方式指定）；即使"
-"计数未降低，并且一旦资源名称被移除，该资源的名称就永远不会在后续更新中再被使"
-"用。"
 
 msgid "List of role assignments."
 msgstr "角色分配的列表。"
@@ -2964,9 +2916,6 @@ msgstr "端口的 MAC 地址。"
 msgid "MAC address to allow through this port."
 msgstr "要通过此端口允许的 MAC 地址。"
 
-msgid "MAC address to give to this port."
-msgstr "要向此端口提供的 MAC 地址。"
-
 msgid "Make the baymodel public."
 msgstr "使支架模型成为公用项。"
 
@@ -3003,13 +2952,6 @@ msgstr "最大 %s 为 1 小时。"
 
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "使用嵌套堆栈时允许的最大深度。"
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"每个堆栈将可用的最大事件数。当达到此数目时，将删除较旧的事件。设置为 0 表示每"
-"个堆栈的事件数不受限。"
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3234,9 +3176,6 @@ msgstr "在部署期间要用于替换输入的键的名称。"
 
 msgid "Name of keypair to inject into the server."
 msgstr "要插入到服务器中的密钥对的名称。"
-
-msgid "Name of keystone domain."
-msgstr "keystone 域的名称。"
 
 msgid "Name of keystone endpoint."
 msgstr "keystone 端点的名称。"
@@ -6871,15 +6810,6 @@ msgid ""
 "stacks."
 msgstr "已达到每个租户的最大堆栈数 %d。请删除一些堆栈。"
 
-msgid "age should be a positive integer"
-msgstr "时效应该为正整数"
-
-msgid "age should be an integer"
-msgstr "时效应该为整数"
-
-msgid "client_plugin and finder should be specified for Resolve rule"
-msgstr "应对“解析”规则指定 client_plugin 和查找器"
-
 #, python-format
 msgid "could not find user %s"
 msgstr "无法找到用户%s"
@@ -6987,6 +6917,3 @@ msgid ""
 msgstr ""
 "任务 %(task)s 包含属性“requires”，以防出现直接工作流程。仅保留工作流程可包含"
 "属性“requires”。"
-
-msgid "value must be list type when rule is Add."
-msgstr "规则为“添加”时，值必须为列表类型。"

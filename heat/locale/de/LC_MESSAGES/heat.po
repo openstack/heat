@@ -9,9 +9,9 @@
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-03-23 04:57+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: German\n"
 
 #, python-format
@@ -869,9 +869,6 @@ msgstr ""
 "Eine sortierte Liste von NICs, die zum Server hinzugefügt werden sollen, mit "
 "Informationen zu verbundenen Netzen, statischen IP-Adressen, Ports usw. "
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "Ein unbekannter Fehler ist in den crypto Hilfsprogrammen aufgetreten."
-
 msgid "An unknown exception occurred."
 msgstr "Eine unbekannte Ausnahme ist aufgetreten."
 
@@ -1098,10 +1095,6 @@ msgstr "An Instanz anzuhängende Blockeinheitenzuordnungen."
 msgid "Block device mappings v2 for this server."
 msgstr "Blockeinheitenzuordnungen v2 für diesen Server."
 
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "Blockgröße von %(given)d ist zu groß, max = %(maximum)d"
-
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
 "to create share snapshots."
@@ -1326,16 +1319,6 @@ msgid "Controls DPD protocol mode."
 msgstr "Steuert den DPD-Protokollmodus."
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"Steuert, wie viele Ereignisse bereinigt werden, wenn die Ereignisse eines "
-"Stacks max_events_per_stack überschreiten. Legen Sie hierfür einen "
-"niedrigeren Wert fest, wenn mehr Ereignisse anstelle häufigerer "
-"Bereinigungen gewünscht sind."
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1374,10 +1357,6 @@ msgstr ""
 
 msgid "Cooldown period, in seconds."
 msgstr "Abkühlzeitraum in Sekunden. "
-
-#, python-format
-msgid "Could not bind to %(bind_addr)safter trying for 30 seconds"
-msgstr "Keine Bindung an %(bind_addr)s möglich nach Versuch über 30 Sekunden"
 
 #, python-format
 msgid "Could not confirm resize of server %s"
@@ -1508,9 +1487,6 @@ msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr ""
 "Standardname oder UUID des Image, das zum Booten von Hadoop-Knoten verwendet "
 "wird."
-
-msgid "Default project of keystone user."
-msgstr "Das Standardprojekt des Keystone-Benutzers."
 
 msgid "Default region name used to get services endpoints."
 msgstr "Verwendeter Standardregionsname zum Abrufen von Serviceendpunkten."
@@ -1907,11 +1883,6 @@ msgstr ""
 "Entweder volume_id oder snapshot_id muss für die Einheitenzuordnung %s "
 "angegeben werden"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr ""
-"Entweder volume_id, snapshot_id, image_id oder swap_size muss angegeben "
-"werden."
-
 msgid "Email address of keystone user."
 msgstr "Die E-Mail-Adresse des Keystone-Benutzers."
 
@@ -2011,10 +1982,6 @@ msgstr "Fehler beim Löschen des Freigabeverzeichnisses \"{0}\"."
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "Fehler bei der Auswertung der Vorlage: %s"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "Fehler beim Abrufen der Imageliste von sahara: %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -3008,9 +2975,6 @@ msgid "Invalid parameter constraints for parameter %s, expected a list"
 msgstr ""
 "Ungültige Parameterbedingungen für Parameter %s, erwartet wurde eine Liste"
 
-msgid "Invalid parameter in environment %(s)."
-msgstr "Ungültiger Parameter in Umgebung %(s)."
-
 #, python-format
 msgid ""
 "Invalid restricted_action type \"%(value)s\" for resource, acceptable "
@@ -3235,10 +3199,6 @@ msgstr "L2-Segmentierungsstrategie für die externe Seite des Netzgateways."
 msgid "LBaaS provider to implement this load balancer instance."
 msgstr "LBaaS-Provider, der diese Loadbalancerinstanz implementieren soll."
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "Länge von %(given)d ist zu groß, max = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 "Länge von OS_PASSWORD überschreitet nach Verschlüsselung den Heat-Grenzwert "
@@ -3313,25 +3273,6 @@ msgstr "Liste der Prozesse, für die Antiaffinität aktiviert werden soll. "
 
 msgid "List of processes to run on every node."
 msgstr "Liste der Prozesse, die auf jedem Knoten auszuführen sind. "
-
-msgid ""
-"List of resources to be removed when doing an update which requires removal "
-"of specific resources. The resource may be specified several ways: (1) The "
-"resource name, as in the nested stack, (2) The resource reference returned "
-"from get_resource in a template, as available via the 'refs' attribute. Note "
-"this is destructive on update when specified; even if the count is not being "
-"reduced, and once a resource name is removed, it's name is never reused in "
-"subsequent updates."
-msgstr ""
-"Liste der zu entfernenden Ressourcen bei einer Aktualisierung, bei der die "
-"Entfernung von bestimmten Ressourcen erforderlich ist. Es gibt verschiedene "
-"Möglichkeiten für die Angabe der Ressourcen: (1) Der Ressourcenname (wie im "
-"verschachtelten Stack) (2) Der Verweis auf die Ressource, der von "
-"get_resource in einer Vorlage zurückgegeben wurde (wie über das Attribut "
-"'refs' verfügbar) Anmerkung: Erfolgt diese Angabe bei der Aktualisierung, "
-"ist dies zerstörerisch, auch wenn die Anzahl nicht verringert wird. Sobald "
-"ein Ressourcenname entfernt wurde, wird der Name der Ressource nie wieder in "
-"nachfolgenden Aktualisierungen verwendet."
 
 msgid "List of role assignments."
 msgstr "Liste der Rollenzuordnungen."
@@ -3441,9 +3382,6 @@ msgstr "MAC-Adresse des Ports."
 msgid "MAC address to allow through this port."
 msgstr "MAC-Adresse, die diesen Port durchlaufen darf. "
 
-msgid "MAC address to give to this port."
-msgstr "MAC-Adresse, die diesem Port zugeordnet werden soll. "
-
 msgid "Make the baymodel public."
 msgstr "Veröffentlichen Sie das Bay-Modell."
 
@@ -3488,14 +3426,6 @@ msgid "Maximum depth allowed when using nested stacks."
 msgstr ""
 "Maximal zulässige Schachtelungstiefe bei der Verwendung von verschachtelten "
 "Stacks."
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"Die maximale Anzahl an Ereignissen, die pro Stack verfügbar sein sollen. "
-"Ältere Ereignisse werden gelöscht, wenn dieser Wert erreicht wird. Legen Sie "
-"hierfür 0 fest, damit die Anzahl der Ereignisse pro Stack unbegrenzt ist. "
 
 msgid "Maximum length of a server name to be used in nova."
 msgstr "Maximale Länge des Servernamens zur Verwendung in Nova."
@@ -3766,9 +3696,6 @@ msgstr ""
 
 msgid "Name of keypair to inject into the server."
 msgstr "Name des Schlüsselpaars, das in den Server injiziert werden soll."
-
-msgid "Name of keystone domain."
-msgstr "Name der Keystone-Domäne."
 
 msgid "Name of keystone endpoint."
 msgstr "Name des Keystone-Endpunkts."
@@ -4124,10 +4051,6 @@ msgstr "Neutron-Subnetz-ID."
 
 msgid "Nexthop IP address."
 msgstr "Nexthop-IP-Adresse."
-
-#, python-format
-msgid "No %(name)s matching %(args)s."
-msgstr "Kein %(name)s entspricht %(args)s."
 
 #, python-format
 msgid "No %s specified"
@@ -7956,16 +7879,6 @@ msgstr ""
 "Sie haben die maximale Anzahl %d an Stacks pro Nutzer erreicht. Löschen Sie "
 "einige Stacks."
 
-msgid "age should be a positive integer"
-msgstr "Alter sollte eine positive Ganzzahl sein"
-
-msgid "age should be an integer"
-msgstr "Alter sollte eine Ganzzahl sein"
-
-msgid "client_plugin and finder should be specified for Resolve rule"
-msgstr ""
-"'client_plugin' und 'finder' müssen für die Resolve-Regel angegeben werden."
-
 #, python-format
 msgid "could not find user %s"
 msgstr "Benutzer %s konnte nicht gefunden werden"
@@ -8086,9 +7999,6 @@ msgstr ""
 "Die Aufgabe %(task)s enthält die Eigenschaft 'requires' für einen direkten "
 "Arbeitsablauf. Die Eigenschaft 'requires' kann jedoch nur für Arbeitsabläufe "
 "vom Typ 'reverse' verwendet werden."
-
-msgid "value must be list type when rule is Add."
-msgstr "Wert muss vom Typ 'list' sein, wenn die Regel 'Add' ist."
 
 msgid "{0} {1} endpoint is not in service catalog."
 msgstr "{0} {1} Endpunkt ist nicht im Dienstkatalog."
