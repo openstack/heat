@@ -20,7 +20,6 @@ from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine import attributes
 from heat.engine import environment
-from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import template
@@ -199,7 +198,8 @@ class RemoteStack(resource.Resource):
         env = environment.Environment(s_data['environment'])
         files = s_data['files']
         tmpl = template.Template(s_data['template'], env=env, files=files)
-        props = function.resolve(self.properties.data)
+        props = dict((k, v) for k, v in self.properties.items()
+                     if k in self.properties.data)
         props[self.TEMPLATE] = jsonutils.dumps(tmpl.t)
         props[self.PARAMETERS] = env.params
 
