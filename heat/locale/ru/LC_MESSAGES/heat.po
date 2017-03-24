@@ -6,20 +6,20 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-03-23 04:57+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-22 01:42+0000\n"
-"Last-Translator: Grigory Mokhin <mokhin@gmail.com>\n"
+"PO-Revision-Date: 2016-04-12 05:29+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: ru\n"
 "Plural-Forms: nplurals=4; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<12 || n%100>14) ? 1 : n%10==0 || (n%10>=5 && n%10<=9) || (n"
 "%100>=11 && n%100<=14)? 2 : 3);\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: Russian\n"
 
 #, python-format
@@ -827,9 +827,6 @@ msgstr ""
 "Упорядоченный список nic, добавляемых на этот сервер, с информацией о "
 "связанных сетях, фиксированных ip-адресах, портах и т. д."
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "В утилитах шифрования возникла неизвестная ошибка."
-
 msgid "An unknown exception occurred."
 msgstr "Обнаружено неизвестное исключение."
 
@@ -1014,10 +1011,6 @@ msgstr "Отображения блочных устройств для прик
 
 msgid "Block device mappings v2 for this server."
 msgstr "Связи блочных устройств версии 2 для данного сервера."
-
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "Размер блока %(given)d слишком велик, max = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1231,15 +1224,6 @@ msgid "Controls DPD protocol mode."
 msgstr "Управляет режимом протокола DPD."
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"Управляет числом событий, которые будут отсечены после превышения числа "
-"событий стека max_events_per_stack. Уменьшите значение для увеличения числа "
-"событий за счет более частых операций очистки."
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1275,12 +1259,6 @@ msgstr ""
 
 msgid "Cooldown period, in seconds."
 msgstr "Время отката (с)."
-
-#, python-format
-msgid "Could not bind to %(bind_addr)safter trying for 30 seconds"
-msgstr ""
-"Попытки привязать к %(bind_addr)s выполнялись в течение 30 секунд, но "
-"безуспешно"
 
 #, python-format
 msgid "Could not confirm resize of server %s"
@@ -1403,9 +1381,6 @@ msgstr ""
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr ""
 "Имя по умолчанию или UUID образа, используемого для загрузки узлов Hadoop."
-
-msgid "Default project of keystone user."
-msgstr "Проект по умолчанию пользователя keystone."
 
 msgid "Default region name used to get services endpoints."
 msgstr "Имя области по умолчанию для получения конечных точек служб."
@@ -1783,9 +1758,6 @@ msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 "Для связывания устройства %s необходимо указать volume_id или snapshot_id"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr "Необходимо указать volume_id, snapshot_id, image_id или swap_size."
-
 msgid "Email address of keystone user."
 msgstr "Адрес электронной почты пользователя keystone."
 
@@ -1885,10 +1857,6 @@ msgstr "Ошибка при удалении общего ресурса \"{0}\"
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "Ошибка при анализе шаблона: %s"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "Ошибка при извлечении списка образов из Sahara: %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -3034,10 +3002,6 @@ msgid "LBaaS provider to implement this load balancer instance."
 msgstr ""
 "Поставщик LBaaS для реализации этого экземпляра балансировщика нагрузки."
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "Длина %(given)d слишком велика, max = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 "Длина OS_PASSWORD после шифрования превышает ограничение Heat (255 символов)"
@@ -3113,23 +3077,6 @@ msgstr ""
 
 msgid "List of processes to run on every node."
 msgstr "Список процессов для выполнения на каждом узле."
-
-msgid ""
-"List of resources to be removed when doing an update which requires removal "
-"of specific resources. The resource may be specified several ways: (1) The "
-"resource name, as in the nested stack, (2) The resource reference returned "
-"from get_resource in a template, as available via the 'refs' attribute. Note "
-"this is destructive on update when specified; even if the count is not being "
-"reduced, and once a resource name is removed, it's name is never reused in "
-"subsequent updates."
-msgstr ""
-"Список ресурсов для удаления, если при обновлении требуется удаление "
-"конкретных ресурсов. Ресурс может быть задан несколькими способами: (1) имя "
-"ресурса, как во вложенном стеке, (2) указатель на ресурс, возвращенный из "
-"get_resource в шаблоне, как задано в атрибуте 'refs'. Примечание: если "
-"указано, такое обновление носит деструктивный характер; даже если количество "
-"не уменьшится, после удаления имени ресурса это имя нельзя будет повторно "
-"использовать в последующих обновлениях."
 
 msgid "List of role assignments."
 msgstr "Список присвоенных ролей."
@@ -3233,9 +3180,6 @@ msgstr "MAC-адрес порта."
 msgid "MAC address to allow through this port."
 msgstr "MAC-адрес, разрешенный для этого порта."
 
-msgid "MAC address to give to this port."
-msgstr "MAC-адрес для этого порта."
-
 msgid "Make the baymodel public."
 msgstr "Сделать модель отсека общедоступной."
 
@@ -3278,14 +3222,6 @@ msgstr "Максимальное значение %s - 1 час."
 
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "Максимальная разрешенная глубина при использовании вложенных стеков."
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"Максимальное число доступных событий в стеке. Старые события будут удалены "
-"при достижении этого значения. Задайте значение 0, чтобы не ограничивать  "
-"число событий в стеке."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3531,9 +3467,6 @@ msgstr ""
 
 msgid "Name of keypair to inject into the server."
 msgstr "Имя пары ключей для внесения на сервер."
-
-msgid "Name of keystone domain."
-msgstr "Имя домена keystone."
 
 msgid "Name of keystone endpoint."
 msgstr "Имя конечной точки keystone."
@@ -7464,15 +7397,6 @@ msgstr ""
 "Достигнуто максимальное число стеков для арендатора %d. Удалите несколько "
 "стеков."
 
-msgid "age should be a positive integer"
-msgstr "срок хранения должен быть положительным целым числом"
-
-msgid "age should be an integer"
-msgstr "срок хранения должен быть целым числом"
-
-msgid "client_plugin and finder should be specified for Resolve rule"
-msgstr "Для правила Обработать должны быть заданы client_plugin и finder"
-
 #, python-format
 msgid "could not find user %s"
 msgstr "пользователь %s не найден"
@@ -7576,6 +7500,3 @@ msgid ""
 msgstr ""
 "Для задачи %(task)s с прямым потоком операций указано свойство 'requires'. "
 "Свойство 'requires' применяется только для обратных потоков операций."
-
-msgid "value must be list type when rule is Add."
-msgstr "Значение должно иметь тип списка, если правило - это Добавить."
