@@ -477,9 +477,6 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             return True
 
     def _delete_resource(self):
-        self._delete_signals()
-        self._delete_user()
-
         derived_config_id = None
         if self.resource_id is not None:
             try:
@@ -491,6 +488,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
         if derived_config_id:
             self._delete_derived_config(derived_config_id)
+
+        self._delete_signals()
+        self._delete_user()
 
     def handle_suspend(self):
         return self._handle_action(self.SUSPEND)
