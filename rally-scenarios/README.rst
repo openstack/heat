@@ -10,4 +10,4 @@ Structure:
 
 * more about rally: https://wiki.openstack.org/wiki/Rally
 * how to add rally-gates: https://wiki.openstack.org/wiki/Rally/RallyGates
-* how to write plugins https://rally.readthedocs.org/en/latest/plugins.html
+* how to write plugins https://rally.readthedocs.io/en/latest/plugins/#rally-plugins

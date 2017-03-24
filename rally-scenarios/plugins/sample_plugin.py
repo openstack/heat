@@ -18,7 +18,7 @@
 For more Heat related benchmarks take a look here:
 https://git.openstack.org/cgit/openstack/rally/tree/rally/plugins/openstack/scenarios/heat
 
-About plugins: https://rally.readthedocs.org/en/latest/plugins.html
+About plugins: https://rally.readthedocs.io/en/latest/plugins/#rally-plugins
 
 Rally concepts https://wiki.openstack.org/wiki/Rally/Concepts
 """
