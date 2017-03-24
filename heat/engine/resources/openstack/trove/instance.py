@@ -23,6 +23,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
 
@@ -292,6 +293,17 @@ class Instance(resource.Resource):
 
     entity = 'instances'
 
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.FLAVOR],
+                client_plugin=self.client_plugin(),
+                finder='find_flavor_by_name_or_id'
+            )
+        ]
+
     def __init__(self, name, json_snippet, stack):
         super(Instance, self).__init__(name, json_snippet, stack)
         self._href = None
@@ -314,8 +326,7 @@ class Instance(resource.Resource):
 
     def handle_create(self):
         """Create cloud database instance."""
-        self.flavor = self.client_plugin().find_flavor_by_name_or_id(
-            self.properties[self.FLAVOR])
+        self.flavor = self.properties[self.FLAVOR]
         self.volume = {'size': self.properties[self.SIZE]}
         self.databases = self.properties[self.DATABASES]
         self.users = self.properties[self.USERS]
@@ -431,8 +442,7 @@ class Instance(resource.Resource):
             if self.NAME in prop_diff:
                 updates.update({self.NAME: prop_diff[self.NAME]})
             if self.FLAVOR in prop_diff:
-                flvid = prop_diff[self.FLAVOR]
-                flv = self.client_plugin().get_flavor_id(flvid)
+                flv = prop_diff[self.FLAVOR]
                 updates.update({self.FLAVOR: flv})
             if self.SIZE in prop_diff:
                 updates.update({self.SIZE: prop_diff[self.SIZE]})
@@ -587,6 +597,29 @@ class Instance(resource.Resource):
                                                    usr[self.USER_NAME],
                                                    revokes)
         return True
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        """A method to parse live resource data to update current resource.
+
+        NOTE: cannot update users from live resource data in case of
+        impossibility to get required user password.
+        """
+        dbs = [d.name for d in self.client().databases.list(self.resource_id)]
+        dbs_reality = []
+        for resource_db in resource_properties[self.DATABASES]:
+            if resource_db[self.DATABASE_NAME] in dbs:
+                dbs_reality.append(resource_db)
+                dbs.remove(resource_db[self.DATABASE_NAME])
+        # cannot get any property for databases except for name, so update
+        # resource with name
+        dbs_reality.extend([{self.DATABASE_NAME: db} for db in dbs])
+        result = {self.NAME: resource_data.get('name'),
+                  self.DATABASES: dbs_reality}
+        if resource_data.get('flavor') is not None:
+            result[self.FLAVOR] = resource_data['flavor'].get('id')
+        if resource_data.get('volume') is not None:
+            result[self.SIZE] = resource_data['volume']['size']
+        return result
 
     def handle_delete(self):
         """Delete a cloud database instance."""
