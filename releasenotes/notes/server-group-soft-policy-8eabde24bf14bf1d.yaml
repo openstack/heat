@@ -1,0 +1,4 @@
+---
+features:
+  - Two new policies soft-affinity and soft-anti-affinity have been supported
+    for the OS::Nova::ServerGroup resource.
