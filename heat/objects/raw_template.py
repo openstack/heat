@@ -24,7 +24,6 @@ from oslo_versionedobjects import fields
 
 from heat.common import crypt
 from heat.common import environment_format as env_fmt
-from heat.common.i18n import _LW
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
@@ -71,10 +70,10 @@ class RawTemplate(
                     value = crypt.decrypt(method, enc_value)
                 else:
                     value = parameters[param_name]
-                    LOG.warning(_LW(
+                    LOG.warning(
                         'Encountered already-decrypted data while attempting '
-                        'to decrypt parameter %s.  Please file a Heat bug so '
-                        'this can be fixed.'), param_name)
+                        'to decrypt parameter %s. Please file a Heat bug so '
+                        'this can be fixed.', param_name)
                 parameters[param_name] = value
             tpl.environment[env_fmt.PARAMETERS] = parameters
 

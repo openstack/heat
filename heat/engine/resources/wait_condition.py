@@ -18,7 +18,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine.resources import signal_responder
 
 LOG = logging.getLogger(__name__)
@@ -67,7 +66,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
                                                      latest_rsrc_metadata)
 
             if not self._metadata_format_ok(signal_data):
-                LOG.info(_LI("Metadata failed validation for %s"), self.name)
+                LOG.info("Metadata failed validation for %s", self.name)
                 raise ValueError(_("Metadata format invalid"))
 
             new_entry = signal_data.copy()
@@ -75,7 +74,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
 
             new_rsrc_metadata = latest_rsrc_metadata.copy()
             if unique_id in new_rsrc_metadata:
-                LOG.info(_LI("Overwriting Metadata item for id %s!"),
+                LOG.info("Overwriting Metadata item for id %s!",
                          unique_id)
             new_rsrc_metadata.update({unique_id: new_entry})
 

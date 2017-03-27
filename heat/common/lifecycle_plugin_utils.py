@@ -16,8 +16,6 @@
 
 from oslo_log import log as logging
 
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
 from heat.engine import resources
 
 LOG = logging.getLogger(__name__)
@@ -42,19 +40,19 @@ def get_plug_point_class_instances():
             slps = resources.global_env().get_stack_lifecycle_plugins()
             pp_classes = [cls for name, cls in slps]
         except Exception:
-            LOG.exception(_LE("failed to get lifecycle plug point classes"))
+            LOG.exception("failed to get lifecycle plug point classes")
 
         for ppc in pp_classes:
             try:
                 pp_class_instances.append(ppc())
             except Exception:
                 LOG.exception(
-                    _LE("failed to instantiate stack lifecycle class %s"), ppc)
+                    "failed to instantiate stack lifecycle class %s", ppc)
         try:
             pp_class_instances = sorted(pp_class_instances,
                                         key=lambda ppci: ppci.get_ordinal())
         except Exception:
-            LOG.exception(_LE("failed to sort lifecycle plug point classes"))
+            LOG.exception("failed to sort lifecycle plug point classes")
     return pp_class_instances
 
 
@@ -108,13 +106,13 @@ def _do_ops(cinstances, opname, cnxt, stack, current_stack=None, action=None,
                     op(cnxt, stack, current_stack, action)
                 success_count += 1
             except Exception as ex:
-                LOG.exception(_LE(
-                    "%(opname)s %(ci)s failed for %(a)s on %(sid)s"),
+                LOG.exception(
+                    "%(opname)s %(ci)s failed for %(a)s on %(sid)s",
                     {'opname': opname, 'ci': type(ci),
                      'a': action, 'sid': stack.id})
                 failure = True
                 failure_exception_message = ex.args[0] if ex.args else str(ex)
                 break
-        LOG.info(_LI("done with class=%(c)s, stackid=%(sid)s, action=%(a)s"),
+        LOG.info("done with class=%(c)s, stackid=%(sid)s, action=%(a)s",
                  {'c': type(ci), 'sid': stack.id, 'a': action})
     return (failure, failure_exception_message, success_count)

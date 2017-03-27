@@ -21,8 +21,6 @@ from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import exception as heat_exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LW
 from heat.common import policy
 from heat.common import wsgi
 from heat.rpc import api as rpc_api
@@ -199,7 +197,7 @@ class WatchController(object):
                         # Filter criteria not met, return None
                         return
                 except KeyError:
-                    LOG.warning(_LW("Invalid filter key %s, ignoring"), f)
+                    LOG.warning("Invalid filter key %s, ignoring", f)
 
             return result
 
@@ -250,8 +248,8 @@ class WatchController(object):
         # need to process (each dict) for dimensions
         metric_data = api_utils.extract_param_list(parms, prefix='MetricData')
         if not len(metric_data):
-            LOG.error(_LE("Request does not contain required MetricData"))
-            return exception.HeatMissingParameterError("MetricData list")
+            LOG.error("Request does not contain required MetricData")
+            return exception.HeatMissingParameterError(_("MetricData list"))
 
         watch_name = None
         dimensions = []

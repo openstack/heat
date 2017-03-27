@@ -15,12 +15,11 @@
 
 from oslo_log import log as logging
 
-from heat.common.i18n import _LW
 
 LOG = logging.getLogger(__name__)
 
-LOG.warning(_LW('DEPRECATED: `heat-manage` script is deprecated. Please use '
-                'the system level heat-manage binary.'))
+LOG.warning('DEPRECATED: `heat-manage` script is deprecated. Please use '
+            'the system level heat-manage binary.')
 
 import os
 import sys

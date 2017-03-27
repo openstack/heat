@@ -15,7 +15,6 @@ import collections
 from oslo_log import log as logging
 import six
 
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -39,26 +38,26 @@ class GenericResource(resource.Resource):
         return (True, None)
 
     def handle_create(self):
-        LOG.warning(_LW('Creating generic resource (Type "%s")'),
+        LOG.warning('Creating generic resource (Type "%s")',
                     self.type())
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        LOG.warning(_LW('Updating generic resource (Type "%s")'),
+        LOG.warning('Updating generic resource (Type "%s")',
                     self.type())
 
     def handle_delete(self):
-        LOG.warning(_LW('Deleting generic resource (Type "%s")'),
+        LOG.warning('Deleting generic resource (Type "%s")',
                     self.type())
 
     def _resolve_attribute(self, name):
         return self.name
 
     def handle_suspend(self):
-        LOG.warning(_LW('Suspending generic resource (Type "%s")'),
+        LOG.warning('Suspending generic resource (Type "%s")',
                     self.type())
 
     def handle_resume(self):
-        LOG.warning(_LW('Resuming generic resource (Type "%s")'),
+        LOG.warning(('Resuming generic resource (Type "%s")'),
                     self.type())
 
 
@@ -67,14 +66,14 @@ class CancellableResource(GenericResource):
         return True
 
     def handle_create_cancel(self, cookie):
-        LOG.warning(_LW('Cancelling create generic resource (Type "%s")'),
+        LOG.warning('Cancelling create generic resource (Type "%s")',
                     self.type())
 
     def check_update_complete(self, cookie):
         return True
 
     def handle_update_cancel(self, cookie):
-        LOG.warning(_LW('Cancelling update generic resource (Type "%s")'),
+        LOG.warning('Cancelling update generic resource (Type "%s")',
                     self.type())
 
 
@@ -257,7 +256,7 @@ class SignalResource(signal_responder.SignalResponder):
         self.resource_id_set(self._get_user_id())
 
     def handle_signal(self, details=None):
-        LOG.warning(_LW('Signaled resource (Type "%(type)s") %(details)s'),
+        LOG.warning('Signaled resource (Type "%(type)s") %(details)s',
                     {'type': self.type(), 'details': details})
 
     def _resolve_attribute(self, name):

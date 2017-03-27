@@ -23,8 +23,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine import attributes
@@ -169,7 +167,7 @@ class StackResource(resource.Resource):
             params = self.child_params()
         except NotImplementedError:
             class_name = reflection.get_class_name(self, fully_qualified=False)
-            LOG.warning(_LW("Preview of '%s' not yet implemented"), class_name)
+            LOG.warning("Preview of '%s' not yet implemented", class_name)
             return self
 
         name = "%s-%s" % (self.stack.name, self.name)
@@ -446,7 +444,7 @@ class StackResource(resource.Resource):
 
         if self.stack.action == self.stack.ROLLBACK:
             if self._try_rollback():
-                LOG.info(_LI('Triggered nested stack %s rollback'),
+                LOG.info('Triggered nested stack %s rollback',
                          self.physical_resource_name())
                 return {'target_action': self.stack.ROLLBACK}
 

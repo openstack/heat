@@ -15,7 +15,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import resource
 
 LOG = logging.getLogger(__name__)
@@ -113,8 +112,7 @@ class NeutronResource(resource.Resource):
             key = self.res_info_key if self.res_info_key else self.entity
             return res_info[key]
         except AttributeError as ex:
-            LOG.warning(_LW("Resolving 'show' attribute has failed : %s"),
-                        ex)
+            LOG.warning("Resolving 'show' attribute has failed : %s", ex)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:

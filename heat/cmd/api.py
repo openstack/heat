@@ -30,7 +30,6 @@ from oslo_service import systemd
 import six
 
 from heat.common import config
-from heat.common.i18n import _LI
 from heat.common import messaging
 from heat.common import profiler
 from heat.common import wsgi
@@ -55,7 +54,7 @@ def launch_api(setup_logging=True):
 
     port = cfg.CONF.heat_api.bind_port
     host = cfg.CONF.heat_api.bind_host
-    LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
+    LOG.info('Starting Heat REST API on %(host)s:%(port)s',
              {'host': host, 'port': port})
     profiler.setup('heat-api', host)
     gmr.TextGuruMeditation.setup_autorun(version)

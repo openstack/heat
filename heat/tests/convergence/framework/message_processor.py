@@ -60,7 +60,7 @@ class MessageProcessor(object):
     def __call__(self):
         message = self.queue.get()
         if message is None:
-            LOG.debug('[%s] No messages' % self.name)
+            LOG.debug('[%s] No messages', self.name)
             return False
 
         try:

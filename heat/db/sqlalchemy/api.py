@@ -35,9 +35,6 @@ from sqlalchemy.orm import aliased as orm_aliased
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.db.sqlalchemy import filters as db_filters
 from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
@@ -1294,7 +1291,7 @@ def _purge_stacks(stack_infos, engine, meta):
     syncpoint = sqlalchemy.Table('sync_point', meta, autoload=True)
 
     stack_info_str = ','.join([str(i) for i in stack_infos])
-    LOG.info("Purging stacks %s" % stack_info_str)
+    LOG.info("Purging stacks %s", stack_info_str)
 
     # TODO(cwolfe): find a way to make this re-entrant with
     # reasonably sized transactions (good luck), or add
@@ -1475,8 +1472,8 @@ def _db_encrypt_or_decrypt_template_params(
             for raw_template in next_batch:
                 try:
                     if verbose:
-                        LOG.info(_LI("Processing raw_template %(id)d..."),
-                                 {'id': raw_template.id})
+                        LOG.info("Processing raw_template %s...",
+                                 raw_template.id)
                     env = raw_template.environment
                     needs_update = False
 
@@ -1524,16 +1521,16 @@ def _db_encrypt_or_decrypt_template_params(
                         raw_template_update(ctxt, raw_template.id,
                                             {'environment': newenv})
                 except Exception as exc:
-                    LOG.exception(_LE('Failed to %(crypt_action)s parameters '
-                                      'of raw template %(id)d'),
+                    LOG.exception('Failed to %(crypt_action)s parameters '
+                                  'of raw template %(id)d',
                                   {'id': raw_template.id,
                                    'crypt_action': _crypt_action(encrypt)})
                     excs.append(exc)
                     continue
                 finally:
                     if verbose:
-                        LOG.info(_LI("Finished %(crypt_action)s processing of "
-                                     "raw_template %(id)d."),
+                        LOG.info("Finished %(crypt_action)s processing of "
+                                 "raw_template %(id)d.",
                                  {'id': raw_template.id,
                                   'crypt_action': _crypt_action(encrypt)})
         next_batch = list(itertools.islice(template_batches, batch_size))
@@ -1560,8 +1557,8 @@ def _db_encrypt_or_decrypt_resource_prop_data_legacy(
                     continue
                 try:
                     if verbose:
-                        LOG.info(_LI("Processing resource %(id)d..."),
-                                 {'id': resource.id})
+                        LOG.info("Processing resource %s...",
+                                 resource.id)
                     if encrypt:
                         result = crypt.encrypted_dict(resource.properties_data,
                                                       encryption_key)
@@ -1573,16 +1570,16 @@ def _db_encrypt_or_decrypt_resource_prop_data_legacy(
                                      'properties_data_encrypted': encrypt},
                                     resource.atomic_key)
                 except Exception as exc:
-                    LOG.exception(_LE('Failed to %(crypt_action)s '
-                                      'properties_data of resource %(id)d') %
+                    LOG.exception('Failed to %(crypt_action)s '
+                                  'properties_data of resource %(id)d' %
                                   {'id': resource.id,
                                    'crypt_action': _crypt_action(encrypt)})
                     excs.append(exc)
                     continue
                 finally:
                     if verbose:
-                        LOG.info(_LI("Finished processing resource "
-                                     "%(id)d."), {'id': resource.id})
+                        LOG.info("Finished processing resource %s.",
+                                 resource.id)
         next_batch = list(itertools.islice(resource_batches, batch_size))
     return excs
 
@@ -1607,8 +1604,8 @@ def _db_encrypt_or_decrypt_resource_prop_data(
                     continue
                 try:
                     if verbose:
-                        LOG.info(_LI("Processing resource_properties_data "
-                                     "%(id)d..."), {'id': rpd.id})
+                        LOG.info("Processing resource_properties_data "
+                                 "%s...", rpd.id)
                     if encrypt:
                         result = crypt.encrypted_dict(rpd.data,
                                                       encryption_key)
@@ -1619,8 +1616,8 @@ def _db_encrypt_or_decrypt_resource_prop_data(
                                 'encrypted': encrypt})
                 except Exception as exc:
                     LOG.exception(
-                        _LE("Failed to %(crypt_action)s "
-                            "data of resource_properties_data %(id)d") %
+                        "Failed to %(crypt_action)s "
+                        "data of resource_properties_data %(id)d" %
                         {'id': rpd.id,
                          'crypt_action': _crypt_action(encrypt)})
                     excs.append(exc)
@@ -1628,8 +1625,8 @@ def _db_encrypt_or_decrypt_resource_prop_data(
                 finally:
                     if verbose:
                         LOG.info(
-                            _LI("Finished processing resource_properties_data"
-                                " %(id)d."), {'id': rpd.id})
+                            "Finished processing resource_properties_data"
+                            " %s.", rpd.id)
         next_batch = list(itertools.islice(rpd_batches, batch_size))
     return excs
 
@@ -1706,10 +1703,10 @@ def db_properties_data_migrate(ctxt, batch_size=50):
                     encrypted = resource.properties_data_encrypted
                     if encrypted is None:
                         LOG.warning(
-                            _LW('Unexpected: resource.encrypted is None for '
-                                'resource id %(id)d for legacy '
-                                'resource.properties_data, assuming False.'),
-                            {'id': resource.id})
+                            'Unexpected: resource.encrypted is None for '
+                            'resource id %s for legacy '
+                            'resource.properties_data, assuming False.',
+                            resource.id)
                         encrypted = False
                     rsrc_prop_data = resource_prop_data_create(
                         ctxt, {'encrypted': encrypted,
@@ -1720,8 +1717,8 @@ def db_properties_data_migrate(ctxt, batch_size=50):
                                      'rsrc_prop_data_id': rsrc_prop_data.id},
                                     resource.atomic_key)
                 except Exception:
-                    LOG.exception(_LE('Failed to migrate properties_data for '
-                                      'resource %(id)d'), {'id': resource.id})
+                    LOG.exception('Failed to migrate properties_data for '
+                                  'resource %d', resource.id)
                     continue
         next_batch = list(itertools.islice(resource_batches, batch_size))
 
@@ -1743,8 +1740,8 @@ def db_properties_data_migrate(ctxt, batch_size=50):
                     event.update({'resource_properties': None,
                                   'rsrc_prop_data_id': rsrc_prop_data.id})
                 except Exception:
-                    LOG.exception(_LE('Failed to migrate resource_properties '
-                                      'for event %(id)d'), {'id': event.id})
+                    LOG.exception('Failed to migrate resource_properties '
+                                  'for event %d', event.id)
                     continue
         next_batch = list(itertools.islice(event_batches, batch_size))
 

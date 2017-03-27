@@ -16,8 +16,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -162,7 +160,7 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
             alarm_state = details.get('current',
                                       details.get('state', 'alarm')).lower()
 
-        LOG.info(_LI('Alarm %(name)s, new state %(state)s'),
+        LOG.info('Alarm %(name)s, new state %(state)s',
                  {'name': self.name, 'state': alarm_state})
 
         asgn_id = self.properties[self.AUTO_SCALING_GROUP_NAME]
@@ -176,11 +174,11 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
 
         self._check_scaling_allowed()
 
-        LOG.info(_LI('%(name)s alarm, adjusting group %(group)s with id '
-                     '%(asgn_id)s by %(filter)s') % {
-            'name': self.name, 'group': group.name,
-            'asgn_id': asgn_id,
-            'filter': self.properties[self.SCALING_ADJUSTMENT]})
+        LOG.info('%(name)s alarm, adjusting group %(group)s with id '
+                 '%(asgn_id)s by %(filter)s',
+                 {'name': self.name, 'group': group.name,
+                  'asgn_id': asgn_id,
+                  'filter': self.properties[self.SCALING_ADJUSTMENT]})
 
         size_changed = False
         try:
@@ -192,10 +190,9 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
         except resource.NoActionRequired:
             raise
         except Exception:
-            LOG.error(_LE("Error in performing scaling adjustment with "
-                          "%(name)s alarm for group %(group)s.") % {
-                'name': self.name,
-                'group': group.name})
+            LOG.error("Error in performing scaling adjustment with "
+                      "%(name)s alarm for group %(group)s.",
+                      {'name': self.name, 'group': group.name})
             raise
         finally:
             self._finished_scaling("%s : %s" % (

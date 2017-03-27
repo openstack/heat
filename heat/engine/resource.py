@@ -24,9 +24,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import short_id
 from heat.common import timeutils
@@ -188,7 +185,7 @@ class Resource(object):
         try:
             (svc_available, reason) = cls.is_service_available(context)
         except Exception as exc:
-            LOG.exception(_LE("Resource type %s unavailable"),
+            LOG.exception("Resource type %s unavailable",
                           resource_type)
             ex = exception.ResourceTypeUnavailable(
                 resource_type=resource_type,
@@ -485,7 +482,7 @@ class Resource(object):
             self._add_event(self.action, self.status,
                             _("%(a)s paused until Hook %(h)s is cleared")
                             % {'a': action, 'h': hook})
-            LOG.info(_LI('Reached hook on %s'), self)
+            LOG.info('Reached hook on %s', self)
 
             while self.has_hook(hook):
                 try:
@@ -584,8 +581,8 @@ class Resource(object):
                 # stacks (see bug 1543685). The error should be harmless
                 # because we're on the before properties, which have presumably
                 # already been validated.
-                LOG.warning(_LW('Ignoring error in old property value '
-                                '%(prop_name)s: %(msg)s'),
+                LOG.warning('Ignoring error in old property value '
+                            '%(prop_name)s: %(msg)s',
                             {'prop_name': key, 'msg': six.text_type(exc)})
                 return True
 
@@ -768,7 +765,7 @@ class Resource(object):
                 self.state_set(action, self.COMPLETE, six.text_type(ex))
                 LOG.debug('%s', six.text_type(ex))
         except Exception as ex:
-            LOG.info(_LI('%(action)s: %(info)s'),
+            LOG.info('%(action)s: %(info)s',
                      {"action": action,
                       "info": six.text_type(self)},
                      exc_info=True)
@@ -784,7 +781,7 @@ class Resource(object):
                         msg += ' (%s)' % reason
                     self.state_set(action, self.FAILED, msg)
                 except Exception:
-                    LOG.exception(_LE('Error marking resource as failed'))
+                    LOG.exception('Error marking resource as failed')
         else:
             self.state_set(action, self.COMPLETE)
 
@@ -837,7 +834,7 @@ class Resource(object):
                                 canceller(handler_data)
                             except Exception:
                                 LOG.exception(
-                                    _LE('Error cancelling resource %s'),
+                                    'Error cancelling resource %s',
                                     action
                                 )
 
@@ -957,7 +954,7 @@ class Resource(object):
             yield self._break_if_required(
                 self.CREATE, environment.HOOK_PRE_CREATE)
 
-        LOG.info(_LI('creating %s'), self)
+        LOG.info('creating %s', self)
 
         # Re-resolve the template, since if the resource Ref's
         # the StackId pseudo parameter, it will change after
@@ -1284,9 +1281,9 @@ class Resource(object):
             except exception.EntityNotFound:
                 raise UpdateReplace(self)
             except Exception as ex:
-                LOG.warning(_LW("Resource cannot be updated with it's "
-                                "live state in case of next "
-                                "error: %s"), ex)
+                LOG.warning("Resource cannot be updated with it's "
+                            "live state in case of next "
+                            "error: %s", ex)
         return after_props, before_props
 
     def _prepare_update_replace(self, action):
@@ -1367,7 +1364,7 @@ class Resource(object):
                     exc = Exception(_('Resource update already requested'))
                     raise exception.ResourceFailure(exc, self, action)
 
-            LOG.info(_LI('updating %s'), self)
+            LOG.info('updating %s', self)
 
             self.updated_time = datetime.utcnow()
 
@@ -1429,7 +1426,7 @@ class Resource(object):
         original state with the added message that check was not performed.
         """
         action = self.CHECK
-        LOG.info(_LI('Checking %s'), self)
+        LOG.info('Checking %s', self)
 
         if hasattr(self, 'handle_%s' % action.lower()):
             if self.state == (self.INIT, self.COMPLETE):
@@ -1477,7 +1474,7 @@ class Resource(object):
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
-        LOG.info(_LI('suspending %s'), self)
+        LOG.info('suspending %s', self)
         return self._do_action(action)
 
     def resume(self):
@@ -1496,12 +1493,12 @@ class Resource(object):
             exc = exception.Error(_('State %s invalid for resume')
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
-        LOG.info(_LI('resuming %s'), self)
+        LOG.info('resuming %s', self)
         return self._do_action(action)
 
     def snapshot(self):
         """Snapshot the resource and return the created data, if any."""
-        LOG.info(_LI('snapshotting %s'), self)
+        LOG.info('snapshotting %s', self)
         return self._do_action(self.SNAPSHOT)
 
     @scheduler.wrappertask
@@ -1551,7 +1548,7 @@ class Resource(object):
         This may be overridden by resource plugins to add extra
         validation logic specific to the resource implementation.
         """
-        LOG.info(_LI('Validating %s'), self)
+        LOG.info('Validating %s', self)
         return self.validate_template()
 
     def validate_template(self):
@@ -1608,8 +1605,8 @@ class Resource(object):
             db_res = resource_objects.Resource.get_obj(
                 self.context, self.replaced_by)
         except exception.NotFound:
-            LOG.info(_LI("Could not find replacement of resource %(name)s "
-                         "with id %(id)s while updating needed_by."),
+            LOG.info("Could not find replacement of resource %(name)s "
+                     "with id %(id)s while updating needed_by.",
                      {'name': self.name, 'id': self.replaced_by})
             return
 
@@ -1698,7 +1695,7 @@ class Resource(object):
             yield self._break_if_required(
                 self.DELETE, environment.HOOK_PRE_DELETE)
 
-        LOG.info(_LI('deleting %s'), self)
+        LOG.info('deleting %s', self)
 
         if self._stored_properties_data is not None:
             # On delete we can't rely on re-resolving the properties
@@ -1723,7 +1720,7 @@ class Resource(object):
 
                 while True:
                     count += 1
-                    LOG.info(_LI('delete %(name)s attempt %(attempt)d') %
+                    LOG.info('delete %(name)s attempt %(attempt)d' %
                              {'name': six.text_type(self), 'attempt': count+1})
                     if count:
                         delay = timeutils.retry_backoff_delay(count,
@@ -1765,7 +1762,7 @@ class Resource(object):
                     self.id,
                     {'physical_resource_id': self.resource_id})
             except Exception as ex:
-                LOG.warning(_LW('db error %s'), ex)
+                LOG.warning('db error %s', ex)
 
     def store(self, set_metadata=False):
         """Create the resource in the database.
@@ -1836,11 +1833,11 @@ class Resource(object):
                 atomic_key=rs.atomic_key,
                 expected_engine_id=None)
         except Exception as ex:
-            LOG.error(_LE('DB error %s'), ex)
+            LOG.error('DB error %s', ex)
             raise
 
         if not updated_ok:
-            LOG.info(_LI('Resource %s is locked for update; deferring'),
+            LOG.info('Resource %s is locked for update; deferring',
                      six.text_type(self))
             LOG.debug(('Resource id:%(resource_id)s with '
                        'atomic_key:%(atomic_key)s, locked '
@@ -1872,7 +1869,7 @@ class Resource(object):
             atomic_key=atomic_key)
 
         if not updated_ok:
-            LOG.warning(_LW('Failed to unlock resource %s'), self.name)
+            LOG.warning('Failed to unlock resource %s', self.name)
 
     def _resolve_all_attributes(self, attr):
         """Method for resolving all attributes.
@@ -1920,7 +1917,7 @@ class Resource(object):
                 else:
                     return resource.to_dict()
             except AttributeError as ex:
-                LOG.warning(_LW("Resolving 'show' attribute has failed : %s"),
+                LOG.warning("Resolving 'show' attribute has failed : %s",
                             ex)
                 return None
 
@@ -2138,7 +2135,7 @@ class Resource(object):
         # `handle_signal` callbacks:
         hook = details['unset_hook']
         self.clear_hook(hook)
-        LOG.info(_LI('Clearing %(hook)s hook on %(resource)s'),
+        LOG.info('Clearing %(hook)s hook on %(resource)s',
                  {'hook': hook, 'resource': six.text_type(self)})
         self._add_event(self.action, self.status,
                         "Hook %s is cleared" % hook)
@@ -2175,7 +2172,7 @@ class Resource(object):
             # Don't log an event as it just spams the user.
             pass
         except Exception as ex:
-            LOG.info(_LI('signal %(name)s : %(msg)s'),
+            LOG.info('signal %(name)s : %(msg)s',
                      {'name': six.text_type(self),
                       'msg': six.text_type(ex)},
                      exc_info=True)
@@ -2207,7 +2204,7 @@ class Resource(object):
     def metadata_update(self, new_metadata=None):
         """No-op for resources which don't explicitly override this method."""
         if new_metadata:
-            LOG.warning(_LW("Resource %s does not implement metadata update"),
+            LOG.warning("Resource %s does not implement metadata update",
                         self.name)
 
     @classmethod

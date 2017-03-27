@@ -16,7 +16,6 @@ from oslo_serialization import jsonutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -503,7 +502,7 @@ class Port(neutron.NeutronResource):
                         subnets.append(self.client().show_subnet(
                             subnet_id)['subnet'])
             except Exception as ex:
-                LOG.warning(_LW("Failed to fetch resource attributes: %s"), ex)
+                LOG.warning("Failed to fetch resource attributes: %s", ex)
                 return
             return subnets
         return super(Port, self)._resolve_attribute(name)
@@ -520,7 +519,7 @@ class Port(neutron.NeutronResource):
                 prop_diff['qos_policy_id'] = self.client_plugin(
                     ).get_qos_policy_id(qos_policy) if qos_policy else None
             self._prepare_port_properties(prop_diff, prepare_for_update=True)
-            LOG.debug('updating port with %s' % prop_diff)
+            LOG.debug('updating port with %s', prop_diff)
             self.client().update_port(self.resource_id, {'port': prop_diff})
 
     def check_update_complete(self, *args):

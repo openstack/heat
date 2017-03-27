@@ -14,7 +14,6 @@
 
 from oslo_log import log as logging
 
-from heat.common.i18n import _LW
 from heat.engine import resource
 from heat.engine import support
 
@@ -35,7 +34,7 @@ class BaseSenlinResource(resource.Resource):
             res_info = client_method(self.resource_id)
             return res_info.to_dict()
         except AttributeError as ex:
-            LOG.warning(_LW("No method to get the resource: %s"), ex)
+            LOG.warning("No method to get the resource: %s", ex)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:

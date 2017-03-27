@@ -15,7 +15,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import resource
 from oslo_utils import timeutils
 import six
@@ -33,8 +32,8 @@ class CooldownMixin(object):
     def _check_scaling_allowed(self):
         metadata = self.metadata_get()
         if metadata.get('scaling_in_progress'):
-            LOG.info(_LI("Can not perform scaling action: resource %s "
-                         "is already in scaling.") % self.name)
+            LOG.info("Can not perform scaling action: resource %s "
+                     "is already in scaling.", self.name)
             reason = _('due to scaling activity')
             raise resource.NoActionRequired(res_name=self.name,
                                             reason=reason)
@@ -66,8 +65,8 @@ class CooldownMixin(object):
 
     def _cooldown_check(self, cooldown, last_adjust):
         if not timeutils.is_older_than(last_adjust, cooldown):
-            LOG.info(_LI("Can not perform scaling action: "
-                         "resource %(name)s is in cooldown (%(cooldown)s).") %
+            LOG.info("Can not perform scaling action: "
+                     "resource %(name)s is in cooldown (%(cooldown)s).",
                      {'name': self.name,
                       'cooldown': cooldown})
             reason = _('due to cooldown, '

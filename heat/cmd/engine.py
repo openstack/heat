@@ -32,7 +32,6 @@ from oslo_reports import guru_meditation_report as gmr
 from oslo_service import service
 
 from heat.common import config
-from heat.common.i18n import _LC
 from heat.common import messaging
 from heat.common import profiler
 from heat.engine import template
@@ -60,7 +59,7 @@ def launch_engine(setup_logging=True):
     try:
         mgr = template._get_template_extension_manager()
     except template.TemplatePluginNotRegistered as ex:
-        LOG.critical(_LC("%s"), ex)
+        LOG.critical("%s", ex)
     if not mgr or not mgr.names():
         sys.exit("ERROR: No template format plugins registered")
 

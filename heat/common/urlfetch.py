@@ -21,7 +21,6 @@ from six.moves import urllib
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 
 cfg.CONF.import_opt('max_template_size', 'heat.common.config')
 
@@ -40,7 +39,7 @@ def get(url, allowed_schemes=('http', 'https')):
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     """
-    LOG.info(_LI('Fetching data from %s'), url)
+    LOG.info('Fetching data from %s', url)
 
     components = urllib.parse.urlparse(url)
 
@@ -70,10 +69,11 @@ def get(url, allowed_schemes=('http', 'https')):
         for chunk in reader:
             result += chunk
             if len(result) > cfg.CONF.max_template_size:
-                raise URLFetchError("Template exceeds maximum allowed size (%s"
-                                    " bytes)" % cfg.CONF.max_template_size)
+                raise URLFetchError(_("Template exceeds maximum allowed size "
+                                      "(%s bytes)") %
+                                    cfg.CONF.max_template_size)
         return result
 
     except exceptions.RequestException as ex:
-        LOG.info(_LI('Failed to retrieve template: %s') % ex)
+        LOG.info('Failed to retrieve template: %s', ex)
         raise URLFetchError(_('Failed to retrieve template from %s') % url)

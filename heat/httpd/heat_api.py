@@ -23,7 +23,6 @@ import oslo_i18n as i18n
 from oslo_log import log as logging
 
 from heat.common import config
-from heat.common.i18n import _LI
 from heat.common import messaging
 from heat.common import profiler
 from heat import version as hversion
@@ -44,6 +43,6 @@ def init_application():
     port = cfg.CONF.heat_api.bind_port
     host = cfg.CONF.heat_api.bind_host
     profiler.setup('heat-api', host)
-    LOG.info(_LI('Starting Heat REST API on %(host)s:%(port)s'),
+    LOG.info('Starting Heat REST API on %(host)s:%(port)s',
              {'host': host, 'port': port})
     return config.load_paste_app()

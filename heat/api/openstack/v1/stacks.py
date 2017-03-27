@@ -24,7 +24,6 @@ from heat.api.openstack.v1.views import stacks_view
 from heat.common import context
 from heat.common import environment_format
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import param_utils
 from heat.common import serializers
@@ -324,7 +323,7 @@ class StackController(object):
                                                      not_tags=not_tags,
                                                      not_tags_any=not_tags_any)
             except AttributeError as ex:
-                LOG.warning(_LW("Old Engine Version: %s"), ex)
+                LOG.warning("Old Engine Version: %s", ex)
 
         return stacks_view.collection(req, stacks=stacks,
                                       count=count,

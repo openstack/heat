@@ -22,7 +22,6 @@ from osprofiler import opts as profiler
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.common import wsgi
 
 
@@ -375,8 +374,8 @@ def startup_sanity_check():
             not cfg.CONF.stack_user_domain_name):
         # FIXME(shardy): Legacy fallback for folks using old heat.conf
         # files which lack domain configuration
-        LOG.warning(_LW('stack_user_domain_id or stack_user_domain_name not '
-                        'set in heat.conf falling back to using default'))
+        LOG.warning('stack_user_domain_id or stack_user_domain_name not '
+                    'set in heat.conf falling back to using default')
     else:
         domain_admin_user = cfg.CONF.stack_domain_admin
         domain_admin_password = cfg.CONF.stack_domain_admin_password
@@ -389,7 +388,7 @@ def startup_sanity_check():
     auth_key_len = len(cfg.CONF.auth_encryption_key)
     if auth_key_len in (16, 24):
         LOG.warning(
-            _LW('Please update auth_encryption_key to be 32 characters.'))
+            'Please update auth_encryption_key to be 32 characters.')
     elif auth_key_len != 32:
         raise exception.Error(_('heat.conf misconfigured, auth_encryption_key '
                                 'must be 32 characters'))

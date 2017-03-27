@@ -21,7 +21,6 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine.clients.os import swift
 from heat.engine.resources import stack_user
 
@@ -139,8 +138,8 @@ class SignalResponder(stack_user.StackUser):
             secret_key = self.data().get('secret_key')
 
             if not access_key or not secret_key:
-                LOG.warning(_LW('Cannot generate signed url, '
-                                'unable to create keypair'))
+                LOG.warning('Cannot generate signed url, '
+                            'unable to create keypair')
                 return
 
         config_url = cfg.CONF.heat_waitcondition_server_url
@@ -342,12 +341,12 @@ class SignalResponder(stack_user.StackUser):
             container = swift_client.get_container(self.stack.id)
         except Exception as exc:
             self.client_plugin('swift').ignore_not_found(exc)
-            LOG.debug("Swift container %s was not found" % self.stack.id)
+            LOG.debug("Swift container %s was not found", self.stack.id)
             return
 
         index = container[1]
         if not index:  # Swift objects were deleted by user
-            LOG.debug("Swift objects in container %s were not found" %
+            LOG.debug("Swift objects in container %s were not found",
                       self.stack.id)
             return
 

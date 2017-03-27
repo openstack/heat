@@ -1509,7 +1509,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             # if the server has been suspended successful,
             # no need to suspend again
             if self.client_plugin().get_status(server) != 'SUSPENDED':
-                LOG.debug('suspending server %s' % self.resource_id)
+                LOG.debug('suspending server %s', self.resource_id)
                 server.suspend()
             return server.id
 
@@ -1519,8 +1519,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         if not server:
             return False
         status = cp.get_status(server)
-        LOG.debug('%(name)s check_suspend_complete status = %(status)s'
-                  % {'name': self.name, 'status': status})
+        LOG.debug('%(name)s check_suspend_complete status = %(status)s',
+                  {'name': self.name, 'status': status})
         if status in list(cp.deferred_server_statuses + ['ACTIVE']):
             return status == 'SUSPENDED'
         else:
@@ -1552,7 +1552,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             # if the server has been resumed successful,
             # no need to resume again
             if self.client_plugin().get_status(server) != 'ACTIVE':
-                LOG.debug('resuming server %s' % self.resource_id)
+                LOG.debug('resuming server %s', self.resource_id)
                 server.resume()
             return server.id
 

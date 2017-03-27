@@ -22,7 +22,6 @@ from heat.api.aws import exception
 from heat.api.aws import utils as api_utils
 from heat.common import exception as heat_exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.common import identifier
 from heat.common import policy
 from heat.common import template_format
@@ -426,7 +425,7 @@ class StackController(object):
             msg = _("The Template must be a JSON or YAML document.")
             return exception.HeatInvalidParameterValueError(detail=msg)
 
-        LOG.info(_LI('validate_template'))
+        LOG.info('validate_template')
 
         def format_validate_parameter(key, value):
             """Reformat engine output into AWS "ValidateTemplate" format."""

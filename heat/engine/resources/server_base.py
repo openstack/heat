@@ -18,7 +18,6 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
 from heat.common import exception
-from heat.common.i18n import _LE
 from heat.engine.clients import progress
 from heat.engine.resources import stack_user
 
@@ -244,7 +243,7 @@ class BaseServer(stack_user.StackUser):
             # transport will continue to work, and the new transport may work
             # despite exceptions in the above block.
             LOG.exception(
-                _LE('Error while updating software config transport')
+                'Error while updating software config transport'
             )
 
     def metadata_update(self, new_metadata=None):

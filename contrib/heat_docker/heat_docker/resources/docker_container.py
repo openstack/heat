@@ -21,7 +21,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -554,8 +553,8 @@ def available_resource_mapping():
     if DOCKER_INSTALLED:
         return resource_mapping()
     else:
-        LOG.warning(_LW("Docker plug-in loaded, but docker lib "
-                        "not installed."))
+        LOG.warning("Docker plug-in loaded, but docker lib "
+                    "not installed.")
         return {}
 
 

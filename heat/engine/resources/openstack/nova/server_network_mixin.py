@@ -21,7 +21,6 @@ import tenacity
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import port as neutron_port
 
@@ -434,10 +433,10 @@ class ServerNetworkMixin(object):
             try:
                 if self.client_plugin().check_interface_detach(
                         existing_server_id, port['id']):
-                    LOG.info(_LI('Detach interface %(port)s successful from '
-                                 'server %(server)s.')
-                             % {'port': port['id'],
-                                'server': existing_server_id})
+                    LOG.info('Detach interface %(port)s successful from '
+                             'server %(server)s.',
+                             {'port': port['id'],
+                              'server': existing_server_id})
             except tenacity.RetryError:
                 raise exception.InterfaceDetachFailed(
                     port=port['id'], server=existing_server_id)
@@ -451,10 +450,10 @@ class ServerNetworkMixin(object):
             try:
                 if self.client_plugin().check_interface_attach(
                         prev_server_id, port['id']):
-                    LOG.info(_LI('Attach interface %(port)s successful to '
-                                 'server %(server)s')
-                             % {'port': port['id'],
-                                'server': prev_server_id})
+                    LOG.info('Attach interface %(port)s successful to '
+                             'server %(server)s',
+                             {'port': port['id'],
+                              'server': prev_server_id})
             except tenacity.RetryError:
                 raise exception.InterfaceAttachFailed(
                     port=port['id'], server=prev_server_id)

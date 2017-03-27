@@ -17,7 +17,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -249,7 +248,7 @@ class SaharaCluster(resource.Resource):
             net_id=net_id,
             use_autoconfig=use_autoconfig,
             shares=shares)
-        LOG.info(_LI('Cluster "%s" is being started.'), cluster.name)
+        LOG.info('Cluster "%s" is being started.', cluster.name)
         self.resource_id_set(cluster.id)
         return self.resource_id
 
@@ -261,7 +260,7 @@ class SaharaCluster(resource.Resource):
         if cluster.status != self.CLUSTER_ACTIVE:
             return False
 
-        LOG.info(_LI("Cluster '%s' has been created"), cluster.name)
+        LOG.info("Cluster '%s' has been created", cluster.name)
         return True
 
     def check_delete_complete(self, resource_id):
@@ -272,7 +271,7 @@ class SaharaCluster(resource.Resource):
             cluster = self.client().clusters.get(resource_id)
         except Exception as ex:
             self.client_plugin().ignore_not_found(ex)
-            LOG.info(_LI("Cluster '%s' has been deleted"),
+            LOG.info("Cluster '%s' has been deleted",
                      self._cluster_name())
             return True
         else:

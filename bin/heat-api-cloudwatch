@@ -22,13 +22,12 @@ implement them.
 
 from oslo_log import log as logging
 
-from heat.common.i18n import _LW
 
 LOG = logging.getLogger(__name__)
 
-LOG.warning(_LW('DEPRECATED: `heat-api-cloudwatch` script is deprecated. '
-                'Please use the system level heat binaries installed to '
-                'start any of the heat services.'))
+LOG.warning('DEPRECATED: `heat-api-cloudwatch` script is deprecated. '
+            'Please use the system level heat binaries installed to '
+            'start any of the heat services.')
 
 import os
 import sys

@@ -37,9 +37,6 @@ from heat.common import environment_format as env_fmt
 from heat.common import environment_util as env_util
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.common import identifier
 from heat.common import messaging as rpc_messaging
 from heat.common import policy
@@ -133,7 +130,7 @@ class ThreadGroupManager(object):
             try:
                 gt.wait()
             except Exception:
-                LOG.exception(_LE('Unhandled error in asynchronous task'))
+                LOG.exception('Unhandled error in asynchronous task')
             except BaseException:
                 pass
 
@@ -278,9 +275,9 @@ class EngineListener(object):
             try:
                 self._server.stop()
                 self._server.wait()
-                LOG.info(_LI("Engine listener is stopped successfully"))
+                LOG.info("Engine listener is stopped successfully")
             except Exception as e:
-                LOG.error(_LE("Failed to stop engine listener, %s"), e)
+                LOG.error("Failed to stop engine listener, %s", e)
 
     def listening(self, ctxt):
         """Respond to a watchdog request.
@@ -336,14 +333,14 @@ class EngineService(service.ServiceBase):
         self.resource_enforcer = policy.ResourceEnforcer()
 
         if cfg.CONF.trusts_delegated_roles:
-            LOG.warning(_LW('The default value of "trusts_delegated_roles" '
-                            'option in heat.conf is changed to [] in Kilo '
-                            'and heat will delegate all roles of trustor. '
-                            'Please keep the same if you do not want to '
-                            'delegate subset roles when upgrading.'))
+            LOG.warning('The default value of "trusts_delegated_roles" '
+                        'option in heat.conf is changed to [] in Kilo '
+                        'and heat will delegate all roles of trustor. '
+                        'Please keep the same if you do not want to '
+                        'delegate subset roles when upgrading.')
 
     def create_periodic_tasks(self):
-        LOG.debug("Starting periodic watch tasks pid=%s" % os.getpid())
+        LOG.debug("Starting periodic watch tasks pid=%s", os.getpid())
         # Note with multiple workers, the parent process hasn't called start()
         # so we need to create a ThreadGroupManager here for the periodic tasks
         if self.thread_group_mgr is None:
@@ -361,10 +358,10 @@ class EngineService(service.ServiceBase):
                         show_hidden=True)
                     for s in stacks:
                         self.stack_watch.start_watch_task(s.id, admin_context)
-                    LOG.info(_LI("Watch tasks created"))
+                    LOG.info("Watch tasks created")
                     return
                 except Exception as e:
-                    LOG.error(_LE("Watch task creation attempt failed, %s"), e)
+                    LOG.error("Watch task creation attempt failed, %s", e)
                     eventlet.sleep(5)
 
         if self.manage_thread_grp is None:
@@ -377,7 +374,7 @@ class EngineService(service.ServiceBase):
             self.thread_group_mgr = ThreadGroupManager()
         self.listener = EngineListener(self.host, self.engine_id,
                                        self.thread_group_mgr)
-        LOG.debug("Starting listener for engine %s" % self.engine_id)
+        LOG.debug("Starting listener for engine %s", self.engine_id)
         self.listener.start()
 
         if cfg.CONF.convergence_engine:
@@ -427,9 +424,9 @@ class EngineService(service.ServiceBase):
         try:
             self._rpc_server.stop()
             self._rpc_server.wait()
-            LOG.info(_LI("Engine service is stopped successfully"))
+            LOG.info("Engine service is stopped successfully")
         except Exception as e:
-            LOG.error(_LE("Failed to stop engine service, %s"), e)
+            LOG.error("Failed to stop engine service, %s", e)
 
     def stop(self):
         self._stop_rpc_server()
@@ -446,19 +443,19 @@ class EngineService(service.ServiceBase):
                 # Ignore dummy service task
                 if stack_id == cfg.CONF.periodic_interval:
                     continue
-                LOG.info(_LI("Waiting stack %s processing to be finished"),
+                LOG.info("Waiting stack %s processing to be finished",
                          stack_id)
                 # Stop threads gracefully
                 self.thread_group_mgr.stop(stack_id, True)
-                LOG.info(_LI("Stack %s processing was finished"), stack_id)
+                LOG.info("Stack %s processing was finished", stack_id)
         if self.manage_thread_grp:
             self.manage_thread_grp.stop()
             ctxt = context.get_admin_context()
             service_objects.Service.delete(ctxt, self.service_id)
-            LOG.info(_LI('Service %s is deleted'), self.service_id)
+            LOG.info('Service %s is deleted', self.service_id)
 
         # Terminate the engine process
-        LOG.info(_LI("All threads were gone, terminating engine"))
+        LOG.info("All threads were gone, terminating engine")
 
     def wait(self):
         pass
@@ -739,7 +736,7 @@ class EngineService(service.ServiceBase):
         :type  environment_files: list or None
         """
 
-        LOG.info(_LI('previewing stack %s'), stack_name)
+        LOG.info('previewing stack %s', stack_name)
 
         conv_eng = cfg.CONF.convergence_engine
         stack = self._parse_template_and_validate_stack(cnxt,
@@ -783,7 +780,7 @@ class EngineService(service.ServiceBase):
         :param parent_resource_name: the parent resource name
         :param template_id: the ID of a pre-stored template in the DB
         """
-        LOG.info(_LI('Creating stack %s'), stack_name)
+        LOG.info('Creating stack %s', stack_name)
 
         def _create_stack_user(stack):
             if not stack.stack_user_project_id:
@@ -806,7 +803,7 @@ class EngineService(service.ServiceBase):
                     # Schedule a periodic watcher task for this stack
                     self.stack_watch.start_watch_task(stack.id, cnxt)
             else:
-                LOG.info(_LI("Stack create failed, status %s"), stack.status)
+                LOG.info("Stack create failed, status %s", stack.status)
 
         convergence = cfg.CONF.convergence_engine
 
@@ -883,9 +880,9 @@ class EngineService(service.ServiceBase):
                 else:
                     # Nothing we can do, the failed update happened before
                     # we started storing prev_raw_template_id
-                    LOG.error(_LE('PATCH update to FAILED stack only '
-                                  'possible if convergence enabled or '
-                                  'previous template stored'))
+                    LOG.error('PATCH update to FAILED stack only '
+                              'possible if convergence enabled or '
+                              'previous template stored')
                     msg = _('PATCH update to non-COMPLETE stack')
                     raise exception.NotSupported(feature=msg)
 
@@ -970,7 +967,7 @@ class EngineService(service.ServiceBase):
         """
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
-        LOG.info(_LI('Updating stack %s'), db_stack.name)
+        LOG.info('Updating stack %s', db_stack.name)
         if cfg.CONF.reauthentication_auth_method == 'trusts':
             current_stack = parser.Stack.load(
                 cnxt, stack=db_stack, use_stored_context=True)
@@ -1025,7 +1022,7 @@ class EngineService(service.ServiceBase):
         """
         # Get the database representation of the existing stack
         db_stack = self._get_stack(cnxt, stack_identity)
-        LOG.info(_LI('Previewing update of stack %s'), db_stack.name)
+        LOG.info('Previewing update of stack %s', db_stack.name)
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
 
@@ -1137,7 +1134,7 @@ class EngineService(service.ServiceBase):
             state = '_'.join(current_stack.state)
             msg = _("Cancelling update when stack is %s") % str(state)
             raise exception.NotSupported(feature=msg)
-        LOG.info(_LI('Starting cancel of updating stack %s'), db_stack.name)
+        LOG.info('Starting cancel of updating stack %s', db_stack.name)
 
         if current_stack.convergence:
             if cancel_with_rollback:
@@ -1206,7 +1203,7 @@ class EngineService(service.ServiceBase):
         :param ignorable_errors: List of error_code to be ignored as part of
         validation
         """
-        LOG.info(_LI('validate_template'))
+        LOG.info('validate_template')
         if template is None:
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
@@ -1383,7 +1380,7 @@ class EngineService(service.ServiceBase):
                 st.action == parser.Stack.DELETE):
             raise exception.EntityNotFound(entity='Stack', name=st.name)
 
-        LOG.info(_LI('Deleting stack %s'), st.name)
+        LOG.info('Deleting stack %s', st.name)
         stack = parser.Stack.load(cnxt, stack=st)
         self.resource_enforcer.enforce_stack(stack)
 
@@ -1440,7 +1437,7 @@ class EngineService(service.ServiceBase):
             watch.start()
 
             while not watch.expired():
-                LOG.debug('Waiting for stack cancel to complete: %s' %
+                LOG.debug('Waiting for stack cancel to complete: %s',
                           stack.name)
                 with lock.try_thread_lock() as acquire_result:
 
@@ -1463,7 +1460,7 @@ class EngineService(service.ServiceBase):
                     stack_identity=stack_identity)
                 if stop_result is None:
                     LOG.debug("Successfully stopped remote task "
-                              "on engine %s" % acquire_result)
+                              "on engine %s", acquire_result)
                 else:
                     raise exception.StopActionFailed(
                         stack_name=stack.name, engine_id=acquire_result)
@@ -1507,13 +1504,13 @@ class EngineService(service.ServiceBase):
             # Get stack details before deleting it.
             stack_info = stack.prepare_abandon()
             if abandon:
-                LOG.info(_LI('abandoning stack %s'), st.name)
+                LOG.info('abandoning stack %s', st.name)
                 self.thread_group_mgr.start_with_acquired_lock(stack,
                                                                lock,
                                                                stack.delete,
                                                                abandon=True)
             else:
-                LOG.info(_LI('exporting stack %s'), st.name)
+                LOG.info('exporting stack %s', st.name)
             return stack_info
 
     def list_resource_types(self,
@@ -1615,8 +1612,8 @@ class EngineService(service.ServiceBase):
         try:
             resource_class = resources.global_env().get_class(type_name)
         except exception.NotFound:
-            LOG.exception(_LE('Error loading resource type %s '
-                              'from global environment.'),
+            LOG.exception('Error loading resource type %s '
+                          'from global environment.',
                           type_name)
             raise exception.InvalidGlobalResource(type_name=type_name)
 
@@ -1676,8 +1673,8 @@ class EngineService(service.ServiceBase):
         try:
             resource_class = resources.global_env().get_class(type_name)
         except exception.NotFound:
-            LOG.exception(_LE('Error loading resource type %s '
-                              'from global environment.'),
+            LOG.exception('Error loading resource type %s '
+                          'from global environment.',
                           type_name)
             raise exception.InvalidGlobalResource(type_name=type_name)
         else:
@@ -1809,7 +1806,7 @@ class EngineService(service.ServiceBase):
 
         if cfg.CONF.heat_stack_user_role in cnxt.roles:
             if not self._authorize_stack_user(cnxt, stack, resource_name):
-                LOG.warning(_LW("Access denied to resource %s"), resource_name)
+                LOG.warning("Access denied to resource %s", resource_name)
                 raise exception.Forbidden()
 
         resource = stack.resource_get(resource_name)
@@ -2012,7 +2009,7 @@ class EngineService(service.ServiceBase):
     def stack_suspend(self, cnxt, stack_identity):
         """Handle request to perform suspend action on a stack."""
         def _stack_suspend(stack):
-            LOG.debug("suspending stack %s" % stack.name)
+            LOG.debug("suspending stack %s", stack.name)
             stack.suspend()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -2026,7 +2023,7 @@ class EngineService(service.ServiceBase):
     def stack_resume(self, cnxt, stack_identity):
         """Handle request to perform a resume action on a stack."""
         def _stack_resume(stack):
-            LOG.debug("resuming stack %s" % stack.name)
+            LOG.debug("resuming stack %s", stack.name)
             stack.resume()
 
         s = self._get_stack(cnxt, stack_identity)
@@ -2049,17 +2046,17 @@ class EngineService(service.ServiceBase):
                     {'data': data, 'status': status,
                      'status_reason': reason})
 
-            LOG.debug("Snapshotting stack %s" % stack.name)
+            LOG.debug("Snapshotting stack %s", stack.name)
             stack.snapshot(save_snapshot_func=save_snapshot)
 
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
         if stack.status == stack.IN_PROGRESS:
-            LOG.info(_LI('%(stack)s is in state %(action)s_IN_PROGRESS, '
-                         'snapshot is not permitted.'), {
-                             'stack': six.text_type(stack),
-                             'action': stack.action})
+            LOG.info('%(stack)s is in state %(action)s_IN_PROGRESS, '
+                     'snapshot is not permitted.', {
+                         'stack': six.text_type(stack),
+                         'action': stack.action})
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)
 
@@ -2104,7 +2101,7 @@ class EngineService(service.ServiceBase):
         """Handle request to perform a check action on a stack."""
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
-        LOG.info(_LI("Checking stack %s"), stack.name)
+        LOG.info("Checking stack %s", stack.name)
 
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
                                               stack.check)
@@ -2112,7 +2109,7 @@ class EngineService(service.ServiceBase):
     @context.request_context
     def stack_restore(self, cnxt, stack_identity, snapshot_id):
         def _stack_restore(stack, snapshot):
-            LOG.debug("restoring stack %s" % stack.name)
+            LOG.debug("restoring stack %s", stack.name)
             stack.restore(snapshot)
 
         s = self._get_stack(cnxt, stack_identity)
@@ -2174,7 +2171,7 @@ class EngineService(service.ServiceBase):
             try:
                 wrn = [w.name for w in watch_rule.WatchRule.get_all(cnxt)]
             except Exception as ex:
-                LOG.warning(_LW('show_watch (all) db error %s'), ex)
+                LOG.warning('show_watch (all) db error %s', ex)
                 return
 
         wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
@@ -2196,7 +2193,7 @@ class EngineService(service.ServiceBase):
         # namespace/metric, but we will want this at some point
         # for now, the API can query all metric data and filter locally
         if metric_namespace is not None or metric_name is not None:
-            LOG.error(_LE("Filtering by namespace/metric not yet supported"))
+            LOG.error("Filtering by namespace/metric not yet supported")
             return
 
         try:
@@ -2205,7 +2202,7 @@ class EngineService(service.ServiceBase):
                 r.id: r.name for r in watch_rule.WatchRule.get_all(cnxt)
             }
         except Exception as ex:
-            LOG.warning(_LW('show_metric (all) db error %s'), ex)
+            LOG.warning('show_metric (all) db error %s', ex)
             return
 
         result = [api.format_watch_data(w, rule_names) for w in wds]
@@ -2339,7 +2336,7 @@ class EngineService(service.ServiceBase):
                                          stack_id=stack_id,
                                          show_deleted=False)
         if parent_stack.convergence:
-            LOG.info(_LI("Convergence was already enabled for stack %s"),
+            LOG.info("Convergence was already enabled for stack %s",
                      stack_id)
             return
         db_stacks = stack_object.Stack.get_all_by_root_owner_id(
@@ -2382,17 +2379,17 @@ class EngineService(service.ServiceBase):
                      report_interval=cfg.CONF.periodic_interval)
             )
             self.service_id = service_ref['id']
-            LOG.debug('Service %s is started' % self.service_id)
+            LOG.debug('Service %s is started', self.service_id)
 
         try:
             service_objects.Service.update_by_id(
                 cnxt,
                 self.service_id,
                 dict(deleted_at=None))
-            LOG.debug('Service %s is updated' % self.service_id)
+            LOG.debug('Service %s is updated', self.service_id)
         except Exception as ex:
-            LOG.error(_LE('Service %(service_id)s update '
-                          'failed: %(error)s'),
+            LOG.error('Service %(service_id)s update '
+                      'failed: %(error)s',
                       {'service_id': self.service_id, 'error': ex})
 
     def service_manage_cleanup(self):
@@ -2410,7 +2407,7 @@ class EngineService(service.ServiceBase):
                 continue
             if service_ref['updated_at'] < time_line:
                 # hasn't been updated, assuming it's died.
-                LOG.debug('Service %s was aborted' % service_ref['id'])
+                LOG.debug('Service %s was aborted', service_ref['id'])
                 service_objects.Service.delete(cnxt, service_ref['id'])
 
     def reset_stack_status(self):
@@ -2440,8 +2437,8 @@ class EngineService(service.ServiceBase):
                     stk = parser.Stack.load(cnxt, stack=s,
                                             service_check_defer=True,
                                             resource_validate=False)
-                    LOG.info(_LI('Engine %(engine)s went down when stack '
-                                 '%(stack_id)s was in action %(action)s'),
+                    LOG.info('Engine %(engine)s went down when stack '
+                             '%(stack_id)s was in action %(action)s',
                              {'engine': engine_id, 'action': stk.action,
                               'stack_id': stk.id})
 
@@ -2457,6 +2454,5 @@ class EngineService(service.ServiceBase):
             except exception.ActionInProgress:
                 continue
             except Exception:
-                LOG.exception(_LE('Error while resetting stack: %s')
-                              % stack_id)
+                LOG.exception('Error while resetting stack: %s', stack_id)
                 continue

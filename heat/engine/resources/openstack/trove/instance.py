@@ -16,8 +16,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -393,9 +391,9 @@ class Instance(resource.Resource):
             return instance
         except Exception as exc:
             if self.client_plugin().is_over_limit(exc):
-                LOG.warning(_LW("Stack %(name)s (%(id)s) received an "
-                                "OverLimit response during instance.get():"
-                                " %(exception)s"),
+                LOG.warning("Stack %(name)s (%(id)s) received an "
+                            "OverLimit response during instance.get():"
+                            " %(exception)s",
                             {'name': self.stack.name,
                              'id': self.stack.id,
                              'exception': exc})
@@ -416,10 +414,10 @@ class Instance(resource.Resource):
 
         if instance.status != self.ACTIVE:
             return False
-        LOG.info(_LI("Database instance %(database)s created "
-                     "(flavor:%(flavor)s, volume:%(volume)s, "
-                     "datastore:%(datastore_type)s, "
-                     "datastore_version:%(datastore_version)s)"),
+        LOG.info("Database instance %(database)s created "
+                 "(flavor:%(flavor)s, volume:%(volume)s, "
+                 "datastore:%(datastore_type)s, "
+                 "datastore_version:%(datastore_version)s)",
                  {'database': self._dbinstance_name(),
                   'flavor': self.flavor,
                   'volume': self.volume,
@@ -503,12 +501,12 @@ class Instance(resource.Resource):
                     # the instance could have updated between the time
                     # we retrieve it and try to update it so check again
                     if self.client_plugin().is_over_limit(exc):
-                        LOG.debug("API rate limit: %(ex)s. Retrying." %
+                        LOG.debug("API rate limit: %(ex)s. Retrying.",
                                   {'ex': six.text_type(exc)})
                         return False
                     if "No change was requested" in six.text_type(exc):
-                        LOG.warning(_LW("Unexpected instance state change "
-                                        "during update. Retrying."))
+                        LOG.warning("Unexpected instance state change "
+                                    "during update. Retrying.")
                         return False
                 raise
         return True

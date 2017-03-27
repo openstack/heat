@@ -15,7 +15,6 @@ from oslo_log import log as logging
 import six
 
 from heat.common import exception
-from heat.common.i18n import _LI
 from heat.common.i18n import repr_wrapper
 from heat.engine import dependencies
 from heat.engine import resource
@@ -82,7 +81,7 @@ class StackUpdate(object):
     def _remove_backup_resource(self, prev_res):
         if prev_res.state not in ((prev_res.INIT, prev_res.COMPLETE),
                                   (prev_res.DELETE, prev_res.COMPLETE)):
-            LOG.debug("Deleting backup resource %s" % prev_res.name)
+            LOG.debug("Deleting backup resource %s", prev_res.name)
             yield prev_res.destroy()
 
     @staticmethod
@@ -106,17 +105,17 @@ class StackUpdate(object):
                 # Swap in the backup resource if it is in a valid state,
                 # instead of creating a new resource
                 if prev_res.status == prev_res.COMPLETE:
-                    LOG.debug("Swapping in backup Resource %s" % res_name)
+                    LOG.debug("Swapping in backup Resource %s", res_name)
                     self._exchange_stacks(self.existing_stack[res_name],
                                           prev_res)
                     return
 
-                LOG.debug("Deleting backup Resource %s" % res_name)
+                LOG.debug("Deleting backup Resource %s", res_name)
                 yield prev_res.destroy()
 
         # Back up existing resource
         if res_name in self.existing_stack:
-            LOG.debug("Backing up existing Resource %s" % res_name)
+            LOG.debug("Backing up existing Resource %s", res_name)
             existing_res = self.existing_stack[res_name]
             self.previous_stack.add_resource(existing_res)
             existing_res.state_set(existing_res.UPDATE, existing_res.COMPLETE)
@@ -170,8 +169,8 @@ class StackUpdate(object):
                     self.previous_stack.t.add_resource(new_res.t)
                     self.previous_stack.t.store(self.previous_stack.context)
 
-                    LOG.info(_LI("Resource %(res_name)s for stack "
-                                 "%(stack_name)s updated"),
+                    LOG.info("Resource %(res_name)s for stack "
+                             "%(stack_name)s updated",
                              {'res_name': res_name,
                               'stack_name': self.existing_stack.name})
                     return

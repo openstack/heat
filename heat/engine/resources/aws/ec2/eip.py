@@ -17,9 +17,6 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -106,21 +103,20 @@ class ElasticIp(resource.Resource):
                 'floatingip': props})['floatingip']
             self.ipaddress = ips['floating_ip_address']
             self.resource_id_set(ips['id'])
-            LOG.info(_LI('ElasticIp create %s'), str(ips))
+            LOG.info('ElasticIp create %s', str(ips))
         else:
             try:
                 ips = self.client().floating_ips.create()
             except Exception as e:
                 with excutils.save_and_reraise_exception():
                     if self.client_plugin('nova').is_not_found(e):
-                        LOG.error(_LE("No default floating IP pool configured."
-                                      " Set 'default_floating_pool' in "
-                                      "nova.conf."))
+                        LOG.error("No default floating IP pool configured. "
+                                  "Set 'default_floating_pool' in nova.conf.")
 
             if ips:
                 self.ipaddress = ips.ip
                 self.resource_id_set(ips.id)
-                LOG.info(_LI('ElasticIp create %s'), str(ips))
+                LOG.info('ElasticIp create %s', str(ips))
 
         instance_id = self.properties[self.INSTANCE_ID]
         if instance_id:
@@ -330,7 +326,7 @@ class ElasticIpAssociation(resource.Resource):
             self._floatingIp_detach(nova_ignore_not_found=True)
             port_id, port_rsrc = self._get_port_info(ni_id, instance_id)
             if not port_id or not port_rsrc:
-                LOG.error(_LE('Port not specified.'))
+                LOG.error('Port not specified.')
                 raise exception.NotFound(_('Failed to update, can not found '
                                            'port info.'))
 
@@ -353,7 +349,7 @@ class ElasticIpAssociation(resource.Resource):
             port_id, port_rsrc = self._get_port_info(ni_id_update,
                                                      instance_id_update)
             if not port_id or not port_rsrc:
-                LOG.error(_LE('Port not specified.'))
+                LOG.error('Port not specified.')
                 raise exception.NotFound(_('Failed to update, can not found '
                                            'port info.'))
 
@@ -377,8 +373,7 @@ class ElasticIpAssociation(resource.Resource):
             instance_id = self.properties[self.INSTANCE_ID]
             port_id, port_rsrc = self._get_port_info(ni_id, instance_id)
             if not port_id or not port_rsrc:
-                LOG.warning(_LW('Skipping association, resource not '
-                                'specified'))
+                LOG.warning('Skipping association, resource not specified')
                 return
 
             float_id = self.properties[self.ALLOCATION_ID]

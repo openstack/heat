@@ -19,7 +19,6 @@ import re
 from oslo_log import log as logging
 
 from heat.api.aws import exception
-from heat.common.i18n import _LE
 
 LOG = logging.getLogger(__name__)
 
@@ -98,7 +97,7 @@ def get_param_value(params, key):
     try:
         return params[key]
     except KeyError:
-        LOG.error(_LE("Request does not contain %s parameter!"), key)
+        LOG.error("Request does not contain %s parameter!", key)
         raise exception.HeatMissingParameterError(key)
 
 

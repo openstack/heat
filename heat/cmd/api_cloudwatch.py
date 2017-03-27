@@ -32,7 +32,6 @@ from oslo_service import systemd
 import six
 
 from heat.common import config
-from heat.common.i18n import _LI
 from heat.common import messaging
 from heat.common import profiler
 from heat.common import wsgi
@@ -59,7 +58,7 @@ def launch_cloudwatch_api(setup_logging=True):
 
     port = cfg.CONF.heat_api_cloudwatch.bind_port
     host = cfg.CONF.heat_api_cloudwatch.bind_host
-    LOG.info(_LI('Starting Heat CloudWatch API on %(host)s:%(port)s'),
+    LOG.info('Starting Heat CloudWatch API on %(host)s:%(port)s',
              {'host': host, 'port': port})
     profiler.setup('heat-api-cloudwatch', host)
     gmr.TextGuruMeditation.setup_autorun(version)

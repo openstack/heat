@@ -15,7 +15,6 @@ from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -152,9 +151,9 @@ class CronTrigger(resource.Resource):
         # changed after
         # https://blueprints.launchpad.net/mistral/+spec/mistral-cron-trigger-life-cycle
         # will be merged.
-        LOG.warning(_LW("get_live_state isn't implemented for this type of "
-                        "resource due to specific behaviour of cron trigger "
-                        "in mistral."))
+        LOG.warning("get_live_state isn't implemented for this type of "
+                    "resource due to specific behaviour of cron trigger "
+                    "in mistral.")
         return {}
 
 

@@ -17,7 +17,6 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine import resource
@@ -154,10 +153,10 @@ class SwiftContainer(resource.Resource):
 
         LOG.debug('SwiftContainer create container %(container)s with '
                   'container headers %(container_headers)s and '
-                  'account headers %(account_headers)s'
-                  % {'container': container,
-                     'account_headers': account_headers,
-                     'container_headers': container_headers})
+                  'account headers %(account_headers)s',
+                  {'container': container,
+                   'account_headers': account_headers,
+                   'container_headers': container_headers})
 
         self.client().put_container(container, container_headers)
 
@@ -242,7 +241,7 @@ class SwiftContainer(resource.Resource):
                 headers = self.client().head_container(self.resource_id)
             except Exception as ex:
                 if self.client_plugin().is_client_exception(ex):
-                    LOG.warning(_LW("Head container failed: %s"), ex)
+                    LOG.warning("Head container failed: %s", ex)
                     return None
                 raise
             else:

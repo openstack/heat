@@ -21,8 +21,6 @@ cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine import constraints
@@ -396,7 +394,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         elif name in self.ATTRIBUTES[1:]:
             res = self._ipaddress()
 
-        LOG.info(_LI('%(name)s._resolve_attribute(%(attname)s) == %(res)s'),
+        LOG.info('%(name)s._resolve_attribute(%(attname)s) == %(res)s',
                  {'name': self.name, 'attname': name, 'res': res})
         return six.text_type(res) if res else None
 
@@ -679,9 +677,9 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         # keep the behavior as creation
         elif (old_network_ifaces and
                 (self.NETWORK_INTERFACES not in prop_diff)):
-            LOG.warning(_LW('There is no change of "%(net_interfaces)s" '
-                            'for instance %(server)s, do nothing '
-                            'when updating.'),
+            LOG.warning('There is no change of "%(net_interfaces)s" '
+                        'for instance %(server)s, do nothing '
+                        'when updating.',
                         {'net_interfaces': self.NETWORK_INTERFACES,
                          'server': self.resource_id})
         # if the interfaces not come from property 'NetworkInterfaces',
@@ -806,10 +804,10 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         if network_interfaces and subnet_id:
             # consider the old templates, we only to log to warn user
             # NetworkInterfaces has higher priority than SubnetId
-            LOG.warning(_LW('"%(subnet)s" will be ignored if specified '
-                            '"%(net_interfaces)s". So if you specified the '
-                            '"%(net_interfaces)s" property, '
-                            'do not specify "%(subnet)s" property.'),
+            LOG.warning('"%(subnet)s" will be ignored if specified '
+                        '"%(net_interfaces)s". So if you specified the '
+                        '"%(net_interfaces)s" property, '
+                        'do not specify "%(subnet)s" property.',
                         {'subnet': self.SUBNET_ID,
                          'net_interfaces': self.NETWORK_INTERFACES})
 
@@ -854,7 +852,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
             # if the instance has been suspended successful,
             # no need to suspend again
             if self.client_plugin().get_status(server) != 'SUSPENDED':
-                LOG.debug("suspending instance %s" % self.resource_id)
+                LOG.debug("suspending instance %s", self.resource_id)
                 server.suspend()
             return server.id
 
@@ -864,8 +862,8 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         if not server:
             return False
         status = cp.get_status(server)
-        LOG.debug('%(name)s check_suspend_complete status = %(status)s'
-                  % {'name': self.name, 'status': status})
+        LOG.debug('%(name)s check_suspend_complete status = %(status)s',
+                  {'name': self.name, 'status': status})
         if status in list(cp.deferred_server_statuses + ['ACTIVE']):
             return status == 'SUSPENDED'
         else:
@@ -897,7 +895,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
             # if the instance has been resumed successful,
             # no need to resume again
             if self.client_plugin().get_status(server) != 'ACTIVE':
-                LOG.debug("resuming instance %s" % self.resource_id)
+                LOG.debug("resuming instance %s", self.resource_id)
                 server.resume()
             return server.id
 

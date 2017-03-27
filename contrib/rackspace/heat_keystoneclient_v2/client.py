@@ -21,12 +21,9 @@ from oslo_log import log as logging
 from oslo_utils import importutils
 
 from heat.common import exception
-from heat.common.i18n import _LE
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 
 LOG = logging.getLogger('heat.common.keystoneclient')
-LOG.info(_LI("Keystone V2 loaded"))
+LOG.info("Keystone V2 loaded")
 
 
 class KeystoneClientV2(object):
@@ -100,8 +97,8 @@ class KeystoneClientV2(object):
             kwargs['tenant_name'] = self.context.project_name
             kwargs['tenant_id'] = self.context.tenant_id
         else:
-            LOG.error(_LE("Keystone v2 API connection failed, no password "
-                          "or auth_token!"))
+            LOG.error("Keystone v2 API connection failed, no password "
+                      "or auth_token!")
             raise exception.AuthorizationFailure()
         kwargs['cacert'] = self._get_client_option('ca_file')
         kwargs['insecure'] = self._get_client_option('insecure')
@@ -115,7 +112,7 @@ class KeystoneClientV2(object):
         if auth_kwargs:
             # Sanity check
             if not client.auth_ref.trust_scoped:
-                LOG.error(_LE("v2 trust token re-scoping failed!"))
+                LOG.error("v2 trust token re-scoping failed!")
                 raise exception.AuthorizationFailure()
             # All OK so update the context with the token
             self.context.auth_token = client.auth_ref.auth_token
@@ -123,8 +120,8 @@ class KeystoneClientV2(object):
             # Ensure the v2 API we're using is not impacted by keystone
             # bug #1239303, otherwise we can't trust the user_id
             if self.context.trustor_user_id != client.auth_ref.user_id:
-                LOG.error(_LE("Trust impersonation failed, bug #1239303 "
-                              "suspected, you may need a newer keystone"))
+                LOG.error("Trust impersonation failed, bug #1239303 "
+                          "suspected, you may need a newer keystone")
                 raise exception.AuthorizationFailure()
 
         return client
@@ -164,8 +161,8 @@ class KeystoneClientV2(object):
         Returns the keystone ID of the resulting user
         """
         if len(username) > 64:
-            LOG.warning(_LW("Truncating the username %s to the last 64 "
-                            "characters."), username)
+            LOG.warning("Truncating the username %s to the last 64 "
+                        "characters.", username)
             # get the last 64 characters of the username
             username = username[-64:]
         user = self.client.users.create(username,
@@ -188,8 +185,8 @@ class KeystoneClientV2(object):
             self.client.roles.add_user_role(user.id, role_id,
                                             self.context.tenant_id)
         else:
-            LOG.error(_LE("Failed to add user %(user)s to role %(role)s, "
-                          "check role exists!"),
+            LOG.error("Failed to add user %(user)s to role %(role)s, "
+                      "check role exists!",
                       {'user': username,
                        'role': cfg.CONF.heat_stack_user_role})
 

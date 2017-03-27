@@ -21,7 +21,6 @@ from stevedore import enabled
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.common.i18n import _LW
 from heat.common import pluginutils
 
 LOG = logging.getLogger(__name__)
@@ -83,7 +82,7 @@ class OpenStackClients(object):
             client = getattr(self, method_name)()
             self._clients[name] = client
             return client
-        LOG.warning(_LW('Requested client "%s" not found'), name)
+        LOG.warning('Requested client "%s" not found', name)
 
 
 class ClientBackend(object):

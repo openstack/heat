@@ -16,7 +16,6 @@ from oslo_utils import excutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import _LE
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -90,9 +89,9 @@ class NovaFloatingIp(resource.Resource):
             with excutils.save_and_reraise_exception():
                 if self.client_plugin().is_not_found(e):
                     if pool is None:
-                        LOG.error(_LE('Could not allocate floating IP. '
-                                      'Probably there is no default floating'
-                                      ' IP pool is configured.'))
+                        LOG.error('Could not allocate floating IP. '
+                                  'Probably there is no default floating '
+                                  'IP pool is configured.')
 
         self.resource_id_set(floating_ip.id)
         self._floating_ip = floating_ip

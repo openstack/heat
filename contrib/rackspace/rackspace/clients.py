@@ -25,8 +25,6 @@ from swiftclient import utils as swiftclient_utils
 from troveclient import client as tc
 
 from heat.common import exception
-from heat.common.i18n import _LI
-from heat.common.i18n import _LW
 from heat.engine.clients import client_plugin
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
@@ -57,7 +55,7 @@ class RackspaceClientPlugin(client_plugin.ClientPlugin):
         """Create an authenticated client context."""
         self.pyrax = pyrax.create_context("rackspace")
         self.pyrax.auth_endpoint = self.context.auth_url
-        LOG.info(_LI("Authenticating username: %s"),
+        LOG.info("Authenticating username: %s",
                  self.context.username)
         tenant = self.context.tenant_id
         tenant_name = self.context.tenant
@@ -65,9 +63,9 @@ class RackspaceClientPlugin(client_plugin.ClientPlugin):
                                    tenant_id=tenant,
                                    tenant_name=tenant_name)
         if not self.pyrax.authenticated:
-            LOG.warning(_LW("Pyrax Authentication Failed."))
+            LOG.warning("Pyrax Authentication Failed.")
             raise exception.AuthorizationFailure()
-        LOG.info(_LI("User %s authenticated successfully."),
+        LOG.info("User %s authenticated successfully.",
                  self.context.username)
 
 
