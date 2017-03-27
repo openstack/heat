@@ -18,6 +18,7 @@ import time
 
 import fixtures
 from heatclient import exc as heat_exceptions
+from keystoneauth1 import exceptions as kc_exceptions
 from neutronclient.common import exceptions as network_exceptions
 from oslo_log import log as logging
 from oslo_utils import timeutils
@@ -193,6 +194,15 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         except network_exceptions.NeutronClientException:
             return False
         return True
+
+    def is_service_available(self, service_type):
+        try:
+            self.identity_client.get_endpoint_url(
+                service_type, self.conf.region)
+        except kc_exceptions.EndpointNotFound:
+            return False
+        else:
+            return True
 
     @staticmethod
     def _stack_output(stack, output_key, validate_errors=True):
