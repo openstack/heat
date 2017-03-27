@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import json
 import uuid
 
@@ -204,7 +205,16 @@ class StackResourceTest(StackResourceBaseTest):
         self.assertEqual({}, ret)
 
     def test_abandon_nested_sends_rpc_abandon(self):
-        rpcc = mock.Mock()
+        rpcc = mock.MagicMock()
+
+        @contextlib.contextmanager
+        def exc_filter(*args):
+            try:
+                yield
+            except exception.NotFound:
+                pass
+
+        rpcc.ignore_error_by_name.side_effect = exc_filter
         self.parent_resource.rpc_client = rpcc
         self.parent_resource.resource_id = 'fake_id'
 
@@ -509,8 +519,17 @@ class StackResourceTest(StackResourceBaseTest):
 
     def test_delete_nested_not_found_nested_stack(self):
         self.parent_resource.resource_id = 'fake_id'
-        rpcc = mock.Mock()
+        rpcc = mock.MagicMock()
         self.parent_resource.rpc_client = rpcc
+
+        @contextlib.contextmanager
+        def exc_filter(*args):
+            try:
+                yield
+            except exception.NotFound:
+                pass
+
+        rpcc.return_value.ignore_error_by_name.side_effect = exc_filter
         rpcc.return_value.delete_stack = mock.Mock(
             side_effect=exception.NotFound())
         self.assertIsNone(self.parent_resource.delete_nested())

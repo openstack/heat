@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import email
 import uuid
 
@@ -99,7 +100,17 @@ class MultipartMimeTest(common.HeatTestCase):
             'type': 'text'
         }]
         self.init_config(parts=parts)
+
+        @contextlib.contextmanager
+        def exc_filter():
+            try:
+                yield
+            except exc.NotFound:
+                pass
+
+        self.rpc_client.ignore_error_by_name.return_value = exc_filter()
         self.rpc_client.show_software_config.side_effect = exc.NotFound()
+
         result = self.config.get_message()
 
         self.assertEqual(

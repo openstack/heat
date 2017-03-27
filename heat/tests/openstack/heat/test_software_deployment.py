@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import copy
 import re
 import uuid
@@ -203,6 +204,15 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
         self.rpc_client = mock.MagicMock()
         self.deployment._rpc_client = self.rpc_client
+
+        @contextlib.contextmanager
+        def exc_filter(*args):
+            try:
+                yield
+            except exc.NotFound:
+                pass
+
+        self.rpc_client.ignore_error_by_name.side_effect = exc_filter
 
     def test_validate(self):
         template = dict(self.template_with_server)
@@ -1188,7 +1198,11 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             }],
             'outputs': [],
         }
-        self.rpc_client.show_software_config.return_value = config
+
+        def show_sw_config(*args):
+            return config.copy()
+
+        self.rpc_client.show_software_config.side_effect = show_sw_config
         mock_sd = self.mock_deployment()
 
         self.rpc_client.show_software_deployment.return_value = mock_sd

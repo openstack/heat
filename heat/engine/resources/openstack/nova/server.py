@@ -702,13 +702,11 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             self.USER_DATA_FORMAT] == self.SOFTWARE_CONFIG
 
     def get_software_config(self, ud_content):
-        try:
+        with self.rpc_client().ignore_error_by_name('NotFound'):
             sc = self.rpc_client().show_software_config(
                 self.context, ud_content)
             return sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
-        except Exception as ex:
-            self.rpc_client().ignore_error_named(ex, 'NotFound')
-            return ud_content
+        return ud_content
 
     def handle_create(self):
         security_groups = self.properties[self.SECURITY_GROUPS]

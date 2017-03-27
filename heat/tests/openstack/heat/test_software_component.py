@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import contextlib
 import mock
 import six
 
@@ -58,6 +59,15 @@ class SoftwareComponentTest(common.HeatTestCase):
         self.component = self.stack['mysql_component']
         self.rpc_client = mock.MagicMock()
         self.component._rpc_client = self.rpc_client
+
+        @contextlib.contextmanager
+        def exc_filter(*args):
+            try:
+                yield
+            except exc.NotFound:
+                pass
+
+        self.rpc_client.ignore_error_by_name.side_effect = exc_filter
 
     def test_handle_create(self):
         config_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
