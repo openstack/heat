@@ -529,6 +529,20 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         stack_link = [l for l in r.links if l.get('rel') == 'stack'][0]
         return stack_link['href'].split("/")[-1]
 
+    def get_physical_resource_id(self, stack_identifier, resource_name):
+        try:
+            resource = self.client.resources.get(
+                stack_identifier, resource_name)
+            return resource.physical_resource_id
+        except Exception:
+            raise Exception('Resource (%s) not found in stack (%s)!' %
+                            (stack_identifier, resource_name))
+
+    def get_stack_output(self, stack_identifier, output_key,
+                         validate_errors=True):
+        stack = self.client.stacks.get(stack_identifier)
+        return self._stack_output(stack, output_key, validate_errors)
+
     def check_input_values(self, group_resources, key, value):
         # Check inputs for deployment and derived config
         for r in group_resources:
