@@ -361,13 +361,20 @@ class ServerNetworkMixin(object):
 
             # according to nova interface-detach command detached port
             # will be deleted
+            inter_port_data = self._data_get_ports()
+            inter_port_ids = [p['id'] for p in inter_port_data]
             for net in old_nets:
-                if net.get(self.NETWORK_PORT):
-                    remove_ports.append(net.get(self.NETWORK_PORT))
-                    if self.data().get('internal_ports'):
+                port_id = net.get(self.NETWORK_PORT)
+                # we can't match the port for some user case, like:
+                # the internal port was detached in nova first, then
+                # user update template to detach this nic. The internal
+                # port will remains till we delete the server resource.
+                if port_id:
+                    remove_ports.append(port_id)
+                    if port_id in inter_port_ids:
                         # if we have internal port with such id, remove it
                         # instantly.
-                        self._delete_internal_port(net.get(self.NETWORK_PORT))
+                        self._delete_internal_port(port_id)
                 if net.get(self.NETWORK_FLOATING_IP):
                     self._floating_ip_disassociate(
                         net.get(self.NETWORK_FLOATING_IP))
