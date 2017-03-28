@@ -26,6 +26,18 @@ class NeutronResource(resource.Resource):
 
     res_info_key = None
 
+    def get_resource_plural(self):
+        """Return the plural of resource type.
+
+        The default implementation is to return self.entity + 's',
+        the rule is not appropriate for some special resources,
+        e.g. qos_policy, this method should be overridden by the
+        special resources if needed.
+        """
+        if not self.entity:
+            return
+        return self.entity + 's'
+
     def validate(self):
         """Validate any of the provided params."""
         res = super(NeutronResource, self).validate()
@@ -154,3 +166,12 @@ class NeutronResource(resource.Resource):
             raise exception.PhysicalResourceExists(
                 name=self.physical_resource_name_or_FnGetRefId())
         return True
+
+    def set_tags(self, tags):
+        resource_plural = self.get_resource_plural()
+        if resource_plural:
+            tags = tags or []
+            body = {'tags': tags}
+            self.client().replace_tag(resource_plural,
+                                      self.resource_id,
+                                      body)

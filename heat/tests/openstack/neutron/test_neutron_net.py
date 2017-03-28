@@ -40,6 +40,9 @@ resources:
         - 28c25a04-3f73-45a7-a2b4-59e183943ddc
       port_security_enabled: False
       dns_domain: openstack.org.
+      tags:
+        - tag1
+        - tag2
 
   subnet:
     type: OS::Neutron::Subnet
@@ -94,6 +97,7 @@ class NeutronNetTest(common.HeatTestCase):
     def test_net(self):
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
+        resource_type = 'networks'
         net_info_build = {"network": {
             "status": "BUILD",
             "subnets": [],
@@ -142,6 +146,9 @@ class NeutronNetTest(common.HeatTestCase):
         remove_dhcp_agent_mock = self.patchobject(
             neutronclient.Client,
             'remove_network_from_dhcp_agent')
+        replace_tag_mock = self.patchobject(
+            neutronclient.Client,
+            'replace_tag')
         show_network_mock = self.patchobject(
             neutronclient.Client,
             'show_network')
@@ -183,6 +190,12 @@ class NeutronNetTest(common.HeatTestCase):
         add_dhcp_agent_mock.assert_called_with(
             '28c25a04-3f73-45a7-a2b4-59e183943ddc',
             {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'})
+        replace_tag_mock.assert_called_with(
+            resource_type,
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'tags': ['tag1', 'tag2']}
+        )
+
         # assert the implicit dependency between the gateway and the interface
         deps = stack.dependencies[stack['router_interface']]
         self.assertIn(stack['gateway'], deps)
@@ -254,6 +267,13 @@ class NeutronNetTest(common.HeatTestCase):
             {'network': {
                 'name': utils.PhysName(stack.name, 'test_net'),
             }}
+        )
+        # Update with tags=[]
+        rsrc.handle_update(update_snippet, {}, {'tags': []})
+        replace_tag_mock.assert_called_with(
+            resource_type,
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'tags': []}
         )
         # Update with empty prop_diff
         rsrc.handle_update(update_snippet, {}, {})

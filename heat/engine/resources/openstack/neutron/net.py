@@ -32,11 +32,11 @@ class Net(neutron.NeutronResource):
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
         DHCP_AGENT_IDS, PORT_SECURITY_ENABLED, QOS_POLICY,
-        DNS_DOMAIN,
+        DNS_DOMAIN, TAGS,
     ) = (
         'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
         'dhcp_agent_ids', 'port_security_enabled', 'qos_policy',
-        'dns_domain',
+        'dns_domain', 'tags',
     )
 
     ATTRIBUTES = (
@@ -115,6 +115,13 @@ class Net(neutron.NeutronResource):
             update_allowed=True,
             support_status=support.SupportStatus(version='7.0.0')
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('The tags to be added to the network.'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -168,6 +175,7 @@ class Net(neutron.NeutronResource):
 
         dhcp_agent_ids = props.pop(self.DHCP_AGENT_IDS, None)
         qos_policy = props.pop(self.QOS_POLICY, None)
+        tags = props.pop(self.TAGS, [])
         if qos_policy:
             props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
                 qos_policy)
@@ -177,6 +185,9 @@ class Net(neutron.NeutronResource):
 
         if dhcp_agent_ids:
             self._replace_dhcp_agents(dhcp_agent_ids)
+
+        if tags:
+            self.set_tags(tags)
 
     def check_create_complete(self, *args):
         attributes = self._show_resource()
@@ -201,6 +212,8 @@ class Net(neutron.NeutronResource):
                 prop_diff[
                     'qos_policy_id'] = self.client_plugin().get_qos_policy_id(
                     qos_policy) if qos_policy else None
+            if self.TAGS in prop_diff:
+                self.set_tags(prop_diff.pop(self.TAGS))
         if prop_diff:
             self.client().update_network(self.resource_id,
                                          {'network': prop_diff})
