@@ -44,9 +44,11 @@ class Port(neutron.NeutronResource):
     PROPERTIES = (
         NAME, NETWORK_ID, NETWORK, FIXED_IPS, SECURITY_GROUPS,
         REPLACEMENT_POLICY, DEVICE_ID, DEVICE_OWNER, DNS_NAME,
+        TAGS,
     ) = (
         'name', 'network_id', 'network', 'fixed_ips', 'security_groups',
         'replacement_policy', 'device_id', 'device_owner', 'dns_name',
+        'tags',
     )
 
     EXTRA_PROPERTIES = (
@@ -208,6 +210,13 @@ class Port(neutron.NeutronResource):
                 constraints.CustomConstraint('dns_name')
             ],
             support_status=support.SupportStatus(version='7.0.0'),
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('The tags to be added to the port.'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='9.0.0')
         ),
     }
 
@@ -422,12 +431,16 @@ class Port(neutron.NeutronResource):
         props['network_id'] = props.pop(self.NETWORK)
         self._prepare_port_properties(props)
         qos_policy = props.pop(self.QOS_POLICY, None)
+        tags = props.pop(self.TAGS, [])
         if qos_policy:
             props['qos_policy_id'] = self.client_plugin().get_qos_policy_id(
                 qos_policy)
 
         port = self.client().create_port({'port': props})['port']
         self.resource_id_set(port['id'])
+
+        if tags:
+            self.set_tags(tags)
 
     def _prepare_port_properties(self, props, prepare_for_update=False):
         if self.FIXED_IPS in props:
@@ -518,6 +531,11 @@ class Port(neutron.NeutronResource):
                 qos_policy = prop_diff.pop(self.QOS_POLICY)
                 prop_diff['qos_policy_id'] = self.client_plugin(
                     ).get_qos_policy_id(qos_policy) if qos_policy else None
+
+            if self.TAGS in prop_diff:
+                tags = prop_diff.pop(self.TAGS)
+                self.set_tags(tags)
+
             self._prepare_port_properties(prop_diff, prepare_for_update=True)
             LOG.debug('updating port with %s', prop_diff)
             self.client().update_port(self.resource_id, {'port': prop_diff})
