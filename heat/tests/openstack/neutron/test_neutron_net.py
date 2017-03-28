@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
+
 from neutronclient.common import exceptions as qe
-from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception
@@ -80,17 +81,6 @@ class NeutronNetTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronNetTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_network')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'add_network_to_dhcp_agent')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'remove_network_from_dhcp_agent')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'list_dhcp_agent_hosting_networks')
-        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
@@ -104,17 +94,7 @@ class NeutronNetTest(common.HeatTestCase):
     def test_net(self):
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
-
-        # Create script
-        neutronclient.Client.create_network({
-            'network': {
-                'name': u'the_network',
-                'admin_state_up': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'port_security_enabled': False,
-                'dns_domain': 'openstack.org.',
-                'shared': True}
-        }).AndReturn({"network": {
+        net_info_build = {"network": {
             "status": "BUILD",
             "subnets": [],
             "name": "name",
@@ -123,77 +103,10 @@ class NeutronNetTest(common.HeatTestCase):
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
             "mtu": 0
-        }})
-
-        neutronclient.Client.list_dhcp_agent_hosting_networks(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"agents": []})
-
-        neutronclient.Client.add_network_to_dhcp_agent(
-            '28c25a04-3f73-45a7-a2b4-59e183943ddc',
-            {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
-        ).AndReturn(None)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "BUILD",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "mtu": 0
-        }})
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "mtu": 0
-        }})
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "mtu": 0
-        }})
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": "name",
-            "admin_state_up": True,
-            "shared": True,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "mtu": 0
-        }})
-
-        # Update script
-        neutronclient.Client.list_dhcp_agent_hosting_networks(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn({
+        }}
+        net_info_active = copy.deepcopy(net_info_build)
+        net_info_active['network'].update({'status': 'ACTIVE'})
+        agent_info = {
             "agents": [{
                 "admin_state_up": True,
                 "agent_type": "DHCP agent",
@@ -214,70 +127,62 @@ class NeutronNetTest(common.HeatTestCase):
                 "started_at": "2014-03-20 05:12:34",
                 "topic": "dhcp_agent"
             }]
-        })
+        }
+        create_mock = self.patchobject(neutronclient.Client, 'create_network')
+        create_mock.return_value = net_info_build
+        list_dhcp_agent_mock = self.patchobject(
+            neutronclient.Client,
+            'list_dhcp_agent_hosting_networks')
+        list_dhcp_agent_mock.side_effect = [{"agents": []},
+                                            agent_info]
+        add_dhcp_agent_mock = self.patchobject(
+            neutronclient.Client,
+            'add_network_to_dhcp_agent')
 
-        neutronclient.Client.add_network_to_dhcp_agent(
-            'bb09cfcd-5277-473d-8336-d4ed8628ae68',
-            {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
-        ).AndReturn(None)
+        remove_dhcp_agent_mock = self.patchobject(
+            neutronclient.Client,
+            'remove_network_from_dhcp_agent')
+        show_network_mock = self.patchobject(
+            neutronclient.Client,
+            'show_network')
+        show_network_mock.side_effect = [
+            net_info_build,
+            net_info_active,
+            qe.NetworkNotFoundClient(status_code=404),
+            net_info_active,
+            net_info_active,
+            qe.NetworkNotFoundClient(status_code=404)]
+        update_net_mock = self.patchobject(
+            neutronclient.Client,
+            'update_network')
 
-        neutronclient.Client.remove_network_from_dhcp_agent(
-            '28c25a04-3f73-45a7-a2b4-59e183943ddc',
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(None)
-
-        # Update script
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'name': 'mynet',
-                'qos_policy_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'
-            }}).AndReturn(None)
-        # update again to detach qos_policy
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'name': 'mynet',
-                'qos_policy_id': None
-            }}).AndReturn(None)
-
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'name': 'mynet',
-                'port_security_enabled': True,
-                'qos_policy_id': None
-            }}).AndReturn(None)
-
-        # update with name = None
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'name': utils.PhysName(stack.name, 'test_net'),
-            }}).AndReturn(None)
-
-        # Delete script
-        neutronclient.Client.delete_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(None)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        neutronclient.Client.delete_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
+        del_net_mock = self.patchobject(
+            neutronclient.Client,
+            'delete_network')
+        del_net_mock.side_effect = [None,
+                                    qe.NetworkNotFoundClient(status_code=404)]
 
         self.patchobject(neutron.NeutronClientPlugin, 'get_qos_policy_id',
                          return_value='0389f747-7785-4757-b7bb-2ab07e4b09c3')
 
-        self.m.ReplayAll()
         self.patchobject(stack['router'], 'FnGetRefId',
                          return_value='792ff887-6c85-4a56-b518-23f24fa65581')
 
+        # network create
         rsrc = self.create_net(t, stack, 'network')
-
+        create_mock.assert_called_with(
+            {'network':
+                {'name': u'the_network',
+                 'admin_state_up': True,
+                 'tenant_id': u'c1210485b2424d48804aad5d39c61b8f',
+                 'dns_domain': u'openstack.org.',
+                 'shared': True,
+                 'port_security_enabled': False}
+             }
+        )
+        add_dhcp_agent_mock.assert_called_with(
+            '28c25a04-3f73-45a7-a2b4-59e183943ddc',
+            {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'})
         # assert the implicit dependency between the gateway and the interface
         deps = stack.dependencies[stack['router_interface']]
         self.assertIn(stack['gateway'], deps)
@@ -296,6 +201,8 @@ class NeutronNetTest(common.HeatTestCase):
         self.assertEqual(0, rsrc.FnGetAtt('mtu'))
         self.assertRaises(
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
+
+        # update tests
         prop_diff = {
             "name": "mynet",
             "dhcp_agent_ids": [
@@ -306,22 +213,55 @@ class NeutronNetTest(common.HeatTestCase):
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       prop_diff)
         rsrc.handle_update(update_snippet, {}, prop_diff)
-
+        update_net_mock.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'name': 'mynet',
+                'qos_policy_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'
+            }})
+        add_dhcp_agent_mock.assert_called_with(
+            'bb09cfcd-5277-473d-8336-d4ed8628ae68',
+            {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'})
+        remove_dhcp_agent_mock.assert_called_with(
+            '28c25a04-3f73-45a7-a2b4-59e183943ddc',
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        )
         # Update with None qos_policy
         prop_diff['qos_policy'] = None
         rsrc.handle_update(update_snippet, {}, prop_diff)
-
+        update_net_mock.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'name': 'mynet',
+                'qos_policy_id': None
+            }}
+        )
         # Update with value_specs
         prop_diff['value_specs'] = {"port_security_enabled": True}
         rsrc.handle_update(update_snippet, {}, prop_diff)
-
+        update_net_mock.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'name': 'mynet',
+                'port_security_enabled': True,
+                'qos_policy_id': None
+            }}
+        )
         # Update with name = None
         rsrc.handle_update(update_snippet, {}, {'name': None})
-
+        update_net_mock.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'network': {
+                'name': utils.PhysName(stack.name, 'test_net'),
+            }}
+        )
         # Update with empty prop_diff
         rsrc.handle_update(update_snippet, {}, {})
 
+        # update delete
         scheduler.TaskRunner(rsrc.delete)()
+        del_net_mock.assert_called_with('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        # delete raise not found
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
