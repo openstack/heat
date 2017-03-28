@@ -82,8 +82,7 @@ class StackWatch(object):
             wrs = watch_rule_object.WatchRule.get_all_by_stack(admin_context,
                                                                sid)
         except Exception as ex:
-            LOG.warning('periodic_task db error watch rule removed? %(ex)s',
-                        ex)
+            LOG.warning('periodic_task db error watch rule removed? %s', ex)
             return
 
         def run_alarm_action(stk, actions, details):
