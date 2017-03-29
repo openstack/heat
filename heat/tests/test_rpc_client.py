@@ -85,8 +85,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
             expected_message = self.rpcapi.make_msg(method, **kwargs)
 
         cast_and_call = ['delete_stack']
-        if rpc_method == 'call' and method in cast_and_call:
-            kwargs['cast'] = False
+        if method in cast_and_call:
+            kwargs['cast'] = rpc_method != 'call'
 
         with mock.patch.object(self.rpcapi, rpc_method) as mock_rpc_method:
             mock_rpc_method.return_value = expected_retval

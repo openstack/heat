@@ -426,12 +426,15 @@ class EngineClient(object):
                                        stack_identity=stack_identity),
                          version='1.32')
 
-    def delete_stack(self, ctxt, stack_identity, cast=True):
+    def delete_stack(self, ctxt, stack_identity, cast=False):
         """Deletes a given stack.
 
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to delete.
-        :param cast: cast the message or use call (default: True)
+        :param cast: cast the message instead of using call (default: False)
+
+        You probably never want to use cast(). If you do, you'll never hear
+        about any exceptions the call might raise.
         """
         rpc_method = self.cast if cast else self.call
         return rpc_method(ctxt,
