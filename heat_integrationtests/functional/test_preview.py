@@ -222,8 +222,16 @@ resources:
             stack_name=stack_name,
             template=main_template,
             files={'nested.yaml': nested_template}).to_dict()
+
+        resource_names = []
+
+        def get_resource_names(resources):
+            for item in resources:
+                if isinstance(item, dict):
+                    resource_names.append(item['resource_name'])
+                else:
+                    get_resource_names(item)
+        get_resource_names(result['resources'])
         # ensure that fixed network and port here
-        self.assertEqual('fixed_network',
-                         result['resources'][0]['resource_name'])
-        self.assertEqual('port',
-                         result['resources'][1][0][0]['resource_name'])
+        self.assertIn('fixed_network', resource_names)
+        self.assertIn('port', resource_names)
