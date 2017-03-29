@@ -138,6 +138,11 @@ class SwiftTest(common.HeatTestCase):
         # Test
         container = self._create_container(stack)
 
+        # call this to populate the url of swiftclient. This is actually
+        # set in head_container/put_container, but we're patching them in
+        # this test.
+        container.client().get_auth()
+
         # Verify Attributes
         self.assertEqual(container_name, container.FnGetRefId())
         self.assertEqual('82', container.FnGetAtt('ObjectCount'))
