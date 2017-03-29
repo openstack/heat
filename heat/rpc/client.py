@@ -15,6 +15,9 @@
 
 """Client side of the heat engine RPC API."""
 
+import warnings
+
+from oslo_utils import excutils
 from oslo_utils import reflection
 
 from heat.common import messaging
@@ -100,14 +103,26 @@ class EngineClient(object):
         error_name = reflection.get_class_name(error, fully_qualified=False)
         return error_name.split('_Remote')[0]
 
+    def ignore_error_by_name(self, name):
+        """Returns a context manager that filters exceptions with a given name.
+
+        :param name: Name to compare the local exception name to.
+        """
+        def error_name_matches(err):
+            return self.local_error_name(err) == name
+
+        return excutils.exception_filter(error_name_matches)
+
     def ignore_error_named(self, error, name):
         """Raises the error unless its local name matches the supplied name.
 
         :param error: Remote raised error to derive the local name from.
         :param name: Name to compare local name to.
         """
-        if self.local_error_name(error) != name:
-            raise error
+        warnings.warn("Use ignore_error_by_name() to get a context manager "
+                      "instead.",
+                      DeprecationWarning)
+        return self.ignore_error_by_name(name)(error)
 
     def identify_stack(self, ctxt, stack_name):
         """Returns the full stack identifier for a single, live stack.

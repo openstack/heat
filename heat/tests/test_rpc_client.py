@@ -56,6 +56,24 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                          reflection.get_class_name(exr, fully_qualified=False))
         self.assertEqual('NotFound', self.rpcapi.local_error_name(exr))
 
+    def test_ignore_error_by_name(self):
+        ex = exception.NotFound()
+        exr = self._to_remote_error(ex)
+
+        filter_exc = self.rpcapi.ignore_error_by_name('NotFound')
+
+        with filter_exc:
+            raise ex
+        with filter_exc:
+            raise exr
+
+        def should_raise(exc):
+            with self.rpcapi.ignore_error_by_name('NotSupported'):
+                raise exc
+
+        self.assertRaises(exception.NotFound, should_raise, ex)
+        self.assertRaises(exception.NotFound, should_raise, exr)
+
     def test_ignore_error_named(self):
         ex = exception.NotFound()
         exr = self._to_remote_error(ex)

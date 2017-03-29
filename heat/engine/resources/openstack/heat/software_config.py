@@ -113,11 +113,9 @@ class SoftwareConfig(resource.Resource):
         if self.resource_id is None:
             return
 
-        try:
+        with self.rpc_client().ignore_error_by_name('NotFound'):
             self.rpc_client().delete_software_config(
                 self.context, self.resource_id)
-        except Exception as ex:
-            self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def _resolve_attribute(self, name):
         """Retrieve attributes of the SoftwareConfig resource.
@@ -126,12 +124,10 @@ class SoftwareConfig(resource.Resource):
          software config does not exist, returns an empty string.
         """
         if name == self.CONFIG_ATTR and self.resource_id:
-            try:
+            with self.rpc_client().ignore_error_by_name('NotFound'):
                 sc = self.rpc_client().show_software_config(
                     self.context, self.resource_id)
                 return sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
-            except Exception as ex:
-                self.rpc_client().ignore_error_named(ex, 'NotFound')
 
 
 def resource_mapping():

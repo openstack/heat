@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import contextlib
 import copy
 import mock
 
@@ -686,6 +687,14 @@ class ServersTest(common.HeatTestCase):
         self.rpc_client = mock.MagicMock()
         server._rpc_client = self.rpc_client
 
+        @contextlib.contextmanager
+        def exc_filter(*args):
+            try:
+                yield
+            except exception.NotFound:
+                pass
+
+        self.rpc_client.ignore_error_by_name.side_effect = exc_filter
         self.rpc_client.show_software_config.side_effect = exception.NotFound
         mock_create = self.patchobject(self.fc.servers, 'create',
                                        return_value=return_server)

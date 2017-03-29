@@ -112,12 +112,9 @@ class MultipartMime(software_config.SoftwareConfig):
             part = config
 
             if uuidutils.is_uuid_like(config):
-                try:
+                with self.rpc_client().ignore_error_by_name('NotFound'):
                     sc = self.rpc_client().show_software_config(
                         self.context, config)
-                except Exception as ex:
-                    self.rpc_client().ignore_error_named(ex, 'NotFound')
-                else:
                     part = sc[rpc_api.SOFTWARE_CONFIG_CONFIG]
 
             if part_type == self.MULTIPART:

@@ -209,11 +209,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return props
 
     def _delete_derived_config(self, derived_config_id):
-        try:
+        with self.rpc_client().ignore_error_by_name('NotFound'):
             self.rpc_client().delete_software_config(
                 self.context, derived_config_id)
-        except Exception as ex:
-            self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def _create_derived_config(self, action, source_config):
 
@@ -466,10 +464,8 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         return self._check_complete()
 
     def handle_delete(self):
-        try:
+        with self.rpc_client().ignore_error_by_name('NotFound'):
             return self._handle_action(self.DELETE)
-        except Exception as ex:
-            self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def check_delete_complete(self, sd=None):
         if not sd or not self._server_exists(sd) or self._check_complete():
@@ -479,12 +475,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
     def _delete_resource(self):
         derived_config_id = None
         if self.resource_id is not None:
-            try:
+            with self.rpc_client().ignore_error_by_name('NotFound'):
                 derived_config_id = self._get_derived_config_id()
                 self.rpc_client().delete_software_deployment(
                     self.context, self.resource_id)
-            except Exception as ex:
-                self.rpc_client().ignore_error_named(ex, 'NotFound')
 
         if derived_config_id:
             self._delete_derived_config(derived_config_id)

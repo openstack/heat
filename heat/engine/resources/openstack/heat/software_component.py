@@ -130,14 +130,12 @@ class SoftwareComponent(sc.SoftwareConfig):
         an empty list is returned.
         """
         if name == self.CONFIGS_ATTR and self.resource_id:
-            try:
+            with self.rpc_client().ignore_error_by_name('NotFound'):
                 sc = self.rpc_client().show_software_config(
                     self.context, self.resource_id)
                 # configs list is stored in 'config' property of parent class
                 # (see handle_create)
                 return sc[rpc_api.SOFTWARE_CONFIG_CONFIG].get(self.CONFIGS)
-            except Exception as ex:
-                self.rpc_client().ignore_error_named(ex, 'NotFound')
 
     def validate(self):
         """Validate SoftwareComponent properties consistency."""
