@@ -636,18 +636,18 @@ class ResourceRegistry(object):
             return (version is None or
                     cls.get_class().support_status.version == version)
 
-        def resource_description(name, cls, with_description):
+        import heat.engine.resource
+
+        def resource_description(name, info, with_description):
             if not with_description:
                 return name
-            if cls.description == 'Plugin':
-                rsrc = cls.value
-            elif cls.description == 'Template':
-                rsrc = cls.get_class()
-            else:
-                rsrc = None
+            rsrc_cls = info.get_class()
+            if rsrc_cls is None:
+                rsrc_cls = heat.engine.resource.Resource
             return {
                 'resource_type': name,
-                'description': rsrc.__doc__}
+                'description': rsrc_cls.getdoc(),
+            }
 
         return [resource_description(name, cls, with_description)
                 for name, cls in six.iteritems(self._registry)

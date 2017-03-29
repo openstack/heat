@@ -625,10 +625,3 @@ def format_snapshot(snapshot):
             heat_timeutils.isotime(snapshot.created_at),
     }
     return result
-
-
-def build_resource_description(docstring):
-    if docstring is not None:
-        return '\n'.join(map(lambda x: x.strip(), docstring.split('\n')))
-    else:
-        return _('No description given')
