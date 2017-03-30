@@ -22,6 +22,7 @@ from keystoneauth1.identity import generic
 from manilaclient import exceptions as manila_exc
 import mock
 from neutronclient.common import exceptions as neutron_exc
+from openstack import exceptions
 from oslo_config import cfg
 from saharaclient.api import base as sahara_base
 import six
@@ -639,6 +640,15 @@ class TestIsNotFound(common.HeatTestCase):
             is_unprocessable_entity=False,
             plugin='nova',
             exception=lambda: fakes_nova.fake_exception(409),
+        )),
+        ('openstack_not_found', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=True,
+            is_conflict=False,
+            is_unprocessable_entity=False,
+            plugin='openstack',
+            exception=lambda: exceptions.ResourceNotFound,
         )),
         ('swift_not_found', dict(
             is_not_found=True,
