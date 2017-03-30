@@ -15,6 +15,7 @@ import base64
 import contextlib
 import datetime as dt
 import pydoc
+import tenacity
 import weakref
 
 from oslo_config import cfg
@@ -772,14 +773,35 @@ class Resource(status.ResourceStatus):
         Expected exceptions are re-raised, with the Resource moved to the
         COMPLETE state.
         """
+        attempts = 1
+        first_iter = [True]  # work around no nonlocal in py27
         if self.stack.convergence:
             lock_acquire = self.LOCK_ACQUIRE
             lock_release = self.LOCK_RELEASE
+            if action != self.CREATE:
+                attempts += max(cfg.CONF.client_retry_limit, 0)
         else:
             lock_acquire = lock_release = self.LOCK_NONE
 
-        try:
+        # retry for convergence DELETE or UPDATE if we get the usual
+        # lock-acquire exception of exception.UpdateInProgress
+        @tenacity.retry(
+            stop=tenacity.stop_after_attempt(attempts),
+            retry=tenacity.retry_if_exception_type(
+                exception.UpdateInProgress),
+            wait=tenacity.wait_random(max=2),
+            reraise=True)
+        def set_in_progress():
+            if not first_iter[0]:
+                res_obj = resource_objects.Resource.get_obj(
+                    self.context, self.id)
+                self._atomic_key = res_obj.atomic_key
+            else:
+                first_iter[0] = False
             self.state_set(action, self.IN_PROGRESS, lock=lock_acquire)
+
+        try:
+            set_in_progress()
             yield
         except exception.UpdateInProgress as ex:
             with excutils.save_and_reraise_exception():
