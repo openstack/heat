@@ -532,8 +532,10 @@ with the concrete syntax for each type.
 length
 ++++++
 The ``length`` constraint applies to parameters of type
-``string``. It defines a lower and upper limit for the length of the
-string value.
+``string``, ``comma_delimited_list`` and ``json``.
+
+It defines a lower and upper limit for the length of the string value or
+list/map collection.
 
 The syntax of the ``length`` constraint is
 
