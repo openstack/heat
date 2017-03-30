@@ -189,3 +189,15 @@ resources:
       value: test_value
       invert: False
 '''
+
+SEGMENT_TEMPLATE = '''
+heat_template_version: pike
+description: Template to test Segment
+resources:
+  segment:
+    type: OS::Neutron::Segment
+    properties:
+      network: private
+      network_type: vxlan
+      segmentation_id: 101
+'''
