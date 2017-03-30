@@ -1670,13 +1670,16 @@ conditions:
             'parent', 'SomeType',
             deletion_policy=rsrc_defn.ResourceDefinition.RETAIN,
             update_policy={"blarg": "wibble"})
+        tmpl = copy.deepcopy(hot_tpl_empty)
+        tmpl['resources'] = {'parent': parent_resource.t.render_hot()}
         parent_resource.stack = parser.Stack(utils.dummy_context(),
                                              'toplevel_stack',
-                                             template.Template(hot_tpl_empty))
+                                             template.Template(tmpl))
+        parent_resource.stack._resources = {'parent': parent_resource}
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_tpl_empty),
                              parent_resource='parent')
-        stack._parent_stack = dict(parent=parent_resource)
+        stack.set_parent_stack(parent_resource.stack)
         self.assertEqual({"foo": "bar"},
                          self.resolve(metadata_snippet, stack.t, stack))
         self.assertEqual('Retain',
@@ -1689,20 +1692,22 @@ conditions:
 
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
-        tmpl = template.Template(hot_juno_tpl_empty)
-        parent_resource.stack = parser.Stack(utils.dummy_context(),
-                                             'toplevel_stack',
-                                             tmpl)
-        del_policy = hot_functions.Join(parent_resource.stack,
+        del_policy = hot_functions.Join(None,
                                         'list_join', ['eta', ['R', 'in']])
         parent_resource.t = rsrc_defn.ResourceDefinition(
             'parent', 'SomeType',
             deletion_policy=del_policy)
+        tmpl = copy.deepcopy(hot_juno_tpl_empty)
+        tmpl['resources'] = {'parent': parent_resource.t.render_hot()}
+        parent_resource.stack = parser.Stack(utils.dummy_context(),
+                                             'toplevel_stack',
+                                             template.Template(tmpl))
+        parent_resource.stack._resources = {'parent': parent_resource}
 
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_tpl_empty),
                              parent_resource='parent')
-        stack._parent_stack = dict(parent=parent_resource)
+        stack.set_parent_stack(parent_resource.stack)
         self.assertEqual('Retain',
                          self.resolve(deletion_policy_snippet, stack.t, stack))
 
@@ -1722,14 +1727,16 @@ conditions:
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = rsrc_defn.ResourceDefinition('parent', 'SomeType')
+        tmpl = copy.deepcopy(hot_tpl_empty)
+        tmpl['resources'] = {'parent': parent_resource.t.render_hot()}
         parent_stack = parser.Stack(utils.dummy_context(),
                                     'toplevel_stack',
-                                    template.Template(hot_tpl_empty))
+                                    template.Template(tmpl))
         parent_stack._resources = {'parent': parent_resource}
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_tpl_empty),
                              parent_resource='parent')
-        stack._parent_stack = parent_stack
+        stack.set_parent_stack(parent_stack)
         self.assertEqual('Delete', self.resolve(snippet, stack.t, stack))
 
     def test_removed_function(self):

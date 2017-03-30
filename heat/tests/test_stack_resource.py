@@ -360,7 +360,8 @@ class StackResourceTest(StackResourceBaseTest):
         nest_stack = stk_resource._parse_nested_stack(
             "test_nest_stack", stk_resource.child_template(),
             stk_resource.child_params())
-        self.assertEqual(nest_stack._parent_stack, self.parent_stack)
+        self.assertEqual(self.parent_stack,
+                         nest_stack.parent_resource._stack())
 
     def test_preview_dict_validates_nested_resources(self):
         parent_t = self.parent_stack.t

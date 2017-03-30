@@ -1307,13 +1307,18 @@ class TemplateTest(common.HeatTestCase):
             'parent', 'SomeType',
             deletion_policy=rsrc_defn.ResourceDefinition.RETAIN,
             update_policy={"blarg": "wibble"})
-
+        tmpl = copy.deepcopy(empty_template)
+        tmpl['Resources'] = {'parent': {'Type': 'SomeType',
+                                        'DeletionPolicy': 'Retain',
+                                        'UpdatePolicy': {"blarg": "wibble"}}}
         parent_resource.stack = stack.Stack(self.ctx, 'toplevel_stack',
-                                            template.Template(empty_template))
+                                            template.Template(tmpl))
+        parent_resource.stack._resources = {'parent': parent_resource}
+
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template),
                           parent_resource='parent', owner_id=45)
-        stk._parent_stack = dict(parent=parent_resource)
+        stk.set_parent_stack(parent_resource.stack)
         self.assertEqual({"foo": "bar"},
                          self.resolve(metadata_snippet, stk.t, stk))
         self.assertEqual('Retain',
@@ -1326,18 +1331,22 @@ class TemplateTest(common.HeatTestCase):
 
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
-        parent_resource.stack = stack.Stack(self.ctx, 'toplevel_stack',
-                                            template.Template(empty_template))
-        del_policy = cfn_funcs.Join(parent_resource.stack,
+        del_policy = cfn_funcs.Join(None,
                                     'Fn::Join', ['eta', ['R', 'in']])
         parent_resource.t = rsrc_defn.ResourceDefinition(
             'parent', 'SomeType',
             deletion_policy=del_policy)
+        tmpl = copy.deepcopy(empty_template)
+        tmpl['Resources'] = {'parent': {'Type': 'SomeType',
+                                        'DeletionPolicy': del_policy}}
+        parent_resource.stack = stack.Stack(self.ctx, 'toplevel_stack',
+                                            template.Template(tmpl))
+        parent_resource.stack._resources = {'parent': parent_resource}
 
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template),
                           parent_resource='parent')
-        stk._parent_stack = dict(parent=parent_resource)
+        stk.set_parent_stack(parent_resource.stack)
         self.assertEqual('Retain',
                          self.resolve(deletion_policy_snippet, stk.t, stk))
 
@@ -1355,13 +1364,16 @@ class TemplateTest(common.HeatTestCase):
         parent_resource = DummyClass()
         parent_resource.metadata_set({"foo": "bar"})
         parent_resource.t = rsrc_defn.ResourceDefinition('parent', 'SomeType')
+        tmpl = copy.deepcopy(empty_template)
+        tmpl['Resources'] = {'parent': {'Type': 'SomeType'}}
 
         parent_resource.stack = stack.Stack(self.ctx, 'toplevel_stack',
-                                            template.Template(empty_template))
+                                            template.Template(tmpl))
+        parent_resource.stack._resources = {'parent': parent_resource}
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template),
                           parent_resource='parent', owner_id=78)
-        stk._parent_stack = dict(parent=parent_resource)
+        stk.set_parent_stack(parent_resource.stack)
         self.assertEqual('Delete', self.resolve(snippet, stk.t, stk))
 
     def test_prevent_parameters_access(self):
