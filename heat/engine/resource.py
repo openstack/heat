@@ -454,7 +454,7 @@ class Resource(status.ResourceStatus):
         if refresh:
             metadata = merge_metadata(metadata, db_res.rsrc_metadata)
         if db_res.update_metadata(metadata):
-            self._incr_atomic_key()
+            self._incr_atomic_key(db_res.atomic_key)
         self._rsrc_metadata = metadata
 
     def handle_metadata_reset(self):
@@ -753,11 +753,11 @@ class Resource(status.ResourceStatus):
     def glance(self):
         return self.client('glance')
 
-    def _incr_atomic_key(self):
-        if self._atomic_key is None:
+    def _incr_atomic_key(self, last_key):
+        if last_key is None:
             self._atomic_key = 1
         else:
-            self._atomic_key = self._atomic_key + 1
+            self._atomic_key = last_key + 1
 
     @contextlib.contextmanager
     def _action_recorder(self, action, expected_exceptions=tuple()):
@@ -1234,7 +1234,7 @@ class Resource(status.ResourceStatus):
                            'atomic_key': self._atomic_key,
                            'engine_id': self._calling_engine_id})
                 raise exception.UpdateInProgress(self.name)
-            self._incr_atomic_key()
+            self._incr_atomic_key(self._atomic_key)
 
         self._calling_engine_id = engine_id
         registry = new_stack.env.registry
@@ -1693,7 +1693,7 @@ class Resource(status.ResourceStatus):
                          'replaces': None},
                         atomic_key=db_res.atomic_key,
                         expected_engine_id=None):
-                    self._incr_atomic_key()
+                    self._incr_atomic_key(self._atomic_key)
 
     def delete_convergence(self, template_id, input_data, engine_id, timeout,
                            progress_callback=None):
@@ -1896,7 +1896,7 @@ class Resource(status.ResourceStatus):
         if resource_objects.Resource.select_and_update_by_id(
                 self.context, self.id, rs, expected_engine_id,
                 self._atomic_key):
-            self._incr_atomic_key()
+            self._incr_atomic_key(self._atomic_key)
         else:
             LOG.info('Resource %s is locked or does not exist',
                      six.text_type(self))
