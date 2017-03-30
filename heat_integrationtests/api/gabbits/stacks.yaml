@@ -7,7 +7,7 @@ tests:
   GET: /stacks
   status: 200
   response_headers:
-    content-type: application/json; charset=UTF-8
+    content-type: application/json
 
 - name: create empty stack
   POST: /stacks
