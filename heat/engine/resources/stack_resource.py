@@ -59,7 +59,11 @@ class StackResource(resource.Resource):
 
     def validate(self):
         super(StackResource, self).validate()
-        self.validate_nested_stack()
+        # Don't redo a non-strict validation of a nested stack during the
+        # creation of a child stack; only validate a child stack prior to the
+        # creation of the root stack.
+        if self.stack.nested_depth == 0 or not self.stack.strict_validate:
+            self.validate_nested_stack()
 
     def validate_nested_stack(self):
         try:
