@@ -68,7 +68,8 @@ class Enforcer(object):
            :param context: Heat request context
            :param rule: String representing the action to be checked
            :param target: Dictionary representing the object of the action.
-           :raises: self.exc (defaults to heat.common.exception.Forbidden)
+           :raises heat.common.exception.Forbidden: When permission is denied
+                   (or self.exc if supplied).
            :returns: A non-False value if access is allowed.
         """
         do_raise = False if not exc else True
@@ -95,7 +96,8 @@ class Enforcer(object):
            :param context: Heat request context
            :param action: String representing the action to be checked
            :param target: Dictionary representing the object of the action.
-           :raises: self.exc (defaults to heat.common.exception.Forbidden)
+           :raises heat.common.exception.Forbidden: When permission is denied
+                   (or self.exc if supplied).
            :returns: A non-False value if access is allowed.
         """
         _action = '%s:%s' % (scope or self.scope, action)

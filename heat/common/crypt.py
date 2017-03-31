@@ -65,7 +65,7 @@ class SymmetricCrypto(object):
         :param key: The Encryption key.
         :param msg: the ciphetext, the first block is the IV
 
-        :returns plain: the plaintext message, after padding is removed.
+        :returns: the plaintext message, after padding is removed.
         """
         key = str.encode(get_valid_encryption_key(key))
         if b64decode:

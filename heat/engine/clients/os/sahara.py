@@ -77,8 +77,8 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
         :param resource_name: API name of entity
         :param value: ID or name of entity
         :returns: the id of the requested :value:
-        :raises: exception.EntityNotFound,
-                 exception.PhysicalResourceNameAmbiguity
+        :raises exception.EntityNotFound:
+        :raises exception.PhysicalResourceNameAmbiguity:
         """
         try:
             entity = getattr(self.client(), resource_name)
@@ -91,8 +91,8 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
 
         :param image_identifier: image name or a UUID-like identifier
         :returns: the id of the requested :image_identifier:
-        :raises: exception.EntityNotFound,
-                 exception.PhysicalResourceNameAmbiguity
+        :raises exception.EntityNotFound:
+        :raises exception.PhysicalResourceNameAmbiguity:
         """
         # leave this method for backward compatibility
         try:
@@ -104,8 +104,8 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
     def find_resource_by_name(self, resource_name, value):
         """Return the ID for the specified entity name.
 
-        :raises: exception.EntityNotFound,
-                 exception.PhysicalResourceNameAmbiguity
+        :raises exception.EntityNotFound:
+        :raises exception.PhysicalResourceNameAmbiguity:
         """
         try:
             filters = {'name': value}
@@ -131,7 +131,7 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
 
         :param plugin_name: the name of the plugin to find
         :returns: the id of :plugin:
-        :raises: exception.EntityNotFound
+        :raises exception.EntityNotFound:
         """
         try:
             self.client().plugins.get(plugin_name)

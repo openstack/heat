@@ -279,7 +279,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
         :param host_name: the name of host to find
         :returns: the list of match hosts
-        :raises: exception.EntityNotFound
+        :raises exception.EntityNotFound:
         """
 
         host_list = self.client().hosts.list()
@@ -294,7 +294,7 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
         :param key_name: the name of the key to look for
         :returns: the keypair (name, public_key) for :key_name:
-        :raises: exception.EntityNotFound
+        :raises exception.EntityNotFound:
         """
         try:
             return self.client().keypairs.get(key_name)

@@ -237,7 +237,7 @@ def get_socket(conf, default_port):
     :param conf: a cfg.ConfigOpts object
     :param default_port: port to bind to if none is specified in conf
 
-    :returns : a socket object as returned from socket.listen or
+    :returns: a socket object as returned from socket.listen or
                ssl.wrap_socket if conf specifies cert_file
     """
     bind_addr = get_bind_addr(conf, default_port)
