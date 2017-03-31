@@ -38,12 +38,12 @@ class Subnet(neutron.NeutronResource):
         NETWORK_ID, NETWORK, SUBNETPOOL, PREFIXLEN, CIDR,
         VALUE_SPECS, NAME, IP_VERSION, DNS_NAMESERVERS, GATEWAY_IP,
         ENABLE_DHCP, ALLOCATION_POOLS, TENANT_ID, HOST_ROUTES,
-        IPV6_RA_MODE, IPV6_ADDRESS_MODE,
+        IPV6_RA_MODE, IPV6_ADDRESS_MODE, SEGMENT
     ) = (
         'network_id', 'network', 'subnetpool', 'prefixlen', 'cidr',
         'value_specs', 'name', 'ip_version', 'dns_nameservers', 'gateway_ip',
         'enable_dhcp', 'allocation_pools', 'tenant_id', 'host_routes',
-        'ipv6_ra_mode', 'ipv6_address_mode',
+        'ipv6_ra_mode', 'ipv6_address_mode', 'segment'
     )
 
     _ALLOCATION_POOL_KEYS = (
@@ -236,6 +236,14 @@ class Subnet(neutron.NeutronResource):
             ],
             support_status=support.SupportStatus(version='2015.1')
         ),
+        SEGMENT: properties.Schema(
+            properties.Schema.STRING,
+            _('The name/ID of the segment to associate.'),
+            constraints=[
+                constraints.CustomConstraint('neutron.segment')
+            ],
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -303,6 +311,13 @@ class Subnet(neutron.NeutronResource):
                 client_plugin=self.client_plugin(),
                 finder='find_resourceid_by_name_or_id',
                 entity='subnetpool'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.SEGMENT],
+                client_plugin=self.client_plugin('openstack'),
+                finder='find_network_segment'
             )
         ]
 
@@ -357,6 +372,8 @@ class Subnet(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
         props['network_id'] = props.pop(self.NETWORK)
+        if self.SEGMENT in props and props[self.SEGMENT]:
+            props['segment_id'] = props.pop(self.SEGMENT)
         if self.SUBNETPOOL in props and props[self.SUBNETPOOL]:
             props['subnetpool_id'] = props.pop('subnetpool')
         self._null_gateway_ip(props)
