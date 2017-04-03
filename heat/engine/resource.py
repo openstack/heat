@@ -95,7 +95,7 @@ class PollDelay(Exception):
 
 @six.python_2_unicode_compatible
 class Resource(status.ResourceStatus):
-    BASE_ATTRIBUTES = (SHOW, ) = ('show', )
+    BASE_ATTRIBUTES = (SHOW, ) = (attributes.SHOW_ATTR, )
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
