@@ -14,6 +14,7 @@ import json
 import os
 import requests
 import subprocess
+import sys
 import tempfile
 import time
 import yaml
@@ -211,26 +212,28 @@ queue_id = %(queue_id)s
         config = metadata['os-collect-config']['zaqar']
         conf_content = self.conf_template % config
         fd, temp_path = tempfile.mkstemp()
-        os.write(fd, conf_content)
+        os.write(fd, conf_content.encode('utf-8'))
         os.close(fd)
         cmd = ['os-collect-config', '--one-time',
                '--config-file=%s' % temp_path, 'zaqar']
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         stdout_value = proc.communicate()[0]
-        data = json.loads(stdout_value)
+        data = json.loads(stdout_value.decode('utf-8'))
         self.assertEqual(config, data['zaqar']['os-collect-config']['zaqar'])
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         stdout_value = proc.communicate()[0]
-        data = json.loads(stdout_value)
+        data = json.loads(stdout_value.decode('utf-8'))
 
         fd, temp_path = tempfile.mkstemp()
-        os.write(fd, json.dumps(data['zaqar']['deployments'][0]))
+        os.write(fd,
+                 json.dumps(data['zaqar']['deployments'][0]).encode('utf-8'))
         os.close(fd)
-        cmd = ['python', self.conf.heat_config_notify_script, temp_path]
+        cmd = [sys.executable, self.conf.heat_config_notify_script, temp_path]
         proc = subprocess.Popen(cmd,
                                 stderr=subprocess.PIPE,
                                 stdin=subprocess.PIPE)
-        proc.communicate(json.dumps({'deploy_stdout': 'here!'}))
+        proc.communicate(
+            json.dumps({'deploy_stdout': 'here!'}).encode('utf-8'))
         self._wait_for_stack_status(stack_identifier, 'CREATE_COMPLETE')
         stack = self.client.stacks.get(stack_identifier)
         self.assertEqual('here!', stack.outputs[0]['output_value'])
