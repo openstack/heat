@@ -20,10 +20,11 @@ import six
 
 from heat.common.i18n import _
 from heat.engine import constraints
-from heat.engine import resources
+from heat.engine import plugin_manager
 from heat.engine import support
 
 LOG = log.getLogger(__name__)
+
 
 class HeatCustomGuidelines(object):
 
@@ -32,20 +33,23 @@ class HeatCustomGuidelines(object):
     def __init__(self, exclude):
         self.error_count = 0
         self.resources_classes = []
-        global_env = resources.global_env()
-        for resource_type in global_env.get_types():
-            cls = global_env.get_class(resource_type)
-            module = cls.__module__
-            # Skip resources, which defined as template resource in environment
-            if module == 'heat.engine.resources.template_resource':
-                continue
-            # Skip discovered plugin resources
-            if module == 'heat.engine.plugins':
-                continue
-            path = module.replace('.', '/')
-            if any(path.startswith(excl_path) for excl_path in exclude):
-                continue
-            self.resources_classes.append(cls)
+        all_resources = _load_all_resources()
+        for resource_type in all_resources:
+            for rsrc_cls in all_resources[resource_type]:
+                module = rsrc_cls.__module__
+                # Skip hidden resources check guidelines
+                if rsrc_cls.support_status.status == support.HIDDEN:
+                    continue
+                # Skip resources, which defined as template resource in
+                # environment or cotrib resource
+                if module in ('heat.engine.resources.template_resource',
+                              'heat.engine.plugins'):
+                    continue
+                # Skip manually excluded folders
+                path = module.replace('.', '/')
+                if any(path.startswith(excl_path) for excl_path in exclude):
+                    continue
+                self.resources_classes.append(rsrc_cls)
 
     def run_check(self):
         print(_('Heat custom guidelines check started.'))
@@ -268,6 +272,21 @@ class HeatCustomGuidelines(object):
             }
         print(msg)
         self.error_count += 1
+
+
+def _load_all_resources():
+    manager = plugin_manager.PluginManager('heat.engine.resources')
+    resource_mapping = plugin_manager.PluginMapping('resource')
+    res_plugin_mappings = resource_mapping.load_all(manager)
+
+    all_resources = {}
+    for mapping in res_plugin_mappings:
+        name, cls = mapping
+        if all_resources.get(name) is not None:
+            all_resources[name].append(cls)
+        else:
+            all_resources[name] = [cls]
+    return all_resources
 
 
 def parse_args():
