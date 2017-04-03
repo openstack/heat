@@ -35,7 +35,7 @@ from heat.scaling import scalingutil as sc_util
 LOG = logging.getLogger(__name__)
 
 
-class AutoScalingGroup(instgrp.InstanceGroup, cooldown.CooldownMixin):
+class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
 
     support_status = support.SupportStatus(version='2014.1')
 
