@@ -367,7 +367,7 @@ def format_stack_resource(resource, detail=True, with_props=False,
 def format_stack_preview(stack):
     def format_resource(res):
         if isinstance(res, list):
-            return map(format_resource, res)
+            return list(map(format_resource, res))
         return format_stack_resource(res, with_props=True)
 
     fmt_stack = format_stack(stack, preview=True)
