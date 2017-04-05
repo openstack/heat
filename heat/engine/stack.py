@@ -45,6 +45,7 @@ from heat.engine import parent_rsrc
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.engine import stk_defn
 from heat.engine import sync_point
 from heat.engine import template as tmpl
 from heat.engine import update
@@ -155,7 +156,6 @@ class Stack(collections.Mapping):
         self.id = stack_id
         self.owner_id = owner_id
         self.context = context
-        self.t = tmpl
         self.name = stack_name
         self.action = (self.ADOPT if adopt_stack_data else
                        self.CREATE if action is None else action)
@@ -163,9 +163,6 @@ class Stack(collections.Mapping):
         self.status_reason = status_reason
         self.timeout_mins = timeout_mins
         self.disable_rollback = disable_rollback
-        self._parent_info = parent_rsrc.ParentResourceProxy(context,
-                                                            parent_resource,
-                                                            owner_id)
         self._outputs = None
         self._resources = None
         self._dependencies = None
@@ -220,12 +217,15 @@ class Stack(collections.Mapping):
 
         resources.initialise()
 
-        if self.t is not None:
-            self.parameters = self.t.parameters(
-                self.identifier(),
-                user_params=self.env.params,
-                param_defaults=self.env.param_defaults)
-            self._set_param_stackid()
+        parent_info = parent_rsrc.ParentResourceProxy(context,
+                                                      parent_resource,
+                                                      owner_id)
+        if tmpl is not None:
+            self.defn = stk_defn.StackDefinition(context, tmpl,
+                                                 self.identifier(), {},
+                                                 parent_info)
+        else:
+            self.defn = None
 
     @property
     def tags(self):
@@ -248,15 +248,30 @@ class Stack(collections.Mapping):
         return self._worker_client
 
     @property
+    def t(self):
+        """The stack template."""
+        if self.defn is None:
+            return None
+        return self.defn.t
+
+    @t.setter
+    def t(self, tmpl):
+        """Set the stack template."""
+        self.defn = self.defn.clone_with_new_template(tmpl, self.identifier())
+
+    @property
+    def parameters(self):
+        return self.defn.parameters
+
+    @property
     def env(self):
-        """This is a helper to allow resources to access stack.env."""
-        return self.t.env
+        """The stack environment"""
+        return self.defn.env
 
     @property
     def parent_resource_name(self):
-        if self._parent_info is None:
-            return None
-        return self._parent_info.name
+        parent_info = self.defn.parent_resource
+        return parent_info and parent_info.name
 
     @property
     def parent_resource(self):
@@ -264,10 +279,12 @@ class Stack(collections.Mapping):
 
         Note: this should only be used by "Fn::ResourceFacade"
         """
-        return self._parent_info
+        return self.defn.parent_resource
 
     def set_parent_stack(self, parent_stack):
-        parent_rsrc.use_parent_stack(self._parent_info, parent_stack)
+        parent_info = self.defn.parent_resource
+        if parent_info is not None:
+            parent_rsrc.use_parent_stack(parent_info, parent_stack)
 
     def stored_context(self):
         if self.user_creds_id:
@@ -706,7 +723,7 @@ class Stack(collections.Mapping):
         resource.t = definition
         resource.reparse()
         self.resources[resource.name] = resource
-        self.t.add_resource(definition)
+        stk_defn.add_resource(self.defn, definition)
         if self.t.id is not None:
             self.t.store(self.context)
         resource.store()
@@ -714,7 +731,7 @@ class Stack(collections.Mapping):
     def remove_resource(self, resource_name):
         """Remove the resource with the specified name."""
         del self.resources[resource_name]
-        self.t.remove_resource(resource_name)
+        stk_defn.remove_resource(self.defn, resource_name)
         if self.t.id is not None:
             self.t.store(self.context)
 
@@ -1228,7 +1245,7 @@ class Stack(collections.Mapping):
             self.disable_rollback = new_stack.disable_rollback
             self.timeout_mins = new_stack.timeout_mins
 
-            self.parameters = new_stack.parameters
+            self.defn = new_stack.defn
             self._set_param_stackid()
 
             self.tags = new_stack.tags
@@ -1494,9 +1511,9 @@ class Stack(collections.Mapping):
         try:
             updater = scheduler.TaskRunner(update_task)
 
-            self.parameters = newstack.parameters
-            self.t.files = newstack.t.files
-            self.t.env = newstack.t.env
+            self.defn.parameters = newstack.defn.parameters
+            self.defn.t.files = newstack.defn.t.files
+            self.defn.t.env = newstack.defn.t.env
             self.disable_rollback = newstack.disable_rollback
             self.timeout_mins = newstack.timeout_mins
             self._set_param_stackid()

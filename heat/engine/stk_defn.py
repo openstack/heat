@@ -217,3 +217,28 @@ class ResourceProxy(status.ResourceStatus):
         all_attrs = self._res_data().attributes()
         return dict((k, v) for k, v in six.iteritems(all_attrs)
                     if k != attributes.SHOW_ATTR)
+
+
+def add_resource(stack_definition, resource_definition):
+    """Insert the given resource definition into the stack definition.
+
+    Add the resource to the template and store any temporary data.
+    """
+    resource_name = resource_definition.name
+    stack_definition._resources.pop(resource_name, None)
+    stack_definition._resource_data.pop(resource_name, None)
+    stack_definition.t.add_resource(resource_definition)
+    if stack_definition._resource_defns is not None:
+        stack_definition._resource_defns[resource_name] = resource_definition
+
+
+def remove_resource(stack_definition, resource_name):
+    """Remove the named resource from the stack definition.
+
+    Remove the resource from the template and eliminate references to it.
+    """
+    stack_definition.t.remove_resource(resource_name)
+    if stack_definition._resource_defns is not None:
+        stack_definition._resource_defns.pop(resource_name, None)
+    stack_definition._resource_data.pop(resource_name, None)
+    stack_definition._resources.pop(resource_name, None)
