@@ -316,8 +316,7 @@ class GetAttAllAttributes(GetAtt):
         if self._attribute is not None:
             return super(GetAttAllAttributes, self).dep_attrs(resource_name)
         elif self._res_name() == resource_name:
-            res = self._resource()
-            attrs = six.iterkeys(res.attributes_schema)
+            attrs = [attributes.ALL_ATTRIBUTES]
         else:
             attrs = []
         return itertools.chain(function.dep_attrs(self.args,

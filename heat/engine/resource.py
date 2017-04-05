@@ -876,9 +876,13 @@ class Resource(status.ResourceStatus):
                 except exception.InvalidTemplateAttribute as ita:
                     LOG.info('%s', ita)
 
-        dep_attrs = self.stack.get_dep_attrs(
+        dep_attrs = set(self.stack.get_dep_attrs(
             six.itervalues(self.stack.resources),
-            self.name)
+            self.name))
+        if attributes.ALL_ATTRIBUTES in dep_attrs:
+            dep_attrs.remove(attributes.ALL_ATTRIBUTES)
+            dep_attrs |= (set(self.attributes) - {self.SHOW})
+
         return node_data.NodeData(self.id, self.name, self.uuid,
                                   self.get_reference_id(),
                                   dict(get_attrs(dep_attrs)),
