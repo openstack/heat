@@ -3997,7 +3997,7 @@ class ServersTest(common.HeatTestCase):
         delete_swift_object.assert_called_once_with()
 
 
-class ServerInternalPortTest(common.HeatTestCase):
+class ServerInternalPortTest(ServersTest):
     def setUp(self):
         super(ServerInternalPortTest, self).setUp()
         self.resolve = self.patchobject(neutron.NeutronClientPlugin,
@@ -4008,14 +4008,6 @@ class ServerInternalPortTest(common.HeatTestCase):
                                             'delete_port')
         self.port_show = self.patchobject(neutronclient.Client,
                                           'show_port')
-        self.patchobject(resource.Resource, 'is_using_neutron',
-                         return_value=True)
-
-        def flavor_side_effect(*args):
-            return 2 if args[0] == 'm1.small' else 1
-
-        def image_side_effect(*args):
-            return 2 if args[0] == 'F17-x86_64-gold' else 1
 
         def neutron_side_effect(*args):
             if args[0] == 'subnet':
@@ -4025,10 +4017,6 @@ class ServerInternalPortTest(common.HeatTestCase):
             if args[0] == 'port':
                 return '12345'
 
-        self.patchobject(nova.NovaClientPlugin, 'find_flavor_by_name_or_id',
-                         side_effect=flavor_side_effect)
-        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
-                         side_effect=image_side_effect)
         self.resolve.side_effect = neutron_side_effect
 
     def _return_template_stack_and_rsrc_defn(self, stack_name, temp):
@@ -4249,54 +4237,47 @@ class ServerInternalPortTest(common.HeatTestCase):
                 - network: 4321
                   subnet: 1234
                   fixed_ip: 127.0.0.1
-                - network: 8765
-                  subnet: 5678
-                  fixed_ip: 127.0.0.2
+                - port: 3344
         """
 
         t, stack, server = self._return_template_stack_and_rsrc_defn('test',
                                                                      tmpl)
-
-        # NOTE(prazumovsky): this method update old_net and new_net with
-        # interfaces' ports. Because of uselessness of checking this method,
-        # we can afford to give port as part of calculate_networks args.
-        self.patchobject(server, 'update_networks_matching_iface_port')
-
-        server._data = {'internal_ports': '[{"id": "1122"}]'}
-        self.port_create.return_value = {'port': {'id': '5566'}}
+        data_mock = self.patchobject(server, '_data_get_ports')
+        data_mock.side_effect = [[{"id": "1122"}], [{"id": "1122"}], []]
+        self.port_create.return_value = {'port': {'id': '7788'}}
         data_set = self.patchobject(resource.Resource, 'data_set')
-        self.resolve.side_effect = ['0912', '9021']
 
         old_net = [{'network': '4321',
                     'subnet': '1234',
-                    'fixed_ip': '127.0.0.1',
-                    'port': '1122'},
-                   {'network': '8765',
+                    'fixed_ip': '127.0.0.1'},
+                   {'port': '3344'}]
+
+        new_net = [{'port': '3344'},
+                   {'port': '5566'},
+                   {'network': '4321',
                     'subnet': '5678',
-                    'fixed_ip': '127.0.0.2',
-                    'port': '3344'}]
+                    'fixed_ip': '10.0.0.1'}
+                   ]
+        interfaces = [
+            self.create_fake_iface('1122', '4321', '127.0.0.1'),
+            self.create_fake_iface('3344', '4321', '10.0.0.2'),
+        ]
 
-        new_net = [{'network': '8765',
-                    'subnet': '5678',
-                    'fixed_ip': '127.0.0.2',
-                    'port': '3344'},
-                   {'network': '0912',
-                    'subnet': '9021',
-                    'fixed_ip': '127.0.0.1'}]
+        server.calculate_networks(old_net, new_net, interfaces)
 
-        server.calculate_networks(old_net, new_net, [])
-
+        # we can only delete the port 1122,
+        # port 3344 is external port, cant delete it
         self.port_delete.assert_called_once_with('1122')
         self.port_create.assert_called_once_with(
-            {'port': {'name': 'server-port-0',
-                      'network_id': '0912',
-                      'fixed_ips': [{'subnet_id': '9021',
-                                     'ip_address': '127.0.0.1'}]}})
+            {'port': {'name': 'server-port-1',
+                      'network_id': '4321',
+                      'fixed_ips': [{'subnet_id': '5678',
+                                     'ip_address': '10.0.0.1'}]}})
 
         self.assertEqual(2, data_set.call_count)
         data_set.assert_has_calls((
             mock.call('internal_ports', '[]'),
-            mock.call('internal_ports', '[{"id": "1122"}, {"id": "5566"}]')))
+            mock.call('internal_ports', '[{"id": "7788"}]')))
 
     def test_calculate_networks_nova_with_fipa(self):
         tmpl = """
