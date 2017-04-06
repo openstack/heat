@@ -1483,7 +1483,7 @@ template_description:
   required: true
   type: string
 template_functions:
-  descriptions: |
+  description: |
     A list of template function descriptors.
   in: body
   required: true
