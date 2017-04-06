@@ -71,8 +71,7 @@ placed in ``rally-scenarios/extra/`` directory.
 
 Also it's possible to specify other fields for each Rally task, like ``sla``
 or ``context``. More information about other configuration setting is
-available by link https://rally.readthedocs.org/en/latest/tutorial.html
-
+available by link https://rally.readthedocs.io/en/latest/plugins/#rally-plugins
 Mentioned patch was proposed for confirmation caching mechanism of Heat
 template validation process
 (see https://specs.openstack.org/openstack/heat-specs/specs/liberty/constraint-validation-cache.html).
