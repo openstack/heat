@@ -1,0 +1,110 @@
+heat_template_version: 2014-10-16
+
+description: >
+  This HOT template that just defines a single server.
+  Contains just base features to verify base heat support.
+
+parameters:
+  key_name:
+    type: string
+    default: key-01
+    description: Name of an existing key pair to use for the server
+  flavor:
+    type: string
+    description: Flavor for the server to be created
+    default: m1.small
+    constraints:
+      - custom_constraint: nova.flavor
+  image:
+    type: string
+    description: Image ID or image name to use for the server
+    constraints:
+      - custom_constraint: glance.image
+  vol_size:
+    type: number
+    description: The size of the Cinder volume
+    default: 1
+  private_net_name:
+    type: string
+    default: private-net-01
+    description: Name of private network to be created
+  private_net_cidr:
+    type: string
+    default: 192.168.101.0/24
+    description: Private network address (CIDR notation)
+  private_net_gateway:
+    type: string
+    default: 192.168.101.1
+    description: Private network gateway address
+  private_net_pool_start:
+    type: string
+    default: 192.168.101.2
+    description: Start of private network IP address allocation pool
+  private_net_pool_end:
+    type: string
+    default: 192.168.101.127
+    description: End of private network IP address allocation pool
+  echo_foo:
+    default: fooooo
+    type: string
+
+resources:
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: private_net_name }
+
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: private_net }
+      cidr: { get_param: private_net_cidr }
+      gateway_ip: { get_param: private_net_gateway }
+      allocation_pools:
+        - start: { get_param: private_net_pool_start }
+          end: { get_param: private_net_pool_end }
+
+  server_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - subnet_id: { get_resource: private_subnet }
+
+  key:
+    type: OS::Nova::KeyPair
+    properties:
+      name: { get_param: key_name }
+
+  server:
+    type: OS::Nova::Server
+    properties:
+      key_name: { get_resource: key }
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      networks:
+        - port: { get_resource: server_port }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            echo echo_foo
+          params:
+            echo_foo: { get_param: echo_foo }
+
+  vol:
+    type: OS::Cinder::Volume
+    properties:
+      size: { get_param: vol_size }
+
+  vol_att:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource: server }
+      volume_id: { get_resource: vol }
+      mountpoint: /dev/vdb
+
+outputs:
+  server_networks:
+    description: The networks of the deployed server
+    value: { get_attr: [server, networks] }
