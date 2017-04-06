@@ -1964,8 +1964,8 @@ conditions:
                 'host': 'example.com',
                 'path': '/foo/?bar',
                 'query': {
-                    'foo': 'bar&baz',
-                    'blarg': 'wib=ble',
+                    'foo#': 'bar & baz',
+                    'blarg': '/wib=ble/',
                 },
             }
         }
@@ -1974,9 +1974,9 @@ conditions:
 
         self.assertIn(resolved,
                       ['http://example.com/foo/%3Fbar'
-                       '?foo=bar%26baz&blarg=wib%3Dble',
+                       '?foo%23=bar+%26+baz&blarg=/wib%3Dble/',
                        'http://example.com/foo/%3Fbar'
-                       '?blarg=wib%3Dble&foo=bar%26baz'])
+                       '?blarg=/wib%3Dble/&foo%23=bar+%26+baz'])
 
     def test_make_url_fragment(self):
         snippet = {
