@@ -76,12 +76,12 @@ class MistralCronTriggerTest(common.HeatTestCase):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
         expected_state = (ct.CREATE, ct.COMPLETE)
         self.assertEqual(expected_state, ct.state)
-        args = self.client.cron_triggers.create.call_args[1]
-        self.assertEqual('* * 0 * *', args['pattern'])
-        self.assertEqual('get_first_glance_image', args['workflow_name'])
-        self.assertEqual({}, args['workflow_input'])
-        self.assertEqual('2015-04-08 06:20', args['first_time'])
-        self.assertEqual(3, args['count'])
+        args, kwargs = self.client.cron_triggers.create.call_args
+        self.assertEqual('* * 0 * *', kwargs['pattern'])
+        self.assertEqual('get_first_glance_image', args[1])
+        self.assertEqual({}, kwargs['workflow_input'])
+        self.assertEqual('2015-04-08 06:20', kwargs['first_time'])
+        self.assertEqual(3, kwargs['count'])
         self.assertEqual('my_cron_trigger', ct.resource_id)
 
     def test_attributes(self):
