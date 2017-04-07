@@ -155,7 +155,7 @@ class Order(resource.Resource):
         ),
         PASS_PHRASE: properties.Schema(
             properties.Schema.STRING,
-            _('The passphrase the created key. Can be set only '
+            _('The passphrase of the created key. Can be set only '
               'for asymmetric type of order.'),
             support_status=support.SupportStatus(version='5.0.0'),
         ),
