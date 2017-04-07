@@ -45,12 +45,29 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return isinstance(ex, mc_exc.Conflict)
 
-    def get_baymodel(self, value):
+    def _get_rsrc_name_or_id(self, value, entity, entity_msg):
+        entity_client = getattr(self.client(), entity)
         try:
-            self.client().baymodels.get(value)
+            return entity_client.get(value).uuid
         except mc_exc.NotFound:
-            raise exception.EntityNotFound(entity='BayModel',
+            # Magnum cli will find the value either is name or id,
+            # so no need to call list() here.
+            raise exception.EntityNotFound(entity=entity_msg,
                                            name=value)
+
+    def get_baymodel(self, value):
+        return self._get_rsrc_name_or_id(value, entity='baymodels',
+                                         entity_msg='BayModel')
+
+    def get_cluster_template(self, value):
+        return self._get_rsrc_name_or_id(value, entity='cluster_templates',
+                                         entity_msg='ClusterTemplate')
+
+
+class ClusterTemplateConstraint(constraints.BaseCustomConstraint):
+
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_cluster_template'
 
 
 class BaymodelConstraint(constraints.BaseCustomConstraint):
