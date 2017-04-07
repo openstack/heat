@@ -582,6 +582,16 @@ class ResourceTest(common.HeatTestCase):
         res.store()
         self.assertIsNotNone(res.updated_time)
 
+    def test_resource_object_get_obj_fields(self):
+        snippet = rsrc_defn.ResourceDefinition('aresource',
+                                               'GenericResourceType')
+        res = resource.Resource('aresource', snippet, self.stack)
+        res.store()
+        res_obj = resource_objects.Resource.get_obj(
+            res.context, res.id, refresh=False, fields=('status', ))
+        self.assertEqual(res_obj.status, res.COMPLETE)
+        self.assertRaises(AttributeError, getattr, res_obj, 'action')
+
     def test_resource_object_resource_properties_data(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', True,
                               enforce_type=True)

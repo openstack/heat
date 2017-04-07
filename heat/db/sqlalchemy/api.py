@@ -173,7 +173,7 @@ def raw_template_files_get(context, files_id):
     return result
 
 
-def resource_get(context, resource_id, refresh=False):
+def resource_get(context, resource_id, refresh=False, refresh_data=False):
     result = context.session.query(models.Resource).get(resource_id)
 
     if not result:
@@ -181,8 +181,9 @@ def resource_get(context, resource_id, refresh=False):
                                  resource_id)
     if refresh:
         context.session.refresh(result)
-        # ensure data is loaded (lazy or otherwise)
-        result.data
+        if refresh_data:
+            # ensure data is loaded (lazy or otherwise)
+            result.data
 
     return result
 
