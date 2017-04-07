@@ -14,12 +14,15 @@
 import base64
 import sys
 
-from Crypto.Cipher import AES
 from cryptography import fernet
+from cryptography.hazmat import backends
+from cryptography.hazmat.primitives.ciphers import algorithms
+from cryptography.hazmat.primitives.ciphers import Cipher
+from cryptography.hazmat.primitives.ciphers import modes
+from cryptography.hazmat.primitives import padding
 from oslo_config import cfg
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
-from oslo_utils import importutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -41,16 +44,16 @@ class SymmetricCrypto(object):
     This class creates a Symmetric Key Crypto object that can be used
     to decrypt arbitrary data.
 
-    Note: This is moved here from oslo-incubator for backward
-    compatibility. Once we've db migration script available to
-    re-rencrypt using new encryption method as part of upgrade,
-    this can be removed.
+    Note: This is a reimplementation of the decryption algorithm from
+    oslo-incubator, and is provided for backward compatibility. Once we have a
+    db migration script available to re-encrypt using new encryption method as
+    part of upgrade, this can be removed.
 
     :param enctype: Encryption Cipher name (default: AES)
     """
 
     def __init__(self, enctype='AES'):
-        self.cipher = importutils.import_module('Crypto.Cipher.' + enctype)
+        self.algo = algorithms.AES
 
     def decrypt(self, key, msg, b64decode=True):
         """Decrypts the provided ciphertext.
@@ -64,15 +67,24 @@ class SymmetricCrypto(object):
 
         :returns plain: the plaintext message, after padding is removed.
         """
+        key = str.encode(get_valid_encryption_key(key))
         if b64decode:
             msg = base64.b64decode(msg)
-        iv = msg[:self.cipher.block_size]
-        cipher = self.cipher.new(key, self.cipher.MODE_CBC, iv)
-
-        padded = cipher.decrypt(msg[self.cipher.block_size:])
-        l = ord(padded[-1:]) + 1
-        plain = padded[:-l]
-        return plain
+        algo = self.algo(key)
+        block_size_bytes = algo.block_size // 8
+        iv = msg[:block_size_bytes]
+        backend = backends.default_backend()
+        cipher = Cipher(algo, modes.CBC(iv), backend=backend)
+        decryptor = cipher.decryptor()
+        padded = (decryptor.update(msg[block_size_bytes:]) +
+                  decryptor.finalize())
+        unpadder = padding.ANSIX923(algo.block_size).unpadder()
+        plain = unpadder.update(padded) + unpadder.finalize()
+        # The original padding algorithm was a slight variation on ANSI X.923,
+        # where the size of the padding did not include the byte that tells
+        # you the size of the padding. Therefore, we need to remove one extra
+        # byte (which will be 0x00) when unpadding.
+        return plain[:-1]
 
 
 def encrypt(value, encryption_key=None):
@@ -155,12 +167,15 @@ def heat_decrypt(value, encryption_key=None):
     function must still exist. So whilst it may seem that this function
     is not referenced, it will be referenced from the database.
     """
-    encryption_key = get_valid_encryption_key(encryption_key)
+    encryption_key = str.encode(get_valid_encryption_key(encryption_key))
     auth = base64.b64decode(value)
-    iv = auth[:AES.block_size]
-    cipher = AES.new(encryption_key, AES.MODE_CFB, iv)
-    res = cipher.decrypt(auth[AES.block_size:])
-    return res
+    AES = algorithms.AES(encryption_key)
+    block_size_bytes = AES.block_size // 8
+    iv = auth[:block_size_bytes]
+    backend = backends.default_backend()
+    cipher = Cipher(AES, modes.CFB(iv), backend=backend)
+    decryptor = cipher.decryptor()
+    return decryptor.update(auth[block_size_bytes:]) + decryptor.finalize()
 
 
 def list_opts():
