@@ -445,9 +445,12 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return False
 
         status = self.get_status(server)
-        if status in ("DELETED", "SOFT_DELETED"):
+        if status == 'DELETED':
             return True
-        if status == 'ERROR':
+
+        if status == 'SOFT_DELETED':
+            self.client().servers.force_delete(server_id)
+        elif status == 'ERROR':
             fault = getattr(server, 'fault', {})
             message = fault.get('message', 'Unknown')
             code = fault.get('code')

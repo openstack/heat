@@ -287,6 +287,8 @@ class FakeSessionClient(base_client.SessionClient):
             assert set(body[action].keys()) == set(['host',
                                                     'block_migration',
                                                     'disk_over_commit'])
+        elif action == 'forceDelete':
+            assert body is not None
         else:
             raise AssertionError("Unexpected server action: %s" % action)
         return (resp, _body)
