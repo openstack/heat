@@ -104,7 +104,7 @@ class AutoscalingLoadBalancerv2Test(scenario_base.ScenarioTestsBase):
         test.call_until_true(self.conf.build_timeout,
                              self.conf.build_interval,
                              self.check_autoscale_complete,
-                             asg.physical_resource_id, 2)
+                             asg.physical_resource_id, 2, sid, 'scale_up')
 
         # Check number of distinctive responses, must now be 2
         self.check_num_responses(lb_url, 2)

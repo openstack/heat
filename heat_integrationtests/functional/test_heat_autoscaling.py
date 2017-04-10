@@ -119,7 +119,8 @@ outputs:
                                      self.conf.build_interval,
                                      self.check_autoscale_complete,
                                      asg.physical_resource_id,
-                                     expected_resources))
+                                     expected_resources, stack_id,
+                                     'scale_up_policy'))
 
     def test_asg_scale_down_min_size(self):
         stack_id = self.stack_create(template=self.template,
@@ -140,7 +141,8 @@ outputs:
                                      self.conf.build_interval,
                                      self.check_autoscale_complete,
                                      asg.physical_resource_id,
-                                     expected_resources))
+                                     expected_resources, stack_id,
+                                     'scale_down_policy'))
 
     def test_asg_cooldown(self):
         cooldown_tmpl = self.template.replace('cooldown: 0',
@@ -162,7 +164,8 @@ outputs:
                                  self.conf.build_interval,
                                  self.check_autoscale_complete,
                                  asg.physical_resource_id,
-                                 expected_resources))
+                                 expected_resources, stack_id,
+                                 'scale_up_policy'))
 
     def test_path_attrs(self):
         stack_id = self.stack_create(template=self.template)
