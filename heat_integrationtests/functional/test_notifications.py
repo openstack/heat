@@ -180,12 +180,14 @@ outputs:
                                 auto_declare=False):
 
             requests.post(scale_up_url, verify=self.verify_cert)
-            test.call_until_true(20, 0, self.consume_events, handler, 2)
+            self.assertTrue(
+                test.call_until_true(20, 0, self.consume_events, handler, 2))
             notifications += handler.notifications
 
             handler.clear()
             requests.post(scale_down_url, verify=self.verify_cert)
-            test.call_until_true(20, 0, self.consume_events, handler, 2)
+            self.assertTrue(
+                test.call_until_true(20, 0, self.consume_events, handler, 2))
             notifications += handler.notifications
 
         self.assertEqual(2, notifications.count(ASG_NOTIFICATIONS[0]))
