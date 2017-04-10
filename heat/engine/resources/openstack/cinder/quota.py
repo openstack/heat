@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -150,20 +148,20 @@ class CinderQuota(resource.Resource):
         if props is None:
             props = self.properties
 
-        args = copy.copy(props.data)
-        project = args.pop(self.PROJECT)
+        kwargs = dict((k, v) for k, v in props.items()
+                      if k != self.PROJECT and v is not None)
         # TODO(ricolin): Move this to stack validate stage. In some cases
         # we still can't get project or other properties form other resources
         # at validate stage.
-        self.validate_quotas(project, **args)
-        self.client().quotas.update(project, **args)
+        self.validate_quotas(props[self.PROJECT], **kwargs)
+        self.client().quotas.update(props[self.PROJECT], **kwargs)
 
     def handle_delete(self):
         self.client().quotas.delete(self.properties[self.PROJECT])
 
     def validate(self):
         super(CinderQuota, self).validate()
-        if len(self.properties.data) == 1:
+        if sum(1 for p in self.properties.values() if p is not None) <= 1:
             raise exception.PropertyUnspecifiedError(self.GIGABYTES,
                                                      self.SNAPSHOTS,
                                                      self.VOLUMES)

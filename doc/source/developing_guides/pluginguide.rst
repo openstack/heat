@@ -113,6 +113,14 @@ manipulate when including that resource in a template. Some examples would be:
 * The port to listen to on Neutron LBaaS nodes
 * The size of a Cinder volume
 
+.. note::
+
+   Properties should normally be accessed through self.properties.
+   This resolves intrinsic functions, provides default values when required
+   and performs property translation for backward compatible schema changes.
+   The self.properties.data dict provides access to the raw data supplied by
+   the user in the template without any of those transformations.
+
 *Attributes* describe runtime state data of the physical resource that the
 plug-in can expose to other resources in a Stack. Generally, these aren't
 available until the physical resource has been created and is in a usable

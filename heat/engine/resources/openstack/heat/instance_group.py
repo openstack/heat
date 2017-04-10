@@ -18,7 +18,6 @@ from heat.common import short_id
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import environment
-from heat.engine import function
 from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
@@ -225,10 +224,15 @@ class InstanceGroup(stack_resource.StackResource):
     def _get_conf_properties(self):
         conf_refid = self.properties[self.LAUNCH_CONFIGURATION_NAME]
         conf = self.stack.resource_by_refid(conf_refid)
-        props = function.resolve(conf.properties.data)
+        props = dict((k, v) for k, v in conf.properties.items()
+                     if k in conf.properties.data)
+        for key in [conf.BLOCK_DEVICE_MAPPINGS, conf.NOVA_SCHEDULER_HINTS]:
+            if props.get(key) is not None:
+                props[key] = list(dict((k, v) for k, v in prop.items()
+                                       if k in conf.properties.data[key][idx])
+                                  for idx, prop in enumerate(props[key]))
         if 'InstanceId' in props:
             props = conf.rebuild_lc_properties(props['InstanceId'])
-
         props['Tags'] = self._tags()
         # if the launch configuration is created from an existing instance.
         # delete the 'InstanceId' property
