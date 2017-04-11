@@ -31,7 +31,7 @@ source $DEST/devstack/openrc demo demo
 # user creds
 iniset $conf_file heat_plugin username $OS_USERNAME
 iniset $conf_file heat_plugin password $OS_PASSWORD
-iniset $conf_file heat_plugin tenant_name $OS_PROJECT_NAME
+iniset $conf_file heat_plugin project_name $OS_PROJECT_NAME
 iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
 iniset $conf_file heat_plugin user_domain_id $OS_USER_DOMAIN_ID
 iniset $conf_file heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID

@@ -42,7 +42,7 @@ resources:
                 'options': {
                     'os_username': self.conf.username,
                     'os_password': self.conf.password,
-                    'os_project_name': self.conf.tenant_name,
+                    'os_project_name': self.conf.project_name,
                     'os_auth_url': self.conf.auth_url,
                     'os_user_domain_id': self.conf.user_domain_id,
                     'os_project_domain_id': self.conf.project_domain_id,
