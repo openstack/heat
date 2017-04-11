@@ -15,6 +15,7 @@ import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -34,6 +35,85 @@ class Cluster(resource.Resource):
     default_client_name = 'magnum'
 
     entity = 'clusters'
+
+    ATTRIBUTES = (
+        API_ADDRESS_ATTR, STACK_ID_ATTR, COE_VERSION_ATTR,
+        MASTER_ADDRESSES_ATTR, STATUS_ATTR, MASTER_COUNT_ATTR,
+        NODE_ADDRESSES_ATTR, STATUS_REASON_ATTR, NODE_COUNT_ATTR,
+        NAME_ATTR, CONTAINER_VERSION_ATTR, DISCOVERY_URL_ATTR,
+        CLUSTER_TEMPLATE_ID_ATTR, KEYPAIR_ATTR, CREATE_TIMEOUT_ATTR
+    ) = (
+        'api_address', 'stack_id', 'coe_version',
+        'master_addresses', 'status', 'master_count',
+        'node_addresses', 'status_reason', 'node_count',
+        'name', 'container_version', 'discovery_url',
+        'cluster_template_id', 'keypair', 'create_timeout'
+    )
+    attributes_schema = {
+        API_ADDRESS_ATTR: attributes.Schema(
+            _('The endpoint URL of COE API exposed to end-users.'),
+            type=attributes.Schema.STRING
+        ),
+        STACK_ID_ATTR: attributes.Schema(
+            _('The reference UUID of orchestration stack for this '
+              'COE cluster.'),
+            type=attributes.Schema.STRING
+        ),
+        COE_VERSION_ATTR: attributes.Schema(
+            _('Version info of chosen COE in cluster for helping client '
+              'in picking the right version of client.'),
+            type=attributes.Schema.STRING
+        ),
+        MASTER_ADDRESSES_ATTR: attributes.Schema(
+            _('List of floating IP of all master nodes.'),
+            type=attributes.Schema.LIST
+        ),
+        STATUS_ATTR: attributes.Schema(
+            _('The status for this COE cluster.'),
+            type=attributes.Schema.STRING
+        ),
+        MASTER_COUNT_ATTR: attributes.Schema(
+            _('The number of servers that will serve as master for the '
+              'cluster.'),
+            type=attributes.Schema.INTEGER
+        ),
+        NODE_ADDRESSES_ATTR: attributes.Schema(
+            _('List of floating IP of all servers that serve as node.'),
+            type=attributes.Schema.LIST
+        ),
+        STATUS_REASON_ATTR: attributes.Schema(
+            _('The reason of cluster current status.'),
+            type=attributes.Schema.STRING
+        ),
+        NODE_COUNT_ATTR: attributes.Schema(
+            _('The number of servers that will serve as node in the cluster.'),
+            type=attributes.Schema.INTEGER
+        ),
+        NAME_ATTR: attributes.Schema(
+            _('Name of the resource.'),
+            type=attributes.Schema.STRING
+        ),
+        CONTAINER_VERSION_ATTR: attributes.Schema(
+            _('Version info of constainer engine in the chosen COE in cluster '
+              'for helping client in picking the right version of client.'),
+            type=attributes.Schema.STRING
+        ),
+        DISCOVERY_URL_ATTR: attributes.Schema(
+            _('The custom discovery url for node discovery.'),
+            type=attributes.Schema.STRING
+        ),
+        CLUSTER_TEMPLATE_ID_ATTR: attributes.Schema(
+            _('The UUID of the cluster template.'),
+            type=attributes.Schema.STRING
+        ),
+        KEYPAIR_ATTR: attributes.Schema(
+            _('The name of the keypair.'),
+            type=attributes.Schema.STRING
+        ),
+        CREATE_TIMEOUT_ATTR: attributes.Schema(
+            _('The timeout for cluster creation in minutes.'),
+            type=attributes.Schema.INTEGER
+        )}
 
     PROPERTIES = (
         NAME, CLUSTER_TEMPLATE, KEYPAIR, NODE_COUNT, MASTER_COUNT,
@@ -102,6 +182,12 @@ class Cluster(resource.Resource):
                 client_plugin=self.client_plugin('magnum'),
                 finder='get_cluster_template')
         ]
+
+    def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
+        cluster = self.client().clusters.get(self.resource_id)
+        return getattr(cluster, name, None)
 
     def handle_create(self):
         args = dict(self.properties.items())
