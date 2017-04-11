@@ -150,7 +150,7 @@ class MetadataRefreshTest(common.HeatTestCase):
     @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id')
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
-    @mock.patch.object(instance.Instance, 'FnGetAtt')
+    @mock.patch.object(instance.Instance, '_resolve_attribute')
     def test_FnGetAtt_metadata_updated(self, mock_get, mock_check,
                                        mock_handle, *args):
         """Tests that metadata gets updated when FnGetAtt return changes."""
@@ -172,6 +172,7 @@ class MetadataRefreshTest(common.HeatTestCase):
 
         # Initial resolution of the metadata
         stack.create()
+        self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
         # Sanity check on S2
         s2 = stack['S2']
@@ -181,6 +182,12 @@ class MetadataRefreshTest(common.HeatTestCase):
         s1 = stack['S1']
         content = self._get_metadata_content(s1.metadata_get())
         self.assertEqual('s2-ip=10.0.0.1', content)
+
+        # This is not a terribly realistic test - the metadata updates below
+        # happen in run_alarm_action() in service_stack_watch, and actually
+        # operate on a freshly loaded stack so there's no cached attributes.
+        # Clear the attributes cache here to keep it passing.
+        s2.attributes.reset_resolved_values()
 
         # Run metadata update to pick up the new value from S2
         s1.metadata_update()
