@@ -604,6 +604,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource = self.stack['A']
 
     def test_node_data_ok(self):
+        self.resource.action = self.resource.CREATE
         expected_input_data = {'attrs': {(u'flat_dict', u'key2'): 'val2',
                                          (u'flat_dict', u'key3'): 'val3',
                                          (u'nested_dict', u'dict', u'a'): 1,
@@ -618,6 +619,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.assertEqual(expected_input_data, actual_input_data.as_dict())
 
     def test_node_data_exception(self):
+        self.resource.action = self.resource.CREATE
         expected_input_data = {'attrs': {},
                                'id': mock.ANY,
                                'reference_id': 'A',
