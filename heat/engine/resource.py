@@ -438,10 +438,16 @@ class Resource(status.ResourceStatus):
         """
         if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
-        LOG.debug('Setting metadata for %s', six.text_type(self))
         refresh = merge_metadata is not None
         db_res = resource_objects.Resource.get_obj(self.stack.context, self.id,
                                                    refresh=refresh)
+        if db_res.action == self.DELETE:
+            self._db_res_is_deleted = True
+            LOG.debug("resource %(name)s, id: %(id)s is DELETE_%(st)s, "
+                      "not setting metadata",
+                      {'name': self.name, 'id': self.id, 'st': db_res.status})
+            raise exception.ResourceNotAvailable(resource_name=self.name)
+        LOG.debug('Setting metadata for %s', six.text_type(self))
         if refresh:
             metadata = merge_metadata(metadata, db_res.rsrc_metadata)
         db_res.update_metadata(metadata)
@@ -2181,6 +2187,9 @@ class Resource(status.ResourceStatus):
             # Don't log an event as it just spams the user.
             pass
         except Exception as ex:
+            if hasattr(self, '_db_res_is_deleted'):
+                # No spam required
+                return
             LOG.info('signal %(name)s : %(msg)s',
                      {'name': six.text_type(self),
                       'msg': six.text_type(ex)},
