@@ -97,10 +97,10 @@ class ClientManager(object):
             return self.conf.admin_password
         return self.conf.password
 
-    def _tenant_name(self):
+    def _project_name(self):
         if self.admin_credentials:
-            return self.conf.admin_tenant_name
-        return self.conf.tenant_name
+            return self.conf.admin_project_name
+        return self.conf.project_name
 
     def _get_orchestration_client(self):
         endpoint = os.environ.get('HEAT_URL')
@@ -130,7 +130,7 @@ class ClientManager(object):
         kwargs = {
             'username': self._username(),
             'password': self._password(),
-            'tenant_name': self._tenant_name(),
+            'project_name': self._project_name(),
             'auth_url': self.conf.auth_url
         }
         # keystone v2 can't ignore domain details
