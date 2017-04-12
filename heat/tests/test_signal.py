@@ -190,30 +190,29 @@ class SignalTest(common.HeatTestCase):
 
         mock_get.assert_called_once_with()
 
-    @mock.patch.object(stk.Stack, 'cache_data_resource_attribute')
-    @mock.patch.object(stk.Stack, 'has_cache_data')
-    def test_FnGetAtt_alarm_url_is_cached(self, mock_has, mock_get):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_cfn_url')
+    def test_FnGetAtt_alarm_url_is_cached(self, mock_get):
         # Setup
-        mock_has.return_value = False
-        stack = self._create_stack(TEMPLATE_CFN_SIGNAL)
-        mock_has.reset_mock()
+        stack_id = stack_name = 'FnGetAtt-alarm-url'
+        stack = self._create_stack(TEMPLATE_CFN_SIGNAL,
+                                   stack_name=stack_name,
+                                   stack_id=stack_id)
 
-        # Simulate not caching for the first run, caching afterwards
-        mock_has.side_effect = [False, True]
-        mock_get.return_value = 'cached'
+        mock_get.return_value = 'http://server.test:8000/v1'
+
         rsrc = stack['signal_handler']
+        created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
+        rsrc.created_time = created_time
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # Test
         first_url = rsrc.FnGetAtt('signal')
-        self.assertIn('alarm_url', first_url)
-        mock_has.assert_called_once_with('signal_handler')
-        mock_has.reset_mock()  # reset the count for the next check
-
         second_url = rsrc.FnGetAtt('signal')
-        mock_has.assert_called_once_with('signal_handler')
-        self.assertEqual(second_url, 'cached')
+
+        # Verify
+        self.assertEqual(first_url, second_url)
+        mock_get.assert_called_once_with()
 
     @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_url')
     def test_FnGetAtt_heat_signal(self, mock_get):
@@ -236,30 +235,23 @@ class SignalTest(common.HeatTestCase):
         self.assertIn('password', signal)
         mock_get.assert_called_once_with()
 
-    @mock.patch.object(stk.Stack, 'cache_data_resource_attribute')
-    @mock.patch.object(stk.Stack, 'has_cache_data')
-    def test_FnGetAtt_heat_signal_is_cached(self, mock_has, mock_get):
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_url')
+    def test_FnGetAtt_heat_signal_is_cached(self, mock_get):
         # Setup
-        mock_has.return_value = False
         stack = self._create_stack(TEMPLATE_HEAT_TEMPLATE_SIGNAL)
-        mock_has.reset_mock()
 
-        # Simulate not caching for the first run, caching afterwards
-        mock_has.side_effect = [False, True]
-        mock_get.return_value = 'cached'
+        mock_get.return_value = 'http://server.test:8004/v1'
         rsrc = stack['signal_handler']
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # Test
         first_url = rsrc.FnGetAtt('signal')
-        self.assertEqual('http://localhost:5000/v3', first_url['auth_url'])
-        mock_has.assert_called_once_with('signal_handler')
-        mock_has.reset_mock()  # reset the count for the next check
-
         second_url = rsrc.FnGetAtt('signal')
-        mock_has.assert_called_once_with('signal_handler')
-        self.assertEqual(second_url, 'cached')
+
+        # Verify
+        self.assertEqual(first_url, second_url)
+        mock_get.assert_called_once_with()
 
     @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
     def test_FnGetAtt_zaqar_signal(self, mock_signed_url):
@@ -282,32 +274,22 @@ class SignalTest(common.HeatTestCase):
         mock_signed_url.assert_called_once_with(
             ['messages'], methods=['GET', 'DELETE'])
 
-    @mock.patch.object(stk.Stack, 'cache_data_resource_attribute')
-    @mock.patch.object(stk.Stack, 'has_cache_data')
     @mock.patch('zaqarclient.queues.v2.queues.Queue.signed_url')
-    def test_FnGetAtt_zaqar_signal_is_cached(self, mock_signed_url, mock_has,
-                                             mock_get):
+    def test_FnGetAtt_zaqar_signal_is_cached(self, mock_signed_url):
         # Setup
-        mock_has.return_value = False
         stack = self._create_stack(TEMPLATE_ZAQAR_SIGNAL)
-        mock_has.reset_mock()
-
-        # Simulate not caching for the first run, caching afterwards
-        mock_has.side_effect = [False, True]
-        mock_get.return_value = 'cached'
         rsrc = stack['signal_handler']
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # Test
         first_url = rsrc.FnGetAtt('signal')
-        self.assertEqual('http://localhost:5000/v3', first_url['auth_url'])
-        mock_has.assert_called_once_with('signal_handler')
-        mock_has.reset_mock()  # reset the count for the next check
-
         second_url = rsrc.FnGetAtt('signal')
-        mock_has.assert_called_once_with('signal_handler')
-        self.assertEqual(second_url, 'cached')
+
+        # Verify
+        self.assertEqual(first_url, second_url)
+        mock_signed_url.assert_called_once_with(
+            ['messages'], methods=['GET', 'DELETE'])
 
     @mock.patch('swiftclient.client.Connection.put_container')
     @mock.patch('swiftclient.client.Connection.put_object')
@@ -335,36 +317,23 @@ class SignalTest(common.HeatTestCase):
     @mock.patch('swiftclient.client.Connection.put_container')
     @mock.patch('swiftclient.client.Connection.put_object')
     @mock.patch.object(swift.SwiftClientPlugin, 'get_temp_url')
-    @mock.patch.object(stk.Stack, 'cache_data_resource_attribute')
-    @mock.patch.object(stk.Stack, 'has_cache_data')
-    def test_FnGetAtt_swift_signal_is_cached(self, mock_has, mock_get,
-                                             mock_get_url, mock_put_object,
+    def test_FnGetAtt_swift_signal_is_cached(self, mock_get_url,
+                                             mock_put_object,
                                              mock_put_container):
         # Setup
-        mock_has.return_value = False
         mock_get_url.return_value = (
             'http://192.0.2.1/v1/AUTH_aprojectid/foo/bar')
         stack = self._create_stack(TEMPLATE_SWIFT_SIGNAL)
-        mock_has.reset_mock()
-
-        # Simulate not caching for the first run, caching afterwards
-        mock_has.side_effect = [False, True]
-        mock_get.return_value = 'cached'
-
         rsrc = stack['signal_handler']
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         # Test
-        first_url = rsrc.FnGetAtt('signal')
-        self.assertIn('alarm_url', first_url)
-        mock_has.assert_called_once_with('signal_handler')
-        mock_has.reset_mock()  # reset the count for the next check
-
-        second_url = rsrc.FnGetAtt('signal')
-        mock_has.assert_called_once_with('signal_handler')
-        self.assertEqual(second_url, 'cached')
+        first_url = rsrc.FnGetAtt('AlarmUrl')
+        second_url = rsrc.FnGetAtt('AlarmUrl')
 
         # Verify
+        self.assertEqual(first_url, second_url)
+
         self.assertEqual(1, mock_put_container.call_count)
         self.assertEqual(1, mock_put_object.call_count)
         self.assertEqual(1, mock_get_url.call_count)
