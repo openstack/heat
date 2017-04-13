@@ -362,7 +362,7 @@ class PoolTest(common.HeatTestCase):
                 'subnet',
                 'sub9999',
                 cmd_resource=None,
-            ).AndReturn('sub9999')
+            ).MultipleTimes().AndReturn('sub9999')
             neutronclient.Client.create_vip(stvipvsn
                                             ).AndReturn({'vip': {'id': 'xyz'}})
         else:
@@ -386,11 +386,7 @@ class PoolTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_with_vip_subnet(self):
-        rsrc = self.create_pool(with_vip_subnet=True)
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self._test_create(with_vip_subnet=True)
 
     def test_create_pending(self):
         snippet = template_format.parse(pool_template)

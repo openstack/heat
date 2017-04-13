@@ -219,8 +219,7 @@ class Resource(status.ResourceStatus):
         self.t = definition
         # Only translate in cases where resource_validate is True
         # ex. for template-validate
-        self.reparse(translate=self.stack.resource_validate,
-                     client_resolve=False)
+        self.reparse(client_resolve=False)
         self.update_policy = self.t.update_policy(self.update_policy_schema,
                                                   self.context)
         self._update_allowed_properties = self.calc_update_allowed(
@@ -372,7 +371,7 @@ class Resource(status.ResourceStatus):
             {'status': self.COMPLETE, 'replaced_by': self.replaced_by})
         return new_rs.id
 
-    def reparse(self, translate=True, client_resolve=True):
+    def reparse(self, client_resolve=True):
         """Reparse the resource properties.
 
         Optional translate flag for property translation and
@@ -381,8 +380,7 @@ class Resource(status.ResourceStatus):
         """
         self.properties = self.t.properties(self.properties_schema,
                                             self.context)
-        if translate:
-            self.translate_properties(self.properties, client_resolve)
+        self.translate_properties(self.properties, client_resolve)
 
     def calc_update_allowed(self, props):
         update_allowed_set = set(self.update_allowed_properties)
@@ -1081,28 +1079,18 @@ class Resource(status.ResourceStatus):
 
     def translation_rules(self, properties):
         """Return specified rules for resource."""
+        return []
 
     def translate_properties(self, properties,
                              client_resolve=True):
-        """Translates properties with resource specific rules.
+        """Set resource specific rules for properties translation.
 
         The properties parameter is a properties object and the
         optional client_resolve flag is to specify whether to
         do 'RESOLVE' translation with client lookup.
         """
         rules = self.translation_rules(properties) or []
-        for rule in rules:
-            try:
-                rule.execute_rule(client_resolve)
-            except exception.ResourcePropertyConflict as ex:
-                path = [self.stack.t.RESOURCES, self.name,
-                        self.stack.t.get_section_name(
-                            self.stack.t.RES_PROPERTIES)]
-                raise exception.StackValidationFailed(
-                    error='Property error',
-                    path=path,
-                    message=ex.message
-                )
+        properties.update_translation(rules, client_resolve=client_resolve)
 
     def cancel_grace_period(self):
         if self.status != self.IN_PROGRESS:
@@ -1279,6 +1267,7 @@ class Resource(status.ResourceStatus):
 
         # Regenerate the schema, else validation would fail
         self.regenerate_info_schema(after)
+        after.set_translation_rules(self.translation_rules(self.properties))
         after_props = after.properties(self.properties_schema,
                                        self.context)
         self.translate_properties(after_props)
@@ -1717,6 +1706,7 @@ class Resource(status.ResourceStatus):
             # so use the stored frozen_definition instead
             self.properties = self.frozen_definition().properties(
                 self.properties_schema, self.context)
+            self.translate_properties(self.properties)
 
         with self._action_recorder(action):
             if self.abandon_in_progress:

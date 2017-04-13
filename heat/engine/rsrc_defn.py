@@ -138,6 +138,8 @@ class ResourceDefinition(object):
                                           function.Function))
             self._hash ^= _hash_data(condition)
 
+        self.set_translation_rules()
+
     def freeze(self, **overrides):
         """Return a frozen resource definition, with all functions resolved.
 
@@ -238,15 +240,22 @@ class ResourceDefinition(object):
             filter(None, (get_resource(dep) for dep in explicit_depends)),
             prop_deps, metadata_deps)
 
+    def set_translation_rules(self, rules=None, client_resolve=True):
+        """Helper method to update properties with translation rules."""
+        self._rules = rules or []
+        self._client_resolve = client_resolve
+
     def properties(self, schema, context=None):
         """Return a Properties object representing the resource properties.
 
         The Properties object is constructed from the given schema, and may
         require a context to validate constraints.
         """
-        return properties.Properties(schema, self._properties or {},
-                                     function.resolve, context=context,
-                                     section='Properties')
+        props = properties.Properties(schema, self._properties or {},
+                                      function.resolve, context=context,
+                                      section='Properties')
+        props.update_translation(self._rules, self._client_resolve)
+        return props
 
     def deletion_policy(self):
         """Return the deletion policy for the resource.
@@ -261,9 +270,11 @@ class ResourceDefinition(object):
         The Properties object is constructed from the given schema, and may
         require a context to validate constraints.
         """
-        return properties.Properties(schema, self._update_policy or {},
-                                     function.resolve, context=context,
-                                     section='UpdatePolicy')
+        props = properties.Properties(schema, self._update_policy or {},
+                                      function.resolve, context=context,
+                                      section='UpdatePolicy')
+        props.update_translation(self._rules, self._client_resolve)
+        return props
 
     def metadata(self):
         """Return the resource metadata."""

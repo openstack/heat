@@ -24,6 +24,7 @@ from heat.engine import function
 from heat.engine.hot import parameters as hot_param
 from heat.engine import parameters
 from heat.engine import support
+from heat.engine import translation as trans
 
 SCHEMA_KEYS = (
     REQUIRED, IMPLEMENTED, DEFAULT, TYPE, SCHEMA,
@@ -280,14 +281,16 @@ class Property(object):
                 raise ValueError(_('Value must be a string'))
         return value
 
-    def _get_children(self, child_values, keys=None, validate=False):
+    def _get_children(self, child_values, keys=None, validate=False,
+                      translation=None):
         if self.schema.schema is not None:
             if keys is None:
                 keys = list(self.schema.schema)
             schemata = dict((k, self.schema.schema[k]) for k in keys)
             properties = Properties(schemata, dict(child_values),
                                     context=self.context,
-                                    parent_name=self.path)
+                                    parent_name=self.path,
+                                    translation=translation)
             if validate:
                 properties.validate()
 
@@ -295,7 +298,7 @@ class Property(object):
         else:
             return child_values
 
-    def _get_map(self, value, validate=False):
+    def _get_map(self, value, validate=False, translation=None):
         if value is None:
             value = self.default() if self.has_default() else {}
         if not isinstance(value, collections.Mapping):
@@ -310,9 +313,10 @@ class Property(object):
             raise TypeError(_('"%s" is not a map') % value)
 
         return dict(self._get_children(six.iteritems(value),
-                                       validate=validate))
+                                       validate=validate,
+                                       translation=translation))
 
-    def _get_list(self, value, validate=False):
+    def _get_list(self, value, validate=False, translation=None):
         if value is None:
             value = self.has_default() and self.default() or []
         if self.schema.allow_conversion and isinstance(value,
@@ -324,7 +328,8 @@ class Property(object):
 
         return [v[1] for v in self._get_children(enumerate(value),
                                                  range(len(value)),
-                                                 validate)]
+                                                 validate=validate,
+                                                 translation=translation)]
 
     def _get_bool(self, value):
         """Get value for boolean property.
@@ -344,7 +349,8 @@ class Property(object):
 
         raise TypeError(_('"%s" is not a valid boolean') % value)
 
-    def get_value(self, value, validate=False, template=None):
+    def get_value(self, value, validate=False, template=None,
+                  translation=None):
         """Get value from raw value and sanitize according to data type."""
 
         t = self.type()
@@ -355,9 +361,9 @@ class Property(object):
         elif t == Schema.NUMBER:
             _value = self._get_number(value)
         elif t == Schema.MAP:
-            _value = self._get_map(value, validate)
+            _value = self._get_map(value, validate, translation)
         elif t == Schema.LIST:
-            _value = self._get_list(value, validate)
+            _value = self._get_list(value, validate, translation)
         elif t == Schema.BOOLEAN:
             _value = self._get_bool(value)
         elif t == Schema.ANY:
@@ -373,7 +379,7 @@ class Property(object):
 class Properties(collections.Mapping):
 
     def __init__(self, schema, data, resolver=lambda d: d, parent_name=None,
-                 context=None, section=None):
+                 context=None, section=None, translation=None):
         self.props = dict((k, Property(s, k, context, path=parent_name))
                           for k, s in schema.items())
         self.resolve = resolver
@@ -381,6 +387,11 @@ class Properties(collections.Mapping):
         self.error_prefix = [section] if section is not None else []
         self.parent_name = parent_name
         self.context = context
+        self.translation = (trans.Translation(properties=self)
+                            if translation is None else translation)
+
+    def update_translation(self, rules, client_resolve=True):
+        self.translation.set_rules(rules, client_resolve=client_resolve)
 
     @staticmethod
     def schema_from_params(params_snippet):
@@ -402,6 +413,9 @@ class Properties(collections.Mapping):
                     raise exception.StackValidationFailed(message=msg)
 
             for (key, prop) in self.props.items():
+                if (self.translation.is_deleted(prop.path) or
+                        self.translation.is_replaced(prop.path)):
+                    continue
                 if with_value:
                     try:
                         self._get_property_value(key,
@@ -446,6 +460,9 @@ class Properties(collections.Mapping):
             raise KeyError(_('Invalid Property %s') % key)
 
         prop = self.props[key]
+        if (self.translation.is_deleted(prop.path) or
+                self.translation.is_replaced(prop.path)):
+            return
         if key in self.data:
             try:
                 unresolved_value = self.data[key]
@@ -454,7 +471,14 @@ class Properties(collections.Mapping):
                         validate = False
 
                 value = self.resolve(unresolved_value)
-                return prop.get_value(value, validate, template=template)
+
+                if self.translation.has_translation(prop.path):
+                    value = self.translation.translate(prop.path,
+                                                       value,
+                                                       self.data)
+
+                return prop.get_value(value, validate, template=template,
+                                      translation=self.translation)
             # Children can raise StackValidationFailed with unique path which
             # is necessary for further use in StackValidationFailed exception.
             # So we need to handle this exception in this method.
@@ -471,10 +495,17 @@ class Properties(collections.Mapping):
             raise KeyError(_('Invalid Property %s') % key)
 
         prop = self.props[key]
-        if key in self.data:
+        if not self.translation.is_deleted(prop.path) and key in self.data:
             return self.get_user_value(key, validate, template=template)
+        elif self.translation.has_translation(prop.path):
+            value = self.translation.translate(prop.path, prop_data=self.data,
+                                               validate=validate,
+                                               template=template)
+            if value is not None or prop.has_default():
+                return prop.get_value(value)
         elif prop.has_default():
-            return prop.get_value(None, validate, template=template)
+            return prop.get_value(None, validate, template=template,
+                                  translation=self.translation)
         elif prop.required():
             raise ValueError(_('Property %s not assigned') % key)
 

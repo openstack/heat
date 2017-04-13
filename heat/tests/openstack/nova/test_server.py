@@ -255,9 +255,13 @@ class ServersTest(common.HeatTestCase):
 
     def _setup_test_stack(self, stack_name, test_templ=wp_template):
         t = template_format.parse(test_templ)
+        files = {}
+        if test_templ == ns_template:
+            files = {'a_file': 'stub'}
         templ = template.Template(t,
                                   env=environment.Environment(
-                                      {'key_name': 'test'}))
+                                      {'key_name': 'test'}),
+                                  files=files)
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              stack_id=uuidutils.generate_uuid(),
                              stack_user_project_id='8888')
@@ -549,38 +553,39 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         mock_image = self.patchobject(glance.GlanceClientPlugin,
                                       'find_image_by_name_or_id')
-        mock_image.side_effect = [
+        self.stub_KeypairConstraint_validate()
+        mock_image.side_effect = (
             glance.client_exception.EntityMatchNotFound(
-                entity='image', args={'name': 'Slackware'})]
+                entity='image', args={'name': 'Slackware'}))
         # Init a server with non exist image name
         tmpl['Resources']['WebServer']['Properties']['image'] = 'Slackware'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        error = self.assertRaises(glance.client_exception.EntityMatchNotFound,
+        error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(server.create))
-        self.assertEqual("No image matching {'name': 'Slackware'}.",
-                         six.text_type(error))
+        self.assertIn("No image matching {'name': 'Slackware'}.",
+                      six.text_type(error))
 
     def test_server_duplicate_image_name_err(self):
         stack_name = 'img_dup_err'
         (tmpl, stack) = self._setup_test_stack(stack_name)
         mock_image = self.patchobject(glance.GlanceClientPlugin,
                                       'find_image_by_name_or_id')
-        mock_image.side_effect = [
+        self.stub_KeypairConstraint_validate()
+        mock_image.side_effect = (
             glance.client_exception.EntityUniqueMatchNotFound(
-                entity='image', args='CentOS 5.2')]
+                entity='image', args='CentOS 5.2'))
         tmpl['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        error = self.assertRaises(
-            glance.client_exception.EntityUniqueMatchNotFound,
-            scheduler.TaskRunner(server.create))
-        self.assertEqual('No image unique match found for CentOS 5.2.',
-                         six.text_type(error))
+        error = self.assertRaises(exception.ResourceFailure,
+                                  scheduler.TaskRunner(server.create))
+        self.assertIn('No image unique match found for CentOS 5.2.',
+                      six.text_type(error))
 
     def test_server_create_unexpected_status(self):
         # NOTE(pshchelo) checking is done only on check_create_complete
@@ -1237,6 +1242,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_with_networks(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.stub_KeypairConstraint_validate()
 
         network_name = 'public'
         # create a server with 'uuid' and 'network' properties
@@ -1245,15 +1251,14 @@ class ServersTest(common.HeatTestCase):
               'network': network_name}])
 
         resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_validate_with_networks',
+                                resource_defns['WebServer'], stack)
+        self.stub_NetworkConstraint_validate()
         ex = self.assertRaises(exception.StackValidationFailed,
-                               servers.Server,
-                               'server_validate_with_networks',
-                               resource_defns['WebServer'], stack)
+                               server.validate)
 
-        self.assertIn("Property error: "
-                      "Resources.server_validate_with_networks.Properties: "
-                      "Cannot define the following properties at the same "
-                      "time: ['network', 'uuid'].",
+        self.assertIn("Cannot define the following properties at "
+                      "the same time: networks.network, networks.uuid",
                       six.text_type(ex))
 
     def test_server_validate_with_network_empty_ref(self):
@@ -2466,20 +2471,20 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name,
                                                test_templ=ns_template)
 
-        side_effect = [neutron.exceptions.NotFound(),
-                       neutron.exceptions.NeutronClientNoUniqueMatch()]
+        resolver = self.patchobject(neutron.NeutronClientPlugin,
+                                    'find_resourceid_by_name_or_id')
 
-        self.patchobject(neutron.NeutronClientPlugin,
-                         'find_resourceid_by_name_or_id',
-                         side_effect=side_effect)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server',
                                 resource_defns['server'], stack)
 
-        self.assertRaises(neutron.exceptions.NotFound,
-                          scheduler.TaskRunner(server.create))
-        self.assertRaises(neutron.exceptions.NeutronClientNoUniqueMatch,
-                          scheduler.TaskRunner(server.create))
+        resolver.side_effect = neutron.exceptions.NotFound()
+        server.reparse()
+        self.assertRaises(ValueError, server.properties.get, 'networks')
+        resolver.side_effect = neutron.exceptions.NeutronClientNoUniqueMatch()
+        ex = self.assertRaises(exception.ResourceFailure,
+                               scheduler.TaskRunner(server.create))
+        self.assertIn('use an ID to be more specific.', six.text_type(ex))
 
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
@@ -2785,22 +2790,23 @@ class ServersTest(common.HeatTestCase):
         resource_defns = tmpl.resource_definitions(stack)
         self.server = servers.Server('server',
                                      resource_defns['server'], stack)
-        self.server.translate_properties(self.server.properties, True)
-        self.assertEqual(2, self.server.t._properties[
-            'block_device_mapping_v2'][0]['image'])
+        self.server.translate_properties(self.server.properties)
+        self.assertEqual('2',
+                         self.server.properties['block_device_mapping_v2'][
+                             0]['image'])
 
     def test_block_device_mapping_v2_image_prop_conflict(self):
         test_templ = bdm_v2_template + "\n          image: F17-x86_64-gold"
         (tmpl, stack) = self._setup_test_stack('mapping',
                                                test_templ=test_templ)
         resource_defns = tmpl.resource_definitions(stack)
-        msg = ("Property error: resources.server.properties: Cannot define "
-               "the following properties at the same time: "
-               "['image', 'image_id'].")
+        msg = ("Cannot define the following "
+               "properties at the same time: block_device_mapping_v2.image, "
+               "block_device_mapping_v2.image_id")
+        server = servers.Server('server', resource_defns['server'], stack)
         exc = self.assertRaises(exception.StackValidationFailed,
-                                servers.Server, 'server',
-                                resource_defns['server'], stack)
-        self.assertEqual(msg, six.text_type(exc))
+                                server.validate)
+        self.assertIn(msg, six.text_type(exc))
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_validate_with_both_blk_dev_map_and_blk_dev_map_v2(self,
@@ -3700,9 +3706,11 @@ class ServersTest(common.HeatTestCase):
 
         # update
         updater = scheduler.TaskRunner(server.update, update_template)
-        err = self.assertRaises(glance.client_exception.EntityMatchNotFound,
+        err = self.assertRaises(exception.ResourceFailure,
                                 updater)
-        self.assertEqual('No image matching Update Image.',
+        self.assertEqual("StackValidationFailed: resources.my_server: "
+                         "Property error: Properties.image: Error validating "
+                         "value '1': No image matching Update Image.",
                          six.text_type(err))
 
     def test_server_snapshot(self):

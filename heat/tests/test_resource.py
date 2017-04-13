@@ -198,7 +198,7 @@ class ResourceTest(common.HeatTestCase):
         stack.resource_validate = False
         mock_db_get.return_value = mock.Mock()
         self.assertEqual(1, len(stack.resources))
-        self.assertEqual(1, mock_translate.call_count)
+        self.assertEqual(2, mock_translate.call_count)
         self.assertEqual(1, mock_load.call_count)
         self.assertEqual(0, mock_resolve.call_count)
 

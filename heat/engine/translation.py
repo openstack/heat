@@ -21,7 +21,6 @@ from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 from heat.engine.hot import functions as hot_funcs
-from heat.engine import properties
 
 
 @functools.total_ordering
@@ -101,9 +100,6 @@ class TranslationRule(object):
                                'rules is: %(rules)s.') % {
                 'rule': self.rule,
                 'rules': ', '.join(self.RULE_KEYS)})
-        if not isinstance(self.properties, properties.Properties):
-            raise ValueError(_('Properties must be Properties type. '
-                               'Found %s.') % type(self.properties))
 
         if (not isinstance(self.translation_path, list) or
                 len(self.translation_path) == 0):
@@ -167,41 +163,7 @@ class TranslationRule(object):
                                 client_resolve=client_resolve)
 
     def _prepare_data(self, data, path, props):
-        def get_props(props, key):
-            props = props.get(key)
-            if props.schema.schema is not None:
-                keys = list(props.schema.schema)
-                schemata = dict((k, props.schema.schema[k])
-                                for k in keys)
-                props = dict((k, properties.Property(s, k))
-                             for k, s in schemata.items())
-                if set(props.keys()) == set('*'):
-                    return get_props(props, '*')
-            return props
-
-        if not path:
-            return
-        current_key = path[0]
-        if data.get(current_key) is None:
-            if (self.rule in (TranslationRule.DELETE,
-                              TranslationRule.RESOLVE) or
-                    (self.rule == TranslationRule.REPLACE and
-                     self.value_name is not None)):
-                return
-            data_type = props.get(current_key).type()
-            if data_type == properties.Schema.LIST:
-                data[current_key] = []
-            if data_type == properties.Schema.MAP:
-                data[current_key] = {}
-            return
-        data[current_key] = self._resolve_param(data.get(current_key))
-        if isinstance(data[current_key], list):
-            for item in data[current_key]:
-                self._prepare_data(item, path[1:],
-                                   get_props(props, current_key))
-        elif isinstance(data[current_key], dict):
-            self._prepare_data(data[current_key], path[1:],
-                               get_props(props, current_key))
+        pass
 
     def _exec_action(self, key, data, value=None, value_key=None,
                      value_data=None, client_resolve=True):
@@ -454,7 +416,8 @@ class Translation(object):
         return (self.is_active and
                 (key in self._rules or key in self.resolved_translations))
 
-    def translate(self, key, prop_value=None, prop_data=None):
+    def translate(self, key, prop_value=None, prop_data=None, validate=False,
+                  template=None):
         if key in self.resolved_translations:
             return self.resolved_translations[key]
 
@@ -468,10 +431,12 @@ class Translation(object):
                 result = None
 
             if rule.rule == TranslationRule.REPLACE:
-                result = self.replace(key, rule, result, prop_data)
+                result = self.replace(key, rule, result, prop_data, validate,
+                                      template)
 
             if rule.rule == TranslationRule.ADD:
-                result = self.add(key, rule, result, prop_data)
+                result = self.add(key, rule, result, prop_data, validate,
+                                  template)
 
             if rule.rule == TranslationRule.RESOLVE:
                 resolved_value = resolve_and_find(result,
@@ -484,7 +449,8 @@ class Translation(object):
 
         return result
 
-    def add(self, key, add_rule, prop_value=None, prop_data=None):
+    def add(self, key, add_rule, prop_value=None, prop_data=None,
+            validate=False, template=None):
         value_path = add_rule.get_value_absolute_path()
         if prop_value is None:
             prop_value = []
@@ -504,7 +470,9 @@ class Translation(object):
             self.is_active = False
             value = get_value(value_path,
                               prop_data if add_rule.value_name else
-                              self.properties)
+                              self.properties,
+                              validate,
+                              template)
             self.is_active = True
             if value is not None:
                 translation_value.extend(value if isinstance(value, list)
@@ -514,7 +482,8 @@ class Translation(object):
             self.resolved_translations[key] = translation_value
         return translation_value
 
-    def replace(self, key, replace_rule, prop_value=None, prop_data=None):
+    def replace(self, key, replace_rule, prop_value=None, prop_data=None,
+                validate=False, template=None):
         value = None
         value_path = replace_rule.get_value_absolute_path(full_value_name=True)
         short_path = replace_rule.get_value_absolute_path()
@@ -530,7 +499,7 @@ class Translation(object):
                 subpath = value_path
             props = prop_data if replace_rule.value_name else self.properties
             self.is_active = False
-            value = get_value(subpath, props)
+            value = get_value(subpath, props, validate, template)
             self.is_active = True
 
             if self.has_translation(prop_path):
@@ -554,12 +523,15 @@ class Translation(object):
         return result
 
 
-def get_value(path, props):
+def get_value(path, props, validate=False, template=None):
     if not props:
         return None
 
     key = path[0]
-    prop = props.get(key)
+    if isinstance(props, dict):
+        prop = props.get(key)
+    else:
+        prop = props._get_property_value(key, validate, template)
     if len(path[1:]) == 0:
         return prop
     elif prop is None:
