@@ -172,7 +172,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual('Resource name may not contain "/"',
                          six.text_type(ex))
 
-    @mock.patch.object(translation.TranslationRule, '_exec_resolve')
+    @mock.patch.object(translation, 'resolve_and_find')
     @mock.patch.object(parser.Stack, 'db_resource_get')
     @mock.patch.object(resource.Resource, '_load_data')
     @mock.patch.object(resource.Resource, 'translate_properties')
