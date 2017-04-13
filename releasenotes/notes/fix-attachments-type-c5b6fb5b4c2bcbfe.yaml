@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    The 'attachments' attribute of OS::Cinder::Volume has been deprecated in
+    favor of 'attachments_list', which has the correct type of LIST. This makes
+    this data easier for end users to process.

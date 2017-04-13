@@ -51,12 +51,12 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         AVAILABILITY_ZONE_ATTR, SIZE_ATTR, SNAPSHOT_ID_ATTR, DISPLAY_NAME_ATTR,
         DISPLAY_DESCRIPTION_ATTR, VOLUME_TYPE_ATTR, METADATA_ATTR,
         SOURCE_VOLID_ATTR, STATUS, CREATED_AT, BOOTABLE, METADATA_VALUES_ATTR,
-        ENCRYPTED_ATTR, ATTACHMENTS, MULTI_ATTACH_ATTR,
+        ENCRYPTED_ATTR, ATTACHMENTS, ATTACHMENTS_LIST, MULTI_ATTACH_ATTR,
     ) = (
         'availability_zone', 'size', 'snapshot_id', 'display_name',
         'display_description', 'volume_type', 'metadata',
         'source_volid', 'status', 'created_at', 'bootable', 'metadata_values',
-        'encrypted', 'attachments', 'multiattach',
+        'encrypted', 'attachments', 'attachments_list', 'multiattach',
     )
 
     properties_schema = {
@@ -220,8 +220,23 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             type=attributes.Schema.STRING
         ),
         ATTACHMENTS: attributes.Schema(
+            _('A string representation of the list of attachments of the '
+              'volume.'),
+            type=attributes.Schema.STRING,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                message=_('Use property %s.') % ATTACHMENTS_LIST,
+                version='9.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.SUPPORTED,
+                    version='2015.1'
+                )
+            )
+        ),
+        ATTACHMENTS_LIST: attributes.Schema(
             _('The list of attachments of the volume.'),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='9.0.0'),
         ),
         MULTI_ATTACH_ATTR: attributes.Schema(
             _('Boolean indicating whether allow the volume to be attached '
@@ -293,6 +308,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             return vol.name
         elif name == self.DISPLAY_DESCRIPTION_ATTR:
             return vol.description
+        elif name == self.ATTACHMENTS_LIST:
+            return vol.attachments
         return six.text_type(getattr(vol, name))
 
     def check_create_complete(self, vol_id):
