@@ -32,6 +32,8 @@ class NoneResource(resource.Resource):
     properties_schema = {}
     attributes_schema = {}
 
+    IS_PLACEHOLDER = 'is_placeholder'
+
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
         return False
@@ -42,12 +44,23 @@ class NoneResource(resource.Resource):
 
     def handle_create(self):
         self.resource_id_set(six.text_type(uuid.uuid4()))
+        # set is_placeholder flag when resource trying to replace original
+        # resource with a placeholder resource.
+        self.data_set(self.IS_PLACEHOLDER, 'True')
 
     def validate(self):
         pass
 
     def get_attribute(self, key, *path):
         return None
+
+    def handle_delete(self):
+        # Will not triger the delete method in client if this is not
+        # a placeholder resource.
+        if not self.data().get(self.IS_PLACEHOLDER):
+            return super(NoneResource, self).handle_delete()
+
+        return self.resource_id
 
 
 def resource_mapping():
