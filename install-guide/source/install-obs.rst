@@ -4,7 +4,7 @@ Install and configure for openSUSE and SUSE Linux Enterprise
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This section describes how to install and configure the Orchestration service
-for openSUSE Leap 42.1 and SUSE Linux Enterprise Server 12 SP1.
+for openSUSE Leap 42.2 and SUSE Linux Enterprise Server 12 SP2.
 
 Prerequisites
 -------------
