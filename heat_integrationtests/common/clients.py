@@ -71,11 +71,13 @@ class ClientManager(object):
         self.conf = conf
         self.admin_credentials = admin_credentials
 
-        if self.conf.auth_url.find('/v'):
-            self.auth_version = self.conf.auth_url.split('/v')[1]
-        else:
-            raise ValueError(_('Incorrectly specified auth_url config: no '
-                               'version found.'))
+        self.auth_version = self.conf.auth_version
+        if not self.auth_version:
+            try:
+                self.auth_version = self.conf.auth_url.split('/v')[1]
+            except IndexError:
+                raise ValueError(_('Please specify version in auth_url or '
+                                   'auth_version in config.'))
         self.insecure = self.conf.disable_ssl_certificate_validation
         self.ca_file = self.conf.ca_file
 

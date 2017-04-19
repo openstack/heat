@@ -38,6 +38,7 @@ iniset $conf_file heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
 iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
 iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
 iniset $conf_file heat_plugin region $OS_REGION_NAME
+iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
 
 source $DEST/devstack/openrc admin admin
 iniset $conf_file heat_plugin admin_username $OS_USERNAME

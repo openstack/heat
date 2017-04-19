@@ -50,7 +50,9 @@ HeatGroup = [
                deprecated_opts=[cfg.DeprecatedOpt('admin_tenant_name',
                                                   group='heat_plugin')]),
     cfg.StrOpt('auth_url',
-               help="Full URI of the OpenStack Identity API (Keystone)"),
+               help="Full URI of the OpenStack Identity API (Keystone)."),
+    cfg.StrOpt('auth_version',
+               help="OpenStack Identity API version."),
     cfg.StrOpt('user_domain_name',
                help="User domain name, if keystone v3 auth_url "
                     "is used"),
