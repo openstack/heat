@@ -36,11 +36,11 @@ class SubnetPool(neutron.NeutronResource):
     PROPERTIES = (
         NAME, PREFIXES, ADDRESS_SCOPE, DEFAULT_QUOTA,
         DEFAULT_PREFIXLEN, MIN_PREFIXLEN, MAX_PREFIXLEN,
-        IS_DEFAULT, TENANT_ID, SHARED,
+        IS_DEFAULT, TENANT_ID, SHARED, TAGS,
     ) = (
         'name', 'prefixes', 'address_scope', 'default_quota',
         'default_prefixlen', 'min_prefixlen', 'max_prefixlen',
-        'is_default', 'tenant_id', 'shared',
+        'is_default', 'tenant_id', 'shared', 'tags',
     )
 
     properties_schema = {
@@ -121,6 +121,13 @@ class SubnetPool(neutron.NeutronResource):
               'attribute to administrative users only.'),
             default=False,
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('The tags to be added to the subnetpool.'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     def validate(self):
@@ -177,9 +184,13 @@ class SubnetPool(neutron.NeutronResource):
             props['address_scope_id'] = self.client_plugin(
                 ).find_resourceid_by_name_or_id(
                 'address_scope', props.pop(self.ADDRESS_SCOPE))
+        tags = props.pop(self.TAGS, [])
         subnetpool = self.client().create_subnetpool(
             {'subnetpool': props})['subnetpool']
         self.resource_id_set(subnetpool['id'])
+
+        if tags:
+            self.set_tags(tags)
 
     def handle_delete(self):
         if self.resource_id is not None:
@@ -200,6 +211,9 @@ class SubnetPool(neutron.NeutronResource):
             else:
                 prop_diff[
                     'address_scope_id'] = prop_diff.pop(self.ADDRESS_SCOPE)
+        if self.TAGS in prop_diff:
+            tags = prop_diff.pop(self.TAGS)
+            self.set_tags(tags)
         if prop_diff:
             self.prepare_update_properties(prop_diff)
             self.client().update_subnetpool(
