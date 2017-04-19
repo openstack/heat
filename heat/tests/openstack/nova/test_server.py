@@ -394,6 +394,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_create(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
+        return_server._info['os_collect_config'] = {}
         server_name = 'test_server_create'
         stack_name = '%s_s' % server_name
         server = self._create_test_server(return_server, server_name)
@@ -444,6 +445,7 @@ class ServersTest(common.HeatTestCase):
         if server.attributes._resolved_values.get('tags'):
             del server.attributes._resolved_values['tags']
         self.assertIsNone(server.FnGetAtt('tags'))
+        self.assertEqual({}, server.FnGetAtt('os_collect_config'))
 
     def test_server_create_metadata(self):
         stack_name = 'create_metadata_test_stack'
@@ -763,6 +765,22 @@ class ServersTest(common.HeatTestCase):
             },
             'deployments': []
         }, server.metadata_get())
+
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
+    def test_resolve_attribute_os_collect_config(self, fake_url):
+        fake_url.return_value = 'the-cfn-url'
+        server = self._server_create_software_config()
+
+        self.assertEqual({
+            'cfn': {
+                'access_key_id': '4567',
+                'metadata_url': 'the-cfn-url/v1/',
+                'path': 'WebServer.Metadata',
+                'secret_access_key': '8901',
+                'stack_name': 'software_config_s'
+            },
+            'collectors': ['ec2', 'cfn', 'local']
+        }, server.FnGetAtt('os_collect_config'))
 
     @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
     def test_server_create_software_config_metadata(self, fake_url):

@@ -129,10 +129,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     ATTRIBUTES = (
         NAME_ATTR, ADDRESSES, NETWORKS_ATTR, FIRST_ADDRESS,
-        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6, CONSOLE_URLS, TAGS_ATTR
+        INSTANCE_NAME, ACCESSIPV4, ACCESSIPV6, CONSOLE_URLS, TAGS_ATTR,
+        OS_COLLECT_CONFIG
     ) = (
         'name', 'addresses', 'networks', 'first_address',
-        'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls', 'tags'
+        'instance_name', 'accessIPv4', 'accessIPv6', 'console_urls', 'tags',
+        'os_collect_config'
     )
 
     # valid image Status
@@ -612,7 +614,14 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             _('Tags from the server. Supported since client version 2.26.'),
             support_status=support.SupportStatus(version='8.0.0'),
             type=attributes.Schema.LIST
-        )
+        ),
+        OS_COLLECT_CONFIG: attributes.Schema(
+            _('The os-collect-config configuration for the server''s local '
+              'agent to be configured to connect to Heat to retrieve '
+              'deployment data.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            type=attributes.Schema.MAP
+        ),
     }
 
     default_client_name = 'nova'
@@ -1038,6 +1047,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         if name == self.FIRST_ADDRESS:
             return self.client_plugin().server_to_ipaddress(
                 self.resource_id) or ''
+        if name == self.OS_COLLECT_CONFIG:
+            return self.metadata_get().get('os-collect-config', {})
         if name == self.NAME_ATTR:
             return self._server_name()
         try:

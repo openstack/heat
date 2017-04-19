@@ -349,3 +349,18 @@ class DeployedServersTest(common.HeatTestCase):
             },
             'deployments': []
         }, server.metadata_get())
+
+    def test_resolve_attribute_os_collect_config(self):
+        metadata_url, server = (
+            self._server_create_software_config_poll_temp_url())
+
+        # FnGetAtt usage belows requires the resource to have a stack set
+        (tmpl, stack) = self._setup_test_stack('stack_name')
+        server.stack = stack
+
+        self.assertEqual({
+            'request': {
+                'metadata_url': metadata_url
+            },
+            'collectors': ['request', 'local']
+        }, server.FnGetAtt('os_collect_config'))
