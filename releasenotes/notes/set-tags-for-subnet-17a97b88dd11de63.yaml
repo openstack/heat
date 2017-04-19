@@ -1,0 +1,3 @@
+---
+features:
+  - Allow to set or update the tags for OS::Neutron::Subnet resource.

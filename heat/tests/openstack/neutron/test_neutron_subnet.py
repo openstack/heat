@@ -124,11 +124,14 @@ class NeutronSubnetTest(common.HeatTestCase):
                              stack)
         return rsrc
 
-    def _setup_mock(self, stack_name=None, use_deprecated_templ=False):
+    def _setup_mock(self, stack_name=None, use_deprecated_templ=False,
+                    tags=None):
         if use_deprecated_templ:
             t = template_format.parse(neutron_template_deprecated)
         else:
             t = template_format.parse(neutron_template)
+        if tags:
+            t['resources']['sub_net']['properties']['tags'] = tags
         stack = utils.parse_stack(t, stack_name=stack_name)
         sn = {
             "subnet": {
@@ -170,11 +173,12 @@ class NeutronSubnetTest(common.HeatTestCase):
             'host_routes': [{'destination': '192.168.1.0/24',
                              'nexthop': '194.168.1.2'}],
             'gateway_ip': '10.0.3.105',
+            'tags': ['tag2', 'tag3'],
             'allocation_pools': [
                 {'start': '10.0.3.20', 'end': '10.0.3.100'},
                 {'start': '10.0.3.110', 'end': '10.0.3.200'}]}}
 
-        t, stack = self._setup_mock()
+        t, stack = self._setup_mock(tags=['tag1', 'tag2'])
         create_props = {'subnet': {
             'name': utils.PhysName(stack.name, 'test_subnet'),
             'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
@@ -190,10 +194,16 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         self.patchobject(stack['net'], 'FnGetRefId',
                          return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        set_tag_mock = self.patchobject(neutronclient.Client, 'replace_tag')
         rsrc = self.create_subnet(t, stack, 'sub_net')
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.create_mock.assert_called_once_with(create_props)
+        set_tag_mock.assert_called_once_with(
+            'subnets',
+            rsrc.resource_id,
+            {'tags': ['tag1', 'tag2']}
+        )
         rsrc.validate()
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1', ref_id)
@@ -213,6 +223,11 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.update_mock.assert_called_once_with(
             '91e47a57-7508-46fe-afc9-fc454e8580e1',
             update_props)
+        set_tag_mock.assert_called_with(
+            'subnets',
+            rsrc.resource_id,
+            {'tags': ['tag2', 'tag3']}
+        )
         # with name None
         del update_props['subnet']['name']
         rsrc.handle_update(update_snippet, {}, update_props['subnet'])
