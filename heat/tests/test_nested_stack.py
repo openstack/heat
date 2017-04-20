@@ -250,7 +250,8 @@ Resources:
         with mock.patch('heat.common.template_format.parse') as mock_parse:
             mock_parse.return_value = 'child_template'
             self.assertEqual('child_template', nested_stack.child_template())
-            mock_parse.assert_called_once_with('template_file')
+            mock_parse.assert_called_once_with(
+                'template_file', 'https://server.test/the.template')
 
     def test_child_template_when_fetching_file_fails(self):
         urlfetch.get.side_effect = exceptions.RequestException()

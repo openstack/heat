@@ -54,15 +54,16 @@ class NestedStack(stack_resource.StackResource):
     }
 
     def child_template(self):
+        template_url = self.properties[self.TEMPLATE_URL]
         try:
-            template_data = urlfetch.get(self.properties[self.TEMPLATE_URL])
+            template_data = urlfetch.get(template_url)
         except (exceptions.RequestException, IOError) as r_exc:
             raise ValueError(_("Could not fetch remote template '%(url)s': "
                              "%(exc)s") %
-                             {'url': self.properties[self.TEMPLATE_URL],
+                             {'url': template_url,
                               'exc': r_exc})
 
-        return template_format.parse(template_data)
+        return template_format.parse(template_data, template_url)
 
     def child_params(self):
         return self.properties[self.PARAMETERS]
@@ -97,16 +98,17 @@ class NestedStack(stack_resource.StackResource):
         # Nested stack template may be changed even if the prop_diff is empty.
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
+        template_url = self.properties[self.TEMPLATE_URL]
 
         try:
-            template_data = urlfetch.get(self.properties[self.TEMPLATE_URL])
+            template_data = urlfetch.get(template_url)
         except (exceptions.RequestException, IOError) as r_exc:
             raise ValueError(_("Could not fetch remote template '%(url)s': "
                              "%(exc)s") %
-                             {'url': self.properties[self.TEMPLATE_URL],
+                             {'url': template_url,
                               'exc': r_exc})
 
-        template = template_format.parse(template_data)
+        template = template_format.parse(template_data, template_url)
 
         return self.update_with_template(template,
                                          self.properties[self.PARAMETERS],
