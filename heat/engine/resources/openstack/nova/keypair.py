@@ -19,6 +19,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class KeyPair(resource.Resource):
@@ -41,9 +42,9 @@ class KeyPair(resource.Resource):
     required_service_extension = 'os-keypairs'
 
     PROPERTIES = (
-        NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY, KEY_TYPE,
+        NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY, KEY_TYPE, USER,
     ) = (
-        'name', 'save_private_key', 'public_key', 'type',
+        'name', 'save_private_key', 'public_key', 'type', 'user',
     )
 
     ATTRIBUTES = (
@@ -80,6 +81,14 @@ class KeyPair(resource.Resource):
                 constraints.AllowedValues(['ssh', 'x509'])],
             support_status=support.SupportStatus(version='8.0.0')
         ),
+        USER: properties.Schema(
+            properties.Schema.STRING,
+            _('ID or name of user to whom to add key-pair. The usage of this '
+              'property is limited to being used by administrators only. '
+              'Supported since Nova api version 2.10.'),
+            constraints=[constraints.CustomConstraint('keystone.user')],
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -101,6 +110,17 @@ class KeyPair(resource.Resource):
     def __init__(self, name, json_snippet, stack):
         super(KeyPair, self).__init__(name, json_snippet, stack)
         self._public_key = None
+
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.USER],
+                client_plugin=self.client_plugin('keystone'),
+                finder='get_user_id'
+            )
+        ]
 
     @property
     def private_key(self):
@@ -125,29 +145,45 @@ class KeyPair(resource.Resource):
         super(KeyPair, self).validate()
 
         # Check if key_type is allowed to use
-        if self.properties[self.KEY_TYPE]:
+        key_type = self.properties[self.KEY_TYPE]
+        user = self.properties[self.USER]
+
+        nc_version = None
+        validate_props = []
+        if key_type:
+            nc_version = self.client_plugin().V2_2
+            validate_props.append(self.KEY_TYPE)
+        if user:
+            nc_version = self.client_plugin().V2_10
+            validate_props.append(self.USER)
+        if nc_version:
             try:
-                self.client(
-                    version=self.client_plugin().V2_2)
+                self.client(version=nc_version)
             except exception.InvalidServiceVersion as ex:
-                msg = (_('Cannot use "%(type)s" property - nova does not '
-                         'support it: %(error)s') %
-                       {'error': six.text_type(ex), 'type': self.KEY_TYPE})
+                msg = (_('Cannot use "%(prop)s" properties - nova does not '
+                         'support: %(error)s') %
+                       {'error': six.text_type(ex), 'prop': validate_props})
                 raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         pub_key = self.properties[self.PUBLIC_KEY] or None
+        user_id = self.properties[self.USER]
         key_type = self.properties[self.KEY_TYPE]
-        nc = self.client(
-            version=self.client_plugin().V2_2) if key_type else self.client()
 
         create_kwargs = {
             'name': self.properties[self.NAME],
             'public_key': pub_key
         }
-        if key_type:
-            create_kwargs[self.KEY_TYPE] = key_type
 
+        nc_version = None
+        if key_type:
+            nc_version = self.client_plugin().V2_2
+            create_kwargs[self.KEY_TYPE] = key_type
+        if user_id:
+            nc_version = self.client_plugin().V2_10
+            create_kwargs['user_id'] = user_id
+
+        nc = self.client(version=nc_version)
         new_keypair = nc.keypairs.create(**create_kwargs)
 
         if (self.properties[self.SAVE_PRIVATE_KEY] and
