@@ -1,0 +1,4 @@
+---
+features:
+  - The list_concat function was added, which concats several lists using
+    python's extend function.
