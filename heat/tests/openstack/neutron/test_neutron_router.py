@@ -257,6 +257,8 @@ class NeutronRouterTest(common.HeatTestCase):
 
     def test_router(self):
         t = template_format.parse(neutron_template)
+        tags = ['for_test']
+        t['resources']['router']['properties']['tags'] = tags
         stack = utils.parse_stack(t)
         create_body = {
             'router': {
@@ -321,8 +323,14 @@ class NeutronRouterTest(common.HeatTestCase):
         self.delete_mock.side_effect = [
             None,
             qe.NeutronClientException(status_code=404)]
+        set_tag_mock = self.patchobject(neutronclient.Client, 'replace_tag')
         rsrc = self.create_router(t, stack, 'router')
         self.create_mock.assert_called_with(create_body)
+        set_tag_mock.assert_called_with(
+            'routers',
+            rsrc.resource_id,
+            {'tags': tags}
+        )
         rsrc.validate()
 
         ref_id = rsrc.FnGetRefId()
@@ -334,14 +342,19 @@ class NeutronRouterTest(common.HeatTestCase):
         prop_diff = {
             "admin_state_up": False,
             "name": "myrouter",
-            "l3_agent_ids": ["63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"]
+            "l3_agent_ids": ["63b3fd83-2c5f-4dad-b3ae-e0f83a40f216"],
+            'tags': ['new_tag']
         }
         props = copy.copy(rsrc.properties.data)
         props.update(prop_diff)
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
         rsrc.handle_update(update_snippet, {}, prop_diff)
-
+        set_tag_mock.assert_called_with(
+            'routers',
+            rsrc.resource_id,
+            {'tags': ['new_tag']}
+        )
         self.update_mock.assert_called_with(
             '3e46229d-8fce-4733-819a-b5fe630550f8',
             {'router': {

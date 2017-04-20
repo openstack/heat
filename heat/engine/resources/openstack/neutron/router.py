@@ -37,10 +37,10 @@ class Router(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
-        L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA,
+        L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA, TAGS,
     ) = (
         'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
-        'l3_agent_id', 'l3_agent_ids', 'distributed', 'ha'
+        'l3_agent_id', 'l3_agent_ids', 'distributed', 'ha', 'tags',
     )
 
     _EXTERNAL_GATEWAY_KEYS = (
@@ -173,6 +173,13 @@ class Router(neutron.NeutronResource):
               'do not support distributed and ha at the same time.'),
             support_status=support.SupportStatus(version='2015.1')
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('The tags to be added to the router.'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -297,12 +304,15 @@ class Router(neutron.NeutronResource):
             self.physical_resource_name())
         self._resolve_gateway(props)
         l3_agent_ids = self._get_l3_agent_list(props)
+        tags = props.pop(self.TAGS, [])
 
         router = self.client().create_router({'router': props})['router']
         self.resource_id_set(router['id'])
 
         if l3_agent_ids:
             self._replace_agent(l3_agent_ids)
+        if tags:
+            self.set_tags(tags)
 
     def check_create_complete(self, *args):
         attributes = self._show_resource()
@@ -323,6 +333,10 @@ class Router(neutron.NeutronResource):
         if self.L3_AGENT_IDS in prop_diff or self.L3_AGENT_ID in prop_diff:
             l3_agent_ids = self._get_l3_agent_list(prop_diff)
             self._replace_agent(l3_agent_ids)
+
+        if self.TAGS in prop_diff:
+            tags = prop_diff.pop(self.TAGS)
+            self.set_tags(tags)
 
         if prop_diff:
             self.prepare_update_properties(prop_diff)
