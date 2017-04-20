@@ -13,9 +13,8 @@
 
 import copy
 
-import mox
+import mock
 from neutronclient.common import exceptions as qe
-from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 import six
 
@@ -120,21 +119,34 @@ class NeutronRouterTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronRouterTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'remove_gateway_router')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'add_router_to_l3_agent')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'remove_router_from_l3_agent')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'list_l3_agent_hosting_routers')
-        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.create_mock = self.patchobject(neutronclient.Client,
+                                            'create_router')
+        self.delete_mock = self.patchobject(neutronclient.Client,
+                                            'delete_router')
+        self.show_mock = self.patchobject(neutronclient.Client,
+                                          'show_router')
+        self.update_mock = self.patchobject(neutronclient.Client,
+                                            'update_router')
+        self.add_if_mock = self.patchobject(neutronclient.Client,
+                                            'add_interface_router')
+        self.remove_if_mock = self.patchobject(neutronclient.Client,
+                                               'remove_interface_router')
+        self.add_gw_mock = self.patchobject(neutronclient.Client,
+                                            'add_gateway_router')
+        self.remove_gw_mock = self.patchobject(neutronclient.Client,
+                                               'remove_gateway_router')
+        self.add_router_mock = self.patchobject(
+            neutronclient.Client,
+            'add_router_to_l3_agent')
+        self.remove_router_mock = self.patchobject(
+            neutronclient.Client,
+            'remove_router_from_l3_agent')
+        self.list_l3_hr_mock = self.patchobject(
+            neutronclient.Client,
+            'list_l3_agent_hosting_routers')
+        self.find_rsrc_mock = self.patchobject(
+            neutron.NeutronClientPlugin,
+            'find_resourceid_by_name_or_id')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
@@ -198,7 +210,6 @@ class NeutronRouterTest(common.HeatTestCase):
                                 rsrc.validate)
         self.assertIn('distributed, l3_agent_id/l3_agent_ids',
                       six.text_type(exc))
-        self.m.VerifyAll()
 
     def test_router_validate_l3_agents(self):
         t = template_format.parse(neutron_template)
@@ -213,7 +224,6 @@ class NeutronRouterTest(common.HeatTestCase):
         self.assertIn('Non HA routers can only have one L3 agent',
                       six.text_type(exc))
         self.assertIsNone(rsrc.properties.get(rsrc.L3_AGENT_ID))
-        self.m.VerifyAll()
 
     def test_router_validate_ha_distribute(self):
         t = template_format.parse(neutron_template)
@@ -231,7 +241,6 @@ class NeutronRouterTest(common.HeatTestCase):
         exc = self.assertRaises(exception.ResourcePropertyConflict,
                                 rsrc.validate)
         self.assertIn('distributed, ha', six.text_type(exc))
-        self.m.VerifyAll()
 
     def test_router_validate_ha_l3_agents(self):
         t = template_format.parse(neutron_template)
@@ -245,78 +254,37 @@ class NeutronRouterTest(common.HeatTestCase):
                                 rsrc.validate)
         self.assertIn('Non HA routers can only have one L3 agent.',
                       six.text_type(exc))
-        self.m.VerifyAll()
 
     def test_router(self):
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
-
-        neutronclient.Client.create_router({
+        create_body = {
             'router': {
                 'name': utils.PhysName(stack.name, 'router'),
-                'admin_state_up': True,
-            }
-        }).AndReturn({
-            "router": {
+                'admin_state_up': True}}
+        router_base_info = {
+            'router': {
                 "status": "BUILD",
                 "external_gateway_info": None,
                 "name": utils.PhysName(stack.name, 'router'),
                 "admin_state_up": True,
                 "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
-            }
-        })
-        neutronclient.Client.list_l3_agent_hosting_routers(
-            u'3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({"agents": []})
-        neutronclient.Client.add_router_to_l3_agent(
-            u'792ff887-6c85-4a56-b518-23f24fa65581',
-            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
-        ).AndReturn(None)
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
-                "router": {
-                    "status": "BUILD",
-                    "external_gateway_info": None,
-                    "name": utils.PhysName(stack.name, 'router'),
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": None,
-                    "name": utils.PhysName(stack.name, 'router'),
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndRaise(
-                qe.NeutronClientException(status_code=404))
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": None,
-                    "name": utils.PhysName(stack.name, 'router'),
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
+                "id": "3e46229d-8fce-4733-819a-b5fe630550f8"}}
+        router_active_info = copy.deepcopy(router_base_info)
+        router_active_info['router']['status'] = 'ACTIVE'
+        self.create_mock.return_value = router_base_info
+        self.show_mock.side_effect = [
+            # create complete check
+            router_base_info,
+            router_active_info,
+            # first get_attr tenant
+            qe.NeutronClientException(status_code=404),
+            # second get_attr tenant
+            router_active_info,
+            # delete complete check
+            qe.NeutronClientException(status_code=404)]
 
-        # Update script
-        neutronclient.Client.list_l3_agent_hosting_routers(
-            u'3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({
+        agents_info = {
             "agents": [{
                 "admin_state_up": True,
                 "agent_type": "L3 agent",
@@ -340,78 +308,21 @@ class NeutronRouterTest(common.HeatTestCase):
                 "started_at": "2014-03-11 05:00:05",
                 "topic": "l3_agent"
             }]
-        })
-        neutronclient.Client.remove_router_from_l3_agent(
-            u'792ff887-6c85-4a56-b518-23f24fa65581',
-            u'3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn(None)
-        neutronclient.Client.add_router_to_l3_agent(
-            u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
-            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
-        ).AndReturn(None)
-        neutronclient.Client.update_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'router': {
-                'name': 'myrouter',
-                'admin_state_up': False
-            }}
-        )
-        # Update again script
-        neutronclient.Client.list_l3_agent_hosting_routers(
-            u'3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({
-            "agents": [{
-                "admin_state_up": True,
-                "agent_type": "L3 agent",
-                "alive": True,
-                "binary": "neutron-l3-agent",
-                "configurations": {
-                    "ex_gw_ports": 1,
-                    "floating_ips": 0,
-                    "gateway_external_network_id": "",
-                    "handle_internal_only_routers": True,
-                    "interface_driver": "DummyDriver",
-                    "interfaces": 1,
-                    "router_id": "",
-                    "routers": 1,
-                    "use_namespaces": True},
-                "created_at": "2014-03-11 05:00:05",
-                "description": None,
-                "heartbeat_timestamp": "2014-03-11 05:01:49",
-                "host": "l3_agent_host",
-                "id": "63b3fd83-2c5f-4dad-b3ae-e0f83a40f216",
-                "started_at": "2014-03-11 05:00:05",
-                "topic": "l3_agent"
-            }]
-        })
-        neutronclient.Client.remove_router_from_l3_agent(
-            u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
-            u'3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn(None)
-        neutronclient.Client.add_router_to_l3_agent(
-            u'4c692423-2c5f-4dad-b3ae-e2339f58539f',
-            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
-        ).AndReturn(None)
-        neutronclient.Client.add_router_to_l3_agent(
-            u'8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4',
-            {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}
-        ).AndReturn(None)
-        # Delete script
-        neutronclient.Client.delete_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn(None)
+        }
+        agents_info1 = copy.deepcopy(agents_info)
+        agent = agents_info1['agents'][0]
+        agent['id'] = '63b3fd83-2c5f-4dad-b3ae-e0f83a40f216'
+        self.list_l3_hr_mock.side_effect = [
+            {"agents": []},
+            agents_info,
+            agents_info1
+        ]
 
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-
-        neutronclient.Client.delete_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-
-        self.m.ReplayAll()
+        self.delete_mock.side_effect = [
+            None,
+            qe.NeutronClientException(status_code=404)]
         rsrc = self.create_router(t, stack, 'router')
-
+        self.create_mock.assert_called_with(create_body)
         rsrc.validate()
 
         ref_id = rsrc.FnGetRefId()
@@ -431,6 +342,13 @@ class NeutronRouterTest(common.HeatTestCase):
                                                       props)
         rsrc.handle_update(update_snippet, {}, prop_diff)
 
+        self.update_mock.assert_called_with(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'router': {
+                'name': 'myrouter',
+                'admin_state_up': False
+            }}
+        )
         prop_diff = {
             "l3_agent_ids": ["4c692423-2c5f-4dad-b3ae-e2339f58539f",
                              "8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4"]
@@ -441,10 +359,38 @@ class NeutronRouterTest(common.HeatTestCase):
                                                       props)
         rsrc.handle_update(update_snippet, {}, prop_diff)
 
+        add_router_calls = [
+            # create
+            mock.call(
+                u'792ff887-6c85-4a56-b518-23f24fa65581',
+                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}),
+            # first update
+            mock.call(
+                u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
+                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}),
+            # second update
+            mock.call(
+                u'4c692423-2c5f-4dad-b3ae-e2339f58539f',
+                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}),
+            mock.call(
+                u'8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4',
+                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'})
+        ]
+        remove_router_calls = [
+            # first update
+            mock.call(
+                u'792ff887-6c85-4a56-b518-23f24fa65581',
+                u'3e46229d-8fce-4733-819a-b5fe630550f8'),
+            # second update
+            mock.call(
+                u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
+                u'3e46229d-8fce-4733-819a-b5fe630550f8')
+        ]
+        self.add_router_mock.assert_has_calls(add_router_calls)
+        self.remove_router_mock.assert_has_calls(remove_router_calls)
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
-        self.m.VerifyAll()
 
     def test_router_dependence(self):
         # assert the implicit dependency between the router
@@ -464,44 +410,31 @@ class NeutronRouterTest(common.HeatTestCase):
         self._test_router_interface(resolve_router=False)
 
     def _test_router_interface(self, resolve_router=True):
-        neutronclient.Client.add_interface_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndReturn(None)
-        neutronclient.Client.remove_interface_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndReturn(None)
-        neutronclient.Client.remove_interface_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.remove_if_mock.side_effect = [
+            None,
+            qe.NeutronClientException(status_code=404)
+        ]
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
-        router_key = 'router'
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            '91e47a57-7508-46fe-afc9-fc454e8580e1',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
-        subnet_key = 'subnet'
 
-        self.m.ReplayAll()
+        def find_rsrc(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'subnet': '91e47a57-7508-46fe-afc9-fc454e8580e1',
+                'router': '3e46229d-8fce-4733-819a-b5fe630550f8'}
+            return id_mapping.get(resource)
+        self.find_rsrc_mock.side_effect = find_rsrc
+        router_key = 'router'
+        subnet_key = 'subnet'
         rsrc = self.create_router_interface(
             t, stack, 'router_interface', properties={
                 router_key: '3e46229d-8fce-4733-819a-b5fe630550f8',
                 subnet_key: '91e47a57-7508-46fe-afc9-fc454e8580e1'
             })
-
+        self.add_if_mock.assert_called_with(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'})
         # Ensure that properties correctly translates
         if not resolve_router:
             self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8',
@@ -511,38 +444,24 @@ class NeutronRouterTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
 
     def test_router_interface_with_old_data(self):
         self.stub_SubnetConstraint_validate()
         self.stub_RouterConstraint_validate()
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('3e46229d-8fce-4733-819a-b5fe630550f8')
 
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            '91e47a57-7508-46fe-afc9-fc454e8580e1',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
-        neutronclient.Client.add_interface_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndReturn(None)
-        neutronclient.Client.remove_interface_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndReturn(None)
-        neutronclient.Client.remove_interface_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        def find_rsrc(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'subnet': '91e47a57-7508-46fe-afc9-fc454e8580e1',
+                'router': '3e46229d-8fce-4733-819a-b5fe630550f8'}
+            return id_mapping.get(resource)
 
-        self.m.ReplayAll()
+        self.find_rsrc_mock.side_effect = find_rsrc
+
+        self.remove_if_mock.side_effect = [
+            None,
+            qe.NeutronClientException(status_code=404)
+        ]
+
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
 
@@ -551,6 +470,10 @@ class NeutronRouterTest(common.HeatTestCase):
                 'router': '3e46229d-8fce-4733-819a-b5fe630550f8',
                 'subnet': '91e47a57-7508-46fe-afc9-fc454e8580e1'
             })
+        self.add_if_mock.assert_called_with(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'subnet_id': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
+        )
         self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8'
                          ':subnet_id=91e47a57-7508-46fe-afc9-fc454e8580e1',
                          rsrc.resource_id)
@@ -562,7 +485,6 @@ class NeutronRouterTest(common.HeatTestCase):
                          rsrc.resource_id)
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
 
     def test_router_interface_with_port(self):
         self._test_router_interface_with_port()
@@ -571,35 +493,21 @@ class NeutronRouterTest(common.HeatTestCase):
         self._test_router_interface_with_port(resolve_port=False)
 
     def _test_router_interface_with_port(self, resolve_port=True):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'port',
-            '9577cafd-8e98-4059-a2e6-8a771b4d318e',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            'ae478782-53c0-4434-ab16-49900c88016c',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('ae478782-53c0-4434-ab16-49900c88016c')
-        neutronclient.Client.add_interface_router(
-            'ae478782-53c0-4434-ab16-49900c88016c',
-            {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
-        ).AndReturn(None)
+        def find_rsrc(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'router': 'ae478782-53c0-4434-ab16-49900c88016c',
+                'port': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
+            return id_mapping.get(resource)
 
-        neutronclient.Client.remove_interface_router(
-            'ae478782-53c0-4434-ab16-49900c88016c',
-            {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
-        ).AndReturn(None)
-        neutronclient.Client.remove_interface_router(
-            'ae478782-53c0-4434-ab16-49900c88016c',
-            {'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        self.find_rsrc_mock.side_effect = find_rsrc
+
+        self.remove_if_mock.side_effect = [
+            None,
+            qe.NeutronClientException(status_code=404)]
+
         self.stub_PortConstraint_validate()
         self.stub_RouterConstraint_validate()
 
-        self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
 
@@ -618,33 +526,22 @@ class NeutronRouterTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
 
     def test_router_interface_validate(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'port',
-            '9577cafd-8e98-4059-a2e6-8a771b4d318e',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'router',
-            'ae478782-53c0-4434-ab16-49900c88016c',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('ae478782-53c0-4434-ab16-49900c88016c')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            '9577cafd-8e98-4059-a2e6-8a771b4d318e',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('9577cafd-8e98-4059-a2e6-8a771b4d318e')
-        self.m.ReplayAll()
+        def find_rsrc(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'router': 'ae478782-53c0-4434-ab16-49900c88016c',
+                'subnet': '8577cafd-8e98-4059-a2e6-8a771b4d318e',
+                'port': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
+            return id_mapping.get(resource)
+
+        self.find_rsrc_mock.side_effect = find_rsrc
+
         t = template_format.parse(neutron_template)
         json = t['resources']['router_interface']
         json['properties'] = {
             'router_id': 'ae478782-53c0-4434-ab16-49900c88016c',
-            'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e',
+            'subnet_id': '8577cafd-8e98-4059-a2e6-8a771b4d318e',
             'port_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
         stack = utils.parse_stack(t)
         resource_defns = stack.t.resource_definitions(stack)
@@ -663,7 +560,7 @@ class NeutronRouterTest(common.HeatTestCase):
         self.assertIsNone(res.validate())
         json['properties'] = {
             'router_id': 'ae478782-53c0-4434-ab16-49900c88016c',
-            'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'}
+            'subnet_id': '8577cafd-8e98-4059-a2e6-8a771b4d318e'}
         stack = utils.parse_stack(t)
         resource_defns = stack.t.resource_definitions(stack)
         res = router.RouterInterface('router_interface',
@@ -682,28 +579,21 @@ class NeutronRouterTest(common.HeatTestCase):
         self.assertEqual("At least one of the following properties "
                          "must be specified: subnet, port.",
                          six.text_type(ex))
-        self.m.VerifyAll()
 
     def test_gateway_router(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        neutronclient.Client.add_gateway_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
-        ).AndReturn(None)
-        neutronclient.Client.remove_gateway_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn(None)
-        neutronclient.Client.remove_gateway_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
+        def find_rsrc(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
+                'network': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
+            return id_mapping.get(resource)
+
+        self.find_rsrc_mock.side_effect = find_rsrc
+
+        self.remove_gw_mock.side_effect = [
+            None,
+            qe.NeutronClientException(status_code=404)]
         self.stub_RouterConstraint_validate()
 
-        self.m.ReplayAll()
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
 
@@ -712,26 +602,178 @@ class NeutronRouterTest(common.HeatTestCase):
                 'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8',
                 'network': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
             })
-
+        self.add_gw_mock.assert_called_with(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
+        )
         scheduler.TaskRunner(rsrc.delete)()
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
 
-    def _create_router_with_gateway(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'public',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub1234',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub1234')
-        neutronclient.Client.create_router({
+    def _test_router_with_gateway(self, for_delete=False, for_update=False):
+        t = template_format.parse(neutron_external_gateway_template)
+        stack = utils.parse_stack(t)
+
+        def find_rsrc(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'subnet': 'sub1234',
+                'network': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
+            return id_mapping.get(resource)
+
+        self.find_rsrc_mock.side_effect = find_rsrc
+        base_info = {
+            "router": {
+                "status": "BUILD",
+                "external_gateway_info": None,
+                "name": "Test Router",
+                "admin_state_up": True,
+                "tenant_id": "3e21026f2dc94372b105808c0e721661",
+                "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
+            }
+        }
+        external_gw_info = {
+            "network_id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+            "enable_snat": True,
+            'external_fixed_ips': [{
+                'ip_address': '192.168.10.99',
+                'subnet_id': 'sub1234'
+            }]}
+        active_info = copy.deepcopy(base_info)
+        active_info['router']['status'] = 'ACTIVE'
+        active_info['router']['external_gateway_info'] = external_gw_info
+        ex_gw_info1 = copy.deepcopy(external_gw_info)
+        ex_gw_info1['network_id'] = '91e47a57-7508-46fe-afc9-fc454e8580e1'
+        ex_gw_info1['enable_snat'] = False
+        active_info1 = copy.deepcopy(active_info)
+        active_info1['router']['external_gateway_info'] = ex_gw_info1
+        self.create_mock.return_value = base_info
+        if for_delete:
+            self.show_mock.side_effect = [
+                # create complete check
+                active_info,
+                # delete complete check
+                qe.NeutronClientException(status_code=404)]
+        elif for_update:
+            self.show_mock.side_effect = [
+                # create complete check
+                active_info,
+                # get attr after create
+                active_info,
+                # get attr after update
+                active_info1]
+        else:
+            self.show_mock.side_effect = [
+                # create complete check
+                active_info,
+                # get attr after create
+                active_info]
+
+        return t, stack
+
+    def test_create_router_gateway_as_property(self):
+        t, stack = self._test_router_with_gateway()
+        rsrc = self.create_router(t, stack, 'router')
+        self._assert_mock_call_create_with_router_gw()
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
+        gateway_info = rsrc.FnGetAtt('external_gateway_info')
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         gateway_info.get('network_id'))
+        self.assertTrue(gateway_info.get('enable_snat'))
+        self.assertEqual([{'subnet_id': 'sub1234',
+                           'ip_address': '192.168.10.99'}],
+                         gateway_info.get('external_fixed_ips'))
+
+    def test_create_router_gateway_enable_snat(self):
+        self.find_rsrc_mock.side_effect = [
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766']
+        router_info = {
+            "router": {
+                "name": "Test Router",
+                "external_gateway_info": {
+                    'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                },
+                "admin_state_up": True,
+                'status': 'BUILD',
+                'id': '3e46229d-8fce-4733-819a-b5fe630550f8'
+            }
+        }
+        active_info = copy.deepcopy(router_info)
+        active_info['router']['status'] = 'ACTIVE'
+        self.create_mock.return_value = router_info
+        self.show_mock.side_effect = [
+            # create complete check
+            active_info,
+            # get attr
+            active_info
+        ]
+
+        t = template_format.parse(neutron_external_gateway_template)
+        t["resources"]["router"]["properties"]["external_gateway_info"].pop(
+            "enable_snat")
+        t["resources"]["router"]["properties"]["external_gateway_info"].pop(
+            "external_fixed_ips")
+        stack = utils.parse_stack(t)
+        rsrc = self.create_router(t, stack, 'router')
+        self.create_mock.assert_called_with(
+            {
+                "router": {
+                    "name": "Test Router",
+                    "external_gateway_info": {
+                        'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                    },
+                    "admin_state_up": True,
+                }
+            }
+        )
+        rsrc.validate()
+
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
+        gateway_info = rsrc.FnGetAtt('external_gateway_info')
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         gateway_info.get('network_id'))
+
+    def test_update_router_gateway_as_property(self):
+        t, stack = self._test_router_with_gateway(for_update=True)
+        rsrc = self.create_router(t, stack, 'router')
+        self._assert_mock_call_create_with_router_gw()
+        gateway_info = rsrc.FnGetAtt('external_gateway_info')
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                         gateway_info.get('network_id'))
+        self.assertTrue(gateway_info.get('enable_snat'))
+        props = t['resources']['router']['properties'].copy()
+        props['external_gateway_info'] = {
+            "network": "other_public",
+            "enable_snat": False
+        }
+        update_template = rsrc.t.freeze(properties=props)
+
+        def find_rsrc_for_update(resource, name_or_id, cmd_resource=None):
+            id_mapping = {
+                'subnet': 'sub1234',
+                'network': '91e47a57-7508-46fe-afc9-fc454e8580e1'}
+            return id_mapping.get(resource)
+
+        self.find_rsrc_mock.side_effect = find_rsrc_for_update
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.update_mock.assert_called_with(
+            '3e46229d-8fce-4733-819a-b5fe630550f8',
+            {'router': {
+                "external_gateway_info": {
+                    'network_id': '91e47a57-7508-46fe-afc9-fc454e8580e1',
+                    'enable_snat': False
+                },
+            }}
+        )
+        gateway_info = rsrc.FnGetAtt('external_gateway_info')
+        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1',
+                         gateway_info.get('network_id'))
+        self.assertFalse(gateway_info.get('enable_snat'))
+
+    def _assert_mock_call_create_with_router_gw(self):
+        self.create_mock.assert_called_with({
             "router": {
                 "name": "Test Router",
                 "external_gateway_info": {
@@ -744,212 +786,11 @@ class NeutronRouterTest(common.HeatTestCase):
                 },
                 "admin_state_up": True,
             }
-        }).AndReturn({
-            "router": {
-                "status": "BUILD",
-                "external_gateway_info": None,
-                "name": "Test Router",
-                "admin_state_up": True,
-                "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
-            }
         })
-
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": {
-                        "network_id":
-                        "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-                        "enable_snat": True,
-                        'external_fixed_ips': [{
-                            'ip_address': '192.168.10.99',
-                            'subnet_id': 'sub1234'
-                        }]
-                    },
-                    "name": "Test Router",
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
-
-    def test_create_router_gateway_as_property(self):
-        self._create_router_with_gateway()
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": {
-                        "network_id":
-                        "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-                        "enable_snat": True,
-                        'external_fixed_ips': [{
-                            'ip_address': '192.168.10.99',
-                            'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e'
-                        }]
-                    },
-                    "name": "Test Router",
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_external_gateway_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_router(t, stack, 'router')
-        rsrc.validate()
-        ref_id = rsrc.FnGetRefId()
-        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
-        gateway_info = rsrc.FnGetAtt('external_gateway_info')
-        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         gateway_info.get('network_id'))
-        self.assertTrue(gateway_info.get('enable_snat'))
-        self.assertEqual([{'subnet_id': '9577cafd-8e98-4059-a2e6-8a771b4d318e',
-                           'ip_address': '192.168.10.99'}],
-                         gateway_info.get('external_fixed_ips'))
-        self.m.VerifyAll()
-
-    def test_create_router_gateway_enable_snat(self):
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'public',
-            cmd_resource=None,
-        ).AndReturn('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        neutronclient.Client.create_router({
-            "router": {
-                "name": "Test Router",
-                "external_gateway_info": {
-                    'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                },
-                "admin_state_up": True,
-            }
-        }).AndReturn({
-            "router": {
-                "status": "BUILD",
-                "external_gateway_info": None,
-                "name": "Test Router",
-                "admin_state_up": True,
-                "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                "id": "3e46229d-8fce-4733-819a-b5fe630550f8",
-            }
-        })
-
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').MultipleTimes().AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": {
-                        "network_id":
-                        "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-                        "enable_snat": True
-                    },
-                    "name": "Test Router",
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_external_gateway_template)
-        t["resources"]["router"]["properties"]["external_gateway_info"].pop(
-            "enable_snat")
-        t["resources"]["router"]["properties"]["external_gateway_info"].pop(
-            "external_fixed_ips")
-        stack = utils.parse_stack(t)
-        rsrc = self.create_router(t, stack, 'router')
-
-        rsrc.validate()
-
-        ref_id = rsrc.FnGetRefId()
-        self.assertEqual('3e46229d-8fce-4733-819a-b5fe630550f8', ref_id)
-        gateway_info = rsrc.FnGetAtt('external_gateway_info')
-        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                         gateway_info.get('network_id'))
-        self.m.VerifyAll()
-
-    def test_update_router_gateway_as_property(self):
-        self._create_router_with_gateway()
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'network',
-            'other_public',
-            cmd_resource=None,
-        ).AndReturn('91e47a57-7508-46fe-afc9-fc454e8580e1')
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub1234',
-            cmd_resource=None,
-        ).AndReturn('sub1234')
-        neutronclient.Client.update_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {'router': {
-                "external_gateway_info": {
-                    'network_id': '91e47a57-7508-46fe-afc9-fc454e8580e1',
-                    'enable_snat': False
-                },
-                }}
-        ).AndReturn(None)
-
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8').MultipleTimes().AndReturn({
-                "router": {
-                    "status": "ACTIVE",
-                    "external_gateway_info": {
-                        "network_id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
-                        "enable_snat": False
-                    },
-                    "name": "Test Router",
-                    "admin_state_up": True,
-                    "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                    "routes": [],
-                    "id": "3e46229d-8fce-4733-819a-b5fe630550f8"
-                }
-            })
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_external_gateway_template)
-        stack = utils.parse_stack(t)
-        rsrc = self.create_router(t, stack, 'router')
-
-        props = t['resources']['router']['properties'].copy()
-        props['external_gateway_info'] = {
-            "network": "other_public",
-            "enable_snat": False
-        }
-        update_template = rsrc.t.freeze(properties=props)
-        scheduler.TaskRunner(rsrc.update, update_template)()
-        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-
-        gateway_info = rsrc.FnGetAtt('external_gateway_info')
-        self.assertEqual('91e47a57-7508-46fe-afc9-fc454e8580e1',
-                         gateway_info.get('network_id'))
-        self.assertFalse(gateway_info.get('enable_snat'))
-
-        self.m.VerifyAll()
 
     def test_delete_router_gateway_as_property(self):
-        self._create_router_with_gateway()
-        neutronclient.Client.delete_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn(None)
+        t, stack = self._test_router_with_gateway(for_delete=True)
 
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndRaise(qe.NeutronClientException(status_code=404))
-
-        self.m.ReplayAll()
-        t = template_format.parse(neutron_external_gateway_template)
-        stack = utils.parse_stack(t)
         rsrc = self.create_router(t, stack, 'router')
+        self._assert_mock_call_create_with_router_gw()
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
-        self.m.VerifyAll()
