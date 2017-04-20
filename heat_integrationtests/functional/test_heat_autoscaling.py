@@ -114,10 +114,12 @@ outputs:
         for num in range(asg_size+1, max_size+2):
             expected_resources = num if num <= max_size else max_size
             self.client.resources.signal(stack_id, 'scale_up_policy')
-            test.call_until_true(self.conf.build_timeout,
-                                 self.conf.build_interval,
-                                 self.check_autoscale_complete,
-                                 asg.physical_resource_id, expected_resources)
+            self.assertTrue(
+                test.call_until_true(self.conf.build_timeout,
+                                     self.conf.build_interval,
+                                     self.check_autoscale_complete,
+                                     asg.physical_resource_id,
+                                     expected_resources))
 
     def test_asg_scale_down_min_size(self):
         stack_id = self.stack_create(template=self.template,
@@ -133,10 +135,12 @@ outputs:
         for num in range(asg_size-1, 0, -1):
             expected_resources = num if num >= min_size else min_size
             self.client.resources.signal(stack_id, 'scale_down_policy')
-            test.call_until_true(self.conf.build_timeout,
-                                 self.conf.build_interval,
-                                 self.check_autoscale_complete,
-                                 asg.physical_resource_id, expected_resources)
+            self.assertTrue(
+                test.call_until_true(self.conf.build_timeout,
+                                     self.conf.build_interval,
+                                     self.check_autoscale_complete,
+                                     asg.physical_resource_id,
+                                     expected_resources))
 
     def test_asg_cooldown(self):
         cooldown_tmpl = self.template.replace('cooldown: 0',
@@ -153,10 +157,12 @@ outputs:
         asg = self.client.resources.get(stack_id, 'random_group')
         expected_resources = 3
         self.client.resources.signal(stack_id, 'scale_up_policy')
-        test.call_until_true(self.conf.build_timeout,
-                             self.conf.build_interval,
-                             self.check_autoscale_complete,
-                             asg.physical_resource_id, expected_resources)
+        self.assertTrue(
+            test.call_until_true(self.conf.build_timeout,
+                                 self.conf.build_interval,
+                                 self.check_autoscale_complete,
+                                 asg.physical_resource_id,
+                                 expected_resources))
 
     def test_path_attrs(self):
         stack_id = self.stack_create(template=self.template)
