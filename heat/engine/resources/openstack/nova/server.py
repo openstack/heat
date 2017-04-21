@@ -54,7 +54,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         SCHEDULER_HINTS, METADATA, USER_DATA_FORMAT, USER_DATA,
         RESERVATION_ID, CONFIG_DRIVE, DISK_CONFIG, PERSONALITY,
         ADMIN_PASS, SOFTWARE_CONFIG_TRANSPORT, USER_DATA_UPDATE_POLICY,
-        TAGS
+        TAGS, DEPLOYMENT_SWIFT_DATA
     ) = (
         'name', 'image', 'block_device_mapping', 'block_device_mapping_v2',
         'flavor', 'flavor_update_policy', 'image_update_policy', 'key_name',
@@ -62,7 +62,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         'scheduler_hints', 'metadata', 'user_data_format', 'user_data',
         'reservation_id', 'config_drive', 'diskConfig', 'personality',
         'admin_pass', 'software_config_transport', 'user_data_update_policy',
-        'tags'
+        'tags', 'deployment_swift_data'
     )
 
     _BLOCK_DEVICE_MAPPING_KEYS = (
@@ -133,6 +133,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         NETWORK_NONE, NETWORK_AUTO,
     ) = (
         'none', 'auto',
+    )
+
+    _DEPLOYMENT_SWIFT_DATA_KEYS = (
+        CONTAINER, OBJECT
+    ) = (
+        'container', 'object',
     )
 
     ATTRIBUTES = (
@@ -568,6 +574,37 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             support_status=support.SupportStatus(version='8.0.0'),
             schema=properties.Schema(properties.Schema.STRING),
             update_allowed=True
+        ),
+        DEPLOYMENT_SWIFT_DATA: properties.Schema(
+            properties.Schema.MAP,
+            _('Swift container and object to use for storing deployment data '
+              'for the server resource. The parameter is a map value '
+              'with the keys "container" and "object", and the values '
+              'are the corresponding container and object names. The '
+              'software_config_transport parameter must be set to '
+              'POLL_TEMP_URL for swift to be used. If not specified, '
+              'and software_config_transport is set to POLL_TEMP_URL, a '
+              'container will be automatically created from the resource '
+              'name, and the object name will be a generated uuid.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            default={},
+            update_allowed=True,
+            schema={
+                CONTAINER: properties.Schema(
+                    properties.Schema.STRING,
+                    _('Name of the container.'),
+                    constraints=[
+                        constraints.Length(min=1)
+                    ]
+                ),
+                OBJECT: properties.Schema(
+                    properties.Schema.STRING,
+                    _('Name of the object.'),
+                    constraints=[
+                        constraints.Length(min=1)
+                    ]
+                )
+            }
         )
     }
 

@@ -37,15 +37,23 @@ class DeployedServer(server_base.BaseServer):
     """
 
     PROPERTIES = (
-        NAME, METADATA, SOFTWARE_CONFIG_TRANSPORT
+        NAME, METADATA, SOFTWARE_CONFIG_TRANSPORT,
+        DEPLOYMENT_SWIFT_DATA
     ) = (
-        'name', 'metadata', 'software_config_transport'
+        'name', 'metadata', 'software_config_transport',
+        'deployment_swift_data'
     )
 
     _SOFTWARE_CONFIG_TRANSPORTS = (
         POLL_SERVER_CFN, POLL_SERVER_HEAT, POLL_TEMP_URL, ZAQAR_MESSAGE
     ) = (
         'POLL_SERVER_CFN', 'POLL_SERVER_HEAT', 'POLL_TEMP_URL', 'ZAQAR_MESSAGE'
+    )
+
+    _DEPLOYMENT_SWIFT_DATA_KEYS = (
+        CONTAINER, OBJECT
+    ) = (
+        'container', 'object',
     )
 
     properties_schema = {
@@ -79,6 +87,37 @@ class DeployedServer(server_base.BaseServer):
                 constraints.AllowedValues(_SOFTWARE_CONFIG_TRANSPORTS),
             ]
         ),
+        DEPLOYMENT_SWIFT_DATA: properties.Schema(
+            properties.Schema.MAP,
+            _('Swift container and object to use for storing deployment data '
+              'for the server resource. The parameter is a map value '
+              'with the keys "container" and "object", and the values '
+              'are the corresponding container and object names. The '
+              'software_config_transport parameter must be set to '
+              'POLL_TEMP_URL for swift to be used. If not specified, '
+              'and software_config_transport is set to POLL_TEMP_URL, a '
+              'container will be automatically created from the resource '
+              'name, and the object name will be a generated uuid.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            default={},
+            update_allowed=True,
+            schema={
+                CONTAINER: properties.Schema(
+                    properties.Schema.STRING,
+                    _('Name of the container.'),
+                    constraints=[
+                        constraints.Length(min=1)
+                    ]
+                ),
+                OBJECT: properties.Schema(
+                    properties.Schema.STRING,
+                    _('Name of the object.'),
+                    constraints=[
+                        constraints.Length(min=1)
+                    ]
+                )
+            }
+        )
     }
 
     ATTRIBUTES = (
