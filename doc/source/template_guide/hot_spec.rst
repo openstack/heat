@@ -294,7 +294,8 @@ for the ``heat_template_version`` key:
     The key with value ``2017-09-01`` or ``pike`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
     up until the Pike release. This version adds the ``make_url`` function for
-    assembling URLs. The complete list of supported functions is::
+    assembling URLs and the ``list_concat`` function for combining multiple
+    lists. The complete list of supported functions is::
 
       digest
       filter
