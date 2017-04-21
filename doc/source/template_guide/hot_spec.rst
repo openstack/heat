@@ -304,6 +304,7 @@ for the ``heat_template_version`` key:
       get_resource
       list_join
       make_url
+      list_concat
       map_merge
       map_replace
       repeat
@@ -1893,3 +1894,28 @@ For example
 ``server_url`` will be evaluated to a URL in the form::
 
     http://[<server IP>]:8080/hello?recipient=world#greeting
+
+list_concat
+-----------
+
+The ``list_concat`` function concatenates lists together.
+
+The syntax of the ``list_concat`` function is
+
+.. code-block:: yaml
+
+    list_concat:
+      - <list #1>
+      - <list #2>
+      - ...
+
+
+For example
+
+.. code-block:: yaml
+
+    list_concat: [['v1', 'v2'], ['v3', 'v4']]
+
+Will resolve to the list ``['v1', 'v2', 'v3', 'v4']``.
+
+Null values will be ignored.

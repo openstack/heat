@@ -590,6 +590,7 @@ class HOTemplate20170901(HOTemplate20170224):
 
         # functions added in 2017-09-01
         'make_url': hot_funcs.MakeURL,
+        'list_concat': hot_funcs.ListConcat,
 
         # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,

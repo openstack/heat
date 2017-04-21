@@ -1436,3 +1436,47 @@ class MakeURL(function.Function):
 
         return urlparse.urlunsplit((scheme, ''.join(netloc()),
                                     path, query, fragment))
+
+
+class ListConcat(function.Function):
+    """A function for extending lists.
+
+    Takes the form::
+
+        list_concat:
+          - [<value 1>, <value 2>]
+          - [<value 3>, <value 4>]
+
+    And resolves to::
+
+        [<value 1>, <value 2>, <value 3>, <value 4>]
+
+    """
+
+    def __init__(self, stack, fn_name, args):
+        super(ListConcat, self).__init__(stack, fn_name, args)
+        example = (_('"%s" : [ [ <value 1>, <value 2> ], '
+                     '[ <value 3>, <value 4> ] ]')
+                   % fn_name)
+        self.fmt_data = {'fn_name': fn_name, 'example': example}
+
+    def result(self):
+        args = function.resolve(self.args)
+
+        if not isinstance(args, collections.Sequence):
+            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                              'should be: %(example)s') % self.fmt_data)
+
+        def ensure_list(m):
+            if m is None:
+                return []
+            elif isinstance(m, collections.Sequence):
+                return m
+            else:
+                msg = _('Incorrect arguments: Items to concat must be lists.')
+                raise TypeError(msg)
+
+        ret_list = []
+        for m in args:
+            ret_list.extend(ensure_list(m))
+        return ret_list

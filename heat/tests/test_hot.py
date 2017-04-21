@@ -2060,6 +2060,26 @@ conditions:
         stack.validate()
         self.assertEqual({'one', 'three'}, set(stack.resources))
 
+    def test_list_concat(self):
+        snippet = {'list_concat': [['v1', 'v2'], ['v3', 'v4']]}
+        snippet_resolved = ['v1', 'v2', 'v3', 'v4']
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, resolved)
+
+    def test_list_concat_none(self):
+        snippet = {'list_concat': [['v1', 'v2'], ['v3', 'v4'], None]}
+        snippet_resolved = ['v1', 'v2', 'v3', 'v4']
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, resolved)
+
+    def test_list_concat_invalid(self):
+        snippet = {'list_concat': [{'k1': 'v2'}, ['v3', 'v4']]}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('Incorrect arguments', six.text_type(exc))
+
 
 class HotStackTest(common.HeatTestCase):
     """Test stack function when stack was created from HOT template."""
