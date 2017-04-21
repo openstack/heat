@@ -839,11 +839,10 @@ class Stack(collections.Mapping):
             raise exception.StackValidationFailed(
                 message=_("Duplicate names %s") % dup_names)
 
-        iter_rsc = (self.dependencies if validate_by_deps
-                    else six.itervalues(resources))
-
-        for name, res in six.iteritems(resources):
-            stk_defn.update_resource_data(self.defn, name, res.node_data())
+        if validate_by_deps:
+            iter_rsc = self.dependencies
+        else:
+            iter_rsc = six.itervalues(resources)
 
         unique_defns = set(res.t for res in six.itervalues(resources))
         unique_defn_names = set(defn.name for defn in unique_defns)

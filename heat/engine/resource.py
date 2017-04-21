@@ -871,17 +871,10 @@ class Resource(status.ResourceStatus):
         def get_attrs(attrs):
             for attr in attrs:
                 path = (attr,) if isinstance(attr, six.string_types) else attr
-                if self.action == self.INIT:
-                    if (type(self).get_attribute != Resource.get_attribute or
-                            type(self).FnGetAtt != Resource.FnGetAtt or
-                            path[0] in self.attributes):
-                        # TODO(ricolin) make better placeholder values here
-                        yield path, None
-                else:
-                    try:
-                        yield attr, self.get_attribute(*path)
-                    except exception.InvalidTemplateAttribute as ita:
-                        LOG.info('%s', ita)
+                try:
+                    yield attr, self.get_attribute(*path)
+                except exception.InvalidTemplateAttribute as ita:
+                    LOG.info('%s', ita)
 
         dep_attrs = set(self.stack.get_dep_attrs(
             six.itervalues(self.stack.resources),
