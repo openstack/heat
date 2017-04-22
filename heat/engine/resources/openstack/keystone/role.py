@@ -12,9 +12,11 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class KeystoneRole(resource.Resource):
@@ -22,7 +24,8 @@ class KeystoneRole(resource.Resource):
 
     Roles dictate the level of authorization the end user can obtain. Roles can
     be granted at either the domain or project level. Role can be assigned to
-    the individual user or at the group level. Role names are globally unique.
+    the individual user or at the group level. Role name is unique within the
+    owning domain.
     """
 
     support_status = support.SupportStatus(
@@ -34,9 +37,9 @@ class KeystoneRole(resource.Resource):
     entity = 'roles'
 
     PROPERTIES = (
-        NAME
+        NAME, DOMAIN,
     ) = (
-        'name'
+        'name', 'domain',
     )
 
     properties_schema = {
@@ -44,8 +47,26 @@ class KeystoneRole(resource.Resource):
             properties.Schema.STRING,
             _('Name of keystone role.'),
             update_allowed=True
+        ),
+        DOMAIN: properties.Schema(
+            properties.Schema.STRING,
+            _('Name or id of keystone domain.'),
+            default='default',
+            constraints=[constraints.CustomConstraint('keystone.domain')],
+            support_status=support.SupportStatus(version='10.0.0')
         )
     }
+
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                [self.DOMAIN],
+                client_plugin=self.client_plugin(),
+                finder='get_domain_id'
+            )
+        ]
 
     def client(self):
         return super(KeystoneRole, self).client().client
@@ -53,8 +74,9 @@ class KeystoneRole(resource.Resource):
     def handle_create(self):
         role_name = (self.properties[self.NAME] or
                      self.physical_resource_name())
-
-        role = self.client().roles.create(name=role_name)
+        domain = self.properties[self.DOMAIN]
+        role = self.client().roles.create(name=role_name,
+                                          domain=domain)
 
         self.resource_id_set(role.id)
 
