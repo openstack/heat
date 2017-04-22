@@ -1430,7 +1430,7 @@ class MakeURL(function.Function):
         path = urlparse.quote(args.get(self.PATH, ''))
 
         query_dict = args.get(self.QUERY, {})
-        query = urlparse.urlencode(query_dict)
+        query = urlparse.urlencode(query_dict).replace('%2F', '/')
 
         fragment = urlparse.quote(args.get(self.FRAGMENT, ''))
 
