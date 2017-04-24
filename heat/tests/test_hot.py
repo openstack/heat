@@ -2125,11 +2125,23 @@ conditions:
         resolved = self.resolve(snippet, tmpl)
         self.assertEqual(snippet_resolved, resolved)
 
-    def test_list_concat_invalid(self):
-        snippet = {'list_concat': [{'k1': 'v2'}, ['v3', 'v4']]}
+    def _test_list_concat_invalid(self, snippet):
         tmpl = template.Template(hot_pike_tpl_empty)
+        msg = 'Incorrect arguments'
         exc = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
-        self.assertIn('Incorrect arguments', six.text_type(exc))
+        self.assertIn(msg, six.text_type(exc))
+
+    def test_list_concat_with_dict_arg(self):
+        snippet = {'list_concat': [{'k1': 'v2'}, ['v3', 'v4']]}
+        self._test_list_concat_invalid(snippet)
+
+    def test_list_concat_with_string_arg(self):
+        snippet = {'list_concat': 'I am string'}
+        self._test_list_concat_invalid(snippet)
+
+    def test_list_concat_with_string_item(self):
+        snippet = {'list_concat': ['v1', 'v2']}
+        self._test_list_concat_invalid(snippet)
 
 
 class HotStackTest(common.HeatTestCase):
