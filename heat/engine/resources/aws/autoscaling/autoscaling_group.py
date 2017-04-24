@@ -223,19 +223,21 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
     def check_create_complete(self, task):
         """Update cooldown timestamp after create succeeds."""
         done = super(AutoScalingGroup, self).check_create_complete(task)
+        cooldown = self.properties[self.COOLDOWN]
         if done:
-            self._finished_scaling(
-                "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
-                             grouputils.get_size(self)))
+            self._finished_scaling(cooldown,
+                                   "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
+                                                grouputils.get_size(self)))
         return done
 
     def check_update_complete(self, cookie):
         """Update the cooldown timestamp after update succeeds."""
         done = super(AutoScalingGroup, self).check_update_complete(cookie)
+        cooldown = self.properties[self.COOLDOWN]
         if done:
-            self._finished_scaling(
-                "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
-                             grouputils.get_size(self)))
+            self._finished_scaling(cooldown,
+                                   "%s : %s" % (sc_util.CFN_EXACT_CAPACITY,
+                                                grouputils.get_size(self)))
         return done
 
     def _get_new_capacity(self, capacity,
@@ -284,7 +286,7 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
 
     def adjust(self, adjustment,
                adjustment_type=sc_util.CFN_CHANGE_IN_CAPACITY,
-               min_adjustment_step=None):
+               min_adjustment_step=None, cooldown=None):
         """Adjust the size of the scaling group if the cooldown permits."""
         if self.status != self.COMPLETE:
             LOG.info("%s NOT performing scaling adjustment, "
@@ -300,7 +302,10 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
                      "as there is no change in capacity.", self.name)
             raise resource.NoActionRequired
 
-        self._check_scaling_allowed()
+        if cooldown is None:
+            cooldown = self.properties[self.COOLDOWN]
+
+        self._check_scaling_allowed(cooldown)
 
         # send a notification before, on-error and on-success.
         notif = {
@@ -342,7 +347,8 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
                       "group %s.", self.name)
             raise
         finally:
-            self._finished_scaling("%s : %s" % (adjustment_type, adjustment),
+            self._finished_scaling(cooldown,
+                                   "%s : %s" % (adjustment_type, adjustment),
                                    size_changed=size_changed)
 
     def _tags(self):

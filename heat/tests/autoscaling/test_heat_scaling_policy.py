@@ -89,8 +89,9 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                '_check_scaling_allowed') as mock_isa:
             self.assertRaises(resource.NoActionRequired,
                               up_policy.handle_signal)
-            mock_isa.assert_called_once_with()
-            mock_fin_scaling.assert_called_once_with('change_in_capacity : 1',
+            mock_isa.assert_called_once_with(60)
+            mock_fin_scaling.assert_called_once_with(60,
+                                                     'change_in_capacity : 1',
                                                      size_changed=False)
 
     def test_scaling_policy_adjust_size_changed(self):
@@ -104,8 +105,9 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         with mock.patch.object(up_policy,
                                '_check_scaling_allowed') as mock_isa:
             self.assertIsNone(up_policy.handle_signal())
-            mock_isa.assert_called_once_with()
-            mock_fin_scaling.assert_called_once_with('change_in_capacity : 1',
+            mock_isa.assert_called_once_with(60)
+            mock_fin_scaling.assert_called_once_with(60,
+                                                     'change_in_capacity : 1',
                                                      size_changed=True)
 
     def test_scaling_policy_cooldown_toosoon(self):
@@ -122,7 +124,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                     side_effect=resource.NoActionRequired) as mock_cip:
                 self.assertRaises(resource.NoActionRequired,
                                   pol.handle_signal, details=test)
-                mock_cip.assert_called_once_with()
+                mock_cip.assert_called_once_with(60)
             self.assertEqual([], dont_call.call_args_list)
 
     def test_policy_metadata_reset(self):
@@ -146,7 +148,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         group.name = 'fluffy'
         with mock.patch.object(pol, '_check_scaling_allowed') as mock_isa:
             pol.handle_signal(details=test)
-            mock_isa.assert_called_once_with()
+            mock_isa.assert_called_once_with(60)
         group.adjust.assert_called_once_with(1, 'change_in_capacity', None)
 
     def test_scaling_policy_refid(self):
@@ -183,12 +185,14 @@ class TestCooldownMixin(common.HeatTestCase):
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
+        properties = t['resources']['my-policy']['properties']
         now = timeutils.utcnow()
         previous_meta = {'cooldown': {
             now.isoformat(): 'change_in_capacity : 1'}}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         ex = self.assertRaises(resource.NoActionRequired,
-                               pol._check_scaling_allowed)
+                               pol._check_scaling_allowed,
+                               properties['cooldown'])
         self.assertIn('due to cooldown', six.text_type(ex))
 
     def test_cooldown_is_in_progress_scaling_unfinished(self):
@@ -196,10 +200,12 @@ class TestCooldownMixin(common.HeatTestCase):
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
+        properties = t['resources']['my-policy']['properties']
         previous_meta = {'scaling_in_progress': True}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
         ex = self.assertRaises(resource.NoActionRequired,
-                               pol._check_scaling_allowed)
+                               pol._check_scaling_allowed,
+                               properties['cooldown'])
         self.assertIn('due to scaling activity', six.text_type(ex))
 
     def test_cooldown_not_in_progress(self):
@@ -215,15 +221,11 @@ class TestCooldownMixin(common.HeatTestCase):
             'scaling_in_progress': False
         }
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed())
+        self.assertIsNone(pol._check_scaling_allowed(60))
 
     def test_scaling_policy_cooldown_zero(self):
         t = template_format.parse(as_template)
 
-        # Create the scaling policy (with cooldown=0) and scale up one
-        properties = t['resources']['my-policy']['properties']
-        properties['cooldown'] = '0'
-
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
@@ -231,16 +233,11 @@ class TestCooldownMixin(common.HeatTestCase):
         previous_meta = {'cooldown': {
             now.isoformat(): 'change_in_capacity : 1'}}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed())
+        self.assertIsNone(pol._check_scaling_allowed(0))
 
     def test_scaling_policy_cooldown_none(self):
         t = template_format.parse(as_template)
 
-        # Create the scaling policy no cooldown property, should behave the
-        # same as when cooldown==0
-        properties = t['resources']['my-policy']['properties']
-        del properties['cooldown']
-
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
 
@@ -248,17 +245,18 @@ class TestCooldownMixin(common.HeatTestCase):
         previous_meta = {'cooldown': {
             now.isoformat(): 'change_in_capacity : 1'}}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed())
+        self.assertIsNone(pol._check_scaling_allowed(None))
 
     def test_no_cooldown_no_scaling_in_progress(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
-
         # no cooldown entry in the metadata
-        previous_meta = {'scaling_in_progress': False}
+        awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
+        previous_meta = {'scaling_in_progress': False,
+                         awhile_ago.isoformat(): 'change_in_capacity : 1'}
         self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed())
+        self.assertIsNone(pol._check_scaling_allowed(60))
 
     def test_metadata_is_written(self):
         t = template_format.parse(as_template)
@@ -269,9 +267,9 @@ class TestCooldownMixin(common.HeatTestCase):
         reason = 'cool as'
         meta_set = self.patchobject(pol, 'metadata_set')
         self.patchobject(timeutils, 'utcnow', return_value=nowish)
-        pol._finished_scaling(reason, size_changed=True)
+        pol._finished_scaling(0, reason, size_changed=True)
         meta_set.assert_called_once_with(
-            {'cooldown': {nowish.isoformat(): reason},
+            {'cooldown_end': {nowish.isoformat(): reason},
              'scaling_in_progress': False})
 
 

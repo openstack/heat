@@ -172,7 +172,7 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
                                        ) % {'alarm': self.name,
                                             'group': asgn_id})
 
-        self._check_scaling_allowed()
+        self._check_scaling_allowed(self.properties[self.COOLDOWN])
 
         LOG.info('%(name)s alarm, adjusting group %(group)s with id '
                  '%(asgn_id)s by %(filter)s',
@@ -196,9 +196,10 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
                       {'name': self.name, 'group': group.name})
             raise
         finally:
-            self._finished_scaling("%s : %s" % (
-                self.properties[self.ADJUSTMENT_TYPE],
-                self.properties[self.SCALING_ADJUSTMENT]),
+            self._finished_scaling(
+                self.properties[self.COOLDOWN],
+                "%s : %s" % (self.properties[self.ADJUSTMENT_TYPE],
+                             self.properties[self.SCALING_ADJUSTMENT]),
                 size_changed=size_changed)
 
     def _resolve_attribute(self, name):
