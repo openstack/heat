@@ -1,0 +1,5 @@
+---
+features:
+  - The list_concat_unique function was added, which behaves identically
+    to the function ``list_concat`` to concat several lists using
+    python's extend function and make sure without repeating items.

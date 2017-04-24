@@ -2125,6 +2125,34 @@ conditions:
         resolved = self.resolve(snippet, tmpl)
         self.assertEqual(snippet_resolved, resolved)
 
+    def test_list_concat_repeat_dict_item(self):
+        snippet = {'list_concat': [[{'v1': 'v2'}], [{'v1': 'v2'}]]}
+        snippet_resolved = [{'v1': 'v2'}, {'v1': 'v2'}]
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, resolved)
+
+    def test_list_concat_repeat_item(self):
+        snippet = {'list_concat': [['v1', 'v2'], ['v2', 'v3']]}
+        snippet_resolved = ['v1', 'v2', 'v2', 'v3']
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, resolved)
+
+    def test_list_concat_unique_dict_item(self):
+        snippet = {'list_concat_unique': [[{'v1': 'v2'}], [{'v1': 'v2'}]]}
+        snippet_resolved = [{'v1': 'v2'}]
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, resolved)
+
+    def test_list_concat_unique(self):
+        snippet = {'list_concat_unique': [['v1', 'v2'], ['v2', 'v3']]}
+        snippet_resolved = ['v1', 'v2', 'v3']
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, resolved)
+
     def _test_list_concat_invalid(self, snippet):
         tmpl = template.Template(hot_pike_tpl_empty)
         msg = 'Incorrect arguments'
