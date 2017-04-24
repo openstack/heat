@@ -1,0 +1,5 @@
+---
+other:
+  - Now heat keystone user name charaters limit increased from 64 to 255.
+    Any extra charaters will lost when truncate the name to the last 255
+    charaters.

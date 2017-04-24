@@ -61,7 +61,7 @@ def call_until_true(duration, sleep_for, func, *args, **kwargs):
 
 
 def rand_name(name=''):
-    randbits = str(random.randint(1, 0x7fffffff))
+    randbits = six.text_type(random.randint(1, 0x7fffffff))
     if name:
         return name + '-' + randbits
     else:

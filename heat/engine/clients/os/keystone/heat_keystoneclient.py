@@ -238,11 +238,11 @@ class KsClientWrapper(object):
             pass
 
     def _get_username(self, username):
-        if(len(username) > 64):
-            LOG.warning("Truncating the username %s to the last 64 "
+        if(len(username) > 255):
+            LOG.warning("Truncating the username %s to the last 255 "
                         "characters.", username)
-        # get the last 64 characters of the username
-        return username[-64:]
+        # get the last 255 characters of the username
+        return username[-255:]
 
     def create_stack_user(self, username, password=''):
         """Create a user defined as part of a stack.

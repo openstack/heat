@@ -153,22 +153,22 @@ class KeystoneClientTest(common.HeatTestCase):
         return mock_ks_auth, mock_auth_ref
 
     def test_username_length(self):
-        """Test that user names >64 characters are properly truncated."""
+        """Test that user names >255 characters are properly truncated."""
 
         self._stubs_auth()
 
         ctx = utils.dummy_context()
         ctx.trust_id = None
 
-        # a >64 character user name and the expected version
-        long_user_name = 'U' * 64 + 'S'
-        good_user_name = long_user_name[-64:]
+        # a >255 character user name and the expected version
+        long_user_name = 'U' * 255 + 'S'
+        good_user_name = 'U' * 254 + 'S'
         # mock keystone client user functions
         self.mock_ks_v3_client.users = self.m.CreateMockAnything()
         mock_user = self.m.CreateMockAnything()
         mock_user.id = 'auser123'
         # when keystone is called, the name should have been truncated
-        # to the last 64 characters of the long name
+        # to the last 255 characters of the long name
         self.mock_ks_v3_client.users.create(name=good_user_name,
                                             password='password',
                                             default_project=ctx.tenant_id
