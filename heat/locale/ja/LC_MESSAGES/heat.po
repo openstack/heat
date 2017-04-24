@@ -7,20 +7,21 @@
 # Satoshi Kodama <s.skk.skk+transifex@gmail.com>, 2013
 # Tomoyuki KATO <tomo@dream.daynight.jp>, 2013
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.1.dev19\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-04-19 20:38+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-30 05:33+0000\n"
-"Last-Translator: 笹原 昌美 <ebb0de1@jp.ibm.com>\n"
+"PO-Revision-Date: 2017-04-24 04:28+0000\n"
+"Last-Translator: Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: Japanese\n"
 
 #, python-format
@@ -287,6 +288,14 @@ msgstr "%s は整数ではありません。"
 #, python-format
 msgid "%s must be provided"
 msgstr "%s を指定する必要があります"
+
+#, python-format
+msgid "%s should be a positive integer"
+msgstr "%sは正の整数である必要があります。"
+
+#, python-format
+msgid "%s should be an integer"
+msgstr "%sは整数である必要があります。"
 
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
@@ -802,9 +811,6 @@ msgstr ""
 "このサーバーに追加される NIC の番号付きリスト。および、接続されているネット"
 "ワーク、固定 IP、ポートなどに関する情報。"
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "crypto ユーティリティーで不明なエラーが発生しました。"
-
 msgid "An unknown exception occurred."
 msgstr "不明な例外が発生しました。"
 
@@ -987,10 +993,6 @@ msgstr "インスタンスに接続するためのブロックデバイスマッ
 msgid "Block device mappings v2 for this server."
 msgstr "このサーバーのブロックデバイスマッピング v2。"
 
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "ブロック容量 %(given)d は大きすぎます。最大 = %(maximum)d"
-
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
 "to create share snapshots."
@@ -1128,6 +1130,10 @@ msgstr "設定実行から取り込まれた stdout。"
 msgid "Circular Dependency Found: %(cycle)s"
 msgstr "循環依存関係が見つかりました: %(cycle)s"
 
+#, python-format
+msgid "Circular definition for condition \"%s\""
+msgstr "条件\"%s\"の定義に循環依存があります。"
+
 msgid "Client entity to poll."
 msgstr "ポーリング対象のクライアントのエンティティー。"
 
@@ -1194,21 +1200,15 @@ msgstr ""
 msgid "Context for this stack."
 msgstr "このスタックのコンテキスト。"
 
+msgid "Continue ? [y/N]"
+msgstr "続けますか？[y/N]"
+
 msgid "Control how the disk is partitioned when the server is created."
 msgstr ""
 "サーバー作成時にディスクをどのようにパーティション化するかを制御します。"
 
 msgid "Controls DPD protocol mode."
 msgstr "DPD プロトコルモードを制御します。"
-
-msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"スタックのイベントが max_events_per_stack を超過したときに必ず除去するイベン"
-"トの数を制御します。この値を小さくすると、保持するイベント数は増えますが、"
-"パージ頻度が増加します。"
 
 msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
@@ -1374,9 +1374,6 @@ msgstr "デフォルトはコンマ区切り一覧の文字列である必要が
 
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr "Hadoop ノードのブートに使用されるイメージのデフォルト名または UUID。"
-
-msgid "Default project of keystone user."
-msgstr "keystone ユーザーのデフォルトプロジェクト。"
 
 msgid "Default region name used to get services endpoints."
 msgstr "サービスエンドポイントの取得に使用するデフォルトの名"
@@ -1752,11 +1749,6 @@ msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 "volume_id または snapshot_id をデバイスマッピング %s に指定する必要があります"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr ""
-"volume_id、snapshot_id、image_id、または swap_size のいずれかを指定する必要が"
-"あります。"
-
 msgid "Email address of keystone user."
 msgstr "keystone ユーザーの E メールアドレス。"
 
@@ -1855,10 +1847,6 @@ msgstr "シェア \"{0}\" の削除中にエラーが発生しました。"
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "テンプレートの解析エラー: %s"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "sahara からのイメージ一覧の取得エラー: %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -1971,6 +1959,10 @@ msgstr "テンプレートの取得に失敗しました"
 #, python-format
 msgid "Failed to retrieve template data: %s"
 msgstr "テンプレートデータの取得に失敗しました: %s"
+
+#, python-format
+msgid "Failed to retrieve template from %s"
+msgstr "%sからテンプレートを取得するのに失敗しました。"
 
 #, python-format
 msgid "Failed to retrieve template: %s"
@@ -2718,6 +2710,10 @@ msgid "Invalid codes in ignore_errors : %s"
 msgstr "ignore_errors に含まれる無効なコード : %s"
 
 #, python-format
+msgid "Invalid condition \"%s\""
+msgstr "\"%s\"は無効な条件です。"
+
+#, python-format
 msgid "Invalid content type %(content_type)s"
 msgstr "コンテンツタイプ %(content_type)s が無効です"
 
@@ -2859,6 +2855,9 @@ msgstr "このファイアウォールルールの IP バージョン。"
 msgid "It defines an executor to which task action should be sent to."
 msgstr "タスクのアクションが送信される先の実行プログラムを定義します。"
 
+msgid "It is advised to shutdown all Heat engines beforehand."
+msgstr "事前にすべてのHeatエンジンを停止することを推奨します。"
+
 #, python-format
 msgid "Items to join must be string, map or list not %s"
 msgstr ""
@@ -2989,10 +2988,6 @@ msgstr "ネットワークゲートウェイの外部サイドの L2 セグメ�
 
 msgid "LBaaS provider to implement this load balancer instance."
 msgstr "このロードバランサーのインスタンスを実装する LBaaS プロバイダー。"
-
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "長さ %(given)d は長すぎます。最大 = %(maximum)d"
 
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr "暗号化後の OS_PASSWORD の長さが heat 制限 (255 文字) を超えています"
@@ -3180,9 +3175,6 @@ msgstr "ポートの MAC アドレス。"
 msgid "MAC address to allow through this port."
 msgstr "このポートを経由することが許可されている MAC アドレス。"
 
-msgid "MAC address to give to this port."
-msgstr "このポートに与える MAC アドレス。"
-
 msgid "Make the baymodel public."
 msgstr "ベイモデルをパブリックに設定します。"
 
@@ -3220,13 +3212,8 @@ msgstr "最大 %s は 1 時間です。"
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "ネストスタック使用時に許可される最大の深さ。"
 
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"スタックあたりで使用可能な最大イベント数。この値に達すると、イベントは古い順"
-"に削除されます。0 に指定すると、スタックあたりのイベント数は無制限になりま"
-"す。"
+msgid "Maximum length of a server name to be used in nova."
+msgstr "novaで使用できるサーバ名の最大長。"
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3465,9 +3452,6 @@ msgstr "実装中に入力を置き換えるために使用するキーの名前
 
 msgid "Name of keypair to inject into the server."
 msgstr "サーバー内に注入するキーペアの名前。"
-
-msgid "Name of keystone domain."
-msgstr "keystone のドメインの名前。"
 
 msgid "Name of keystone endpoint."
 msgstr "keystone のエンドポイントの名前。"
@@ -3811,6 +3795,9 @@ msgid ""
 msgstr ""
 "%(fn_name)s パスの \"files\" セクションに内容がありません: %(file_key)s"
 
+msgid "No description given"
+msgstr "説明がありません。"
+
 #, python-format
 msgid "No event %s found"
 msgstr "イベント \"%s\" は見つかりませんでした。"
@@ -3907,6 +3894,13 @@ msgstr "DPD 遅延の秒数。"
 
 msgid "Number of seconds for the DPD timeout."
 msgstr "DPD タイムアウトの秒数。"
+
+msgid ""
+"Number of stacks to delete at a time (per transaction). Note that a single "
+"stack may have many db rows (events, etc.) associated with it."
+msgstr ""
+"トランザクション毎に削除するスタックの数です。1つのスタックに複数のdb行(イベ"
+"ント等)が関連していることもあります。"
 
 msgid ""
 "Number of times to check whether an interface has been attached or detached."
@@ -4795,6 +4789,9 @@ msgstr "このファイアウォールルールの共有状況。"
 msgid "Shared status of this firewall."
 msgstr "このファイアウォールの共有状況。"
 
+msgid "Show available commands."
+msgstr "利用可能なコマンドを表示する。"
+
 msgid "Shrinking volume"
 msgstr "ボリュームの縮小中"
 
@@ -4916,6 +4913,9 @@ msgstr "スタック ID"
 msgid "Stack Name"
 msgstr "スタック名"
 
+msgid "Stack id"
+msgstr "スタック ID"
+
 msgid "Stack name may not contain \"/\""
 msgstr "スタック名には \"/\" を使用できません"
 
@@ -4924,6 +4924,10 @@ msgstr "スタックリソース ID"
 
 msgid "Stack unknown status"
 msgstr "スタックの不明状況"
+
+#, python-format
+msgid "Stack with id %s can not be found."
+msgstr "スタック ID %sが見つかりません。"
 
 #, python-format
 msgid "Stack with id %s not found"
@@ -5707,6 +5711,9 @@ msgstr ""
 msgid "The directory to search for environment files."
 msgstr "環境ファイルを検索するディレクトリー。"
 
+msgid "The directory to search for template files."
+msgstr "テンプレートファイルを検索するディレクトリ先。"
+
 msgid "The ebs volume to attach to the instance."
 msgstr "インスタンスに接続する ebs ボリューム。"
 
@@ -6360,6 +6367,13 @@ msgstr "証明書のリクエストのソース。"
 #, python-format
 msgid "The specified reference \"%(resource)s\" (in %(key)s) is incorrect."
 msgstr "指定された参照 \"%(resource)s\" (%(key)s 内) は正しくありません。"
+
+msgid ""
+"The stack or some of its nested stacks are in progress. Note, that all the "
+"stacks should be in COMPLETE state in order to be migrated."
+msgstr ""
+"スタックまたはスタックの中でのネスト化されたスタックが処理中です。移行するた"
+"めにはすべてのスタックの状態がCOMPLETEである必要があります。"
 
 msgid "The start and end addresses for the allocation pools."
 msgstr "割り当てプールの開始アドレスと終了アドレス。"
@@ -7343,12 +7357,6 @@ msgstr ""
 "テナントあたりの最大スタック数 %d に達しました。スタックをいくつか削除してく"
 "ださい。"
 
-msgid "age should be a positive integer"
-msgstr "日数は正整数でなければなりません"
-
-msgid "age should be an integer"
-msgstr "日数は整数でなければなりません"
-
 msgid "client_plugin and finder should be specified for Resolve rule"
 msgstr ""
 "client_plugin と finder を Resolve ルールのために指定する必要があります"
@@ -7356,6 +7364,9 @@ msgstr ""
 #, python-format
 msgid "could not find user %s"
 msgstr "ユーザー %s が見つかりませんでした"
+
+msgid "decrypt"
+msgstr "復号化"
 
 msgid "deployment_id must be specified"
 msgstr "deployment_id の指定は必須です"
@@ -7370,6 +7381,9 @@ msgstr ""
 #, python-format
 msgid "deployments of server %s"
 msgstr "サーバー %s の実装環境"
+
+msgid "encrypt"
+msgstr "暗号化"
 
 #, python-format
 msgid "environment has wrong section \"%s\""
@@ -7457,6 +7471,9 @@ msgstr "segmentation_id はフラットネットワーク形式には使用で�
 
 msgid "server_id must be specified"
 msgstr "server_id の指定は必須です"
+
+msgid "step/offset must be numeric"
+msgstr "ステップ/オフセットには数値を指定してください。"
 
 #, python-format
 msgid ""

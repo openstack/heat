@@ -8,18 +8,18 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.1.dev19\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-04-19 20:38+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-31 03:47+0000\n"
-"Last-Translator: Ian Y. Choi <ianyrchoi@gmail.com>\n"
+"PO-Revision-Date: 2016-04-12 05:30+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: ko-KR\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: Korean (South Korea)\n"
 
 #, python-format
@@ -779,9 +779,6 @@ msgstr ""
 "이 서버에 추가할 nics의 정렬된 목록으로 연결된 네트워크, 고정 ips, 포트 등에 "
 "대한 정보가 포함되어 있습니다."
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "crypto utils에서 알 수 없는 오류가 발생했습니다."
-
 msgid "An unknown exception occurred."
 msgstr "알 수 없는 예외가 발생했습니다. "
 
@@ -958,10 +955,6 @@ msgstr "인스턴스에 접속할 블록 디바이스 맵핑입니다."
 
 msgid "Block device mappings v2 for this server."
 msgstr "이 서버에 대한 블록 디바이스 맵핑 v2입니다."
-
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "%(given)d의 블록 크기가 너무 큽니다. 최대 = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1172,15 +1165,6 @@ msgid "Controls DPD protocol mode."
 msgstr "DPD 프로토콜 모드를 제어합니다."
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"스택의 이벤트가 max_events_per_stack을 초과할 때마다 이벤트가 제거되는 수를 "
-"제어합니다. 이 값을 낮게 설정하여 이벤트가 덜 자주 제거되도록 하여 더 많이 유"
-"지되도록 하십시오."
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1340,9 +1324,6 @@ msgstr "기본값은 쉼표로 구분된 목록 문자열이어야 함: %s"
 
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr "부트 Hadoop 노드에 사용된 이미지의 기본 이름 또는 UUID입니다."
-
-msgid "Default project of keystone user."
-msgstr "Keystone 사용자의 기본 프로젝트입니다."
 
 msgid "Default region name used to get services endpoints."
 msgstr "서비스 엔드포인트를 가져오는 데 사용하는 기본 리젼 이름입니다."
@@ -1707,9 +1688,6 @@ msgstr "역할 %s에 대해 프로젝트나 도메인을 지정해야 함"
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr "디바이스 맵핑 %s에 대해 volume_id 또는 snapshot_id가 지정되어야 함"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr "volume_id, snapshot_id, image_id 또는 swap_size가 지정되어야 합니다."
-
 msgid "Email address of keystone user."
 msgstr "keystone 사용자의 이메일 주소입니다."
 
@@ -1805,10 +1783,6 @@ msgstr "공유 \"{0}\" 삭제 중에 오류가 발생했습니다."
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "템플리트 구문 분석 중 오류 발생: %s"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "sahara에서 이미지 목록 검색 중 오류: %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -2902,10 +2876,6 @@ msgstr "네트워크 게이트웨이의 외부 측에 있는 L2 분석 방식 �
 msgid "LBaaS provider to implement this load balancer instance."
 msgstr "이 로드 밸런서 인스턴스를 구현하는 LBaaS 프로바이더입니다."
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "%(given)d의 길이가 너무 큽니다. 최대 = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr "암호화 후 OS_PASSWORD 길이가 히트 한계(255자)를 초과함"
 
@@ -3086,9 +3056,6 @@ msgstr "포트의 MAC 주소입니다."
 msgid "MAC address to allow through this port."
 msgstr "이 포트를 통해 허용할 MAC 주소입니다."
 
-msgid "MAC address to give to this port."
-msgstr "이 포트에 제공할 MAC 주소입니다."
-
 msgid "Make the baymodel public."
 msgstr "Baymodel을 공개로 만드십시오."
 
@@ -3125,13 +3092,6 @@ msgstr "최대 %s은(는) 1시간입니다."
 
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "중첩 스택 사용 시 허용되는 최대 깊이입니다."
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"스택당 사용 가능한 최대 이벤트입니다. 최대 이벤트에 도달하면 이전 이벤트는 삭"
-"제됩니다. 스택당 무제한 이벤트는 0으로 설정하십시오."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3364,9 +3324,6 @@ msgstr "배포 중에 입력을 대체하는 데 사용할 키 이름입니다."
 
 msgid "Name of keypair to inject into the server."
 msgstr "서버에 삽입할 키 쌍의 이름입니다."
-
-msgid "Name of keystone domain."
-msgstr "keystone 도메인의 이름입니다."
 
 msgid "Name of keystone endpoint."
 msgstr "keystone 엔드포인트의 이름입니다."
@@ -7149,12 +7106,6 @@ msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr "테넌트당 최대 스택 수(%d)에 도달했습니다. 일부 스택을 삭제하십시오."
-
-msgid "age should be a positive integer"
-msgstr "age는 양의 정수여야 함"
-
-msgid "age should be an integer"
-msgstr "age는 정수여야 함"
 
 msgid "client_plugin and finder should be specified for Resolve rule"
 msgstr "분석 규칙에 대해 client_plugin 및 찾기 프로그램을 지정해야 함"

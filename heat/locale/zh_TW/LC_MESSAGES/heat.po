@@ -6,18 +6,18 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.1.dev19\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-04-19 20:38+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-31 03:39+0000\n"
-"Last-Translator: Jennifer <cristxu@tw.ibm.com>\n"
+"PO-Revision-Date: 2016-04-12 05:32+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: zh-TW\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: Chinese (Taiwan)\n"
 
 #, python-format
@@ -746,9 +746,6 @@ msgid ""
 msgstr ""
 "要新增至此伺服器的有序 NIC 清單，含有所連接網路、固定 IP 及埠等的相關資訊。"
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "加密公用程式發生不明錯誤。"
-
 msgid "An unknown exception occurred."
 msgstr "發生一個未知例外"
 
@@ -921,10 +918,6 @@ msgstr "要連接至實例的區塊裝置對映。"
 
 msgid "Block device mappings v2 for this server."
 msgstr "此伺服器的區塊裝置對映第 2 版。"
-
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "區塊大小 %(given)d 太大，上限 = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1124,14 +1117,6 @@ msgid "Controls DPD protocol mode."
 msgstr "控制 DPD 通訊協定模式。"
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"控制每當堆疊的事件數超出 max_events_per_stack 時，將刪改多少事件。設定的刪改"
-"事件數越小，保留的事件就越多，但代價是清除頻率越高。"
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1283,9 +1268,6 @@ msgstr "預設值必須是以逗點定界的清單字串：%s"
 
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr "用來啟動 Hadoop 節點之映像檔的預設名稱或 UUID。"
-
-msgid "Default project of keystone user."
-msgstr "Keystone 使用者的預設專案。"
 
 msgid "Default region name used to get services endpoints."
 msgstr "用來取得服務端點的預設區域名稱。"
@@ -1638,9 +1620,6 @@ msgstr "必須為角色 %s 指定專案或網域"
 msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr "必須給裝置對映 %s 指定 volume_id 或 snapshot_id"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr "必須指定 volume_id、snapshot_id、image_id 或 swap_size。"
-
 msgid "Email address of keystone user."
 msgstr "Keystone 使用者的電子郵件位址。"
 
@@ -1733,10 +1712,6 @@ msgstr "刪除共用項目 \"{0}\" 時發生錯誤。"
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "剖析範本 %s 時發生錯誤"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "從 sahara %s 中擷取映像檔清單時發生錯誤"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -2794,10 +2769,6 @@ msgstr "網路閘道外部端的 L2 分段策略。"
 msgid "LBaaS provider to implement this load balancer instance."
 msgstr "用來實作此負載平衡器實例的 LBaaS 提供者。"
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "長度 %(given)d 太長，上限 = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr "加密之後的 OS_PASSWORD 長度超出 Heat 限制（255 個字元）"
 
@@ -2971,9 +2942,6 @@ msgstr "埠的 MAC 位址。"
 msgid "MAC address to allow through this port."
 msgstr "容許通過此埠的 MAC 位址。"
 
-msgid "MAC address to give to this port."
-msgstr "提供給此埠的 MAC 位址。"
-
 msgid "Make the baymodel public."
 msgstr "公開機架型號。"
 
@@ -3010,13 +2978,6 @@ msgstr "上限 %s 為 1 小時。"
 
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "使用巢狀堆疊時容許的深度上限。"
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"每個堆疊的可用事件數上限。達到此上限後將刪除較早的事件。設為 0 時，不限制每個"
-"堆疊的事件數。"
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3242,9 +3203,6 @@ msgstr "部署期間要用於替代輸入的索引鍵名稱。"
 
 msgid "Name of keypair to inject into the server."
 msgstr "要注入伺服器的金鑰組名稱。"
-
-msgid "Name of keystone domain."
-msgstr "Keystone 網域的名稱。"
 
 msgid "Name of keystone endpoint."
 msgstr "Keystone 端點的名稱。"
@@ -6879,12 +6837,6 @@ msgid ""
 "You have reached the maximum stacks per tenant, %d. Please delete some "
 "stacks."
 msgstr "已達到每個承租人的堆疊數目上限 (%d)。請刪除一些堆疊。"
-
-msgid "age should be a positive integer"
-msgstr "經歷時間應該是正整數"
-
-msgid "age should be an integer"
-msgstr "經歷時間應該是整數"
 
 msgid "client_plugin and finder should be specified for Resolve rule"
 msgstr "應該為「解析」規則指定 client_plugin 和搜尋器"

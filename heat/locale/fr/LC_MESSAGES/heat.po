@@ -8,18 +8,18 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 7.0.0.0rc2.dev178\n"
+"Project-Id-Version: heat 8.0.1.dev19\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2016-10-27 13:47+0000\n"
+"POT-Creation-Date: 2017-04-19 20:38+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-03-29 08:13+0000\n"
-"Last-Translator: Angelique Pillal <pillal@fr.ibm.com>\n"
+"PO-Revision-Date: 2016-04-12 05:27+0000\n"
+"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: fr\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.7.3\n"
+"X-Generator: Zanata 3.9.6\n"
 "Language-Team: French\n"
 
 #, python-format
@@ -844,9 +844,6 @@ msgstr ""
 "informations sur les réseaux connectés, les adresses IP fixes, les ports, "
 "etc."
 
-msgid "An unknown error occurred in crypto utils."
-msgstr "Une erreur inconnue s'est produite avec les outils crypto."
-
 msgid "An unknown exception occurred."
 msgstr "Une exception inconnue s'est produite."
 
@@ -1037,10 +1034,6 @@ msgstr "Mappages d'unité par bloc à connecter à l'instance."
 
 msgid "Block device mappings v2 for this server."
 msgstr "Mappages d'unités par bloc v2 pour ce serveur."
-
-#, python-format
-msgid "Block size of %(given)d is too big, max = %(maximum)d"
-msgstr "La taille du block %(given)d est trop grande. max = %(maximum)d"
 
 msgid ""
 "Boolean extra spec that used for filtering of backends by their capability "
@@ -1261,16 +1254,6 @@ msgid "Controls DPD protocol mode."
 msgstr "Contrôle le mode de protocole de détection d'homologue inactif (DPD)."
 
 msgid ""
-"Controls how many events will be pruned whenever a stack's events exceed "
-"max_events_per_stack. Set this lower to keep more events at the expense of "
-"more frequent purges."
-msgstr ""
-"Contrôle le nombre d'événements élagués chaque fois que les événements d'une "
-"pile dépassent max_events_per_stack. Définissez ce paramètre avec une valeur "
-"inférieure pour conserver plus d'événements au prix de purges plus "
-"fréquentes."
-
-msgid ""
 "Convenience attribute to fetch the first assigned network address, or an "
 "empty string if nothing has been assigned at this time. Result may not be "
 "predictable if the server has addresses from more than one network."
@@ -1442,9 +1425,6 @@ msgstr ""
 msgid "Default name or UUID of the image used to boot Hadoop nodes."
 msgstr ""
 "Nom par défaut ou UUID de l'image utilisée pour amorcer les noeuds Hadoop."
-
-msgid "Default project of keystone user."
-msgstr "Projet par défaut de l'utilisateur Keystone."
 
 msgid "Default region name used to get services endpoints."
 msgstr ""
@@ -1831,9 +1811,6 @@ msgid "Either volume_id or snapshot_id must be specified for device mapping %s"
 msgstr ""
 "volume_id ou snapshot_id doit être spécifié pour le mappage d'unités %s"
 
-msgid "Either volume_id, snapshot_id, image_id or swap_size must be specified."
-msgstr "volume_id, snapshot_id, image_id ou swap_size doit être indiqué."
-
 msgid "Email address of keystone user."
 msgstr "Adresse e-mail de l'utilisateur Keystone."
 
@@ -1932,10 +1909,6 @@ msgstr "Erreur lors de la suppression du partage \"{0}\"."
 #, python-format
 msgid "Error parsing template: %s"
 msgstr "Erreur lors de l'analyse syntaxique du modèle : %s"
-
-#, python-format
-msgid "Error retrieving image list from sahara: %s"
-msgstr "Erreur lors de l'extraction de la liste d'images depuis sahara : %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -3108,10 +3081,6 @@ msgstr ""
 "Fournisseur LBaaS pour l'implémentation de cette instance de l'équilibreur "
 "de charge."
 
-#, python-format
-msgid "Length of %(given)d is too long, max = %(maximum)d"
-msgstr "%(given)d est trop longue. max = %(maximum)d"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr ""
 "La longueur d'OS_PASSWORD après le chiffrement dépasse la limite Heat (255 "
@@ -3314,9 +3283,6 @@ msgstr "Adresse MAC du port."
 msgid "MAC address to allow through this port."
 msgstr "Adresse MAC à autoriser via ce port."
 
-msgid "MAC address to give to this port."
-msgstr "Adresse MAC à donner à ce port."
-
 msgid "Make the baymodel public."
 msgstr "Rendre le modèle de baie public."
 
@@ -3359,14 +3325,6 @@ msgstr "La valeur maximale pour %s est 1 heure."
 
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "Profondeur maximale admise lors de l'utilisation de piles imbriquées."
-
-msgid ""
-"Maximum events that will be available per stack. Older events will be "
-"deleted when this is reached. Set to 0 for unlimited events per stack."
-msgstr ""
-"Nombre maximal d'événements qui seront disponibles par pile. Les événements "
-"plus anciens seront supprimés lorsque cette valeur sera atteinte. Définir "
-"sur 0 pour un nombre illimité d'événements par pile."
 
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
@@ -3617,9 +3575,6 @@ msgstr ""
 
 msgid "Name of keypair to inject into the server."
 msgstr "Nom de la paire de clés à injecter dans le serveur."
-
-msgid "Name of keystone domain."
-msgstr "Nom du domaine Keystone."
 
 msgid "Name of keystone endpoint."
 msgstr "Nom du noeud final Keystone."
@@ -7669,12 +7624,6 @@ msgid ""
 msgstr ""
 "Vous avez atteint le nombre maximal de piles par locataire : %d. Supprimez "
 "quelques piles."
-
-msgid "age should be a positive integer"
-msgstr "age doit etre un entier positif"
-
-msgid "age should be an integer"
-msgstr "age doit etre un entier"
 
 msgid "client_plugin and finder should be specified for Resolve rule"
 msgstr ""
