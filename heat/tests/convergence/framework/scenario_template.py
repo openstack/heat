@@ -16,17 +16,26 @@ class GetRes(object):
     def __init__(self, target_name):
         self.target_name = target_name
 
+    def __repr__(self):
+        return 'GetRes(%r)' % self.target_name
+
 
 class GetAtt(GetRes):
     def __init__(self, target_name, attr):
         super(GetAtt, self).__init__(target_name)
         self.attr = attr
 
+    def __repr__(self):
+        return 'GetAtt(%r, %r)' % (self.target_name, self.attr)
+
 
 class RsrcDef(object):
     def __init__(self, properties, depends_on):
         self.properties = properties
         self.depends_on = depends_on
+
+    def __repr__(self):
+        return 'RsrcDef(%r, %r)' % (self.properties, self.depends_on)
 
 
 class Template(object):
