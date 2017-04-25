@@ -55,3 +55,8 @@ class AodhAlarmTest(scenario_base.ScenarioTestsBase):
         # Note: there is little point waiting more than 60s+time to scale up.
         self.assertTrue(test.call_until_true(
             120, 2, self.check_instance_count, stack_identifier, 2))
+
+        # Temporarily avoids a race condition, addressed in the
+        # next change https://review.openstack.org/#/c/449351/
+        import time
+        time.sleep(3)

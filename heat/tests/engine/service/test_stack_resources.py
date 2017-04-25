@@ -676,25 +676,25 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @tools.stack_context('service_mark_unhealthy_lock_converge_test_stk',
                          convergence=True)
     def test_mark_unhealthy_stack_lock_convergence(self):
-        mock_acquire = self.patchobject(res.Resource,
-                                        '_acquire',
-                                        return_value=None)
+        mock_store_with_lock = self.patchobject(res.Resource,
+                                                '_store_with_lock',
+                                                return_value=None)
 
         self.eng.resource_mark_unhealthy(self.ctx, self.stack.identifier(),
                                          'WebServer', True,
                                          resource_status_reason="")
 
-        mock_acquire.assert_called_once_with(self.eng.engine_id)
+        self.assertEqual(2, mock_store_with_lock.call_count)
 
     @tools.stack_context('service_mark_unhealthy_lockexc_converge_test_stk',
                          convergence=True)
     def test_mark_unhealthy_stack_lock_exc_convergence(self):
-        def _acquire(*args, **kwargs):
+        def _store_with_lock(*args, **kwargs):
             raise exception.UpdateInProgress(self.stack.name)
 
         self.patchobject(
             res.Resource,
-            '_acquire',
+            '_store_with_lock',
             return_value=None,
             side_effect=exception.UpdateInProgress(self.stack.name))
         ex = self.assertRaises(dispatcher.ExpectedException,

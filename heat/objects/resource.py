@@ -261,6 +261,14 @@ class Resource(
                                       atomic_key=atomic_key,
                                       expected_engine_id=expected_engine_id)
 
+    @classmethod
+    def select_and_update_by_id(cls, context, resource_id,
+                                values, expected_engine_id=None,
+                                atomic_key=0):
+        return db_api.resource_update(context, resource_id, values,
+                                      atomic_key=atomic_key,
+                                      expected_engine_id=expected_engine_id)
+
     def refresh(self):
         resource_db = db_api.resource_get(self._context, self.id, refresh=True)
         return self.__class__._from_db_object(
@@ -282,3 +290,6 @@ class Resource(
             if not rows_updated:
                 action = _('metadata setting for resource %s') % self.name
                 raise exception.ConcurrentTransaction(action=action)
+            return True
+        else:
+            return False
