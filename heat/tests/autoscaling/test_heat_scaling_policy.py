@@ -69,8 +69,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
     def test_scaling_policy_bad_group(self):
         t = template_format.parse(inline_templates.as_heat_template_bad_group)
         stack = utils.parse_stack(t)
-        up_policy = self.create_scaling_policy(t, stack,
-                                               'my-policy')
+        up_policy = self.create_scaling_policy(t, stack, 'my-policy')
 
         ex = self.assertRaises(exception.ResourceFailure, up_policy.signal)
         self.assertIn('Alarm my-policy could '
@@ -79,30 +78,23 @@ class TestAutoScalingPolicy(common.HeatTestCase):
     def test_scaling_policy_adjust_no_action(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        up_policy = self.create_scaling_policy(t, stack,
-                                               'my-policy')
+        up_policy = self.create_scaling_policy(t, stack, 'my-policy')
         group = stack['my-group']
         self.patchobject(group, 'adjust',
                          side_effect=resource.NoActionRequired())
-        mock_fin_scaling = self.patchobject(up_policy, '_finished_scaling')
-        with mock.patch.object(up_policy,
-                               '_check_scaling_allowed') as mock_isa:
-            self.assertRaises(resource.NoActionRequired,
-                              up_policy.handle_signal)
-            mock_isa.assert_called_once_with(60)
-            mock_fin_scaling.assert_called_once_with(60,
-                                                     'change_in_capacity : 1',
-                                                     size_changed=False)
+        self.assertRaises(resource.NoActionRequired,
+                          up_policy.handle_signal)
 
     def test_scaling_policy_adjust_size_changed(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        up_policy = self.create_scaling_policy(t, stack,
-                                               'my-policy')
+        up_policy = self.create_scaling_policy(t, stack, 'my-policy')
         group = stack['my-group']
-        self.patchobject(group, 'adjust')
-        mock_fin_scaling = self.patchobject(up_policy, '_finished_scaling')
-        with mock.patch.object(up_policy,
+        self.patchobject(group, 'resize')
+        self.patchobject(group, '_lb_reload')
+        mock_fin_scaling = self.patchobject(group, '_finished_scaling')
+
+        with mock.patch.object(group,
                                '_check_scaling_allowed') as mock_isa:
             self.assertIsNone(up_policy.handle_signal())
             mock_isa.assert_called_once_with(60)
@@ -117,39 +109,27 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         group = stack['my-group']
         test = {'current': 'alarm'}
 
-        with mock.patch.object(group, 'adjust',
-                               side_effect=AssertionError) as dont_call:
-            with mock.patch.object(
-                    pol, '_check_scaling_allowed',
-                    side_effect=resource.NoActionRequired) as mock_cip:
-                self.assertRaises(resource.NoActionRequired,
-                                  pol.handle_signal, details=test)
-                mock_cip.assert_called_once_with(60)
-            self.assertEqual([], dont_call.call_args_list)
-
-    def test_policy_metadata_reset(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
-        metadata = {'scaling_in_progress': True}
-        pol.metadata_set(metadata)
-        pol.handle_metadata_reset()
-
-        new_metadata = pol.metadata_get()
-        self.assertEqual({'scaling_in_progress': False}, new_metadata)
+        with mock.patch.object(
+                group, '_check_scaling_allowed',
+                side_effect=resource.NoActionRequired) as mock_cip:
+            self.assertRaises(resource.NoActionRequired,
+                              pol.handle_signal, details=test)
+            mock_cip.assert_called_once_with(60)
 
     def test_scaling_policy_cooldown_ok(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
         pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = stack['my-group']
         test = {'current': 'alarm'}
+        self.patchobject(group, '_finished_scaling')
+        self.patchobject(group, '_lb_reload')
+        mock_resize = self.patchobject(group, 'resize')
 
-        group = self.patchobject(pol.stack, 'resource_by_refid').return_value
-        group.name = 'fluffy'
-        with mock.patch.object(pol, '_check_scaling_allowed') as mock_isa:
+        with mock.patch.object(group, '_check_scaling_allowed') as mock_isa:
             pol.handle_signal(details=test)
             mock_isa.assert_called_once_with(60)
-        group.adjust.assert_called_once_with(1, 'change_in_capacity', None)
+        mock_resize.assert_called_once_with(1)
 
     def test_scaling_policy_refid(self):
         t = template_format.parse(as_template)
@@ -173,45 +153,42 @@ class TestAutoScalingPolicy(common.HeatTestCase):
 
 
 class TestCooldownMixin(common.HeatTestCase):
-    def create_scaling_policy(self, t, stack, resource_name):
+    def create_scaling_group(self, t, stack, resource_name):
+        stack.store()
         rsrc = stack[resource_name]
-        self.assertIsNone(rsrc.validate())
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        rsrc.state_set('CREATE', 'COMPLETE')
         return rsrc
 
     def test_cooldown_is_in_progress_toosoon(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
 
-        properties = t['resources']['my-policy']['properties']
         now = timeutils.utcnow()
         previous_meta = {'cooldown': {
             now.isoformat(): 'change_in_capacity : 1'}}
-        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
+        self.patchobject(group, 'metadata_get', return_value=previous_meta)
         ex = self.assertRaises(resource.NoActionRequired,
-                               pol._check_scaling_allowed,
-                               properties['cooldown'])
+                               group._check_scaling_allowed,
+                               60)
         self.assertIn('due to cooldown', six.text_type(ex))
 
     def test_cooldown_is_in_progress_scaling_unfinished(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
 
-        properties = t['resources']['my-policy']['properties']
         previous_meta = {'scaling_in_progress': True}
-        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
+        self.patchobject(group, 'metadata_get', return_value=previous_meta)
         ex = self.assertRaises(resource.NoActionRequired,
-                               pol._check_scaling_allowed,
-                               properties['cooldown'])
+                               group._check_scaling_allowed,
+                               60)
         self.assertIn('due to scaling activity', six.text_type(ex))
 
     def test_cooldown_not_in_progress(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
 
         awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
         previous_meta = {
@@ -220,54 +197,54 @@ class TestCooldownMixin(common.HeatTestCase):
             },
             'scaling_in_progress': False
         }
-        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed(60))
+        self.patchobject(group, 'metadata_get', return_value=previous_meta)
+        self.assertIsNone(group._check_scaling_allowed(60))
 
     def test_scaling_policy_cooldown_zero(self):
         t = template_format.parse(as_template)
 
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
 
         now = timeutils.utcnow()
         previous_meta = {'cooldown': {
             now.isoformat(): 'change_in_capacity : 1'}}
-        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed(0))
+        self.patchobject(group, 'metadata_get', return_value=previous_meta)
+        self.assertIsNone(group._check_scaling_allowed(0))
 
     def test_scaling_policy_cooldown_none(self):
         t = template_format.parse(as_template)
 
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
 
         now = timeutils.utcnow()
         previous_meta = {'cooldown': {
             now.isoformat(): 'change_in_capacity : 1'}}
-        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed(None))
+        self.patchobject(group, 'metadata_get', return_value=previous_meta)
+        self.assertIsNone(group._check_scaling_allowed(None))
 
     def test_no_cooldown_no_scaling_in_progress(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
         # no cooldown entry in the metadata
         awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
         previous_meta = {'scaling_in_progress': False,
                          awhile_ago.isoformat(): 'change_in_capacity : 1'}
-        self.patchobject(pol, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(pol._check_scaling_allowed(60))
+        self.patchobject(group, 'metadata_get', return_value=previous_meta)
+        self.assertIsNone(group._check_scaling_allowed(60))
 
     def test_metadata_is_written(self):
         t = template_format.parse(as_template)
         stack = utils.parse_stack(t, params=as_params)
-        pol = self.create_scaling_policy(t, stack, 'my-policy')
+        group = self.create_scaling_group(t, stack, 'my-group')
 
         nowish = timeutils.utcnow()
         reason = 'cool as'
-        meta_set = self.patchobject(pol, 'metadata_set')
+        meta_set = self.patchobject(group, 'metadata_set')
         self.patchobject(timeutils, 'utcnow', return_value=nowish)
-        pol._finished_scaling(0, reason, size_changed=True)
+        group._finished_scaling(0, reason, size_changed=True)
         meta_set.assert_called_once_with(
             {'cooldown_end': {nowish.isoformat(): reason},
              'scaling_in_progress': False})

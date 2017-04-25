@@ -116,6 +116,15 @@ class TestGroupAdjust(common.HeatTestCase):
         self.stub_SnapshotConstraint_validate()
         self.assertIsNone(self.group.validate())
 
+    def test_group_metadata_reset(self):
+        self.group.state_set('CREATE', 'COMPLETE')
+        metadata = {'scaling_in_progress': True}
+        self.group.metadata_set(metadata)
+        self.group.handle_metadata_reset()
+
+        new_metadata = self.group.metadata_get()
+        self.assertEqual({'scaling_in_progress': False}, new_metadata)
+
     def test_scaling_policy_cooldown_toosoon(self):
         dont_call = self.patchobject(self.group, 'resize')
         self.patchobject(self.group, '_check_scaling_allowed',
