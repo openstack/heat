@@ -11,10 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import datetime
-
 import mock
-from oslo_utils import timeutils
 import six
 
 from heat.common import exception
@@ -150,104 +147,6 @@ class TestAutoScalingPolicy(common.HeatTestCase):
         stack = utils.parse_stack(t, cache_data=cache_data)
         rsrc = stack.defn['my-policy']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
-
-
-class TestCooldownMixin(common.HeatTestCase):
-    def create_scaling_group(self, t, stack, resource_name):
-        stack.store()
-        rsrc = stack[resource_name]
-        rsrc.state_set('CREATE', 'COMPLETE')
-        return rsrc
-
-    def test_cooldown_is_in_progress_toosoon(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-
-        now = timeutils.utcnow()
-        previous_meta = {'cooldown': {
-            now.isoformat(): 'change_in_capacity : 1'}}
-        self.patchobject(group, 'metadata_get', return_value=previous_meta)
-        ex = self.assertRaises(resource.NoActionRequired,
-                               group._check_scaling_allowed,
-                               60)
-        self.assertIn('due to cooldown', six.text_type(ex))
-
-    def test_cooldown_is_in_progress_scaling_unfinished(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-
-        previous_meta = {'scaling_in_progress': True}
-        self.patchobject(group, 'metadata_get', return_value=previous_meta)
-        ex = self.assertRaises(resource.NoActionRequired,
-                               group._check_scaling_allowed,
-                               60)
-        self.assertIn('due to scaling activity', six.text_type(ex))
-
-    def test_cooldown_not_in_progress(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-
-        awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
-        previous_meta = {
-            'cooldown': {
-                awhile_ago.isoformat(): 'change_in_capacity : 1'
-            },
-            'scaling_in_progress': False
-        }
-        self.patchobject(group, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(group._check_scaling_allowed(60))
-
-    def test_scaling_policy_cooldown_zero(self):
-        t = template_format.parse(as_template)
-
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-
-        now = timeutils.utcnow()
-        previous_meta = {'cooldown': {
-            now.isoformat(): 'change_in_capacity : 1'}}
-        self.patchobject(group, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(group._check_scaling_allowed(0))
-
-    def test_scaling_policy_cooldown_none(self):
-        t = template_format.parse(as_template)
-
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-
-        now = timeutils.utcnow()
-        previous_meta = {'cooldown': {
-            now.isoformat(): 'change_in_capacity : 1'}}
-        self.patchobject(group, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(group._check_scaling_allowed(None))
-
-    def test_no_cooldown_no_scaling_in_progress(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-        # no cooldown entry in the metadata
-        awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
-        previous_meta = {'scaling_in_progress': False,
-                         awhile_ago.isoformat(): 'change_in_capacity : 1'}
-        self.patchobject(group, 'metadata_get', return_value=previous_meta)
-        self.assertIsNone(group._check_scaling_allowed(60))
-
-    def test_metadata_is_written(self):
-        t = template_format.parse(as_template)
-        stack = utils.parse_stack(t, params=as_params)
-        group = self.create_scaling_group(t, stack, 'my-group')
-
-        nowish = timeutils.utcnow()
-        reason = 'cool as'
-        meta_set = self.patchobject(group, 'metadata_set')
-        self.patchobject(timeutils, 'utcnow', return_value=nowish)
-        group._finished_scaling(0, reason, size_changed=True)
-        meta_set.assert_called_once_with(
-            {'cooldown_end': {nowish.isoformat(): reason},
-             'scaling_in_progress': False})
 
 
 class ScalingPolicyAttrTest(common.HeatTestCase):

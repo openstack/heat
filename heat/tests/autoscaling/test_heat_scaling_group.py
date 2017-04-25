@@ -10,9 +10,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
 import json
 
 import mock
+from oslo_utils import timeutils
 import six
 
 from heat.common import exception
@@ -664,3 +666,122 @@ class IncorrectUpdatePolicyTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('Unknown Property RollingUpdate', six.text_type(exc))
+
+
+class TestCooldownMixin(common.HeatTestCase):
+    def setUp(self):
+        super(TestCooldownMixin, self).setUp()
+        t = template_format.parse(inline_templates.as_heat_template)
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.stack.store()
+        self.group = self.stack['my-group']
+        self.group.state_set('CREATE', 'COMPLETE')
+
+    def test_cooldown_is_in_progress_toosoon(self):
+        cooldown_end = timeutils.utcnow() + datetime.timedelta(seconds=60)
+        previous_meta = {'cooldown_end': {
+            cooldown_end.isoformat(): 'change_in_capacity : 1'}}
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertRaises(resource.NoActionRequired,
+                          self.group._check_scaling_allowed,
+                          60)
+
+    def test_cooldown_is_in_progress_toosoon_legacy(self):
+        now = timeutils.utcnow()
+        previous_meta = {'cooldown': {
+            now.isoformat(): 'change_in_capacity : 1'}}
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertRaises(resource.NoActionRequired,
+                          self.group._check_scaling_allowed,
+                          60)
+
+    def test_cooldown_is_in_progress_scaling_unfinished(self):
+        previous_meta = {'scaling_in_progress': True}
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertRaises(resource.NoActionRequired,
+                          self.group._check_scaling_allowed,
+                          60)
+
+    def test_cooldown_not_in_progress_legacy(self):
+        awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
+        previous_meta = {
+            'cooldown': {
+                awhile_ago.isoformat(): 'change_in_capacity : 1'
+            },
+            'scaling_in_progress': False
+        }
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertIsNone(self.group._check_scaling_allowed(60))
+
+    def test_cooldown_not_in_progress(self):
+        awhile_after = timeutils.utcnow() + datetime.timedelta(seconds=60)
+        previous_meta = {
+            'cooldown_end': {
+                awhile_after.isoformat(): 'change_in_capacity : 1'
+            },
+            'scaling_in_progress': False
+        }
+        timeutils.set_time_override()
+        timeutils.advance_time_seconds(100)
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertIsNone(self.group._check_scaling_allowed(60))
+        timeutils.clear_time_override()
+
+    def test_scaling_policy_cooldown_zero(self):
+        now = timeutils.utcnow()
+        previous_meta = {'cooldown_end': {
+            now.isoformat(): 'change_in_capacity : 1'}}
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertIsNone(self.group._check_scaling_allowed(0))
+
+    def test_scaling_policy_cooldown_none(self):
+        now = timeutils.utcnow()
+        previous_meta = {'cooldown_end': {
+            now.isoformat(): 'change_in_capacity : 1'}}
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertIsNone(self.group._check_scaling_allowed(None))
+
+    def test_no_cooldown_no_scaling_in_progress(self):
+        # no cooldown entry in the metadata
+        awhile_ago = timeutils.utcnow() - datetime.timedelta(seconds=100)
+        previous_meta = {'scaling_in_progress': False,
+                         awhile_ago.isoformat(): 'change_in_capacity : 1'}
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        self.assertIsNone(self.group._check_scaling_allowed(60))
+
+    def test_metadata_is_written(self):
+        nowish = timeutils.utcnow()
+        reason = 'cool as'
+        meta_set = self.patchobject(self.group, 'metadata_set')
+        self.patchobject(timeutils, 'utcnow', return_value=nowish)
+        self.group._finished_scaling(60, reason)
+        cooldown_end = nowish + datetime.timedelta(seconds=60)
+        meta_set.assert_called_once_with(
+            {'cooldown_end': {cooldown_end.isoformat(): reason},
+             'scaling_in_progress': False})
+
+    def test_metadata_is_written_update(self):
+        nowish = timeutils.utcnow()
+        reason = 'cool as'
+        prev_cooldown_end = nowish + datetime.timedelta(seconds=100)
+        previous_meta = {
+            'cooldown_end': {
+                prev_cooldown_end.isoformat(): 'change_in_capacity : 1'
+            }
+        }
+        self.patchobject(self.group, 'metadata_get',
+                         return_value=previous_meta)
+        meta_set = self.patchobject(self.group, 'metadata_set')
+        self.patchobject(timeutils, 'utcnow', return_value=nowish)
+        self.group._finished_scaling(60, reason)
+        meta_set.assert_called_once_with(
+            {'cooldown_end': {prev_cooldown_end.isoformat(): reason},
+             'scaling_in_progress': False})
