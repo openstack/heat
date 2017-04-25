@@ -1,0 +1,33 @@
+[dashboard]
+title = Heat Review Inbox
+description = Review Inbox
+foreach = (project:openstack/heat OR project:openstack/heat-agents OR
+           project:openstack/heat-templates OR project:openstack/python-heatclient OR
+           project:openstack/heat-cfntools OR project:openstack/heat-specs OR
+           project:openstack/heat-dashboard OR project:openstack/heat-tempest-plugin)
+           status:open NOT owner:self NOT label:Workflow<=-1 label:Verified>=1
+           NOT label:Code-Review<=-1,self NOT label:Code-Review>=1,self
+
+[section "Heat Specs"]
+query = project:openstack/heat-specs
+
+[section "Bug Fixes"]
+query = topic:^bug/.*
+
+[section "Blueprints"]
+query = message:"Blueprint"
+
+[section "Needs Feedback (Changes older than 5 days that have not been reviewed by anyone)"]
+query = NOT label:Code-Review<=2 age:5d
+
+[section "You are a reviewer, but haven't voted in the current revision"]
+query = reviewer:self
+
+[section "Needs final +2"]
+query = label:Code-Review>=2 limit:50
+
+[section "New Contributors"]
+query = reviewer:10068
+
+[section "Passed Zuul, No Negative Feedback"]
+query = NOT label:Code-Review>=2 NOT label:Code-Review<=-1 limit:50
