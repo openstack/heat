@@ -41,10 +41,10 @@ class Net(neutron.NeutronResource):
 
     ATTRIBUTES = (
         STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR,
-        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR, QOS_POLICY_ATTR,
+        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR, QOS_POLICY_ATTR, L2_ADJACENCY
     ) = (
         "status", "name", "subnets", "admin_state_up", "tenant_id",
-        "port_security_enabled", "mtu", 'qos_policy_id',
+        "port_security_enabled", "mtu", 'qos_policy_id', 'l2_adjacency'
     )
 
     properties_schema = {
@@ -152,6 +152,12 @@ class Net(neutron.NeutronResource):
             _("The QoS policy ID attached to this network."),
             type=attributes.Schema.STRING,
             support_status=support.SupportStatus(version='6.0.0'),
+        ),
+        L2_ADJACENCY: attributes.Schema(
+            _("A boolean value for L2 adjacency, True means that you can "
+              "expect L2 connectivity throughout the Network."),
+            type=attributes.Schema.BOOLEAN,
+            support_status=support.SupportStatus(version='9.0.0'),
         ),
     }
 
