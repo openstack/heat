@@ -16,6 +16,9 @@ from openstack import exceptions
 from openstack import profile
 
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
+
+CLIENT_NAME = 'openstack'
 
 
 class OpenStackSDKPlugin(client_plugin.ClientPlugin):
@@ -43,3 +46,16 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.ResourceNotFound)
+
+    def find_network_segment(self, value):
+        return self.client().network.find_segment(value).id
+
+
+class SegmentConstraint(constraints.BaseCustomConstraint):
+
+    expected_exceptions = (exceptions.ResourceNotFound,
+                           exceptions.DuplicateResource)
+
+    def validate_with_client(self, client, value):
+        sdk_plugin = client.client_plugin(CLIENT_NAME)
+        sdk_plugin.find_network_segment(value)
