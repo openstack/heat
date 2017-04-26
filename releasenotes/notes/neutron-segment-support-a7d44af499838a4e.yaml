@@ -1,0 +1,13 @@
+---
+features:
+  - A new ``openstack`` client plugin to use
+    python-openstacksdk library and a ``neutron.segment``
+    custom constraint.
+  - A new ``OS::Neutron:Segment`` resource to create routed
+    networks. Availability of this resource depends on
+    availability of neutron ``segment`` API extension.
+  - Resource ``OS::Neutron::Subnet`` now supports ``segment``
+    optional property to specify a segment.
+  - Resource ``OS::Neutron::Net`` now supports ``l2_adjacency``
+    atribute on whether L2 connectivity is available across
+    the network or not.
