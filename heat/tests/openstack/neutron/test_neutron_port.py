@@ -83,6 +83,13 @@ class NeutronPortTest(common.HeatTestCase):
         self.find_mock = self.patchobject(
             neutronV20, 'find_resourceid_by_name_or_id')
 
+    def test_missing_network(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'] = {}
+        stack = utils.parse_stack(t)
+        port = stack['port']
+        self.assertRaises(exception.StackValidationFailed, port.validate)
+
     def test_missing_subnet_id(self):
         t = template_format.parse(neutron_port_template)
         t['resources']['port']['properties']['fixed_ips'][0].pop('subnet')
