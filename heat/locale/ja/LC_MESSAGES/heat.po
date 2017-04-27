@@ -9,9 +9,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-03-23 04:57+0000\n"
+"POT-Creation-Date: 2017-04-27 00:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -640,9 +640,6 @@ msgid "Add needed policies directly to the task, Policy keyword is not needed"
 msgstr ""
 "必要なポリシーをタスクに直接追加します。ポリシーのキーワードは不要です。"
 
-msgid "Add rule must be used only for lists."
-msgstr "Add ルールはリストのためにのみ使用する必要があります。"
-
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr ""
 "ポートを通過することが許可されている追加の MAC アドレスと IP アドレスのペア。"
@@ -1021,10 +1018,6 @@ msgstr "サブネットの CIDR。"
 
 msgid "CIDR to be associated with this metering rule."
 msgstr "この計測ルールに関連付ける CIDR。"
-
-#, python-format
-msgid "Can not resolve parameter due to: %s"
-msgstr "以下の理由のためパラメーターを解決できません: %s"
 
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
@@ -2067,10 +2060,6 @@ msgstr "関数 \"%s\" には引数が必要です"
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr "関数 \"%s\" の使用状況: [\"<algorithm>\", \"<value>\"]"
-
-msgid ""
-"Gap, in seconds, to determine whether the given token is about to expire."
-msgstr "特定のトークンの有効期限が近いかどうかを判断するための間隔 (秒)。"
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -3575,9 +3564,6 @@ msgstr ""
 "{ get_resource: wf_name }} など) で定義できます。タスクにはアクションかワーク"
 "フローのいずれかを定義できます。"
 
-msgid "Name of the workflow."
-msgstr "ワークフローの名前。"
-
 msgid "Name of this Load Balancer."
 msgstr "このロードバランサーの名前。"
 
@@ -4213,11 +4199,6 @@ msgstr ""
 msgid "Properties for profile."
 msgstr "プロファイルのプロパティー。"
 
-#, python-format
-msgid "Properties must be Properties type. Found %s."
-msgstr ""
-"プロパティーはプロパティータイプである必要があります。%s が見つかりました。"
-
 msgid "Properties of this policy."
 msgstr "このポリシーのプロパティー。"
 
@@ -4511,9 +4492,6 @@ msgstr "リソースタイプ。"
 
 msgid "Resource update already requested"
 msgstr "リソース更新は既に要求済みです"
-
-msgid "Resource update failed"
-msgstr "リソースの更新が失敗しました"
 
 msgid "Resource with the name requested already exists"
 msgstr "要求された名前のリソースは既に存在します"
@@ -6719,17 +6697,6 @@ msgid ""
 msgstr ""
 "このイメージのデータが既にある URL。例えば、イメージデータが swift に格納され"
 "ている場合は、\"swift://example.com/container/obj\" と指定できます。"
-
-msgid ""
-"URLs of server's consoles. To get a specific console type, the requested "
-"type can be specified as parameter to the get_attr function, e.g. get_attr: "
-"[ <server>, console_urls, novnc ]. Currently supported types are novnc, "
-"xvpvnc, spice-html5, rdp-html5, serial."
-msgstr ""
-"サーバーのコンソールの URL。特定のコンソール種別を取得するには、要求される種"
-"別を get_attr 関数のパラメーターとして指定できます。例えば、get_attr: "
-"[ <server>, console_urls, novnc ] と指定します。現在サポートされている種別は "
-"novnc、xvpvnc、spice-html5、rdp-html5、および serial です。"
 
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr "インスタンスの接続先となる内部サブネットの UUID。"

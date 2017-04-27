@@ -8,9 +8,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-03-23 04:57+0000\n"
+"POT-Creation-Date: 2017-04-27 00:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -626,9 +626,6 @@ msgstr "태스크의 실제 입력 매개변수 값입니다."
 msgid "Add needed policies directly to the task, Policy keyword is not needed"
 msgstr "필수 정책을 직접 태스크에 추가, 정책 키워드는 필요하지 않음"
 
-msgid "Add rule must be used only for lists."
-msgstr "규칙 추가는 목록에만 사용해야 합니다."
-
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr "포트를 통해 전달하도록 허용된 추가 MAC/IP 주소 쌍입니다."
 
@@ -993,10 +990,6 @@ msgstr "서브넷의 CIDR입니다."
 
 msgid "CIDR to be associated with this metering rule."
 msgstr "이 측정 규칙과 연관시킬 CIDR입니다."
-
-#, python-format
-msgid "Can not resolve parameter due to: %s"
-msgstr "다음 이유로 인해 매개변수를 분석할 수 없음: %s"
 
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
@@ -2012,10 +2005,6 @@ msgstr "\"%s\" 기능은 인수여야 함"
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr "함수 \"%s\" 사용법: [\"<algorithm>\", \"<value>\"]"
-
-msgid ""
-"Gap, in seconds, to determine whether the given token is about to expire."
-msgstr "지정된 토큰이 만료될지를 판별하기 위한 격차(초)."
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -3477,9 +3466,6 @@ msgstr ""
 "wf_name }})으로 정의할 수 있습니다. 작업 또는 워크플로우를 태스크에 정의할 "
 "수 있습니다."
 
-msgid "Name of the workflow."
-msgstr "워크플로우의 이름입니다."
-
 msgid "Name of this Load Balancer."
 msgstr "이 로드 밸런서의 이름입니다."
 
@@ -4102,10 +4088,6 @@ msgstr ""
 msgid "Properties for profile."
 msgstr "프로파일의 특성입니다."
 
-#, python-format
-msgid "Properties must be Properties type. Found %s."
-msgstr "특성은 특성 타입이어야 합니다. %s을(를) 찾았습니다."
-
 msgid "Properties of this policy."
 msgstr "이 정책의 특성입니다."
 
@@ -4389,9 +4371,6 @@ msgstr "자원 유형."
 
 msgid "Resource update already requested"
 msgstr "자원 업데이트가 이미 요청됨"
-
-msgid "Resource update failed"
-msgstr "자원 업데이트 실패"
 
 msgid "Resource with the name requested already exists"
 msgstr "요청된 이름을 가진 자원이 이미 존재함"
@@ -6539,17 +6518,6 @@ msgstr ""
 "이 이미지에 대한 데이터가 이미 상주하는 URL입니다. 예를 들어, 이미지 데이터"
 "가 swift에 저장되어 있는 경우에는 \"swift://example.com/container/obj\"를 지"
 "정할 수 있습니다."
-
-msgid ""
-"URLs of server's consoles. To get a specific console type, the requested "
-"type can be specified as parameter to the get_attr function, e.g. get_attr: "
-"[ <server>, console_urls, novnc ]. Currently supported types are novnc, "
-"xvpvnc, spice-html5, rdp-html5, serial."
-msgstr ""
-"서버의 콘솔 URL입니다. 특정 콘솔 유형을 가져오려는 경우, 요청된 유형을 "
-"get_attr 함수에 대한 매개변수로 지정할 수 있습니다. 예: get_attr: "
-"[ <server>, console_urls, novnc ]. 현재 지원되는 유형은 novnc, xvpvnc, spice-"
-"html5, rdp-html5, serial입니다."
 
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr "인스턴스가 접속되는 내부 서브넷의 UUID입니다."

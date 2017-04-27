@@ -7,9 +7,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-03-23 04:57+0000\n"
+"POT-Creation-Date: 2017-04-27 00:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -678,9 +678,6 @@ msgstr ""
 "Añada las políticas necesarias directamente a las tareas, no es necesaria "
 "una palabra clave de política."
 
-msgid "Add rule must be used only for lists."
-msgstr "La regla Añadir se debe utilizar solo para listas."
-
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr ""
 "Pares de direcciones MAC/IP adicionales a los que se permite pasar por un "
@@ -1077,10 +1074,6 @@ msgstr "CIDR de la subred."
 
 msgid "CIDR to be associated with this metering rule."
 msgstr "CIDR a asociar con esta regla de medición."
-
-#, python-format
-msgid "Can not resolve parameter due to: %s"
-msgstr "No se puede resolver el parámetro debido a: %s"
 
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
@@ -2148,12 +2141,6 @@ msgstr "La función \"%s\" debe tener argumentos"
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr "Uso de la función \"%s\": [\"<algorithm>\", \"<value>\"]"
-
-msgid ""
-"Gap, in seconds, to determine whether the given token is about to expire."
-msgstr ""
-"Espacio de tiempo, en segundos, para determinar si el token indicado está a "
-"punto de caducar."
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -3749,9 +3736,6 @@ msgstr ""
 "{ get_resource: wf_name }}. Se puede definir acción o flujo de trabajo en la "
 "tarea."
 
-msgid "Name of the workflow."
-msgstr "Nombre del flujo de trabajo."
-
 msgid "Name of this Load Balancer."
 msgstr "Nombre de este equilibrador de carga."
 
@@ -4412,10 +4396,6 @@ msgstr ""
 msgid "Properties for profile."
 msgstr "Propiedades del perfil."
 
-#, python-format
-msgid "Properties must be Properties type. Found %s."
-msgstr "Las propiedades deber ser de tipo Propiedad. Se ha encontrado %s."
-
 msgid "Properties of this policy."
 msgstr "Propiedades de esta política."
 
@@ -4715,9 +4695,6 @@ msgstr "Tipo de recurso."
 
 msgid "Resource update already requested"
 msgstr "La actualización de recurso ya se ha solicitado"
-
-msgid "Resource update failed"
-msgstr "Ha fallado la actualización del recurso."
 
 msgid "Resource with the name requested already exists"
 msgstr "Recurso con el nombre solicitado ya existe"
@@ -7045,18 +7022,6 @@ msgstr ""
 "URL donde residen los datos de esta imagen. Por ejemplo, si los datos de "
 "imagen se almacenan en Swift, puede especificar \"swift://example.com/"
 "container/obj\"."
-
-msgid ""
-"URLs of server's consoles. To get a specific console type, the requested "
-"type can be specified as parameter to the get_attr function, e.g. get_attr: "
-"[ <server>, console_urls, novnc ]. Currently supported types are novnc, "
-"xvpvnc, spice-html5, rdp-html5, serial."
-msgstr ""
-"URL de las consolas del servidor. Para obtener un tipo de consola concreto, "
-"el tipo solicitado se puede especificar como parámetro en la función "
-"get_attr function, por ejemplo, get_attr: [ <server>, console_urls, novnc ]. "
-"Actualmente, los tipos admitidos son novnc, xvpvnc, spice-html5, rdp-html5 y "
-"serial."
 
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr "UUID de la subred interna a la que se conectará la instancia."

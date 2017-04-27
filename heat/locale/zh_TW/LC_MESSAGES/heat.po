@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-03-23 04:57+0000\n"
+"POT-Creation-Date: 2017-04-27 00:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -597,9 +597,6 @@ msgstr "作業的實際輸入參數值。"
 msgid "Add needed policies directly to the task, Policy keyword is not needed"
 msgstr "將所需原則直接新增至作業，不需要「原則」關鍵字"
 
-msgid "Add rule must be used only for lists."
-msgstr "「新增」規則必須僅用於清單。"
-
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr "容許通過埠的其他 MAC/IP 位址配對。"
 
@@ -952,10 +949,6 @@ msgstr "子網路的 CIDR。"
 
 msgid "CIDR to be associated with this metering rule."
 msgstr "要與此計量規則產生關聯的 CIDR。"
-
-#, python-format
-msgid "Can not resolve parameter due to: %s"
-msgstr "無法解析參數，原因：%s"
 
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
@@ -1932,10 +1925,6 @@ msgstr "函數 \"%s\" 必須是引數"
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr "函數 \"%s\" 用法：[\"<algorithm>\", \"<value>\"]"
-
-msgid ""
-"Gap, in seconds, to determine whether the given token is about to expire."
-msgstr "用來判定給定的記號是否即將到期的間隙（以秒為單位）。"
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -3354,9 +3343,6 @@ msgstr ""
 "以透過所參照之工作流程的名稱進行定義，例如 { workflow: wf_name } 或 "
 "{ workflow: { get_resource: wf_name }}。可以在作業中定義動作或工作流程。"
 
-msgid "Name of the workflow."
-msgstr "工作流程的名稱。"
-
 msgid "Name of this Load Balancer."
 msgstr "此負載平衡器的名稱。"
 
@@ -3950,10 +3936,6 @@ msgstr "%(type)s 類型的順序需要內容 %(algorithm)s 和 %(bit_length)s。
 msgid "Properties for profile."
 msgstr "設定檔的內容。"
 
-#, python-format
-msgid "Properties must be Properties type. Found %s."
-msgstr "內容的類型必須是「內容」。但卻找到 %s。"
-
 msgid "Properties of this policy."
 msgstr "此原則的內容。"
 
@@ -4222,9 +4204,6 @@ msgstr "資源類型。"
 
 msgid "Resource update already requested"
 msgstr "已要求資源更新"
-
-msgid "Resource update failed"
-msgstr "資源更新失敗"
 
 msgid "Resource with the name requested already exists"
 msgstr "具有所要求名稱的資源已存在"
@@ -6295,16 +6274,6 @@ msgid ""
 msgstr ""
 "已包含此映像檔的資料的 URL。例如，如果將映像檔資料儲存在 Swift 中，則您可以指"
 "定\"swift://example.com/container/obj\"。"
-
-msgid ""
-"URLs of server's consoles. To get a specific console type, the requested "
-"type can be specified as parameter to the get_attr function, e.g. get_attr: "
-"[ <server>, console_urls, novnc ]. Currently supported types are novnc, "
-"xvpvnc, spice-html5, rdp-html5, serial."
-msgstr ""
-"伺服器主控台的 URL。若要取得特定的主控台類型，可以將所要求的類型作為參數指定"
-"給 get_attr 函數，例如，get_attr: [ <server>, console_urls, novnc ]。目前支援"
-"的類型為 novnc、xvpvnc、spice-html5、rdp-html5、serial。"
 
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr "要將實例連接至的內部子網路的 UUID。"

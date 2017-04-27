@@ -7,9 +7,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-03-23 04:57+0000\n"
+"POT-Creation-Date: 2017-04-27 00:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -598,9 +598,6 @@ msgstr "任务的实际输入参数值。"
 msgid "Add needed policies directly to the task, Policy keyword is not needed"
 msgstr "将所需策略直接添加至该任务。不需要策略关键字。"
 
-msgid "Add rule must be used only for lists."
-msgstr "只能对列表使用“添加”规则。"
-
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr "允许通过端口传递的其他 MAC/IP 地址对。"
 
@@ -952,10 +949,6 @@ msgstr "子网的 CIDR。"
 
 msgid "CIDR to be associated with this metering rule."
 msgstr "要与此测量规则关联的 CIDR。"
-
-#, python-format
-msgid "Can not resolve parameter due to: %s"
-msgstr "无法解析参数，因为：%s"
 
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
@@ -1931,10 +1924,6 @@ msgstr "函数“%s”必须具有自变量"
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr "函数“%s”用法：[\"<algorithm>\", \"<value>\"]"
-
-msgid ""
-"Gap, in seconds, to determine whether the given token is about to expire."
-msgstr "用于确定给定令牌到期的时间间隔（以秒计）。"
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -3344,9 +3333,6 @@ msgstr ""
 "的名称（即 { workflow: wf_name } 或 { workflow: { get_resource: wf_name }}）"
 "定义。可在该任务中定义操作或工作流程。"
 
-msgid "Name of the workflow."
-msgstr "工作流程的名称。"
-
 msgid "Name of this Load Balancer."
 msgstr "此负载均衡器的名称。"
 
@@ -3939,10 +3925,6 @@ msgstr ""
 msgid "Properties for profile."
 msgstr "概要文件的属性。"
 
-#, python-format
-msgid "Properties must be Properties type. Found %s."
-msgstr "属性必须为属性类型。发现 %s。"
-
 msgid "Properties of this policy."
 msgstr "此策略的属性。"
 
@@ -4212,9 +4194,6 @@ msgstr "资源类型。"
 
 msgid "Resource update already requested"
 msgstr "已请求资源更新"
-
-msgid "Resource update failed"
-msgstr "资源更新失败"
 
 msgid "Resource with the name requested already exists"
 msgstr "具有所请求名称的资源已存在"
@@ -6284,16 +6263,6 @@ msgid ""
 msgstr ""
 "此映像的数据已驻留的 URL。例如，如果映像数据存储在 swift 中，那么可指"
 "定“swift://example.com/container/obj”。"
-
-msgid ""
-"URLs of server's consoles. To get a specific console type, the requested "
-"type can be specified as parameter to the get_attr function, e.g. get_attr: "
-"[ <server>, console_urls, novnc ]. Currently supported types are novnc, "
-"xvpvnc, spice-html5, rdp-html5, serial."
-msgstr ""
-"服务器控制台的 URL。要获取特定控制台类型，可将所请求类型指定为 get_attr 函数"
-"的参数，例如 get_attr: [ <server>, console_urls, novnc ]。以下是当前受支持的"
-"类型：novnc、xvpvnc、spice-html5、rdp-html5 或 serial。"
 
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr "实例将连接至的内部子网的 UUID。"

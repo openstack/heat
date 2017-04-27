@@ -9,9 +9,9 @@
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.0.0rc2.dev165\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-03-23 04:57+0000\n"
+"POT-Creation-Date: 2017-04-27 00:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -701,9 +701,6 @@ msgstr ""
 "Fügen Sie erforderliche Richtlinien der Aufgabe direkt hinzu. Es ist kein "
 "Richtlinienkennwort erforderlich."
 
-msgid "Add rule must be used only for lists."
-msgstr "Das Hinzufügen von Regeln darf nur für Listen verwendet werden."
-
 msgid "Additional MAC/IP address pairs allowed to pass through a port."
 msgstr "Zusätzliche MAC-IP-Adressen-Paare, die einen Port durchlaufen dürfen. "
 
@@ -1134,10 +1131,6 @@ msgstr "CIDR des Subnetzes."
 
 msgid "CIDR to be associated with this metering rule."
 msgstr "CIDR, das dieser Messungsregel zuzuordnen ist. "
-
-#, python-format
-msgid "Can not resolve parameter due to: %s"
-msgstr "Der Parameter kann aus folgendem Grund nicht aufgelöst werden: %s"
 
 #, python-format
 msgid "Can not specify property \"%s\" if the volume type is public."
@@ -2234,12 +2227,6 @@ msgstr "Funktion \"%s\" muss Argumente haben"
 #, python-format
 msgid "Function \"%s\" usage: [\"<algorithm>\", \"<value>\"]"
 msgstr "Verwendung der Funktion \"%s\": [\"<Algorithmus>\", \"<Wert>\"]"
-
-msgid ""
-"Gap, in seconds, to determine whether the given token is about to expire."
-msgstr ""
-"Zeitspanne in Sekunden, um zu ermitteln, ob das angegebene Token demnächst "
-"abläuft."
 
 #, python-format
 msgid "Gateway IP address \"%(gateway)s\" is in invalid format."
@@ -3891,9 +3878,6 @@ msgstr ""
 "{ workflow: { get_resource: wf_name }}. In der Aufgabe kann entweder eine "
 "Aktion oder ein Arbeitsablauf definiert sein."
 
-msgid "Name of the workflow."
-msgstr "Name des Arbeitsablaufs."
-
 msgid "Name of this Load Balancer."
 msgstr "Name dieses Loadbalancers."
 
@@ -4071,9 +4055,6 @@ msgid ""
 msgstr ""
 "Kein Inhalt im Abschnitt \"files\" für %(fn_name)s-Pfad gefunden: "
 "%(file_key)s"
-
-msgid "No description given"
-msgstr "Keine Beschreibung angegeben"
 
 #, python-format
 msgid "No event %s found"
@@ -4569,10 +4550,6 @@ msgstr ""
 msgid "Properties for profile."
 msgstr "Eigenschaften für das Profil."
 
-#, python-format
-msgid "Properties must be Properties type. Found %s."
-msgstr "Eigenschaften müssen vom Typ Eigenschaften sein. %s wurde gefunden."
-
 msgid "Properties of this policy."
 msgstr "Eigenschaften dieser Richtlinie."
 
@@ -4880,9 +4857,6 @@ msgstr "Ressourcentyp."
 
 msgid "Resource update already requested"
 msgstr "Ressourcenaktualisierung wurde bereits angefordert"
-
-msgid "Resource update failed"
-msgstr "Ressourcenaktualisierung fehlgeschlagen"
 
 msgid "Resource with the name requested already exists"
 msgstr "Eine Ressource mit dem angeforderten Namen ist bereits vorhanden"
@@ -7280,17 +7254,6 @@ msgstr ""
 "URL, unter der sich die Daten für dieses Image bereits befinden. Wenn die "
 "Imagedaten beispielsweise in Swift gespeichert sind, könnten Sie \"swift://"
 "example.com/container/obj\" angeben."
-
-msgid ""
-"URLs of server's consoles. To get a specific console type, the requested "
-"type can be specified as parameter to the get_attr function, e.g. get_attr: "
-"[ <server>, console_urls, novnc ]. Currently supported types are novnc, "
-"xvpvnc, spice-html5, rdp-html5, serial."
-msgstr ""
-"URLs der Serverkonsolen. Zum Abrufen eines bestimmten Konsolentyps kann der "
-"angeforderte Typ als Parameter an die Funktion get_attr übergeben werden, z. "
-"B. get_attr: [ <Server>, console_urls, novnc ]. Derzeit unterstützte Typen "
-"sind novnc, xvpvnc, spice-html5, rdp-html5 und serial."
 
 msgid "UUID of the internal subnet to which the instance will be attached."
 msgstr "UUID des internen Teilnetzes, mit dem die Instanz verbunden sein wird."
