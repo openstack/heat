@@ -503,6 +503,8 @@ class Properties(collections.Mapping):
                                                template=template)
             if value is not None or prop.has_default():
                 return prop.get_value(value)
+            elif prop.required():
+                raise ValueError(_('Property %s not assigned') % key)
         elif prop.has_default():
             return prop.get_value(None, validate, template=template,
                                   translation=self.translation)
