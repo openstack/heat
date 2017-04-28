@@ -166,9 +166,11 @@ class YamlParseExceptions(common.HeatTestCase):
             yaml_loader.side_effect = self.raised_exception
 
             err = self.assertRaises(ValueError,
-                                    template_format.parse, text)
+                                    template_format.parse, text,
+                                    'file://test.yaml')
 
-            self.assertIn('Error parsing template: ', six.text_type(err))
+            self.assertIn('Error parsing template file://test.yaml',
+                          six.text_type(err))
 
 
 class JsonYamlResolvedCompareTest(common.HeatTestCase):

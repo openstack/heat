@@ -908,7 +908,8 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       stack)
         err = self.assertRaises(exception.StackValidationFailed,
                                 temp_res.validate)
-        self.assertIn('Error parsing template: ', six.text_type(err))
+        self.assertIn('Error parsing template http://heatr/bad_tmpl.yaml',
+                      six.text_type(err))
 
         self.m.VerifyAll()
 

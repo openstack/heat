@@ -173,7 +173,8 @@ class TemplateResource(stack_resource.StackResource):
 
     def child_template(self):
         if not self._parsed_nested:
-            self._parsed_nested = template_format.parse(self.template_data())
+            self._parsed_nested = template_format.parse(self.template_data(),
+                                                        self.template_name)
         return self._parsed_nested
 
     def regenerate_info_schema(self, definition):

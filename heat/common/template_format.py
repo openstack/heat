@@ -58,7 +58,7 @@ yaml_dumper.add_representer(collections.OrderedDict,
                             yaml_dumper.represent_ordered_dict)
 
 
-def simple_parse(tmpl_str):
+def simple_parse(tmpl_str, tmpl_url=None):
     try:
         tpl = jsonutils.loads(tmpl_str)
     except ValueError:
@@ -71,8 +71,11 @@ def simple_parse(tmpl_str):
             try:
                 tpl = yaml.load(tmpl_str, Loader=yaml.SafeLoader)
             except yaml.YAMLError as yea:
+                if tmpl_url is None:
+                    tmpl_url = '[root stack]'
                 yea = six.text_type(yea)
-                msg = _('Error parsing template: %s') % yea
+                msg = _('Error parsing template %(tmpl)s '
+                        '%(yea)s') % {'tmpl': tmpl_url, 'yea': yea}
                 raise ValueError(msg)
         else:
             if tpl is None:
@@ -99,7 +102,7 @@ def validate_template_limit(contain_str):
         raise exception.RequestLimitExceeded(message=msg)
 
 
-def parse(tmpl_str):
+def parse(tmpl_str, tmpl_url=None):
     """Takes a string and returns a dict containing the parsed structure.
 
     This includes determination of whether the string is using the
@@ -110,7 +113,7 @@ def parse(tmpl_str):
     # Validate nested stack template.
     validate_template_limit(six.text_type(tmpl_str))
 
-    tpl = simple_parse(tmpl_str)
+    tpl = simple_parse(tmpl_str, tmpl_url)
     # Looking for supported version keys in the loaded template
     if not ('HeatTemplateFormatVersion' in tpl
             or 'heat_template_version' in tpl
