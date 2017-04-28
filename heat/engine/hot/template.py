@@ -479,7 +479,7 @@ class HOTemplate20161014(HOTemplate20160408):
 
         self._parser_condition_functions = {}
         for n, f in six.iteritems(self.functions):
-            if not isinstance(f, hot_funcs.Removed):
+            if not f == hot_funcs.Removed:
                 self._parser_condition_functions[n] = function.Invalid
             else:
                 self._parser_condition_functions[n] = f
