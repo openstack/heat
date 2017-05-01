@@ -1338,8 +1338,7 @@ class StackServiceTest(common.HeatTestCase):
         ])
         mock_stack_load.assert_called_once_with(self.ctx,
                                                 stack=db_stack,
-                                                service_check_defer=True,
-                                                resource_validate=False)
+                                                service_check_defer=True)
         self.assertTrue(lock2.release.called)
         reason = ('Engine went down during stack %s' % fake_stack.action)
         mock_thread.start_with_acquired_lock.assert_called_once_with(

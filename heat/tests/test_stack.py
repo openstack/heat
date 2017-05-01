@@ -445,8 +445,7 @@ class StackTest(common.HeatTestCase):
                              current_deps=None, cache_data=None,
                              nested_depth=0,
                              deleted_time=None,
-                             service_check_defer=False,
-                             resource_validate=True)
+                             service_check_defer=False)
 
         self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id)
@@ -2029,8 +2028,7 @@ class StackTest(common.HeatTestCase):
         self.assertIn("The Parameter (aparam) was not provided",
                       six.text_type(ex))
 
-        self.stack.resource_validate = False
-        self.assertIsNone(self.stack.validate())
+        self.assertIsNone(self.stack.validate(validate_res_tmpl_only=True))
 
     def test_nodisable_validate_tmpl_err(self):
         tmpl = template_format.parse("""
@@ -2058,9 +2056,9 @@ class StackTest(common.HeatTestCase):
             "The specified reference \"noexist\" (in AResource) is incorrect",
             six.text_type(ex))
 
-        self.stack.resource_validate = False
         ex = self.assertRaises(exception.InvalidTemplateReference,
-                               self.stack.validate)
+                               self.stack.validate,
+                               validate_res_tmpl_only=True)
         self.assertIn(
             "The specified reference \"noexist\" (in AResource) is incorrect",
             six.text_type(ex))
