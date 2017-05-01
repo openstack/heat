@@ -35,7 +35,7 @@ def _to_byte_string(value, num_bits):
     def byte_at(off):
         return (value >> off if off >= 0 else value << -off) & 0xff
 
-    return ''.join(six.unichr(byte_at(offset)) for offset in shifts)
+    return b''.join(six.int2byte(byte_at(offset)) for offset in shifts)
 
 
 def get_id(source_uuid):
@@ -53,9 +53,8 @@ def get_id(source_uuid):
     random_bytes = _to_byte_string(source_uuid.time, 60)
     # The first 12 bytes (= 60 bits) of base32-encoded output is our data
 
-    encoded = base64.b32encode(random_bytes.encode('latin-1'))[:12]
-
-    return encoded.lower().decode('latin-1')
+    encoded_bytes = base64.b32encode(random_bytes)[:12]
+    return encoded_bytes.decode('ascii').lower()
 
 
 def generate_id():
