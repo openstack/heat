@@ -111,7 +111,7 @@ class WatchRule(object):
             'stack_id': self.stack_id
         }
 
-        if not self.id:
+        if self.id is None:
             wr = watch_rule_objects.WatchRule.create(self.context, wr_values)
             self.id = wr.id
         else:
@@ -120,7 +120,7 @@ class WatchRule(object):
 
     def destroy(self):
         """Delete the watchrule from the database."""
-        if self.id:
+        if self.id is not None:
             watch_rule_objects.WatchRule.delete(self.context, self.id)
 
     def do_data_cmp(self, data, threshold):

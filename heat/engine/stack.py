@@ -360,7 +360,7 @@ class Stack(collections.Mapping):
         return resources or None
 
     def db_resource_get(self, name):
-        if not self.id:
+        if self.id is None:
             return None
         return self._db_resources_get().get(name)
 
@@ -461,7 +461,7 @@ class Stack(collections.Mapping):
         Includes nested stacks below.
         """
         if not stack_id:
-            if not self.id:
+            if self.id is None:
                 # We're not stored yet, so we don't have anything to count
                 return 0
             stack_id = self.id
@@ -653,7 +653,7 @@ class Stack(collections.Mapping):
         else:
             s['raw_template_id'] = self.t.id
 
-        if self.id:
+        if self.id is not None:
             if exp_trvsl is None and not ignore_traversal_check:
                 exp_trvsl = self.current_traversal
 

@@ -623,8 +623,8 @@ class Resource(status.ResourceStatus):
 
     def __str__(self):
         class_name = reflection.get_class_name(self, fully_qualified=False)
-        if self.stack.id:
-            if self.resource_id:
+        if self.stack.id is not None:
+            if self.resource_id is not None:
                 text = '%s "%s" [%s] %s' % (class_name, self.name,
                                             self.resource_id,
                                             six.text_type(self.stack))
@@ -2309,7 +2309,7 @@ class Resource(status.ResourceStatus):
 
         :returns: a dict representing the resource data for this resource.
         """
-        if self._data is None and self.id:
+        if self._data is None and self.id is not None:
             try:
                 self._data = resource_data_objects.ResourceData.get_all(self)
             except exception.NotFound:
