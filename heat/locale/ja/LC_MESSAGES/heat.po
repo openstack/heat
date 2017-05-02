@@ -7,16 +7,17 @@
 # Satoshi Kodama <s.skk.skk+transifex@gmail.com>, 2013
 # Tomoyuki KATO <tomo@dream.daynight.jp>, 2013
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-04-27 00:07+0000\n"
+"POT-Creation-Date: 2017-05-01 21:01+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-12 05:29+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-04-28 06:33+0000\n"
+"Last-Translator: Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
@@ -307,7 +308,7 @@ msgid "A UUID for the set of servers being requested."
 msgstr "サーバーのセットの UUID が要求されています。"
 
 msgid "A bad or out-of-range value was supplied"
-msgstr "正しくないか範囲外の値が指定されました"
+msgstr "異常または範囲外の値が指定されました"
 
 msgid "A boolean value of default flag."
 msgstr "デフォルトフラグのブール値。"
@@ -614,7 +615,7 @@ msgid "AWS compatible instance name."
 msgstr "AWS 互換インスタンス名。"
 
 msgid "AWS query string is malformed, does not adhere to AWS spec"
-msgstr "AWS 照会文字列の形式が正しくありません。AWS 仕様に従っていません"
+msgstr "AWSクエリ文字列の形式が正しくありません。AWS 仕様に従っていません"
 
 msgid "Access policies to apply to the user."
 msgstr "ユーザーに適用するアクセスポリシー。"
@@ -900,6 +901,10 @@ msgid "Arguments to %s not fully resolved"
 msgstr "%s に対する引数が完全に解決されていません"
 
 #, python-format
+msgid "At least one of the following properties must be specified: %(props)s."
+msgstr "次の属性のうち少なくとも1つを指定する必要があります: %(props)s"
+
+#, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr "ID %(id)s のスタックの削除を試行: %(msg)s"
 
@@ -1160,6 +1165,14 @@ msgstr "自動的に最も重要なコンフィグを設定します。"
 msgid "Confirm resize for server %s failed"
 msgstr " サーバー %s のサイズ変更の確定が失敗しました"
 
+#, python-format
+msgid ""
+"Conflicting merge strategy '%(strategy)s' for parameter '%(param)s' in file "
+"'%(env_file)s'."
+msgstr ""
+"ファイル '%(env_file)s' に指定されたパラメタ '%(param)s'に対して不正なマージ"
+"戦略 '%(strategy)s' が指定されています。"
+
 msgid "Connection info for this network gateway."
 msgstr "このネットワークゲートウェイの接続情報。"
 
@@ -1179,6 +1192,9 @@ msgstr ""
 
 msgid "Context for this stack."
 msgstr "このスタックのコンテキスト。"
+
+msgid "Continue ? [y/N]"
+msgstr "続けますか？[y/N]"
 
 msgid "Control how the disk is partitioned when the server is created."
 msgstr ""
@@ -1223,6 +1239,10 @@ msgstr ""
 
 msgid "Cooldown period, in seconds."
 msgstr "クールダウン期間 (秒)。"
+
+#, python-format
+msgid "Could not bind to %(bind_addr)s after trying for 30 seconds"
+msgstr "30秒間試行しましたが%(bind_addr)s にバインドできませんでした"
 
 #, python-format
 msgid "Could not confirm resize of server %s"
@@ -1758,6 +1778,9 @@ msgstr ""
 msgid "Encapsulation mode for the ipsec policy."
 msgstr "ipsec ポリシーのカプセル化モード。"
 
+msgid "Encountered an empty component."
+msgstr "空のコンポーネントが検出されました。"
+
 #, fuzzy
 msgid ""
 "Encrypt template parameters that were marked as hidden and also all the "
@@ -1818,8 +1841,8 @@ msgid "Error during deleting share \"{0}\"."
 msgstr "シェア \"{0}\" の削除中にエラーが発生しました。"
 
 #, python-format
-msgid "Error parsing template: %s"
-msgstr "テンプレートの解析エラー: %s"
+msgid "Error in %(resource)s output %(attribute)s: %(message)s"
+msgstr "%(resource)s の出力 %(attribute)s にエラーが発生しました: %(message)s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
@@ -1932,6 +1955,10 @@ msgstr "テンプレートの取得に失敗しました"
 #, python-format
 msgid "Failed to retrieve template data: %s"
 msgstr "テンプレートデータの取得に失敗しました: %s"
+
+#, python-format
+msgid "Failed to retrieve template from %s"
+msgstr "%s からテンプレートの取得に失敗しました。"
 
 #, python-format
 msgid "Failed to retrieve template: %s"
@@ -2069,7 +2096,7 @@ msgid "Gateway network for the router."
 msgstr "ルーターのゲートウェイネットワーク。"
 
 msgid "Generic HeatAPIException, please use specific subclasses!"
-msgstr "一般 HeatAPIException。具体的なサブクラスを使用してください。"
+msgstr "汎用 HeatAPIException、具体的なサブクラスを使用してください。"
 
 msgid "Glance image ID or name."
 msgstr "glance イメージの ID または名前。"
@@ -2422,7 +2449,7 @@ msgstr ""
 "はワークフローを何度でも実行できます。"
 
 msgid "If set, then the server's certificate will not be verified."
-msgstr "設定すると、サーバーの証明書は検査されません。"
+msgstr "設定すると、サーバーの証明書は検証されません。"
 
 msgid "If specified, the backup to create the volume from."
 msgstr "指定した場合、ボリュームの作成元となるバックアップ。"
@@ -2686,6 +2713,13 @@ msgstr "無効なデフォルト %(default)s (%(exc)s)"
 msgid "Invalid deletion policy \"%s\""
 msgstr "無効な削除ポリシー \"%s\""
 
+#, python-format
+msgid ""
+"Invalid dependency with external %(resource_type)s resource: %(external_id)s"
+msgstr ""
+"外部リソース %(resource_type)s に対して不正な依存関係があります: "
+"%(external_id)s"
+
 #, fuzzy, python-format
 msgid "Invalid filter parameters %s"
 msgstr "無効なフィルターパラメーター %s"
@@ -2714,6 +2748,12 @@ msgstr "%(entity)s の無効キー '%(key)s'"
 msgid "Invalid keys in resource mark unhealthy %s"
 msgstr "不適切 %s とマークされたリソースの無効なキー"
 
+#, python-format
+msgid "Invalid merge strategy '%(strategy)s' for parameter '%(param)s'."
+msgstr ""
+"パラメタ '%(param)s'に対して不正なマージ戦略 '%(strategy)s' が指定されていま"
+"す。"
+
 msgid ""
 "Invalid mix of disk and container formats. When setting a disk or container "
 "format to one of 'aki', 'ari', or 'ami', the container and disk formats must "
@@ -2732,12 +2772,20 @@ msgid "Invalid parameter constraints for parameter %s, expected a list"
 msgstr "パラメーター %s のパラメーター制約が無効です。リストが必要です"
 
 #, python-format
+msgid "Invalid parameter in environment %s."
+msgstr "環境 %sに不正なパラメタがあります。"
+
+#, python-format
 msgid ""
 "Invalid restricted_action type \"%(value)s\" for resource, acceptable "
 "restricted_action types are: %(types)s"
 msgstr ""
 "リソースの restricted_action タイプ \"%(value)s\" が無効です。許容される "
 "restricted_action のタイプ: %(types)s"
+
+#, python-format
+msgid "Invalid service %(service)s version %(version)s"
+msgstr "不正なサービス %(service)s バージョン %(version)s"
 
 #, python-format
 msgid ""
@@ -2815,6 +2863,9 @@ msgstr "このファイアウォールルールの IP バージョン。"
 
 msgid "It defines an executor to which task action should be sent to."
 msgstr "タスクのアクションが送信される先の実行プログラムを定義します。"
+
+msgid "It is advised to shutdown all Heat engines beforehand."
+msgstr "事前にすべてのHeatエンジンの停止を推奨します。"
 
 #, python-format
 msgid "Items to join must be string, map or list not %s"
@@ -3154,6 +3205,9 @@ msgstr "最大 %s は 1 時間です。"
 msgid "Maximum depth allowed when using nested stacks."
 msgstr "ネストスタック使用時に許可される最大の深さ。"
 
+msgid "Maximum length of a server name to be used in nova."
+msgstr "Novaで使用できるサーバ名の最大長。"
+
 msgid ""
 "Maximum line size of message headers to be accepted. max_header_line may "
 "need to be increased when using large tokens (typically those generated by "
@@ -3263,6 +3317,9 @@ msgstr "アラームによって監視されるメトリック名。"
 msgid "Metric statistic to evaluate."
 msgstr "評価するメトリック統計。"
 
+msgid "MetricData list"
+msgstr "MetricData リスト"
+
 msgid "Min size of the cluster."
 msgstr "クラスターの最小サイズ。"
 
@@ -3322,11 +3379,19 @@ msgid "Multiple physical resources were found with name (%(name)s)."
 msgstr "名前が (%(name)s) の複数の物理リソースが見つかりました。"
 
 #, python-format
+msgid "Multiple resources were found with the physical ID (%(phys_id)s)."
+msgstr "物理ID (%(phys_id)s) を持つ複数のリソースが見つかりました。"
+
+#, python-format
 msgid "Multiple routers found with name %s"
 msgstr "%s という名前の複数のルーターが見つかりました"
 
 msgid "Must specify 'InstanceId' if you specify 'EIP'."
 msgstr "'EIP' を指定する場合は、'InstanceId' も指定する必要があります。"
+
+#, python-format
+msgid "Name '%s' must not start or end with a hyphen."
+msgstr "名前 '%s の先頭または末尾にハイフンを使用してはなりません。"
 
 msgid "Name for the Sahara Cluster Template."
 msgstr "Sahara クラスターテンプレートの名前。"
@@ -4504,6 +4569,10 @@ msgstr ""
 "UPDATE_FAILED の状態が発生しました。"
 
 #, python-format
+msgid "ResourcePropertiesData with id %s not found"
+msgstr " id %s を持つ ResourcePropertiesDataが見つかりません"
+
+#, python-format
 msgid "Resources must contain Resource. Found a [%s] instead"
 msgstr ""
 "リソースにはリソースが含まれている必要があります。代わりに [%s] が見つかりま"
@@ -4651,7 +4720,7 @@ msgstr ""
 "ん。理由: %(reason)s"
 
 msgid "Service misconfigured"
-msgstr "サービスの設定が正しくありません"
+msgstr "サービスの設定に誤りがあります"
 
 msgid "Service temporarily unavailable"
 msgstr "サービスが一時的に使用できません"
@@ -4706,6 +4775,9 @@ msgstr "このファイアウォールルールの共有状況。"
 
 msgid "Shared status of this firewall."
 msgstr "このファイアウォールの共有状況。"
+
+msgid "Show available commands."
+msgstr "利用可能なコマンドを表示する。"
 
 msgid "Shrinking volume"
 msgstr "ボリュームの縮小中"
@@ -4828,6 +4900,9 @@ msgstr "スタック ID"
 msgid "Stack Name"
 msgstr "スタック名"
 
+msgid "Stack id"
+msgstr "Stack ID"
+
 msgid "Stack name may not contain \"/\""
 msgstr "スタック名には \"/\" を使用できません"
 
@@ -4836,6 +4911,10 @@ msgstr "スタックリソース ID"
 
 msgid "Stack unknown status"
 msgstr "スタックの不明状況"
+
+#, python-format
+msgid "Stack with id %s can not be found."
+msgstr "スタック ID %sが見つかりません。"
 
 #, python-format
 msgid "Stack with id %s not found"
@@ -5046,6 +5125,10 @@ msgstr ""
 "使用して Heat API の resource-signal を呼び出すことができます。ZAQAR_SIGNAL "
 "を設定すると、専用の zaqar キューを作成し、 提供される keystone の認証情報を"
 "使用して信号を送信することができます。"
+
+#, python-format
+msgid "Template exceeds maximum allowed size (%s bytes)"
+msgstr "テンプレートが最大許容サイズ (%s バイト) を超えています"
 
 msgid "Template format version not found."
 msgstr "テンプレートのフォーマットバージョンが見つかりません。"
@@ -5619,6 +5702,9 @@ msgstr ""
 msgid "The directory to search for environment files."
 msgstr "環境ファイルを検索するディレクトリー。"
 
+msgid "The directory to search for template files."
+msgstr "テンプレートファイルを検索するためのディレクトリ先。"
+
 msgid "The ebs volume to attach to the instance."
 msgstr "インスタンスに接続する ebs ボリューム。"
 
@@ -6096,6 +6182,10 @@ msgstr "パーソナリティープロパティーには %s を超える項目�
 msgid "The physical mechanism by which the virtual network is implemented."
 msgstr "仮想ネットワークを実装する物理メカニズム。"
 
+#, python-format
+msgid "The physical resource for (%(name)s) exists."
+msgstr "(%(name)s) の物理リソースが存在します。"
+
 msgid "The port being checked."
 msgstr "ポートの検査中。"
 
@@ -6128,7 +6218,7 @@ msgid "The public key."
 msgstr "公開鍵。"
 
 msgid "The query string is malformed"
-msgstr "照会文字列の形式が正しくありません"
+msgstr "クエリの文字列の形式が正しくありません"
 
 msgid "The query to filter the metrics."
 msgstr "メトリックをフィルタリングするクエリー。"
@@ -7074,6 +7164,13 @@ msgstr "WaitCondition 無効ハンドルスタック %s"
 msgid "WaitCondition invalid Handle tenant %s"
 msgstr "WaitCondition 無効ハンドルテナント %s"
 
+msgid ""
+"Warning: this command is potentially destructive and only intended to "
+"recover from specific crashes."
+msgstr ""
+"注意：本コマンドは破壊的なため、特定の障害のリカバリのみにしか利用できませ"
+"ん。"
+
 msgid "Weight of pool member in the pool (default to 1)."
 msgstr "プール内のプールメンバーの重み (1 にデフォルト設定されます)。"
 
@@ -7263,6 +7360,10 @@ msgid "deployments of server %s"
 msgstr "サーバー %s の実装環境"
 
 #, python-format
+msgid "environment has empty section \"%s\""
+msgstr "環境に空のセクション \"%s\"があります。"
+
+#, python-format
 msgid "environment has wrong section \"%s\""
 msgstr "環境に正しくない \"%s\" があります"
 
@@ -7328,6 +7429,10 @@ msgstr "previous_status は %s ではなく SupportStatus である必要があ�
 #, python-format
 msgid "raw template with id %s not found"
 msgstr "ID %s のローテンプレートが見つかりません"
+
+#, python-format
+msgid "raw_template_files with files_id %d not found"
+msgstr "files_id %d を持つ raw_template_files が見つかりません"
 
 #, python-format
 msgid "resource with id %s not found"

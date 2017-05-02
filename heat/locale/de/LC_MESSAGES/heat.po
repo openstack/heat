@@ -9,9 +9,9 @@
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev52\n"
+"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-04-27 00:07+0000\n"
+"POT-Creation-Date: 2017-05-01 21:01+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1971,10 +1971,6 @@ msgstr "Fehler beim Erstellen des Freigabeverzeichnisses \"{0}\"."
 
 msgid "Error during deleting share \"{0}\"."
 msgstr "Fehler beim Löschen des Freigabeverzeichnisses \"{0}\"."
-
-#, python-format
-msgid "Error parsing template: %s"
-msgstr "Fehler bei der Auswertung der Vorlage: %s"
 
 #, python-format
 msgid "Error validating value '%(value)s'"
