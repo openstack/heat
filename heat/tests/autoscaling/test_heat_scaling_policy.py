@@ -300,7 +300,7 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         self.assertEqual('heat', base[2])
         self.assertEqual('test_tenant_id', base[4])
 
-        res = base[5].split('%2F')
+        res = base[5].split('/')
         self.assertEqual('stacks', res[0])
         self.assertEqual(self.stack_name, res[1])
         self.assertEqual('resources', res[3])

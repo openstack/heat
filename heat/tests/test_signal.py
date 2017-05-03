@@ -173,8 +173,8 @@ class SignalTest(common.HeatTestCase):
         # done for comparison
         expected_url_path = "".join([
             'http://server.test:8000/v1/signal/',
-            'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks%2F',
-            'FnGetAtt-alarm-url%2FFnGetAtt-alarm-url%2Fresources%2F',
+            'arn%3Aopenstack%3Aheat%3A%3Atest_tenant%3Astacks/',
+            'FnGetAtt-alarm-url/FnGetAtt-alarm-url/resources/',
             'signal_handler'])
         expected_url_params = {
             'Timestamp': ['2012-11-29T13:49:37Z'],
