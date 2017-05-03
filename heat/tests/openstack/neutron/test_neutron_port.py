@@ -288,6 +288,30 @@ class NeutronPortTest(common.HeatTestCase):
 
         }}
 
+    def test_create_with_tags(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties']['tags'] = ['tag1', 'tag2']
+        stack = utils.parse_stack(t)
+
+        port_prop = {
+            'network_id': u'net_or_sub',
+            'fixed_ips': [
+                {'subnet_id': u'net_or_sub', 'ip_address': u'10.0.3.21'}
+            ],
+            'name': utils.PhysName(stack.name, 'port'),
+            'admin_state_up': True,
+            'device_owner': u'network:dhcp'}
+
+        set_tag_mock = self.patchobject(neutronclient.Client, 'replace_tag')
+        self._mock_create_with_props()
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.assertEqual((port.CREATE, port.COMPLETE), port.state)
+        self.create_mock.assert_called_once_with({'port': port_prop})
+        set_tag_mock.assert_called_with('ports', port.resource_id,
+                                        {'tags': ['tag1', 'tag2']})
+
     def test_security_groups(self):
         t = template_format.parse(neutron_port_template)
         t['resources']['port']['properties']['security_groups'] = [
@@ -801,6 +825,7 @@ class UpdatePortTest(common.HeatTestCase):
         }
         self.patchobject(neutronclient.Client, 'list_security_groups',
                          return_value=fake_groups_list)
+        set_tag_mock = self.patchobject(neutronclient.Client, 'replace_tag')
 
         props = {'network_id': u'net1234',
                  'name': str(utils.PhysName(stack.name, 'port')),
@@ -810,6 +835,7 @@ class UpdatePortTest(common.HeatTestCase):
         update_props = props.copy()
         update_props['security_groups'] = self.secgrp
         update_props['value_specs'] = self.value_specs
+        update_props['tags'] = ['test_tag']
         if self.fixed_ips:
             update_props['fixed_ips'] = self.fixed_ips
         update_props['allowed_address_pairs'] = self.addr_pair
@@ -828,6 +854,8 @@ class UpdatePortTest(common.HeatTestCase):
             for value_spec in six.iteritems(value_specs):
                 update_dict[value_spec[0]] = value_spec[1]
 
+        tags = update_dict.pop('tags')
+
         # create port
         port = stack['port']
         self.assertIsNone(scheduler.TaskRunner(port.handle_create)())
@@ -840,7 +868,8 @@ class UpdatePortTest(common.HeatTestCase):
                                                update_props)())
 
         update_port.assset_called_once_with(update_dict)
-
+        set_tag_mock.assert_called_with('ports', port.resource_id,
+                                        {'tags': tags})
         # check, that update does not cause of Update Replace
         create_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       props)
