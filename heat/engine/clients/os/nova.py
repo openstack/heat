@@ -616,17 +616,11 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                     console_data = data.get(
                         'remote_console', data.get('console'))
                     url = console_data['url']
-                except (exceptions.BadRequest,
-                        exceptions.UnsupportedConsoleType) as e:
-                    unavailable = 'Unavailable console type'
-                    unsupport = 'Unsupported console_type'
-                    if unavailable in e.message or unsupport in e.message:
-                        url = e.message
-                    else:
-                        raise
-                except exception.InvalidServiceVersion:
-                    url = _('Nova service version %s is '
-                            'unavailable') % mks_version
+                except exceptions.UnsupportedConsoleType as ex:
+                    url = ex.message
+                except Exception as e:
+                    url = _('Cannot get console url: %s') % six.text_type(e)
+
                 return url
 
             def __len__(self):
