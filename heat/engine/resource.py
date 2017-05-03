@@ -1400,6 +1400,12 @@ class Resource(status.ResourceStatus):
                                           prev_resource):
                     if update_templ_func is not None:
                         update_templ_func(persist=True)
+                    if self.status == self.FAILED:
+                        status_reason = _('Update status to COMPLETE for '
+                                          'FAILED resource neither update '
+                                          'nor replace.')
+                        self.state_set(self.action, self.COMPLETE,
+                                       status_reason)
                     return
 
             if not self.stack.convergence:
