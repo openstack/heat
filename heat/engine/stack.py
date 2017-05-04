@@ -2066,7 +2066,7 @@ class Stack(collections.Mapping):
         start_time = timeutils.round_to_seconds(self.updated_time or
                                                 self.created_time)
         nowish = timeutils.round_to_seconds(datetime.datetime.utcnow())
-        return (nowish - start_time).seconds
+        return int((nowish - start_time).total_seconds())
 
     def time_remaining(self):
         """Time left before stack times out."""
