@@ -38,12 +38,12 @@ class Subnet(neutron.NeutronResource):
         NETWORK_ID, NETWORK, SUBNETPOOL, PREFIXLEN, CIDR,
         VALUE_SPECS, NAME, IP_VERSION, DNS_NAMESERVERS, GATEWAY_IP,
         ENABLE_DHCP, ALLOCATION_POOLS, TENANT_ID, HOST_ROUTES,
-        IPV6_RA_MODE, IPV6_ADDRESS_MODE, SEGMENT
+        IPV6_RA_MODE, IPV6_ADDRESS_MODE, SEGMENT, TAGS,
     ) = (
         'network_id', 'network', 'subnetpool', 'prefixlen', 'cidr',
         'value_specs', 'name', 'ip_version', 'dns_nameservers', 'gateway_ip',
         'enable_dhcp', 'allocation_pools', 'tenant_id', 'host_routes',
-        'ipv6_ra_mode', 'ipv6_address_mode', 'segment'
+        'ipv6_ra_mode', 'ipv6_address_mode', 'segment', 'tags',
     )
 
     _ALLOCATION_POOL_KEYS = (
@@ -244,6 +244,13 @@ class Subnet(neutron.NeutronResource):
             ],
             support_status=support.SupportStatus(version='9.0.0')
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('The tags to be added to the subnet.'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -374,11 +381,18 @@ class Subnet(neutron.NeutronResource):
         props['network_id'] = props.pop(self.NETWORK)
         if self.SEGMENT in props and props[self.SEGMENT]:
             props['segment_id'] = props.pop(self.SEGMENT)
+
+        tags = props.pop(self.TAGS, [])
+
         if self.SUBNETPOOL in props and props[self.SUBNETPOOL]:
             props['subnetpool_id'] = props.pop('subnetpool')
         self._null_gateway_ip(props)
+
         subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
+
+        if tags:
+            self.set_tags(tags)
 
     def handle_delete(self):
         try:
@@ -397,7 +411,9 @@ class Subnet(neutron.NeutronResource):
 
             # If the new value is '', set to None
             self._null_gateway_ip(prop_diff)
-
+            if self.TAGS in prop_diff:
+                tags = prop_diff.pop(self.TAGS)
+                self.set_tags(tags)
             self.client().update_subnet(
                 self.resource_id, {'subnet': prop_diff})
 
