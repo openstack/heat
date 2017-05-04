@@ -31,7 +31,8 @@ class MistralClientPlugin(client_plugin.ClientPlugin):
                                 endpoint_type=endpoint_type)
         args = {
             'mistral_url': endpoint,
-            'auth_token': self.context.keystone_session.get_token()
+            'session': self.context.keystone_session,
+            'region_name': self._get_region_name()
         }
 
         client = mistral_client.client(**args)
