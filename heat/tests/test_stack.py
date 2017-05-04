@@ -110,47 +110,43 @@ class StackTest(common.HeatTestCase):
                                  timeout_mins=10)
         self.assertEqual(600, self.stack.timeout_secs())
 
-    @mock.patch.object(stack, 'datetime')
-    def test_time_elapsed(self, mock_dt):
+    @mock.patch.object(stack, 'oslo_timeutils')
+    def test_time_elapsed(self, mock_tu):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         # dummy create time 10:00:00
         self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 0, 0)
         # mock utcnow set to 10:10:00 (600s offset)
-        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
-                                                                 10, 10, 0)
+        mock_tu.utcnow.return_value = datetime.datetime(2015, 7, 27, 10, 10, 0)
         self.assertEqual(600, self.stack.time_elapsed())
 
-    @mock.patch.object(stack, 'datetime')
-    def test_time_elapsed_negative(self, mock_dt):
+    @mock.patch.object(stack, 'oslo_timeutils')
+    def test_time_elapsed_negative(self, mock_tu):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         # dummy create time 10:00:00
         self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 0, 0)
         # mock utcnow set to 09:59:50 (-10s offset)
-        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
-                                                                 9, 59, 50)
+        mock_tu.utcnow.return_value = datetime.datetime(2015, 7, 27, 9, 59, 50)
         self.assertEqual(-10, self.stack.time_elapsed())
 
-    @mock.patch.object(stack, 'datetime')
-    def test_time_elapsed_ms(self, mock_dt):
+    @mock.patch.object(stack, 'oslo_timeutils')
+    def test_time_elapsed_ms(self, mock_tu):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         # dummy create time 10:00:00
         self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 5, 0)
         # mock utcnow set to microsecond offset
-        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
-                                                                 10, 4, 59,
-                                                                 750000)
-        self.assertEqual(0, self.stack.time_elapsed())
+        mock_tu.utcnow.return_value = datetime.datetime(2015, 7, 27,
+                                                        10, 4, 59, 750000)
+        self.assertEqual(-0.25, self.stack.time_elapsed())
 
-    @mock.patch.object(stack, 'datetime')
-    def test_time_elapsed_with_updated_time(self, mock_dt):
+    @mock.patch.object(stack, 'oslo_timeutils')
+    def test_time_elapsed_with_updated_time(self, mock_tu):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         # dummy create time 10:00:00
         self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 0, 0)
         # dummy updated time 11:00:00; should consider this not created_time
         self.stack.updated_time = datetime.datetime(2015, 7, 27, 11, 0, 0)
         # mock utcnow set to 11:10:00 (600s offset)
-        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
-                                                                 11, 10, 0)
+        mock_tu.utcnow.return_value = datetime.datetime(2015, 7, 27, 11, 10, 0)
         self.assertEqual(600, self.stack.time_elapsed())
 
     @mock.patch.object(stack.Stack, 'time_elapsed')
