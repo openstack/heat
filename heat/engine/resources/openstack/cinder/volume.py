@@ -663,7 +663,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             self.IMAGE_REF, self.IMAGE, self.SOURCE_VOLID)
         props = dict(
             (key, value) for (key, value) in
-            six.iteritems(defn.properties(self.properties_schema))
+            self.properties.data.items()
             if key not in ignore_props and value is not None)
         props[self.BACKUP_ID] = backup_id
         return defn.freeze(properties=props)
