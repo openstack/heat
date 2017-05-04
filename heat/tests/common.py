@@ -18,7 +18,6 @@ import fixtures
 import mox
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslotest import mockpatch
 import testscenarios
 import testtools
 
@@ -203,14 +202,15 @@ class HeatTestCase(testscenarios.WithScenarios,
             generic_rsrc.ResourceWithHiddenPropertyAndAttribute)
 
     def patchobject(self, obj, attr, **kwargs):
-        mockfixture = self.useFixture(mockpatch.PatchObject(obj, attr,
-                                                            **kwargs))
+        mockfixture = self.useFixture(fixtures.MockPatchObject(obj, attr,
+                                                               **kwargs))
         return mockfixture.mock
 
     # NOTE(pshchelo): this overrides the testtools.TestCase.patch method
     # that does simple monkey-patching in favor of mock's patching
     def patch(self, target, **kwargs):
-        mockfixture = self.useFixture(mockpatch.Patch(target, **kwargs))
+        mockfixture = self.useFixture(fixtures.MockPatch(target,
+                                                         **kwargs))
         return mockfixture.mock
 
     def stub_auth(self, ctx=None, **kwargs):
