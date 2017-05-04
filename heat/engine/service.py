@@ -1231,11 +1231,11 @@ class EngineService(service.ServiceBase):
         stack_name = 'dummy'
         stack = parser.Stack(cnxt, stack_name, tmpl,
                              strict_validate=False,
-                             resource_validate=False,
                              service_check_defer=service_check_defer)
         try:
             stack.validate(ignorable_errors=ignorable_errors,
-                           validate_by_deps=False)
+                           validate_by_deps=False,
+                           validate_res_tmpl_only=True)
         except exception.StackValidationFailed as ex:
             return {'Error': six.text_type(ex)}
 
@@ -2428,8 +2428,7 @@ class EngineService(service.ServiceBase):
                         continue
 
                     stk = parser.Stack.load(cnxt, stack=s,
-                                            service_check_defer=True,
-                                            resource_validate=False)
+                                            service_check_defer=True)
                     LOG.info('Engine %(engine)s went down when stack '
                              '%(stack_id)s was in action %(action)s',
                              {'engine': engine_id, 'action': stk.action,

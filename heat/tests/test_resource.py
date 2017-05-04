@@ -193,9 +193,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(0, mock_load.call_count)
 
         # set stack._resources = None to reload the resources
-        # and set resource_validate = False
         stack._resources = None
-        stack.resource_validate = False
         mock_db_get.return_value = mock.Mock()
         self.assertEqual(1, len(stack.resources))
         self.assertEqual(2, mock_translate.call_count)

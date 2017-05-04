@@ -221,8 +221,6 @@ class Resource(status.ResourceStatus):
         self.context = stack.context
         self.name = name
         self.t = definition
-        # Only translate in cases where resource_validate is True
-        # ex. for template-validate
         self.reparse(client_resolve=False)
         self.update_policy = self.t.update_policy(self.update_policy_schema,
                                                   self.context)
