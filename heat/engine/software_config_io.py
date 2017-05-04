@@ -16,12 +16,14 @@ APIs for dealing with input and output definitions for Software Configurations.
 """
 
 import collections
+import copy
 import six
 
 from heat.common.i18n import _
 
 from heat.common import exception
 from heat.engine import constraints
+from heat.engine import parameters
 from heat.engine import properties
 
 
@@ -59,7 +61,7 @@ input_config_schema = {
         constraints=[constraints.AllowedValues(TYPES)]
     ),
     DEFAULT: properties.Schema(
-        properties.Schema.STRING,
+        properties.Schema.ANY,
         _('Default value for the input if none is specified.'),
     ),
     REPLACE_ON_CHANGE: properties.Schema(
@@ -126,6 +128,12 @@ class InputConfig(IOConfig):
     schema = input_config_schema
 
     def __init__(self, value=_no_value, **config):
+        if TYPE in config and DEFAULT in config:
+            self.schema = copy.deepcopy(self.schema)
+            config_param = parameters.Schema.from_dict(
+                'config', {'Type': config[TYPE]})
+            self.schema[DEFAULT] = properties.Schema.from_parameter(
+                config_param)
         super(InputConfig, self).__init__(**config)
         self._value = value
 
