@@ -917,8 +917,7 @@ def _delete_event_rows(context, stack_id, limit):
     # delete the events
     retval = session.query(models.Event.id).filter(
         models.Event.id <= max_id).filter(
-            models.Event.stack_id == stack_id).delete(
-                synchronize_session=False)
+            models.Event.stack_id == stack_id).delete()
 
     # delete unreferenced resource_properties_data
     rsrc_prop_ids = set(rsrc_prop_ids)
