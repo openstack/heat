@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
@@ -76,6 +77,45 @@ class KeystoneProject(resource.Resource):
             constraints=[constraints.CustomConstraint('keystone.project')]
         ),
     }
+
+    ATTRIBUTES = (
+        NAME_ATTR, PARENT_ATTR, DOMAIN_ATTR, ENABLED_ATTR, IS_DOMAIN_ATTR
+    ) = (
+        'name', 'parent_id', 'domain_id', 'enabled', 'is_domain'
+    )
+    attributes_schema = {
+        NAME_ATTR: attributes.Schema(
+            _('Project name.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            type=attributes.Schema.STRING
+        ),
+        PARENT_ATTR: attributes.Schema(
+            _('Parent project id.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            type=attributes.Schema.STRING
+        ),
+        DOMAIN_ATTR: attributes.Schema(
+            _('Domain id for project.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            type=attributes.Schema.STRING
+        ),
+        ENABLED_ATTR: attributes.Schema(
+            _('Flag of enable project.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            type=attributes.Schema.BOOLEAN
+        ),
+        IS_DOMAIN_ATTR: attributes.Schema(
+            _('Indicates whether the project also acts as a domain.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            type=attributes.Schema.BOOLEAN
+        ),
+    }
+
+    def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
+        project = self.client().projects.get(self.resource_id)
+        return getattr(project, name, None)
 
     def translation_rules(self, properties):
         return [

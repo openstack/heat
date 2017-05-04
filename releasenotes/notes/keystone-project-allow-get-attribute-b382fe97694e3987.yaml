@@ -1,0 +1,4 @@
+---
+fixes:
+  - Add attribute schema to `OS::Keystone::Project`. This allow get_attr
+    function can work with project resource.

@@ -73,7 +73,11 @@ class KeystoneProjectTest(common.HeatTestCase):
         value = mock.MagicMock()
         project_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         value.id = project_id
-
+        value.name = 'test_project_1'
+        value.domain_id = 'default'
+        value.enabled = True
+        value.parent_id = 'my_father'
+        value.is_domain = False
         return value
 
     def test_project_handle_create(self):
@@ -377,3 +381,24 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.assertEqual(set(expected.keys()), set(reality.keys()))
         for key in expected:
             self.assertEqual(expected[key], reality[key])
+
+    def test_resolve_attributes(self):
+        mock_project = self._get_mock_project()
+        self.test_project.resource_id = mock_project['id']
+        self.projects.get.return_value = mock_project
+        self.assertEqual(
+            'test_project_1',
+            self.test_project._resolve_attribute(
+                project.KeystoneProject.NAME_ATTR))
+        self.assertEqual(
+            'my_father',
+            self.test_project._resolve_attribute(
+                project.KeystoneProject.PARENT_ATTR))
+        self.assertEqual(
+            'default',
+            self.test_project._resolve_attribute(
+                project.KeystoneProject.DOMAIN_ATTR))
+        self.assertTrue(self.test_project._resolve_attribute(
+            project.KeystoneProject.ENABLED_ATTR))
+        self.assertFalse(self.test_project._resolve_attribute(
+            project.KeystoneProject.IS_DOMAIN_ATTR))
