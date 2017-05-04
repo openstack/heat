@@ -600,6 +600,17 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         info = self.client.stacks.abandon(stack_id=stack_id)
         return info
 
+    def stack_snapshot(self, stack_id,
+                       wait_for_status='SNAPSHOT_COMPLETE'):
+        snapshot = self.client.stacks.snapshot(stack_id=stack_id)
+        self._wait_for_stack_status(stack_id, wait_for_status)
+        return snapshot['id']
+
+    def stack_restore(self, stack_id, snapshot_id,
+                      wait_for_status='RESTORE_COMPLETE'):
+        self.client.stacks.restore(stack_id, snapshot_id)
+        self._wait_for_stack_status(stack_id, wait_for_status)
+
     def stack_suspend(self, stack_identifier):
         if (self.conf.skip_test_stack_action_list and
                 'SUSPEND' in self.conf.skip_test_stack_action_list):
