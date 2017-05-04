@@ -23,7 +23,6 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine import constraints
-from heat.engine import function
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import port as neutron_port
 from heat.engine.resources.openstack.neutron import subnet
@@ -1576,7 +1575,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     def handle_restore(self, defn, restore_data):
         image_id = restore_data['resource_data']['snapshot_image_id']
-        props = function.resolve(self.properties.data)
+        props = dict((k, v) for k, v in self.properties.data.items()
+                     if v is not None)
         props[self.IMAGE] = image_id
         return defn.freeze(properties=props)
 
