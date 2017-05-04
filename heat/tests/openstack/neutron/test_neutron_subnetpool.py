@@ -37,8 +37,10 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
                                               'find_resourceid_by_name_or_id',
                                               return_value='new_test')
 
-    def create_subnetpool(self, status='COMPLETE'):
+    def create_subnetpool(self, status='COMPLETE', tags=None):
         self.t = template_format.parse(inline_templates.SPOOL_TEMPLATE)
+        if tags:
+            self.t['resources']['sub_pool']['properties']['tags'] = tags
         self.stack = utils.parse_stack(self.t)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = subnetpool.SubnetPool('sub_pool', resource_defns['sub_pool'],
@@ -61,6 +63,10 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
             scheduler.TaskRunner(rsrc.create)()
 
         self.assertEqual((rsrc.CREATE, status), rsrc.state)
+        if tags:
+            self.set_tag_mock.assert_called_once_with('subnetpools',
+                                                      rsrc.resource_id,
+                                                      {'tags': tags})
         return rsrc
 
     def test_validate_prefixlen_min_gt_max(self):
@@ -113,6 +119,14 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
 
+    def test_create_subnetpool_with_tags(self):
+        tags = ['for_test']
+        self.set_tag_mock = self.patchobject(neutronclient.Client,
+                                             'replace_tag')
+        rsrc = self.create_subnetpool(tags=tags)
+        ref_id = rsrc.FnGetRefId()
+        self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
+
     def test_create_subnetpool_failed(self):
         self.create_subnetpool('FAILED')
 
@@ -144,11 +158,15 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
     def test_update_subnetpool(self):
         update_subnetpool = self.patchobject(neutronclient.Client,
                                              'update_subnetpool')
-        rsrc = self.create_subnetpool()
+        self.set_tag_mock = self.patchobject(neutronclient.Client,
+                                             'replace_tag')
+        old_tags = ['old_tag']
+        rsrc = self.create_subnetpool(tags=old_tags)
         self.patchobject(rsrc, 'physical_resource_name',
                          return_value='the_new_sp')
         ref_id = rsrc.FnGetRefId()
         self.assertEqual('fc68ea2c-b60b-4b4f-bd82-94ec81110766', ref_id)
+        new_tags = ['new_tag']
         props = {
             'name': 'the_new_sp',
             'prefixes': [
@@ -160,6 +178,7 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
             'min_prefixlen': '24',
             'max_prefixlen': '28',
             'is_default': False,
+            'tags': new_tags
         }
         update_dict = props.copy()
         update_dict['name'] = 'the_new_sp'
@@ -168,12 +187,16 @@ class NeutronSubnetPoolTest(common.HeatTestCase):
                                                       props)
         # with name
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, props))
+        self.set_tag_mock.assert_called_with('subnetpools',
+                                             rsrc.resource_id,
+                                             {'tags': new_tags})
 
         # without name
         props['name'] = None
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, props))
 
         self.assertEqual(2, update_subnetpool.call_count)
+        update_dict.pop('tags')
         update_subnetpool.assert_called_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
             {'subnetpool': update_dict})
