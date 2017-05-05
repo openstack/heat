@@ -133,11 +133,9 @@ function configure_heat {
 
     # logging
     iniset $HEAT_CONF DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
-    iniset $HEAT_CONF DEFAULT use_syslog $SYSLOG
-    if [ "$LOG_COLOR" == "True" ] && [ "$SYSLOG" == "False" ] && [ "$HEAT_USE_MOD_WSGI" == "False" ]  ; then
-        # Add color to logging output
-        setup_colorized_logging $HEAT_CONF DEFAULT tenant user
-    fi
+
+    # Format logging
+    setup_logging $HEAT_CONF $HEAT_USE_MOD_WSGI
 
     if [ ! -z "$HEAT_DEFERRED_AUTH" ]; then
         iniset $HEAT_CONF DEFAULT deferred_auth_method $HEAT_DEFERRED_AUTH
