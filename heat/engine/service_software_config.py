@@ -100,7 +100,10 @@ class SoftwareConfigService(object):
     def _push_metadata_software_deployments(
             self, cnxt, server_id, stack_user_project_id):
         rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
-        if not rs or rs.action == resource.Resource.DELETE:
+        if not rs:
+            return
+        cnxt.session.refresh(rs)
+        if rs.action == resource.Resource.DELETE:
             return
         deployments = self.metadata_software_deployments(cnxt, server_id)
         md = rs.rsrc_metadata or {}
