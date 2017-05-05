@@ -45,7 +45,7 @@ python-mistralclient>=3.1.0 # Apache-2.0
 python-monascaclient>=1.1.0 # Apache-2.0
 python-neutronclient>=5.1.0 # Apache-2.0
 python-novaclient>=7.1.0 # Apache-2.0
-python-openstackclient>=3.3.0 # Apache-2.0
+python-openstackclient!=3.10.0,>=3.3.0 # Apache-2.0
 python-saharaclient>=1.1.0 # Apache-2.0
 python-senlinclient>=1.1.0 # Apache-2.0
 python-swiftclient>=3.2.0 # Apache-2.0
