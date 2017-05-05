@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -179,7 +181,10 @@ class ClusterTemplate(resource.Resource):
         ),
         PUBLIC: properties.Schema(
             properties.Schema.BOOLEAN,
-            _('Make the cluster template public.'),
+            _('Make the cluster template public. To enable this option, you '
+              'must own the right to publish in magnum. Which default set '
+              'to admin only.'),
+            update_allowed=True,
             default=False
         ),
         REGISTRY_ENABLED: properties.Schema(
@@ -249,6 +254,35 @@ class ClusterTemplate(resource.Resource):
 
         ct = self.client().cluster_templates.create(**args)
         self.resource_id_set(ct.uuid)
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            patch = [{'op': 'replace', 'path': '/' + k, 'value': v}
+                     for k, v in six.iteritems(prop_diff)]
+            self.client().cluster_templates.update(self.resource_id, patch)
+            return self.resource_id
+
+    def check_update_complete(self, id):
+        cluster_template = self.client().cluster_templates.get(id)
+        if cluster_template.status == 'UPDATE_IN_PROGRESS':
+            return False
+        elif cluster_template.status == 'UPDATE_COMPLETE':
+            return True
+        elif cluster_template.status == 'UPDATE_FAILED':
+            msg = (_("Failed to update Cluster Template "
+                     "'%(name)s' - %(reason)s")
+                   % {'name': self.name,
+                      'reason': cluster_template.status_reason})
+            raise exception.ResourceInError(
+                status_reason=msg, resource_status=cluster_template.status)
+
+        else:
+            msg = (_("Unknown status updating Cluster Template "
+                     "'%(name)s' - %(reason)s")
+                   % {'name': self.name,
+                      'reason': cluster_template.status_reason})
+            raise exception.ResourceUnknownStatus(
+                status_reason=msg, resource_status=cluster_template.status)
 
 
 def resource_mapping():
