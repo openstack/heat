@@ -91,5 +91,5 @@ Lite spec from existing bugs
 ----------------------------
 
 If there's an already existing bug that describes a small feature suitable for
-a spec-lite, add a `spec-lite' tag to the bug. There is no need to create a new
+a spec-lite, add a `spec-lite` tag to the bug. There is no need to create a new
 bug. The comments and history of the existing bug are important for it's review.
