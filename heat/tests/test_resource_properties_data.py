@@ -39,8 +39,7 @@ class ResourcePropertiesDataTest(common.HeatTestCase):
         return rpd_obj, db_obj
 
     def test_rsrc_prop_data_encrypt(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         rpd_obj, db_obj = self._get_rpd_and_db_obj()
 
         # verify data is encrypted in the db
@@ -59,8 +58,7 @@ class ResourcePropertiesDataTest(common.HeatTestCase):
         self.assertEqual(self.data, rpd_obj['data'])
 
     def test_rsrc_prop_data_no_encrypt(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
         rpd_obj, db_obj = self._get_rpd_and_db_obj()
 
         # verify data is unencrypted in the db

@@ -80,8 +80,8 @@ class EventTest(EventCommon):
         self._setup_stack(tmpl)
 
     def test_store_caps_events(self):
-        cfg.CONF.set_override('event_purge_batch_size', 1, enforce_type=True)
-        cfg.CONF.set_override('max_events_per_stack', 1, enforce_type=True)
+        cfg.CONF.set_override('event_purge_batch_size', 1)
+        cfg.CONF.set_override('max_events_per_stack', 1)
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
@@ -100,8 +100,8 @@ class EventTest(EventCommon):
         self.assertEqual('arizona', events[0].physical_resource_id)
 
     def test_store_caps_events_random_purge(self):
-        cfg.CONF.set_override('event_purge_batch_size', 100, enforce_type=True)
-        cfg.CONF.set_override('max_events_per_stack', 1, enforce_type=True)
+        cfg.CONF.set_override('event_purge_batch_size', 100)
+        cfg.CONF.set_override('max_events_per_stack', 1)
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
@@ -133,8 +133,8 @@ class EventTest(EventCommon):
         self.assertEqual(2, len(events))
 
     def test_store_caps_resource_props_data(self):
-        cfg.CONF.set_override('event_purge_batch_size', 2, enforce_type=True)
-        cfg.CONF.set_override('max_events_per_stack', 3, enforce_type=True)
+        cfg.CONF.set_override('event_purge_batch_size', 2)
+        cfg.CONF.set_override('max_events_per_stack', 3)
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
@@ -249,8 +249,7 @@ class EventTest(EventCommon):
         self.assertEqual({'Time': 'not enough'}, ev.resource_properties)
 
     def test_event_object_resource_properties_data(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         data = {'p1': 'hello',
                 'p2': 'too soon?'}
         rpd_obj = rpd_object.ResourcePropertiesData().create(self.ctx, data)

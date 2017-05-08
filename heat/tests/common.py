@@ -106,7 +106,7 @@ class HeatTestCase(testscenarios.WithScenarios,
                                     'templates')
 
         cfg.CONF.set_default('environment_dir', env_dir)
-        cfg.CONF.set_override('error_wait_time', None, enforce_type=True)
+        cfg.CONF.set_override('error_wait_time', None)
         cfg.CONF.set_default('template_dir', template_dir)
         self.addCleanup(cfg.CONF.reset)
 

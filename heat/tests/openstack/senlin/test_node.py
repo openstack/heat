@@ -112,7 +112,7 @@ class SenlinNodeTest(common.HeatTestCase):
             **expect_kwargs)
 
     def test_node_create_error(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         self.senlin_mock.create_node.return_value = self.fake_node
         mock_action = mock.MagicMock()
         mock_action.status = 'FAILED'

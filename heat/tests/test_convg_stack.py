@@ -34,7 +34,7 @@ from heat.tests import utils
 class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def setUp(self):
         super(StackConvergenceCreateUpdateDeleteTest, self).setUp()
-        cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
+        cfg.CONF.set_override('convergence_engine', True)
         self.stack = None
 
     @mock.patch.object(parser.Stack, 'mark_complete')
@@ -589,7 +589,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 class TestConvgStackStateSet(common.HeatTestCase):
     def setUp(self):
         super(TestConvgStackStateSet, self).setUp()
-        cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
+        cfg.CONF.set_override('convergence_engine', True)
         self.stack = tools.get_stack(
             'test_stack', utils.dummy_context(),
             template=tools.wp_template, convergence=True)

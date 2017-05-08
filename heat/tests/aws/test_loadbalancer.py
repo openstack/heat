@@ -153,8 +153,7 @@ class LoadBalancerTest(common.HeatTestCase):
             rsrc.validate())
 
     def test_loadbalancer_validate_badtemplate(self):
-        cfg.CONF.set_override('loadbalancer_template', '/a/noexist/x.y',
-                              enforce_type=True)
+        cfg.CONF.set_override('loadbalancer_template', '/a/noexist/x.y')
         rsrc = self.setup_loadbalancer()
         self.assertRaises(exception.StackValidationFailed, rsrc.validate)
 

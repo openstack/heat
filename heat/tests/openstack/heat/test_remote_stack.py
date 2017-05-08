@@ -131,7 +131,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.that_region = 'RegionTwo'
         self.bad_region = 'RegionNone'
 
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         self.parent = None
         self.heat = None
         self.client_plugin = None

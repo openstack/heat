@@ -600,8 +600,7 @@ class InstancesTest(common.HeatTestCase):
 
     def test_instance_create_with_stack_scheduler_hints(self):
         return_server = self.fc.servers.list()[1]
-        sh.cfg.CONF.set_override('stack_scheduler_hints', True,
-                                 enforce_type=True)
+        sh.cfg.CONF.set_override('stack_scheduler_hints', True)
         # Unroll _create_test_instance, to enable check
         # for addition of heat ids (stack id, resource name)
         stack_name = 'test_instance_create_with_stack_scheduler_hints'

@@ -95,7 +95,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
     def test_exception_with_non_ascii_chars(self):
         # We set debug to true to test the code path for serializing traces too
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
         msg = u'Error with non-ascii chars \x80'
 
         class TestException(heat_exc.HeatException):
@@ -115,7 +115,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
     def test_remote_exception(self):
         # We want tracebacks
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
         exc_info = (type(error), error, None)
         serialized = rpc_common.serialize_remote_exception(exc_info)
@@ -222,7 +222,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
     def test_should_not_ignore_parent_classes_even_for_remote_ones(self):
         # We want tracebacks
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
 
         error = StackNotFoundChild(entity='Stack', name='a')
         exc_info = (type(error), error, None)

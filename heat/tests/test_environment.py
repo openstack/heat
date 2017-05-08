@@ -185,8 +185,7 @@ def constraint_mapping():
         with open(plugin_file, 'w+') as ef:
             ef.write(constraint_content)
         self.addCleanup(sys.modules.pop, "heat.engine.plugins.test")
-        cfg.CONF.set_override('plugin_dirs', plugin_dir.path,
-                              enforce_type=True)
+        cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
 
         env = environment.Environment({})
         resources._load_global_environment(env)
@@ -205,8 +204,7 @@ def constraint_mapping():
         with open(plugin_file, 'w+') as ef:
             ef.write(constraint_content)
         self.addCleanup(sys.modules.pop, "heat.engine.plugins.test")
-        cfg.CONF.set_override('plugin_dirs', plugin_dir.path,
-                              enforce_type=True)
+        cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
 
         env = environment.Environment({})
         error = self.assertRaises(ValueError,
@@ -399,8 +397,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         envfile = os.path.join(envdir.path, 'test.yaml')
         with open(envfile, 'w+') as ef:
             ef.write(g_env_content)
-        cfg.CONF.set_override('environment_dir', envdir.path,
-                              enforce_type=True)
+        cfg.CONF.set_override('environment_dir', envdir.path)
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
@@ -422,8 +419,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         envfile = os.path.join(envdir.path, 'test.yaml')
         with open(envfile, 'w+') as ef:
             ef.write(g_env_content)
-        cfg.CONF.set_override('environment_dir', envdir.path,
-                              enforce_type=True)
+        cfg.CONF.set_override('environment_dir', envdir.path)
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
@@ -449,8 +445,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
         envfile = os.path.join(envdir.path, 'test.yaml')
         with open(envfile, 'w+') as ef:
             ef.write(g_env_content)
-        cfg.CONF.set_override('environment_dir', envdir.path,
-                              enforce_type=True)
+        cfg.CONF.set_override('environment_dir', envdir.path)
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
@@ -492,8 +487,7 @@ class GlobalEnvLoadingTest(common.HeatTestCase):
             ef.write(g_env_content)
         with open(os.path.join(envdir.path, 'b.yaml'), 'w+') as ef:
             ef.write(g_env_content)
-        cfg.CONF.set_override('environment_dir', envdir.path,
-                              enforce_type=True)
+        cfg.CONF.set_override('environment_dir', envdir.path)
 
         # 2. load global env
         g_env = environment.Environment({}, user_env=False)
