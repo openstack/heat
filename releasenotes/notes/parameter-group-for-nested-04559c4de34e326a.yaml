@@ -1,0 +1,4 @@
+---
+features:
+  - ParameterGroups section is added to the nested stacks,
+    for the output of the stack validate templates.
