@@ -73,7 +73,7 @@ class CronTrigger(resource.Resource):
             schema={
                 WORKFLOW_NAME: properties.Schema(
                     properties.Schema.STRING,
-                    _('Name of the workflow.'),
+                    _('Name or ID of the workflow.'),
                     required=True,
                     constraints=[
                         constraints.CustomConstraint('mistral.workflow')
@@ -122,16 +122,18 @@ class CronTrigger(resource.Resource):
 
     def handle_create(self):
         workflow = self.properties.get(self.WORKFLOW)
+        name = self._cron_trigger_name()
+        identifier = workflow[self.WORKFLOW_NAME]
+
         args = {
-            'name': self._cron_trigger_name(),
             'pattern': self.properties.get(self.PATTERN),
-            'workflow_name': workflow.get(self.WORKFLOW_NAME),
             'workflow_input': workflow.get(self.WORKFLOW_INPUT),
             'first_time': self.properties.get(self.FIRST_TIME),
             'count': self.properties.get(self.COUNT)
         }
 
-        cron_trigger = self.client().cron_triggers.create(**args)
+        cron_trigger = self.client().cron_triggers.create(name, identifier,
+                                                          **args)
         self.resource_id_set(cron_trigger.name)
 
     def _resolve_attribute(self, name):
