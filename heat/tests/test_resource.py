@@ -531,7 +531,7 @@ class ResourceTest(common.HeatTestCase):
         res, utmpl = self._setup_resource_for_update(
             res_name='test_update_rsrc_in_progress_raises_exception')
 
-        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
+        cfg.CONF.set_override('convergence_engine', False)
 
         res.action = res.UPDATE
         res.status = res.IN_PROGRESS
@@ -539,7 +539,7 @@ class ResourceTest(common.HeatTestCase):
             exception.ResourceFailure, scheduler.TaskRunner(res.update, utmpl))
 
     def test_update_replace_rollback(self):
-        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
+        cfg.CONF.set_override('convergence_engine', False)
         res, utmpl = self._setup_resource_for_update(
             res_name='test_update_replace_rollback')
         res.restore_prev_rsrc = mock.Mock()
@@ -550,7 +550,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(res.restore_prev_rsrc.called)
 
     def test_update_replace_rollback_restore_prev_rsrc_error(self):
-        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
+        cfg.CONF.set_override('convergence_engine', False)
         res, utmpl = self._setup_resource_for_update(
             res_name='restore_prev_rsrc_error')
         res.restore_prev_rsrc = mock.Mock(side_effect=Exception)
@@ -597,8 +597,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsNotNone(res.updated_time)
 
     def test_resource_object_resource_properties_data(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         data = {'p1': 'i see',
                 'p2': 'good times, good times'}
         rpd_obj = rpd_object.ResourcePropertiesData().create(
@@ -992,7 +991,7 @@ class ResourceTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_fail_retry_disabled(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
                                             {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
@@ -1919,8 +1918,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual({'foo': 'res', 'Foo': 'res'}, res.FnGetAtts())
 
     def test_properties_data_stored_encrypted_decrypted_on_load(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
 
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         stored_properties_data = {'prop1': 'string',
@@ -1965,8 +1963,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual('string', res_obj.rsrc_prop_data.data['prop1'])
 
     def test_properties_data_no_encryption(self):
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
 
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
         stored_properties_data = {'prop1': 'string',
@@ -2677,8 +2674,7 @@ class ResourceDeleteRetryTest(common.HeatTestCase):
                                                     env=self.env),
                                   stack_id=str(uuid.uuid4()))
         self.num_retries = 2
-        cfg.CONF.set_override('action_retry_limit', self.num_retries,
-                              enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', self.num_retries)
 
     def test_delete_retry_conflict(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource',
@@ -2716,8 +2712,7 @@ class ResourceDeleteRetryTest(common.HeatTestCase):
             'test_resource', tmpl, self.stack)
         res.state_set(res.CREATE, res.COMPLETE, 'wobble')
 
-        cfg.CONF.set_override('action_retry_limit', self.num_retries,
-                              enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', self.num_retries)
 
         self.m.StubOutWithMock(timeutils, 'retry_backoff_delay')
         self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_delete')
@@ -4147,7 +4142,7 @@ class TestLiveStateUpdate(common.HeatTestCase):
         res = self._prepare_resource_live_state()
         res.resource_id = self.resource_id
 
-        cfg.CONF.set_override('observe_on_update', True, enforce_type=True)
+        cfg.CONF.set_override('observe_on_update', True)
 
         utmpl = rsrc_defn.ResourceDefinition('test_resource',
                                              'ResourceWithPropsType',

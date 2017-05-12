@@ -265,7 +265,7 @@ class InstanceTest(common.HeatTestCase):
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
 
     def test_instance_create_fails(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         t = template_format.parse(db_template)
         instance = self._setup_test_instance('dbinstance_create', t)
         self.fake_instance.status = 'ERROR'

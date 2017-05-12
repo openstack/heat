@@ -50,12 +50,10 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, BASE_DIR)
 
 cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
-cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS,
-                      enforce_type=True)
+cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
 
 cfg.CONF.import_opt('environment_dir', 'heat.common.config')
-cfg.CONF.set_override(name='environment_dir', override=TEMP_ENV_DIR,
-                      enforce_type=True)
+cfg.CONF.set_override(name='environment_dir', override=TEMP_ENV_DIR)
 
 # This is required for ReadTheDocs.org, but isn't a bad idea anyway.
 os.environ['DJANGO_SETTINGS_MODULE'] = 'openstack_dashboard.settings'

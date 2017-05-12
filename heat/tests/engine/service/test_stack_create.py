@@ -86,12 +86,12 @@ class StackCreateTest(common.HeatTestCase):
                                 environment_files=environment_files)
 
     def test_stack_create_equals_max_per_tenant(self):
-        cfg.CONF.set_override('max_stacks_per_tenant', 1, enforce_type=True)
+        cfg.CONF.set_override('max_stacks_per_tenant', 1)
         stack_name = 'service_create_test_stack_equals_max'
         self._test_stack_create(stack_name)
 
     def test_stack_create_exceeds_max_per_tenant(self):
-        cfg.CONF.set_override('max_stacks_per_tenant', 0, enforce_type=True)
+        cfg.CONF.set_override('max_stacks_per_tenant', 0)
         stack_name = 'service_create_test_stack_exceeds_max'
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self._test_stack_create, stack_name)
@@ -234,7 +234,7 @@ class StackCreateTest(common.HeatTestCase):
                                     return_value=stk.env)
         mock_stack = self.patchobject(stack, 'Stack', return_value=stk)
 
-        cfg.CONF.set_override('max_resources_per_stack', 3, enforce_type=True)
+        cfg.CONF.set_override('max_resources_per_stack', 3)
 
         result = self.man.create_stack(self.ctx, stack_name, template, params,
                                        None, {})
@@ -264,7 +264,7 @@ class StackCreateTest(common.HeatTestCase):
             }
         }
 
-        cfg.CONF.set_override('max_resources_per_stack', 2, enforce_type=True)
+        cfg.CONF.set_override('max_resources_per_stack', 2)
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.create_stack, self.ctx, stack_name,
                                tpl, params, None, {})
@@ -380,6 +380,6 @@ class StackCreateTest(common.HeatTestCase):
     def test_stack_create_max_unlimited(self, total_res_mock, validate_mock):
         total_res_mock.return_value = 9999
         validate_mock.return_value = None
-        cfg.CONF.set_override('max_resources_per_stack', -1, enforce_type=True)
+        cfg.CONF.set_override('max_resources_per_stack', -1)
         stack_name = 'service_create_test_max_unlimited'
         self._test_stack_create(stack_name)

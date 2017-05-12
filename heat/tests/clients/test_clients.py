@@ -44,14 +44,12 @@ class ClientsTest(common.HeatTestCase):
 
     def test_bad_cloud_backend(self):
         con = mock.Mock()
-        cfg.CONF.set_override('cloud_backend', 'some.weird.object',
-                              enforce_type=True)
+        cfg.CONF.set_override('cloud_backend', 'some.weird.object')
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
         self.assertIn('Invalid cloud_backend setting in heat.conf detected',
                       six.text_type(exc))
 
-        cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients',
-                              enforce_type=True)
+        cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients')
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
         self.assertIn('Invalid cloud_backend setting in heat.conf detected',
                       six.text_type(exc))
@@ -102,7 +100,7 @@ class ClientsTest(common.HeatTestCase):
 
     def test_clients_get_heat_cfn_metadata_url_conf(self):
         cfg.CONF.set_override('heat_metadata_server_url',
-                              'http://server.test:123', enforce_type=True)
+                              'http://server.test:123')
         obj = self._client_cfn_url()
         self.assertEqual("http://server.test:123/v1/",
                          obj.get_cfn_metadata_server_url())
@@ -182,11 +180,11 @@ class ClientPluginTest(common.HeatTestCase):
         plugin = FooClientsPlugin(con)
 
         cfg.CONF.set_override('ca_file', '/tmp/bar',
-                              group='clients_heat', enforce_type=True)
+                              group='clients_heat')
         cfg.CONF.set_override('ca_file', '/tmp/foo',
-                              group='clients', enforce_type=True)
+                              group='clients')
         cfg.CONF.set_override('endpoint_type', 'internalURL',
-                              group='clients', enforce_type=True)
+                              group='clients')
 
         # check heat group
         self.assertEqual('/tmp/bar',

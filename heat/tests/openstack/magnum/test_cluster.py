@@ -194,7 +194,7 @@ class TestMagnumCluster(common.HeatTestCase):
             create_timeout=60)
 
     def test_cluster_create_failed(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         b = self._create_resource('cluster', self.rsrc_defn, self.stack,
                                   stat='CREATE_FAILED')
         exc = self.assertRaises(

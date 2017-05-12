@@ -99,8 +99,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('', self.stack.status_reason)
 
     def test_timeout_secs_default(self):
-        cfg.CONF.set_override('stack_action_timeout', 1000,
-                              enforce_type=True)
+        cfg.CONF.set_override('stack_action_timeout', 1000)
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         self.assertIsNone(self.stack.timeout_mins)
         self.assertEqual(1000, self.stack.timeout_secs())
@@ -1468,8 +1467,7 @@ class StackTest(common.HeatTestCase):
 
     def test_store_saves_creds_trust(self):
         """A user_creds entry is created on first stack store."""
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
         keystone.KeystoneClientPlugin._create().AndReturn(
@@ -2438,8 +2436,7 @@ class StackTest(common.HeatTestCase):
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
 
         # Verify that hidden parameters stored in plain text
         self.stack.store()
@@ -2467,8 +2464,7 @@ class StackTest(common.HeatTestCase):
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
 
         # Verify that hidden parameters are stored encrypted
         self.stack.store()
@@ -2523,16 +2519,14 @@ class StackTest(common.HeatTestCase):
         ''')
 
         # Create the stack with encryption enabled
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
         self.stack.store()
 
         # Update the stack with encryption disabled
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
         loaded_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id)
         loaded_stack.state_set(self.stack.CREATE, self.stack.COMPLETE,
                                'for_update')
@@ -2568,8 +2562,7 @@ class StackTest(common.HeatTestCase):
                                 format="%(levelname)8s [%(name)s] "
                                        "%(message)s"))
 
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
 
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
@@ -2609,8 +2602,7 @@ class StackTest(common.HeatTestCase):
         env1 = environment.Environment({'param1': 'foo', 'param2': 'bar'})
         self.stack = stack.Stack(self.ctx, 'test',
                                  template.Template(tmpl, env=env1))
-        cfg.CONF.set_override('encrypt_parameters_and_properties', False,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', False)
 
         # Verify that hidden parameters are stored decrypted
         self.stack.store()

@@ -55,13 +55,10 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m.StubOutWithMock(ks_loading, 'load_auth_from_conf_options')
 
         cfg.CONF.set_override('auth_uri', 'http://server.test:5000/v2.0',
-                              group='keystone_authtoken', enforce_type=True)
-        cfg.CONF.set_override('stack_user_domain_id', 'adomain123',
-                              enforce_type=True)
-        cfg.CONF.set_override('stack_domain_admin', 'adminuser123',
-                              enforce_type=True)
-        cfg.CONF.set_override('stack_domain_admin_password', 'adminsecret',
-                              enforce_type=True)
+                              group='keystone_authtoken')
+        cfg.CONF.set_override('stack_user_domain_id', 'adomain123')
+        cfg.CONF.set_override('stack_domain_admin', 'adminuser123')
+        cfg.CONF.set_override('stack_domain_admin_password', 'adminsecret')
 
         self.addCleanup(self.m.VerifyAll)
 
@@ -498,8 +495,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test create_trust_context with existing trust_id."""
 
         self._stubs_auth(method='trust')
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -529,11 +525,9 @@ class KeystoneClientTest(common.HeatTestCase):
                                                        project_id='42',
                                                        stub_trust_context=True)
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         if delegate_roles:
-            cfg.CONF.set_override('trusts_delegated_roles', delegate_roles,
-                                  enforce_type=True)
+            cfg.CONF.set_override('trusts_delegated_roles', delegate_roles)
 
         trustor_roles = ['heat_stack_owner', 'admin', '__member__']
         trustee_roles = delegate_roles or trustor_roles
@@ -570,10 +564,8 @@ class KeystoneClientTest(common.HeatTestCase):
                                                     project_id='42',
                                                     stub_trust_context=True)
 
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
-        cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'],
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        cfg.CONF.set_override('trusts_delegated_roles', ['heat_stack_owner'])
 
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         self.mock_ks_v3_client.trusts.create(
@@ -627,8 +619,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test consuming a trust when initializing."""
 
         self._stubs_auth(method='trust')
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -646,8 +637,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test consuming a trust when initializing, error scoping."""
 
         self._stubs_auth(method='trust', trust_scoped=False)
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -664,8 +654,7 @@ class KeystoneClientTest(common.HeatTestCase):
         """Test consuming a trust when initializing, impersonation error."""
 
         self._stubs_auth(method='trust', user_id='wrong_user_id')
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.m.ReplayAll()
 
         ctx = utils.dummy_context()
@@ -708,8 +697,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
     def _test_delete_trust(self, raise_ext=None):
         self._stubs_auth()
-        cfg.CONF.set_override('deferred_auth_method', 'trusts',
-                              enforce_type=True)
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.mock_ks_v3_client.trusts = self.m.CreateMockAnything()
         if raise_ext is None:
             self.mock_ks_v3_client.trusts.delete('atrust123').AndReturn(None)
@@ -1423,8 +1411,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
 class KeystoneClientTestDomainName(KeystoneClientTest):
     def setUp(self):
-        cfg.CONF.set_override('stack_user_domain_name', 'fake_domain_name',
-                              enforce_type=True)
+        cfg.CONF.set_override('stack_user_domain_name', 'fake_domain_name')
         super(KeystoneClientTestDomainName, self).setUp()
         cfg.CONF.clear_override('stack_user_domain_id')
 

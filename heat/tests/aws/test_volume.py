@@ -181,7 +181,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_volume_create_error(self):
         fv = vt_base.FakeVolume('creating')
         stack_name = 'test_volume_create_error_stack'
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
 
         self._mock_create_volume(fv, stack_name, final_status='error')
 
@@ -610,7 +610,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
     def test_snapshot_no_volume(self):
         """Test that backup does not start for failed resource."""
         stack_name = 'test_volume_snapshot_novol_stack'
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         fv = self._mock_create_volume(vt_base.FakeVolume('creating'),
                                       stack_name,
                                       final_status='error')
@@ -666,7 +666,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
 
     def test_create_from_snapshot_error(self):
         stack_name = 'test_volume_create_from_snap_err_stack'
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         fv = vt_base.FakeVolume('restoring-backup')
         fvbr = vt_base.FakeBackupRestore('vol-123')
 

@@ -139,7 +139,7 @@ blarg: wibble
         self.assertRaises(webob.exc.HTTPBadRequest, data.template)
 
     def test_template_exceeds_max_template_size(self):
-        cfg.CONF.set_override('max_template_size', 10, enforce_type=True)
+        cfg.CONF.set_override('max_template_size', 10)
         template = json.dumps(['a'] * cfg.CONF.max_template_size)
         body = {'template': template}
         data = stacks.InstantiationData(body)
@@ -1170,7 +1170,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_err_stack_bad_reqest(self, mock_enforce):
-        cfg.CONF.set_override('debug', True, enforce_type=True)
+        cfg.CONF.set_override('debug', True)
         template = {u'Foo': u'bar'}
         parameters = {u'InstanceType': u'm1.xlarge'}
         body = {'template': template,

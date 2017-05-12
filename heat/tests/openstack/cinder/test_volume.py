@@ -1039,8 +1039,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
     def test_cinder_create_with_stack_scheduler_hints(self):
         fv = vt_base.FakeVolume('creating')
-        sh.cfg.CONF.set_override('stack_scheduler_hints', True,
-                                 enforce_type=True)
+        sh.cfg.CONF.set_override('stack_scheduler_hints', True)
 
         stack_name = 'test_cvolume_stack_scheduler_hints_stack'
         t = template_format.parse(single_cinder_volume_template)

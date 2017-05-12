@@ -56,8 +56,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
         return template, adopt_data
 
     def test_stack_adopt_with_params(self):
-        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
-        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('convergence_engine', False)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         result = self.man.create_stack(self.ctx, "test_adopt_with_params",
@@ -74,8 +74,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
     def test_convergence_stack_adopt_with_params(self,
                                                  mock_converge,
                                                  mock_send_notif):
-        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
-        cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('convergence_engine', True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         result = self.man.create_stack(self.ctx, "test_adopt_with_params",
@@ -89,8 +89,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
         self.assertTrue(mock_converge.called)
 
     def test_stack_adopt_saves_input_params(self):
-        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
-        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('convergence_engine', False)
         env = {'parameters': {"app_dbx": "foo"}}
         input_params = {
             "parameters": {"app_dbx": "bar"}
@@ -109,8 +109,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
     @mock.patch.object(parser.Stack, '_send_notification_and_add_event')
     def test_convergence_stack_adopt_saves_input_params(
             self, mock_converge, mock_send_notif):
-        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
-        cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('convergence_engine', True)
         env = {'parameters': {"app_dbx": "foo"}}
         input_params = {
             "parameters": {"app_dbx": "bar"}
@@ -127,8 +127,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
         self.assertTrue(mock_converge.called)
 
     def test_stack_adopt_stack_state(self):
-        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
-        cfg.CONF.set_override('convergence_engine', False, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('convergence_engine', False)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         result = self.man.create_stack(self.ctx, "test_adopt_stack_state",
@@ -143,8 +143,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
     @mock.patch.object(parser.Stack, '_send_notification_and_add_event')
     def test_convergence_stack_adopt_stack_state(self, mock_converge,
                                                  mock_send_notif):
-        cfg.CONF.set_override('enable_stack_adopt', True, enforce_type=True)
-        cfg.CONF.set_override('convergence_engine', True, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', True)
+        cfg.CONF.set_override('convergence_engine', True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         result = self.man.create_stack(self.ctx, "test_adopt_stack_state",
@@ -158,7 +158,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
 
     def test_stack_adopt_disabled(self):
         # to test disable stack adopt
-        cfg.CONF.set_override('enable_stack_adopt', False, enforce_type=True)
+        cfg.CONF.set_override('enable_stack_adopt', False)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
         ex = self.assertRaises(

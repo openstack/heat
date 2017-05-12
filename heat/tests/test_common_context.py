@@ -128,7 +128,7 @@ class TestRequestContext(common.HeatTestCase):
     def test_keystone_v3_endpoint_in_context(self):
         """Ensure that the context is the preferred source for the auth_uri."""
         cfg.CONF.set_override('auth_uri', 'http://xyz',
-                              group='clients_keystone', enforce_type=True)
+                              group='clients_keystone')
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
         with mock.patch(policy_check) as pc:
             pc.return_value = False
@@ -144,7 +144,7 @@ class TestRequestContext(common.HeatTestCase):
         the preferred source when the context does not have the auth_uri.
         """
         cfg.CONF.set_override('auth_uri', 'http://xyz',
-                              group='clients_keystone', enforce_type=True)
+                              group='clients_keystone')
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
         with mock.patch(policy_check) as pc:
             pc.return_value = False
@@ -166,7 +166,7 @@ class TestRequestContext(common.HeatTestCase):
         """
         importutils.import_module('keystonemiddleware.auth_token')
         cfg.CONF.set_override('auth_uri', 'http://abc/v2.0',
-                              group='keystone_authtoken', enforce_type=True)
+                              group='keystone_authtoken')
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
         with mock.patch(policy_check) as pc:
             pc.return_value = False

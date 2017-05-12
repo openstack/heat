@@ -118,7 +118,7 @@ class FirewallTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed_error_status(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         rsrc = self.create_firewall()
         neutronclient.Client.show_firewall('5678').AndReturn(
             {'firewall': {'status': 'PENDING_CREATE'}})

@@ -146,7 +146,7 @@ class SenlinClusterTest(common.HeatTestCase):
             **attach_policy_kwargs)
 
     def test_cluster_create_error(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         cluster = self._init_cluster(self.t)
         self.senlin_mock.create_cluster.return_value = self.fake_cl
         mock_action = mock.MagicMock()

@@ -429,7 +429,7 @@ class PoolTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_create_failed_error_status(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
 
         snippet = template_format.parse(pool_template)
         self.stack = utils.parse_stack(snippet)

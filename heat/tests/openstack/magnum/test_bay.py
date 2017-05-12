@@ -72,7 +72,7 @@ class TestMagnumBay(common.HeatTestCase):
         self.assertEqual((b.CREATE, b.COMPLETE), b.state)
 
     def test_bay_create_failed(self):
-        cfg.CONF.set_override('action_retry_limit', 0, enforce_type=True)
+        cfg.CONF.set_override('action_retry_limit', 0)
         b = self._create_resource('bay', self.rsrc_defn, self.stack,
                                   stat='CREATE_FAILED')
         exc = self.assertRaises(

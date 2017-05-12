@@ -238,8 +238,7 @@ resources:
    a_resource:
        type: GenericResourceType
 '''
-        cfg.CONF.set_override('encrypt_parameters_and_properties', True,
-                              enforce_type=True)
+        cfg.CONF.set_override('encrypt_parameters_and_properties', True)
 
         stack_name = 'service_update_test_stack_encrypted_parameters'
         t = template_format.parse(hidden_param_template)
@@ -583,7 +582,7 @@ resources:
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
 
         # do update
-        cfg.CONF.set_override('max_resources_per_stack', 3, enforce_type=True)
+        cfg.CONF.set_override('max_resources_per_stack', 3)
 
         api_args = {'timeout_mins': 60}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
@@ -671,7 +670,7 @@ resources:
         sid = old_stack.store()
         self.assertIsNotNone(sid)
 
-        cfg.CONF.set_override('max_resources_per_stack', 2, enforce_type=True)
+        cfg.CONF.set_override('max_resources_per_stack', 2)
 
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.update_stack, self.ctx,
