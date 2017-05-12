@@ -33,4 +33,5 @@ Verify operation of the Orchestration service.
    .. note::
 
       This output should indicate four ``heat-engine`` components
+      (default to 4 or number of CPUs on the host, whichever is greater)
       on the controller node.
