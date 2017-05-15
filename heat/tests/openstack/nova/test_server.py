@@ -507,6 +507,31 @@ class ServersTest(common.HeatTestCase):
         args, kwargs = mock_create.call_args
         self.assertEqual({}, kwargs['meta'])
 
+    def test_server_create_with_str_network(self):
+        stack_name = 'server_with_str_network'
+        return_server = self.fc.servers.list()[1]
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        mock_nc = self.patchobject(nova.NovaClientPlugin, '_create',
+                                   return_value=self.fc)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id')
+
+        props = tmpl['Resources']['WebServer']['Properties']
+        props['networks'] = [{'allocate_network': 'none'}]
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('WebServer',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
+        create_mock = self.patchobject(self.fc.servers, 'create',
+                                       return_value=return_server)
+        scheduler.TaskRunner(server.create)()
+        mock_nc.assert_called_with(version='2.37')
+        self.assertEqual('none', create_mock.call_args[1]['nics'])
+
     def test_server_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
@@ -1298,8 +1323,9 @@ class ServersTest(common.HeatTestCase):
                          'find_resourceid_by_name_or_id')
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
-        self.assertIn(_('One of the properties "network", "port" or "subnet" '
-                        'should be set for the specified network of '
+        self.assertIn(_('One of the properties "network", "port", '
+                        '"allocate_network" or "subnet" should be set '
+                        'for the specified network of '
                         'server "%s".') % server.name,
                       six.text_type(ex))
 
@@ -1326,6 +1352,30 @@ class ServersTest(common.HeatTestCase):
         self.assertIn(_('Property "floating_ip" is not supported if '
                         'only "network" is specified, because the '
                         'corresponding port can not be retrieved.'),
+                      six.text_type(ex))
+
+    def test_server_validate_with_networks_str_net(self):
+        stack_name = 'srv_networks_str_nets'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        # create a server with 'uuid' and 'network' properties
+        tmpl['Resources']['WebServer']['Properties']['networks'] = (
+            [{'network': '6b1688bb-18a0-4754-ab05-19daaedc5871',
+              'allocate_network': 'auto'}])
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_validate_net_list_str',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id')
+        ex = self.assertRaises(exception.StackValidationFailed,
+                               server.validate)
+        self.assertIn(_('Can not specify "allocate_network" with '
+                        'other keys of networks at the same time.'),
                       six.text_type(ex))
 
     def test_server_validate_port_fixed_ip(self):
@@ -3139,10 +3189,12 @@ class ServersTest(common.HeatTestCase):
 
     def create_old_net(self, port=None, net=None,
                        ip=None, uuid=None, subnet=None,
-                       port_extra_properties=None, floating_ip=None):
+                       port_extra_properties=None, floating_ip=None,
+                       str_network=None):
         return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid,
                 'subnet': subnet, 'floating_ip': floating_ip,
-                'port_extra_properties': port_extra_properties}
+                'port_extra_properties': port_extra_properties,
+                'allocate_network': str_network}
 
     def create_fake_iface(self, port, net, ip):
         class fake_interface(object):
@@ -3212,7 +3264,8 @@ class ServersTest(common.HeatTestCase):
             old_nets_copy = copy.deepcopy(old_nets)
             for net in new_nets_copy:
                 for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
-                            'port_extra_properties', 'floating_ip'):
+                            'port_extra_properties', 'floating_ip',
+                            'allocate_network'):
                     net.setdefault(key)
 
             matched_nets = server._exclude_not_updated_networks(old_nets,
@@ -3243,7 +3296,8 @@ class ServersTest(common.HeatTestCase):
         old_nets_copy = copy.deepcopy(old_nets)
         for net in new_nets_copy:
             for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
-                        'port_extra_properties', 'floating_ip'):
+                        'port_extra_properties', 'floating_ip',
+                        'allocate_network'):
                 net.setdefault(key)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3267,7 +3321,8 @@ class ServersTest(common.HeatTestCase):
              'subnet': None,
              'uuid': None,
              'port_extra_properties': None,
-             'floating_ip': None}]
+             'floating_ip': None,
+             'allocate_network': None}]
         new_nets_copy = copy.deepcopy(new_nets)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3310,35 +3365,40 @@ class ServersTest(common.HeatTestCase):
              'subnet': None,
              'floating_ip': None,
              'port_extra_properties': None,
-             'uuid': None},
+             'uuid': None,
+             'allocate_network': None},
             {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '1.2.3.4',
              'subnet': None,
              'port_extra_properties': None,
              'floating_ip': None,
-             'uuid': None},
+             'uuid': None,
+             'allocate_network': None},
             {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': None,
              'subnet': None,
              'port_extra_properties': None,
              'floating_ip': None,
-             'uuid': None},
+             'uuid': None,
+             'allocate_network': None},
             {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
              'network': None,
              'fixed_ip': None,
              'subnet': None,
              'port_extra_properties': None,
              'floating_ip': None,
-             'uuid': None},
+             'uuid': None,
+             'allocate_network': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
              'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '5.6.7.8',
              'subnet': None,
              'port_extra_properties': None,
              'floating_ip': None,
-             'network': None}]
+             'network': None,
+             'allocate_network': None}]
 
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
@@ -3512,6 +3572,110 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(1, mock_attach.call_count)
         self.assertEqual(1, mock_detach_check.call_count)
         self.assertEqual(1, mock_attach_check.call_count)
+
+    def _test_server_update_to_auto(self, available_multi_nets=None):
+        multi_nets = available_multi_nets or []
+        return_server = self.fc.servers.list()[1]
+        return_server.id = '5678'
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'}]
+
+        before_props = self.server_props.copy()
+        before_props['networks'] = old_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = [{'allocate_network': 'auto'}]
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
+
+        self.patchobject(self.fc.servers, 'get', return_value=return_server)
+        poor_interfaces = [
+            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '11.12.13.14')
+        ]
+
+        self.patchobject(return_server, 'interface_list',
+                         return_value=poor_interfaces)
+        self.patchobject(server, '_get_available_networks',
+                         return_value=multi_nets)
+        mock_detach = self.patchobject(return_server, 'interface_detach')
+        mock_attach = self.patchobject(return_server, 'interface_attach')
+        updater = scheduler.TaskRunner(server.update, update_template)
+        if not multi_nets:
+            self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
+                             return_value=True)
+            self.patchobject(nova.NovaClientPlugin,
+                             'check_interface_attach',
+                             return_value=True)
+
+            auto_allocate_net = '9cfe6c74-c105-4906-9a1f-81d9064e9bca'
+            self.patchobject(server, '_auto_allocate_network',
+                             return_value=[auto_allocate_net])
+            updater()
+            self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+            self.assertEqual(1, mock_detach.call_count)
+            self.assertEqual(1, mock_attach.call_count)
+            mock_attach.called_once_with(
+                {'port_id': None,
+                 'net_id': auto_allocate_net,
+                 'fip': None})
+        else:
+            self.assertRaises(exception.ResourceFailure, updater)
+            self.assertEqual(0, mock_detach.call_count)
+            self.assertEqual(0, mock_attach.call_count)
+
+    def test_server_update_str_networks_auto(self):
+        self._test_server_update_to_auto()
+
+    def test_server_update_str_networks_auto_multi_nets(self):
+        available_nets = ['net_1', 'net_2']
+        self._test_server_update_to_auto(available_nets)
+
+    def test_server_update_str_networks_none(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = '5678'
+        server = self._create_test_server(return_server, 'networks_update')
+
+        old_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
+            {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
+            {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+             'fixed_ip': '31.32.33.34'}]
+
+        before_props = self.server_props.copy()
+        before_props['networks'] = old_networks
+        update_props = self.server_props.copy()
+        update_props['networks'] = [{'allocate_network': 'none'}]
+        update_template = server.t.freeze(properties=update_props)
+        server.t = server.t.freeze(properties=before_props)
+
+        self.patchobject(self.fc.servers, 'get', return_value=return_server)
+        port_interfaces = [
+            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '11.12.13.14'),
+            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '21.22.23.24'),
+            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '31.32.33.34')
+        ]
+
+        self.patchobject(return_server, 'interface_list',
+                         return_value=port_interfaces)
+        mock_detach = self.patchobject(return_server, 'interface_detach')
+        self.patchobject(nova.NovaClientPlugin,
+                         'check_interface_detach',
+                         return_value=True)
+        mock_attach = self.patchobject(return_server, 'interface_attach')
+
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.assertEqual(3, mock_detach.call_count)
+        self.assertEqual(0, mock_attach.call_count)
 
     def test_server_update_networks_with_complex_parameters(self):
         return_server = self.fc.servers.list()[1]

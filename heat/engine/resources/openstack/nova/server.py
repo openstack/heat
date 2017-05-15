@@ -109,10 +109,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     _NETWORK_KEYS = (
         NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
-        NETWORK_SUBNET, NETWORK_PORT_EXTRA, NETWORK_FLOATING_IP
+        NETWORK_SUBNET, NETWORK_PORT_EXTRA, NETWORK_FLOATING_IP,
+        ALLOCATE_NETWORK,
     ) = (
         'uuid', 'network', 'fixed_ip', 'port',
-        'subnet', 'port_extra_properties', 'floating_ip'
+        'subnet', 'port_extra_properties', 'floating_ip',
+        'allocate_network',
     )
 
     _SOFTWARE_CONFIG_FORMATS = (
@@ -125,6 +127,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         POLL_SERVER_CFN, POLL_SERVER_HEAT, POLL_TEMP_URL, ZAQAR_MESSAGE
     ) = (
         'POLL_SERVER_CFN', 'POLL_SERVER_HEAT', 'POLL_TEMP_URL', 'ZAQAR_MESSAGE'
+    )
+
+    _ALLOCATE_TYPES = (
+        NETWORK_NONE, NETWORK_AUTO,
+    ) = (
+        'none', 'auto',
     )
 
     ATTRIBUTES = (
@@ -404,6 +412,23 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         constraints=[
                             constraints.CustomConstraint('neutron.network')
                         ]
+                    ),
+                    ALLOCATE_NETWORK: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The special string values of network, '
+                          'auto: means either a network that is already '
+                          'available to the project will be used, or if one '
+                          'does not exist, will be automatically created for '
+                          'the project; none: means no networking will be '
+                          'allocated for the created server. Supported by '
+                          'Nova API since version "2.37". This property can '
+                          'not be used with other network keys.'),
+                        support_status=support.SupportStatus(version='9.0.0'),
+                        constraints=[
+                            constraints.AllowedValues(
+                                [NETWORK_NONE, NETWORK_AUTO])
+                        ],
+                        update_allowed=True,
                     ),
                     NETWORK_FIXED_IP: properties.Schema(
                         properties.Schema.STRING,
@@ -754,7 +779,15 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         server = None
         try:
-            server = self.client().servers.create(
+            # if 'auto' or 'none' is specified, we get the string type
+            # nics after self._build_nics(), and the string network
+            # is supported since nova microversion 2.37
+            if isinstance(nics, six.string_types):
+                nc = self.client(version=self.client_plugin().V2_37)
+            else:
+                nc = self.client()
+
+            server = nc.servers.create(
                 name=self._server_name(),
                 image=image,
                 flavor=flavor,
@@ -1370,15 +1403,37 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         if image:
             self._validate_image_flavor(image, flavor)
 
-        # network properties 'uuid' and 'network' shouldn't be used
-        # both at once for all networks
         networks = self.properties[self.NETWORKS] or []
-        # record if any networks include explicit ports
-        networks_with_port = False
         for network in networks:
-            networks_with_port = (networks_with_port or
-                                  network.get(self.NETWORK_PORT) is not None)
             self._validate_network(network)
+
+        has_str_net = self._str_network(networks) is not None
+        if has_str_net:
+            if len(networks) != 1:
+                msg = _('Property "%s" can not be specified if '
+                        'multiple network interfaces set for '
+                        'server.') % self.ALLOCATE_NETWORK
+                raise exception.StackValidationFailed(message=msg)
+            # Check if str_network is allowed to use
+            try:
+                self.client(
+                    version=self.client_plugin().V2_37)
+            except exception.InvalidServiceVersion as ex:
+                msg = (_('Cannot use "%(prop)s" property - compute service '
+                         'does not support the required api '
+                         'microversion: %(ex)s')
+                       % {'prop': self.ALLOCATE_NETWORK,
+                          'ex': six.text_type(ex)})
+                raise exception.StackValidationFailed(message=msg)
+
+        # record if any networks include explicit ports
+        has_port = any(n[self.NETWORK_PORT] is not None for n in networks)
+        # if 'security_groups' present for the server and explicit 'port'
+        # in one or more entries in 'networks', raise validation error
+        if has_port and self.properties[self.SECURITY_GROUPS]:
+            raise exception.ResourcePropertyConflict(
+                self.SECURITY_GROUPS,
+                "/".join([self.NETWORKS, self.NETWORK_PORT]))
 
         # Check if tags is allowed to use
         if self.properties[self.TAGS]:
@@ -1395,13 +1450,6 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         personality = self.properties[self.PERSONALITY]
         if metadata or personality:
             limits = self.client_plugin().absolute_limits()
-
-        # if 'security_groups' present for the server and explicit 'port'
-        # in one or more entries in 'networks', raise validation error
-        if networks_with_port and self.properties[self.SECURITY_GROUPS]:
-            raise exception.ResourcePropertyConflict(
-                self.SECURITY_GROUPS,
-                "/".join([self.NETWORKS, self.NETWORK_PORT]))
 
         # verify that the number of metadata entries is not greater
         # than the maximum number allowed in the provider's absolute

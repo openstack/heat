@@ -530,3 +530,7 @@ class InvalidServiceVersion(HeatException):
 class InvalidTemplateVersions(HeatException):
     msg_fmt = _('A template version alias %(version)s was added for a '
                 'template class that has no official YYYY-MM-DD version.')
+
+
+class UnableToAutoAllocateNetwork(HeatException):
+    msg_fmt = _('Unable to automatically allocate a network: %(message)s')

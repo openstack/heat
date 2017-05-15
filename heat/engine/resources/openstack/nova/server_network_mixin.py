@@ -35,15 +35,27 @@ class ServerNetworkMixin(object):
         subnet = network.get(self.NETWORK_SUBNET)
         fixed_ip = network.get(self.NETWORK_FIXED_IP)
         floating_ip = network.get(self.NETWORK_FLOATING_IP)
+        str_network = network.get(self.ALLOCATE_NETWORK)
 
-        if net_id is None and port is None and subnet is None:
-            msg = _('One of the properties "%(id)s", "%(port_id)s" '
-                    'or "%(subnet)s" should be set for the '
+        if (net_id is None and
+                port is None and
+                subnet is None and
+                not str_network):
+            msg = _('One of the properties "%(id)s", "%(port_id)s", '
+                    '"%(str_network)s" or "%(subnet)s" should be set for the '
                     'specified network of server "%(server)s".'
                     '') % dict(id=self.NETWORK_ID,
                                port_id=self.NETWORK_PORT,
                                subnet=self.NETWORK_SUBNET,
+                               str_network=self.ALLOCATE_NETWORK,
                                server=self.name)
+            raise exception.StackValidationFailed(message=msg)
+        # can not specify str_network with other keys of networks
+        # at the same time
+        has_value_keys = [k for k, v in network.items() if v is not None]
+        if str_network and len(has_value_keys) != 1:
+            msg = _('Can not specify "%s" with other keys of networks '
+                    'at the same time.') % self.ALLOCATE_NETWORK
             raise exception.StackValidationFailed(message=msg)
 
         if port is not None and not self.is_using_neutron():
@@ -214,6 +226,11 @@ class ServerNetworkMixin(object):
     def _build_nics(self, networks, security_groups=None):
         if not networks:
             return None
+
+        str_network = self._str_network(networks)
+        if str_network:
+            return str_network
+
         nics = []
 
         for idx, net in enumerate(networks):
@@ -329,8 +346,42 @@ class ServerNetworkMixin(object):
             if net is not None:
                 net['port'] = props['port']
 
-    def calculate_networks(self, old_nets, new_nets, ifaces,
-                           security_groups=None):
+    def _get_available_networks(self):
+        # first we get the private networks owned by the tenant
+        search_opts = {'tenant_id': self.context.tenant_id, 'shared': False,
+                       'admin_state_up': True, }
+        nc = self.client('neutron')
+        nets = nc.list_networks(**search_opts).get('networks', [])
+        # second we get the public shared networks
+        search_opts = {'shared': True}
+        nets += nc.list_networks(**search_opts).get('networks', [])
+
+        ids = [net['id'] for net in nets]
+
+        return ids
+
+    def _auto_allocate_network(self):
+        topology = self.client('neutron').get_auto_allocated_topology(
+            self.context.tenant_id)['auto_allocated_topology']
+
+        return topology['id']
+
+    def _calculate_using_str_network(self, ifaces, str_net):
+        add_nets = []
+        remove_ports = [iface.port_id for iface in ifaces or []]
+        if str_net == self.NETWORK_AUTO:
+            nets = self._get_available_networks()
+            if not nets:
+                nets = [self._auto_allocate_network()]
+            if len(nets) > 1:
+                msg = 'Multiple possible networks found.'
+                raise exception.UnableToAutoAllocateNetwork(message=msg)
+
+            add_nets.append({'port_id': None, 'net_id': nets[0], 'fip': None})
+        return remove_ports, add_nets
+
+    def _calculate_using_list_networks(self, old_nets, new_nets, ifaces,
+                                       security_groups):
         remove_ports = []
         add_nets = []
         attach_first_free_port = False
@@ -351,33 +402,38 @@ class ServerNetworkMixin(object):
         # 3. detach unmatched networks, which were present in old_nets
         # 4. attach unmatched networks, which were present in new_nets
         else:
-            # remove not updated networks from old and new networks lists,
-            # also get list these networks
-            not_updated_nets = self._exclude_not_updated_networks(old_nets,
-                                                                  new_nets)
+            # if old net is string net, remove the interfaces
+            if self._str_network(old_nets):
+                remove_ports = [iface.port_id for iface in ifaces or []]
+            else:
+                # remove not updated networks from old and new networks lists,
+                # also get list these networks
+                not_updated_nets = self._exclude_not_updated_networks(
+                    old_nets,
+                    new_nets)
 
-            self.update_networks_matching_iface_port(
-                old_nets + not_updated_nets, ifaces)
+                self.update_networks_matching_iface_port(
+                    old_nets + not_updated_nets, ifaces)
 
-            # according to nova interface-detach command detached port
-            # will be deleted
-            inter_port_data = self._data_get_ports()
-            inter_port_ids = [p['id'] for p in inter_port_data]
-            for net in old_nets:
-                port_id = net.get(self.NETWORK_PORT)
-                # we can't match the port for some user case, like:
-                # the internal port was detached in nova first, then
-                # user update template to detach this nic. The internal
-                # port will remains till we delete the server resource.
-                if port_id:
-                    remove_ports.append(port_id)
-                    if port_id in inter_port_ids:
-                        # if we have internal port with such id, remove it
-                        # instantly.
-                        self._delete_internal_port(port_id)
-                if net.get(self.NETWORK_FLOATING_IP):
-                    self._floating_ip_disassociate(
-                        net.get(self.NETWORK_FLOATING_IP))
+                # according to nova interface-detach command detached port
+                # will be deleted
+                inter_port_data = self._data_get_ports()
+                inter_port_ids = [p['id'] for p in inter_port_data]
+                for net in old_nets:
+                    port_id = net.get(self.NETWORK_PORT)
+                    # we can't match the port for some user case, like:
+                    # the internal port was detached in nova first, then
+                    # user update template to detach this nic. The internal
+                    # port will remains till we delete the server resource.
+                    if port_id:
+                        remove_ports.append(port_id)
+                        if port_id in inter_port_ids:
+                            # if we have internal port with such id, remove it
+                            # instantly.
+                            self._delete_internal_port(port_id)
+                    if net.get(self.NETWORK_FLOATING_IP):
+                        self._floating_ip_disassociate(
+                            net.get(self.NETWORK_FLOATING_IP))
 
         handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
         # if new_nets is None, we should attach first free port,
@@ -414,6 +470,23 @@ class ServerNetworkMixin(object):
             add_nets.append(handler_kwargs)
 
         return remove_ports, add_nets
+
+    def _str_network(self, networks):
+        # if user specify 'allocate_network', return it
+        # otherwise we return None
+        for net in networks or []:
+            str_net = net.get(self.ALLOCATE_NETWORK)
+            if str_net:
+                return str_net
+
+    def calculate_networks(self, old_nets, new_nets, ifaces,
+                           security_groups=None):
+        new_str_net = self._str_network(new_nets)
+        if new_str_net:
+            return self._calculate_using_str_network(ifaces, new_str_net)
+        else:
+            return self._calculate_using_list_networks(
+                old_nets, new_nets, ifaces, security_groups)
 
     def update_floating_ip_association(self, floating_ip, flip_associate):
         if self.is_using_neutron() and flip_associate.get('port_id'):
