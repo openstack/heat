@@ -586,7 +586,18 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
     def test_str_replace_map_param(self):
-        """Test str_replace function with non-string params."""
+        """Test old str_replace function with non-string map param."""
+
+        snippet = {'str_replace': {'template': 'jsonvar1',
+                                   'params': {'jsonvar1': {'foo': 123}}}}
+
+        tmpl = template.Template(hot_tpl_empty)
+        ex = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('"str_replace" params must be strings or numbers, '
+                      'param jsonvar1 is not valid', six.text_type(ex))
+
+    def test_liberty_str_replace_map_param(self):
+        """Test str_replace function with non-string map param."""
 
         snippet = {'str_replace': {'template': 'jsonvar1',
                                    'params': {'jsonvar1': {'foo': 123}}}}
@@ -596,7 +607,18 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
     def test_str_replace_list_param(self):
-        """Test str_replace function with non-string params."""
+        """Test old str_replace function with non-string list param."""
+
+        snippet = {'str_replace': {'template': 'listvar1',
+                                   'params': {'listvar1': ['foo', 123]}}}
+
+        tmpl = template.Template(hot_tpl_empty)
+        ex = self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+        self.assertIn('"str_replace" params must be strings or numbers, '
+                      'param listvar1 is not valid', six.text_type(ex))
+
+    def test_liberty_str_replace_list_param(self):
+        """Test str_replace function with non-string param."""
 
         snippet = {'str_replace': {'template': 'listvar1',
                                    'params': {'listvar1': ['foo', 123]}}}
@@ -717,7 +739,7 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
     def test_str_replace_strict_missing_param(self):
-        """Test str_replace_strict function missing param (s)raises error."""
+        """Test str_replace_strict function missing param(s) raises error."""
 
         snippet = {'str_replace_strict':
                    {'template': 'Template var1 string var2',
@@ -738,15 +760,44 @@ class HOTemplateTest(common.HeatTestCase):
         self.assertEqual('The following params were not found in the '
                          'template: var0', six.text_type(ex))
 
-        snippet = {'str_replace_strict':
+        # str_replace_vstrict has same behaviour
+        snippet = {'str_replace_vstrict':
                    {'template': 'Template var1 string var2',
                     'params': {'var1': 'foo', 'var2': 'bar',
                                'var0': 'zed', 'var': 'z',
                                'longvarname': 'q'}}}
 
+        tmpl = template.Template(hot_pike_tpl_empty)
         ex = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
         self.assertEqual('The following params were not found in the '
                          'template: longvarname,var0,var', six.text_type(ex))
+
+    def test_str_replace_strict_empty_param_ok(self):
+        """Test str_replace_strict function with empty params."""
+
+        snippet = {'str_replace_strict':
+                   {'template': 'Template var1 string var2',
+                    'params': {'var1': 'foo', 'var2': ''}}}
+
+        tmpl = template.Template(hot_ocata_tpl_empty)
+        self.assertEqual('Template foo string ', self.resolve(snippet, tmpl))
+
+    def test_str_replace_vstrict_empty_param_not_ok(self):
+        """Test str_replace_vstrict function with empty params.
+
+        Raise ValueError when any of the params are None or empty.
+        """
+
+        snippet = {'str_replace_vstrict':
+                   {'template': 'Template var1 string var2',
+                    'params': {'var1': 'foo', 'var2': ''}}}
+
+        tmpl = template.Template(hot_pike_tpl_empty)
+        for val in (None, '', {}, []):
+            snippet['str_replace_vstrict']['params']['var2'] = val
+            ex = self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+            self.assertIn('str_replace_vstrict has an undefined or empty '
+                          'value for param var2', six.text_type(ex))
 
     def test_str_replace_invalid_param_keys(self):
         """Test str_replace function parameter keys.
