@@ -506,12 +506,7 @@ class Workflow(signal_responder.SignalResponder,
             current_task = {}
             wf_value = task.get(self.WORKFLOW)
             if wf_value is not None:
-                if wf_value in [res.resource_id
-                                for res in six.itervalues(self.stack)]:
-                    current_task.update({self.WORKFLOW: wf_value})
-                else:
-                    msg = _("No such workflow %s") % wf_value
-                    raise ValueError(msg)
+                current_task.update({self.WORKFLOW: wf_value})
 
             # backward support for kilo.
             if task.get(self.POLICIES) is not None:
