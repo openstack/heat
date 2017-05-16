@@ -536,15 +536,6 @@ class SaharaClusterTemplate(resource.Resource):
     entity = 'cluster_templates'
 
     def translation_rules(self, props):
-        if not self.is_using_neutron():
-            return [
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    [self.MANAGEMENT_NETWORK],
-                    client_plugin=self.client_plugin('nova'),
-                    finder='get_nova_network_id')
-                ]
         return [
             translation.TranslationRule(
                 props,
@@ -552,8 +543,7 @@ class SaharaClusterTemplate(resource.Resource):
                 [self.MANAGEMENT_NETWORK],
                 client_plugin=self.client_plugin('neutron'),
                 finder='find_resourceid_by_name_or_id',
-                entity='network')
-            ]
+                entity='network')]
 
     def _cluster_template_name(self, name):
         if name:

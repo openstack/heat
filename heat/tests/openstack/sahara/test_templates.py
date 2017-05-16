@@ -114,6 +114,7 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.patchobject(nova.NovaClientPlugin, 'find_flavor_by_name_or_id'
                          ).return_value = 'someflavorid'
         self.patchobject(neutron.NeutronClientPlugin, '_create')
+
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
                          return_value='some_pool_id')
@@ -171,8 +172,6 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
 
     def test_validate_floatingippool_on_neutron_fails(self):
         ngt = self._init_ngt(self.t)
-        self.patchobject(ngt, 'is_using_neutron').return_value = True
-
         self.patchobject(
             neutron.NeutronClientPlugin,
             'find_resourceid_by_name_or_id'
@@ -188,25 +187,12 @@ class SaharaNodeGroupTemplateTest(common.HeatTestCase):
         self.assertEqual('Not found',
                          six.text_type(ex))
 
-    def test_validate_floatingippool_on_novanetwork_fails(self):
-        ngt = self._init_ngt(self.t)
-        self.patchobject(ngt, 'is_using_neutron').return_value = False
-        nova_mock = mock.MagicMock()
-        nova_mock.floating_ip_pools.find.side_effect = (
-            nova.exceptions.NotFound(404, message='Not found'))
-        self.patchobject(nova.NovaClientPlugin,
-                         '_create').return_value = nova_mock
-        ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
-        self.assertEqual('Not found (HTTP 404)', six.text_type(ex))
-
     def test_validate_flavor_constraint_return_false(self):
         self.t['resources']['node-group']['properties'].pop('floating_ip_pool')
         self.t['resources']['node-group']['properties'].pop('volume_type')
         ngt = self._init_ngt(self.t)
         self.patchobject(nova.FlavorConstraint, 'validate'
                          ).return_value = False
-        self.patchobject(ngt, 'is_using_neutron').return_value = False
-
         ex = self.assertRaises(exception.StackValidationFailed, ngt.validate)
         self.assertEqual(u"Property error: "
                          u"resources.node-group.properties.flavor: "

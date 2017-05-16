@@ -176,57 +176,6 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
                  mock.call('idontexist')]
         self.nova_client.servers.get.assert_has_calls(calls)
 
-    def test_get_network_id_by_label(self):
-        """Tests the get_net_id_by_label function."""
-        net = mock.MagicMock()
-        net.id = str(uuid.uuid4())
-        self.nova_client.networks.find.side_effect = [
-            net, nova_exceptions.NotFound(404),
-            nova_exceptions.NoUniqueMatch()]
-        self.assertEqual(net.id,
-                         self.nova_plugin.get_net_id_by_label('net_label'))
-
-        exc = self.assertRaises(
-            exception.EntityNotFound,
-            self.nova_plugin.get_net_id_by_label, 'idontexist')
-        expected = 'The Nova network (idontexist) could not be found'
-        self.assertIn(expected, six.text_type(exc))
-        exc = self.assertRaises(
-            exception.PhysicalResourceNameAmbiguity,
-            self.nova_plugin.get_net_id_by_label, 'notUnique')
-        expected = ('Multiple physical resources were found '
-                    'with name (notUnique)')
-        self.assertIn(expected, six.text_type(exc))
-        calls = [mock.call(label='net_label'),
-                 mock.call(label='idontexist'),
-                 mock.call(label='notUnique')]
-        self.nova_client.networks.find.assert_has_calls(calls)
-
-    def test_get_nova_network_id(self):
-        """Tests the get_nova_network_id function."""
-        net = mock.MagicMock()
-        net.id = str(uuid.uuid4())
-        not_existent_net_id = str(uuid.uuid4())
-        self.nova_client.networks.get.side_effect = [
-            net, nova_exceptions.NotFound(404)]
-        self.nova_client.networks.find.side_effect = [
-            nova_exceptions.NotFound(404)]
-
-        self.assertEqual(net.id,
-                         self.nova_plugin.get_nova_network_id(net.id))
-        exc = self.assertRaises(
-            exception.EntityNotFound,
-            self.nova_plugin.get_nova_network_id, not_existent_net_id)
-        expected = ('The Nova network (%s) could not be found' %
-                    not_existent_net_id)
-        self.assertIn(expected, six.text_type(exc))
-
-        calls = [mock.call(net.id),
-                 mock.call(not_existent_net_id)]
-        self.nova_client.networks.get.assert_has_calls(calls)
-        self.nova_client.networks.find.assert_called_once_with(
-            label=not_existent_net_id)
-
     def test_get_status(self):
         server = self.m.CreateMockAnything()
         server.status = 'ACTIVE'
@@ -554,39 +503,6 @@ class FlavorConstraintTest(common.HeatTestCase):
         self.assertEqual(1, nova.NovaClientPlugin._create.call_count)
         self.assertEqual(3, client.flavors.get.call_count)
         self.assertEqual(2, client.flavors.find.call_count)
-
-
-class NetworkConstraintTest(common.HeatTestCase):
-
-    def test_validate(self):
-        client = fakes_nova.FakeClient()
-        self.stub_keystoneclient()
-        self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
-        client.networks = mock.Mock()
-
-        network = collections.namedtuple("Network", ['id', 'label'])
-        network.id = '7f47ff06-0353-4013-b814-123b70b1b27d'
-        network.label = 'foo'
-        client.networks.get.return_value = network
-
-        constraint = nova.NetworkConstraint()
-        ctx = utils.dummy_context()
-
-        self.assertTrue(constraint.validate(network.id, ctx))
-        client.networks.get.side_effect = nova_exceptions.NotFound('')
-        client.networks.find.return_value = network
-        self.assertTrue(constraint.validate(network.id, ctx))
-
-        client.networks.find.side_effect = nova_exceptions.NotFound('')
-        self.assertFalse(constraint.validate(network.id, ctx))
-
-        client.networks.find.side_effect = nova_exceptions.NoUniqueMatch()
-        self.assertFalse(constraint.validate(network.id, ctx))
-
-        network.id = 'nonuuid'
-        client.networks.find.return_value = network
-        client.networks.find.side_effect = None
-        self.assertTrue(constraint.validate(network.id, ctx))
 
 
 class HostConstraintTest(common.HeatTestCase):

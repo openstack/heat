@@ -298,10 +298,6 @@ class HeatTestCase(testscenarios.WithScenarios,
         validate = self.patchobject(neutron.QoSPolicyConstraint, 'validate')
         validate.return_value = True
 
-    def stub_NovaNetworkConstraint(self):
-        validate = self.patchobject(nova.NetworkConstraint, 'validate')
-        validate.return_value = True
-
     def stub_KeystoneProjectConstraint(self):
         validate = self.patchobject(ks_constr.KeystoneProjectConstraint,
                                     'validate')

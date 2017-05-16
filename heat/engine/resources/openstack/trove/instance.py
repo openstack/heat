@@ -349,13 +349,9 @@ class Instance(resource.Resource):
             nic_dict = {}
             net = nic.get(self.NET)
             if net:
-                if self.is_using_neutron():
-                    net_id = self.client_plugin(
-                        'neutron').find_resourceid_by_name_or_id('network',
-                                                                 net)
-                else:
-                    net_id = (self.client_plugin(
-                        'nova').get_nova_network_id(net))
+                net_id = self.client_plugin(
+                    'neutron').find_resourceid_by_name_or_id('network',
+                                                             net)
                 nic_dict['net-id'] = net_id
             port = nic.get(self.PORT)
             if port:

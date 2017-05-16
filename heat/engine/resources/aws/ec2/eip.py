@@ -12,7 +12,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import excutils
 import six
 
 from heat.common import exception
@@ -23,6 +22,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.aws.ec2 import internet_gateway
 from heat.engine.resources.aws.ec2 import vpc
+from heat.engine import support
 
 LOG = logging.getLogger(__name__)
 
@@ -45,6 +45,12 @@ class ElasticIp(resource.Resource):
             properties.Schema.STRING,
             _('Set to "vpc" to have IP address allocation associated to your '
               'VPC.'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                message=_('Now we only allow vpc here, so no need to set up '
+                          'this tag anymore.'),
+                version='9.0.0'
+            ),
             constraints=[
                 constraints.AllowedValues(['vpc']),
             ]
@@ -76,47 +82,25 @@ class ElasticIp(resource.Resource):
 
     def _ipaddress(self):
         if self.ipaddress is None and self.resource_id is not None:
-            if self.properties[self.DOMAIN]:
-                try:
-                    ips = self.neutron().show_floatingip(self.resource_id)
-                except Exception as ex:
-                    self.client_plugin('neutron').ignore_not_found(ex)
-                else:
-                    self.ipaddress = ips['floatingip']['floating_ip_address']
+            try:
+                ips = self.neutron().show_floatingip(self.resource_id)
+            except Exception as ex:
+                self.client_plugin('neutron').ignore_not_found(ex)
             else:
-                try:
-                    ips = self.client().floating_ips.get(self.resource_id)
-                except Exception as e:
-                    self.client_plugin('nova').ignore_not_found(e)
-                else:
-                    self.ipaddress = ips.ip
+                self.ipaddress = ips['floatingip']['floating_ip_address']
         return self.ipaddress or ''
 
     def handle_create(self):
         """Allocate a floating IP for the current tenant."""
         ips = None
-        if self.properties[self.DOMAIN]:
-            ext_net = internet_gateway.InternetGateway.get_external_network_id(
-                self.neutron())
-            props = {'floating_network_id': ext_net}
-            ips = self.neutron().create_floatingip({
-                'floatingip': props})['floatingip']
-            self.ipaddress = ips['floating_ip_address']
-            self.resource_id_set(ips['id'])
-            LOG.info('ElasticIp create %s', str(ips))
-        else:
-            try:
-                ips = self.client().floating_ips.create()
-            except Exception as e:
-                with excutils.save_and_reraise_exception():
-                    if self.client_plugin('nova').is_not_found(e):
-                        LOG.error("No default floating IP pool configured. "
-                                  "Set 'default_floating_pool' in nova.conf.")
-
-            if ips:
-                self.ipaddress = ips.ip
-                self.resource_id_set(ips.id)
-                LOG.info('ElasticIp create %s', str(ips))
+        ext_net = internet_gateway.InternetGateway.get_external_network_id(
+            self.neutron())
+        props = {'floating_network_id': ext_net}
+        ips = self.neutron().create_floatingip({
+            'floatingip': props})['floatingip']
+        self.ipaddress = ips['floating_ip_address']
+        self.resource_id_set(ips['id'])
+        LOG.info('ElasticIp create %s', str(ips))
 
         instance_id = self.properties[self.INSTANCE_ID]
         if instance_id:
@@ -145,12 +129,8 @@ class ElasticIp(resource.Resource):
                     raise
 
         # deallocate the eip
-        if self.properties[self.DOMAIN]:
-            with self.client_plugin('neutron').ignore_not_found:
-                self.neutron().delete_floatingip(self.resource_id)
-        else:
-            with self.client_plugin('nova').ignore_not_found:
-                self.client().floating_ips.delete(self.resource_id)
+        with self.client_plugin('neutron').ignore_not_found:
+            self.neutron().delete_floatingip(self.resource_id)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:

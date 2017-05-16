@@ -35,7 +35,14 @@ class NovaFloatingIp(resource.Resource):
     user to have a "static" IP address that can be reassigned when an instance
     is upgraded or moved.
     """
-    support_status = support.SupportStatus(version='2014.1')
+
+    deprecation_msg = _('Please use OS::Neutron::FloatingIP instead.')
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        message=deprecation_msg,
+        version='9.0.0',
+        previous_status=support.SupportStatus(version='2014.1')
+    )
 
     required_service_extension = 'os-floating-ips'
 
@@ -113,7 +120,14 @@ class NovaFloatingIpAssociation(resource.Resource):
     Resource for associating existing Nova floating IP and Nova server.
     """
 
-    support_status = support.SupportStatus(version='2014.1')
+    deprecation_msg = _(
+        'Please use OS::Neutron::FloatingIPAssociation instead.')
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        message=deprecation_msg,
+        version='9.0.0',
+        previous_status=support.SupportStatus(version='2014.1')
+    )
 
     PROPERTIES = (
         SERVER, FLOATING_IP

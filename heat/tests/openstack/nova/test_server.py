@@ -224,9 +224,7 @@ class ServersTest(common.HeatTestCase):
         self.limits = self.m.CreateMockAnything()
         self.limits.absolute = self._limits_absolute()
         self.mock_flavor = mock.Mock(ram=4, disk=4)
-        self.mock_image = mock.Mock(min_ram=1, min_disk=1, status='active')
-        self.patchobject(resource.Resource, 'is_using_neutron',
-                         return_value=True)
+        self.mock_image = mock.Mock(min_ram=1, min_disk=1, status='ACTIVE')
 
         def flavor_side_effect(*args):
             return 2 if args[0] == 'm1.small' else 1
@@ -329,6 +327,8 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(server, 'store_external_ports')
         self.patchobject(nova.NovaClientPlugin, '_create',
                          return_value=self.fc)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
         if stub_create:
             self.patchobject(self.fc.servers, 'create',
                              return_value=return_server)
@@ -1413,46 +1413,6 @@ class ServersTest(common.HeatTestCase):
                          "time: networks/fixed_ip, networks/port.",
                          six.text_type(error))
 
-    def test_server_validate_with_port_not_using_neutron(self):
-        test_templ = with_port_template.replace('fixed_ip: 10.0.0.99', '')
-        stack_name = 'with_port_in_nova_network'
-        (tmpl, stack) = self._setup_test_stack(stack_name,
-                                               test_templ=test_templ)
-        self.patchobject(servers.Server,
-                         'is_using_neutron', return_value=False)
-
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('port_reference_use_nova_network',
-                                resource_defns['server'], stack)
-
-        self.patchobject(glance.GlanceClientPlugin, 'get_image',
-                         return_value=self.mock_image)
-        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
-                         return_value=self.mock_flavor)
-
-        error = self.assertRaises(exception.StackValidationFailed,
-                                  server.validate)
-        self.assertEqual('Property "port" is supported only for Neutron.',
-                         six.text_type(error))
-
-        # test if port doesn't reference with non-created resource
-        tmpl['Resources']['server']['Properties']['networks'] = (
-            [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}])
-        # We're patching neutron finder here as constraint validation
-        # does not check if neutron is enabled or not. This would be
-        # fixed in a subsequent patch.
-        self.patchobject(neutron.NeutronClientPlugin,
-                         'find_resourceid_by_name_or_id')
-
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('validate_port_in_nova_network',
-                                resource_defns['server'], stack)
-
-        error = self.assertRaises(exception.StackValidationFailed,
-                                  server.validate)
-        self.assertEqual('Property "port" is supported only for Neutron.',
-                         six.text_type(error))
-
     def test_server_validate_with_uuid_fixed_ip(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -1896,10 +1856,11 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(return_server, 'interface_list',
                          return_value=[iface, iface1, iface2])
 
-        self.patchobject(nova.NovaClientPlugin, 'get_net_id_by_label',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          side_effect=['public_id',
                                       'private_id'])
-        reality = server.get_live_state(server.properties)
+        reality = server.get_live_state(server.properties.data)
 
         expected = {'flavor': '1',
                     'image': '2',
@@ -2483,7 +2444,6 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
                                           'test_server_create')
-        self.patchobject(server, 'is_using_neutron', return_value=True)
         self.patchobject(neutronclient.Client, 'create_port',
                          return_value={'port': {'id': '4815162342'}})
 
@@ -2504,12 +2464,6 @@ class ServersTest(common.HeatTestCase):
                          server._build_nics([{'port': 'aaaabbbb'},
                                              {'fixed_ip': '2002::2'}]))
 
-        self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
-                         server._build_nics(
-                             [{'network':
-                               'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}]))
-
-        self.patchobject(server, 'is_using_neutron', return_value=False)
         self.assertEqual([{'net-id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'}],
                          server._build_nics(
                              [{'network':
@@ -2540,11 +2494,13 @@ class ServersTest(common.HeatTestCase):
         return_server.id = '9102'
         server = self._create_test_server(return_server,
                                           'wo_ipaddr')
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
+                         return_value=None)
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(return_server, 'interface_list', return_value=[])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
-
         self.assertEqual({'empty_net': []}, server.FnGetAtt('addresses'))
         self.assertEqual({'empty_net': []}, server.FnGetAtt('networks'))
         self.assertEqual(0, mock_detach.call_count)
@@ -3164,7 +3120,8 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         server.networks = {"fake_net": ["10.0.0.3"]}
         self.patchobject(self.fc.servers, 'get', return_value=server)
-        self.patchobject(nova.NovaClientPlugin, 'get_net_id_by_label',
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
                          return_value='fake_uuid')
         expect_networks = {"fake_uuid": ["10.0.0.3"],
                            "fake_net": ["10.0.0.3"]}
@@ -3209,8 +3166,6 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
-        self.patchobject(server, 'is_using_neutron', return_value=True)
-
         net = {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}
         net_id = server._get_network_id(net)
         self.assertIsNone(net_id)
@@ -3225,25 +3180,6 @@ class ServersTest(common.HeatTestCase):
         net = {'network': '', 'fixed_ip': '1.2.3.4'}
         net_id = server._get_network_id(net)
         self.assertIsNone(net_id)
-
-    def test_get_network_id_nova(self):
-        return_server = self.fc.servers.list()[3]
-        server = self._create_test_server(return_server, 'networks_update')
-
-        self.patchobject(server, 'is_using_neutron', return_value=False)
-
-        net = {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}
-
-        net_id = server._get_network_id(net)
-        self.assertIsNone(net_id)
-
-        net = {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
-               'fixed_ip': '1.2.3.4'}
-
-        self.patchobject(nova.NovaClientPlugin, 'get_nova_network_id',
-                         return_value='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032')
-        net_id = server._get_network_id(net)
-        self.assertEqual('f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', net_id)
 
     def test_exclude_not_updated_networks_no_matching(self):
         return_server = self.fc.servers.list()[3]
@@ -3904,7 +3840,9 @@ class ServersTest(common.HeatTestCase):
                                           'test_server_snapshot')
         image_in_error = mock.Mock()
         image_in_error.status = image_status
-        self.fc.images.get = mock.Mock(return_value=image_in_error)
+
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=image_in_error)
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(server.snapshot))
 
@@ -3979,6 +3917,8 @@ class ServersTest(common.HeatTestCase):
         stack.store()
         self.patchobject(nova.NovaClientPlugin, '_create',
                          return_value=self.fc)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
         self.patchobject(stack['server'], 'store_external_ports')
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
@@ -4031,6 +3971,9 @@ class ServersTest(common.HeatTestCase):
         create_image = self.patchobject(self.fc.servers, 'create_image')
         create_image.return_value = image
 
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+
         delete_server = self.patchobject(self.fc.servers, 'delete')
         delete_server.side_effect = nova_exceptions.NotFound(404)
 
@@ -4058,7 +4001,8 @@ class ServersTest(common.HeatTestCase):
 
         mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
         mock_plugin.return_value = self.fc
-
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
         mock_create = self.patchobject(self.fc.servers, 'create')
@@ -4077,15 +4021,16 @@ class ServersTest(common.HeatTestCase):
 
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
-        failed_image = {
+        failed_image = mock.Mock(**{
             'id': 456,
             'name': 'CentOS 5.2',
             'updated': '2010-10-10T12:00:00Z',
             'created': '2010-08-10T12:00:00Z',
-            'status': 'ERROR'}
-        self.fc.client.get_images_456 = lambda **kw: (
-            200, {'image': failed_image})
+            'status': 'ERROR'})
 
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=failed_image)
+        return_server = self.fc.servers.list()[1]
         scheduler.TaskRunner(stack.delete)()
 
         self.assertEqual((stack.DELETE, stack.FAILED), stack.state)
@@ -4450,74 +4395,6 @@ class ServerInternalPortTest(ServersTest):
             mock.call('internal_ports', '[]'),
             mock.call('internal_ports', '[{"id": "7788"}]')))
 
-    def test_calculate_networks_nova_with_fipa(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-                  subnet: 1234
-                  fixed_ip: 127.0.0.1
-                  floating_ip: 1199
-                - network: 8765
-                  subnet: 5678
-                  fixed_ip: 127.0.0.2
-        """
-
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
-
-        # NOTE(prazumovsky): this method update old_net and new_net with
-        # interfaces' ports. Because of uselessness of checking this method,
-        # we can afford to give port as part of calculate_networks args.
-        self.patchobject(server, 'update_networks_matching_iface_port')
-        self.patchobject(server.client_plugin(), 'get_nova_network_id',
-                         side_effect=['4321', '8765'])
-
-        self.patchobject(server, 'is_using_neutron', return_value=False)
-        self.patchobject(resource.Resource, 'data_set')
-
-        FakeFIP = collections.namedtuple('FakeFip', ['ip'])
-        self.patchobject(server.client().floating_ips, 'get',
-                         side_effect=[FakeFIP('192.168.0.1'),
-                                      FakeFIP('192.168.0.2'),
-                                      FakeFIP('192.168.0.1')])
-        fipa = self.patchobject(server.client().servers, 'add_floating_ip')
-        fip_disa = self.patchobject(server.client().servers,
-                                    'remove_floating_ip')
-        server.resource_id = '1234567890'
-
-        old_net = [{'network': '4321',
-                    'subnet': '1234',
-                    'fixed_ip': '127.0.0.1',
-                    'floating_ip': '1199'},
-                   {'network': '8765',
-                    'subnet': '5678',
-                    'fixed_ip': '127.0.0.2'}]
-
-        new_net = [{'network': '8765',
-                    'subnet': '5678',
-                    'fixed_ip': '127.0.0.2',
-                    'floating_ip': '11910'},
-                   {'network': '0912',
-                    'subnet': '9021',
-                    'fixed_ip': '127.0.0.1',
-                    'floating_ip': '1199'}]
-
-        server.calculate_networks(old_net, new_net, [])
-
-        fip_disa.assert_called_once_with('1234567890',
-                                         '192.168.0.1')
-        fipa.assert_has_calls((
-            mock.call('1234567890', '192.168.0.2'),
-            mock.call('1234567890', '192.168.0.1')
-        ))
-
     def test_calculate_networks_internal_ports_with_fipa(self):
         tmpl = """
         heat_template_version: 2015-10-15
@@ -4620,37 +4497,6 @@ class ServerInternalPortTest(ServersTest):
 
         self.assertIsNone(server._floating_ip_disassociate('flip123'))
         self.assertEqual(1, delete_flip.call_count)
-
-    def test_delete_fipa_with_exception_not_found_nova(self):
-        tmpl = """
-        heat_template_version: 2015-10-15
-        resources:
-          server:
-            type: OS::Nova::Server
-            properties:
-              flavor: m1.small
-              image: F17-x86_64-gold
-              networks:
-                - network: 4321
-                  subnet: 1234
-                  fixed_ip: 127.0.0.1
-                  floating_ip: 1199
-                - network: 8765
-                  subnet: 5678
-                  fixed_ip: 127.0.0.2
-                  floating_ip: 9911
-        """
-
-        t, stack, server = self._return_template_stack_and_rsrc_defn('test',
-                                                                     tmpl)
-        self.patchobject(server, 'is_using_neutron', return_value=False)
-        flip = mock.MagicMock()
-        flip.ip = 'flip123'
-        server.client().floating_ips = flip
-        server.client().servers.remove_floating_ip = mock.MagicMock(
-            side_effect=[nova_exceptions.NotFound(404)])
-
-        self.assertIsNone(server._floating_ip_disassociate('flip123'))
 
     def test_delete_internal_ports(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(

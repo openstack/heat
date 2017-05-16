@@ -193,24 +193,14 @@ class SaharaCluster(resource.Resource):
                 translation.TranslationRule.RESOLVE,
                 [self.IMAGE_ID],
                 client_plugin=self.client_plugin('glance'),
-                finder='find_image_by_name_or_id')]
-        if self.is_using_neutron():
-            rules.extend([
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    [self.MANAGEMENT_NETWORK],
-                    client_plugin=self.client_plugin('neutron'),
-                    finder='find_resourceid_by_name_or_id',
-                    entity='network')])
-        else:
-            rules.extend([
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    [self.MANAGEMENT_NETWORK],
-                    client_plugin=self.client_plugin('nova'),
-                    finder='get_nova_network_id')])
+                finder='find_image_by_name_or_id'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.MANAGEMENT_NETWORK],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network')]
         return rules
 
     def _cluster_name(self):

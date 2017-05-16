@@ -17,7 +17,6 @@ from neutronclient.common import exceptions as qe
 
 from heat.common import exception
 from heat.common.i18n import _
-from heat.engine.clients.os import nova
 from heat.engine import constraints
 
 CLIENT_NAME = 'neutron'
@@ -30,15 +29,9 @@ class NetworkConstraint(constraints.BaseCustomConstraint):
                            exception.PhysicalResourceNameAmbiguity)
 
     def validate_with_client(self, client, value):
-        try:
-            client.client(CLIENT_NAME)
-        except Exception:
-            # is not using neutron
-            client.client_plugin(nova.CLIENT_NAME).get_nova_network_id(value)
-        else:
-            neutron_plugin = client.client_plugin(CLIENT_NAME)
-            neutron_plugin.find_resourceid_by_name_or_id(
-                'network', value, cmd_resource=None)
+        neutron_plugin = client.client_plugin(CLIENT_NAME)
+        neutron_plugin.find_resourceid_by_name_or_id(
+            'network', value, cmd_resource=None)
 
 
 class NeutronConstraint(constraints.BaseCustomConstraint):

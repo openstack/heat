@@ -24,7 +24,6 @@ from novaclient import exceptions
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-from oslo_utils import uuidutils
 import six
 from six.moves.urllib import parse as urlparse
 import tenacity
@@ -637,30 +636,6 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         return ConsoleUrls(server)
 
-    def get_net_id_by_label(self, label):
-        try:
-            net_id = self.client().networks.find(label=label).id
-        except exceptions.NotFound as ex:
-            LOG.debug('Nova network (%(net)s) not found: %(ex)s',
-                      {'net': label, 'ex': ex})
-            raise exception.EntityNotFound(entity='Nova network', name=label)
-        except exceptions.NoUniqueMatch as exc:
-            LOG.debug('Nova network (%(net)s) is not unique matched: %(exc)s',
-                      {'net': label, 'exc': exc})
-            raise exception.PhysicalResourceNameAmbiguity(name=label)
-        return net_id
-
-    def get_nova_network_id(self, net_identifier):
-        if uuidutils.is_uuid_like(net_identifier):
-            try:
-                net_id = self.client().networks.get(net_identifier).id
-            except exceptions.NotFound:
-                net_id = self.get_net_id_by_label(net_identifier)
-        else:
-            net_id = self.get_net_id_by_label(net_identifier)
-
-        return net_id
-
     def attach_volume(self, server_id, volume_id, device):
         try:
             va = self.client().volumes.create_server_volume(
@@ -794,14 +769,6 @@ class FlavorConstraint(NovaBaseConstraint):
     expected_exceptions = (exceptions.NotFound,)
 
     resource_getter_name = 'find_flavor_by_name_or_id'
-
-
-class NetworkConstraint(NovaBaseConstraint):
-
-    expected_exceptions = (exception.EntityNotFound,
-                           exception.PhysicalResourceNameAmbiguity)
-
-    resource_getter_name = 'get_nova_network_id'
 
 
 class HostConstraint(NovaBaseConstraint):

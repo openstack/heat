@@ -58,11 +58,6 @@ class ServerNetworkMixin(object):
                     'at the same time.') % self.ALLOCATE_NETWORK
             raise exception.StackValidationFailed(message=msg)
 
-        if port is not None and not self.is_using_neutron():
-            msg = _('Property "%s" is supported only for '
-                    'Neutron.') % self.NETWORK_PORT
-            raise exception.StackValidationFailed(message=msg)
-
         # Nova doesn't allow specify ip and port at the same time
         if fixed_ip and port is not None:
             raise exception.ResourcePropertyConflict(
@@ -72,7 +67,7 @@ class ServerNetworkMixin(object):
         # if user only specifies network and floating ip, floating ip
         # can't be associated as the the neutron port isn't created/managed
         # by heat
-        if floating_ip is not None and self.is_using_neutron():
+        if floating_ip is not None:
             if net_id is not None and port is None and subnet is None:
                 msg = _('Property "%(fip)s" is not supported if only '
                         '"%(net)s" is specified, because the corresponding '
@@ -82,7 +77,7 @@ class ServerNetworkMixin(object):
                 raise exception.StackValidationFailed(message=msg)
 
     def _validate_belonging_subnet_to_net(self, network):
-        if network.get(self.NETWORK_PORT) is None and self.is_using_neutron():
+        if network.get(self.NETWORK_PORT) is None:
             net = self._get_network_id(network)
             # check if there are subnet and network both specified that
             # subnet belongs to specified network
@@ -195,9 +190,6 @@ class ServerNetworkMixin(object):
         creating. We need to store information about that ports, so store
         their IDs to data with key `external_ports`.
         """
-        if not self.is_using_neutron():
-            return
-
         # check if os-attach-interfaces extension is available on this cloud.
         # If it's not, then novaclient's interface_list method cannot be used
         # to get the list of interfaces.
@@ -238,7 +230,7 @@ class ServerNetworkMixin(object):
             nic_info = {'net-id': self._get_network_id(net)}
             if net.get(self.NETWORK_PORT):
                 nic_info['port-id'] = net[self.NETWORK_PORT]
-            elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
+            elif net.get(self.NETWORK_SUBNET):
                 nic_info['port-id'] = self._create_internal_port(
                     net, idx, security_groups)
 
@@ -264,14 +256,8 @@ class ServerNetworkMixin(object):
         return nics
 
     def _floating_ip_neutron_associate(self, floating_ip, floating_ip_data):
-        if self.is_using_neutron():
-            self.client('neutron').update_floatingip(
-                floating_ip, {'floatingip': floating_ip_data})
-
-    def _floating_ip_nova_associate(self, floating_ip):
-        fl_ip = self.client().floating_ips.get(floating_ip)
-        if fl_ip and self.resource_id:
-            self.client().servers.add_floating_ip(self.resource_id, fl_ip.ip)
+        self.client('neutron').update_floatingip(
+            floating_ip, {'floatingip': floating_ip_data})
 
     def _floating_ips_disassociate(self):
         networks = self.properties[self.NETWORKS] or []
@@ -281,15 +267,9 @@ class ServerNetworkMixin(object):
                 self._floating_ip_disassociate(floating_ip)
 
     def _floating_ip_disassociate(self, floating_ip):
-        if self.is_using_neutron():
-            with self.client_plugin('neutron').ignore_not_found:
-                self.client('neutron').update_floatingip(
-                    floating_ip, {'floatingip': {'port_id': None}})
-        else:
-            with self.client_plugin().ignore_conflict_and_not_found:
-                fl_ip = self.client().floating_ips.get(floating_ip)
-                self.client().servers.remove_floating_ip(self.resource_id,
-                                                         fl_ip.ip)
+        with self.client_plugin('neutron').ignore_not_found:
+            self.client('neutron').update_floatingip(
+                floating_ip, {'floatingip': {'port_id': None}})
 
     def _exclude_not_updated_networks(self, old_nets, new_nets):
         # make networks similar by adding None vlues for not used keys
@@ -449,7 +429,7 @@ class ServerNetworkMixin(object):
 
             if net.get(self.NETWORK_PORT):
                 handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
-            elif self.is_using_neutron() and net.get(self.NETWORK_SUBNET):
+            elif net.get(self.NETWORK_SUBNET):
                 handler_kwargs['port_id'] = self._create_internal_port(
                     net, idx, security_groups)
 
@@ -489,10 +469,8 @@ class ServerNetworkMixin(object):
                 old_nets, new_nets, ifaces, security_groups)
 
     def update_floating_ip_association(self, floating_ip, flip_associate):
-        if self.is_using_neutron() and flip_associate.get('port_id'):
+        if flip_associate.get('port_id'):
             self._floating_ip_neutron_associate(floating_ip, flip_associate)
-        elif not self.is_using_neutron():
-            self._floating_ip_nova_associate(floating_ip)
 
     @staticmethod
     def get_all_ports(server):
@@ -539,15 +517,9 @@ class ServerNetworkMixin(object):
                     port=port['id'], server=prev_server_id)
 
     def prepare_ports_for_replace(self):
-        if not self.is_using_neutron():
-            return
-
         self.detach_ports(self)
 
     def restore_ports_after_rollback(self, convergence):
-        if not self.is_using_neutron():
-            return
-
         # In case of convergence, during rollback, the previous rsrc is
         # already selected and is being acted upon.
         backup_stack = self.stack._backup_stack()

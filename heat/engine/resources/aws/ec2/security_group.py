@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import abc
-
 import six
 
 from heat.common import exception
@@ -21,156 +19,10 @@ from heat.engine import properties
 from heat.engine import resource
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BaseSecurityGroup(object):
+class NeutronSecurityGroup(object):
 
     def __init__(self, sg):
         self.sg = sg
-
-    @abc.abstractmethod
-    def create(self):
-        return
-
-    @abc.abstractmethod
-    def delete(self):
-        return
-
-    @abc.abstractmethod
-    def update(self, props):
-        return
-
-    def diff_rules(self, existing, updated):
-        ids_to_delete = [id for id, rule in existing.items()
-                         if rule not in updated]
-        rules_to_create = [rule for rule in updated
-                           if rule not in six.itervalues(existing)]
-        return ids_to_delete, rules_to_create
-
-
-class NovaSecurityGroup(BaseSecurityGroup):
-
-    def __init__(self, sg):
-        super(NovaSecurityGroup, self).__init__(sg)
-        self.client = sg.client('nova')
-        self.plugin = sg.client_plugin('nova')
-
-    def _get_rule_secgroupid_nova(self, prop):
-        source_group_id = None
-        if prop.get(self.sg.RULE_SOURCE_SECURITY_GROUP_ID) is not None:
-            source_group_id = prop[self.sg.RULE_SOURCE_SECURITY_GROUP_ID]
-        elif prop.get(self.sg.RULE_SOURCE_SECURITY_GROUP_NAME) is not None:
-            rule_name = prop[self.sg.RULE_SOURCE_SECURITY_GROUP_NAME]
-            for group in self.client.security_groups.list():
-                if group.name == rule_name:
-                    source_group_id = group.id
-                    break
-            else:
-                raise SecurityGroupNotFound(group_name=rule_name)
-        return source_group_id
-
-    def _prop_rules_to_common(self, props, direction):
-        rules = []
-        prs = props.get(direction) or []
-        for pr in prs:
-            rule = dict(pr)
-            rule.pop(self.sg.RULE_SOURCE_SECURITY_GROUP_OWNER_ID)
-            if rule[self.sg.RULE_FROM_PORT]:
-                rule[self.sg.RULE_FROM_PORT] = int(
-                    rule[self.sg.RULE_FROM_PORT])
-            if rule[self.sg.RULE_TO_PORT]:
-                rule[self.sg.RULE_TO_PORT] = int(rule[self.sg.RULE_TO_PORT])
-            rule[self.sg.RULE_SOURCE_SECURITY_GROUP_ID
-                 ] = self._get_rule_secgroupid_nova(rule)
-            rule.pop(self.sg.RULE_SOURCE_SECURITY_GROUP_NAME)
-            rules.append(rule)
-        return rules
-
-    def _res_rules_to_common(self, api_rules):
-        rules = {}
-        for nr in api_rules:
-            rule = {}
-            rule[self.sg.RULE_CIDR_IP] = nr['ip_range'].get('cidr') or None
-            rule[self.sg.RULE_IP_PROTOCOL] = nr['ip_protocol']
-            rule[self.sg.RULE_FROM_PORT] = nr['from_port'] or None
-            rule[self.sg.RULE_TO_PORT] = nr['to_port'] or None
-            # set source_group_id as id, not name
-            group_name = nr['group'].get('name')
-            group_id = None
-            if group_name:
-                for group in self.client.security_groups.list():
-                    if group.name == group_name:
-                        group_id = group.id
-                        break
-            rule[self.sg.RULE_SOURCE_SECURITY_GROUP_ID] = group_id
-            rules[nr['id']] = rule
-        return rules
-
-    def create(self):
-        sec = None
-        groups = self.client.security_groups.list()
-        for group in groups:
-            if group.name == self.sg.physical_resource_name():
-                sec = group
-                break
-
-        if not sec:
-            sec = self.client.security_groups.create(
-                self.sg.physical_resource_name(),
-                self.sg.properties[self.sg.GROUP_DESCRIPTION])
-
-        self.sg.resource_id_set(sec.id)
-        if self.sg.properties[self.sg.SECURITY_GROUP_INGRESS]:
-            rules = self._prop_rules_to_common(
-                self.sg.properties, self.sg.SECURITY_GROUP_INGRESS)
-            for rule in rules:
-                self.create_rule(sec, rule)
-
-    def create_rule(self, sec, rule):
-        try:
-            self.client.security_group_rules.create(
-                sec.id,
-                rule.get(self.sg.RULE_IP_PROTOCOL),
-                rule.get(self.sg.RULE_FROM_PORT),
-                rule.get(self.sg.RULE_TO_PORT),
-                rule.get(self.sg.RULE_CIDR_IP),
-                rule.get(self.sg.RULE_SOURCE_SECURITY_GROUP_ID))
-        except Exception as ex:
-            # ignore error if the group already exists
-            if not (self.plugin.is_bad_request(ex) and
-                    'already exists' in six.text_type(ex)):
-                raise
-
-    def delete(self):
-        if self.sg.resource_id is not None:
-            try:
-                sec = self.client.security_groups.get(self.sg.resource_id)
-            except Exception as e:
-                self.plugin.ignore_not_found(e)
-            else:
-                for rule in sec.rules:
-                    self.delete_rule(rule['id'])
-                self.client.security_groups.delete(self.sg.resource_id)
-
-    def delete_rule(self, rule_id):
-        with self.plugin.ignore_not_found:
-            self.client.security_group_rules.delete(rule_id)
-
-    def update(self, props):
-        sec = self.client.security_groups.get(self.sg.resource_id)
-        existing = self._res_rules_to_common(sec.rules)
-        updated = self._prop_rules_to_common(
-            props, self.sg.SECURITY_GROUP_INGRESS)
-        ids, new = self.diff_rules(existing, updated)
-        for id in ids:
-            self.delete_rule(id)
-        for rule in new:
-            self.create_rule(sec, rule)
-
-
-class NeutronSecurityGroup(BaseSecurityGroup):
-
-    def __init__(self, sg):
-        super(NeutronSecurityGroup, self).__init__(sg)
         self.client = sg.client('neutron')
         self.plugin = sg.client_plugin('neutron')
 
@@ -319,8 +171,11 @@ class NeutronSecurityGroup(BaseSecurityGroup):
             rule['direction'] = 'ingress'
         updated_rules = list(six.itervalues(updated))
         updated_all = updated_rules[0] + updated_rules[1]
-        return super(NeutronSecurityGroup, self).diff_rules(existing,
-                                                            updated_all)
+        ids_to_delete = [id for id, rule in existing.items()
+                         if rule not in updated_all]
+        rules_to_create = [rule for rule in updated_all
+                           if rule not in six.itervalues(existing)]
+        return ids_to_delete, rules_to_create
 
 
 class SecurityGroup(resource.Resource):
@@ -398,50 +253,17 @@ class SecurityGroup(resource.Resource):
     }
 
     def handle_create(self):
-        if self.is_using_neutron():
-            impl = NeutronSecurityGroup
-        else:
-            impl = NovaSecurityGroup
-        impl(self).create()
+        NeutronSecurityGroup(self).create()
 
     def handle_delete(self):
-        if self.is_using_neutron():
-            impl = NeutronSecurityGroup
-        else:
-            impl = NovaSecurityGroup
-        impl(self).delete()
-
-    def get_reference_id(self):
-        if self.is_using_neutron():
-            return super(SecurityGroup, self).get_reference_id()
-        else:
-            return self.physical_resource_name()
-
-    def validate(self):
-        res = super(SecurityGroup, self).validate()
-        if res:
-            return res
-
-        if (self.properties[self.SECURITY_GROUP_EGRESS] and
-                not self.is_using_neutron()):
-            raise exception.EgressRuleNotAllowed()
+        NeutronSecurityGroup(self).delete()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        update = False
-        if (self.is_using_neutron() and (
-                self.SECURITY_GROUP_INGRESS in prop_diff or
-                self.SECURITY_GROUP_EGRESS in prop_diff)):
-            impl = NeutronSecurityGroup
-            update = True
-        elif (not self.is_using_neutron() and
-              self.SECURITY_GROUP_INGRESS in prop_diff):
-            impl = NovaSecurityGroup
-            update = True
-
-        if update:
+        if (self.SECURITY_GROUP_INGRESS in prop_diff or
+                self.SECURITY_GROUP_EGRESS in prop_diff):
             props = json_snippet.properties(self.properties_schema,
                                             self.context)
-            impl(self).update(props)
+            NeutronSecurityGroup(self).update(props)
 
 
 class SecurityGroupNotFound(exception.HeatException):

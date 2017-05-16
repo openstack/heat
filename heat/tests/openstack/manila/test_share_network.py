@@ -15,7 +15,6 @@ import mock
 
 from heat.common import exception
 from heat.common import template_format
-from heat.engine.clients.os import nova
 from heat.engine.resources.openstack.manila import share_network
 from heat.engine import scheduler
 from heat.tests import common
@@ -68,15 +67,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         def resolve_neutron(resource_type, name):
             return name
 
-        def resolve_nova(name):
-            return name
-
         self.client_plugin.find_resourceid_by_name_or_id.side_effect = (
             resolve_neutron
-        )
-
-        self.client_plugin.get_nova_network_id.side_effect = (
-            resolve_nova
         )
 
         self.patchobject(share_network.ManilaShareNetwork, 'client_plugin',
@@ -89,7 +81,6 @@ class ManilaShareNetworkTest(common.HeatTestCase):
             return_network
         )
         self.stub_NetworkConstraint_validate()
-        self.stub_NovaNetworkConstraint()
         self.stub_SubnetConstraint_validate()
 
     def _create_network(self, name, snippet, stack, use_neutron=True):
@@ -274,17 +265,6 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         msg = ('neutron_network cannot be specified without neutron_subnet.')
         self.assertRaisesRegexp(exception.ResourcePropertyDependency, msg,
                                 net.validate)
-
-    def test_nova_constraint_fail(self):
-        validate = self.patchobject(nova.NetworkConstraint, 'validate')
-        validate.return_value = False
-        t = template_format.parse(stack_template)
-        t['resources']['share_network']['properties']['nova_network'] = 1
-        stack = utils.parse_stack(t)
-        rsrc_defn = stack.t.resource_definitions(stack)['share_network']
-        self.assertRaises(exception.ResourceFailure,
-                          self._create_network, 'share_network',
-                          rsrc_defn, stack)
 
     def test_attributes(self):
         net = self._create_network('share_network', self.rsrc_defn,

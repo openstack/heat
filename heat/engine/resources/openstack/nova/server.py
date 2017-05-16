@@ -674,38 +674,27 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                                   self.BLOCK_DEVICE_MAPPING_IMAGE],
                 client_plugin=self.client_plugin('glance'),
                 finder='find_image_by_name_or_id'),
-        ]
-        if self.is_using_neutron():
-            rules.extend([
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    translation_path=[self.NETWORKS, self.NETWORK_ID],
-                    client_plugin=self.client_plugin('neutron'),
-                    finder='find_resourceid_by_name_or_id',
-                    entity='network'),
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    translation_path=[self.NETWORKS, self.NETWORK_SUBNET],
-                    client_plugin=self.client_plugin('neutron'),
-                    finder='find_resourceid_by_name_or_id',
-                    entity='subnet'),
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    translation_path=[self.NETWORKS, self.NETWORK_PORT],
-                    client_plugin=self.client_plugin('neutron'),
-                    finder='find_resourceid_by_name_or_id',
-                    entity='port')])
-        else:
-            rules.extend([
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    translation_path=[self.NETWORKS, self.NETWORK_ID],
-                    client_plugin=self.client_plugin('nova'),
-                    finder='get_nova_network_id')])
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.NETWORKS, self.NETWORK_ID],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.NETWORKS, self.NETWORK_SUBNET],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.NETWORKS, self.NETWORK_PORT],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='port')]
         return rules
 
     def __init__(self, name, json_snippet, stack):
@@ -819,24 +808,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             if self.properties[self.TAGS]:
                 self._update_server_tags(self.properties[self.TAGS])
             self.store_external_ports()
-            # Addresses binds to server not immediately, so we need to wait
-            # until server is created and after that associate floating ip.
-            self.floating_ips_nova_associate()
         return check
 
     def _update_server_tags(self, tags):
         server = self.client().servers.get(self.resource_id)
         self.client(version=self.client_plugin().V2_26
                     ).servers.set_tags(server, tags)
-
-    def floating_ips_nova_associate(self):
-        # If there is no neutron used, floating_ip still unassociated,
-        # so need associate it with nova.
-        if not self.is_using_neutron():
-            for net in self.properties.get(self.NETWORKS) or []:
-                if net.get(self.NETWORK_FLOATING_IP):
-                    self._floating_ip_nova_associate(
-                        net.get(self.NETWORK_FLOATING_IP))
 
     def handle_check(self):
         server = self.client().servers.get(self.resource_id)
@@ -891,7 +868,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         reality_net_ids = {}
         for net_key in reality_nets:
             try:
-                net_id = self.client_plugin().get_net_id_by_label(net_key)
+                net_id = self.client_plugin(
+                    'neutron').find_resourceid_by_name_or_id('network',
+                                                             net_key)
             except (exception.EntityNotFound,
                     exception.PhysicalResourceNameAmbiguity):
                 net_id = None
@@ -1057,7 +1036,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         nets = copy.deepcopy(networks)
         for key in list(nets.keys()):
             try:
-                net_id = self.client_plugin().get_net_id_by_label(key)
+                net_id = self.client_plugin(
+                    'neutron').find_resourceid_by_name_or_id('network', key)
             except (exception.EntityNotFound,
                     exception.PhysicalResourceNameAmbiguity):
                 net_id = None
@@ -1517,9 +1497,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
     def check_delete_complete(self, prg):
         if not prg:
             return True
-
         if not prg.image_complete:
-            image = self.client().images.get(prg.image_id)
+            image = self.client_plugin('glance').get_image(prg.image_id)
             if image.status in ('DELETED', 'ERROR'):
                 raise exception.Error(image.status)
             elif image.status == 'ACTIVE':
@@ -1611,7 +1590,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         return image_id
 
     def check_snapshot_complete(self, image_id):
-        image = self.client().images.get(image_id)
+        image = self.client_plugin('glance').get_image(image_id)
         if image.status == 'ACTIVE':
             return True
         elif image.status == 'ERROR' or image.status == 'DELETED':
@@ -1622,7 +1601,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
     def handle_delete_snapshot(self, snapshot):
         image_id = snapshot['resource_data'].get('snapshot_image_id')
         with self.client_plugin().ignore_not_found:
-            self.client().images.delete(image_id)
+            self.client_plugin('glance').images.delete(image_id)
 
     def handle_restore(self, defn, restore_data):
         image_id = restore_data['resource_data']['snapshot_image_id']

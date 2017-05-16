@@ -66,7 +66,6 @@ class ManilaShareNetwork(resource.Resource):
             properties.Schema.STRING,
             _('Nova network id.'),
             update_allowed=True,
-            constraints=[constraints.CustomConstraint('nova.network')]
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
@@ -156,36 +155,24 @@ class ManilaShareNetwork(resource.Resource):
                 raise exception.StackValidationFailed(message=msg)
 
     def translation_rules(self, props):
-        if self.is_using_neutron():
-            translation_rules = [
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    [self.NEUTRON_NETWORK],
-                    client_plugin=self.client_plugin('neutron'),
-                    finder='find_resourceid_by_name_or_id',
-                    entity='network'
-                ),
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    [self.NEUTRON_SUBNET],
-                    client_plugin=self.client_plugin('neutron'),
-                    finder='find_resourceid_by_name_or_id',
-                    entity='subnet'
-                )
-            ]
-        else:
-            translation_rules = [
-                translation.TranslationRule(
-                    props,
-                    translation.TranslationRule.RESOLVE,
-                    [self.NOVA_NETWORK],
-                    client_plugin=self.client_plugin('nova'),
-                    finder='get_nova_network_id'
-                )
-            ]
-
+        translation_rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.NEUTRON_NETWORK],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.NEUTRON_SUBNET],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
+            )
+        ]
         return translation_rules
 
     def handle_create(self):

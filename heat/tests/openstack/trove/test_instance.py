@@ -22,7 +22,6 @@ from troveclient.v1 import users
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import neutron
-from heat.engine.clients.os import nova
 from heat.engine.clients.os import trove
 from heat.engine import resource
 from heat.engine.resources.openstack.trove import instance as dbinstance
@@ -540,28 +539,6 @@ class InstanceTest(common.HeatTestCase):
             restorePoint=None, availability_zone=None, datastore=None,
             datastore_version=None, nics=[{'net-id': net_id}], replica_of=None,
             replica_count=None)
-
-    def test_instance_create_with_net_name(self):
-        t = template_format.parse(db_template_with_nics)
-        t['resources']['MySqlCloudDB']['properties']['networks'] = [
-            {'network': 'somenetname'}]
-        instance = self._setup_test_instance('dbinstance_test', t)
-        self.stub_NetworkConstraint_validate()
-        self.patchobject(instance, 'is_using_neutron', return_value=False)
-        novaclient = mock.Mock()
-        self.patchobject(nova.NovaClientPlugin, '_create',
-                         return_value=novaclient)
-        fake_net = mock.Mock()
-        fake_net.id = 'somenetid'
-        novaclient.networks.find.return_value = fake_net
-
-        scheduler.TaskRunner(instance.create)()
-        self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
-        self.client.instances.create.assert_called_once_with(
-            'test', '1', volume={'size': 30}, databases=[], users=[],
-            restorePoint=None, availability_zone=None, datastore=None,
-            datastore_version=None, nics=[{'net-id': 'somenetid'}],
-            replica_of=None, replica_count=None)
 
     def test_instance_create_with_replication(self):
         t = template_format.parse(db_template_with_replication)

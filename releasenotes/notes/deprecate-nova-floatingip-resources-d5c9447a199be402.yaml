@@ -1,0 +1,7 @@
+---
+deprecations:
+  - nova-network is no longer supported in OpenStack. Please use
+    OS::Neutron::FloatingIPAssociation and OS::Neutron::FloatingIP in place of
+    OS::Nova::FloatingIPAssociation and OS::Nova::FloatingIP
+  - The AWS::EC2::EIP domain is always assumed to be 'vpc', since nova-network
+    is not supported in OpenStack any longer.

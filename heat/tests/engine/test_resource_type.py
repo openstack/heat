@@ -47,7 +47,9 @@ class ResourceTypeTest(common.HeatTestCase):
                               'OS::Designate::Record',
                               'OS::Heat::HARestarter',
                               'OS::Magnum::Bay',
-                              'OS::Glance::Image']),
+                              'OS::Glance::Image',
+                              'OS::Nova::FloatingIP',
+                              'OS::Nova::FloatingIPAssociation']),
                          set(resources))
 
     @mock.patch.object(res.Resource, 'is_service_available')
