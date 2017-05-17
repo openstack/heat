@@ -440,9 +440,12 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             prg_detach, prg_attach = self._detach_attach_progress(vol)
         # restore the volume from backup
         if self.BACKUP_ID in prop_diff:
+            if not vol:
+                vol = cinder.volumes.get(self.resource_id)
             prg_restore = progress.VolumeBackupRestoreProgress(
                 vol_id=self.resource_id,
                 backup_id=prop_diff.get(self.BACKUP_ID))
+            prg_detach, prg_attach = self._detach_attach_progress(vol)
         # extend volume size
         if self.SIZE in prop_diff:
             if not vol:
@@ -508,6 +511,11 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     def check_update_complete(self, checkers):
         prg_restore, prg_detach, prg_resize, prg_access, prg_attach = checkers
+        # detach volume
+        if prg_detach:
+            if not prg_detach.nova_complete:
+                self._detach_volume_to_complete(prg_detach)
+                return False
         if prg_restore:
             if not prg_restore.called:
                 prg_restore.called = self._backup_restore(
@@ -517,13 +525,6 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             if not prg_restore.complete:
                 prg_restore.complete = self._check_backup_restore_complete()
                 return prg_restore.complete and not prg_resize
-        if not prg_resize and not prg_access:
-            return True
-        # detach volume
-        if prg_detach:
-            if not prg_detach.nova_complete:
-                self._detach_volume_to_complete(prg_detach)
-                return False
         # resize volume
         if prg_resize:
             if not prg_resize.called:
@@ -544,7 +545,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         return True
 
     def handle_snapshot(self):
-        backup = self.client().backups.create(self.resource_id)
+        backup = self.client().backups.create(self.resource_id, force=True)
         self.data_set('backup_id', backup.id)
         return backup.id
 
