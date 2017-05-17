@@ -864,6 +864,7 @@ class Stack(collections.Mapping):
                     message=encodeutils.safe_decode(six.text_type(ex)))
             if result:
                 raise exception.StackValidationFailed(message=result)
+            eventlet.sleep(0)
 
         for op_name, output in six.iteritems(self.outputs):
             try:
