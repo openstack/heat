@@ -26,6 +26,9 @@ class Segment(neutron.NeutronResource):
 
     This requires enabling the segments service plug-in by appending
     'segments' to the list of service_plugins in the neutron.conf.
+
+    The default policy usage of this resource is limited to
+    administrators only.
     """
 
     required_service_extension = 'segment'

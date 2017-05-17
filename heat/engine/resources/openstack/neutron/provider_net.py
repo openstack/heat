@@ -25,6 +25,9 @@ class ProviderNet(net.Net):
 
     Provider networks specify details of physical realisation of the existing
     network.
+
+    The default policy usage of this resource is limited to
+    administrators only.
     """
 
     required_service_extension = 'provider'
