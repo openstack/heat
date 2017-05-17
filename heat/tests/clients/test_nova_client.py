@@ -20,7 +20,6 @@ from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 from oslo_serialization import jsonutils as json
-from oslo_utils import encodeutils
 import requests
 import six
 
@@ -601,7 +600,7 @@ class ConsoleUrlsTest(common.HeatTestCase):
             self.console_type]
 
         self._assert_console_method_called()
-        self.assertEqual(msg, console_url)
+        self.assertIn(msg, console_url)
 
     def test_get_console_url_tolerate_unavailable(self):
         msg = 'Unavailable console type %s.' % self.console_type
@@ -618,24 +617,17 @@ class ConsoleUrlsTest(common.HeatTestCase):
 
         self._test_get_console_url_tolerate_exception(msg)
 
-    def test_get_console_urls_reraises_other_400(self):
+    def test_get_console_urls_tolerate_other_400(self):
         exc = nova_exceptions.BadRequest
         self.console_method.side_effect = exc(400, message="spam")
 
-        urls = self.nova_plugin.get_console_urls(self.server)
-        e = self.assertRaises(exc, urls.__getitem__, self.console_type)
-        self.assertIn('spam', encodeutils.exception_to_unicode(e))
-        self._assert_console_method_called()
+        self._test_get_console_url_tolerate_exception('spam')
 
     def test_get_console_urls_reraises_other(self):
         exc = Exception
         self.console_method.side_effect = exc("spam")
 
-        urls = self.nova_plugin.get_console_urls(self.server)
-        e = self.assertRaises(exc, urls.__getitem__, self.console_type)
-
-        self.assertIn('spam', e.args)
-        self._assert_console_method_called()
+        self._test_get_console_url_tolerate_exception('spam')
 
 
 class NovaClientPluginExtensionsTest(NovaClientPluginTestCase):
