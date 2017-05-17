@@ -120,6 +120,16 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(600, self.stack.time_elapsed())
 
     @mock.patch.object(stack, 'datetime')
+    def test_time_elapsed_negative(self, mock_dt):
+        self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
+        # dummy create time 10:00:00
+        self.stack.created_time = datetime.datetime(2015, 7, 27, 10, 0, 0)
+        # mock utcnow set to 09:59:50 (-10s offset)
+        mock_dt.datetime.utcnow.return_value = datetime.datetime(2015, 7, 27,
+                                                                 9, 59, 50)
+        self.assertEqual(-10, self.stack.time_elapsed())
+
+    @mock.patch.object(stack, 'datetime')
     def test_time_elapsed_ms(self, mock_dt):
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl)
         # dummy create time 10:00:00
