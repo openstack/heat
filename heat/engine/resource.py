@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import base64
 import contextlib
 import datetime as dt
 import pydoc
@@ -2162,14 +2161,6 @@ class Resource(status.ResourceStatus):
         attrs = dict((k, v) for k, v in six.iteritems(attrs)
                      if k != self.SHOW)
         return attrs
-
-    def FnBase64(self, data):
-        """For the intrinsic function Fn::Base64.
-
-        :param data: the input data.
-        :returns: the Base64 representation of the input data.
-        """
-        return base64.b64encode(data)
 
     def _signal_check_action(self):
         if self.action in self.no_signal_actions:
