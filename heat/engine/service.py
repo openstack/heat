@@ -2113,8 +2113,15 @@ class EngineService(service.ServiceBase):
         # FIXME(pas-ha) has to be amended to deny restoring stacks
         # that have disallowed for current user
 
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              _stack_restore, stack, snapshot)
+        if stack.convergence:
+            new_stack, tmpl = stack.restore_data(snapshot)
+            stack.thread_group_mgr = self.thread_group_mgr
+            stack.converge_stack(template=tmpl,
+                                 action=stack.RESTORE,
+                                 new_stack=new_stack)
+        else:
+            self.thread_group_mgr.start_with_lock(
+                cnxt, stack, self.engine_id, _stack_restore, stack, snapshot)
 
     @context.request_context
     def stack_list_snapshots(self, cnxt, stack_identity):
