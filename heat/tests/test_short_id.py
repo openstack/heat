@@ -20,21 +20,21 @@ from heat.tests import common
 class ShortIdTest(common.HeatTestCase):
 
     def test_byte_string_8(self):
-        self.assertEqual(u'\xab', short_id._to_byte_string(0xab, 8))
-        self.assertEqual(u'\x05', short_id._to_byte_string(0x05, 8))
+        self.assertEqual(b'\xab', short_id._to_byte_string(0xab, 8))
+        self.assertEqual(b'\x05', short_id._to_byte_string(0x05, 8))
 
     def test_byte_string_16(self):
-        self.assertEqual(u'\xab\xcd', short_id._to_byte_string(0xabcd, 16))
-        self.assertEqual(u'\x0a\xbc', short_id._to_byte_string(0xabc, 16))
+        self.assertEqual(b'\xab\xcd', short_id._to_byte_string(0xabcd, 16))
+        self.assertEqual(b'\x0a\xbc', short_id._to_byte_string(0xabc, 16))
 
     def test_byte_string_12(self):
-        self.assertEqual(u'\xab\xc0', short_id._to_byte_string(0xabc, 12))
-        self.assertEqual(u'\x0a\xb0', short_id._to_byte_string(0x0ab, 12))
+        self.assertEqual(b'\xab\xc0', short_id._to_byte_string(0xabc, 12))
+        self.assertEqual(b'\x0a\xb0', short_id._to_byte_string(0x0ab, 12))
 
     def test_byte_string_60(self):
         val = 0x111111111111111
         byte_string = short_id._to_byte_string(val, 60)
-        self.assertEqual('\x11\x11\x11\x11\x11\x11\x11\x10', byte_string)
+        self.assertEqual(b'\x11\x11\x11\x11\x11\x11\x11\x10', byte_string)
 
     def test_get_id_string(self):
         id = short_id.get_id('11111111-1111-4111-bfff-ffffffffffff')
@@ -62,10 +62,10 @@ class ShortIdTest(common.HeatTestCase):
         self.assertRaises(ValueError, short_id.get_id, source)
 
     def test_generate_ids(self):
-        allowed_chars = 'abcdefghijklmnopqrstuvwxyz234567'
+        allowed_chars = [ord(c) for c in u'abcdefghijklmnopqrstuvwxyz234567']
         ids = [short_id.generate_id() for i in range(25)]
 
         for id in ids:
             self.assertEqual(12, len(id))
-            self.assertEqual(id, id.translate(allowed_chars))
+            self.assertFalse(id.translate({c: None for c in allowed_chars}))
             self.assertEqual(1, ids.count(id))
