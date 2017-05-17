@@ -1490,14 +1490,16 @@ class ListConcat(function.Function):
     def result(self):
         args = function.resolve(self.args)
 
-        if not isinstance(args, collections.Sequence):
+        if (isinstance(args, six.string_types) or
+                not isinstance(args, collections.Sequence)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % self.fmt_data)
 
         def ensure_list(m):
             if m is None:
                 return []
-            elif isinstance(m, collections.Sequence):
+            elif (isinstance(m, collections.Sequence) and
+                  not isinstance(m, six.string_types)):
                 return m
             else:
                 msg = _('Incorrect arguments: Items to concat must be lists.')
