@@ -2273,11 +2273,12 @@ class Resource(status.ResourceStatus):
         signal. The base-class raise an exception if no handler is implemented.
         """
         if need_check:
-            self._signal_check_action()
             self._signal_check_hook(details)
         if details and 'unset_hook' in details:
             self._unset_hook(details)
             return False
+        if need_check:
+            self._signal_check_action()
         self._handle_signal(details)
         return self.signal_needs_metadata_updates
 
