@@ -1,0 +1,4 @@
+---
+features:
+  - Support to managing rbac policy for 'qos_policy' resource,
+    which allows to share Neutron qos policy to subsets of tenants.

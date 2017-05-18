@@ -23,7 +23,8 @@ class RBACPolicy(neutron.NeutronResource):
     """A Resource for managing RBAC policy in Neutron.
 
     This resource creates and manages Neutron RBAC policy,
-    which allows to share Neutron networks to subsets of tenants.
+    which allows to share Neutron networks and qos-policies
+    to subsets of tenants.
     """
 
     support_status = support.SupportStatus(version='6.0.0')
@@ -38,8 +39,22 @@ class RBACPolicy(neutron.NeutronResource):
         'object_type', 'target_tenant', 'action', 'object_id', 'tenant_id'
     )
 
+    OBJECT_TYPE_KEYS = (
+        OBJECT_NETWORK, OBJECT_QOS_POLICY,
+    ) = (
+        'network', 'qos_policy',
+    )
+
+    ACTION_KEYS = (
+        ACCESS_AS_SHARED, ACCESS_AS_EXTERNAL,
+    ) = (
+        'access_as_shared', 'access_as_external',
+    )
+
     # Change it when neutron supports more function in the future.
-    SUPPORTED_TYPES_ACTIONS = {'network': ['access_as_shared']}
+    SUPPORTED_TYPES_ACTIONS = {
+        OBJECT_NETWORK: [ACCESS_AS_SHARED, ACCESS_AS_EXTERNAL],
+        OBJECT_QOS_POLICY: [ACCESS_AS_SHARED]}
 
     properties_schema = {
         OBJECT_TYPE: properties.Schema(
@@ -79,9 +94,15 @@ class RBACPolicy(neutron.NeutronResource):
                 [self.OBJECT_ID],
                 client_plugin=self.client_plugin(),
                 finder='find_resourceid_by_name_or_id',
-                entity=props[self.OBJECT_TYPE]
+                entity=self._get_resource_name(props[self.OBJECT_TYPE])
             )
         ]
+
+    def _get_resource_name(self, object_type):
+        resource_name = object_type
+        if object_type == self.OBJECT_QOS_POLICY:
+            resource_name = 'policy'
+        return resource_name
 
     def handle_create(self):
         props = self.prepare_properties(

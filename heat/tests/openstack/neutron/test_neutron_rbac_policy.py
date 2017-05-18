@@ -32,17 +32,18 @@ class RBACPolicyTest(common.HeatTestCase):
         self.t = template_format.parse(tmpl)
         self.stack = utils.parse_stack(self.t)
         self.rbac = self.stack['rbac']
-
         self.neutron_client = mock.MagicMock()
         self.rbac.client = mock.MagicMock()
         self.rbac.client.return_value = self.neutron_client
 
-    def test_create(self):
-        self._create_stack()
+    def _test_create(self, obj_type='network'):
+        tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
+        tpl['resources']['rbac']['properties']['object_type'] = obj_type
+        self._create_stack(tmpl=yaml.safe_dump(tpl))
         expected = {
             "rbac_policy": {
                 "action": "access_as_shared",
-                "object_type": "network",
+                "object_type": obj_type,
                 "object_id": "9ba4c03a-dbd5-4836-b651-defa595796ba",
                 "target_tenant": "d1dbbed707e5469da9cd4fdd618e9706"
             }
@@ -50,13 +51,35 @@ class RBACPolicyTest(common.HeatTestCase):
         self.rbac.handle_create()
         self.neutron_client.create_rbac_policy.assert_called_with(expected)
 
-    def test_validate_invalid_action(self):
+    def test_create_network_rbac(self):
+        self._test_create()
+
+    def test_create_qos_policy_rbac(self):
+        self._test_create(obj_type='qos_policy')
+
+    def _test_validate_invalid_action(self,
+                                      invalid_action='invalid',
+                                      obj_type='network'):
         tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
-        tpl['resources']['rbac']['properties']['action'] = 'access_as_external'
+        tpl['resources']['rbac']['properties']['action'] = invalid_action
+        tpl['resources']['rbac']['properties']['object_type'] = obj_type
         self._create_stack(tmpl=yaml.safe_dump(tpl))
-        msg = "Invalid action access_as_external for object type network."
-        self.assertRaisesRegex(exception.StackValidationFailed, msg,
-                               self.rbac.validate)
+        msg = ("Invalid action %(action)s for object type %(type)s." %
+               {'action': invalid_action,
+                'type': obj_type})
+        self.assertRaisesRegexp(exception.StackValidationFailed, msg,
+                                self.rbac.validate)
+
+    def test_validate_action_for_network(self):
+        self._test_validate_invalid_action()
+
+    def test_validate_action_for_qos_policy(self):
+        self._test_validate_invalid_action(
+            obj_type='qos_policy')
+        # we dont support access_as_external for qos_policy
+        self._test_validate_invalid_action(
+            obj_type='qos_policy',
+            invalid_action='access_as_external')
 
     def test_validate_invalid_type(self):
         tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
