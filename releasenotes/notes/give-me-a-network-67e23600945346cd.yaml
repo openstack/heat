@@ -1,0 +1,10 @@
+---
+features:
+  - New item key 'allocate_network' of 'networks' with allowed values 'auto'
+    and 'none' for OS::Nova::Server, to support 'Give Me a Network' nova feature.
+    Specifying 'auto' would auto allocate a network topology for the project
+    if there is no existing network available; Specifying 'none' means no
+    networking will be allocated for the created server.
+    This feature requires nova API micro version 2.37 or later and
+    the ``auto-allocated-topology`` API is available in the Neutron
+    networking service.
