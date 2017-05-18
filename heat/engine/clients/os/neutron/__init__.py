@@ -28,6 +28,14 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [NETWORK] = ['network']
 
+    res_cmdres_mapping = {
+        # resource: cmd_resource
+        'policy': 'qos_policy',
+        'loadbalancer': 'lbaas_loadbalancer',
+        'pool': 'lbaas_pool',
+        'l7policy': 'lbaas_l7policy'
+    }
+
     def _create(self):
 
         con = self.context
@@ -67,6 +75,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       cmd_resource=None):
+        cmd_resource = (cmd_resource or
+                        self.res_cmdres_mapping.get(resource))
         return self._find_resource_id(self.context.tenant_id,
                                       resource, name_or_id,
                                       cmd_resource)
@@ -97,7 +107,7 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def resolve_pool(self, props, pool_key, pool_id_key):
         if props.get(pool_key):
             props[pool_id_key] = self.find_resourceid_by_name_or_id(
-                'pool', props.get(pool_key), cmd_resource='lbaas_pool')
+                'pool', props.get(pool_key))
             props.pop(pool_key)
         return props[pool_id_key]
 
@@ -122,7 +132,7 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         policy: ID or name of the policy.
         """
         return self.find_resourceid_by_name_or_id(
-            'policy', policy, cmd_resource='qos_policy')
+            'policy', policy)
 
     def get_secgroup_uuids(self, security_groups):
         '''Returns a list of security group UUIDs.

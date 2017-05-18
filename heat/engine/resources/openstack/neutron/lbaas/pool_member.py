@@ -136,8 +136,7 @@ class PoolMember(neutron.NeutronResource):
         if self._pool_id is None:
             self._pool_id = self.client_plugin().find_resourceid_by_name_or_id(
                 self.POOL,
-                self.properties[self.POOL],
-                cmd_resource='lbaas_pool')
+                self.properties[self.POOL])
         return self._pool_id
 
     @property

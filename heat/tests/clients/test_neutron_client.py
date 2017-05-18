@@ -131,48 +131,37 @@ class NeutronConstraintsValidate(common.HeatTestCase):
     scenarios = [
         ('validate_network',
             dict(constraint_class=nc.NetworkConstraint,
-                 resource_type='network',
-                 cmd_resource=None)),
+                 resource_type='network')),
         ('validate_port',
             dict(constraint_class=nc.PortConstraint,
-                 resource_type='port',
-                 cmd_resource=None)),
+                 resource_type='port')),
         ('validate_router',
             dict(constraint_class=nc.RouterConstraint,
-                 resource_type='router',
-                 cmd_resource=None)),
+                 resource_type='router')),
         ('validate_subnet',
             dict(constraint_class=nc.SubnetConstraint,
-                 resource_type='subnet',
-                 cmd_resource=None)),
+                 resource_type='subnet')),
         ('validate_subnetpool',
             dict(constraint_class=nc.SubnetPoolConstraint,
-                 resource_type='subnetpool',
-                 cmd_resource=None)),
+                 resource_type='subnetpool')),
         ('validate_address_scope',
             dict(constraint_class=nc.AddressScopeConstraint,
-                 resource_type='address_scope',
-                 cmd_resource=None)),
+                 resource_type='address_scope')),
         ('validate_loadbalancer',
             dict(constraint_class=lc.LoadbalancerConstraint,
-                 resource_type='loadbalancer',
-                 cmd_resource='lbaas_loadbalancer')),
+                 resource_type='loadbalancer')),
         ('validate_listener',
             dict(constraint_class=lc.ListenerConstraint,
-                 resource_type='listener',
-                 cmd_resource=None)),
+                 resource_type='listener')),
         ('validate_pool',
             dict(constraint_class=lc.PoolConstraint,
-                 resource_type='pool',
-                 cmd_resource='lbaas_pool')),
+                 resource_type='pool')),
         ('validate_qos_policy',
             dict(constraint_class=nc.QoSPolicyConstraint,
-                 resource_type='policy',
-                 cmd_resource='qos_policy')),
+                 resource_type='policy')),
         ('validate_security_group',
             dict(constraint_class=nc.SecurityGroupConstraint,
-                 resource_type='security_group',
-                 cmd_resource=None))
+                 resource_type='security_group'))
     ]
 
     def test_validate(self):
@@ -206,10 +195,8 @@ class NeutronConstraintsValidate(common.HeatTestCase):
         self.assertTrue(constraint.validate("foo", ctx))
         self.assertFalse(constraint.validate("bar", ctx))
         mock_find.assert_has_calls(
-            [mock.call(self.resource_type, 'foo',
-                       cmd_resource=self.cmd_resource),
-             mock.call(self.resource_type, 'bar',
-                       cmd_resource=self.cmd_resource)])
+            [mock.call(self.resource_type, 'foo'),
+             mock.call(self.resource_type, 'bar')])
 
 
 class NeutronProviderConstraintsValidate(common.HeatTestCase):

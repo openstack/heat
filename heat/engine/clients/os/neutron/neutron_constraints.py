@@ -22,24 +22,11 @@ from heat.engine import constraints
 CLIENT_NAME = 'neutron'
 
 
-class NetworkConstraint(constraints.BaseCustomConstraint):
-
-    expected_exceptions = (qe.NeutronClientException,
-                           exception.EntityNotFound,
-                           exception.PhysicalResourceNameAmbiguity)
-
-    def validate_with_client(self, client, value):
-        neutron_plugin = client.client_plugin(CLIENT_NAME)
-        neutron_plugin.find_resourceid_by_name_or_id(
-            'network', value, cmd_resource=None)
-
-
 class NeutronConstraint(constraints.BaseCustomConstraint):
 
     expected_exceptions = (qe.NeutronClientException,
                            exception.EntityNotFound)
     resource_name = None
-    cmd_resource = None
     extension = None
 
     def validate_with_client(self, client, value):
@@ -49,7 +36,7 @@ class NeutronConstraint(constraints.BaseCustomConstraint):
             raise exception.EntityNotFound(entity='neutron extension',
                                            name=self.extension)
         neutron_plugin.find_resourceid_by_name_or_id(
-            self.resource_name, value, cmd_resource=self.cmd_resource)
+            self.resource_name, value)
 
 
 class NeutronExtConstraint(NeutronConstraint):
@@ -61,6 +48,10 @@ class NeutronExtConstraint(NeutronConstraint):
             raise exception.EntityNotFound(entity='neutron extension',
                                            name=self.extension)
         neutron_plugin.resolve_ext_resource(self.resource_name, value)
+
+
+class NetworkConstraint(NeutronConstraint):
+    resource_name = 'network'
 
 
 class PortConstraint(NeutronConstraint):
@@ -90,7 +81,6 @@ class AddressScopeConstraint(NeutronConstraint):
 
 class QoSPolicyConstraint(NeutronConstraint):
     resource_name = 'policy'
-    cmd_resource = 'qos_policy'
     extension = 'qos'
 
 

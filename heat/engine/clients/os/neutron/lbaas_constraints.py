@@ -21,7 +21,6 @@ CLIENT_NAME = 'neutron'
 
 class LoadbalancerConstraint(nc.NeutronConstraint):
     resource_name = 'loadbalancer'
-    cmd_resource = 'lbaas_loadbalancer'
     extension = 'lbaasv2'
 
 
@@ -33,7 +32,6 @@ class ListenerConstraint(nc.NeutronConstraint):
 class PoolConstraint(nc.NeutronConstraint):
     # Pool constraint for lbaas v2
     resource_name = 'pool'
-    cmd_resource = 'lbaas_pool'
     extension = 'lbaasv2'
 
 
