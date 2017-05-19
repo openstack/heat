@@ -45,10 +45,10 @@ from heat.engine import scheduler
 from heat.engine import status
 from heat.engine import support
 from heat.engine import sync_point
+from heat.engine import template
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
 from heat.objects import resource_properties_data as rpd_objects
-from heat.objects import stack as stack_objects
 from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
@@ -322,36 +322,45 @@ class Resource(status.ResourceStatus):
 
     @classmethod
     def load(cls, context, resource_id, current_traversal, is_update, data):
+        """Load a specified resource from the database to check.
+
+        Returns a tuple of the Resource, the StackDefinition corresponding to
+        the resource's ResourceDefinition (i.e. the one the resource was last
+        updated to if it has already been created, or the one it will be
+        created with if it hasn't been already), and the Stack containing the
+        latest StackDefinition (i.e. the one that the latest traversal is
+        updating to.
+
+        The latter two must remain in-scope, because the Resource holds weak
+        references to them.
+        """
         from heat.engine import stack as stack_mod
         db_res = resource_objects.Resource.get_obj(context, resource_id)
         curr_stack = stack_mod.Stack.load(context, stack_id=db_res.stack_id,
                                           cache_data=data)
 
-        resource_owning_stack = curr_stack
+        initial_stk_defn = latest_stk_defn = curr_stack.defn
         if (db_res.current_template_id != curr_stack.t.id and
             (db_res.action != cls.INIT or
              not is_update or
              current_traversal != curr_stack.current_traversal)):
-            # load stack with template owning the resource
-            db_stack = stack_objects.Stack.get_by_id(context, db_res.stack_id)
-            db_stack.raw_template = None
-            db_stack.raw_template_id = db_res.current_template_id
-            resource_owning_stack = stack_mod.Stack.load(context,
-                                                         stack=db_stack)
+            # load the definition associated with the resource's template
+            current_template_id = db_res.current_template_id
+            current_template = template.Template.load(context,
+                                                      current_template_id)
+            initial_stk_defn = curr_stack.defn.clone_with_new_template(
+                current_template,
+                curr_stack.identifier())
+            curr_stack.defn = initial_stk_defn
 
         # Load only the resource in question; don't load all resources
         # by invoking stack.resources. Maintain light-weight stack.
-        res_defn = resource_owning_stack.defn.resource_definition(db_res.name)
-        resource = cls(db_res.name, res_defn, resource_owning_stack)
+        res_defn = initial_stk_defn.resource_definition(db_res.name)
+        resource = cls(db_res.name, res_defn, curr_stack)
         resource._load_data(db_res)
 
-        # assign current stack to the resource for updates
-        if is_update:
-            resource.stack = curr_stack
-
-        # return resource owning stack so that it is not GCed since it
-        # is the only stack instance with a weak-ref from resource
-        return resource, resource_owning_stack, curr_stack
+        curr_stack.defn = latest_stk_defn
+        return resource, initial_stk_defn, curr_stack
 
     def make_replacement(self, new_tmpl_id):
         # 1. create the replacement with "replaces" = self.id

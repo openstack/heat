@@ -94,11 +94,6 @@ class WaitCondition(heat_wc.HeatWaitCondition):
             raise ValueError(_("WaitCondition invalid Handle %s") %
                              handle_id.resource_name)
 
-    def _get_handle_resource(self):
-        handle_url = self.properties[self.HANDLE]
-        handle_id = identifier.ResourceIdentifier.from_arn_url(handle_url)
-        return self.stack[handle_id.resource_name]
-
     def handle_create(self):
         self._validate_handle_url()
         return super(WaitCondition, self).handle_create()
