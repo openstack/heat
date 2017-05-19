@@ -481,9 +481,9 @@ class VolumeTest(vt_base.BaseVolumeTest):
         stack = utils.parse_stack(self.t, stack_name=stack_name)
         rsrc = self.create_volume(self.t, stack, 'DataVolume')
         deleter = scheduler.TaskRunner(rsrc.destroy)
-        self.assertRaisesRegexp(exception.ResourceFailure,
-                                ".*ResourceInError.*error_deleting.*delete",
-                                deleter)
+        self.assertRaisesRegex(exception.ResourceFailure,
+                               ".*ResourceInError.*error_deleting.*delete",
+                               deleter)
 
         self.m.VerifyAll()
 

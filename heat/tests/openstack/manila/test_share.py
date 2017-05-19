@@ -227,7 +227,7 @@ class ManilaShareTest(common.HeatTestCase):
         properties = tmp['resources']['test_share']['properties']
         properties['access_rules'][0]['access_type'] = 'domain'
         stack = utils.parse_stack(tmp, stack_name='access_type')
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             exception.StackValidationFailed,
             ".* \"domain\" is not an allowed value \[ip, user, cert, cephx\]",
             stack.validate)

@@ -781,7 +781,7 @@ class PropertyTest(common.HeatTestCase):
         p = properties.Property(schema)
         # python 3.4.3 returns another error message
         # try to handle this by regexp
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             TypeError, "int\(\) argument must be a string(, a bytes-like "
                        "object)? or a number, not 'list'", p.get_value, [1])
 

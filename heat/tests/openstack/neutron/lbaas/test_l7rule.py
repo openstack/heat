@@ -62,8 +62,8 @@ class L7RuleTest(common.HeatTestCase):
                 'specified for rules of HEADER and COOKIE types.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, self.l7rule.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, self.l7rule.validate)
 
     def test_create(self):
         self._create_stack()

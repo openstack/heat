@@ -109,8 +109,8 @@ class CinderQuotaTest(common.HeatTestCase):
         my_quota.reparse()
         msg = ('At least one of the following properties must be specified: '
                'gigabytes, snapshots, volumes.')
-        self.assertRaisesRegexp(exception.PropertyUnspecifiedError, msg,
-                                my_quota.validate)
+        self.assertRaisesRegex(exception.PropertyUnspecifiedError, msg,
+                               my_quota.validate)
 
     def test_quota_handle_create(self):
         self.my_quota.physical_resource_name = mock.MagicMock(

@@ -145,8 +145,8 @@ class TestSecret(common.HeatTestCase):
                                             props)
         res = self._create_resource(defn.name, defn, self.stack)
         msg = "payload_content_type cannot be specified without payload."
-        self.assertRaisesRegexp(exception.ResourcePropertyDependency,
-                                msg, res.validate)
+        self.assertRaisesRegex(exception.ResourcePropertyDependency,
+                               msg, res.validate)
 
     def test_validate_octet_stream_without_encoding(self):
         props = {
@@ -161,8 +161,8 @@ class TestSecret(common.HeatTestCase):
         msg = ("Property unspecified. For 'application/octet-stream' value of "
                "'payload_content_type' property, 'payload_content_encoding' "
                "property must be specified.")
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg, res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg, res.validate)
 
     def test_validate_base64(self):
         props = {
@@ -177,8 +177,8 @@ class TestSecret(common.HeatTestCase):
         res = self._create_resource(defn.name, defn, self.stack)
         msg = ("Invalid payload for specified 'base64' value of "
                "'payload_content_encoding' property.")
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg, res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg, res.validate)
 
     def test_validate_encoding_dependency(self):
         props = {
@@ -194,5 +194,5 @@ class TestSecret(common.HeatTestCase):
         msg = ("payload_content_encoding property should only be specified "
                "for payload_content_type with value "
                "application/octet-stream.")
-        self.assertRaisesRegexp(exception.ResourcePropertyValueDependency,
-                                msg, res.validate)
+        self.assertRaisesRegex(exception.ResourcePropertyValueDependency,
+                               msg, res.validate)

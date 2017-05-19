@@ -170,9 +170,9 @@ class TestContainer(common.HeatTestCase):
         defn = rsrc_defn.ResourceDefinition(
             'failed_container', 'OS::Barbican::GenericContainer', props)
         res = container.GenericContainer('foo', defn, stack)
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                'Duplicate refs are not allowed',
-                                res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               'Duplicate refs are not allowed',
+                               res.validate)
 
     def test_attributes(self):
         mock_container = mock.Mock()

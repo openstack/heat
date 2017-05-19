@@ -114,8 +114,8 @@ class NovaQuotaTest(common.HeatTestCase):
                'injected_file_path_bytes, injected_files, instances, '
                'key_pairs, metadata_items, ram, security_group_rules, '
                'security_groups, server_group_members, server_groups.')
-        self.assertRaisesRegexp(exception.PropertyUnspecifiedError, msg,
-                                my_quota.validate)
+        self.assertRaisesRegex(exception.PropertyUnspecifiedError, msg,
+                               my_quota.validate)
 
     def test_quota_handle_create(self):
         self.my_quota.physical_resource_name = mock.MagicMock(

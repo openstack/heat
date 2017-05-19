@@ -60,8 +60,8 @@ class PoolTest(common.HeatTestCase):
                 'session_persistence type is set to APP_COOKIE.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, self.pool.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, self.pool.validate)
 
     def test_validate_source_ip_cookie_name(self):
         tmpl = yaml.load(inline_templates.POOL_TEMPLATE)
@@ -74,8 +74,8 @@ class PoolTest(common.HeatTestCase):
                 'session_persistence type is set to SOURCE_IP.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, self.pool.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, self.pool.validate)
 
     def test_create(self):
         self._create_stack()

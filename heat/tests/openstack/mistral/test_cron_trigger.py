@@ -101,8 +101,8 @@ class MistralCronTriggerTest(common.HeatTestCase):
         ct = self._create_resource('trigger', self.rsrc_defn, self.stack)
         msg = ("At least one of the following properties must be specified: "
                "pattern, first_time")
-        self.assertRaisesRegexp(exception.PropertyUnspecifiedError, msg,
-                                ct.validate)
+        self.assertRaisesRegex(exception.PropertyUnspecifiedError, msg,
+                               ct.validate)
 
     def test_validate_ok_without_first_time(self):
         t = template_format.parse(stack_template)
