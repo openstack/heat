@@ -178,9 +178,9 @@ class ValidateTest(common.HeatTestCase):
     def test_validate_func(self):
         self.assertIsNone(function.validate(self.func))
         self.func = TestFunction(None, 'foo', ['bar'])
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                '.foo: Need more arguments',
-                                function.validate, self.func)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               '.foo: Need more arguments',
+                               function.validate, self.func)
 
     def test_validate_dict(self):
         snippet = {'foo': 'bar', 'blarg': self.func}
@@ -188,9 +188,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                '.blarg.foo: Need more arguments',
-                                function.validate, snippet)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               '.blarg.foo: Need more arguments',
+                               function.validate, snippet)
 
     def test_validate_list(self):
         snippet = ['foo', 'bar', 'baz', 'blarg', self.func]
@@ -198,9 +198,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                '.blarg.foo: Need more arguments',
-                                function.validate, snippet)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               '.blarg.foo: Need more arguments',
+                               function.validate, snippet)
 
     def test_validate_all(self):
         snippet = ['foo', {'bar': ['baz', {'blarg': self.func}]}]
@@ -208,9 +208,9 @@ class ValidateTest(common.HeatTestCase):
 
         self.func = TestFunction(None, 'foo', ['bar'])
         snippet = {'foo': 'bar', 'blarg': self.func}
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                '.blarg.foo: Need more arguments',
-                                function.validate, snippet)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               '.blarg.foo: Need more arguments',
+                               function.validate, snippet)
 
 
 class DependenciesTest(common.HeatTestCase):

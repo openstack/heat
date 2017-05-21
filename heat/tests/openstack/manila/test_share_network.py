@@ -167,8 +167,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         net.is_using_neutron = mock.Mock(return_value=True)
         msg = ('Provided neutron_subnet does not belong '
                'to provided neutron_network.')
-        self.assertRaisesRegexp(exception.StackValidationFailed, msg,
-                                net.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed, msg,
+                               net.validate)
 
     def test_update(self):
         net = self._create_network('share_network', self.rsrc_defn, self.stack)
@@ -227,8 +227,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         net = self._create_network('share_network', rsrc_defn, stack)
         msg = ('Cannot define the following properties at the same time: '
                'neutron_network, nova_network.')
-        self.assertRaisesRegexp(exception.ResourcePropertyConflict, msg,
-                                net.validate)
+        self.assertRaisesRegex(exception.ResourcePropertyConflict, msg,
+                               net.validate)
 
     def test_nova_net_neutron_subnet_conflict(self):
         t = template_format.parse(stack_template)
@@ -239,8 +239,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         net = self._create_network('share_network', rsrc_defn, stack)
         msg = ('Cannot define the following properties at the same time: '
                'neutron_subnet, nova_network.')
-        self.assertRaisesRegexp(exception.ResourcePropertyConflict, msg,
-                                net.validate)
+        self.assertRaisesRegex(exception.ResourcePropertyConflict, msg,
+                               net.validate)
 
     def test_nova_net_while_using_neutron(self):
         t = template_format.parse(stack_template)
@@ -253,8 +253,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         net.is_using_neutron = mock.Mock(return_value=True)
         msg = ('With Neutron enabled you need to pass Neutron network '
                'and Neutron subnet instead of Nova network')
-        self.assertRaisesRegexp(exception.StackValidationFailed, msg,
-                                net.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed, msg,
+                               net.validate)
 
     def test_neutron_net_without_neutron_subnet(self):
         t = template_format.parse(stack_template)
@@ -263,8 +263,8 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         rsrc_defn = stack.t.resource_definitions(stack)['share_network']
         net = self._create_network('share_network', rsrc_defn, stack)
         msg = ('neutron_network cannot be specified without neutron_subnet.')
-        self.assertRaisesRegexp(exception.ResourcePropertyDependency, msg,
-                                net.validate)
+        self.assertRaisesRegex(exception.ResourcePropertyDependency, msg,
+                               net.validate)
 
     def test_attributes(self):
         net = self._create_network('share_network', self.rsrc_defn,

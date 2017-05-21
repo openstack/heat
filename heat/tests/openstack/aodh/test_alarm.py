@@ -401,8 +401,8 @@ class AodhAlarmTest(common.HeatTestCase):
             msg = ("Property error: Resources.MEMAlarmHigh.Properties.%s: "
                    "int\(\) argument must be a string(, a bytes-like "
                    "object)? or a number, not 'list'" % p)
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, rsrc.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, rsrc.validate)
 
     def test_mem_alarm_high_check_not_required_parameters(self):
         snippet = template_format.parse(not_string_alarm_template)

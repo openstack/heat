@@ -1165,52 +1165,52 @@ class HOTemplateTest(common.HeatTestCase):
                                    {'keys': {'f2': 'f1'}}]}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "key replacement f1 collides with a key in the input map"
-        self.assertRaisesRegexp(ValueError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(ValueError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_replaced_keys_collide(self):
         snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
                                    {'keys': {'f1': 'f3', 'f2': 'f3'}}]}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "key replacement f3 collides with a key in the output map"
-        self.assertRaisesRegexp(ValueError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(ValueError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_invalid_str_arg1(self):
         snippet = {'map_replace': 'ab'}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "Incorrect arguments to \"map_replace\" should be:"
-        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(TypeError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_invalid_str_arg2(self):
         snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'}, "ab"]}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = ("Incorrect arguments: to \"map_replace\", "
                "arguments must be a list of maps")
-        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(TypeError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_invalid_empty(self):
         snippet = {'map_replace': []}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "Incorrect arguments to \"map_replace\" should be:"
-        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(TypeError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_invalid_missing1(self):
         snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'}]}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "Incorrect arguments to \"map_replace\" should be:"
-        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(TypeError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_invalid_missing2(self):
         snippet = {'map_replace': [{'keys': {'f1': 'f3', 'f2': 'f3'}}]}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "Incorrect arguments to \"map_replace\" should be:"
-        self.assertRaisesRegexp(TypeError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(TypeError, msg, self.resolve, snippet, tmpl)
 
     def test_map_replace_invalid_wrongkey(self):
         snippet = {'map_replace': [{'f1': 'b1', 'f2': 'b2'},
                                    {'notkeys': {'f2': 'F2'}}]}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = "Incorrect arguments to \"map_replace\" should be:"
-        self.assertRaisesRegexp(ValueError, msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(ValueError, msg, self.resolve, snippet, tmpl)
 
     def test_yaql(self):
         snippet = {'yaql': {'expression': '$.data.var1.sum()',
@@ -1267,8 +1267,8 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'yaql': 'invalid'}
         tmpl = template.Template(hot_newton_tpl_empty)
         msg = '.yaql: Arguments to "yaql" must be a map.'
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg, self.resolve, snippet, tmpl)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg, self.resolve, snippet, tmpl)
 
     def test_yaql_invalid_expression(self):
         snippet = {'yaql': {'expression': 'invalid(',
@@ -1277,8 +1277,8 @@ class HOTemplateTest(common.HeatTestCase):
         yaql = tmpl.parse(None, snippet)
         regxp = ('.yaql: Bad expression Parse error: unexpected end '
                  'of statement.')
-        self.assertRaisesRegexp(exception.StackValidationFailed, regxp,
-                                function.validate, yaql)
+        self.assertRaisesRegex(exception.StackValidationFailed, regxp,
+                               function.validate, yaql)
 
     def test_yaql_data_as_function(self):
         snippet = {'yaql': {'expression': '$.data.var1.len()',
@@ -1543,8 +1543,8 @@ conditions:
         repeat = tmpl.parse(None, snippet)
         regxp = ('.repeat: The "for_each" argument to "repeat" '
                  'must contain a map')
-        self.assertRaisesRegexp(exception.StackValidationFailed, regxp,
-                                function.validate, repeat)
+        self.assertRaisesRegex(exception.StackValidationFailed, regxp,
+                               function.validate, repeat)
 
     def test_digest(self):
         snippet = {'digest': ['md5', 'foobar']}
@@ -1795,10 +1795,10 @@ conditions:
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_juno_tpl_empty))
         regxp = '.Fn::GetAZs: The template version is invalid'
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                regxp,
-                                function.validate,
-                                stack.t.parse(stack, snippet))
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               regxp,
+                               function.validate,
+                               stack.t.parse(stack, snippet))
 
     def test_add_resource(self):
         hot_tpl = template_format.parse('''

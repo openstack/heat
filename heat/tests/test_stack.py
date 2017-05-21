@@ -1870,7 +1870,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
                                  template.Template(tmpl))
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             exception.StackValidationFailed,
             ('Outputs.Resource_attr.Value.Fn::GetAtt: The Referenced '
              'Attribute \(AResource Bar\) is incorrect.'),
@@ -2233,7 +2233,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'stack_with_correct_outputs',
                                  template.Template(tmpl))
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             exception.StackValidationFailed,
             ('outputs.resource_attr.value.get_attr: The Referenced Attribute '
              '\(AResource Bar\) is incorrect.'),

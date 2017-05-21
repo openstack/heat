@@ -87,11 +87,11 @@ class TestOrder(common.HeatTestCase):
         del props['type']
         snippet = self.res_template.freeze(properties=props)
 
-        self.assertRaisesRegexp(exception.ResourceFailure,
-                                'Property type not assigned',
-                                self._create_resource,
-                                'foo',
-                                snippet, self.stack)
+        self.assertRaisesRegex(exception.ResourceFailure,
+                               'Property type not assigned',
+                               self._create_resource,
+                               'foo',
+                               snippet, self.stack)
 
     def test_validate_non_certificate_order(self):
         props = self.props.copy()
@@ -101,9 +101,9 @@ class TestOrder(common.HeatTestCase):
         res = self._create_resource('test', snippet, self.stack)
         msg = ("Properties algorithm and bit_length are required for "
                "key type of order.")
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg,
-                                res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg,
+                               res.validate)
 
     def test_validate_certificate_with_profile_without_ca_id(self):
         props = self.props.copy()
@@ -112,9 +112,9 @@ class TestOrder(common.HeatTestCase):
         snippet = self.res_template.freeze(properties=props)
         res = self._create_resource('test', snippet, self.stack)
         msg = ("profile cannot be specified without ca_id.")
-        self.assertRaisesRegexp(exception.ResourcePropertyDependency,
-                                msg,
-                                res.validate)
+        self.assertRaisesRegex(exception.ResourcePropertyDependency,
+                               msg,
+                               res.validate)
 
     def test_key_order_validation_fail(self):
         props = self.props.copy()
@@ -124,9 +124,9 @@ class TestOrder(common.HeatTestCase):
         msg = ("Unexpected properties: pass_phrase. Only these properties "
                "are allowed for key type of order: algorithm, "
                "bit_length, expiration, mode, name, payload_content_type.")
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg,
-                                res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg,
+                               res.validate)
 
     def test_certificate_validation_fail(self):
         props = self.props.copy()
@@ -137,9 +137,9 @@ class TestOrder(common.HeatTestCase):
                "these properties are allowed for certificate type of order: "
                "ca_id, name, profile, request_data, request_type, "
                "source_container_ref, subject_dn.")
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg,
-                                res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg,
+                               res.validate)
 
     def test_asymmetric_order_validation_fail(self):
         props = self.props.copy()
@@ -150,9 +150,9 @@ class TestOrder(common.HeatTestCase):
         msg = ("Unexpected properties: subject_dn. Only these properties are "
                "allowed for asymmetric type of order: algorithm, bit_length, "
                "expiration, mode, name, pass_phrase, payload_content_type")
-        self.assertRaisesRegexp(exception.StackValidationFailed,
-                                msg,
-                                res.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed,
+                               msg,
+                               res.validate)
 
     def test_attributes(self):
         mock_order = mock.Mock()

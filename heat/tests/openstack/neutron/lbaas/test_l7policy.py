@@ -62,8 +62,8 @@ class L7PolicyTest(common.HeatTestCase):
                 'required when action type is set to REJECT.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, self.l7policy.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, self.l7policy.validate)
 
     def test_validate_redirect_pool_action_with_url(self):
         tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
@@ -76,8 +76,8 @@ class L7PolicyTest(common.HeatTestCase):
                 'for action with value REDIRECT_TO_URL.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.ResourcePropertyValueDependency,
-                                    msg, self.l7policy.validate)
+            self.assertRaisesRegex(exception.ResourcePropertyValueDependency,
+                                   msg, self.l7policy.validate)
 
     def test_validate_redirect_pool_action_without_pool(self):
         tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
@@ -90,8 +90,8 @@ class L7PolicyTest(common.HeatTestCase):
                 'is set to REDIRECT_TO_POOL.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, self.l7policy.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, self.l7policy.validate)
 
     def test_validate_redirect_url_action_with_pool(self):
         tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
@@ -103,8 +103,8 @@ class L7PolicyTest(common.HeatTestCase):
                 'for action with value REDIRECT_TO_POOL.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.ResourcePropertyValueDependency,
-                                    msg, self.l7policy.validate)
+            self.assertRaisesRegex(exception.ResourcePropertyValueDependency,
+                                   msg, self.l7policy.validate)
 
     def test_validate_redirect_url_action_without_url(self):
         tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
@@ -116,8 +116,8 @@ class L7PolicyTest(common.HeatTestCase):
                 'is set to REDIRECT_TO_URL.')
         with mock.patch('heat.engine.clients.os.neutron.NeutronClientPlugin.'
                         'has_extension', return_value=True):
-            self.assertRaisesRegexp(exception.StackValidationFailed,
-                                    msg, self.l7policy.validate)
+            self.assertRaisesRegex(exception.StackValidationFailed,
+                                   msg, self.l7policy.validate)
 
     def test_create(self):
         self._create_stack()
