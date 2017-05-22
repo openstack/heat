@@ -98,20 +98,7 @@ class ResourceChain(stack_resource.StackResource):
                 # Valid if it's a template resource
                 pass
 
-        # Check the nested template itself
-        nested_tmpl = self.child_template()
-        nested_stack_name = '%s-%s' % (self.stack.name, self.name)
-
-        try:
-            nested_stack = self._parse_nested_stack(nested_stack_name,
-                                                    nested_tmpl,
-                                                    {})
-            nested_stack.strict_validate = False
-            nested_stack.validate()
-        except Exception as ex:
-            msg = (_('Failed to validate nested template: %s')
-                   % six.text_type(ex))
-            raise exception.StackValidationFailed(message=msg)
+        super(ResourceChain, self).validate_nested_stack()
 
     def handle_create(self):
         return self.create_with_template(self.child_template())

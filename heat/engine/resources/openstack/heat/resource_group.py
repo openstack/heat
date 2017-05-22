@@ -295,8 +295,9 @@ class ResourceGroup(stack_resource.StackResource):
             nested_stack.strict_validate = False
             nested_stack.validate()
         except Exception as ex:
-            msg = _("Failed to validate: %s") % six.text_type(ex)
-            raise exception.StackValidationFailed(message=msg)
+            path = "%s<%s>" % (self.name, self.template_url)
+            raise exception.StackValidationFailed(
+                ex, path=[self.stack.t.RESOURCES, path])
 
     def _current_blacklist(self):
         db_rsrc_names = self.data().get('name_blacklist')

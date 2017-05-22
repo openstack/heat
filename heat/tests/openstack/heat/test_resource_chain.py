@@ -146,7 +146,10 @@ class ResourceChainTest(common.HeatTestCase):
             chain.validate_nested_stack()
             self.fail('Exception expected')
         except exception.StackValidationFailed as e:
-            self.assertIn('unknown property group', e.message.lower())
+            self.assertEqual('property error: '
+                             'resources.test<nested_stack>.resources[2].'
+                             'properties: unknown property group',
+                             e.message.lower())
 
     def test_validate_fake_resource_type(self):
         # Setup

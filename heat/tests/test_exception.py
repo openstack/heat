@@ -45,6 +45,17 @@ class TestHeatException(common.HeatTestCase):
 class TestStackValidationFailed(common.HeatTestCase):
 
     scenarios = [
+        ('test_error_as_exception', dict(
+            kwargs=dict(
+                error=exception.StackValidationFailed(
+                    error='Error',
+                    path=['some', 'path'],
+                    message='Some message')),
+            expected='Error: some.path: Some message',
+            called_error='Error',
+            called_path=['some', 'path'],
+            called_msg='Some message'
+        )),
         ('test_full_exception', dict(
             kwargs=dict(
                 error='Error',
@@ -124,8 +135,8 @@ class TestStackValidationFailed(common.HeatTestCase):
         try:
             raise exception.StackValidationFailed(**self.kwargs)
         except exception.StackValidationFailed as ex:
-            self.assertEqual(self.expected, six.text_type(ex))
-            self.assertEqual(self.called_error, ex.error)
+            self.assertIn(self.expected, six.text_type(ex))
+            self.assertIn(self.called_error, ex.error)
             self.assertEqual(self.called_path, ex.path)
             self.assertEqual(self.called_msg, ex.error_message)
 

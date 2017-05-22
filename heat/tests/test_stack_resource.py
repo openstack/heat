@@ -79,7 +79,7 @@ main_template = '''
 heat_template_version: 2013-05-23
 resources:
   volume_server:
-    type: nested.yaml
+      type: file://tmp/nested.yaml
 '''
 
 my_wrong_nested_template = '''
@@ -396,14 +396,15 @@ class StackResourceTest(StackResourceBaseTest):
     def test_validate_error_reference(self):
         stack_name = 'validate_error_reference'
         tmpl = template_format.parse(main_template)
-        files = {'nested.yaml': my_wrong_nested_template}
+        files = {'file://tmp/nested.yaml': my_wrong_nested_template}
         stack = parser.Stack(utils.dummy_context(), stack_name,
                              templatem.Template(tmpl, files=files))
         rsrc = stack['volume_server']
-        raise_exc_msg = ('Failed to validate: resources.volume_server: '
-                         'The specified reference "instance" '
-                         '(in volume_attachment.Properties.instance_uuid) '
-                         'is incorrect.')
+        raise_exc_msg = ('InvalidTemplateReference: '
+                         'resources.volume_server<file://tmp/nested.yaml>: '
+                         'The specified reference "instance" (in '
+                         'volume_attachment.Properties.instance_uuid) is '
+                         'incorrect.')
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertEqual(raise_exc_msg, six.text_type(exc))

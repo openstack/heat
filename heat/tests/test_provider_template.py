@@ -579,7 +579,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
         self.assertEqual('test_resource.template',
-                         temp_res.template_name)
+                         temp_res.template_url)
 
     def test_resource_info_special(self):
         provider = {
@@ -614,7 +614,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         temp_res = template_resource.TemplateResource('foo',
                                                       definition, stack)
         self.assertEqual('foo.template',
-                         temp_res.template_name)
+                         temp_res.template_url)
 
     def test_get_error_for_invalid_template_name(self):
         # assertion: if the name matches {.yaml|.template} and is valid
