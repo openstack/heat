@@ -51,6 +51,12 @@ class ProviderNet(net.Net):
         'status', 'subnets',
     )
 
+    NETWORK_TYPES = (
+        LOCAL, VLAN, VXLAN, GRE, GENEVE, FLAT
+    ) = (
+        'local', 'vlan', 'vxlan', 'gre', 'geneve', 'flat'
+    )
+
     properties_schema = {
         NAME: net.Net.properties_schema[NAME],
         PROVIDER_NETWORK_TYPE: properties.Schema(
@@ -60,7 +66,7 @@ class ProviderNet(net.Net):
             update_allowed=True,
             required=True,
             constraints=[
-                constraints.AllowedValues(['vlan', 'flat']),
+                constraints.AllowedValues(NETWORK_TYPES),
             ]
         ),
         PROVIDER_PHYSICAL_NETWORK: properties.Schema(
