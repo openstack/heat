@@ -1745,7 +1745,7 @@ class Resource(object):
 
         rs = {'action': self.action,
               'status': self.status,
-              'status_reason': str(self.status_reason),
+              'status_reason': six.text_type(self.status_reason),
               'stack_id': self.stack.id,
               'physical_resource_id': self.resource_id,
               'name': self.name,
