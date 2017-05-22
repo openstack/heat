@@ -18,6 +18,7 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine.resources import stack_user
 
@@ -129,6 +130,8 @@ class BaseServer(stack_user.StackUser):
             self.client('swift').put_object(
                 container, object_name, jsonutils.dumps(meta))
 
+        self.attributes.reset_resolved_values()
+
     def _create_transport_credentials(self, props):
         if self.transport_poll_server_cfn(props):
             self._create_user()
@@ -184,6 +187,8 @@ class BaseServer(stack_user.StackUser):
             return
         if name == self.NAME_ATTR:
             return self._server_name()
+        if name == self.OS_COLLECT_CONFIG:
+            return self.metadata_get().get('os-collect-config', {})
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if tmpl_diff.metadata_changed():
@@ -307,3 +312,17 @@ class BaseServer(stack_user.StackUser):
     def check_delete_complete(self, prg):
         if not prg:
             return True
+
+    def _show_resource(self):
+        rsrc_dict = super(BaseServer, self)._show_resource()
+        rsrc_dict.setdefault(
+            self.OS_COLLECT_CONFIG,
+            self.metadata_get().get('os-collect-config', {}))
+        return rsrc_dict
+
+    def get_attribute(self, key, *path):
+        if key == self.OS_COLLECT_CONFIG:
+            occ = self.metadata_get().get('os-collect-config', {})
+            return attributes.select_from_attribute(occ, path)
+        else:
+            return super(BaseServer, self).get_attribute(key, *path)

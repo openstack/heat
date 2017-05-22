@@ -19,6 +19,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources import server_base
+from heat.engine import support
 
 cfg.CONF.import_opt('default_software_config_transport', 'heat.common.config')
 cfg.CONF.import_opt('default_user_data_format', 'heat.common.config')
@@ -81,16 +82,23 @@ class DeployedServer(server_base.BaseServer):
     }
 
     ATTRIBUTES = (
-        NAME_ATTR
+        NAME_ATTR, OS_COLLECT_CONFIG
     ) = (
-        'name'
+        'name', 'os_collect_config'
     )
 
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
             _('Name of the server.'),
             type=attributes.Schema.STRING
-        )
+        ),
+        OS_COLLECT_CONFIG: attributes.Schema(
+            _('The os-collect-config configuration for the server''s local '
+              'agent to be configured to connect to Heat to retrieve '
+              'deployment data.'),
+            type=attributes.Schema.MAP,
+            support_status=support.SupportStatus(version='9.0.0')
+        ),
     }
 
     def __init__(self, name, json_snippet, stack):
