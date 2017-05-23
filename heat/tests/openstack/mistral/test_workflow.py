@@ -131,7 +131,8 @@ resources:
            - wait_instance
        - name: on_error
          action: std.echo output="output"
-
+       - name: external_workflow
+         workflow: external_workflow_name
 """
 
 workflow_updating_request_body_property = """
