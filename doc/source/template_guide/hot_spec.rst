@@ -295,8 +295,10 @@ for the ``heat_template_version`` key:
     document is a HOT template and it may contain features added and/or removed
     up until the Pike release. This version adds the ``make_url`` function for
     assembling URLs, the ``list_concat`` function for combining multiple
-    lists, and ``string_replace_vstrict`` which raises errors for
-    missing and empty params. The complete list of supported functions is::
+    lists, the ``list_concat_unique`` function for combining multiple
+    lists without repeating items, and the``string_replace_vstrict`` which
+    raises errors for missing and empty params. The complete list of
+    supported functions is::
 
       digest
       filter
@@ -307,6 +309,7 @@ for the ``heat_template_version`` key:
       list_join
       make_url
       list_concat
+      list_concat_unique
       map_merge
       map_replace
       repeat
@@ -1931,3 +1934,17 @@ For example
 Will resolve to the list ``['v1', 'v2', 'v3', 'v4']``.
 
 Null values will be ignored.
+
+list_concat_unique
+------------------
+
+The ``list_concat_unique`` function behaves identically to the function
+``list_concat``, only removes the repeating items of lists.
+
+For example
+
+.. code-block:: yaml
+
+    list_concat_unique: [['v1', 'v2'], ['v2', 'v43']]
+
+Will resolve to the list ``['v1', 'v2', 'v3']``.

@@ -1480,6 +1480,8 @@ class ListConcat(function.Function):
 
     """
 
+    _unique = False
+
     def __init__(self, stack, fn_name, args):
         super(ListConcat, self).__init__(stack, fn_name, args)
         example = (_('"%s" : [ [ <value 1>, <value 2> ], '
@@ -1508,4 +1510,20 @@ class ListConcat(function.Function):
         ret_list = []
         for m in args:
             ret_list.extend(ensure_list(m))
+
+        if self._unique:
+            for i in ret_list:
+                while ret_list.count(i) > 1:
+                    del ret_list[ret_list.index(i)]
+
         return ret_list
+
+
+class ListConcatUnique(ListConcat):
+    """A function for extending lists with unique items.
+
+    list_concat_unique is identical to the list_concat function, only
+    contains unique items in retuning list.
+    """
+
+    _unique = True

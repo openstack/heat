@@ -592,6 +592,7 @@ class HOTemplate20170901(HOTemplate20170224):
         'make_url': hot_funcs.MakeURL,
         'list_concat': hot_funcs.ListConcat,
         'str_replace_vstrict': hot_funcs.ReplaceJsonVeryStrict,
+        'list_concat_unique': hot_funcs.ListConcatUnique,
 
         # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
