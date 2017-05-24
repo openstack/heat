@@ -16,8 +16,7 @@ from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
-
-from neutronclient.neutron import v2_0 as neutronV20
+from heat.engine import translation
 
 
 class RBACPolicy(neutron.NeutronResource):
@@ -72,16 +71,17 @@ class RBACPolicy(neutron.NeutronResource):
         )
     }
 
-    def prepare_properties(self, properties, name):
-        props = super(RBACPolicy, self).prepare_properties(properties, name)
-
-        obj_type = props.get(self.OBJECT_TYPE)
-        obj_id_or_name = props.get(self.OBJECT_ID)
-        obj_id = neutronV20.find_resourceid_by_name_or_id(self.client(),
-                                                          obj_type,
-                                                          obj_id_or_name)
-        props['object_id'] = obj_id
-        return props
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.OBJECT_ID],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity=props[self.OBJECT_TYPE]
+            )
+        ]
 
     def handle_create(self):
         props = self.prepare_properties(
@@ -107,7 +107,6 @@ class RBACPolicy(neutron.NeutronResource):
 
         action = self.properties[self.ACTION]
         obj_type = self.properties[self.OBJECT_TYPE]
-        obj_id_or_name = self.properties[self.OBJECT_ID]
 
         # Validate obj_type and action per SUPPORTED_TYPES_ACTIONS.
         if obj_type not in self.SUPPORTED_TYPES_ACTIONS:
@@ -122,11 +121,6 @@ class RBACPolicy(neutron.NeutronResource):
                    {'action': action, 'obj_type': obj_type,
                     'value': self.SUPPORTED_TYPES_ACTIONS[obj_type]})
             raise exception.StackValidationFailed(message=msg)
-
-        # Make sure the value of object_id is correct.
-        neutronV20.find_resourceid_by_name_or_id(self.client(),
-                                                 obj_type,
-                                                 obj_id_or_name)
 
 
 def resource_mapping():

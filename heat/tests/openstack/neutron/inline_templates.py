@@ -56,6 +56,21 @@ resources:
       object_id: 9ba4c03a-dbd5-4836-b651-defa595796ba
 '''
 
+RBAC_REFERENCE_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Template to test rbac-policy Neutron resource
+resources:
+  rbac:
+    type: OS::Neutron::RBACPolicy
+    properties:
+      object_type: network
+      target_tenant: d1dbbed707e5469da9cd4fdd618e9706
+      action: access_as_shared
+      object_id: {get_resource: my_net}
+  my_net:
+    type: OS::Neutron::Net
+'''
+
 LB_TEMPLATE = '''
 heat_template_version: 2016-04-08
 description: Create a loadbalancer

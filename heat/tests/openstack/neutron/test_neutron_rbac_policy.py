@@ -37,16 +37,6 @@ class RBACPolicyTest(common.HeatTestCase):
         self.rbac.client = mock.MagicMock()
         self.rbac.client.return_value = self.neutron_client
 
-        self.rbac.client_plugin().find_resourceid_by_name_or_id = (
-            mock.MagicMock(return_value='123'))
-        props = {
-            "action": "access_as_shared",
-            "object_type": "network",
-            "object_id": "9ba4c03a-dbd5-4836-b651-defa595796ba",
-            "target_tenant": "d1dbbed707e5469da9cd4fdd618e9706"
-            }
-        self.rbac.prepare_properties = (mock.MagicMock(return_value=props))
-
     def test_create(self):
         self._create_stack()
         expected = {
@@ -75,6 +65,11 @@ class RBACPolicyTest(common.HeatTestCase):
         msg = "Invalid object_type: networks. "
         self.assertRaisesRegex(exception.StackValidationFailed, msg,
                                self.rbac.validate)
+
+    def test_validate_object_id_reference(self):
+        self._create_stack(tmpl=inline_templates.RBAC_REFERENCE_TEMPLATE)
+        # won't check the object_id, so validate() is success
+        self.rbac.validate()
 
     def test_update(self):
         self._create_stack()
