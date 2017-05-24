@@ -13,7 +13,6 @@
 
 import collections
 import copy
-import datetime
 import eventlet
 import functools
 import itertools
@@ -35,7 +34,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
-from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import event
@@ -2099,10 +2097,8 @@ class Stack(collections.Mapping):
 
     def time_elapsed(self):
         """Time elapsed in seconds since the stack operation started."""
-        start_time = timeutils.round_to_seconds(self.updated_time or
-                                                self.created_time)
-        nowish = timeutils.round_to_seconds(datetime.datetime.utcnow())
-        return int((nowish - start_time).total_seconds())
+        start_time = self.updated_time or self.created_time
+        return (oslo_timeutils.utcnow() - start_time).total_seconds()
 
     def time_remaining(self):
         """Time left before stack times out."""
