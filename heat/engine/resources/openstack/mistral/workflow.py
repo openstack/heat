@@ -595,11 +595,7 @@ class Workflow(signal_responder.SignalResponder,
         self.data_set(self.EXECUTIONS, ','.join(executions))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        update_allowed = [self.INPUT, self.PARAMS, self.DESCRIPTION]
-        for prop in update_allowed:
-            if prop in prop_diff:
-                del prop_diff[prop]
-        if len(prop_diff) > 0:
+        if prop_diff:
             props = json_snippet.properties(self.properties_schema,
                                             self.context)
             new_props = self.prepare_properties(props)
