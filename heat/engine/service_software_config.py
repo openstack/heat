@@ -259,7 +259,7 @@ class SoftwareConfigService(object):
             'stack_user_project_id': stack_user_project_id,
             'action': action,
             'status': status,
-            'status_reason': str(status_reason)})
+            'status_reason': six.text_type(status_reason)})
         self._push_metadata_software_deployments(
             cnxt, server_id, stack_user_project_id)
         return api.format_software_deployment(sd)
@@ -340,7 +340,7 @@ class SoftwareConfigService(object):
         if status:
             update_data['status'] = status
         if status_reason:
-            update_data['status_reason'] = str(status_reason)
+            update_data['status_reason'] = six.text_type(status_reason)
         if updated_at:
             update_data['updated_at'] = timeutils.normalize_time(
                 timeutils.parse_isotime(updated_at))
