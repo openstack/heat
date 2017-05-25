@@ -13,7 +13,6 @@
 
 import collections
 from oslo_log import log as logging
-import six
 
 from heat.engine import attributes
 from heat.engine import constraints
@@ -373,7 +372,7 @@ class ResourceWithRestoreType(ResWithComplexPropsAndAttrs):
     def handle_restore(self, defn, data):
         props = dict(
             (key, value) for (key, value) in
-            six.iteritems(defn.properties(self.properties_schema))
+            self.properties.data.items()
             if value is not None)
         value = data['resource_data']['a_string']
         props['a_string'] = value

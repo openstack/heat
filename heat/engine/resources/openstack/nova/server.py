@@ -1618,8 +1618,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     def handle_restore(self, defn, restore_data):
         image_id = restore_data['resource_data']['snapshot_image_id']
-        props = dict((k, v) for k, v in self.properties.items()
-                     if k in self.properties.data)
+        props = dict((k, v) for k, v in self.properties.data.items()
+                     if v is not None)
         for key in [self.BLOCK_DEVICE_MAPPING, self.BLOCK_DEVICE_MAPPING_V2,
                     self.NETWORKS]:
             if props.get(key) is not None:
