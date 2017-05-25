@@ -145,8 +145,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         'os_collect_config'
     )
 
-    # valid image Status
-    IMAGE_STATUS_ACTIVE = 'active'
+    # Image Statuses
+    IMAGE_STATUSES = (IMAGE_ACTIVE, IMAGE_ERROR,
+                      IMAGE_DELETED) = ('active', 'error', 'deleted')
 
     properties_schema = {
         NAME: properties.Schema(
@@ -1347,10 +1348,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                 return
             raise
         else:
-            if image_obj.status.lower() != self.IMAGE_STATUS_ACTIVE:
+            if image_obj.status.lower() != self.IMAGE_ACTIVE:
                 msg = _('Image status is required to be %(cstatus)s not '
                         '%(wstatus)s.') % {
-                    'cstatus': self.IMAGE_STATUS_ACTIVE,
+                    'cstatus': self.IMAGE_ACTIVE,
                     'wstatus': image_obj.status}
                 raise exception.StackValidationFailed(message=msg)
 
@@ -1510,9 +1511,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             return True
         if not prg.image_complete:
             image = self.client_plugin('glance').get_image(prg.image_id)
-            if image.status in ('DELETED', 'ERROR'):
+            if image.status.lower() in (self.IMAGE_ERROR,
+                                        self.IMAGE_DELETED):
                 raise exception.Error(image.status)
-            elif image.status == 'ACTIVE':
+            elif image.status.lower() == self.IMAGE_ACTIVE:
                 prg.image_complete = True
                 if not self._delete():
                     return True
@@ -1602,9 +1604,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     def check_snapshot_complete(self, image_id):
         image = self.client_plugin('glance').get_image(image_id)
-        if image.status == 'ACTIVE':
+        if image.status.lower() == self.IMAGE_ACTIVE:
             return True
-        elif image.status == 'ERROR' or image.status == 'DELETED':
+        elif image.status.lower() in (self.IMAGE_ERROR, self.IMAGE_DELETED):
             raise exception.Error(image.status)
 
         return False
@@ -1612,7 +1614,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
     def handle_delete_snapshot(self, snapshot):
         image_id = snapshot['resource_data'].get('snapshot_image_id')
         with self.client_plugin().ignore_not_found:
-            self.client_plugin('glance').images.delete(image_id)
+            self.client('glance').images.delete(image_id)
 
     def handle_restore(self, defn, restore_data):
         image_id = restore_data['resource_data']['snapshot_image_id']
