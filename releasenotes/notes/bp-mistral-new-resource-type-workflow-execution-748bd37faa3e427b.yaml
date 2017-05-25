@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    A new OS::Mistral::ExternalResource is added that allows users to manage
+    resources that are not known to Heat by specifying in the template Mistral
+    workflows to handle actions such as create, update and delete.
