@@ -607,3 +607,14 @@ class HOTemplate20170901(HOTemplate20170224):
         'Fn::ResourceFacade': hot_funcs.Removed,
         'Ref': hot_funcs.Removed,
     }
+
+    condition_functions = {
+        'get_param': hot_funcs.GetParam,
+        'equals': hot_funcs.Equals,
+        'not': hot_funcs.Not,
+        'and': hot_funcs.And,
+        'or': hot_funcs.Or,
+
+        # functions added in 2017-09-01
+        'yaql': hot_funcs.Yaql
+    }

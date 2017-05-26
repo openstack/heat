@@ -321,6 +321,7 @@ for the ``heat_template_version`` key:
       yaql
       if
 
+    We support 'yaql' as condition function in this version.
     The complete list of supported condition functions is::
 
       equals
@@ -328,6 +329,7 @@ for the ``heat_template_version`` key:
       not
       and
       or
+      yaql
 
 .. _hot_spec_parameter_groups:
 
@@ -934,10 +936,12 @@ expression
       not
       and
       or
+      yaql
 
     Note: In condition functions, you can reference a value from an input
     parameter, but you cannot reference resource or its attribute. We support
     referencing other conditions (by condition name) in condition functions.
+    We support 'yaql' as condition function in the Pike version.
 
 An example of conditions section definition
 
@@ -979,6 +983,12 @@ An example of conditions section definition
        and:
        - cd1
        - cd2
+     cd9:
+       yaql:
+         expression: $.data.services.contains('heat')
+         data:
+           services:
+             get_param: ServiceNames
 
 The example below shows how to associate condition with resources
 

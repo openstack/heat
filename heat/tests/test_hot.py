@@ -1299,6 +1299,36 @@ class HOTemplateTest(common.HeatTestCase):
 
         self.assertEqual({'a': [1, 2, 3]}, resolved)
 
+    def test_yaql_as_condition(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: pike
+        parameters:
+          ServiceNames:
+            type: comma_delimited_list
+            default: ['neutron', 'heat']
+        ''')
+        snippet = {
+            'yaql': {
+                'expression': '$.data.service_names.contains("neutron")',
+                'data': {'service_names': {'get_param': 'ServiceNames'}}}}
+        # when param 'ServiceNames' contains 'neutron',
+        # equals function resolve to true
+        tmpl = template.Template(hot_tpl)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_condition_yaql_true', tmpl)
+        resolved = self.resolve_condition(snippet, tmpl, stack)
+        self.assertTrue(resolved)
+        # when param 'ServiceNames' doesn't contain 'neutron',
+        # equals function resolve to false
+        tmpl = template.Template(
+            hot_tpl,
+            env=environment.Environment(
+                {'ServiceNames': ['nova_network', 'heat']}))
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_condition_yaql_false', tmpl)
+        resolved = self.resolve_condition(snippet, tmpl, stack)
+        self.assertFalse(resolved)
+
     def test_equals(self):
         hot_tpl = template_format.parse('''
         heat_template_version: 2016-10-14
