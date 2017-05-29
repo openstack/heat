@@ -19,6 +19,7 @@ import webob
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
+from heat.common import urlfetch
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
@@ -1746,3 +1747,67 @@ class ValidateTest(common.HeatTestCase):
         ex = webob.exc.HTTPBadRequest(explanation=msg)
         self.assertIsInstance(res, webob.exc.HTTPBadRequest)
         self.assertEqual(ex.explanation, res.explanation)
+
+    def test_validate_parameter_group_output(self):
+        engine = service.EngineService('a', 't')
+        params = {
+            "resource_registry": {
+                "OS::Test::TestResource": "https://server.test/nested.template"
+            }
+        }
+        root_template_str = '''
+heat_template_version: 2015-10-15
+parameters:
+    test_root_param:
+        type: string
+parameter_groups:
+-   label: RootTest
+    parameters:
+    -   test_root_param
+resources:
+    Nested:
+        type: OS::Test::TestResource
+'''
+        nested_template_str = '''
+heat_template_version: 2015-10-15
+parameters:
+    test_param:
+        type: string
+parameter_groups:
+-   label: Test
+    parameters:
+    -   test_param
+'''
+        root_template = template_format.parse(root_template_str)
+
+        self.patchobject(urlfetch, 'get')
+        urlfetch.get.return_value = nested_template_str
+
+        res = dict(engine.validate_template(self.ctx, root_template,
+                                            params, show_nested=True))
+        expected = {
+            'Description': 'No description',
+            'ParameterGroups': [{
+                'label': 'RootTest',
+                'parameters': ['test_root_param']}],
+            'Parameters': {
+                'test_root_param': {
+                    'Description': '',
+                    'Label': 'test_root_param',
+                    'NoEcho': 'false',
+                    'Type': 'String'}},
+            'NestedParameters': {
+                'Nested': {
+                    'Description': 'No description',
+                    'ParameterGroups': [{
+                        'label': 'Test',
+                        'parameters': ['test_param']}],
+                    'Parameters': {
+                        'test_param': {
+                            'Description': '',
+                            'Label': 'test_param',
+                            'NoEcho': 'false',
+                            'Type': 'String'}},
+                    'Type': 'OS::Test::TestResource'}},
+        }
+        self.assertEqual(expected, res)

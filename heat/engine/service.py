@@ -1273,6 +1273,14 @@ class EngineService(service.ServiceBase):
                                 'Description', ''),
                             'Parameters': n_params
                         }
+
+                        # Add parameter_groups if it is present in nested stack
+                        nested_pg = parameter_groups.ParameterGroups(
+                            stk[r].nested().t)
+                        if nested_pg.parameter_groups:
+                            n_result[r].update({'ParameterGroups':
+                                               nested_pg.parameter_groups})
+
                         n_result[r].update(nested_params(stk[r].nested()))
                 return {'NestedParameters': n_result} if n_result else {}
 
