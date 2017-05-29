@@ -21,6 +21,7 @@ sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_network.sh
 
 cd $DEST/tempest
+sudo sed -i -e '/group_regex/c\group_regex=heat_integrationtests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .testr.conf
 sudo tempest run --regex heat_integrationtests
 
 sudo -E $DEST/heat/heat_integrationtests/cleanup_test_env.sh
