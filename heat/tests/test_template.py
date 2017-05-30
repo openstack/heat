@@ -16,7 +16,6 @@ import hashlib
 import json
 
 import fixtures
-from oslotest import mockpatch
 import six
 from stevedore import extension
 
@@ -109,7 +108,7 @@ class TemplatePluginFixture(fixtures.Fixture):
             template._template_classes = None
 
         clear_template_classes()
-        self.useFixture(mockpatch.PatchObject(
+        self.useFixture(fixtures.MockPatchObject(
             template,
             '_get_template_extension_manager',
             new=self._get_template_extension_manager))
