@@ -1048,9 +1048,11 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             try:
                 net_id = self.client_plugin(
                     'neutron').find_resourceid_by_name_or_id('network', key)
-            except (exception.EntityNotFound,
-                    exception.PhysicalResourceNameAmbiguity):
-                net_id = None
+            except Exception as ex:
+                if (self.client_plugin('neutron').is_not_found(ex) or
+                        self.client_plugin('neutron').is_no_unique(ex)):
+                    net_id = None
+                raise
             if net_id:
                 nets[net_id] = nets[key]
         return nets
