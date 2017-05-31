@@ -14,7 +14,6 @@
 import abc
 import collections
 import itertools
-import warnings
 
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
@@ -565,34 +564,9 @@ class Parameters(collections.Mapping):
             if param not in schemata:
                 raise exception.UnknownUserParameter(key=param)
 
+    @abc.abstractmethod
     def _pseudo_parameters(self, stack_identifier):
-        warnings.warn("Parameters._pseudo_parameters() is deprecated and "
-                      "will become an abstract method in future. Subclasses "
-                      "should override it to provide their own pseudo "
-                      "parameters.", DeprecationWarning)
-        stack_id = (stack_identifier.arn()
-                    if stack_identifier is not None else 'None')
-        stack_name = stack_identifier and stack_identifier.stack_name
-
-        yield Parameter('AWS::StackId',
-                        Schema(Schema.STRING, _('Stack ID'),
-                               default=str(stack_id)))
-        if stack_name:
-            yield Parameter('AWS::StackName',
-                            Schema(Schema.STRING, _('Stack Name'),
-                                   default=stack_name))
-            yield Parameter('AWS::Region',
-                            Schema(Schema.STRING,
-                                   default='ap-southeast-1',
-                                   constraints=[
-                                       constr.AllowedValues(['us-east-1',
-                                                             'us-west-1',
-                                                             'us-west-2',
-                                                             'sa-east-1',
-                                                             'eu-west-1',
-                                                             'ap-southeast-1',
-                                                             'ap-northeast-1']
-                                                            )]))
+        pass
 
     def immutable_params_modified(self, new_parameters, input_params):
         # A parameter must have been present in the old stack for its

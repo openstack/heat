@@ -16,7 +16,6 @@ import collections
 import copy
 import functools
 import hashlib
-import warnings
 
 import six
 from stevedore import extension
@@ -26,7 +25,6 @@ from heat.common.i18n import _
 from heat.engine import conditions
 from heat.engine import environment
 from heat.engine import function
-from heat.engine import output
 from heat.engine import template_files
 from heat.objects import raw_template as template_object
 
@@ -207,40 +205,6 @@ class Template(collections.Mapping):
         """Return a parameters.Parameters object for the stack."""
         pass
 
-    @classmethod
-    def validate_resource_key_type(cls, key, valid_types, typename,
-                                   allowed_keys, rsrc_name, rsrc_data):
-        """Validate the type of the value provided for a specific resource key.
-
-        This method is deprecated. This is a utility function previously used
-        by the HOT and CFN template implementations. Its API makes no sense
-        since it attempts to check both properties of user-provided keys
-        (i.e. whether they're valid keys) and properties that must necessarily
-        be associated with a pre-defined whitelist of keys (i.e. knowing what
-        types the values should be associated with). This method will be
-        removed in a future version of Heat.
-        """
-        warnings.warn("The validate_resource_key_type() method doesn't make "
-                      "any sense and will be removed in a future version of "
-                      "Heat. Template subclasses should define any "
-                      "validation utility functions they need themselves.",
-                      DeprecationWarning)
-
-        if key not in allowed_keys:
-            raise ValueError(_('"%s" is not a valid '
-                               'keyword inside a resource '
-                               'definition') % key)
-        if key in rsrc_data:
-            if not isinstance(rsrc_data.get(key), valid_types):
-                args = {'name': rsrc_name, 'key': key,
-                        'typename': typename}
-                message = _('Resource %(name)s %(key)s type '
-                            'must be %(typename)s') % args
-                raise TypeError(message)
-            return True
-        else:
-            return False
-
     def validate_resource_definitions(self, stack):
         """Check validity of resource definitions.
 
@@ -256,41 +220,10 @@ class Template(collections.Mapping):
         """Return a dictionary of resolved conditions."""
         return conditions.Conditions({})
 
+    @abc.abstractmethod
     def outputs(self, stack):
-        warnings.warn("The default implementation of the outputs() method "
-                      "is deprecated, and this method could become an "
-                      "abstractmethod as early as the Pike release. "
-                      "Template subclasses should override this method with "
-                      "a custom implementation for their particular template "
-                      "format.",
-                      DeprecationWarning)
-
-        outputs = self.parse(stack, self[self.OUTPUTS], path=self.OUTPUTS)
-
-        def get_outputs():
-            for key, val in outputs.items():
-                if not isinstance(val, collections.Mapping):
-                    message = _('Outputs must contain Output. '
-                                'Found a [%s] instead') % type(val)
-                    raise exception.StackValidationFailed(
-                        error='Output validation error',
-                        path=[self.OUTPUTS, key],
-                        message=message)
-
-                if self.OUTPUT_VALUE not in val:
-                    message = _('Each output must contain '
-                                'a %s key.') % self.OUTPUT_VALUE
-                    raise exception.StackValidationFailed(
-                        error='Output validation error',
-                        path=[self.OUTPUTS, key],
-                        message=message)
-
-                value_def = val[self.OUTPUT_VALUE]
-                description = val.get(self.OUTPUT_DESCRIPTION)
-
-                yield key, output.OutputDefinition(key, value_def, description)
-
-        return dict(get_outputs())
+        """Return a dictionary of OutputDefinition objects."""
+        pass
 
     @abc.abstractmethod
     def resource_definitions(self, stack):
