@@ -949,11 +949,11 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
         name = 'bar'
         inp = swc_io.InputConfig(name=name, description='test', type='Number',
                                  default=0, replace_on_change=True)
-        self.assertEqual('0', inp.default())
+        self.assertEqual(0, inp.default())
         self.assertIs(True, inp.replace_on_change())
         self.assertEqual(name, inp.name())
         self.assertEqual({'name': name, 'type': 'Number',
-                          'description': 'test', 'default': '0',
+                          'description': 'test', 'default': 0,
                           'replace_on_change': True},
                          inp.as_dict())
         self.assertEqual((name, None), inp.input_data())
@@ -962,11 +962,11 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
         name = 'baz'
         inp = swc_io.InputConfig(name=name, type='Number',
                                  default=0, value=42)
-        self.assertEqual('0', inp.default())
+        self.assertEqual(0, inp.default())
         self.assertIs(False, inp.replace_on_change())
         self.assertEqual(name, inp.name())
         self.assertEqual({'name': name, 'type': 'Number',
-                          'default': '0', 'value': 42},
+                          'default': 0, 'value': 42},
                          inp.as_dict())
         self.assertEqual((name, 42), inp.input_data())
 
@@ -1046,3 +1046,15 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
     def test_check_io_schema_list_mixed(self):
         self.assertRaises(TypeError, swc_io.check_io_schema_list,
                           [{'name': 'foo'}, ('name', 'bar')])
+
+    def test_input_config_value_json_default(self):
+        name = 'baz'
+        inp = swc_io.InputConfig(name=name, type='Json',
+                                 default={'a': 1}, value=42)
+        self.assertEqual({'a': 1}, inp.default())
+
+    def test_input_config_value_default_coerce(self):
+        name = 'baz'
+        inp = swc_io.InputConfig(name=name, type='Number',
+                                 default='0')
+        self.assertEqual(0, inp.default())
