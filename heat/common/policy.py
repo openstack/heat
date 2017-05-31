@@ -31,6 +31,8 @@ LOG = logging.getLogger(__name__)
 DEFAULT_RULES = policy.Rules.from_dict({'default': '!'})
 DEFAULT_RESOURCE_RULES = policy.Rules.from_dict({'default': '@'})
 
+ENFORCER = None
+
 
 class Enforcer(object):
     """Responsible for loading and enforcing rules."""
@@ -86,6 +88,13 @@ class Enforcer(object):
            :returns: A non-False value if the user is admin according to policy
         """
         return self._check(context, 'context_is_admin', target={}, exc=None)
+
+
+def get_enforcer():
+    global ENFORCER
+    if ENFORCER is None:
+        ENFORCER = Enforcer()
+    return ENFORCER
 
 
 class ResourceEnforcer(Enforcer):
