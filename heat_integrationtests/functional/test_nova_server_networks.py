@@ -68,7 +68,7 @@ resources:
   net:
     type: OS::Neutron::Net
     properties:
-      name: my_net
+      name: server_with_port_net
   subnet:
     type: OS::Neutron::Subnet
     properties:

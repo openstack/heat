@@ -876,14 +876,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         reality_nets = self._add_port_for_address(server,
                                                   extend_networks=False)
         reality_net_ids = {}
+        client_plugin = self.client_plugin('neutron')
         for net_key in reality_nets:
             try:
-                net_id = self.client_plugin(
-                    'neutron').find_resourceid_by_name_or_id('network',
-                                                             net_key)
-            except (exception.EntityNotFound,
-                    exception.PhysicalResourceNameAmbiguity):
-                net_id = None
+                net_id = client_plugin.find_resourceid_by_name_or_id('network',
+                                                                     net_key)
+            except Exception as ex:
+                if (client_plugin.is_not_found(ex) or
+                        client_plugin.is_no_unique(ex)):
+                    net_id = None
+                else:
+                    raise
             if net_id:
                 reality_net_ids[net_id] = reality_nets.get(net_key)
 
@@ -1044,15 +1047,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         This method is used only for resolving attributes.
         """
         nets = copy.deepcopy(networks)
+        client_plugin = self.client_plugin('neutron')
         for key in list(nets.keys()):
             try:
-                net_id = self.client_plugin(
-                    'neutron').find_resourceid_by_name_or_id('network', key)
+                net_id = client_plugin.find_resourceid_by_name_or_id('network',
+                                                                     key)
             except Exception as ex:
-                if (self.client_plugin('neutron').is_not_found(ex) or
-                        self.client_plugin('neutron').is_no_unique(ex)):
+                if (client_plugin.is_not_found(ex) or
+                        client_plugin.is_no_unique(ex)):
                     net_id = None
-                raise
+                else:
+                    raise
             if net_id:
                 nets[net_id] = nets[key]
         return nets
