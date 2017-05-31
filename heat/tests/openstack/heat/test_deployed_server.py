@@ -137,7 +137,7 @@ class DeployedServersTest(common.HeatTestCase):
                 'request': {
                     'metadata_url': metadata_url
                 },
-                'collectors': ['ec2', 'request', 'local']
+                'collectors': ['request', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -188,7 +188,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'secret_access_key': '8901',
                     'stack_name': 'server_sc_s'
                 },
-                'collectors': ['ec2', 'cfn', 'local']
+                'collectors': ['cfn', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -208,7 +208,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'secret_access_key': '8901',
                     'stack_name': 'server_sc_s'
                 },
-                'collectors': ['ec2', 'cfn', 'local'],
+                'collectors': ['cfn', 'local'],
                 'polling_interval': 10
             },
             'deployments': []
@@ -251,7 +251,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'stack_id': 'server_heat_s/%s' % stack.id,
                     'user_id': '1234'
                 },
-                'collectors': ['ec2', 'heat', 'local']
+                'collectors': ['heat', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -270,7 +270,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'stack_id': 'server_heat_s/%s' % stack.id,
                     'user_id': '1234'
                 },
-                'collectors': ['ec2', 'heat', 'local'],
+                'collectors': ['heat', 'local'],
                 'polling_interval': 10
             },
             'deployments': []
@@ -327,7 +327,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'project_id': '8888',
                     'queue_id': queue_id
                 },
-                'collectors': ['ec2', 'zaqar', 'local']
+                'collectors': ['zaqar', 'local']
             },
             'deployments': []
         }, server.metadata_get())
@@ -344,7 +344,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'project_id': '8888',
                     'queue_id': queue_id
                 },
-                'collectors': ['ec2', 'zaqar', 'local'],
+                'collectors': ['zaqar', 'local'],
                 'polling_interval': 10
             },
             'deployments': []

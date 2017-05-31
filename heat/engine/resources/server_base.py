@@ -36,6 +36,7 @@ class BaseServer(stack_user.StackUser):
 
     def __init__(self, name, json_snippet, stack):
         super(BaseServer, self).__init__(name, json_snippet, stack)
+        self.default_collectors = []
 
     def _server_name(self):
         name = self.properties[self.NAME]
@@ -48,7 +49,7 @@ class BaseServer(stack_user.StackUser):
         meta['deployments'] = meta.get('deployments', [])
         meta['os-collect-config'] = meta.get('os-collect-config', {})
         occ = meta['os-collect-config']
-        collectors = ['ec2']
+        collectors = list(self.default_collectors)
         occ['collectors'] = collectors
 
         # set existing values to None to override any boot-time config

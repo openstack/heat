@@ -684,6 +684,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         super(Server, self).__init__(name, json_snippet, stack)
         if self.user_data_software_config():
             self._register_access_key()
+        self.default_collectors = ['ec2']
 
     def _config_drive(self):
         # This method is overridden by the derived CloudServer resource
