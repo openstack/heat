@@ -163,6 +163,9 @@ class DeployedServer(server_base.BaseServer):
 
         return self.resource_id
 
+    def user_data_software_config(self):
+        return True
+
     def _delete(self):
         self._delete_queue()
         self._delete_user()
