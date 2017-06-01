@@ -204,12 +204,6 @@ class BaseServer(stack_user.StackUser):
             self.metadata_set(new_md)
 
         updaters = []
-        server = None
-
-        if self.METADATA in prop_diff:
-            server = self.client_plugin().get_server(self.resource_id)
-            self.client_plugin().meta_update(server,
-                                             prop_diff[self.METADATA])
 
         if self.SOFTWARE_CONFIG_TRANSPORT in prop_diff:
             self._update_software_config_transport(prop_diff)
