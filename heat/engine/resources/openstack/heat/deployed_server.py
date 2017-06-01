@@ -60,7 +60,16 @@ class DeployedServer(server_base.BaseServer):
               'keys and values must be 255 characters or less. Non-string '
               'values will be serialized to JSON (and the serialized '
               'string must be 255 characters or less).'),
-            update_allowed=True
+            update_allowed=True,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                message='This property will be ignored',
+                version='9.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.SUPPORTED,
+                    version='8.0.0'
+                )
+            )
         ),
         SOFTWARE_CONFIG_TRANSPORT: properties.Schema(
             properties.Schema.STRING,
