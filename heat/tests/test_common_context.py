@@ -40,6 +40,7 @@ class TestRequestContext(common.HeatTestCase):
                     'user': 'mick',
                     'password': 'foo',
                     'trust_id': None,
+                    'global_request_id': None,
                     'show_deleted': False,
                     'roles': ['arole', 'notadmin'],
                     'tenant_id': '456tenant',

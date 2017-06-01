@@ -174,6 +174,7 @@ class RequestContext(context.RequestContext):
                 'is_admin': self.is_admin,
                 'user': self.username,
                 'request_id': self.request_id,
+                'global_request_id': self.global_request_id,
                 'show_deleted': self.show_deleted,
                 'region_name': self.region_name,
                 'user_identity': user_idt,
