@@ -914,11 +914,12 @@ class Repeat(function.Function):
                 raise TypeError(_('The "for_each" argument to "%s" must '
                                   'contain a map') % self.fn_name)
 
-    @staticmethod
-    def _valid_arg(arg):
-        return (isinstance(arg, (collections.Sequence,
+    def _valid_arg(self, arg):
+        if not (isinstance(arg, (collections.Sequence,
                                  function.Function)) and
-                not isinstance(arg, six.string_types))
+                not isinstance(arg, six.string_types)):
+            raise TypeError(_('The values of the "for_each" argument to '
+                              '"%s" must be lists') % self.fn_name)
 
     def _do_replacement(self, keys, values, template):
         if isinstance(template, six.string_types):
@@ -941,10 +942,8 @@ class Repeat(function.Function):
 
         # use empty list for references(None) else validation will fail
         values = [[] if value is None else value for value in lists]
-
-        if not all(self._valid_arg(l) for l in values):
-            raise TypeError(_('The values of the "for_each" argument to '
-                              '"%s" must be lists') % self.fn_name)
+        for arg in values:
+            self._valid_arg(arg)
 
         template = function.resolve(self._template)
 
@@ -953,18 +952,19 @@ class Repeat(function.Function):
 
 
 class RepeatWithMap(Repeat):
-    """A function for iterating over a list of items.
+    """A function for iterating over a list or map of items.
 
-    Behaves the same as Replace, but if tolerates a map as
+    Behaves the same as Repeat, but if tolerates a map as
     values to be repeated, in which case it iterates the map keys.
     """
 
-    @staticmethod
-    def _valid_arg(arg):
-        return (isinstance(arg, (collections.Sequence,
+    def _valid_arg(self, arg):
+        if not (isinstance(arg, (collections.Sequence,
                                  collections.Mapping,
                                  function.Function)) and
-                not isinstance(arg, six.string_types))
+                not isinstance(arg, six.string_types)):
+            raise TypeError(_('The values of the "for_each" argument to '
+                              '"%s" must be lists or maps') % self.fn_name)
 
 
 class Digest(function.Function):
