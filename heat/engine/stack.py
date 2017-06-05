@@ -921,7 +921,7 @@ class Stack(collections.Mapping):
 
         if self.convergence and action in (
                 self.UPDATE, self.DELETE, self.CREATE,
-                self.ADOPT, self.ROLLBACK):
+                self.ADOPT, self.ROLLBACK, self.RESTORE):
             # if convergence and stack operation is create/update/rollback/
             # delete, stack lock is not used, hence persist state
             updated = self._persist_state()
@@ -939,7 +939,7 @@ class Stack(collections.Mapping):
         # or action == UPDATE/DELETE/ROLLBACK. Else, it would
         # be done before releasing the stack lock.
         if status == self.IN_PROGRESS or action in (
-                self.UPDATE, self.DELETE, self.ROLLBACK):
+                self.UPDATE, self.DELETE, self.ROLLBACK, self.RESTORE):
             self._persist_state()
 
     def _log_status(self):
@@ -1907,14 +1907,7 @@ class Stack(collections.Mapping):
                 data = snapshot.data['resources'].get(name)
                 scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
-    @profiler.trace('Stack.restore', hide_args=False)
-    @reset_state_on_error
-    def restore(self, snapshot):
-        """Restore the given snapshot.
-
-        Invokes handle_restore on all resources.
-        """
-        self.updated_time = oslo_timeutils.utcnow()
+    def restore_data(self, snapshot):
         env = environment.Environment(snapshot.data['environment'])
         files = snapshot.data['files']
         template = tmpl.Template(snapshot.data['template'],
@@ -1933,6 +1926,17 @@ class Stack(collections.Mapping):
             template.add_resource(defn, name)
 
         newstack.parameters.set_stack_id(self.identifier())
+
+        return newstack, template
+
+    @reset_state_on_error
+    def restore(self, snapshot):
+        """Restore the given snapshot.
+
+        Invokes handle_restore on all resources.
+        """
+        self.updated_time = oslo_timeutils.utcnow()
+        newstack = self.restore_data(snapshot)[0]
 
         updater = scheduler.TaskRunner(self.update_task, newstack,
                                        action=self.RESTORE)
