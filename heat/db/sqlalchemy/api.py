@@ -657,27 +657,30 @@ def stack_create(context, values):
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
                            retry_interval=0.5, inc_retry_interval=True)
 def stack_update(context, stack_id, values, exp_trvsl=None):
-    stack = stack_get(context, stack_id)
-
-    if stack is None:
-        raise exception.NotFound(_('Attempt to update a stack with id: '
-                                 '%(id)s %(msg)s') % {
-                                     'id': stack_id,
-                                     'msg': 'that does not exist'})
-
-    if (exp_trvsl is not None
-            and stack.current_traversal != exp_trvsl):
-        # stack updated by another update
-        return False
-
     session = context.session
-
     with session.begin(subtransactions=True):
-        rows_updated = (session.query(models.Stack)
-                        .filter(models.Stack.id == stack.id)
-                        .filter(models.Stack.current_traversal
-                                == stack.current_traversal)
-                        .update(values, synchronize_session=False))
+        query = (session.query(models.Stack)
+                 .filter(and_(models.Stack.id == stack_id),
+                         (models.Stack.deleted_at.is_(None))))
+        if not context.is_admin:
+            query = query.filter(sqlalchemy.or_(
+                models.Stack.tenant == context.tenant_id,
+                models.Stack.stack_user_project_id == context.tenant_id))
+        if exp_trvsl is not None:
+            query = query.filter(models.Stack.current_traversal == exp_trvsl)
+        rows_updated = query.update(values, synchronize_session=False)
+        if not rows_updated:
+            LOG.debug('Did not set stack state with values '
+                      '%(vals)s, stack id: %(id)s with '
+                      'expected traversal: %(trav)s',
+                      {'id': stack_id, 'vals': str(values),
+                       'trav': str(exp_trvsl)})
+            if not stack_get(context, stack_id, eager_load=False):
+                raise exception.NotFound(
+                    _('Attempt to update a stack with id: '
+                      '%(id)s %(msg)s') % {
+                          'id': stack_id,
+                          'msg': 'that does not exist'})
     session.expire_all()
     return (rows_updated is not None and rows_updated > 0)
 
