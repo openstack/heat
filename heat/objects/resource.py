@@ -100,10 +100,13 @@ class Resource(
     }
 
     @staticmethod
-    def _from_db_object(resource, context, db_resource):
+    def _from_db_object(resource, context, db_resource, only_fields=None):
         if db_resource is None:
             return None
         for field in resource.fields:
+            if (only_fields is not None and field not in only_fields
+                    and field != 'id'):
+                continue
             if field == 'data':
                 resource['data'] = [resource_data.ResourceData._from_db_object(
                     resource_data.ResourceData(context), resd
@@ -150,10 +153,16 @@ class Resource(
         return self._properties_data
 
     @classmethod
-    def get_obj(cls, context, resource_id, refresh=False):
+    def get_obj(cls, context, resource_id, refresh=False, fields=None):
+        if fields is None or 'data' in fields:
+            refresh_data = refresh
+        else:
+            refresh_data = False
         resource_db = db_api.resource_get(context, resource_id,
-                                          refresh=refresh)
-        return cls._from_db_object(cls(context), context, resource_db)
+                                          refresh=refresh,
+                                          refresh_data=refresh_data)
+        return cls._from_db_object(cls(context), context, resource_db,
+                                   only_fields=fields)
 
     @classmethod
     def get_all(cls, context):

@@ -57,7 +57,8 @@ class CheckResource(object):
 
     def _try_steal_engine_lock(self, cnxt, resource_id):
         rs_obj = resource_objects.Resource.get_obj(cnxt,
-                                                   resource_id)
+                                                   resource_id,
+                                                   fields=('engine_id', ))
         if rs_obj.engine_id not in (None, self.engine_id):
             if not listener_client.EngineListenerClient(
                     rs_obj.engine_id).is_alive(cnxt):

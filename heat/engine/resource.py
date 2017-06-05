@@ -420,7 +420,8 @@ class Resource(status.ResourceStatus):
         if self._rsrc_metadata is not None:
             return self._rsrc_metadata
         rs = resource_objects.Resource.get_obj(self.stack.context, self.id,
-                                               refresh=True)
+                                               refresh=True,
+                                               fields=('rsrc_metadata', ))
         self._rsrc_metadata = rs.rsrc_metadata
         return rs.rsrc_metadata
 
@@ -441,8 +442,10 @@ class Resource(status.ResourceStatus):
         if self.id is None or self.action == self.INIT:
             raise exception.ResourceNotAvailable(resource_name=self.name)
         refresh = merge_metadata is not None
-        db_res = resource_objects.Resource.get_obj(self.stack.context, self.id,
-                                                   refresh=refresh)
+        db_res = resource_objects.Resource.get_obj(
+            self.stack.context, self.id, refresh=refresh,
+            fields=('rsrc_metadata', 'atomic_key', 'engine_id',
+                    'action', 'status'))
         if db_res.action == self.DELETE:
             self._db_res_is_deleted = True
             LOG.debug("resource %(name)s, id: %(id)s is DELETE_%(st)s, "
@@ -1677,7 +1680,8 @@ class Resource(status.ResourceStatus):
 
         try:
             db_res = resource_objects.Resource.get_obj(
-                self.context, self.replaced_by)
+                self.context, self.replaced_by,
+                fields=('current_template_id', 'atomic_key'))
         except exception.NotFound:
             LOG.info("Could not find replacement of resource %(name)s "
                      "with id %(id)s while updating needed_by.",
