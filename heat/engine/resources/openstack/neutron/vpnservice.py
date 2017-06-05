@@ -505,8 +505,10 @@ class IKEPolicy(neutron.NeutronResource):
             _('Authentication hash algorithm for the ike policy.'),
             default='sha1',
             constraints=[
-                constraints.AllowedValues(['sha1']),
-            ]
+                constraints.AllowedValues(['sha1', 'sha256',
+                                           'sha384', 'sha512']),
+            ],
+            update_allowed=True
         ),
         ENCRYPTION_ALGORITHM: properties.Schema(
             properties.Schema.STRING,
