@@ -760,7 +760,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         fb = vt_base.FakeBackup('creating')
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.cinder_fc.backups.create(fv.id, force=True).AndReturn(fb)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
         self.cinder_fc.backups.get(fb.id).AndReturn(
             vt_base.FakeBackup('available'))
@@ -800,7 +800,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
 
         fb = vt_base.FakeBackup('creating')
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.cinder_fc.backups.create(fv.id, force=True).AndReturn(fb)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
         fail_reason = 'Could not determine which Swift endpoint to use'
         self.cinder_fc.backups.get(fb.id).AndReturn(
@@ -1220,7 +1220,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         # snapshot script
         fb = vt_base.FakeBackup('creating')
         self.m.StubOutWithMock(self.cinder_fc.backups, 'create')
-        self.cinder_fc.backups.create(fv.id).AndReturn(fb)
+        self.cinder_fc.backups.create(fv.id, force=True).AndReturn(fb)
         self.m.StubOutWithMock(self.cinder_fc.backups, 'get')
         self.cinder_fc.backups.get(fb.id).AndReturn(
             vt_base.FakeBackup('available'))
@@ -1230,7 +1230,8 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
         self.m.StubOutWithMock(self.cinder_fc.restores, 'restore')
         self.cinder_fc.restores.restore('backup-123',
                                         'vol-123').AndReturn(fvbr)
-        fv_restoring = vt_base.FakeVolume('restoring-backup', id=fv.id)
+        fv_restoring = vt_base.FakeVolume(
+            'restoring-backup', id=fv.id, attachments=[])
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv_restoring)
         fv_final = vt_base.FakeVolume(final_status, id=fv.id)
         self.cinder_fc.volumes.get('vol-123').AndReturn(fv_final)
