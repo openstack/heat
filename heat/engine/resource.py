@@ -444,7 +444,7 @@ class Resource(status.ResourceStatus):
         refresh = merge_metadata is not None
         db_res = resource_objects.Resource.get_obj(
             self.stack.context, self.id, refresh=refresh,
-            fields=('rsrc_metadata', 'atomic_key', 'engine_id',
+            fields=('name', 'rsrc_metadata', 'atomic_key', 'engine_id',
                     'action', 'status'))
         if db_res.action == self.DELETE:
             self._db_res_is_deleted = True
