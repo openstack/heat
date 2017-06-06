@@ -287,9 +287,10 @@ class CheckResource(object):
                                               rsrc, stack)
 
 
-def load_resource(cnxt, resource_id, resource_data, is_update):
+def load_resource(cnxt, resource_id, resource_data,
+                  current_traversal, is_update):
     try:
-        return resource.Resource.load(cnxt, resource_id,
+        return resource.Resource.load(cnxt, resource_id, current_traversal,
                                       is_update, resource_data)
     except (exception.ResourceNotFound, exception.NotFound):
         # can be ignored

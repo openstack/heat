@@ -158,7 +158,7 @@ class WorkerService(object):
         resource_data = node_data.load_resources_data(in_data if is_update
                                                       else {})
         rsrc, rsrc_owning_stack, stack = check_resource.load_resource(
-            cnxt, resource_id, resource_data, is_update)
+            cnxt, resource_id, resource_data, current_traversal, is_update)
 
         if rsrc is None:
             return

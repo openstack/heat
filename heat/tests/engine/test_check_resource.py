@@ -345,18 +345,20 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         resC = self.stack['C']
         # lets say C is update-replaced
         is_update = True
+        trav_id = self.stack.current_traversal
         replacementC_id = resC.make_replacement(self.stack.t.id)
         replacementC, stack, _ = resource.Resource.load(self.ctx,
                                                         replacementC_id,
+                                                        trav_id,
                                                         is_update, {})
         self.cr._initiate_propagate_resource(self.ctx, replacementC_id,
-                                             self.stack.current_traversal,
+                                             trav_id,
                                              is_update, replacementC,
                                              self.stack)
         # check_stack_complete should be called with resC.id not
         # replacementC.id
         mock_csc.assert_called_once_with(self.ctx, self.stack,
-                                         self.stack.current_traversal,
+                                         trav_id,
                                          resC.id, mock.ANY,
                                          is_update)
 

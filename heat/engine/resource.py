@@ -322,14 +322,17 @@ class Resource(status.ResourceStatus):
         self._stackref = weakref.ref(stack)
 
     @classmethod
-    def load(cls, context, resource_id, is_update, data):
+    def load(cls, context, resource_id, current_traversal, is_update, data):
         from heat.engine import stack as stack_mod
         db_res = resource_objects.Resource.get_obj(context, resource_id)
         curr_stack = stack_mod.Stack.load(context, stack_id=db_res.stack_id,
                                           cache_data=data)
 
         resource_owning_stack = curr_stack
-        if db_res.current_template_id != curr_stack.t.id:
+        if (db_res.current_template_id != curr_stack.t.id and
+            (db_res.action != cls.INIT or
+             not is_update or
+             current_traversal != curr_stack.current_traversal)):
             # load stack with template owning the resource
             db_stack = stack_objects.Stack.get_by_id(context, db_res.stack_id)
             db_stack.raw_template = None
