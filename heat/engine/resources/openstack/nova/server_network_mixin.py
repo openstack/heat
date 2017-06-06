@@ -522,17 +522,17 @@ class ServerNetworkMixin(object):
     def restore_ports_after_rollback(self, convergence):
         # In case of convergence, during rollback, the previous rsrc is
         # already selected and is being acted upon.
-        backup_stack = self.stack._backup_stack()
-        backup_res = backup_stack.resources.get(self.name)
-        prev_server = self if convergence else backup_res
-
         if convergence:
+            prev_server = self
             rsrc, rsrc_owning_stack, stack = resource.Resource.load(
-                prev_server.context, prev_server.replaced_by, True,
+                prev_server.context, prev_server.replaced_by,
+                prev_server.stack.current_traversal, True,
                 prev_server.stack.cache_data
             )
             existing_server = rsrc
         else:
+            backup_stack = self.stack._backup_stack()
+            prev_server = backup_stack.resources.get(self.name)
             existing_server = self
 
         # Wait until server will move to active state. We can't

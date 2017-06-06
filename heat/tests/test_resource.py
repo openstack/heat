@@ -109,7 +109,8 @@ class ResourceTest(common.HeatTestCase):
         res.state_set('CREATE', 'IN_PROGRESS')
         self.stack.add_resource(res)
         loaded_res, res_owning_stack, stack = resource.Resource.load(
-            self.stack.context, res.id, True, {})
+            self.stack.context, res.id,
+            self.stack.current_traversal, True, {})
         self.assertEqual(loaded_res.id, res.id)
         self.assertEqual(self.stack.t, stack.t)
 
@@ -133,7 +134,8 @@ class ResourceTest(common.HeatTestCase):
         res.state_set('CREATE', 'IN_PROGRESS')
         self.old_stack.add_resource(res)
         loaded_res, res_owning_stack, stack = resource.Resource.load(
-            self.old_stack.context, res.id, False, {})
+            self.old_stack.context, res.id,
+            self.stack.current_traversal, False, {})
         self.assertEqual(loaded_res.id, res.id)
         self.assertEqual(self.old_stack.t, stack.t)
         self.assertNotEqual(self.new_stack.t, stack.t)
@@ -158,7 +160,8 @@ class ResourceTest(common.HeatTestCase):
         self.stack._resources = None
 
         loaded_res, res_owning_stack, stack = resource.Resource.load(
-            self.stack.context, res.id, False, {})
+            self.stack.context, res.id,
+            self.stack.current_traversal, False, {})
         self.assertEqual(origin_resources, stack.resources)
         self.assertEqual(loaded_res.id, res.id)
         self.assertEqual(self.stack.t, stack.t)
@@ -2663,7 +2666,8 @@ class ResourceTest(common.HeatTestCase):
         res.store()
         data = {'bar': {'atrr1': 'baz', 'attr2': 'baz2'}}
         mock_stack_load.return_value = stack
-        resource.Resource.load(stack.context, res.id, True, data)
+        resource.Resource.load(stack.context, res.id,
+                               stack.current_traversal, True, data)
         self.assertTrue(mock_stack_load.called)
         mock_stack_load.assert_called_with(stack.context,
                                            stack_id=stack.id,
