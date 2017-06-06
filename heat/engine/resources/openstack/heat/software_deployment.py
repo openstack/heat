@@ -657,7 +657,8 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     def get_size(self):
         return len(self.properties[self.SERVERS])
 
-    def _resource_names(self, size=None):
+    def _resource_names(self, size=None,
+                        update_rsrc_data=True):
         candidates = self.properties[self.SERVERS]
         if size is None:
             return iter(candidates)

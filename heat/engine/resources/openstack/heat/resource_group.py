@@ -278,7 +278,9 @@ class ResourceGroup(stack_resource.StackResource):
         if not self.get_size():
             return
 
-        test_tmpl = self._assemble_nested(["0"], include_all=True)
+        first_name = next(self._resource_names(update_rsrc_data=False))
+        test_tmpl = self._assemble_nested([first_name],
+                                          include_all=True)
         res_def = next(six.itervalues(
             test_tmpl.resource_definitions(self.stack)))
         # make sure we can resolve the nested resource type
@@ -303,7 +305,7 @@ class ResourceGroup(stack_resource.StackResource):
         else:
             return []
 
-    def _name_blacklist(self):
+    def _name_blacklist(self, update_rsrc_data=True):
         """Resolve the remove_policies to names for removal."""
 
         nested = self.nested()
@@ -329,12 +331,12 @@ class ResourceGroup(stack_resource.StackResource):
                         rsrc_names.add(rsrc.name)
 
         # If the blacklist has changed, update the resource data
-        if rsrc_names != set(current_blacklist):
+        if update_rsrc_data and rsrc_names != set(current_blacklist):
             self.data_set('name_blacklist', ','.join(rsrc_names))
         return rsrc_names
 
-    def _resource_names(self, size=None):
-        name_blacklist = self._name_blacklist()
+    def _resource_names(self, size=None, update_rsrc_data=True):
+        name_blacklist = self._name_blacklist(update_rsrc_data)
         if size is None:
             size = self.get_size()
 
