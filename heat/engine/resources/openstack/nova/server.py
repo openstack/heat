@@ -117,6 +117,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         'allocate_network', 'tag',
     )
 
+    _IFACE_MANAGED_KEYS = (NETWORK_PORT, NETWORK_ID,
+                           NETWORK_FIXED_IP, NETWORK_SUBNET)
+
     _SOFTWARE_CONFIG_FORMATS = (
         HEAT_CFNTOOLS, RAW, SOFTWARE_CONFIG
     ) = (

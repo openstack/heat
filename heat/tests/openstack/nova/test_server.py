@@ -3285,8 +3285,10 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
-        for new_nets in ([],
-                         [{'port': '952fd4ae-53b9-4b39-9e5f-8929c553b5ae'}]):
+        for new_nets in (
+                [],
+                [{'port': '952fd4ae-53b9-4b39-9e5f-8929c553b5ae',
+                  'network': '450abbc9-9b6d-4d6f-8c3a-c47ac34100dd'}]):
 
             old_nets = [
                 self.create_old_net(
@@ -3295,20 +3297,48 @@ class ServersTest(common.HeatTestCase):
                     net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032', ip='1.2.3.4'),
                 self.create_old_net(
                     net='0da8adbf-a7e2-4c59-a511-96b03d2da0d7')]
+            interfaces = [
+                create_fake_iface(
+                    port='2a60cbaa-3d33-4af6-a9ce-83594ac546fc',
+                    net='450abbc9-9b6d-4d6f-8c3a-c47ac34100aa',
+                    ip='4.3.2.1',
+                    subnet='subnetsu-bnet-subn-etsu-bnetsubnetsu'),
+                create_fake_iface(
+                    port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                    net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+                    ip='1.2.3.4',
+                    subnet='subnetsu-bnet-subn-etsu-bnetsubnetsu'),
+                create_fake_iface(
+                    port='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                    net='0da8adbf-a7e2-4c59-a511-96b03d2da0d7',
+                    ip='4.2.3.1',
+                    subnet='subnetsu-bnet-subn-etsu-bnetsubnetsu')]
 
-            new_nets_copy = copy.deepcopy(new_nets)
-            old_nets_copy = copy.deepcopy(old_nets)
-            for net in new_nets_copy:
+            new_nets_cpy = copy.deepcopy(new_nets)
+            old_nets_cpy = copy.deepcopy(old_nets)
+            # Add values to old_nets_cpy that is populated in old_nets when
+            # calling update_networks_matching_iface_port() in
+            # _exclude_not_updated_networks()
+            old_nets_cpy[0]['fixed_ip'] = '4.3.2.1'
+            old_nets_cpy[0]['network'] = '450abbc9-9b6d-4d6f-8c3a-c47ac34100aa'
+            old_nets_cpy[0]['subnet'] = 'subnetsu-bnet-subn-etsu-bnetsubnetsu'
+            old_nets_cpy[1]['fixed_ip'] = '1.2.3.4'
+            old_nets_cpy[1]['port'] = 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
+            old_nets_cpy[1]['subnet'] = 'subnetsu-bnet-subn-etsu-bnetsubnetsu'
+            old_nets_cpy[2]['fixed_ip'] = '4.2.3.1'
+            old_nets_cpy[2]['port'] = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
+            old_nets_cpy[2]['subnet'] = 'subnetsu-bnet-subn-etsu-bnetsubnetsu'
+
+            for net in new_nets_cpy:
                 for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
                             'port_extra_properties', 'floating_ip',
                             'allocate_network', 'tag'):
                     net.setdefault(key)
 
-            matched_nets = server._exclude_not_updated_networks(old_nets,
-                                                                new_nets)
-            self.assertEqual([], matched_nets)
-            self.assertEqual(old_nets_copy, old_nets)
-            self.assertEqual(new_nets_copy, new_nets)
+            server._exclude_not_updated_networks(old_nets, new_nets,
+                                                 interfaces)
+            self.assertEqual(old_nets_cpy, old_nets)
+            self.assertEqual(new_nets_cpy, new_nets)
 
     def test_exclude_not_updated_networks_success(self):
         return_server = self.fc.servers.list()[3]
@@ -3327,17 +3357,32 @@ class ServersTest(common.HeatTestCase):
             {'network': 'f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
              'fixed_ip': '1.2.3.4'},
             {'port': '952fd4ae-53b9-4b39-9e5f-8929c553b5ae'}]
+        interfaces = [
+            create_fake_iface(port='2a60cbaa-3d33-4af6-a9ce-83594ac546fc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='3.4.5.6'),
+            create_fake_iface(port='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                              net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+                              ip='1.2.3.4'),
+            create_fake_iface(port='cccccccc-cccc-cccc-cccc-cccccccccccc',
+                              net='0da8adbf-a7e2-4c59-a511-96b03d2da0d7',
+                              ip='2.3.4.5')]
 
         new_nets_copy = copy.deepcopy(new_nets)
         old_nets_copy = copy.deepcopy(old_nets)
+        # Add values to old_nets_copy that is populated in old_nets when
+        # calling update_networks_matching_iface_port() in
+        # _exclude_not_updated_networks()
+        old_nets_copy[2]['fixed_ip'] = '2.3.4.5'
+        old_nets_copy[2]['port'] = 'cccccccc-cccc-cccc-cccc-cccccccccccc'
+
         for net in new_nets_copy:
             for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
                         'port_extra_properties', 'floating_ip',
                         'allocate_network', 'tag'):
                 net.setdefault(key)
 
-        matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
-        self.assertEqual(old_nets_copy[:-1], matched_nets)
+        server._exclude_not_updated_networks(old_nets, new_nets, interfaces)
         self.assertEqual([old_nets_copy[2]], old_nets)
         self.assertEqual([new_nets_copy[2]], new_nets)
 
@@ -3360,10 +3405,12 @@ class ServersTest(common.HeatTestCase):
              'floating_ip': None,
              'allocate_network': None,
              'tag': None}]
-        new_nets_copy = copy.deepcopy(new_nets)
+        interfaces = [
+            create_fake_iface(port='',
+                              net='f3ef5d2f-d7ba-4b27-af66-58ca0b81e032',
+                              ip='')]
 
-        matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
-        self.assertEqual(new_nets_copy, matched_nets)
+        server._exclude_not_updated_networks(old_nets, new_nets, interfaces)
         self.assertEqual([], old_nets)
         self.assertEqual([], new_nets)
 
@@ -4696,6 +4743,11 @@ class ServerInternalPortTest(ServersTest):
                                 port='3344', floating_ip='9911')
         ]
 
+        interfaces = [create_fake_iface(port='1122', net='4321',
+                                        ip='127.0.0.1', subnet='1234'),
+                      create_fake_iface(port='3344', net='8765',
+                                        ip='127.0.0.2', subnet='5678')]
+
         new_net = [{'network': '8765',
                     'subnet': '5678',
                     'fixed_ip': '127.0.0.2',
@@ -4707,7 +4759,7 @@ class ServerInternalPortTest(ServersTest):
                     'floating_ip': '1199',
                     'port': '1122'}]
 
-        server.calculate_networks(old_net, new_net, [])
+        server.calculate_networks(old_net, new_net, interfaces)
 
         fipa.assert_has_calls((
             mock.call('1199', {'floatingip': {'port_id': None}}),
