@@ -200,13 +200,11 @@ class SignalResponder(stack_user.StackUser):
             return
 
         url = self.client_plugin('heat').get_heat_url()
-        host_url = urlparse.urlparse(url)
         path = self.identifier().url_path()
         if project_id is not None:
             path = project_id + path[path.find('/'):]
 
-        url = urlparse.urlunsplit(
-            (host_url.scheme, host_url.netloc, 'v1/%s/signal' % path, '', ''))
+        url = urlparse.urljoin(url, '%s/signal' % path)
 
         self.data_set('heat_signal_url', url)
         return url
