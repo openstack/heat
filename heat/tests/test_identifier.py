@@ -57,7 +57,7 @@ class IdentifierTest(common.HeatTestCase):
 
     def test_arn_url(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
-        self.assertEqual('/arn%3Aopenstack%3Aheat%3A%3At%3Astacks/s/i/p',
+        self.assertEqual('/arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2Fs%2Fi%2Fp',
                          hi.arn_url_path())
 
     def test_arn_id_int(self):
@@ -208,7 +208,7 @@ class IdentifierTest(common.HeatTestCase):
         self.assertEqual(arn, hi.arn())
 
     def test_arn_url_parse_round_trip(self):
-        arn = '/arn%3Aopenstack%3Aheat%3A%3At%3Astacks/s/i/p'
+        arn = '/arn%3Aopenstack%3Aheat%3A%3At%3Astacks%2Fs%2Fi%2Fp'
         url = 'http://1.2.3.4/foo' + arn
         hi = identifier.HeatIdentifier.from_arn_url(url)
         self.assertEqual(arn, hi.arn_url_path())
