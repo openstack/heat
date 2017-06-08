@@ -1237,6 +1237,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         after_props = json_snippet.properties(self.properties_schema,
                                               self.context)
+        if self.METADATA in prop_diff:
+            server = self.client_plugin().get_server(self.resource_id)
+            self.client_plugin().meta_update(server,
+                                             after_props[self.METADATA])
 
         if self.TAGS in prop_diff:
             self._update_server_tags(after_props[self.TAGS] or [])
