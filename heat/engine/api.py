@@ -282,6 +282,9 @@ def format_resource_attributes(resource, with_attr=None):
     if not with_attr:
         with_attr = []
 
+    # Always return live values for consistency
+    resolver.reset_resolved_values()
+
     def resolve(attr, resolver):
         try:
             return resolver._resolver(attr)
