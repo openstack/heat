@@ -1,0 +1,7 @@
+---
+features:
+  - A new property, deployment_swift_data is added to the OS::Nova::Server
+    and OS::Heat::DeployedServer resources. The property is used to define
+    the Swift container and object name that is used for deployment data
+    for the server. If unset, the fallback is the previous behavior where
+    these values will be automatically generated.

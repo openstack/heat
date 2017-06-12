@@ -45,6 +45,22 @@ class BaseServer(stack_user.StackUser):
 
         return self.physical_resource_name()
 
+    def _container_and_object_name(self, props):
+        deployment_swift_data = props.get(
+            self.DEPLOYMENT_SWIFT_DATA,
+            self.properties[self.DEPLOYMENT_SWIFT_DATA])
+        container_name = deployment_swift_data[self.CONTAINER]
+        if container_name is None:
+            container_name = self.physical_resource_name()
+
+        object_name = deployment_swift_data[self.OBJECT]
+        if object_name is None:
+            object_name = self.data().get('metadata_object_name')
+        if object_name is None:
+            object_name = str(uuid.uuid4())
+
+        return container_name, object_name
+
     def _populate_deployments_metadata(self, meta, props):
         meta['deployments'] = meta.get('deployments', [])
         meta['os-collect-config'] = meta.get('os-collect-config', {})
@@ -94,17 +110,15 @@ class BaseServer(stack_user.StackUser):
             collectors.append('cfn')
 
         elif self.transport_poll_temp_url(props):
-            container = self.physical_resource_name()
-            object_name = self.data().get('metadata_object_name')
-            if not object_name:
-                object_name = str(uuid.uuid4())
+            container_name, object_name = self._container_and_object_name(
+                props)
 
-            self.client('swift').put_container(container)
+            self.client('swift').put_container(container_name)
 
             url = self.client_plugin('swift').get_temp_url(
-                container, object_name, method='GET')
+                container_name, object_name, method='GET')
             put_url = self.client_plugin('swift').get_temp_url(
-                container, object_name)
+                container_name, object_name)
             self.data_set('metadata_put_url', put_url)
             self.data_set('metadata_object_name', object_name)
 
@@ -126,9 +140,10 @@ class BaseServer(stack_user.StackUser):
 
         object_name = self.data().get('metadata_object_name')
         if object_name:
-            container = self.physical_resource_name()
+            container_name, object_name = self._container_and_object_name(
+                props)
             self.client('swift').put_object(
-                container, object_name, jsonutils.dumps(meta))
+                container_name, object_name, jsonutils.dumps(meta))
 
         self.attributes.reset_resolved_values()
 
@@ -272,7 +287,9 @@ class BaseServer(stack_user.StackUser):
         if not object_name:
             return
         with self.client_plugin('swift').ignore_not_found:
-            container = self.physical_resource_name()
+            container = self.properties[self.DEPLOYMENT_SWIFT_DATA].get(
+                'container')
+            container = container or self.physical_resource_name()
             swift = self.client('swift')
             swift.delete_object(container, object_name)
             headers = swift.head_container(container)

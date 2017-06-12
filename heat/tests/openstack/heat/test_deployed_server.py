@@ -17,6 +17,7 @@ from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 from six.moves.urllib import parse as urlparse
 
+from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import swift
@@ -63,6 +64,66 @@ resources:
     type: OS::Heat::DeployedServer
     properties:
       software_config_transport: ZAQAR_MESSAGE
+"""
+
+ds_deployment_data_tmpl = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Heat::DeployedServer
+    properties:
+      software_config_transport: POLL_TEMP_URL
+      deployment_swift_data:
+        container: my-custom-container
+        object: my-custom-object
+"""
+
+ds_deployment_data_bad_container_tmpl = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Heat::DeployedServer
+    properties:
+      software_config_transport: POLL_TEMP_URL
+      deployment_swift_data:
+        container: ''
+        object: 'my-custom-object'
+"""
+
+ds_deployment_data_bad_object_tmpl = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Heat::DeployedServer
+    properties:
+      software_config_transport: POLL_TEMP_URL
+      deployment_swift_data:
+        container: 'my-custom-container'
+        object: ''
+"""
+
+ds_deployment_data_none_container_tmpl = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Heat::DeployedServer
+    properties:
+      software_config_transport: POLL_TEMP_URL
+      deployment_swift_data:
+        container: 0
+        object: 'my-custom-object'
+"""
+
+ds_deployment_data_none_object_tmpl = """
+heat_template_version: 2015-10-15
+resources:
+  server:
+    type: OS::Heat::DeployedServer
+    properties:
+      software_config_transport: POLL_TEMP_URL
+      deployment_swift_data:
+        container: 'my-custom-container'
+        object: 0
 """
 
 
@@ -116,6 +177,178 @@ class DeployedServersTest(common.HeatTestCase):
         self.assertTrue(uuidutils.is_uuid_like(object_name))
         test_path = '/v1/AUTH_test_tenant_id/%s/%s' % (
             server.physical_resource_name(), object_name)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
+        sc.put_object.assert_called_once_with(
+            container_name, object_name, jsonutils.dumps(md))
+
+        sc.head_container.return_value = {'x-container-object-count': '0'}
+        server._delete_temp_url()
+        sc.delete_object.assert_called_once_with(container_name, object_name)
+        sc.head_container.assert_called_once_with(container_name)
+        sc.delete_container.assert_called_once_with(container_name)
+        return metadata_url, server
+
+    def test_server_create_deployment_swift_data(self):
+        server_name = 'server'
+        stack_name = '%s_s' % server_name
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name,
+            ds_deployment_data_tmpl)
+
+        props = tmpl.t['resources']['server']['properties']
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+        self.server_props = props
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = deployed_server.DeployedServer(
+            server_name, resource_defns[server_name], stack)
+
+        sc = mock.Mock()
+        sc.head_account.return_value = {
+            'x-account-meta-temp-url-key': 'secrit'
+        }
+        sc.url = 'http://192.0.2.2'
+
+        self.patchobject(swift.SwiftClientPlugin, '_create',
+                         return_value=sc)
+        scheduler.TaskRunner(server.create)()
+        # self._create_test_server(server_name)
+        metadata_put_url = server.data().get('metadata_put_url')
+        md = server.metadata_get()
+        metadata_url = md['os-collect-config']['request']['metadata_url']
+        self.assertNotEqual(metadata_url, metadata_put_url)
+
+        container_name = 'my-custom-container'
+        object_name = 'my-custom-object'
+        test_path = '/v1/AUTH_test_tenant_id/%s/%s' % (
+            container_name, object_name)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
+        sc.put_object.assert_called_once_with(
+            container_name, object_name, jsonutils.dumps(md))
+
+        sc.head_container.return_value = {'x-container-object-count': '0'}
+        server._delete_temp_url()
+        sc.delete_object.assert_called_once_with(container_name, object_name)
+        sc.head_container.assert_called_once_with(container_name)
+        sc.delete_container.assert_called_once_with(container_name)
+        return metadata_url, server
+
+    def test_server_create_deployment_swift_data_bad_container(self):
+        server_name = 'server'
+        stack_name = '%s_s' % server_name
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name,
+            ds_deployment_data_bad_container_tmpl)
+
+        props = tmpl.t['resources']['server']['properties']
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+        self.server_props = props
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = deployed_server.DeployedServer(
+            server_name, resource_defns[server_name], stack)
+
+        self.assertRaises(exception.StackValidationFailed, server.validate)
+
+    def test_server_create_deployment_swift_data_bad_object(self):
+        server_name = 'server'
+        stack_name = '%s_s' % server_name
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name,
+            ds_deployment_data_bad_object_tmpl)
+
+        props = tmpl.t['resources']['server']['properties']
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+        self.server_props = props
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = deployed_server.DeployedServer(
+            server_name, resource_defns[server_name], stack)
+
+        self.assertRaises(exception.StackValidationFailed, server.validate)
+
+    def test_server_create_deployment_swift_data_none_container(self):
+        server_name = 'server'
+        stack_name = '%s_s' % server_name
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name,
+            ds_deployment_data_none_container_tmpl)
+
+        props = tmpl.t['resources']['server']['properties']
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+        self.server_props = props
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = deployed_server.DeployedServer(
+            server_name, resource_defns[server_name], stack)
+
+        sc = mock.Mock()
+        sc.head_account.return_value = {
+            'x-account-meta-temp-url-key': 'secrit'
+        }
+        sc.url = 'http://192.0.2.2'
+
+        self.patchobject(swift.SwiftClientPlugin, '_create',
+                         return_value=sc)
+        scheduler.TaskRunner(server.create)()
+        # self._create_test_server(server_name)
+        metadata_put_url = server.data().get('metadata_put_url')
+        md = server.metadata_get()
+        metadata_url = md['os-collect-config']['request']['metadata_url']
+        self.assertNotEqual(metadata_url, metadata_put_url)
+
+        container_name = '0'
+        object_name = 'my-custom-object'
+        test_path = '/v1/AUTH_test_tenant_id/%s/%s' % (
+            container_name, object_name)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
+        self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
+        sc.put_object.assert_called_once_with(
+            container_name, object_name, jsonutils.dumps(md))
+
+        sc.head_container.return_value = {'x-container-object-count': '0'}
+        server._delete_temp_url()
+        sc.delete_object.assert_called_once_with(container_name, object_name)
+        sc.head_container.assert_called_once_with(container_name)
+        sc.delete_container.assert_called_once_with(container_name)
+        return metadata_url, server
+
+    def test_server_create_deployment_swift_data_none_object(self):
+        server_name = 'server'
+        stack_name = '%s_s' % server_name
+        (tmpl, stack) = self._setup_test_stack(
+            stack_name,
+            ds_deployment_data_none_object_tmpl)
+
+        props = tmpl.t['resources']['server']['properties']
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+        self.server_props = props
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = deployed_server.DeployedServer(
+            server_name, resource_defns[server_name], stack)
+
+        sc = mock.Mock()
+        sc.head_account.return_value = {
+            'x-account-meta-temp-url-key': 'secrit'
+        }
+        sc.url = 'http://192.0.2.2'
+
+        self.patchobject(swift.SwiftClientPlugin, '_create',
+                         return_value=sc)
+        scheduler.TaskRunner(server.create)()
+        # self._create_test_server(server_name)
+        metadata_put_url = server.data().get('metadata_put_url')
+        md = server.metadata_get()
+        metadata_url = md['os-collect-config']['request']['metadata_url']
+        self.assertNotEqual(metadata_url, metadata_put_url)
+
+        container_name = 'my-custom-container'
+        object_name = '0'
+        test_path = '/v1/AUTH_test_tenant_id/%s/%s' % (
+            container_name, object_name)
         self.assertEqual(test_path, urlparse.urlparse(metadata_put_url).path)
         self.assertEqual(test_path, urlparse.urlparse(metadata_url).path)
         sc.put_object.assert_called_once_with(
