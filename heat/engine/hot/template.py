@@ -571,7 +571,7 @@ class HOTemplate20170901(HOTemplate20170224):
         'get_param': hot_funcs.GetParam,
         'get_resource': hot_funcs.GetResource,
         'list_join': hot_funcs.JoinMultiple,
-        'repeat': hot_funcs.RepeatWithMap,
+        'repeat': hot_funcs.RepeatWithNestedLoop,
         'resource_facade': hot_funcs.ResourceFacade,
         'str_replace': hot_funcs.ReplaceJson,
 

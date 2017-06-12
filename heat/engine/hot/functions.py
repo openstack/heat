@@ -887,9 +887,12 @@ class Repeat(function.Function):
     is a copy of <body> with any occurrences of <var> replaced with the
     corresponding item of <list>.
     """
+
     def __init__(self, stack, fn_name, args):
         super(Repeat, self).__init__(stack, fn_name, args)
+        self._parse_args()
 
+    def _parse_args(self):
         if not isinstance(self.args, collections.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map') %
                             self.fn_name)
@@ -905,6 +908,8 @@ class Repeat(function.Function):
               for_each:
                 %var%: ['a', 'b', 'c']''')
             raise KeyError(_('"repeat" syntax should be %s') % example)
+
+        self._nested_loop = True
 
     def validate(self):
         super(Repeat, self).validate()
@@ -942,20 +947,37 @@ class Repeat(function.Function):
 
         # use empty list for references(None) else validation will fail
         values = [[] if value is None else value for value in lists]
+        value_lens = []
         for arg in values:
             self._valid_arg(arg)
+            value_lens.append(len(arg))
+        if not self._nested_loop:
+            if len(set(value_lens)) != 1:
+                raise ValueError(_('For %s, the length of for_each values '
+                                   'should be equal if no nested '
+                                   'loop.') % self.fn_name)
 
         template = function.resolve(self._template)
+        iter_func = itertools.product if self._nested_loop else six.moves.zip
 
         return [self._do_replacement(keys, replacements, template)
-                for replacements in itertools.product(*values)]
+                for replacements in iter_func(*values)]
 
 
 class RepeatWithMap(Repeat):
-    """A function for iterating over a list or map of items.
+    """A function for iterating over a list of items or a dict of keys.
 
-    Behaves the same as Repeat, but if tolerates a map as
-    values to be repeated, in which case it iterates the map keys.
+    Takes the form::
+
+        repeat:
+            template:
+                <body>
+            for_each:
+                <var>: <list> or <dict>
+
+    The result is a new list of the same size as <list> or <dict>, where each
+    element is a copy of <body> with any occurrences of <var> replaced with the
+    corresponding item of <list> or key of <dict>.
     """
 
     def _valid_arg(self, arg):
@@ -965,6 +987,57 @@ class RepeatWithMap(Repeat):
                 not isinstance(arg, six.string_types)):
             raise TypeError(_('The values of the "for_each" argument to '
                               '"%s" must be lists or maps') % self.fn_name)
+
+
+class RepeatWithNestedLoop(RepeatWithMap):
+    """A function for iterating over a list of items or a dict of keys.
+
+    Takes the form::
+
+        repeat:
+            template:
+                <body>
+            for_each:
+                <var>: <list> or <dict>
+
+    The result is a new list of the same size as <list> or <dict>, where each
+    element is a copy of <body> with any occurrences of <var> replaced with the
+    corresponding item of <list> or key of <dict>.
+
+    This function also allows to specify 'permutations' to decide
+    whether to iterate nested the over all the permutations of the
+    elements in the given lists.
+
+    Takes the form::
+
+        repeat:
+          template:
+            var: %var%
+            bar: %bar%
+          for_each:
+            %var%: <list1>
+            %bar%: <list2>
+          permutations: false
+
+    If 'permutations' is not specified, we set the default value to true to
+    compatible with before behavior. The args have to be lists instead of
+    dicts if 'permutations' is False because keys in a dict are unordered,
+    and the list args all have to be of the same length.
+    """
+
+    def _parse_args(self):
+        super(RepeatWithNestedLoop, self)._parse_args()
+        self._nested_loop = self.args.get('permutations', True)
+
+        if not isinstance(self._nested_loop, bool):
+            raise TypeError(_('"permutations" should be boolean type '
+                              'for %s function.') % self.fn_name)
+
+    def _valid_arg(self, arg):
+        if self._nested_loop:
+            super(RepeatWithNestedLoop, self)._valid_arg(arg)
+        else:
+            Repeat._valid_arg(self, arg)
 
 
 class Digest(function.Function):
