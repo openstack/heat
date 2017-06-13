@@ -58,9 +58,9 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
     NOVA_API_VERSION = '2.1'
 
     validate_versions = [
-        V2_2, V2_8, V2_10, V2_15, V2_26, V2_37
+        V2_2, V2_8, V2_10, V2_15, V2_26, V2_37, V2_42
     ] = [
-        '2.2', '2.8', '2.10', '2.15', '2.26', '2.37'
+        '2.2', '2.8', '2.10', '2.15', '2.26', '2.37', '2.42'
     ]
 
     supported_versions = [NOVA_API_VERSION] + validate_versions
