@@ -84,8 +84,14 @@ resources:
             expected_status='CREATE_IN_PROGRESS')
         self._wait_for_resource_status(
             stack_identifier, 'deployment', 'CREATE_IN_PROGRESS')
+
+        # Wait for all deployment resources to become IN_PROGRESS, since only
+        # IN_PROGRESS resources get signalled
         nested_identifier = self.assert_resource_is_a_stack(
             stack_identifier, 'deployment')
+        self._wait_for_stack_status(nested_identifier, 'CREATE_IN_PROGRESS')
+        self._wait_for_all_resource_status(nested_identifier,
+                                           'CREATE_IN_PROGRESS')
         group_resources = self.list_group_resources(
             stack_identifier, 'deployment', minimal=False)
 
@@ -96,9 +102,8 @@ resources:
 
         created_group_resources = self.list_group_resources(
             stack_identifier, 'deployment', minimal=False)
-
-        self.check_input_values(created_group_resources,
-                                'foo', 'foo_input')
+        self.assertEqual(4, len(created_group_resources))
+        self.check_input_values(created_group_resources, 'foo', 'foo_input')
 
         self.update_stack(stack_identifier,
                           template=template,
@@ -106,12 +111,11 @@ resources:
                           expected_status='UPDATE_IN_PROGRESS')
         nested_identifier = self.assert_resource_is_a_stack(
             stack_identifier, 'deployment')
-        self.assertEqual(4, len(group_resources))
         self._wait_for_stack_status(stack_identifier, 'UPDATE_COMPLETE',
                                     signal_required=True,
                                     resources_to_signal=group_resources)
 
-        self.check_input_values(group_resources, 'foo', 'input2')
+        self.check_input_values(created_group_resources, 'foo', 'input2')
 
         # We explicitly test delete here, vs just via cleanup and check
         # the nested stack is gone
