@@ -1683,6 +1683,62 @@ class ServersTest(common.HeatTestCase):
         md['os-collect-config']['request']['metadata_url'] = 'the_url'
         self.assertEqual(expected_md, server.metadata_get())
 
+    def test_update_transport_heat_to_zaqar(self):
+        stack, server = self._server_create_software_config_poll_heat()
+        password = server.password
+        self.assertEqual({
+            'os-collect-config': {
+                'heat': {
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'password': password,
+                    'project_id': '8888',
+                    'resource_name': 'WebServer',
+                    'stack_id': 'software_config_s/%s' % stack.id,
+                    'user_id': '1234'
+                },
+                'collectors': ['ec2', 'heat', 'local'],
+            },
+            'deployments': []
+        }, server.metadata_get())
+
+        update_props = self.server_props.copy()
+        update_props['software_config_transport'] = 'ZAQAR_MESSAGE'
+        update_template = server.t.freeze(properties=update_props)
+        zcc = self.patchobject(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+        zc = mock.Mock()
+        zcc.return_value = zc
+        queue = mock.Mock()
+        zc.queue.return_value = queue
+
+        self.rpc_client = mock.MagicMock()
+        server._rpc_client = self.rpc_client
+        self.rpc_client.create_software_config.return_value = None
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        password_1 = server.password
+        self.assertEqual(password, password_1)
+        self.assertEqual({
+            'os-collect-config': {
+                'zaqar': {
+                    'user_id': '1234',
+                    'password': password_1,
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'project_id': '8888',
+                    'queue_id': server.data().get('metadata_queue_id')
+                },
+                'heat': {
+                    'auth_url': None,
+                    'password': None,
+                    'project_id': None,
+                    'resource_name': None,
+                    'stack_id': None,
+                    'user_id': None
+                },
+                'collectors': ['ec2', 'zaqar', 'local']
+            },
+            'deployments': []
+        }, server.metadata_get())
+
     def test_server_update_nova_metadata(self):
         return_server = self.fc.servers.list()[1]
         server = self._create_test_server(return_server,
