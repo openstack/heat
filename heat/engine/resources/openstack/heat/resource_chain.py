@@ -106,7 +106,7 @@ class ResourceChain(stack_resource.StackResource):
             nested_stack = self._parse_nested_stack(nested_stack_name,
                                                     nested_tmpl,
                                                     {})
-            # nested_stack.strict_validate = False
+            nested_stack.strict_validate = False
             nested_stack.validate()
         except Exception as ex:
             msg = (_('Failed to validate nested template: %s')
