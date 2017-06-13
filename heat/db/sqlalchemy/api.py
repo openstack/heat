@@ -486,11 +486,12 @@ def engine_get_all_locked_by_stack(context, stack_id):
 
 
 def resource_prop_data_create_or_update(context, values, rpd_id=None):
-    if rpd_id is None:
-        obj_ref = models.ResourcePropertiesData()
-    else:
+    obj_ref = None
+    if rpd_id is not None:
         obj_ref = context.session.query(
             models.ResourcePropertiesData).filter_by(id=rpd_id).first()
+    if obj_ref is None:
+        obj_ref = models.ResourcePropertiesData()
     obj_ref.update(values)
     obj_ref.save(context.session)
     return obj_ref
