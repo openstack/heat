@@ -12,9 +12,9 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import excutils
 import six
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -58,7 +58,9 @@ class NovaFloatingIp(resource.Resource):
         POOL: properties.Schema(
             properties.Schema.STRING,
             description=_('Allocate a floating IP from a given '
-                          'floating IP pool.')
+                          'floating IP pool. Now that nova-network '
+                          'is not supported this represents the '
+                          'external network.')
         ),
     }
 
@@ -73,43 +75,49 @@ class NovaFloatingIp(resource.Resource):
         ),
     }
 
-    default_client_name = 'nova'
-
-    entity = 'floating_ips'
-
     def __init__(self, name, json_snippet, stack):
         super(NovaFloatingIp, self).__init__(name, json_snippet, stack)
         self._floating_ip = None
 
     def _get_resource(self):
         if self._floating_ip is None and self.resource_id is not None:
-            self._floating_ip = self.client().floating_ips.get(
+            self._floating_ip = self.neutron().show_floatingip(
                 self.resource_id)
 
         return self._floating_ip
 
-    def handle_create(self):
-        try:
-            pool = self.properties[self.POOL]
-            floating_ip = self.client().floating_ips.create(pool=pool)
-        except Exception as e:
-            with excutils.save_and_reraise_exception():
-                if self.client_plugin().is_not_found(e):
-                    if pool is None:
-                        LOG.error('Could not allocate floating IP. '
-                                  'Probably there is no default floating '
-                                  'IP pool is configured.')
+    def get_external_network_id(self, pool=None):
+        if pool:
+            return self.client_plugin(
+                'neutron').find_resourceid_by_name_or_id('network', pool)
+        ext_filter = {'router:external': True}
+        ext_nets = self.neutron().list_networks(**ext_filter)['networks']
+        if len(ext_nets) != 1:
+            raise exception.Error(
+                _('Expected 1 external network, found %d') % len(ext_nets))
+        external_network_id = ext_nets[0]['id']
+        return external_network_id
 
-        self.resource_id_set(floating_ip.id)
+    def handle_create(self):
+        ext_net_id = self.get_external_network_id(
+            pool=self.properties[self.POOL])
+        floating_ip = self.neutron().create_floatingip(
+            {'floatingip': {'floating_network_id': ext_net_id}})
+        self.resource_id_set(floating_ip['floatingip']['id'])
         self._floating_ip = floating_ip
+
+    def handle_delete(self):
+        with self.client_plugin('neutron').ignore_not_found:
+            self.neutron().delete_floatingip(self.resource_id)
+            return True
 
     def _resolve_attribute(self, key):
         if self.resource_id is None:
             return
         floating_ip = self._get_resource()
         attributes = {
-            self.POOL_ATTR: getattr(floating_ip, self.POOL_ATTR, None),
-            self.IP: floating_ip.ip
+            self.POOL_ATTR: floating_ip['floatingip']['floating_network_id'],
+            self.IP: floating_ip['floatingip']['floating_ip_address']
         }
         return six.text_type(attributes[key])
 
@@ -160,10 +168,11 @@ class NovaFloatingIpAssociation(resource.Resource):
 
     def handle_create(self):
         server = self.client().servers.get(self.properties[self.SERVER])
-        fl_ip = self.client().floating_ips.get(
+        fl_ip = self.neutron().show_floatingip(
             self.properties[self.FLOATING_IP])
 
-        self.client().servers.add_floating_ip(server, fl_ip.ip)
+        ip_address = fl_ip['floatingip']['floating_ip_address']
+        self.client().servers.add_floating_ip(server, ip_address)
         self.resource_id_set(self.id)
 
     def handle_delete(self):
@@ -173,11 +182,15 @@ class NovaFloatingIpAssociation(resource.Resource):
         try:
             server = self.client().servers.get(self.properties[self.SERVER])
             if server:
-                fl_ip = self.client().floating_ips.get(
+                fl_ip = self.neutron().show_floatingip(
                     self.properties[self.FLOATING_IP])
-                self.client().servers.remove_floating_ip(server, fl_ip.ip)
+                ip_address = fl_ip['floatingip']['floating_ip_address']
+            self.client().servers.remove_floating_ip(server, ip_address)
         except Exception as e:
-            self.client_plugin().ignore_conflict_and_not_found(e)
+            if not (self.client_plugin().is_not_found(e)
+                    or self.client_plugin().is_conflict(e)
+                    or self.client_plugin('neutron').is_not_found(e)):
+                raise
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
@@ -194,9 +207,9 @@ class NovaFloatingIpAssociation(resource.Resource):
             fl_ip_id = (prop_diff.get(self.FLOATING_IP) or
                         self.properties[self.FLOATING_IP])
             server = self.client().servers.get(server_id)
-            fl_ip = self.client().floating_ips.get(fl_ip_id)
-
-            self.client().servers.add_floating_ip(server, fl_ip.ip)
+            fl_ip = self.neutron().show_floatingip(fl_ip_id)
+            ip_address = fl_ip['floatingip']['floating_ip_address']
+            self.client().servers.add_floating_ip(server, ip_address)
             self.resource_id_set(self.id)
 
 
