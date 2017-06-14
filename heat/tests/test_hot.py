@@ -2201,6 +2201,42 @@ conditions:
         snippet = {'list_concat': ['v1', 'v2']}
         self._test_list_concat_invalid(snippet)
 
+    def test_contains_with_list(self):
+        snippet = {'contains': ['v1', ['v1', 'v2']]}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertTrue(resolved)
+
+    def test_contains_with_string(self):
+        snippet = {'contains': ['a', 'abc']}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+        self.assertTrue(resolved)
+
+    def test_contains_with_invalid_args_type(self):
+        snippet = {'contains': {'key': 'value'}}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve, snippet, tmpl)
+        msg = 'Incorrect arguments to '
+        self.assertIn(msg, six.text_type(exc))
+
+    def test_contains_with_invalid_args_number(self):
+        snippet = {'contains': ['v1', ['v1', 'v2'], 'redundant']}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve, snippet, tmpl)
+        msg = 'must be of the form: [value1, [value1, value2]]'
+        self.assertIn(msg, six.text_type(exc))
+
+    def test_contains_with_invalid_sequence(self):
+        snippet = {'contains': ['v1', {'key': 'value'}]}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        exc = self.assertRaises(TypeError,
+                                self.resolve, snippet, tmpl)
+        msg = 'should be a sequence'
+        self.assertIn(msg, six.text_type(exc))
+
 
 class HotStackTest(common.HeatTestCase):
     """Test stack function when stack was created from HOT template."""
