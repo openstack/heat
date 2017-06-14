@@ -94,7 +94,11 @@ resources:
                                     signal_required=True,
                                     resources_to_signal=group_resources)
 
-        self.check_input_values(group_resources, 'foo', 'foo_input')
+        created_group_resources = self.list_group_resources(
+            stack_identifier, 'deployment', minimal=False)
+
+        self.check_input_values(created_group_resources,
+                                'foo', 'foo_input')
 
         self.update_stack(stack_identifier,
                           template=template,
