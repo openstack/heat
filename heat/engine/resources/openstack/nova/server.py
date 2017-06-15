@@ -538,7 +538,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         ),
         USER_DATA: properties.Schema(
             properties.Schema.STRING,
-            _('User data script to be executed by cloud-init.'),
+            _('User data script to be executed by cloud-init. Changes cause '
+              'replacement of the resource by default, but can be ignored '
+              'altogether by setting the `user_data_update_policy` property.'),
             default='',
             update_allowed=True
         ),
