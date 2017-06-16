@@ -294,6 +294,12 @@ class ParameterTestSpecific(common.HeatTestCase):
                                 new_parameter, 'p', schema, 'str')
         self.assertIn('float', six.text_type(err))
 
+    def test_number_bad_type(self):
+        schema = {'Type': 'Number'}
+        err = self.assertRaises(exception.StackValidationFailed,
+                                new_parameter, 'p', schema, ['foo'])
+        self.assertIn('int', six.text_type(err))
+
     def test_number_value_list_good(self):
         schema = {'Type': 'Number',
                   'AllowedValues': ['1', '3', '5']}
