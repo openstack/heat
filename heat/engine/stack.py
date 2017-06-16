@@ -1194,6 +1194,7 @@ class Stack(collections.Mapping):
         self.t = template
         self.reset_dependencies()
         self._resources = None
+        self.cache_data = None
 
         if action is not self.CREATE:
             self.updated_time = oslo_timeutils.utcnow()
