@@ -1011,6 +1011,27 @@ class ValidateTest(common.HeatTestCase):
                          res['Parameters']['net_name']['Value'])
         self.assertNotIn('Default', res['Parameters']['net_name'])
 
+    def test_validate_parameters_nested(self):
+        t = template_format.parse(test_template_allowed_integers)
+
+        other_template = test_template_no_default.replace(
+            'net_name', 'net_name2')
+
+        files = {'env1': 'parameter_defaults:\n  net_name: net1',
+                 'env2': 'parameter_defaults:'
+                         '\n  net_name: net2'
+                         '\n  net_name2: net3',
+                 'tmpl1.yaml': test_template_no_default,
+                 'tmpl2.yaml': other_template}
+        params = {'parameters': {}, 'parameter_defaults': {}}
+
+        self.engine.validate_template(
+            self.ctx, t,
+            params=params,
+            files=files, environment_files=['env1', 'env2'])
+        self.assertEqual('net2', params['parameter_defaults']['net_name'])
+        self.assertEqual('net3', params['parameter_defaults']['net_name2'])
+
     def test_validate_hot_empty_parameters_valid(self):
         t = template_format.parse(
             """

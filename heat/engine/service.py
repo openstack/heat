@@ -696,7 +696,7 @@ class EngineService(service.ServiceBase):
         else:
             tmpl = templatem.Template(template, files=files)
             env_util.merge_environments(environment_files, files, params,
-                                        tmpl.param_schemata())
+                                        tmpl.all_param_schemata(files))
             tmpl.env = environment.Environment(params)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
@@ -891,7 +891,7 @@ class EngineService(service.ServiceBase):
             new_files.update(files or {})
             tmpl = templatem.Template(new_template, files=new_files)
             env_util.merge_environments(environment_files, files, params,
-                                        tmpl.param_schemata())
+                                        tmpl.all_param_schemata(files))
             existing_env = current_stack.env.env_as_dict()
             existing_params = existing_env[env_fmt.PARAMETERS]
             clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
@@ -912,7 +912,7 @@ class EngineService(service.ServiceBase):
             else:
                 tmpl = templatem.Template(template, files=files)
                 env_util.merge_environments(environment_files, files, params,
-                                            tmpl.param_schemata())
+                                            tmpl.all_param_schemata(files))
                 tmpl.env = environment.Environment(params)
 
         max_resources = cfg.CONF.max_resources_per_stack
@@ -1221,7 +1221,7 @@ class EngineService(service.ServiceBase):
 
         tmpl = templatem.Template(template, files=files)
         env_util.merge_environments(environment_files, files, params,
-                                    tmpl.param_schemata())
+                                    tmpl.all_param_schemata(files))
         tmpl.env = environment.Environment(params)
         try:
             self._validate_template(cnxt, tmpl)

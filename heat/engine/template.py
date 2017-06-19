@@ -22,6 +22,7 @@ from stevedore import extension
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import template_format
 from heat.engine import conditions
 from heat.engine import environment
 from heat.engine import function
@@ -194,6 +195,21 @@ class Template(collections.Mapping):
     def param_schemata(self, param_defaults=None):
         """Return a dict of parameters.Schema objects for the parameters."""
         pass
+
+    def all_param_schemata(self, files):
+        schema = {}
+        files = files if files is not None else {}
+        for f in files.values():
+            try:
+                data = template_format.parse(f)
+            except ValueError:
+                continue
+            else:
+                sub_tmpl = Template(data)
+                schema.update(sub_tmpl.param_schemata())
+        # Parent template has precedence, so update the schema last.
+        schema.update(self.param_schemata())
+        return schema
 
     @abc.abstractmethod
     def get_section_name(self, section):
