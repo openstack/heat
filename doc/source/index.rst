@@ -89,6 +89,7 @@ Operating Heat
     getting_started/on_ubuntu
     operating_guides/scale_deployment
     operating_guides/httpd
+    operating_guides/upgrades_guide
     man/index
 
 Developing Heat
