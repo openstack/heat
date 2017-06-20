@@ -10,12 +10,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat_integrationtests.common import test
+from heat_integrationtests.functional import functional_base
 from heatclient import exc
 import six
 
 
-class StackPreviewTest(test.HeatIntegrationTest):
+class StackPreviewTest(functional_base.FunctionalTestsBase):
     template = '''
 heat_template_version: 2015-04-30
 parameters:
