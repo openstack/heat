@@ -129,11 +129,16 @@ class InputConfig(IOConfig):
 
     def __init__(self, value=_no_value, **config):
         if TYPE in config and DEFAULT in config:
-            self.schema = copy.deepcopy(self.schema)
-            config_param = parameters.Schema.from_dict(
-                'config', {'Type': config[TYPE]})
-            self.schema[DEFAULT] = properties.Schema.from_parameter(
-                config_param)
+            if config[DEFAULT] == '' and config[TYPE] != STRING_TYPE:
+                # This is a legacy path, because default used to be of string
+                # type, so we need to skip schema validation in this case.
+                pass
+            else:
+                self.schema = copy.deepcopy(self.schema)
+                config_param = parameters.Schema.from_dict(
+                    'config', {'Type': config[TYPE]})
+                self.schema[DEFAULT] = properties.Schema.from_parameter(
+                    config_param)
         super(InputConfig, self).__init__(**config)
         self._value = value
 
