@@ -740,7 +740,7 @@ resources:
         self.stack_resume(stack_identifier=stack_identifier)
 
 
-class ValidateFacadeTest(test.HeatIntegrationTest):
+class ValidateFacadeTest(functional_base.FunctionalTestsBase):
     """Prove that nested stack errors don't suck."""
 
     template = '''
