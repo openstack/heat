@@ -471,6 +471,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         ctx = utils.dummy_context()
         ctx.auth_token = None
+        ctx.password = 'password'
         ctx.trust_id = None
         ctx.user_domain = 'adomain123'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)

@@ -178,8 +178,8 @@ class RequestContext(context.RequestContext):
                 'show_deleted': self.show_deleted,
                 'region_name': self.region_name,
                 'user_identity': user_idt,
-                'user_domain_id': self.user_domain,
-                'project_domain_id': self.project_domain}
+                'user_domain': self.user_domain,
+                'project_domain': self.project_domain}
 
     @classmethod
     def from_dict(cls, values):
@@ -253,6 +253,13 @@ class RequestContext(context.RequestContext):
             return access_plugin.AccessInfoPlugin(
                 auth_ref=access_info, auth_url=self.keystone_v3_endpoint)
 
+        if self.password:
+            return generic.Password(username=self.username,
+                                    password=self.password,
+                                    project_id=self.tenant_id,
+                                    user_domain_id=self.user_domain,
+                                    auth_url=self.keystone_v3_endpoint)
+
         if self.auth_token:
             # FIXME(jamielennox): This is broken but consistent. If you
             # only have a token but don't load a service catalog then
@@ -260,13 +267,6 @@ class RequestContext(context.RequestContext):
             # least it might be right.
             return token_endpoint.Token(endpoint=self.keystone_v3_endpoint,
                                         token=self.auth_token)
-
-        if self.password:
-            return generic.Password(username=self.username,
-                                    password=self.password,
-                                    project_id=self.tenant_id,
-                                    user_domain_id=self.user_domain,
-                                    auth_url=self.keystone_v3_endpoint)
 
         LOG.error("Keystone API connection failed, no password "
                   "trust or auth_token!")
@@ -352,12 +352,20 @@ class ContextMiddleware(wsgi.Middleware):
         username = None
         password = None
         aws_creds = None
+        user_domain = None
+        project_domain = None
 
         if headers.get('X-Auth-User') is not None:
             username = headers.get('X-Auth-User')
             password = headers.get('X-Auth-Key')
         elif headers.get('X-Auth-EC2-Creds') is not None:
             aws_creds = headers.get('X-Auth-EC2-Creds')
+
+        if headers.get('X-User-Domain-Id') is not None:
+            user_domain = headers.get('X-User-Domain-Id')
+
+        if headers.get('X-Project-Domain-Id') is not None:
+            project_domain = headers.get('X-Project-Domain-Id')
 
         project_name = headers.get('X-Project-Name')
         region_name = headers.get('X-Region-Name')
@@ -375,6 +383,8 @@ class ContextMiddleware(wsgi.Middleware):
             password=password,
             auth_url=auth_url,
             request_id=req_id,
+            user_domain=user_domain,
+            project_domain=project_domain,
             auth_token_info=token_info,
             region_name=region_name,
             auth_plugin=auth_plugin,

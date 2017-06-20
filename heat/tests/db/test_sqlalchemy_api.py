@@ -933,6 +933,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.m.VerifyAll()
 
     def test_user_creds_password(self):
+        self.ctx.password = 'password'
         self.ctx.trust_id = None
         self.ctx.region_name = 'RegionOne'
         db_creds = db_api.user_creds_create(self.ctx)

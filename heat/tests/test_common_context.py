@@ -50,8 +50,8 @@ class TestRequestContext(common.HeatTestCase):
                     'aws_creds': 'blah',
                     'region_name': 'RegionOne',
                     'user_identity': 'fooUser 456tenant',
-                    'user_domain_id': None,
-                    'project_domain_id': None}
+                    'user_domain': None,
+                    'project_domain': None}
 
         super(TestRequestContext, self).setUp()
 
