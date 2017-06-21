@@ -197,18 +197,6 @@ class Resource(status.ResourceStatus):
                 LOG.info(six.text_type(ex))
                 raise ex
 
-    def _init_attributes(self):
-        """The method that defines attribute initialization for a resource.
-
-        Some resource requires different initialization of resource attributes.
-        So they must override this method and return the initialized
-        attributes to the resource.
-        :return: resource attributes
-        """
-        return attributes.Attributes(self.name,
-                                     self.attributes_schema,
-                                     self._make_resolver(weakref.ref(self)))
-
     def __init__(self, name, definition, stack):
 
         def _validate_name(res_name):
@@ -227,7 +215,10 @@ class Resource(status.ResourceStatus):
         self._update_allowed_properties = self.calc_update_allowed(
             self.properties)
         self.attributes_schema.update(self.base_attributes_schema)
-        self.attributes = self._init_attributes()
+        self.attributes = attributes.Attributes(self.name,
+                                                self.attributes_schema,
+                                                self._make_resolver(
+                                                    weakref.ref(self)))
 
         self.abandon_in_progress = False
 

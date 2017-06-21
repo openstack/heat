@@ -98,7 +98,9 @@ class NeutronTest(common.HeatTestCase):
         res = self._get_some_neutron_resource()
         res.attributes_schema.update(
             {'attr2': attributes.Schema(type=attributes.Schema.STRING)})
-        res.attributes = res._init_attributes()
+        res.attributes = attributes.Attributes(res.name,
+                                               res.attributes_schema,
+                                               res._resolve_all_attributes)
         side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
                        {'attr1': 'val1', 'attr2': 'val2'},
                        {'attr1': 'val1', 'attr2': 'val2'},
