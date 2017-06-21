@@ -51,7 +51,7 @@ class Event(
         event._resource_properties = None
         for field in event.fields:
             if field == 'resource_status_reason':
-                # this works whether db_event is a dict or db ref
+                # this works whether db_event is a dict or DB ref
                 event[field] = db_event['_resource_status_reason']
             else:
                 event[field] = db_event[field]

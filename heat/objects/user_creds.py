@@ -49,7 +49,7 @@ class UserCreds(
             return db_ucreds
         ucreds._context = context
         for field in ucreds.fields:
-            # TODO(Shao HE Feng), now the db layer delete the decrypt_method
+            # TODO(Shao HE Feng), now the DB layer delete the decrypt_method
             # field, just skip it here. and will add an encrypted_field later.
             if field == "decrypt_method":
                 continue

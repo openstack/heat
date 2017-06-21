@@ -50,7 +50,7 @@ class TemplateFiles(collections.Mapping):
                                '(value is %(val)s)') %
                              {'cname': files.__class__,
                               'val': str(files)})
-        # the dict has not been persisted as a raw_template_files db obj
+        # the dict has not been persisted as a raw_template_files DB obj
         # yet, so no self.files_id
         self.files = ReadOnlyDict(files)
 
@@ -82,7 +82,7 @@ class TemplateFiles(collections.Mapping):
         return iter(self.files)
 
     def _refresh_if_needed(self):
-        # retrieve files from db if needed
+        # retrieve files from DB if needed
         if self.files_id is None:
             return
         if self.files_id in _d:
@@ -112,13 +112,13 @@ class TemplateFiles(collections.Mapping):
 
     def update(self, files):
         # Sets up the next call to store() to create a new
-        # raw_template_files db obj. It seems like we *could* just
+        # raw_template_files DB obj. It seems like we *could* just
         # update the existing raw_template_files obj, but the problem
         # with that is other heat-engine processes' _d dictionaries
         # would have stale data for a given raw_template_files.id with
         # no way of knowing whether that data should be refreshed or
         # not. So, just avoid the potential for weird race conditions
-        # and create another db obj in the next store().
+        # and create another DB obj in the next store().
         if len(files) == 0:
             return
         if not isinstance(files, dict):

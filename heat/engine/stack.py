@@ -2279,9 +2279,9 @@ class Stack(collections.Mapping):
                 requires = set(res_id_dep.requires(db_res.id))
                 r = self.resources.get(db_res.name)
                 if r is None:
-                    # delete db resources not in current_template_id
+                    # delete DB resources not in current_template_id
                     LOG.warning("Resource %(res)s not found in template "
-                                "for stack %(st)s, deleting from db.",
+                                "for stack %(st)s, deleting from DB.",
                                 {'res': db_res.name, 'st': self.id})
                     resource_objects.Resource.delete(self.context, db_res.id)
                 else:

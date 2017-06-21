@@ -1447,7 +1447,7 @@ def create_raw_template(context, **kwargs):
         'template': t,
     }
     if 'files' not in kwargs and 'files_id' not in kwargs:
-        # modern raw_templates have associated raw_template_files db obj
+        # modern raw_templates have associated raw_template_files DB obj
         tf = template_files.TemplateFiles({'foo': 'bar'})
         tf.store(context)
         kwargs['files_id'] = tf.files_id
@@ -3195,7 +3195,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual(1, db_res.atomic_key)
         # Set engine id as engine-2 and pass expected engine id as old engine
-        # i.e engine-1 in db api steal the lock
+        # i.e engine-1 in DB api steal the lock
         values = {'engine_id': 'engine-2',
                   'action': 'DELETE',
                   'status': 'IN_PROGRESS'}

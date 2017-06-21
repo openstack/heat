@@ -366,7 +366,7 @@ class Instance(resource.Resource):
                 nic_dict['v4-fixed-ip'] = ip
             nics.append(nic_dict)
 
-        # create db instance
+        # create DB instance
         instance = self.client().instances.create(
             self._dbinstance_name(),
             self.flavor,

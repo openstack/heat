@@ -282,7 +282,7 @@ class EventEncryptedTest(EventCommon):
                         self.resource.name, self.resource.type())
         e.store()
 
-        # verify the resource_properties_data db data is encrypted
+        # verify the resource_properties_data DB data is encrypted
         e_obj = event_object.Event.get_all_by_stack(self.resource.context,
                                                     self.stack.id)[0]
         rpd_id = e_obj['rsrc_prop_data_id']

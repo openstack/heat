@@ -243,7 +243,7 @@ def format_stack(stack, preview=False, resolve_outputs=True):
 def format_stack_db_object(stack):
     """Return a summary representation of the given stack.
 
-    Given a stack versioned db object, return a representation of the given
+    Given a stack versioned DB object, return a representation of the given
     stack for a stack listing.
     """
     updated_time = heat_timeutils.isotime(stack.updated_at)
