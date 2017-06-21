@@ -16,6 +16,11 @@ if is_heat_enabled; then
         echo_summary "Installing heatclient"
         install_heatclient
 
+    elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
+        if is_service_enabled tempest; then
+            setup_develop $TEMPEST_DIR
+        fi
+
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
         echo_summary "Cleaning up heat"
         cleanup_heat
