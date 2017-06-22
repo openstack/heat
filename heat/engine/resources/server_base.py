@@ -18,7 +18,6 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
 from heat.common import exception
-from heat.engine import attributes
 from heat.engine.clients import progress
 from heat.engine.resources import stack_user
 
@@ -144,8 +143,6 @@ class BaseServer(stack_user.StackUser):
                 props)
             self.client('swift').put_object(
                 container_name, object_name, jsonutils.dumps(meta))
-
-        self.attributes.reset_resolved_values()
 
     def _create_transport_credentials(self, props):
         if self.transport_poll_server_cfn(props):
@@ -331,10 +328,3 @@ class BaseServer(stack_user.StackUser):
             self.OS_COLLECT_CONFIG,
             self.metadata_get().get('os-collect-config', {}))
         return rsrc_dict
-
-    def get_attribute(self, key, *path):
-        if key == self.OS_COLLECT_CONFIG:
-            occ = self.metadata_get().get('os-collect-config', {})
-            return attributes.select_from_attribute(occ, path)
-        else:
-            return super(BaseServer, self).get_attribute(key, *path)

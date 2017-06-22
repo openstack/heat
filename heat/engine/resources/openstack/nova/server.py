@@ -681,11 +681,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             type=attributes.Schema.LIST
         ),
         OS_COLLECT_CONFIG: attributes.Schema(
-            _('The os-collect-config configuration for the server''s local '
+            _('The os-collect-config configuration for the server\'s local '
               'agent to be configured to connect to Heat to retrieve '
               'deployment data.'),
             support_status=support.SupportStatus(version='9.0.0'),
-            type=attributes.Schema.MAP
+            type=attributes.Schema.MAP,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
 
