@@ -526,8 +526,21 @@ class EngineService(service.ServiceBase):
         else:
             stacks = parser.Stack.load_all(cnxt)
 
-        return [api.format_stack(
+        retval = [api.format_stack(
             stack, resolve_outputs=resolve_outputs) for stack in stacks]
+        if resolve_outputs:
+            # Cases where stored attributes may not exist for a resource:
+            #  * For those resources that have attributes that were
+            #    *not* referenced by other resources, their attributes
+            #    are not resolved/stored over a stack update traversal
+            #  * The resource is an AutoScalingGroup that received a signal
+            #  * Near simultaneous updates (say by an update and a signal)
+            #  * The first time resolving a pre-Pike stack
+            for stack in stacks:
+                if stack.convergence:
+                    for res in six.itervalues(stack.resources):
+                        res.store_attributes()
+        return retval
 
     def get_revision(self, cnxt):
         return cfg.CONF.revision['heat_revision']

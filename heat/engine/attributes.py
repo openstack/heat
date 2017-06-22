@@ -153,6 +153,10 @@ class Attributes(collections.Mapping):
             "Invalid attribute name '%s'" % ALL_ATTRIBUTES
 
     def reset_resolved_values(self):
+        if hasattr(self, '_resolved_values'):
+            self._has_new_resolved = len(self._resolved_values) > 0
+        else:
+            self._has_new_resolved = False
         self._resolved_values = {}
 
     @staticmethod
@@ -223,6 +227,29 @@ class Attributes(collections.Mapping):
                             {'name': attrib.name,
                              'att_type': attrib.schema.BOOLEAN})
 
+    @property
+    def cached_attrs(self):
+        # do not return an empty dict
+        if self._resolved_values:
+            return self._resolved_values
+        return None
+
+    @cached_attrs.setter
+    def cached_attrs(self, c_attrs):
+        if c_attrs is None:
+            self._resolved_values = {}
+        else:
+            self._resolved_values = c_attrs
+        self._has_new_resolved = False
+
+    def has_new_cached_attrs(self):
+        """Returns True if cached_attrs have changed
+
+        Allows the caller to determine if this instance's cached_attrs
+        have been updated since they were initially set (if at all).
+        """
+        return self._has_new_resolved
+
     def __getitem__(self, key):
         if key not in self:
             raise KeyError(_('%(resource)s: Invalid attribute %(key)s') %
@@ -242,6 +269,7 @@ class Attributes(collections.Mapping):
             self._validate_type(attrib, value)
             # only store if not None, it may resolve to an actual value
             # on subsequent calls
+            self._has_new_resolved = True
             self._resolved_values[key] = value
         return value
 

@@ -249,6 +249,13 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
                                               min_adjustment_step,
                                               lower, upper)
 
+    def resize(self, capacity):
+        try:
+            super(AutoScalingGroup, self).resize(capacity)
+        finally:
+            # allow InstanceList to be re-resolved
+            self.clear_stored_attributes()
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Updates self.properties, if Properties has changed.
 

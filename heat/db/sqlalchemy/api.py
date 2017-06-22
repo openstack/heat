@@ -29,6 +29,7 @@ import six
 import sqlalchemy
 from sqlalchemy import and_
 from sqlalchemy import func
+from sqlalchemy import or_
 from sqlalchemy import orm
 from sqlalchemy.orm import aliased as orm_aliased
 
@@ -229,19 +230,29 @@ def resource_get_all(context):
 
 def resource_purge_deleted(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
-    query = context.session.query(models.Resource.id)
+    query = context.session.query(models.Resource)
     result = query.filter_by(**filters)
-    result.delete()
+    attr_ids = [r.attr_data_id for r in result if r.attr_data_id is not None]
+    with context.session.begin(subtransactions=True):
+        result.delete()
+        if attr_ids:
+            context.session.query(models.ResourcePropertiesData).filter(
+                models.ResourcePropertiesData.id.in_(attr_ids)).delete(
+                    synchronize_session=False)
+
+
+def _add_atomic_key_to_values(values, atomic_key):
+    if atomic_key is None:
+        values['atomic_key'] = 1
+    else:
+        values['atomic_key'] = atomic_key + 1
 
 
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     session = context.session
     with session.begin(subtransactions=True):
-        if atomic_key is None:
-            values['atomic_key'] = 1
-        else:
-            values['atomic_key'] = atomic_key + 1
+        _add_atomic_key_to_values(values, atomic_key)
         rows_updated = session.query(models.Resource).filter_by(
             id=resource_id, engine_id=expected_engine_id,
             atomic_key=atomic_key).update(values)
@@ -260,6 +271,48 @@ def resource_delete(context, resource_id):
         resource = session.query(models.Resource).get(resource_id)
         if resource:
             session.delete(resource)
+            if resource.attr_data_id is not None:
+                attr_prop_data = session.query(
+                    models.ResourcePropertiesData).get(resource.attr_data_id)
+                session.delete(attr_prop_data)
+
+
+def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
+    session = context.session
+    with session.begin(subtransactions=True):
+        values = {'attr_data_id': attr_id}
+        _add_atomic_key_to_values(values, atomic_key)
+        rows_updated = session.query(models.Resource).filter(and_(
+            models.Resource.id == resource_id,
+            models.Resource.atomic_key == atomic_key,
+            models.Resource.engine_id.is_(None),
+            or_(models.Resource.attr_data_id == attr_id,
+                models.Resource.attr_data_id.is_(None)))).update(
+                    values)
+        if rows_updated > 0:
+            return True
+        else:
+            # Someone else set the attr_id first and/or we have a stale
+            # view of the resource based on atomic_key, so delete the
+            # resource_properties_data (attr) db row.
+            LOG.debug('Not updating res_id %(rid)s with attr_id %(aid)s',
+                      {'rid': resource_id, 'aid': attr_id})
+            session.query(
+                models.ResourcePropertiesData).filter(
+                    models.ResourcePropertiesData.attr_id == attr_id).delete()
+            return False
+
+
+def resource_attr_data_delete(context, resource_id, attr_id):
+    session = context.session
+    with session.begin(subtransactions=True):
+        resource = session.query(models.Resource).get(resource_id)
+        attr_prop_data = session.query(
+            models.ResourcePropertiesData).get(attr_id)
+        if resource:
+            resource.update({'attr_data_id': None})
+        if attr_prop_data:
+            session.delete(attr_prop_data)
 
 
 def resource_data_get_all(context, resource_id, data=None):
@@ -432,11 +485,19 @@ def engine_get_all_locked_by_stack(context, stack_id):
     return set(i[0] for i in query.all())
 
 
-def resource_prop_data_create(context, values):
-    obj_ref = models.ResourcePropertiesData()
+def resource_prop_data_create_or_update(context, values, rpd_id=None):
+    if rpd_id is None:
+        obj_ref = models.ResourcePropertiesData()
+    else:
+        obj_ref = context.session.query(
+            models.ResourcePropertiesData).filter_by(id=rpd_id).first()
     obj_ref.update(values)
     obj_ref.save(context.session)
     return obj_ref
+
+
+def resource_prop_data_create(context, values):
+    return resource_prop_data_create_or_update(context, values)
 
 
 def resource_prop_data_get(context, resource_prop_data_id):
@@ -694,8 +755,17 @@ def stack_delete(context, stack_id):
                                      'msg': 'that does not exist'})
     session = context.session
     with session.begin():
+        attr_ids = []
+        # normally the resources are deleted already by this point
         for r in s.resources:
+            if r.attr_data_id is not None:
+                attr_ids.append(r.attr_data_id)
             session.delete(r)
+        if attr_ids:
+            session.query(
+                models.ResourcePropertiesData.id).filter(
+                    models.ResourcePropertiesData.id.in_(attr_ids)).delete(
+                        synchronize_session=False)
         delete_softly(context, s)
 
 
@@ -1324,6 +1394,11 @@ def _purge_stacks(stack_infos, engine, meta):
         [resource.c.rsrc_prop_data_id]).where(
             resource.c.stack_id.in_(stack_ids))
     rsrc_prop_data_ids = set(
+        [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
+    rsrc_prop_data_where = sqlalchemy.select(
+        [resource.c.attr_data_id]).where(
+            resource.c.stack_id.in_(stack_ids))
+    rsrc_prop_data_ids.update(
         [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
     rsrc_prop_data_where = sqlalchemy.select(
         [event.c.rsrc_prop_data_id]).where(

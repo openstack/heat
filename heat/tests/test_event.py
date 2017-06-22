@@ -252,7 +252,8 @@ class EventTest(EventCommon):
         cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         data = {'p1': 'hello',
                 'p2': 'too soon?'}
-        rpd_obj = rpd_object.ResourcePropertiesData().create(self.ctx, data)
+        rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
+            self.ctx, data)
         e_obj = event_object.Event().create(
             self.ctx,
             {'stack_id': self.stack.id,

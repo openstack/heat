@@ -609,11 +609,57 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res_obj.status, res.COMPLETE)
         self.assertRaises(AttributeError, getattr, res_obj, 'action')
 
+    def test_attributes_store(self):
+        res_def = rsrc_defn.ResourceDefinition('test_resource',
+                                               'ResWithStringPropAndAttr')
+        res = generic_rsrc.ResWithStringPropAndAttr(
+            'test_res_attr_store', res_def, self.stack)
+
+        res.action = res.CREATE
+        res.status = res.COMPLETE
+        res.store()
+        res.store_attributes()
+        # attr was not resolved, cache was not warmed, nothing to store
+        self.assertIsNone(res._attr_data_id)
+
+        with mock.patch.object(res, '_resolve_attribute') as res_attr:
+            attr_val = '0123 four'
+            res_attr.return_value = attr_val
+            res.attributes['string']
+
+            # attr cache is warmed, now store_attributes persists something
+            res.store_attributes()
+            self.assertIsNotNone(res._attr_data_id)
+
+            # verify the attribute rpd obj that was stored matches
+            self.assertEqual({'string': attr_val},
+                             rpd_object.ResourcePropertiesData.get_by_id(
+                                 res.context, res._attr_data_id).data)
+
+    def test_attributes_load_stored(self):
+        res_def = rsrc_defn.ResourceDefinition('test_resource',
+                                               'ResWithStringPropAndAttr')
+        res = generic_rsrc.ResWithStringPropAndAttr(
+            'test_res_attr_store', res_def, self.stack)
+
+        res.action = res.UPDATE
+        res.status = res.COMPLETE
+        res.store()
+        attr_data = {'string': 'word'}
+        resource_objects.Resource.store_attributes(
+            res.context, res.id, res._atomic_key, attr_data, None)
+        res._load_data(resource_objects.Resource.get_obj(
+            res.context, res.id))
+        with mock.patch.object(res, '_resolve_attribute') as res_attr:
+            self.assertEqual(attr_data, res.attributes._resolved_values)
+            self.assertEqual('word', res.attributes['string'])
+            self.assertEqual(0, res_attr.call_count)
+
     def test_resource_object_resource_properties_data(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         data = {'p1': 'i see',
                 'p2': 'good times, good times'}
-        rpd_obj = rpd_object.ResourcePropertiesData().create(
+        rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
             self.stack.context, data)
         rpd_db_obj = self.stack.context.session.query(
             models.ResourcePropertiesData).get(rpd_obj.id)
