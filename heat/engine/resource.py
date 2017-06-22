@@ -42,6 +42,7 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import status
 from heat.engine import support
+from heat.engine import sync_point
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
 from heat.objects import resource_properties_data as rpd_objects
@@ -281,7 +282,7 @@ class Resource(status.ResourceStatus):
                 self, resource.data)
         except exception.NotFound:
             self._data = {}
-        self.attributes.cached_attrs = resource.attr_data
+        self.attributes.cached_attrs = resource.attr_data or None
         self._attr_data_id = resource.attr_data_id
         self._rsrc_metadata = resource.rsrc_metadata
         self._stored_properties_data = resource.properties_data
@@ -922,7 +923,7 @@ class Resource(status.ResourceStatus):
             for attr in attrs:
                 path = (attr,) if isinstance(attr, six.string_types) else attr
                 try:
-                    yield attr, self.get_attribute(*path)
+                    yield attr, self._get_attribute_caching(*path)
                 except exception.InvalidTemplateAttribute as ita:
                     LOG.info('%s', ita)
 
@@ -2160,6 +2161,24 @@ class Resource(status.ResourceStatus):
 
         return attributes.select_from_attribute(attribute, path)
 
+    def _get_attribute_caching(self, key, *path):
+        cache_custom = ((self.attributes.get_cache_mode(key) !=
+                         attributes.Schema.CACHE_NONE) and
+                        (type(self).get_attribute != Resource.get_attribute))
+        if cache_custom:
+            if path:
+                full_key = sync_point.str_pack_tuple((key,) + path)
+            else:
+                full_key = key
+            if full_key in self.attributes.cached_attrs:
+                return self.attributes.cached_attrs[full_key]
+
+        attr_val = self.get_attribute(key, *path)
+
+        if cache_custom:
+            self.attributes.set_cached_attr(full_key, attr_val)
+        return attr_val
+
     def FnGetAtt(self, key, *path):
         """For the intrinsic function Fn::GetAtt.
 
@@ -2175,7 +2194,7 @@ class Resource(status.ResourceStatus):
             attribute = self.stack.cache_data_resource_attribute(
                 self.name, complex_key)
             return attribute
-        return self.get_attribute(key, *path)
+        return self._get_attribute_caching(key, *path)
 
     def FnGetAtts(self):
         """For the intrinsic function get_attr which returns all attributes.

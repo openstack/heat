@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import weakref
-
 from oslo_serialization import jsonutils
 from requests import exceptions
 import six
@@ -120,9 +118,7 @@ class TemplateResource(stack_resource.StackResource):
             tmpl, self.stack.env.param_defaults)
 
         self.attributes_schema.update(self.base_attributes_schema)
-        self.attributes = attributes.Attributes(
-            self.name, self.attributes_schema,
-            self._make_resolver(weakref.ref(self)))
+        self.attributes.set_schema(self.attributes_schema)
 
     def child_params(self):
         """Override method of child_params for the resource.
