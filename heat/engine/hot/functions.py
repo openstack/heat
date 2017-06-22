@@ -1527,3 +1527,43 @@ class ListConcatUnique(ListConcat):
     """
 
     _unique = True
+
+
+class Contains(function.Function):
+    """A function for checking whether specific value is in sequence.
+
+    Takes the form::
+
+        contains:
+          - <value>
+          - <sequence>
+
+    The value can be any type that you want to check. Returns true
+    if the specific value is in the sequence, otherwise returns false.
+    """
+
+    def __init__(self, stack, fn_name, args):
+        super(Contains, self).__init__(stack, fn_name, args)
+        example = '"%s" : [ "value1", [ "value1", "value2"]]' % self.fn_name
+        fmt_data = {'fn_name': self.fn_name,
+                    'example': example}
+
+        if not self.args or not isinstance(self.args, list):
+            raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
+                              'should be: %(example)s') % fmt_data)
+        try:
+            self.value, self.sequence = self.args
+        except ValueError:
+            msg = _('Arguments to "%s" must be of the form: '
+                    '[value1, [value1, value2]]')
+            raise ValueError(msg % self.fn_name)
+
+    def result(self):
+        resolved_value = function.resolve(self.value)
+        resolved_sequence = function.resolve(self.sequence)
+
+        if not isinstance(resolved_sequence, collections.Sequence):
+            raise TypeError(_('Second argument to "%s" should be '
+                              'a sequence.') % self.fn_name)
+
+        return resolved_value in resolved_sequence

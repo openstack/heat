@@ -593,6 +593,7 @@ class HOTemplate20170901(HOTemplate20170224):
         'list_concat': hot_funcs.ListConcat,
         'str_replace_vstrict': hot_funcs.ReplaceJsonVeryStrict,
         'list_concat_unique': hot_funcs.ListConcatUnique,
+        'contains': hot_funcs.Contains,
 
         # functions removed from 2015-10-15
         'Fn::Select': hot_funcs.Removed,
@@ -616,5 +617,6 @@ class HOTemplate20170901(HOTemplate20170224):
         'or': hot_funcs.Or,
 
         # functions added in 2017-09-01
-        'yaql': hot_funcs.Yaql
+        'yaql': hot_funcs.Yaql,
+        'contains': hot_funcs.Contains
     }

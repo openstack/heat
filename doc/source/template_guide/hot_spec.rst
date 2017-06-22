@@ -296,8 +296,9 @@ for the ``heat_template_version`` key:
     up until the Pike release. This version adds the ``make_url`` function for
     assembling URLs, the ``list_concat`` function for combining multiple
     lists, the ``list_concat_unique`` function for combining multiple
-    lists without repeating items, and the``string_replace_vstrict`` which
-    raises errors for missing and empty params. The complete list of
+    lists without repeating items, the``string_replace_vstrict`` which
+    raises errors for missing and empty params, and the ``contains`` which
+    checks whether specific value is in a sequence. The complete list of
     supported functions is::
 
       digest
@@ -310,6 +311,7 @@ for the ``heat_template_version`` key:
       make_url
       list_concat
       list_concat_unique
+      contains
       map_merge
       map_replace
       repeat
@@ -321,7 +323,7 @@ for the ``heat_template_version`` key:
       yaql
       if
 
-    We support 'yaql' as condition function in this version.
+    We support 'yaql' and 'contains' as condition functions in this version.
     The complete list of supported condition functions is::
 
       equals
@@ -330,6 +332,7 @@ for the ``heat_template_version`` key:
       and
       or
       yaql
+      contains
 
 .. _hot_spec_parameter_groups:
 
@@ -1958,3 +1961,25 @@ For example
     list_concat_unique: [['v1', 'v2'], ['v2', 'v43']]
 
 Will resolve to the list ``['v1', 'v2', 'v3']``.
+
+contains
+--------
+
+The ``contains`` function checks whether the specific value is
+in a sequence.
+
+The syntax of the ``contains`` function is
+
+.. code-block:: yaml
+
+    contains: [<value>, <sequence>]
+
+This function returns true if value is in sequence or false if it isn't.
+
+For example
+
+.. code-block:: yaml
+
+    contains: ['v1', ['v1', 'v2', 'v3']]
+
+Will resolve to boolean true.
