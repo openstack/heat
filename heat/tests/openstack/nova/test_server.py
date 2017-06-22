@@ -16,6 +16,7 @@ import contextlib
 import copy
 import mock
 
+from keystoneauth1 import exceptions as ks_exceptions
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
 from oslo_serialization import jsonutils
@@ -977,7 +978,7 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
-    def _server_create_software_config_zaqar(self, md=None):
+    def _prepare_for_server_create(self, md=None):
         self.patchobject(nova.NovaClientPlugin, '_create',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
@@ -994,14 +995,20 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
         self.patchobject(server, 'store_external_ports')
+        self.patchobject(self.fc.servers, 'create',
+                         return_value=return_server)
+
+        return server, stack
+
+    def _server_create_software_config_zaqar(self, md=None):
+        server, stack = self._prepare_for_server_create(md)
 
         zcc = self.patchobject(zaqar.ZaqarClientPlugin, 'create_for_tenant')
         zc = mock.Mock()
         zcc.return_value = zc
         queue = mock.Mock()
         zc.queue.return_value = queue
-        self.patchobject(self.fc.servers, 'create',
-                         return_value=return_server)
+
         scheduler.TaskRunner(server.create)()
 
         metadata_queue_id = server.data().get('metadata_queue_id')
@@ -1036,6 +1043,30 @@ class ServersTest(common.HeatTestCase):
             },
             'deployments': []
         }, server.metadata_get())
+
+    def test_create_delete_no_zaqar_service(self):
+        zcc = self.patchobject(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+        zcc.side_effect = ks_exceptions.EndpointNotFound
+        server, stack = self._prepare_for_server_create()
+        creator = scheduler.TaskRunner(server.create)
+        self.assertRaises(exception.ResourceFailure, creator)
+        self.assertEqual((server.CREATE, server.FAILED), server.state)
+        self.assertEqual({
+            'os-collect-config': {
+                'zaqar': {
+                    'user_id': '1234',
+                    'password': server.password,
+                    'auth_url': 'http://server.test:5000/v2.0',
+                    'project_id': '8888',
+                    'queue_id': mock.ANY
+                },
+                'collectors': ['ec2', 'zaqar', 'local']
+            },
+            'deployments': []
+        }, server.metadata_get())
+
+        scheduler.TaskRunner(server.delete)()
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
 
     def test_server_create_software_config_zaqar_metadata(self):
         md = {'os-collect-config': {'polling_interval': 10}}

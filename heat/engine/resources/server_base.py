@@ -77,6 +77,7 @@ class BaseServer(stack_user.StackUser):
             for k in existing:
                 existing[k] = None
 
+        queue_id = self.data().get('metadata_queue_id')
         if self.transport_poll_server_heat(props):
             occ.update({'heat': {
                 'user_id': self._get_user_id(),
@@ -88,8 +89,7 @@ class BaseServer(stack_user.StackUser):
             collectors.append('heat')
 
         elif self.transport_zaqar_message(props):
-            queue_id = self.physical_resource_name()
-            self.data_set('metadata_queue_id', queue_id)
+            queue_id = queue_id or self.physical_resource_name()
             occ.update({'zaqar': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
@@ -123,20 +123,19 @@ class BaseServer(stack_user.StackUser):
             self.data_set('metadata_object_name', object_name)
 
             collectors.append('request')
-            occ.update({'request': {
-                'metadata_url': url}})
+            occ.update({'request': {'metadata_url': url}})
 
         collectors.append('local')
         self.metadata_set(meta)
 
         # push replacement polling config to any existing push-based sources
-        queue_id = self.data().get('metadata_queue_id')
         if queue_id:
             zaqar_plugin = self.client_plugin('zaqar')
             zaqar = zaqar_plugin.create_for_tenant(
                 self.stack.stack_user_project_id, self._user_token())
             queue = zaqar.queue(queue_id)
             queue.post({'body': meta, 'ttl': zaqar_plugin.DEFAULT_TTL})
+            self.data_set('metadata_queue_id', queue_id)
 
         object_name = self.data().get('metadata_object_name')
         if object_name:
