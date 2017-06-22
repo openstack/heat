@@ -188,6 +188,20 @@ class Macro(Function):
         """
         return dep_attrs(self.parsed, resource_name)
 
+    def __reduce__(self):
+        """Return a representation of the macro result suitable for pickling.
+
+        This allows the copy module (which works by pickling and then
+        unpickling objects) to copy a template. Functions in the copy will
+        return to their original (JSON) form (i.e. a single-element map).
+
+        Unlike other functions, macros are *not* preserved during a copy. The
+        the processed (but unparsed) output is returned in their place.
+        """
+        if isinstance(self.parsed, Function):
+            return self.parsed.__reduce__()
+        return type(self.parsed), (self.parsed,)
+
     def _repr_result(self):
         return repr(self.parsed)
 
