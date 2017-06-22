@@ -161,7 +161,8 @@ class Cluster(res_base.BaseSenlinResource):
         ),
         ATTR_NODES: attributes.Schema(
             _("Nodes list in the cluster."),
-            type=attributes.Schema.LIST
+            type=attributes.Schema.LIST,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         ATTR_MIN_SIZE: attributes.Schema(
             _("Min size of the cluster."),
@@ -182,6 +183,7 @@ class Cluster(res_base.BaseSenlinResource):
               "collected from the nodes of this cluster."),
             type=attributes.Schema.LIST,
             support_status=support.SupportStatus(version='8.0.0'),
+            cache_mode=attributes.Schema.CACHE_NONE
         )
     }
 
