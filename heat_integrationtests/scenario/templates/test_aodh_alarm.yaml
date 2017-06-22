@@ -25,7 +25,10 @@ resources:
       period: 60
       evaluation_periods: 1
       alarm_actions:
-        - {get_attr: [scaleup_policy, alarm_url]}
+        - str_replace:
+            template: trust+url
+            params:
+              url: {get_attr: [scaleup_policy, signal_url]}
       matching_metadata:
         metadata.metering.stack_id: {get_param: "OS::stack_id"}
 outputs:
