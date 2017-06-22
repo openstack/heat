@@ -290,13 +290,17 @@ class Parameter(object):
     def set_default(self, value):
         self.user_default = value
 
+    @classmethod
+    def _value_as_text(cls, value):
+        return six.text_type(value)
+
     def __str__(self):
         """Return a string representation of the parameter."""
         value = self.value()
         if self.hidden():
             return six.text_type('******')
         else:
-            return six.text_type(value)
+            return self._value_as_text(value)
 
 
 class NumberParam(Parameter):
@@ -410,10 +414,9 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
         """Return an item from the list."""
         return self.parsed[index]
 
-    def __str__(self):
-        if self.hidden():
-            return super(CommaDelimitedListParam, self).__str__()
-        return ",".join(self.value())
+    @classmethod
+    def _value_as_text(cls, value):
+        return ",".join(value)
 
     def _validate(self, val, context, template=None):
         try:
@@ -460,10 +463,9 @@ class JsonParam(ParsedParameter):
     def __len__(self):
         return len(self.parsed)
 
-    def __str__(self):
-        if self.hidden():
-            return super(JsonParam, self).__str__()
-        return encodeutils.safe_decode(jsonutils.dumps(self.value()))
+    @classmethod
+    def _value_as_text(cls, value):
+        return encodeutils.safe_decode(jsonutils.dumps(value))
 
     def _validate(self, val, context, template=None):
         try:

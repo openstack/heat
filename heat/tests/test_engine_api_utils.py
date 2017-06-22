@@ -505,6 +505,40 @@ class FormatTest(common.HeatTestCase):
         self.assertEqual(expected, sorted(info, key=lambda k: k['output_key'],
                                           reverse=True))
 
+    def test_format_stack_params_csv(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'parameters': {
+                'foo': {
+                    'type': 'comma_delimited_list',
+                    'default': ['bar', 'baz']
+                },
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl, stack_id=str(uuid.uuid4()))
+        info = api.format_stack(stack)
+
+        # Should be 'bar,baz' NOT "[u'bar', u'baz']"
+        self.assertEqual('bar,baz', info['parameters']['foo'])
+
+    def test_format_stack_params_json(self):
+        tmpl = template.Template({
+            'heat_template_version': '2013-05-23',
+            'parameters': {
+                'foo': {
+                    'type': 'json',
+                    'default': {'bar': 'baz'}
+                },
+            }
+        })
+        stack = parser.Stack(utils.dummy_context(), 'test_stack',
+                             tmpl, stack_id=str(uuid.uuid4()))
+        info = api.format_stack(stack)
+
+        # Should be '{"bar": "baz"}' NOT "{u'bar': u'baz'}"
+        self.assertEqual('{"bar": "baz"}', info['parameters']['foo'])
+
 
 class FormatValidateParameterTest(common.HeatTestCase):
 
