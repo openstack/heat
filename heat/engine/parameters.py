@@ -315,7 +315,7 @@ class NumberParam(Parameter):
     def _validate(self, val, context, template=None):
         try:
             Schema.str_to_num(val)
-        except ValueError as ex:
+        except (ValueError, TypeError) as ex:
             raise exception.StackValidationFailed(message=six.text_type(ex))
         self.schema.validate_value(val, context=context, template=template)
 
