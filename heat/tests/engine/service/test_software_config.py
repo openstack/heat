@@ -1058,3 +1058,11 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
         inp = swc_io.InputConfig(name=name, type='Number',
                                  default='0')
         self.assertEqual(0, inp.default())
+
+    def test_input_config_value_ignore_string(self):
+        name = 'baz'
+        inp = swc_io.InputConfig(name=name, type='Number',
+                                 default='')
+
+        self.assertEqual({'type': 'Number', 'name': 'baz', 'default': ''},
+                         inp.as_dict())
