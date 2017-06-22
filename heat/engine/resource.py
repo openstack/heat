@@ -123,6 +123,7 @@ class Resource(status.ResourceStatus):
     base_attributes_schema = {
         SHOW: attributes.Schema(
             _("Detailed information about resource."),
+            cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.MAP
         )
     }
