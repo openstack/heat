@@ -16,6 +16,7 @@ from neutronclient.common import exceptions as qe
 import six
 
 from heat.common import exception
+from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import net
 from heat.engine.resources.openstack.neutron import neutron as nr
@@ -95,6 +96,9 @@ class NeutronTest(common.HeatTestCase):
 
     def test_resolve_attribute(self):
         res = self._get_some_neutron_resource()
+        res.attributes_schema.update(
+            {'attr2': attributes.Schema(type=attributes.Schema.STRING)})
+        res.attributes = res._init_attributes()
         side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
                        {'attr1': 'val1', 'attr2': 'val2'},
                        {'attr1': 'val1', 'attr2': 'val2'},
@@ -103,18 +107,22 @@ class NeutronTest(common.HeatTestCase):
         res.resource_id = 'resource_id'
         self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
                          res.FnGetAtt('show'))
-        self.assertEqual('val2', res._resolve_all_attributes('attr2'))
+        self.assertEqual('val2', res.attributes['attr2'])
         self.assertRaises(KeyError, res._resolve_all_attributes, 'attr3')
-        self.assertIsNone(res._resolve_all_attributes('attr2'))
+        self.assertIsNone(res._resolve_all_attributes('attr1'))
 
         res.resource_id = None
-        # use local cached object
-        self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
-                         res.FnGetAtt('show'))
-        # reset cache, so resolver should be used again
-        # and return None due to resource_id is None
-        res.attributes.reset_resolved_values()
+        # use local cached object for non-show attribute
+        self.assertEqual('val2',
+                         res.FnGetAtt('attr2'))
+        # but the 'show' attribute is never cached
         self.assertIsNone(res.FnGetAtt('show'))
+
+        # remove 'attr2' from res.attributes cache
+        res.attributes.reset_resolved_values()
+        # _resolve_attribute (in NeutronResource class) returns None
+        # due to no resource_id
+        self.assertIsNone(res.FnGetAtt('attr2'))
 
     def test_needs_replace_failed(self):
         res = self._get_some_neutron_resource()
