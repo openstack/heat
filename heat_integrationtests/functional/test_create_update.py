@@ -17,7 +17,7 @@ import json
 from heat_integrationtests.functional import functional_base
 
 test_template_one_resource = {
-    'heat_template_version': '2013-05-23',
+    'heat_template_version': 'pike',
     'description': 'Test template to create one instance.',
     'resources': {
         'test1': {
@@ -36,7 +36,7 @@ test_template_one_resource = {
 }
 
 test_template_two_resource = {
-    'heat_template_version': '2013-05-23',
+    'heat_template_version': 'pike',
     'description': 'Test template to create two instance.',
     'resources': {
         'test1': {
@@ -673,3 +673,30 @@ resources:
                           template=template,
                           expected_status='UPDATE_FAILED')
         self._stack_delete(stack_identifier)
+
+    def test_stack_update_with_conditions(self):
+        """Update manages new conditions added.
+
+        When a new resource is added during updates, the stacks handles the new
+        conditions correctly, and doesn't fail to load them while the update is
+        still in progress.
+        """
+        stack_identifier = self.stack_create(
+            template=test_template_one_resource)
+
+        updated_template = copy.deepcopy(test_template_two_resource)
+        updated_template['conditions'] = {'cond1': True}
+        updated_template['resources']['test3'] = {
+            'type': 'OS::Heat::TestResource',
+            'properties': {
+                'value': {'if': ['cond1', 'val3', 'val4']}
+            }
+        }
+        test2_props = updated_template['resources']['test2']['properties']
+        test2_props['action_wait_secs'] = {'create': 30}
+
+        self.update_stack(stack_identifier,
+                          template=updated_template,
+                          expected_status='UPDATE_IN_PROGRESS')
+
+        self.assertIn('test3', self.list_resources(stack_identifier))
