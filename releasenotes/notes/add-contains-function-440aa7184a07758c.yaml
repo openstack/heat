@@ -1,0 +1,5 @@
+---
+features:
+  - The 'contains' function was added, which checks whether the
+    specified value is in a sequence. In addition, the new function
+    can be used as a condition function.
