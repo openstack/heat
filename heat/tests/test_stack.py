@@ -265,15 +265,20 @@ class StackTest(common.HeatTestCase):
 
         db_resources = {
             'A': mock.MagicMock(),
-            'B': mock.MagicMock(current_template_id=t2.id)
+            'B': mock.MagicMock(current_template_id=t2.id),
+            'C': mock.MagicMock(current_template_id=t2.id)
         }
         db_resources['A'].name = 'A'
         db_resources['B'].name = 'B'
+        db_resources['C'].name = 'C'
         gabs.return_value = db_resources
 
         self.assertEqual('A', self.stack.resource_get('A').name)
         self.assertEqual('B', self.stack.resource_get('B').name)
+
+        # Ignore the resource if only in db
         self.assertIsNone(self.stack.resource_get('C'))
+        self.assertIsNone(self.stack.resource_get('D'))
 
     @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
     def test_iter_resources(self, mock_db_call):
