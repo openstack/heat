@@ -88,7 +88,6 @@ class ProviderNet(net.Net):
               'provides the default value for the attribute of the ports '
               'created on this network.'),
             update_allowed=True,
-            default=True,
             support_status=support.SupportStatus(version='8.0.0')
         ),
         ROUTER_EXTERNAL: properties.Schema(
