@@ -101,6 +101,11 @@ engine_opts = [
     cfg.StrOpt('deferred_auth_method',
                choices=['password', 'trusts'],
                default='trusts',
+               deprecated_for_removal=True,
+               deprecated_reason='Stored password based deferred auth is '
+                                 'broken when used with keystone v3 and '
+                                 'is not supported.',
+               deprecated_since='9.0.0',
                help=_('Select deferred auth method, '
                       'stored password or trusts.')),
     cfg.StrOpt('reauthentication_auth_method',
