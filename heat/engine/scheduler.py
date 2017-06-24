@@ -473,7 +473,10 @@ class DependencyTaskGroup(object):
                 return grace_period
 
         for k, r in six.iteritems(self._runners):
-            gp = get_grace_period(k)
+            if not r.started() or r.done():
+                gp = None
+            else:
+                gp = get_grace_period(k)
             try:
                 r.cancel(grace_period=gp)
             except Exception as ex:

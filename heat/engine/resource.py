@@ -1062,9 +1062,6 @@ class Resource(object):
                 )
 
     def cancel_grace_period(self):
-        if self.status != self.IN_PROGRESS:
-            return None
-
         canceller = getattr(self,
                             'handle_%s_cancel' % self.action.lower(),
                             None)
