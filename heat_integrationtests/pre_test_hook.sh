@@ -39,6 +39,10 @@ echo -e '[eventlet_opts]\nclient_socket_timeout=120\n' >> $localconf
 
 echo -e '[oslo_messaging_notifications]\ndriver=messagingv2\n' >> $localconf
 
+# Disable nova quota check.
+echo -e '[[post-config|$NOVA_CONF]]\n[DEFAULT]\n' >> $localconf
+echo -e 'quota_driver=nova.quota.NoopQuotaDriver\n' >> $localconf
+
 echo "[[local|localrc]]" >> $localconf
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
