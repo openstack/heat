@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    A new OS::Zun::Container resource is added that allows users to manage
+    docker containers powered by Zun. This resource will have an 'addresses'
+    attribute that contains various networking information including the
+    neutron port id. This allows users to orchestrate containers with other
+    networking resources (i.e. floating ip).
