@@ -1293,14 +1293,6 @@ class Stack(collections.Mapping):
         LOG.info('convergence_dependencies: %s',
                  self.convergence_dependencies)
 
-        # Delete all the snapshots before starting delete operation
-        if self.action == self.DELETE:
-            snapshots = snapshot_object.Snapshot.get_all(self.context,
-                                                         self.id)
-            for snapshot in snapshots:
-                self.delete_snapshot(snapshot)
-                snapshot_object.Snapshot.delete(self.context, snapshot.id)
-
         # create sync_points for resources in DB
         for rsrc_id, is_update in self.convergence_dependencies:
             sync_point.create(self.context, rsrc_id,
@@ -1782,11 +1774,7 @@ class Stack(collections.Mapping):
                                'Failed to %s : %s' % (action, failure))
                 return
 
-        snapshots = snapshot_object.Snapshot.get_all(self.context,
-                                                     self.id)
-        for snapshot in snapshots:
-            self.delete_snapshot(snapshot)
-            snapshot_object.Snapshot.delete(self.context, snapshot.id)
+        self.delete_all_snapshots()
 
         if not backup:
             try:
@@ -1897,6 +1885,13 @@ class Stack(collections.Mapping):
             reverse=False,
             pre_completion_func=save_snapshot_func)
         sus_task(timeout=self.timeout_secs())
+
+    def delete_all_snapshots(self):
+        """Remove all snapshots for this stack."""
+        snapshots = snapshot_object.Snapshot.get_all(self.context, self.id)
+        for snapshot in snapshots:
+            self.delete_snapshot(snapshot)
+            snapshot_object.Snapshot.delete(self.context, snapshot.id)
 
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
     def delete_snapshot(self, snapshot):
