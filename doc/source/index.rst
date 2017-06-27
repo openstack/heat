@@ -63,6 +63,7 @@ Operating Heat
     getting_started/on_fedora
     getting_started/on_ubuntu
     operating_guides/scale_deployment
+    operating_guides/httpd
     man/index
 
 Developing Heat
