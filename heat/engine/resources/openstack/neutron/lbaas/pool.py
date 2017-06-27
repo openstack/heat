@@ -148,6 +148,7 @@ class Pool(neutron.NeutronResource):
         ),
         MEMBERS_ATTR: attributes.Schema(
             _('Members associated with this pool.'),
+            cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.LIST
         ),
     }

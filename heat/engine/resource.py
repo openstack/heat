@@ -235,6 +235,7 @@ class Resource(status.ResourceStatus):
         self.id = None
         self.uuid = None
         self._data = None
+        self._attr_data_id = None
         self._rsrc_metadata = None
         self._rsrc_prop_data = None
         self._stored_properties_data = None
@@ -280,6 +281,8 @@ class Resource(status.ResourceStatus):
                 self, resource.data)
         except exception.NotFound:
             self._data = {}
+        self.attributes.cached_attrs = resource.attr_data
+        self._attr_data_id = resource.attr_data_id
         self._rsrc_metadata = resource.rsrc_metadata
         self._stored_properties_data = resource.properties_data
         self._rsrc_prop_data = resource.rsrc_prop_data
@@ -912,6 +915,7 @@ class Resource(status.ResourceStatus):
         self._stored_properties_data = function.resolve(self.properties.data)
         if self._stored_properties_data != old_props:
             self._rsrc_prop_data = None
+            self.attributes.reset_resolved_values()
 
     def node_data(self):
         def get_attrs(attrs):
@@ -2083,12 +2087,37 @@ class Resource(status.ResourceStatus):
         if new_state != old_state:
             self._add_event(action, status, reason)
 
-        self.attributes.reset_resolved_values()
+        if status != self.COMPLETE:
+            self.clear_stored_attributes()
 
     @property
     def state(self):
         """Returns state, tuple of action, status."""
         return (self.action, self.status)
+
+    def store_attributes(self):
+        assert self.id is not None
+        if self.status != self.COMPLETE or self.action in (self.INIT,
+                                                           self.DELETE):
+            return
+        if not self.attributes.has_new_cached_attrs():
+            return
+
+        try:
+            attr_data_id = resource_objects.Resource.store_attributes(
+                self.context, self.id, self._atomic_key,
+                self.attributes.cached_attrs, self._attr_data_id)
+            if attr_data_id is not None:
+                self._attr_data_id = attr_data_id
+        except Exception as ex:
+            LOG.error('store_attributes rsrc %(name)s %(id)s DB error %(ex)s',
+                      {'name': self.name, 'id': self.id, 'ex': ex})
+
+    def clear_stored_attributes(self):
+        if self._attr_data_id:
+            resource_objects.Resource.attr_data_delete(
+                self.context, self.id, self._attr_data_id)
+        self.attributes.reset_resolved_values()
 
     def get_reference_id(self):
         """Default implementation for function get_resource.

@@ -31,8 +31,8 @@ class ResourcePropertiesDataTest(common.HeatTestCase):
             'prop5': True}
 
     def _get_rpd_and_db_obj(self):
-        rpd_obj = rpd_object.ResourcePropertiesData().create(self.ctx,
-                                                             self.data)
+        rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
+            self.ctx, self.data)
         db_obj = self.ctx.session.query(
             models.ResourcePropertiesData).get(rpd_obj.id)
         self.assertEqual(len(self.data), len(db_obj['data']))

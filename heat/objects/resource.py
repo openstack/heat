@@ -111,7 +111,7 @@ class Resource(
                 resource['data'] = [resource_data.ResourceData._from_db_object(
                     resource_data.ResourceData(context), resd
                 ) for resd in db_resource.data]
-            else:
+            elif field != 'attr_data':
                 resource[field] = db_resource[field]
 
         if db_resource['rsrc_prop_data'] is not None:
@@ -139,14 +139,19 @@ class Resource(
             resource._properties_data = {}
 
         if db_resource['attr_data'] is not None:
-            resource['attr_data'] = \
-                rpd.ResourcePropertiesData._from_db_object(
-                    rpd.ResourcePropertiesData(context), context,
-                    db_resource['attr_data'])
+            resource._attr_data = rpd.ResourcePropertiesData._from_db_object(
+                rpd.ResourcePropertiesData(context), context,
+                db_resource['attr_data']).data
+        else:
+            resource._attr_data = None
 
         resource._context = context
         resource.obj_reset_changes()
         return resource
+
+    @property
+    def attr_data(self):
+        return self._attr_data
 
     @property
     def properties_data(self):
@@ -184,6 +189,10 @@ class Resource(
     @classmethod
     def delete(cls, context, resource_id):
         db_api.resource_delete(context, resource_id)
+
+    @classmethod
+    def attr_data_delete(cls, context, resource_id, attr_id):
+        db_api.resource_attr_data_delete(context, resource_id, attr_id)
 
     @classmethod
     def exchange_stacks(cls, context, resource_id1, resource_id2):
@@ -277,6 +286,16 @@ class Resource(
         return db_api.resource_update(context, resource_id, values,
                                       atomic_key=atomic_key,
                                       expected_engine_id=expected_engine_id)
+
+    @classmethod
+    def store_attributes(cls, context, resource_id, atomic_key,
+                         attr_data, attr_id):
+        attr_id = rpd.ResourcePropertiesData.create_or_update(
+            context, attr_data, attr_id).id
+        if db_api.resource_attr_id_set(
+                context, resource_id, atomic_key, attr_id):
+            return attr_id
+        return None
 
     def refresh(self):
         resource_db = db_api.resource_get(self._context, self.id, refresh=True)

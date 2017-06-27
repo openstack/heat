@@ -55,13 +55,18 @@ class ResourcePropertiesData(
         return rpd
 
     @classmethod
-    def create(cls, context, data):
+    def create_or_update(cls, context, data, rpd_id=None):
         properties_data_encrypted, properties_data = \
             ResourcePropertiesData.encrypt_properties_data(data)
         values = {'encrypted': properties_data_encrypted,
                   'data': properties_data}
-        db_obj = db_api.resource_prop_data_create(context, values)
+        db_obj = db_api.resource_prop_data_create_or_update(
+            context, values, rpd_id)
         return cls._from_db_object(cls(), context, db_obj, data)
+
+    @classmethod
+    def create(cls, context, data):
+        return ResourcePropertiesData.create_or_update(context, data)
 
     @staticmethod
     def encrypt_properties_data(data):
