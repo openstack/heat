@@ -379,30 +379,6 @@ class ResourceWithRestoreType(ResWithComplexPropsAndAttrs):
         return defn.freeze(properties=props)
 
 
-class DynamicSchemaResource(resource.Resource):
-    """Resource with an attribute not registered in the attribute schema."""
-    properties_schema = {}
-
-    attributes_schema = {
-        'stat_attr': attributes.Schema('A generic static attribute',
-                                       type=attributes.Schema.STRING),
-    }
-
-    def _init_attributes(self):
-        # software deployment scheme is not static
-        # so return dynamic attributes for it
-        return attributes.DynamicSchemeAttributes(
-            self.name, self.attributes_schema, self._resolve_attribute)
-
-    def _resolve_attribute(self, name):
-        if name == 'stat_attr':
-            return "static_attribute"
-        elif name == 'dynamic_attr':
-            return "dynamic_attribute"
-        else:
-            raise KeyError()
-
-
 class ResourceTypeUnSupportedLiberty(GenericResource):
     support_status = support.SupportStatus(
         version='5.0.0',

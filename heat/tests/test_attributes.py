@@ -16,13 +16,8 @@ import six
 
 from heat.engine import attributes
 from heat.engine import resources
-from heat.engine import rsrc_defn
-from heat.engine import stack
 from heat.engine import support
-from heat.engine import template
 from heat.tests import common
-from heat.tests import generic_resource
-from heat.tests import utils
 
 
 class AttributeSchemaTest(common.HeatTestCase):
@@ -298,25 +293,3 @@ class AttributesTypeTest(common.HeatTestCase):
         self.assertNotIn(msg, self.LOG.output)
         attribs._validate_type(attr, self.invalid_value)
         self.assertIn(msg, self.LOG.output)
-
-
-class DynamicSchemeAttributeTest(common.HeatTestCase):
-    def setUp(self):
-        super(DynamicSchemeAttributeTest, self).setUp()
-        test_stack = stack.Stack(
-            utils.dummy_context(), 'test_stack',
-            template.Template.create_empty_template())
-        snippet = rsrc_defn.ResourceDefinition('test_resource',
-                                               'DynamicSchemaResource')
-        test_res = generic_resource.DynamicSchemaResource(
-            'aresource', snippet, test_stack)
-        self.attrs = test_res.attributes
-
-    def test_get_static_attribute(self):
-        self.assertEqual("static_attribute", self.attrs["stat_attr"])
-
-    def test_get_dynamic_attribute(self):
-        self.assertEqual("dynamic_attribute", self.attrs["dynamic_attr"])
-
-    def test_get_non_existing_attribute(self):
-        self.assertRaises(KeyError, self.attrs.__getitem__, "non_existing")
