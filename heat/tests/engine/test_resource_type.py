@@ -47,6 +47,7 @@ class ResourceTypeTest(common.HeatTestCase):
                               'OS::Designate::Record',
                               'OS::Heat::HARestarter',
                               'OS::Magnum::Bay',
+                              'OS::Magnum::BayModel',
                               'OS::Glance::Image',
                               'OS::Nova::FloatingIP',
                               'OS::Nova::FloatingIPAssociation']),
