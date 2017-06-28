@@ -1,0 +1,27 @@
+---
+prelude: >
+
+    Magnum recently changed terminology to more
+    intuitively convey key concepts in order to align
+    with industry standards. "Bay" is now "Cluster"
+    and "BayModel" is now "ClusterTemplate". This
+    release deprecates the old names in favor of the
+    new.
+
+features:
+  - OS::Magnum::Cluster resource plugin added to support magnum cluster
+    feature, which is provided by magnum ``cluster`` API.
+  - OS::Magnum::ClusterTemplate resource plugin added to support magnum
+    cluster template feature, which is provided by magnum ``clustertemplates``
+    API.
+
+deprecations:
+  - Magnum terminology deprecations
+
+    * `OS::Magnum::Bay` is now deprecated, should use `OS::Magnum::Cluster`
+      instead
+
+    * `OS::Magnum::BayModel` is now deprecated,
+      should use `OS::Magnum::ClusterTemplate` instead
+
+    Deprecation warnings are printed for old usages.
