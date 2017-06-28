@@ -146,7 +146,7 @@ class Attributes(collections.Mapping):
     def __init__(self, res_name, schema, resolver):
         self._resource_name = res_name
         self._resolver = resolver
-        self._attributes = Attributes._make_attributes(schema)
+        self.set_schema(schema)
         self.reset_resolved_values()
 
         assert ALL_ATTRIBUTES not in schema, \
@@ -158,6 +158,20 @@ class Attributes(collections.Mapping):
         else:
             self._has_new_resolved = False
         self._resolved_values = {}
+
+    def set_schema(self, schema):
+        self._attributes = self._make_attributes(schema)
+
+    def get_cache_mode(self, attribute_name):
+        """Return the cache mode for the specified attribute.
+
+        If the attribute is not defined in the schema, the default cache
+        mode (CACHE_LOCAL) is returned.
+        """
+        try:
+            return self._attributes[attribute_name].schema.cache_mode
+        except KeyError:
+            return Schema.CACHE_LOCAL
 
     @staticmethod
     def _make_attributes(schema):
@@ -229,10 +243,7 @@ class Attributes(collections.Mapping):
 
     @property
     def cached_attrs(self):
-        # do not return an empty dict
-        if self._resolved_values:
-            return self._resolved_values
-        return None
+        return self._resolved_values
 
     @cached_attrs.setter
     def cached_attrs(self, c_attrs):
@@ -241,6 +252,10 @@ class Attributes(collections.Mapping):
         else:
             self._resolved_values = c_attrs
         self._has_new_resolved = False
+
+    def set_cached_attr(self, key, value):
+        self._resolved_values[key] = value
+        self._has_new_resolved = True
 
     def has_new_cached_attrs(self):
         """Returns True if cached_attrs have changed
@@ -269,8 +284,7 @@ class Attributes(collections.Mapping):
             self._validate_type(attrib, value)
             # only store if not None, it may resolve to an actual value
             # on subsequent calls
-            self._has_new_resolved = True
-            self._resolved_values[key] = value
+            self.set_cached_attr(key, value)
         return value
 
     def __len__(self):

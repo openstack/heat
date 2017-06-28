@@ -73,7 +73,7 @@ def update_input_data(context, entity_id, current_traversal,
     return rows_updated
 
 
-def _str_pack_tuple(t):
+def str_pack_tuple(t):
     return u'tuple:' + str(t)
 
 
@@ -97,7 +97,7 @@ def _serialize(d):
     d2 = {}
     for k, v in d.items():
         if isinstance(k, tuple):
-            k = _str_pack_tuple(k)
+            k = str_pack_tuple(k)
         if isinstance(v, dict):
             v = _serialize(v)
         d2[k] = v
