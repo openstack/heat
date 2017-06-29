@@ -255,7 +255,7 @@ class ResourceDefinition(object):
         """Return the Resource objects in given stack on which this depends."""
         def get_resource(res_name):
             if res_name not in stack:
-                if res_name in stack.t.get(stack.t.RESOURCES):
+                if res_name in stack.defn.all_rsrc_names():
                     # The resource is conditionally defined, allow dependencies
                     # on it
                     return
