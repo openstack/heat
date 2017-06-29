@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import six
 
 from heat.engine import function
@@ -49,3 +50,10 @@ class OutputDefinition(object):
             return 'No description given'
 
         return six.text_type(self._description)
+
+    def render_hot(self):
+        def items():
+            if self._description is not None:
+                yield 'description', self._description
+            yield 'value', copy.deepcopy(self._value)
+        return dict(items())

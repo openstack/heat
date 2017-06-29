@@ -255,6 +255,13 @@ class Template(collections.Mapping):
         """
         pass
 
+    def add_output(self, definition):
+        """Add an output to the template.
+
+        The output is passed as a OutputDefinition object.
+        """
+        raise NotImplementedError
+
     def remove_resource(self, name):
         """Remove a resource from the template."""
         self.t.get(self.RESOURCES, {}).pop(name)

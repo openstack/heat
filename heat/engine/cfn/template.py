@@ -75,6 +75,9 @@ class CfnTemplateBase(template_common.CommonTemplate):
                             'deletion_policy': RES_DELETION_POLICY,
                             'update_policy': RES_UPDATE_POLICY}
 
+    HOT_TO_CFN_OUTPUT_ATTRS = {'description': OUTPUT_DESCRIPTION,
+                               'value': OUTPUT_VALUE}
+
     def __getitem__(self, section):
         """Get the relevant section in the template."""
         if section not in self.SECTIONS:
@@ -156,6 +159,15 @@ class CfnTemplateBase(template_common.CommonTemplate):
         if self.t.get(self.RESOURCES) is None:
             self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = cfn_tmpl
+
+    def add_output(self, definition):
+        hot_op = definition.render_hot()
+        cfn_op = dict((self.HOT_TO_CFN_OUTPUT_ATTRS[k], v)
+                      for k, v in hot_op.items())
+
+        if self.t.get(self.OUTPUTS) is None:
+            self.t[self.OUTPUTS] = {}
+        self.t[self.OUTPUTS][definition.name] = cfn_op
 
 
 class CfnTemplate(CfnTemplateBase):

@@ -1429,6 +1429,23 @@ class TemplateTest(common.HeatTestCase):
 
         self.assertEqual(cfn_tpl['Resources'], empty.t['Resources'])
 
+    def test_add_output(self):
+        cfn_tpl = template_format.parse('''
+        AWSTemplateFormatVersion: 2010-09-09
+        Outputs:
+          output1:
+            Description: An output
+            Value: foo
+        ''')
+        source = template.Template(cfn_tpl)
+        empty = template.Template(copy.deepcopy(empty_template))
+        stk = stack.Stack(self.ctx, 'test_stack', source)
+
+        for defn in six.itervalues(source.outputs(stk)):
+            empty.add_output(defn)
+
+        self.assertEqual(cfn_tpl['Outputs'], empty.t['Outputs'])
+
     def test_create_empty_template_default_version(self):
         empty_template = template.Template.create_empty_template()
         self.assertEqual(hot_t.HOTemplate20150430, empty_template.__class__)
