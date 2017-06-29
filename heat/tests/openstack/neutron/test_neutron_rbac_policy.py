@@ -67,8 +67,8 @@ class RBACPolicyTest(common.HeatTestCase):
         msg = ("Invalid action %(action)s for object type %(type)s." %
                {'action': invalid_action,
                 'type': obj_type})
-        self.assertRaisesRegexp(exception.StackValidationFailed, msg,
-                                self.rbac.validate)
+        self.assertRaisesRegex(exception.StackValidationFailed, msg,
+                               self.rbac.validate)
 
     def test_validate_action_for_network(self):
         self._test_validate_invalid_action()
