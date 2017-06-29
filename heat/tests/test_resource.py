@@ -3626,7 +3626,7 @@ class ResourceHookTest(common.HeatTestCase):
         task.start()
         task.step()
         self.assertTrue(res.has_hook('pre-create'))
-        res.clear_hook('pre-create')
+        res.signal(details={'unset_hook': 'pre-create'})
         task.run_to_completion()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -3645,7 +3645,7 @@ class ResourceHookTest(common.HeatTestCase):
         task.start()
         task.step()
         self.assertTrue(res.has_hook('pre-delete'))
-        res.clear_hook('pre-delete')
+        res.signal(details={'unset_hook': 'pre-delete'})
         task.run_to_completion()
         self.assertEqual((res.DELETE, res.COMPLETE), res.state)
 
@@ -3662,7 +3662,7 @@ class ResourceHookTest(common.HeatTestCase):
         task.start()
         task.step()
         self.assertTrue(res.has_hook('post-create'))
-        res.clear_hook('post-create')
+        res.signal(details={'unset_hook': 'post-create'})
         task.run_to_completion()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
@@ -3681,7 +3681,7 @@ class ResourceHookTest(common.HeatTestCase):
         task.start()
         task.step()
         self.assertTrue(res.has_hook('post-delete'))
-        res.clear_hook('post-delete')
+        res.signal(details={'unset_hook': 'post-delete'})
         task.run_to_completion()
         self.assertEqual((res.DELETE, res.COMPLETE), res.state)
 
