@@ -1017,8 +1017,8 @@ resources:
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
         mock_merge = self.patchobject(env_util, 'merge_environments')
 
-        # Patch _resolve_all_attributes or it tries to call novaclient
-        self.patchobject(resource.Resource, '_resolve_all_attributes',
+        # Patch _resolve_any_attribute or it tries to call novaclient
+        self.patchobject(resource.Resource, '_resolve_any_attribute',
                          return_value=None)
 
         # do preview_update_stack

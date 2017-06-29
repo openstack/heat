@@ -2051,11 +2051,11 @@ class Resource(status.ResourceStatus):
         else:
             self._store_with_lock({}, self.LOCK_RELEASE)
 
-    def _resolve_all_attributes(self, attr):
-        """Method for resolving all attributes.
+    def _resolve_any_attribute(self, attr):
+        """Method for resolving any attribute, including base attributes.
 
         This method uses basic _resolve_attribute method for resolving
-        specific attributes. Base attributes will be resolved with
+        plugin-specific attributes. Base attributes will be resolved with
         corresponding method, which should be defined in each resource
         class.
 
@@ -2527,5 +2527,5 @@ class Resource(status.ResourceStatus):
             res = ref()
             if res is None:
                 raise RuntimeError("Resource collected")
-            return res._resolve_all_attributes(attr)
+            return res._resolve_any_attribute(attr)
         return resolve

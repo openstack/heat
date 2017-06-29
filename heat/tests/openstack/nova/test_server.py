@@ -3189,7 +3189,7 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         self.patchobject(self.fc.servers, 'get',
                          side_effect=fakes_nova.fake_exception())
-        self.assertEqual('', server._resolve_all_attributes("accessIPv4"))
+        self.assertEqual('', server._resolve_any_attribute("accessIPv4"))
 
     def test_resolve_attribute_console_url(self):
         server = self.fc.servers.list()[0]
@@ -3200,7 +3200,7 @@ class ServersTest(common.HeatTestCase):
             'WebServer', tmpl.resource_definitions(stack)['WebServer'], stack)
         ws.resource_id = server.id
         self.patchobject(self.fc.servers, 'get', return_value=server)
-        console_urls = ws._resolve_all_attributes('console_urls')
+        console_urls = ws._resolve_any_attribute('console_urls')
         self.assertIsInstance(console_urls, collections.Mapping)
         supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5',
                               'serial', 'webmks')
@@ -3221,7 +3221,7 @@ class ServersTest(common.HeatTestCase):
         expect_networks = {"fake_uuid": ["10.0.0.3"],
                            "fake_net": ["10.0.0.3"]}
         self.assertEqual(expect_networks,
-                         server._resolve_all_attributes("networks"))
+                         server._resolve_any_attribute("networks"))
 
     def test_empty_instance_user(self):
         """Test Nova server doesn't set instance_user in build_userdata
