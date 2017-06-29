@@ -927,6 +927,9 @@ class EngineService(service.ServiceBase):
         common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
                                  current_stack.disable_rollback)
 
+        if args.get(rpc_api.PARAM_EXISTING):
+            common_params.setdefault(rpc_api.STACK_TAGS,
+                                     current_stack.tags)
         current_kwargs.update(common_params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      **current_kwargs)

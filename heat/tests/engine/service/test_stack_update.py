@@ -322,6 +322,41 @@ resources:
                              tmpl.env.params)
             self.assertEqual(stk.identifier(), result)
 
+    def test_stack_update_with_tags(self):
+        """Test case for updating stack with tags.
+
+        Create a stack with tags, then update with/without
+        rpc_api.PARAM_EXISTING.
+        """
+        stack_name = 'service_update_test_stack_existing_tags'
+        api_args = {rpc_api.PARAM_TIMEOUT: 60,
+                    rpc_api.PARAM_EXISTING: True}
+        t = template_format.parse(tools.wp_template)
+
+        stk = utils.parse_stack(t, stack_name=stack_name, tags=['tag1'])
+        stk.set_stack_user_project_id('1234')
+        self.assertEqual(['tag1'], stk.tags)
+
+        self.patchobject(stack.Stack, 'validate')
+
+        # update keep old tags
+        _, _, updated_stack = self.man._prepare_stack_updates(
+            self.ctx, stk, t, {}, None, None, api_args, None)
+        self.assertEqual(['tag1'], updated_stack.tags)
+
+        # with new tags
+        api_args[rpc_api.STACK_TAGS] = ['tag2']
+        _, _, updated_stack = self.man._prepare_stack_updates(
+            self.ctx, stk, t, {}, None, None, api_args, None)
+        self.assertEqual(['tag2'], updated_stack.tags)
+
+        # with no PARAM_EXISTING flag and no tags
+        del api_args[rpc_api.PARAM_EXISTING]
+        del api_args[rpc_api.STACK_TAGS]
+        _, _, updated_stack = self.man._prepare_stack_updates(
+            self.ctx, stk, t, {}, None, None, api_args, None)
+        self.assertIsNone(updated_stack.tags)
+
     def test_stack_update_existing_registry(self):
         # Use a template with existing flag and ensure the
         # environment registry is preserved.
