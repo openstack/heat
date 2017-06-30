@@ -992,6 +992,10 @@ An example of conditions section definition
          data:
            services:
              get_param: ServiceNames
+     cd10:
+       contains:
+       - 'neutron'
+       - get_param: ServiceNames
 
 The example below shows how to associate condition with resources
 
