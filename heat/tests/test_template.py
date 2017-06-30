@@ -1419,15 +1419,24 @@ class TemplateTest(common.HeatTestCase):
               foo: bar
           resource2:
             Type: AWS::EC2::Instance
+          resource3:
+            Type: AWS::EC2::Instance
+            DependsOn:
+              - resource1
+              - dummy
+              - resource2
         ''')
         source = template.Template(cfn_tpl)
         empty = template.Template(copy.deepcopy(empty_template))
         stk = stack.Stack(self.ctx, 'test_stack', source)
 
-        for defn in six.itervalues(source.resource_definitions(stk)):
+        for rname, defn in sorted(source.resource_definitions(stk).items()):
             empty.add_resource(defn)
 
-        self.assertEqual(cfn_tpl['Resources'], empty.t['Resources'])
+        expected = copy.deepcopy(cfn_tpl['Resources'])
+        del expected['resource1']['DependsOn']
+        expected['resource3']['DependsOn'] = ['resource1', 'resource2']
+        self.assertEqual(expected, empty.t['Resources'])
 
     def test_add_output(self):
         cfn_tpl = template_format.parse('''

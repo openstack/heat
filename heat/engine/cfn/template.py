@@ -150,14 +150,23 @@ class CfnTemplateBase(template_common.CommonTemplate):
             name = definition.name
         hot_tmpl = definition.render_hot()
 
+        if self.t.get(self.RESOURCES) is None:
+            self.t[self.RESOURCES] = {}
+
         cfn_tmpl = dict((self.HOT_TO_CFN_RES_ATTRS[k], v)
                         for k, v in hot_tmpl.items())
 
-        if len(cfn_tmpl.get(self.RES_DEPENDS_ON, [])) == 1:
-            cfn_tmpl[self.RES_DEPENDS_ON] = cfn_tmpl[self.RES_DEPENDS_ON][0]
+        dep_list = cfn_tmpl.get(self.RES_DEPENDS_ON, [])
+        if len(dep_list) == 1:
+            dep_res = cfn_tmpl[self.RES_DEPENDS_ON][0]
+            if dep_res in self.t[self.RESOURCES]:
+                cfn_tmpl[self.RES_DEPENDS_ON] = dep_res
+            else:
+                del cfn_tmpl[self.RES_DEPENDS_ON]
+        elif dep_list:
+            cfn_tmpl[self.RES_DEPENDS_ON] = [d for d in dep_list
+                                             if d in self.t[self.RESOURCES]]
 
-        if self.t.get(self.RESOURCES) is None:
-            self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = cfn_tmpl
 
     def add_output(self, definition):

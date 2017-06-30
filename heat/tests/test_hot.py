@@ -1931,15 +1931,24 @@ conditions:
               foo: bar
           resource2:
             type: AWS::EC2::Instance
+          resource3:
+            type: AWS::EC2::Instance
+            depends_on:
+              - resource1
+              - dummy
+              - resource2
         ''')
         source = template.Template(hot_tpl)
         empty = template.Template(copy.deepcopy(hot_tpl_empty))
         stack = parser.Stack(utils.dummy_context(), 'test_stack', source)
 
-        for defn in six.itervalues(source.resource_definitions(stack)):
+        for rname, defn in sorted(source.resource_definitions(stack).items()):
             empty.add_resource(defn)
 
-        self.assertEqual(hot_tpl['resources'], empty.t['resources'])
+        expected = copy.deepcopy(hot_tpl['resources'])
+        expected['resource1']['depends_on'] = []
+        expected['resource3']['depends_on'] = ['resource1', 'resource2']
+        self.assertEqual(expected, empty.t['resources'])
 
     def test_add_output(self):
         hot_tpl = template_format.parse('''
