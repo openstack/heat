@@ -1857,6 +1857,23 @@ conditions:
 
         self.assertEqual(hot_tpl['resources'], empty.t['resources'])
 
+    def test_add_output(self):
+        hot_tpl = template_format.parse('''
+        heat_template_version: 2013-05-23
+        outputs:
+          output1:
+            description: An output
+            value: bar
+        ''')
+        source = template.Template(hot_tpl)
+        empty = template.Template(copy.deepcopy(hot_tpl_empty))
+        stack = parser.Stack(utils.dummy_context(), 'test_stack', source)
+
+        for defn in six.itervalues(source.outputs(stack)):
+            empty.add_output(defn)
+
+        self.assertEqual(hot_tpl['outputs'], empty.t['outputs'])
+
     def test_filter(self):
         snippet = {'filter': [[None], [1, None, 4, 2, None]]}
         tmpl = template.Template(hot_ocata_tpl_empty)

@@ -268,6 +268,11 @@ class HOTemplate20130523(template_common.CommonTemplate):
             self.t[self.RESOURCES] = {}
         self.t[self.RESOURCES][name] = definition.render_hot()
 
+    def add_output(self, definition):
+        if self.t.get(self.OUTPUTS) is None:
+            self.t[self.OUTPUTS] = {}
+        self.t[self.OUTPUTS][definition.name] = definition.render_hot()
+
 
 class HOTemplate20141016(HOTemplate20130523):
     functions = {
