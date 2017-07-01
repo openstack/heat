@@ -539,7 +539,8 @@ class EngineService(service.ServiceBase):
             for stack in stacks:
                 if stack.convergence:
                     for res in six.itervalues(stack.resources):
-                        res.store_attributes()
+                        if res.id is not None:
+                            res.store_attributes()
         return retval
 
     def get_revision(self, cnxt):
