@@ -5,15 +5,16 @@
 # Translators:
 # Rafael Rivero <rafael@cloudscaling.com>, 2014
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# Omar Rivera <gr113x@att.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
+"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-05-01 21:01+0000\n"
+"POT-Creation-Date: 2017-07-03 02:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-12 05:27+0000\n"
+"PO-Revision-Date: 2017-07-01 11:12+0000\n"
 "Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
 "Language: es\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -116,10 +117,6 @@ msgid "\"%s\" is not a valid boolean"
 msgstr "\"%s\" no es un booleano válido"
 
 #, python-format
-msgid "\"%s\" is not a valid keyword inside a resource definition"
-msgstr "\"%s\" no es una palabra clave válida en una definición de recurso"
-
-#, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr "\"%s\" no es una sección de plantilla válida"
 
@@ -138,10 +135,6 @@ msgstr "Los parámetros \"%s\" deben ser una correlación"
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr "Los parámetros \"%s\" deben ser una correlación"
-
-#, python-format
-msgid "\"%s\" params must be strings or numbers"
-msgstr "Los parámetros \"%s\" deben ser series o números"
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
@@ -220,11 +213,6 @@ msgstr "%(min_size)s no puede ser mayor que %(max_size)s"
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "%(name)s restricción inválida para %(utype)s"
-
-#, python-format
-msgid "%(name)s is not a valid wait condition handle."
-msgstr ""
-"%(name)s no es un descriptor de contexto de condición de espera válido."
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
@@ -330,13 +318,6 @@ msgid ""
 msgstr ""
 "Una secuencia de caracteres y su correspondiente restricción %(min)s a "
 "partir de la que se genera la serie aleatoria."
-
-msgid ""
-"A comma separated list of addresses for which proxies should not be used in "
-"the bay."
-msgstr ""
-"Una lista separada por comas de las direcciones de la bahía para las cuales "
-"no se deben usar proxies."
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
@@ -738,9 +719,6 @@ msgstr "El algoritmo debe ser uno de %s"
 msgid "All heat engines are down."
 msgstr "Todos los motores de Heat están inactivos."
 
-msgid "Allocate a floating IP from a given floating IP pool."
-msgstr "Asignar una IP flotante desde un pool de IPs flotantes."
-
 msgid "Allocated floating IP address."
 msgstr "Dirección IP flotante asignada."
 
@@ -896,12 +874,6 @@ msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr ""
 "Metadatos arbitrarios de pares clave/valor para almacenar información para "
 "el agregado."
-
-msgid ""
-"Arbitrary labels in the form of key=value pairs to associate with a baymodel."
-msgstr ""
-"Etiquetas arbitrarias con el formato de pares key=value para asociar a un "
-"modelo de bahía."
 
 #, python-format
 msgid "Argument to \"%s\" must be a list"
@@ -1221,6 +1193,14 @@ msgstr "Configure las configuraciones más importantes de forma automática."
 msgid "Confirm resize for server %s failed"
 msgstr "Ha fallado la confirmación de redimensionamiento del servidor %s"
 
+#, python-format
+msgid ""
+"Conflicting merge strategy '%(strategy)s' for parameter '%(param)s' in file "
+"'%(env_file)s'."
+msgstr ""
+"Conflicto con la estrategia de unión '%(strategy)s' para el parámetro "
+"'%(param)s' en archivo '%(env_file)s'."
+
 msgid "Connection info for this network gateway."
 msgstr "Información de conexión para esta pasarela de red."
 
@@ -1241,6 +1221,9 @@ msgstr ""
 
 msgid "Context for this stack."
 msgstr "Contexto para esta pila."
+
+msgid "Continue ? [y/N]"
+msgstr "Continuar? Si/No [y/N]"
 
 msgid "Control how the disk is partitioned when the server is created."
 msgstr "Controlar cómo se particiona el disco cuando se crea el servidor."
@@ -1727,9 +1710,6 @@ msgstr ""
 "en la forma en que el motor  Mistral ejecuta las tareas. Debe satisfacer "
 "Mistral DSL v2."
 
-msgid "Disable TLS in the bay."
-msgstr "Deshabilitar TLS en la bahía."
-
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback y OnFailure no se pueden usar juntas"
 
@@ -1797,9 +1777,6 @@ msgstr ""
 
 msgid "Email address of keystone user."
 msgstr "Dirección de correo electrónico del usuario de keystone."
-
-msgid "Enable the docker registry in the bay."
-msgstr "Habilitar el registo del docker en la bahía."
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "Habilitar el recurso heredado OS::Heat::CWLiteAlarm."
@@ -2842,6 +2819,10 @@ msgstr ""
 "lista"
 
 #, python-format
+msgid "Invalid parameter in environment %s."
+msgstr "Parámetro invalido en el ambiente %s."
+
+#, python-format
 msgid ""
 "Invalid restricted_action type \"%(value)s\" for resource, acceptable "
 "restricted_action types are: %(types)s"
@@ -2925,6 +2906,10 @@ msgstr "Ip_version para esta regla de cortafuegos."
 
 msgid "It defines an executor to which task action should be sent to."
 msgstr "Define un ejecutor al que se debe enviar la acción de la tarea."
+
+msgid "It is advised to shutdown all Heat engines beforehand."
+msgstr ""
+"De antemano, es recomendado cerrar todas las sesiones de 'Heat engine'."
 
 #, python-format
 msgid "Items to join must be string, map or list not %s"
@@ -3096,9 +3081,6 @@ msgstr "Lista de grupos de seguridad asignada al LB actual."
 msgid "List of TLS container references for SNI."
 msgstr "Lista de referencias de contenedor TLS para SNI."
 
-msgid "List of alarm identifiers to combine."
-msgstr "Lista de identificadores de alarma a combinar."
-
 msgid "List of database instances."
 msgstr "Lista de instancias de base de datos."
 
@@ -3244,9 +3226,6 @@ msgstr "Dirección MAC del puerto."
 
 msgid "MAC address to allow through this port."
 msgstr "Dirección MAC a permitir a través de este puerto."
-
-msgid "Make the baymodel public."
-msgstr "Hacer público el modelo de bahía."
 
 msgid "Map between role with either project or domain."
 msgstr "Correlación entre el rol y el proyecto o el dominio."
@@ -3926,10 +3905,6 @@ msgstr "No existe ninguna pila con el id \"%s\""
 msgid "No stack name specified"
 msgstr "Nombre de pila no especificada"
 
-#, python-format
-msgid "No such workflow %s"
-msgstr "No existe el flujo de trabajo %s"
-
 msgid "No template specified"
 msgstr "Plantilla no especificada"
 
@@ -4063,22 +4038,6 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "Uno de los tipos de supervisor de estado predefinidos."
 
-#, python-format
-msgid ""
-"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
-"be set for the specified network of server \"%(server)s\"."
-msgstr ""
-"Se debe establecer una de las propiedades \"%(id)s\", \"%(port_id)s\" o "
-"\"%(subnet)s\" para la red o el servidor especificado \"%(server)s\"."
-
-#, python-format
-msgid ""
-"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
-"the specified network of server \"%s\"."
-msgstr ""
-"Se debe establecer una de las propiedades \"network\", \"port\" o \"subnet\" "
-"para la red o el servidor especificado \"%s\"."
-
 msgid "One or more listeners for this load balancer."
 msgstr "Una o más escuchas para este equilibrador de carga."
 
@@ -4096,9 +4055,6 @@ msgstr "'%(name)s' sólo acepta el entero."
 #, python-format
 msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "'%(name)s' sólo acepta un entero que no sea cero."
-
-msgid "Operator used to combine the alarms."
-msgstr "Operador utilizado para combinar las alarmas."
 
 msgid "Operator used to compare specified statistic with threshold."
 msgstr "Operador utilizado para comparar estadísticas específicas con umbral."
@@ -4137,11 +4093,6 @@ msgstr "Opciones para simular la espera."
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "La orden '%(name)s' ha fallado: %(code)s - %(reason)s"
-
-#, python-format
-msgid "Outputs must contain Output. Found a [%s] instead"
-msgstr ""
-"Las salidas deben contener salida. Se ha encontrado un/a [%s] en su lugar"
 
 msgid "Outputs received"
 msgstr "Salidas recibidas"
@@ -4398,10 +4349,6 @@ msgstr "Propiedades de esta política."
 msgid "Properties to pass to each resource being created in the chain."
 msgstr ""
 "Propiedades que se tienen qu  pasar a cada recurso que se cree en la cadena."
-
-#, python-format
-msgid "Property \"%s\" is supported only for Neutron."
-msgstr "La propiedad \"%s\" solo está soportada para Neutron."
 
 #, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -5055,6 +5002,10 @@ msgid "Stack unknown status"
 msgstr "Estado desconocido de la pila"
 
 #, python-format
+msgid "Stack with id %s can not be found."
+msgstr "Stack con id %s no pudo ser encontrado."
+
+#, python-format
 msgid "Stack with id %s not found"
 msgstr "No se ha encontrado la pila con el ID %s"
 
@@ -5366,9 +5317,6 @@ msgstr "Las zonas de disponibilidad en las que crear el equilibrador de carga."
 msgid "The CIDR."
 msgstr "El CIDR."
 
-msgid "The Container Orchestration Engine for this bay model."
-msgstr "El motor de orquestación de contenedor para este modelo de bahía."
-
 msgid "The DNS name for the LoadBalancer."
 msgstr "El nombre DNS para el equilibrador de carga."
 
@@ -5558,9 +5506,6 @@ msgstr ""
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr "El Recurso (%(resource_name)s) no está disponible."
 
-msgid "The SSH Authorized Key."
-msgstr "La clave SSH autorizada."
-
 #, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr ""
@@ -5710,9 +5655,6 @@ msgstr "La zona de disponibilidad en la que se creará el volumen."
 
 msgid "The availability zone of shared filesystem."
 msgstr "La zona de disponibilidad del sistema de archivos compartido."
-
-msgid "The bay model name."
-msgstr "El nombre del modelo de bahía."
 
 msgid "The bay name."
 msgstr "El nombre de la bahía."
@@ -5894,20 +5836,8 @@ msgstr "La fecha de caducidad del secreto en formato ISO-8601."
 msgid "The external load balancer port number."
 msgstr "Número de puerto de equilibrador de carga externo."
 
-msgid "The external network to attach the Bay."
-msgstr "La red externa a la que se conectará la bahía."
-
 msgid "The extra specs key and value pairs of the volume type."
 msgstr "Pares de clave-valor de especificación adicional del tipo de volumen."
-
-msgid "The fixed network to attach the Bay."
-msgstr "La red fija a la que se conectará la bahía."
-
-msgid "The flavor of the master node for this bay model."
-msgstr "El tipo del nodo maestro de este modelo de bahía."
-
-msgid "The flavor of this bay model."
-msgstr "El tipo de este modelo de bahía"
 
 msgid "The flavor to use."
 msgstr "El sabor a utilizar."
@@ -5946,12 +5876,6 @@ msgid "The host from which a user is allowed to connect to the database."
 msgstr ""
 "El host desde el que se permite que un usuario se conecte a la base de datos."
 
-msgid "The http_proxy address to use for nodes in bay."
-msgstr "La dirección http_proxy a utilizar para los nodos de la bahía."
-
-msgid "The https_proxy address to use for nodes in bay."
-msgstr "La dirección https_proxy a utilizar para los nodos de la bahía."
-
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must be "
 "specified when using vlan."
@@ -5964,11 +5888,6 @@ msgstr "El identificador de la CA a utilizar."
 
 msgid "The image ID. Glance will generate a UUID if not specified."
 msgstr "El ID de imagen. Glance generará un UUID si no se especifica."
-
-msgid "The image name or UUID to use as a base image for this baymodel."
-msgstr ""
-"El nombre  o el UUID de la imagen a utilizar como imagen base para este "
-"modelo de bahía."
 
 msgid "The initiator of the ipsec site connection."
 msgstr "El iniciador de la conexión del sitio ipsec."
@@ -6232,9 +6151,6 @@ msgstr "El nombre o el ID de la agrupación de subred."
 
 msgid "The name or id of the Senlin profile."
 msgstr "El nombre o el ID del perfil Senlin."
-
-msgid "The name or id of the nova ssh keypair."
-msgstr "El nombre o el ID del par de claves ssh de nova."
 
 msgid "The negotiation mode of the ike policy."
 msgstr "La modalidad de negociación de la política ike."
@@ -7255,9 +7171,6 @@ msgstr "Usuario %s en proyecto inválido"
 msgid "User ID for API authentication"
 msgstr "ID de usuario para la autenticación de la API"
 
-msgid "User data script to be executed by cloud-init."
-msgstr "Script de datos de usuario que cloud-init debe ejecutar."
-
 msgid "User data to pass to instance."
 msgstr "Datos de usuario a pasar a instancia."
 
@@ -7414,6 +7327,13 @@ msgstr "Pila de descriptor de contexto no válida de WaitCondition %s"
 #, python-format
 msgid "WaitCondition invalid Handle tenant %s"
 msgstr "Arrendatario de descriptor de contexto no válido de WaitCondition %s"
+
+msgid ""
+"Warning: this command is potentially destructive and only intended to "
+"recover from specific crashes."
+msgstr ""
+"Atención: esta operación es potencialmente destructiva y solo es para "
+"restaurar de fallas de procesos especificas."
 
 msgid "Weight of pool member in the pool (default to 1)."
 msgstr ""

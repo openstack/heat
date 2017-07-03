@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
+"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-05-01 21:01+0000\n"
+"POT-Creation-Date: 2017-07-03 02:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -116,12 +116,6 @@ msgid "\"%s\" is not a valid boolean"
 msgstr "\"%s\" non è un valore booleano valido"
 
 #, python-format
-msgid "\"%s\" is not a valid keyword inside a resource definition"
-msgstr ""
-"\"%s\" non è una parola chiave valida all'interno di una definizione di "
-"risorsa"
-
-#, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr "\"%s\" non è una sezione template valida"
 
@@ -140,10 +134,6 @@ msgstr "I parametri \"%s\" devono essere una mappatura"
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr "I parametri \"%s\" devono essere una mappa"
-
-#, python-format
-msgid "\"%s\" params must be strings or numbers"
-msgstr "I parametri \"%s\" devono essere stringhe o numeri"
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
@@ -221,10 +211,6 @@ msgstr "%(min_size)s non può essere maggiore di %(max_size)s"
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "Vincolo %(name)s non valido per %(utype)s"
-
-#, python-format
-msgid "%(name)s is not a valid wait condition handle."
-msgstr "%(name)s non è un handle della condizione di attesa valido."
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
@@ -330,13 +316,6 @@ msgid ""
 msgstr ""
 "Una sequenza di caratteri e il corrispondente vincolo %(min)s da cui "
 "generare la stringa casuale."
-
-msgid ""
-"A comma separated list of addresses for which proxies should not be used in "
-"the bay."
-msgstr ""
-"Un elenco separato da virgole di indirizzi per cui i proxy non devono essere "
-"utilizzati nell'alloggiamento."
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr ""
@@ -738,9 +717,6 @@ msgstr "L'algoritmo deve essere uno di %s"
 msgid "All heat engines are down."
 msgstr "Tutti i motori Heat sono spenti."
 
-msgid "Allocate a floating IP from a given floating IP pool."
-msgstr "Assegnare un IP mobile da un dato pool IP mobile."
-
 msgid "Allocated floating IP address."
 msgstr "Indirizzo IP mobile assegnato."
 
@@ -895,12 +871,6 @@ msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr ""
 "Metadati chiave/valore arbitrari per memorizzare le informazioni "
 "sull'aggregato."
-
-msgid ""
-"Arbitrary labels in the form of key=value pairs to associate with a baymodel."
-msgstr ""
-"Livelli arbitrari nel formato di coppie chiave=valore da associare ad un "
-"modello di alloggiamento."
 
 #, python-format
 msgid "Argument to \"%s\" must be a list"
@@ -1733,9 +1703,6 @@ msgstr ""
 "influenzano il modo in cui Mistral Engine esegue le attività. Deve "
 "soddisfare Mistral DSL v2."
 
-msgid "Disable TLS in the bay."
-msgstr "Disabilitare TLS nell'alloggiamento."
-
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback e OnFailure non possono essere utilizzati insieme"
 
@@ -1804,9 +1771,6 @@ msgstr ""
 
 msgid "Email address of keystone user."
 msgstr "Indirizzo email dell'utente keystone."
-
-msgid "Enable the docker registry in the bay."
-msgstr "Abilitare il registro docker nell'alloggiamento."
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "Abilita la risorsa OS::Heat::CWLiteAlarm legacy."
@@ -3087,9 +3051,6 @@ msgstr "List of Security Groups assigned on current LB."
 msgid "List of TLS container references for SNI."
 msgstr "Elenco di riferimenti al contenitore TLS per SNI."
 
-msgid "List of alarm identifiers to combine."
-msgstr "Elenco di identificativi di segnalazione da mettere in combinazione."
-
 msgid "List of database instances."
 msgstr "Elenco di istanze del database."
 
@@ -3229,9 +3190,6 @@ msgstr "Indirizzo MAC della porta."
 
 msgid "MAC address to allow through this port."
 msgstr "L'indirizzo MAC da consentire tramite questa porta."
-
-msgid "Make the baymodel public."
-msgstr "Rendere pubblico il modello di alloggiamento."
 
 msgid "Map between role with either project or domain."
 msgstr "Associazione tra ruolo con progetto o dominio."
@@ -3906,10 +3864,6 @@ msgstr "Nessuno stack esistente con id \"%s\""
 msgid "No stack name specified"
 msgstr "Nessun nome stack specificato"
 
-#, python-format
-msgid "No such workflow %s"
-msgstr "Nessun flusso di lavoro di questo tipo %s"
-
 msgid "No template specified"
 msgstr "Nessun template specificato"
 
@@ -4040,22 +3994,6 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "Uno dei tipi di monitor di stato predefinito."
 
-#, python-format
-msgid ""
-"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
-"be set for the specified network of server \"%(server)s\"."
-msgstr ""
-"Una delle proprietà \"%(id)s\", \"%(port_id)s\" o \"%(subnet)s\" deve essere "
-"impostata per la rete di server specificata \"%(server)s\"."
-
-#, python-format
-msgid ""
-"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
-"the specified network of server \"%s\"."
-msgstr ""
-"Una delle proprietà \"network\", \"port\" o \"subnet\" deve essere impostata "
-"per la rete di server specificata \"%s\"."
-
 msgid "One or more listeners for this load balancer."
 msgstr "Uno o più listener per questo bilanciatore di carico."
 
@@ -4073,9 +4011,6 @@ msgstr "Solo un valore intero è accettabile da '%(name)s'."
 #, python-format
 msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "Solo un numero intero diverso da zero è accettabile da '%(name)s'."
-
-msgid "Operator used to combine the alarms."
-msgstr "Operatore utilizzato per mettere in combinazione le segnalazioni."
 
 msgid "Operator used to compare specified statistic with threshold."
 msgstr ""
@@ -4114,10 +4049,6 @@ msgstr "Opzioni per la simulazione dell'attesa."
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "Ordine '%(name)s' non riuscito: %(code)s - %(reason)s"
-
-#, python-format
-msgid "Outputs must contain Output. Found a [%s] instead"
-msgstr "Gli output devono contenere output. Trovato invece un [%s]"
 
 msgid "Outputs received"
 msgstr "Output ricevuti"
@@ -4372,10 +4303,6 @@ msgstr "Proprietà di questa politica."
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "Le proprietà da trasferire a ciascuna risorsa da creare nella catena."
-
-#, python-format
-msgid "Property \"%s\" is supported only for Neutron."
-msgstr "La proprietà \"%s\" è supportata solo per Neutron."
 
 #, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -5329,11 +5256,6 @@ msgstr "Le zone di disponibilità in cui creare il bilanciatore di carico."
 msgid "The CIDR."
 msgstr "CIDR."
 
-msgid "The Container Orchestration Engine for this bay model."
-msgstr ""
-"Il motore di orchestrazione del contenitore per questo modello di "
-"alloggiamento."
-
 msgid "The DNS name for the LoadBalancer."
 msgstr "Il nome DNS per LoadBalancer."
 
@@ -5516,9 +5438,6 @@ msgstr ""
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr "La risorsa (%(resource_name)s) non è disponibile."
 
-msgid "The SSH Authorized Key."
-msgstr "La chiave autorizzata SSH."
-
 #, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr ""
@@ -5665,9 +5584,6 @@ msgstr "La zona di disponibilità in cui il volume verrà creato."
 
 msgid "The availability zone of shared filesystem."
 msgstr "La zona di disponibilità per il filesystem condiviso."
-
-msgid "The bay model name."
-msgstr "Il nome modello dell'alloggiamento."
 
 msgid "The bay name."
 msgstr "Il nome dell'alloggiamento."
@@ -5850,22 +5766,10 @@ msgstr "La data di scadenza del segreto in formato ISO-8601."
 msgid "The external load balancer port number."
 msgstr "Il numero della porta del bilanciatore di carico esterno."
 
-msgid "The external network to attach the Bay."
-msgstr "La rete esterna da collegare all'alloggiamento."
-
 msgid "The extra specs key and value pairs of the volume type."
 msgstr ""
 "La chiave delle specifiche supplementari e le coppie di valori del tipo di "
 "volume."
-
-msgid "The fixed network to attach the Bay."
-msgstr "La rete fissa da collegare all'alloggiamento."
-
-msgid "The flavor of the master node for this bay model."
-msgstr "Il flavor del nodo principale per questo modello di aggiornamento."
-
-msgid "The flavor of this bay model."
-msgstr "Il flavor di questo modello di alloggiamento."
 
 msgid "The flavor to use."
 msgstr "Il flavor da utilizzare."
@@ -5904,12 +5808,6 @@ msgstr "L'host dell'URL contenitore."
 msgid "The host from which a user is allowed to connect to the database."
 msgstr "L'host da cui un utente può connettersi al database."
 
-msgid "The http_proxy address to use for nodes in bay."
-msgstr "L'indirizzo http_proxy da utilizzare per i nodi nell'alloggiamento."
-
-msgid "The https_proxy address to use for nodes in bay."
-msgstr "L'indirizzo https_proxy da utilizzare per i nodi nell'alloggiamento."
-
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must be "
 "specified when using vlan."
@@ -5922,11 +5820,6 @@ msgstr "L'identificativo del CA da utilizzare."
 
 msgid "The image ID. Glance will generate a UUID if not specified."
 msgstr "L'ID immagine. Glance genererà un UUID se non è specificato."
-
-msgid "The image name or UUID to use as a base image for this baymodel."
-msgstr ""
-"Il nome immagine o l'UUID da utilizzare come immagine di base per questo "
-"modello di alloggiamento."
 
 msgid "The initiator of the ipsec site connection."
 msgstr "L'iniziatore della connessione al sito ipsec."
@@ -6195,9 +6088,6 @@ msgstr "Il nome o l'ID del pool di sottorete."
 
 msgid "The name or id of the Senlin profile."
 msgstr "Il nome o l'ID del profilo Senlin."
-
-msgid "The name or id of the nova ssh keypair."
-msgstr "Il nome o l'ID della coppia di chiavi nova ssh."
 
 msgid "The negotiation mode of the ike policy."
 msgstr "La modalità di negoziazione della politica ike."
@@ -6770,9 +6660,6 @@ msgstr ""
 "Si è verificato un errore durante il caricamento della definizione del tipo "
 "di risorsa globale %(type_name)s."
 
-msgid "This attribute has been removed in Magnum"
-msgstr "Questo attributo è stato rimosso in Magnum"
-
 msgid "This endpoint is enabled or disabled."
 msgstr "Questo endpoint è abilitato o disabilitato."
 
@@ -7207,9 +7094,6 @@ msgstr "Utente %s in progetto non valido"
 
 msgid "User ID for API authentication"
 msgstr "ID utente per l'autenticazione API"
-
-msgid "User data script to be executed by cloud-init."
-msgstr "Lo script dei dati utente che deve essere eseguito da cloud-init."
 
 msgid "User data to pass to instance."
 msgstr "Dati utenti da passare all'istanza."

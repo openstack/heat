@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
+"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-05-01 21:01+0000\n"
+"POT-Creation-Date: 2017-07-03 02:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -112,10 +112,6 @@ msgid "\"%s\" is not a valid boolean"
 msgstr "\"%s\" 不是有效的布林值"
 
 #, python-format
-msgid "\"%s\" is not a valid keyword inside a resource definition"
-msgstr "\"%s\" 不是資源定義中的有效關鍵字"
-
-#, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr "\"%s\" 不是有效的範本區段"
 
@@ -134,10 +130,6 @@ msgstr "\"%s\" 參數必須是對映"
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr "\"%s\" 參數必須是對映"
-
-#, python-format
-msgid "\"%s\" params must be strings or numbers"
-msgstr "\"%s\" 參數必須是字串或數字"
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
@@ -210,10 +202,6 @@ msgstr "%(min_size)s 不能大於 %(max_size)s"
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "%(name)s 限制項不適用於 %(utype)s"
-
-#, python-format
-msgid "%(name)s is not a valid wait condition handle."
-msgstr "%(name)s 不是有效的等待條件控點。"
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
@@ -308,11 +296,6 @@ msgid ""
 "A character sequence and its corresponding %(min)s constraint to generate "
 "the random string from."
 msgstr "字元序列及用於從其產生隨機字串的對應 %(min)s限制。"
-
-msgid ""
-"A comma separated list of addresses for which proxies should not be used in "
-"the bay."
-msgstr "在機架中不應對其使用 Proxy 之位址的逗點區隔清單。"
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr "伺服器 IP 位址的逗點定界清單。（Heat 延伸）。"
@@ -647,9 +630,6 @@ msgstr "演算法必須是 %s 的其中之一"
 msgid "All heat engines are down."
 msgstr "所有的 Heat 引擎都已關閉。"
 
-msgid "Allocate a floating IP from a given floating IP pool."
-msgstr "從浮動 IP 倉庫分配一個浮動 IP。"
-
 msgid "Allocated floating IP address."
 msgstr "已配置浮動 IP 位址。"
 
@@ -783,10 +763,6 @@ msgstr ""
 
 msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr "用於儲存聚集資訊的任意鍵/值 meta 資料。"
-
-msgid ""
-"Arbitrary labels in the form of key=value pairs to associate with a baymodel."
-msgstr "要與機架型號建立關聯的任意標籤（採用「鍵=值」組形式）。"
 
 #, python-format
 msgid "Argument to \"%s\" must be a list"
@@ -1545,9 +1521,6 @@ msgstr ""
 "與字典類似的區段，用來定義可影響 Mistral 引擎如何執行作業的作業原則。必須滿"
 "足 Mistral DSL 第 2 版。"
 
-msgid "Disable TLS in the bay."
-msgstr "在機架中停用 TLS。"
-
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback 及 OnFailure 不能一起使用"
 
@@ -1611,9 +1584,6 @@ msgstr "必須給裝置對映 %s 指定 volume_id 或 snapshot_id"
 
 msgid "Email address of keystone user."
 msgstr "Keystone 使用者的電子郵件位址。"
-
-msgid "Enable the docker registry in the bay."
-msgstr "在機架中啟用 Docker 登錄。"
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "啟用舊式 OS::Heat::CWLiteAlarm 資源。"
@@ -2781,9 +2751,6 @@ msgstr "現行 LB 上指派的安全群組清單。"
 msgid "List of TLS container references for SNI."
 msgstr "SNI 的 TLS 儲存器參照清單。"
 
-msgid "List of alarm identifiers to combine."
-msgstr "要合併的警示 ID 清單。"
-
 msgid "List of database instances."
 msgstr "資料庫實例清單。"
 
@@ -2908,9 +2875,6 @@ msgstr "埠的 MAC 位址。"
 
 msgid "MAC address to allow through this port."
 msgstr "容許通過此埠的 MAC 位址。"
-
-msgid "Make the baymodel public."
-msgstr "公開機架型號。"
 
 msgid "Map between role with either project or domain."
 msgstr "角色與專案或網域之間的對映。"
@@ -3515,10 +3479,6 @@ msgstr "不存在 ID 為 \"%s\" 的堆疊"
 msgid "No stack name specified"
 msgstr "未指定堆疊名稱"
 
-#, python-format
-msgid "No such workflow %s"
-msgstr "沒有此類工作流程 %s"
-
 msgid "No template specified"
 msgstr "未指定範本"
 
@@ -3633,22 +3593,6 @@ msgstr "更新時，容許 Heat 將現實和聚合中的現有資源內容收集
 msgid "One of predefined health monitor types."
 msgstr "其中一個預先定義的性能監視器類型。"
 
-#, python-format
-msgid ""
-"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
-"be set for the specified network of server \"%(server)s\"."
-msgstr ""
-"應該為伺服器 \"%(server)s\" 的指定網路設定下列其中一個內容：\"%(id)s"
-"\"、\"%(port_id)s\" 或 \"%(subnet)s\"。"
-
-#, python-format
-msgid ""
-"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
-"the specified network of server \"%s\"."
-msgstr ""
-"應該為伺服器 \"%s\" 的指定網路設定下列其中一個內容：「網路」、「埠」或「子網"
-"路」。"
-
 msgid "One or more listeners for this load balancer."
 msgstr "此負載平衡器的一個以上接聽器。"
 
@@ -3665,9 +3609,6 @@ msgstr "'%(name)s' 僅接受整數。"
 #, python-format
 msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "'%(name)s' 僅接受非零整數。"
-
-msgid "Operator used to combine the alarms."
-msgstr "用來合併警示的運算子。"
 
 msgid "Operator used to compare specified statistic with threshold."
 msgstr "用來將所指定統計資料與臨界值相比較的運算子。"
@@ -3703,10 +3644,6 @@ msgstr "用來模擬等待的選項。"
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "順序 '%(name)s' 失敗：%(code)s - %(reason)s"
-
-#, python-format
-msgid "Outputs must contain Output. Found a [%s] instead"
-msgstr "輸出必須包含輸出。但卻找到 [%s]"
 
 msgid "Outputs received"
 msgstr "收到輸出"
@@ -3937,10 +3874,6 @@ msgstr "此原則的內容。"
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "要傳遞至正在鏈中建立之每一個資源的內容。"
-
-#, python-format
-msgid "Property \"%s\" is supported only for Neutron."
-msgstr "只有 Neutron 才支援內容 \"%s\"。"
 
 #, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -4809,9 +4742,6 @@ msgstr "要在其中建立負載平衡器的可用性區域。"
 msgid "The CIDR."
 msgstr "CIDR。"
 
-msgid "The Container Orchestration Engine for this bay model."
-msgstr "此機架型號的儲存器編排引擎。"
-
 msgid "The DNS name for the LoadBalancer."
 msgstr "負載平衡器的 DNS 名稱。"
 
@@ -4976,9 +4906,6 @@ msgstr "在堆疊 %(stack_name)s 中找不到資源(%(resource_name)s)。"
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr "資源 (%(resource_name)s) 無法使用。"
 
-msgid "The SSH Authorized Key."
-msgstr "SSH 授權金鑰。"
-
 #, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr "找不到堆疊 (%(stack)s) 的 Snapshot (%(snapshot)s)。"
@@ -5118,9 +5045,6 @@ msgstr "將在其中建立磁區的可用性區域。"
 
 msgid "The availability zone of shared filesystem."
 msgstr "共用檔案系統的可用性區域。"
-
-msgid "The bay model name."
-msgstr "機架型號名稱。"
 
 msgid "The bay name."
 msgstr "機架名稱。"
@@ -5288,20 +5212,8 @@ msgstr "密碼的到期日期（採用 ISO-8601 格式）。"
 msgid "The external load balancer port number."
 msgstr "外部負載平衡器埠號。"
 
-msgid "The external network to attach the Bay."
-msgstr "用來連接機架的外部網路。"
-
 msgid "The extra specs key and value pairs of the volume type."
 msgstr "磁區類型的額外規格鍵值組。"
-
-msgid "The fixed network to attach the Bay."
-msgstr "用來連接機架的固定網路。"
-
-msgid "The flavor of the master node for this bay model."
-msgstr "此機架型號之主要節點的特性。"
-
-msgid "The flavor of this bay model."
-msgstr "此機架型號的特性。"
 
 msgid "The flavor to use."
 msgstr "要使用的特性。"
@@ -5335,12 +5247,6 @@ msgstr "來自儲存器 URL 的主機。"
 msgid "The host from which a user is allowed to connect to the database."
 msgstr "容許使用者從其連接至資料庫的主機。"
 
-msgid "The http_proxy address to use for nodes in bay."
-msgstr "要用於機架中節點的 http_proxy 位址。"
-
-msgid "The https_proxy address to use for nodes in bay."
-msgstr "要用於機架中節點的 https_proxy 位址。"
-
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must be "
 "specified when using vlan."
@@ -5351,9 +5257,6 @@ msgstr "要使用之 CA 的 ID。"
 
 msgid "The image ID. Glance will generate a UUID if not specified."
 msgstr "映像檔 ID。如果未指定，則 Glance 將產生 UUID。"
-
-msgid "The image name or UUID to use as a base image for this baymodel."
-msgstr "要用作此機架型號之基本映像檔的映像檔名稱或 UUID。"
 
 msgid "The initiator of the ipsec site connection."
 msgstr "IPSec 網站連線的起始器。"
@@ -5585,9 +5488,6 @@ msgstr "子網路儲存區的名稱或 ID。"
 
 msgid "The name or id of the Senlin profile."
 msgstr "Senlin 設定檔的名稱或 ID。"
-
-msgid "The name or id of the nova ssh keypair."
-msgstr "Nova SSH 金鑰組的名稱或 ID。"
 
 msgid "The negotiation mode of the ike policy."
 msgstr "IKE 原則的協議模式。"
@@ -6091,9 +5991,6 @@ msgid ""
 "%(type_name)s."
 msgstr "載入廣域資源類型 %(type_name)s 的定義時發生錯誤。"
 
-msgid "This attribute has been removed in Magnum"
-msgstr "此屬性已在 Magnum 中予以移除"
-
 msgid "This endpoint is enabled or disabled."
 msgstr "已啟用或已停用此端點。"
 
@@ -6476,9 +6373,6 @@ msgstr "使用者 %s 所在的專案無效"
 
 msgid "User ID for API authentication"
 msgstr "用於 API 鑑別的使用者 ID"
-
-msgid "User data script to be executed by cloud-init."
-msgstr "要由 cloud-init 執行的使用者資料 Script。"
 
 msgid "User data to pass to instance."
 msgstr "要傳遞給實例的使用者資料。"

@@ -10,9 +10,9 @@
 # Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
+"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-05-01 21:01+0000\n"
+"POT-Creation-Date: 2017-07-03 02:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -121,10 +121,6 @@ msgid "\"%s\" is not a valid boolean"
 msgstr "\"%s\" は有効なブール値ではありません"
 
 #, python-format
-msgid "\"%s\" is not a valid keyword inside a resource definition"
-msgstr "\"%s\" はリソース定義内で有効なキーワードではありません"
-
-#, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr "\"%s\" が有効なテンプレートセクションではありません"
 
@@ -143,10 +139,6 @@ msgstr "\"%s\" パラメーターはマッピングでなければなりませ�
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr "\"%s\" パラメーターはマップでなければなりません"
-
-#, python-format
-msgid "\"%s\" params must be strings or numbers"
-msgstr "\"%s\" パラメーターは文字列または数値でなければなりません"
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
@@ -223,10 +215,6 @@ msgstr "%(min_size)s を %(max_size)s よりも大きくすることはできま
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "%(name)s 制約は %(utype)s には無効です"
-
-#, python-format
-msgid "%(name)s is not a valid wait condition handle."
-msgstr "%(name)s はは有効な待機条件のハンドルではありません。"
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
@@ -328,12 +316,6 @@ msgid ""
 "the random string from."
 msgstr ""
 "ランダム文字列の生成元である文字シーケンスとその対応する %(min)s 制約。"
-
-msgid ""
-"A comma separated list of addresses for which proxies should not be used in "
-"the bay."
-msgstr ""
-"ベイ内でプロキシーを使用してはならないアドレスに関するコンマ区切りのリスト。"
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr "サーバー IP アドレスのコンマ区切りリスト (heat 拡張)。"
@@ -699,9 +681,6 @@ msgstr "アルゴリズムは %s のいずれかでなければなりません"
 msgid "All heat engines are down."
 msgstr "す べての heat エンジンが停止しています。"
 
-msgid "Allocate a floating IP from a given floating IP pool."
-msgstr "指定した Floating IP プールから Floating IP を確保します。"
-
 msgid "Allocated floating IP address."
 msgstr "割り当て済み Floating IP アドレス。"
 
@@ -846,10 +825,6 @@ msgstr ""
 
 msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr "アグリゲートのための情報を保存する任意のキーと値のメタデータ。"
-
-msgid ""
-"Arbitrary labels in the form of key=value pairs to associate with a baymodel."
-msgstr "ベイモデルと関連付けられるキーと値のペアの形式の任意のラベル。"
 
 #, python-format
 msgid "Argument to \"%s\" must be a list"
@@ -1669,9 +1644,6 @@ msgstr ""
 "Mistral Engine のタスクの実行に影響を及ぼすタスクポリシーを定義するディクショ"
 "ナリーのようなセクション。Mistral DSL v2 をサポートする必要があります。"
 
-msgid "Disable TLS in the bay."
-msgstr "ベイにおいて TLS を無効化します。"
-
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback と OnFailure を一緒に使用できません"
 
@@ -1744,9 +1716,6 @@ msgstr ""
 
 msgid "Email address of keystone user."
 msgstr "keystone ユーザーの E メールアドレス。"
-
-msgid "Enable the docker registry in the bay."
-msgstr "ベイにおいて ドッカー のレジストリーを有効化します。"
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "既存の OS::Heat::CWLiteAlarm リソースを有効にします。"
@@ -3032,9 +3001,6 @@ msgstr "現在の LB に割り当てられたセキュリティーグループ�
 msgid "List of TLS container references for SNI."
 msgstr "SNI に対する TLS コンテナー参照のリスト。"
 
-msgid "List of alarm identifiers to combine."
-msgstr "結合するアラーム ID のリスト。"
-
 msgid "List of database instances."
 msgstr "データベースインスタンスの一覧。"
 
@@ -3167,9 +3133,6 @@ msgstr "ポートの MAC アドレス。"
 
 msgid "MAC address to allow through this port."
 msgstr "このポートを経由することが許可されている MAC アドレス。"
-
-msgid "Make the baymodel public."
-msgstr "ベイモデルをパブリックに設定します。"
 
 msgid "Map between role with either project or domain."
 msgstr "プロジェクトまたはドメインを持つロール間のマップ。"
@@ -3814,10 +3777,6 @@ msgstr "ID \"%s\" のスタックは存在しません"
 msgid "No stack name specified"
 msgstr "スタック名が指定されていません。"
 
-#, python-format
-msgid "No such workflow %s"
-msgstr "%s のようなワークフローは存在しません"
-
 msgid "No template specified"
 msgstr "テンプレートが指定されていません"
 
@@ -3944,23 +3903,6 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "事前定義ヘルスモニタータイプの 1 つ。"
 
-#, python-format
-msgid ""
-"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
-"be set for the specified network of server \"%(server)s\"."
-msgstr ""
-"サーバー \"%(server)s\" の指定されたネットワークに対して、\"%(id)s"
-"\"、\"%(port_id)s\"、\"%(subnet)s\" のプロパティーのうちのいずれか 1 つを設定"
-"する必要があります。"
-
-#, python-format
-msgid ""
-"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
-"the specified network of server \"%s\"."
-msgstr ""
-"サーバー \"%s\" の指定されたネットワークに対しては、\"network\"、\"port"
-"\"、\"subnet\" のプロパティーのうち いずれか 1 つを設定する必要があります。"
-
 msgid "One or more listeners for this load balancer."
 msgstr "このロードバランサーの 1 つ以上のリスナー。"
 
@@ -3978,9 +3920,6 @@ msgstr "'%(name)s' では整数のみが許容されます。"
 #, python-format
 msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "'%(name)s' ではゼロ以外の整数のみが受け入れられます。"
-
-msgid "Operator used to combine the alarms."
-msgstr "アラームを結合するために使用する演算子。"
 
 msgid "Operator used to compare specified statistic with threshold."
 msgstr "指定された統計をしきい値と比較するために使用する演算子。"
@@ -4017,10 +3956,6 @@ msgstr "待機のシミュレーションを行うためのオプション。"
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "注文 '%(name)s' が失敗しました: %(code)s - %(reason)s"
-
-#, python-format
-msgid "Outputs must contain Output. Found a [%s] instead"
-msgstr "出力には出力 が含まれる必要があります。[%s] が見つかりました。"
 
 msgid "Outputs received"
 msgstr "受け取った出力"
@@ -4269,10 +4204,6 @@ msgstr "このポリシーのプロパティー。"
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "チェーン内で作成中の各ソースに渡すプロパティー。"
-
-#, python-format
-msgid "Property \"%s\" is supported only for Neutron."
-msgstr "プロパティー \"%s\" は Neutron でのみサポートされます。"
 
 #, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -5226,9 +5157,6 @@ msgstr "ロードバランサーを作成するアベイラビリティーゾー
 msgid "The CIDR."
 msgstr "CIDR。"
 
-msgid "The Container Orchestration Engine for this bay model."
-msgstr "このベイモデルのコンテナーオーケストレーションエンジン。"
-
 msgid "The DNS name for the LoadBalancer."
 msgstr "LoadBalancer の DNS 名。"
 
@@ -5408,9 +5336,6 @@ msgstr ""
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr "リソース %(resource_name)s) は使用できません。"
 
-msgid "The SSH Authorized Key."
-msgstr "SSH 認証鍵。"
-
 #, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr ""
@@ -5554,9 +5479,6 @@ msgstr "ボリュームが作成されるアベイラビリティーゾーン。
 
 msgid "The availability zone of shared filesystem."
 msgstr "共有ファイルシステムのアベイラビリティーゾーン。"
-
-msgid "The bay model name."
-msgstr "ベイのモデル名。"
 
 msgid "The bay name."
 msgstr "ベイの名前。"
@@ -5732,20 +5654,8 @@ msgstr "ISO-8601 形式の秘密の有効期限。"
 msgid "The external load balancer port number."
 msgstr "外部ロードバランサーのポート番号。"
 
-msgid "The external network to attach the Bay."
-msgstr "ベイを追加する外部ネットワーク。"
-
 msgid "The extra specs key and value pairs of the volume type."
 msgstr "追加スペックに関するボリュームタイプのキーと値のペア。"
-
-msgid "The fixed network to attach the Bay."
-msgstr "ベイを追加する固定ネットワーク。"
-
-msgid "The flavor of the master node for this bay model."
-msgstr "このベイモデルのマスターノードのフレーバー。"
-
-msgid "The flavor of this bay model."
-msgstr "このベイモデルのフレーバー。"
 
 msgid "The flavor to use."
 msgstr "使用するフレーバー。"
@@ -5782,12 +5692,6 @@ msgstr "コンテナー URL からのホスト。"
 msgid "The host from which a user is allowed to connect to the database."
 msgstr "ユーザーがデータベースへの接続を許可されるホスト。"
 
-msgid "The http_proxy address to use for nodes in bay."
-msgstr "ベイのノードに使用する http_proxy アドレス。"
-
-msgid "The https_proxy address to use for nodes in bay."
-msgstr "ベイのノードに使用する https_proxy アドレス。"
-
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must be "
 "specified when using vlan."
@@ -5800,9 +5704,6 @@ msgstr "使用する CA の識別子。"
 
 msgid "The image ID. Glance will generate a UUID if not specified."
 msgstr "イメージ ID。指定しない場合は Glance によって UUID が生成されます。"
-
-msgid "The image name or UUID to use as a base image for this baymodel."
-msgstr "このベイモデルのベースイメージとして使用する UUID のイメージ名。"
 
 msgid "The initiator of the ipsec site connection."
 msgstr "ipsec サイト接続のイニシエーター。"
@@ -6050,9 +5951,6 @@ msgstr "サブネットプールの名前または ID。"
 
 msgid "The name or id of the Senlin profile."
 msgstr "Senlin プロファイルの名前または ID。"
-
-msgid "The name or id of the nova ssh keypair."
-msgstr "nova の ssh キーペアの名前またはID。"
 
 msgid "The negotiation mode of the ike policy."
 msgstr "IKE ポリシーのネゴシエーションモード。"
@@ -6593,9 +6491,6 @@ msgstr ""
 "グローバルリソースタイプ %(type_name)s の定義をロードする際にエラーがありまし"
 "た。"
 
-msgid "This attribute has been removed in Magnum"
-msgstr "この属性は Magnum で削除されています。"
-
 msgid "This endpoint is enabled or disabled."
 msgstr "このエンドポイントは有効化または無効化されています。"
 
@@ -7006,9 +6901,6 @@ msgstr "ユーザー %s は無効なプロジェクトにあります"
 
 msgid "User ID for API authentication"
 msgstr "API 認証用ユーザー ID"
-
-msgid "User data script to be executed by cloud-init."
-msgstr "cloud-init によって実行されるユーザーデータスクリプト。"
 
 msgid "User data to pass to instance."
 msgstr "インスタンスに渡すユーザーデータ。"

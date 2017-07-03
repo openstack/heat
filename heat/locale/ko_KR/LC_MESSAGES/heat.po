@@ -8,9 +8,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
+"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-05-01 21:01+0000\n"
+"POT-Creation-Date: 2017-07-03 02:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -121,10 +121,6 @@ msgid "\"%s\" is not a valid boolean"
 msgstr "\"%s\"이(가) 올바른 부울이 아님"
 
 #, python-format
-msgid "\"%s\" is not a valid keyword inside a resource definition"
-msgstr "\"%s\"은(는) 자원 정의 내의 올바른 키워드가 아님"
-
-#, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr "\"%s\"은(는) 올바른 템플리트 섹션이 아님"
 
@@ -143,10 +139,6 @@ msgstr "\"%s\" 매개변수는 맵핑이어야 함"
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr "\"%s\" 매개변수는 맵이어야 함"
-
-#, python-format
-msgid "\"%s\" params must be strings or numbers"
-msgstr "\"%s\" 매개변수는 문자열 또는 숫자여야 함"
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
@@ -221,10 +213,6 @@ msgstr "%(min_size)s은(는) %(max_size)s보다 클 수 없음"
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "%(utype)s에 대해 올바르지 않은 %(name)s 제한조건"
-
-#, python-format
-msgid "%(name)s is not a valid wait condition handle."
-msgstr "%(name)s이(가) 올바른 대기 조건 핸들이 아닙니다."
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
@@ -325,11 +313,6 @@ msgid ""
 "the random string from."
 msgstr ""
 "랜덤 문자열을 생성할 문자 순서 및 그에 해당하는 %(min)s 제한조건입니다."
-
-msgid ""
-"A comma separated list of addresses for which proxies should not be used in "
-"the bay."
-msgstr "Bay에서 프록시를 사용하지 않아야 할 쉼표로 구분된 주소 목록입니다."
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr "서버 IP 주소의 쉼표로 구분된 목록입니다(히트 확장)."
@@ -677,9 +660,6 @@ msgstr "알고리즘은 %s 중 하나여야 함"
 msgid "All heat engines are down."
 msgstr "모든 히트 엔진이 중지됩니다."
 
-msgid "Allocate a floating IP from a given floating IP pool."
-msgstr "주어진 유동 IP pool에서 유동 IP를 할당하세요. "
-
 msgid "Allocated floating IP address."
 msgstr "부동 IP 주소가 할당되었습니다."
 
@@ -818,10 +798,6 @@ msgstr ""
 
 msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr "집합의 정보를 저장할 임의의 키/값 메타데이터입니다."
-
-msgid ""
-"Arbitrary labels in the form of key=value pairs to associate with a baymodel."
-msgstr "Baymodel과 연관시킬 키=값 쌍 형식의 임의 레이블입니다."
 
 #, python-format
 msgid "Argument to \"%s\" must be a list"
@@ -1611,9 +1587,6 @@ msgstr ""
 "Mistral Engine에서 태스크를 실행하는 방법에 영향을 미치는 태스크 정책을 ㅈ어"
 "의하는 사전과 유사한 섹션입니다. Mistral DSL v2를 만족시켜야 합니다."
 
-msgid "Disable TLS in the bay."
-msgstr "Bay에서 TLS를 사용하지 않게 설정하십시오."
-
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback 및 OnFailure를 함께 사용할 수 없음"
 
@@ -1679,9 +1652,6 @@ msgstr "디바이스 맵핑 %s에 대해 volume_id 또는 snapshot_id가 지정�
 
 msgid "Email address of keystone user."
 msgstr "keystone 사용자의 이메일 주소입니다."
-
-msgid "Enable the docker registry in the bay."
-msgstr "Bay에서 docker 레지스트리를 사용하십시오."
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "레거시 OS::Heat::CWLiteAlarm 자원을 사용합니다."
@@ -2890,9 +2860,6 @@ msgstr "현재 LB에 할당된 보안 그룹 목록입니다."
 msgid "List of TLS container references for SNI."
 msgstr "SNI의 TLS 컨테이너 참조 목록입니다."
 
-msgid "List of alarm identifiers to combine."
-msgstr "결합할 알람 ID의 목록입니다."
-
 msgid "List of database instances."
 msgstr "데이터베이스 인스턴스의 목록입니다."
 
@@ -3020,9 +2987,6 @@ msgstr "포트의 MAC 주소입니다."
 
 msgid "MAC address to allow through this port."
 msgstr "이 포트를 통해 허용할 MAC 주소입니다."
-
-msgid "Make the baymodel public."
-msgstr "Baymodel을 공개로 만드십시오."
 
 msgid "Map between role with either project or domain."
 msgstr "프로젝트나 도메인이 있는 역할 사이의 맵핑입니다."
@@ -3646,10 +3610,6 @@ msgstr "ID가 \"%s\"인 스택이 존재하지 않음"
 msgid "No stack name specified"
 msgstr "스택 이름이 지정되지 않음"
 
-#, python-format
-msgid "No such workflow %s"
-msgstr "해당 워크플로우가 없음: %s"
-
 msgid "No template specified"
 msgstr "템플리트가 지정되지 않음"
 
@@ -3770,22 +3730,6 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "사전 정의된 상태 모니터 유형 중 하나입니다."
 
-#, python-format
-msgid ""
-"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
-"be set for the specified network of server \"%(server)s\"."
-msgstr ""
-"\"%(id)s\", \"%(port_id)s\" 또는 \"%(subnet)s\" 특성 중 하나를 서버 "
-"\"%(server)s\"의 지정된 네트워크에 설정해야 합니다."
-
-#, python-format
-msgid ""
-"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
-"the specified network of server \"%s\"."
-msgstr ""
-"\"%s\" 서버에 지정된 네트워크에는 \"network\", \"port\" 또는 \"subnet\" 특성 "
-"중 하나를 설정해야 합니다."
-
 msgid "One or more listeners for this load balancer."
 msgstr "이 로드 밸런서에 대한 하나 이상의 리스너입니다."
 
@@ -3802,9 +3746,6 @@ msgstr "'%(name)s'에서는 정수만 허용됩니다. "
 #, python-format
 msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "'%(name)s'에서는 0이 아닌 정수만 허용됩니다. "
-
-msgid "Operator used to combine the alarms."
-msgstr "알람을 결합하는 데 사용된 연산자입니다."
 
 msgid "Operator used to compare specified statistic with threshold."
 msgstr "지정된 통계를 임계값과 비교하는 데 사용된 연산자입니다."
@@ -3842,10 +3783,6 @@ msgstr "대기를 시뮬레이션하는 옵션입니다."
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "순서 '%(name)s' 실패: %(code)s - %(reason)s"
-
-#, python-format
-msgid "Outputs must contain Output. Found a [%s] instead"
-msgstr "출력에는 출력이 포함되어야 합니다. 대신 [%s]이(가) 발견되었습니다."
 
 msgid "Outputs received"
 msgstr "출력 수신"
@@ -4089,10 +4026,6 @@ msgstr "이 정책의 특성입니다."
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "체인에 작성 중인 각 자원에 전달되는 특성입니다."
-
-#, python-format
-msgid "Property \"%s\" is supported only for Neutron."
-msgstr "특성\"%s\"은(는) Neutron에만 지원됩니다."
 
 #, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -4992,9 +4925,6 @@ msgstr "로드 밸런서를 작성할 가용성 구역입니다."
 msgid "The CIDR."
 msgstr "CIDR입니다."
 
-msgid "The Container Orchestration Engine for this bay model."
-msgstr "이 bay 모델의 Container Orchestration Engine입니다."
-
 msgid "The DNS name for the LoadBalancer."
 msgstr "LoadBalancer의 DNS 이름입니다."
 
@@ -5169,9 +5099,6 @@ msgstr "자원(%(resource_name)s)을%(stack_name)s."
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr "자원(%(resource_name)s)을 사용할 수 없습니다."
 
-msgid "The SSH Authorized Key."
-msgstr "SSH 인증 키입니다."
-
 #, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr "스택 (%(stack)s)의 스냅샷(%(snapshot)s)을 찾을 수 없습니다."
@@ -5313,9 +5240,6 @@ msgstr "볼륨이 작성되는 가용성 구역입니다."
 
 msgid "The availability zone of shared filesystem."
 msgstr "공유 파일 시스템의 가용 구역입니다."
-
-msgid "The bay model name."
-msgstr "Bay 모델 이름입니다."
 
 msgid "The bay name."
 msgstr "Bay 이름입니다."
@@ -5484,20 +5408,8 @@ msgstr "ISO-8601 형식으로 된 시크릿의 만기 날짜입니다."
 msgid "The external load balancer port number."
 msgstr "외부 로드 밸런서 포트 번호입니다."
 
-msgid "The external network to attach the Bay."
-msgstr "Bay를 연결하기 위한 외부 네트워크입니다."
-
 msgid "The extra specs key and value pairs of the volume type."
 msgstr "볼륨 타입의 추가 스펙 키 및 값 쌍입니다."
-
-msgid "The fixed network to attach the Bay."
-msgstr "Bay를 연결하기 위한 고정 네트워크입니다."
-
-msgid "The flavor of the master node for this bay model."
-msgstr "이 bay 모델에 대한 마스터 노드의 flavor입니다."
-
-msgid "The flavor of this bay model."
-msgstr "이 bay 모델의 flavor입니다."
 
 msgid "The flavor to use."
 msgstr "사용할 플레이버"
@@ -5532,12 +5444,6 @@ msgstr "컨테이너 URL의 호스트입니다."
 msgid "The host from which a user is allowed to connect to the database."
 msgstr "사용자가 데이터베이스에 연결하도록 허용되는 호스트입니다."
 
-msgid "The http_proxy address to use for nodes in bay."
-msgstr "Bay의 노드에 사용할 http_proxy 주소입니다."
-
-msgid "The https_proxy address to use for nodes in bay."
-msgstr "Bay의 노드에 사용할 https_proxy 주소입니다."
-
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must be "
 "specified when using vlan."
@@ -5550,9 +5456,6 @@ msgstr "사용할 CA의 ID입니다."
 
 msgid "The image ID. Glance will generate a UUID if not specified."
 msgstr "이미지 ID입니다. 지정되어 있지 않으면 글랜스에서 UUID를 생성합니다."
-
-msgid "The image name or UUID to use as a base image for this baymodel."
-msgstr "이 baymodel의 기본 이미지로 사용할 이미지 이름 또는 UUID입니다."
 
 msgid "The initiator of the ipsec site connection."
 msgstr "ipsec 사이트 연결의 개시자입니다."
@@ -5795,9 +5698,6 @@ msgstr "서브넷 풀의 이름 또는 ID입니다."
 
 msgid "The name or id of the Senlin profile."
 msgstr "Senlin 프로파일의 이름 또는 id입니다."
-
-msgid "The name or id of the nova ssh keypair."
-msgstr "nova ssh 키 페어의 이름 또는 id입니다."
 
 msgid "The negotiation mode of the ike policy."
 msgstr "ike 정책의 협상 모드입니다."
@@ -6324,9 +6224,6 @@ msgid ""
 msgstr ""
 "글로벌 자원 유형 %(type_name)s의 정의를 로드하는 중에 오류가 발생했습니다."
 
-msgid "This attribute has been removed in Magnum"
-msgstr "이 속성은 Magnum에서 제거됨"
-
 msgid "This endpoint is enabled or disabled."
 msgstr "이 엔드포인트를 사용하거나 사용하지 않게 설정합니다."
 
@@ -6731,9 +6628,6 @@ msgstr "사용자 %s이(가) 올바르지 않은 프로젝트에 있음"
 
 msgid "User ID for API authentication"
 msgstr "API 인증용 사용자 ID"
-
-msgid "User data script to be executed by cloud-init."
-msgstr "cloud-init로 실행할 사용자 데이터 스크립트입니다."
 
 msgid "User data to pass to instance."
 msgstr "인스턴스에 전달할 사용자 데이터입니다."

@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b2.dev60\n"
+"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-05-01 21:01+0000\n"
+"POT-Creation-Date: 2017-07-03 02:49+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -119,10 +119,6 @@ msgid "\"%s\" is not a valid boolean"
 msgstr "\"%s\" не является допустимым булевским значением"
 
 #, python-format
-msgid "\"%s\" is not a valid keyword inside a resource definition"
-msgstr "\"%s\" не является допустимым ключевым словом в определении ресурса"
-
-#, python-format
 msgid "\"%s\" is not a valid template section"
 msgstr "\"%s\" не является допустимым разделом шаблона"
 
@@ -141,10 +137,6 @@ msgstr "Параметры \"%s\" должны быть связыванием"
 #, python-format
 msgid "\"%s\" params must be a map"
 msgstr "Параметры \"%s\" должны быть картой связей"
-
-#, python-format
-msgid "\"%s\" params must be strings or numbers"
-msgstr "Параметры \"%s\" должны быть строками или числами"
 
 #, python-format
 msgid "\"%s\" params must be strings, numbers, list or map."
@@ -222,10 +214,6 @@ msgstr "%(min_size)s не может превышать %(max_size)s"
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
 msgstr "Неверное ограничение %(name)s для %(utype)s"
-
-#, python-format
-msgid "%(name)s is not a valid wait condition handle."
-msgstr "%(name)s не является допустимым обработчиком условия ожидания."
 
 #, python-format
 msgid "%(prop1)s cannot be specified without %(prop2)s."
@@ -328,13 +316,6 @@ msgid ""
 msgstr ""
 "Последовательность символов и его соответствующее ограничение %(min)s для "
 "генерирования из них псевдослучайной строки."
-
-msgid ""
-"A comma separated list of addresses for which proxies should not be used in "
-"the bay."
-msgstr ""
-"Список адресов через запятую, для которых прокси не будет использоваться в "
-"отсеке."
 
 msgid "A comma-delimited list of server ip addresses. (Heat extension)."
 msgstr "Разделенный запятыми список ip-адресов сервера. (Расширение Heat)."
@@ -722,9 +703,6 @@ msgstr "Алгоритм должен быть одним из следующи�
 msgid "All heat engines are down."
 msgstr "Все модули heat выключены."
 
-msgid "Allocate a floating IP from a given floating IP pool."
-msgstr "Выделить назначаемый IP из указанного пула назначаемых IP."
-
 msgid "Allocated floating IP address."
 msgstr "Выделенный нефиксированный IP-адрес."
 
@@ -873,10 +851,6 @@ msgid "Arbitrary key/value metadata to store information for aggregate."
 msgstr ""
 "Произвольные метаданные вида ключ-значение для сохранения информации о "
 "совокупном объекте. "
-
-msgid ""
-"Arbitrary labels in the form of key=value pairs to associate with a baymodel."
-msgstr "Произвольные метки в формате ключ=значение для модели отсека."
 
 #, python-format
 msgid "Argument to \"%s\" must be a list"
@@ -1684,9 +1658,6 @@ msgstr ""
 "Раздел в формате словария, определяющий стратегии задачи, влияющие на способ "
 "выполнения задач модулем Mistral. Должен соответствовать Mistral DSL v2."
 
-msgid "Disable TLS in the bay."
-msgstr "Выключить TLS в отсеке."
-
 msgid "DisableRollback and OnFailure may not be used together"
 msgstr "DisableRollback и OnFailure не могут быть указаны одновременно"
 
@@ -1753,9 +1724,6 @@ msgstr ""
 
 msgid "Email address of keystone user."
 msgstr "Адрес электронной почты пользователя keystone."
-
-msgid "Enable the docker registry in the bay."
-msgstr "Включить реестр Docker в отсеке."
 
 msgid "Enable the legacy OS::Heat::CWLiteAlarm resource."
 msgstr "Включить устаревший ресурс OS::Heat::CWLiteAlarm."
@@ -3021,11 +2989,6 @@ msgstr "Список групп защиты, присвоенных текущ�
 msgid "List of TLS container references for SNI."
 msgstr "Список ссылок на контейнеры TLS для SNI."
 
-msgid "List of alarm identifiers to combine."
-msgstr ""
-"Список идентификаторов предупреждений, которые могут использоваться "
-"одновременно."
-
 msgid "List of database instances."
 msgstr "Список экземпляров базы данных."
 
@@ -3162,9 +3125,6 @@ msgstr "MAC-адрес порта."
 
 msgid "MAC address to allow through this port."
 msgstr "MAC-адрес, разрешенный для этого порта."
-
-msgid "Make the baymodel public."
-msgstr "Сделать модель отсека общедоступной."
 
 msgid "Map between role with either project or domain."
 msgstr "Карта связей ролей с проектом или доменом."
@@ -3811,10 +3771,6 @@ msgstr "Отсутствует стек с ИД \"%s\""
 msgid "No stack name specified"
 msgstr "Имя стека не указано"
 
-#, python-format
-msgid "No such workflow %s"
-msgstr "Не существует такого потока операций: %s"
-
 msgid "No template specified"
 msgstr "Шаблон не указан"
 
@@ -3939,22 +3895,6 @@ msgstr ""
 msgid "One of predefined health monitor types."
 msgstr "Один из стандартных типов монитора работоспособности."
 
-#, python-format
-msgid ""
-"One of the properties \"%(id)s\", \"%(port_id)s\" or \"%(subnet)s\" should "
-"be set for the specified network of server \"%(server)s\"."
-msgstr ""
-"Одно из свойств,  \"%(id)s\", \"%(port_id)s\" или \"%(subnet)s\", должно "
-"быть задано для указанной сети сервера \"%(server)s\"."
-
-#, python-format
-msgid ""
-"One of the properties \"network\", \"port\" or \"subnet\" should be set for "
-"the specified network of server \"%s\"."
-msgstr ""
-"Одно из свойств, \"network\", \"port\" или \"subnet\", должно быть задано "
-"для указанной сети сервера \"%s\"."
-
 msgid "One or more listeners for this load balancer."
 msgstr "Один или несколько приемников для этого распределителя нагрузки."
 
@@ -3973,9 +3913,6 @@ msgstr "Для %(name)s допустимо только целое число."
 #, python-format
 msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "Для %(name)s допустимо только целое число, отличное от нуля."
-
-msgid "Operator used to combine the alarms."
-msgstr "Оператор, используемый для соединения предупреждений."
 
 msgid "Operator used to compare specified statistic with threshold."
 msgstr "Оператор для сравнения указанной статистики с порогом."
@@ -4013,10 +3950,6 @@ msgstr "Параметры для эмуляции ожидания."
 #, python-format
 msgid "Order '%(name)s' failed: %(code)s - %(reason)s"
 msgstr "Заказ '%(name)s' не выполнен: %(code)s - %(reason)s"
-
-#, python-format
-msgid "Outputs must contain Output. Found a [%s] instead"
-msgstr "Вывод должен содержать элементы Output. Вместо него обнаружен [%s]"
 
 msgid "Outputs received"
 msgstr "Выходы получены"
@@ -4267,10 +4200,6 @@ msgstr "Свойства стратегии."
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "Свойства, передаваемые каждому ресурсу, создаваемому в цепочке."
-
-#, python-format
-msgid "Property \"%s\" is supported only for Neutron."
-msgstr "Свойство \"%s\" поддерживается только для Neutron."
 
 #, python-format
 msgid "Property %(cookie)s is required when %(sp)s type is set to %(app)s."
@@ -5200,9 +5129,6 @@ msgstr "Области доступности для создания распр
 msgid "The CIDR."
 msgstr "CIDR."
 
-msgid "The Container Orchestration Engine for this bay model."
-msgstr "Модуль оркестрации контейнеров для этой модели отсека."
-
 msgid "The DNS name for the LoadBalancer."
 msgstr "Имя DNS для LoadBalancer."
 
@@ -5381,9 +5307,6 @@ msgstr "Ресурс (%(resource_name)s) не найден в стеке %(stack
 msgid "The Resource (%(resource_name)s) is not available."
 msgstr "Ресурс (%(resource_name)s) недоступен."
 
-msgid "The SSH Authorized Key."
-msgstr "Доверенный ключ SSH."
-
 #, python-format
 msgid "The Snapshot (%(snapshot)s) for Stack (%(stack)s) could not be found."
 msgstr "Не найдена моментальная копия (%(snapshot)s) для стека (%(stack)s)."
@@ -5527,9 +5450,6 @@ msgstr "Область доступности, в которой будет со
 
 msgid "The availability zone of shared filesystem."
 msgstr "Зона доступности для общих файловых систем."
-
-msgid "The bay model name."
-msgstr "Имя модели отсека."
 
 msgid "The bay name."
 msgstr "Имя отсека."
@@ -5707,20 +5627,8 @@ msgstr "Дата истечения срока действия секретно
 msgid "The external load balancer port number."
 msgstr "Номер порта внешнего распределителя нагрузки."
 
-msgid "The external network to attach the Bay."
-msgstr "Внешняя сеть для подключения отсека."
-
 msgid "The extra specs key and value pairs of the volume type."
 msgstr "Дополнительные пары ключ-значение, определенные для типа тома."
-
-msgid "The fixed network to attach the Bay."
-msgstr "Фиксированная сеть для подключения отсека."
-
-msgid "The flavor of the master node for this bay model."
-msgstr "Разновидность главного узла для модели отсека."
-
-msgid "The flavor of this bay model."
-msgstr "Разновидность модели отсека."
 
 msgid "The flavor to use."
 msgstr "Используемая разновидность."
@@ -5758,12 +5666,6 @@ msgstr "Хост из URL контейнера."
 msgid "The host from which a user is allowed to connect to the database."
 msgstr "Хост, с которого пользователю разрешается подключиться к базе данных."
 
-msgid "The http_proxy address to use for nodes in bay."
-msgstr "Адрес http_proxy для узлов в отсеке."
-
-msgid "The https_proxy address to use for nodes in bay."
-msgstr "Адрес https_proxy для узлов в отсеке."
-
 msgid ""
 "The id for L2 segment on the external side of the network gateway. Must be "
 "specified when using vlan."
@@ -5776,9 +5678,6 @@ msgstr "Идентификатор центра сертификации (CA)."
 
 msgid "The image ID. Glance will generate a UUID if not specified."
 msgstr "ИД образа. Glance создаст UUID, если тот не указан."
-
-msgid "The image name or UUID to use as a base image for this baymodel."
-msgstr "Имя или UUID, используемого как базовый для этой модели отсека."
 
 msgid "The initiator of the ipsec site connection."
 msgstr "Инициатор соединения с сайтом ipsec."
@@ -6034,9 +5933,6 @@ msgstr "Имя или ИД пула подсетей."
 
 msgid "The name or id of the Senlin profile."
 msgstr "Имя или ИД профайла senlin."
-
-msgid "The name or id of the nova ssh keypair."
-msgstr "Имя или ИД пары ключей ssh Nova."
 
 msgid "The negotiation mode of the ike policy."
 msgstr "Режим согласования стратегии ike."
@@ -7022,9 +6918,6 @@ msgstr "Пользователь %s из неверного проекта"
 
 msgid "User ID for API authentication"
 msgstr "ИД пользователя для идентификации API"
-
-msgid "User data script to be executed by cloud-init."
-msgstr "Сценарий пользовательских данных, выполняемый cloud-init."
 
 msgid "User data to pass to instance."
 msgstr "Пользовательские данные для передачи экземпляру."
