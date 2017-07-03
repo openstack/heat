@@ -918,6 +918,30 @@ class Resource(status.ResourceStatus):
             self._rsrc_prop_data = None
             self.attributes.reset_resolved_values()
 
+    def referenced_attrs(self, in_resources=True, in_outputs=True):
+        """Return the set of all attributes referenced in the template.
+
+        This enables the resource to calculate which of its attributes will
+        be used. By default, attributes referenced in either other resources
+        or outputs will be included. Either can be excluded by setting the
+        `in_resources` or `in_outputs` parameters to False.
+        """
+        def get_dep_attrs(source_dict):
+            return set(self.stack.get_dep_attrs(six.itervalues(source_dict),
+                                                self.name))
+
+        refd_attrs = set()
+        if in_resources:
+            refd_attrs |= get_dep_attrs(self.stack.resources)
+        if in_outputs:
+            refd_attrs |= get_dep_attrs(self.stack.outputs)
+
+        if attributes.ALL_ATTRIBUTES in refd_attrs:
+            refd_attrs.remove(attributes.ALL_ATTRIBUTES)
+            refd_attrs |= (set(self.attributes) - {self.SHOW})
+
+        return refd_attrs
+
     def node_data(self):
         def get_attrs(attrs):
             for attr in attrs:
@@ -927,13 +951,7 @@ class Resource(status.ResourceStatus):
                 except exception.InvalidTemplateAttribute as ita:
                     LOG.info('%s', ita)
 
-        dep_attrs = set(self.stack.get_dep_attrs(
-            six.itervalues(self.stack.resources),
-            self.name))
-        if attributes.ALL_ATTRIBUTES in dep_attrs:
-            dep_attrs.remove(attributes.ALL_ATTRIBUTES)
-            dep_attrs |= (set(self.attributes) - {self.SHOW})
-
+        dep_attrs = self.referenced_attrs(in_outputs=False)
         return node_data.NodeData(self.id, self.name, self.uuid,
                                   self.get_reference_id(),
                                   dict(get_attrs(dep_attrs)),

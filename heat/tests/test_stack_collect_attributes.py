@@ -232,3 +232,38 @@ class DepAttrsTest(common.HeatTestCase):
                              self.stack.get_dep_attrs(
                                  resources,
                                  res.name))
+
+
+class ReferencedAttrsTest(common.HeatTestCase):
+    def setUp(self):
+        super(ReferencedAttrsTest, self).setUp()
+        parsed_tmpl = template_format.parse(tmpl6)
+        self.stack = stack.Stack(utils.dummy_context(), 'test_stack',
+                                 template.Template(parsed_tmpl))
+        self.resA = self.stack['AResource']
+        self.resB = self.stack['BResource']
+
+    def test_referenced_attrs_resources(self):
+        self.assertEqual(self.resA.referenced_attrs(in_resources=True,
+                                                    in_outputs=False),
+                         {('list', 1), ('nested_dict', 'dict', 'b')})
+        self.assertEqual(self.resB.referenced_attrs(in_resources=True,
+                                                    in_outputs=False),
+                         set())
+
+    def test_referenced_attrs_outputs(self):
+        self.assertEqual(self.resA.referenced_attrs(in_resources=False,
+                                                    in_outputs=True),
+                         {('flat_dict', 'key2'), ('nested_dict', 'string')})
+        self.assertEqual(self.resB.referenced_attrs(in_resources=False,
+                                                    in_outputs=True),
+                         {'attr_B3'})
+
+    def test_referenced_attrs_both(self):
+        self.assertEqual(self.resA.referenced_attrs(in_resources=True,
+                                                    in_outputs=True),
+                         {('list', 1), ('nested_dict', 'dict', 'b'),
+                          ('flat_dict', 'key2'), ('nested_dict', 'string')})
+        self.assertEqual(self.resB.referenced_attrs(in_resources=True,
+                                                    in_outputs=True),
+                         {'attr_B3'})
