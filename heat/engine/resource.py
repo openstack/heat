@@ -1151,9 +1151,6 @@ class Resource(status.ResourceStatus):
         properties.update_translation(rules, client_resolve=client_resolve)
 
     def cancel_grace_period(self):
-        if self.status != self.IN_PROGRESS:
-            return None
-
         canceller = getattr(self,
                             'handle_%s_cancel' % self.action.lower(),
                             None)
