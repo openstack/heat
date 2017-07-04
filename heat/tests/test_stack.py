@@ -2924,15 +2924,18 @@ class StackTest(common.HeatTestCase):
 
 class StackKwargsForCloningTest(common.HeatTestCase):
     scenarios = [
-        ('default', dict(keep_status=False, only_db=False,
-                         not_included=['action', 'status', 'status_reason'])),
-        ('only_db', dict(keep_status=False, only_db=True,
+        ('default', dict(keep_status=False, only_db=False, keep_tags=False,
                          not_included=['action', 'status', 'status_reason',
-                                       'strict_validate'])),
-        ('keep_status', dict(keep_status=True, only_db=False,
-                             not_included=[])),
-        ('status_db', dict(keep_status=True, only_db=True,
-                           not_included=['strict_validate'])),
+                                       'tags'])),
+        ('only_db', dict(keep_status=False, only_db=True, keep_tags=False,
+                         not_included=['action', 'status', 'status_reason',
+                                       'strict_validate', 'tags'])),
+        ('keep_status', dict(keep_status=True, only_db=False, keep_tags=False,
+                             not_included=['tags'])),
+        ('status_db', dict(keep_status=True, only_db=True, keep_tags=False,
+                           not_included=['strict_validate', 'tags'])),
+        ('keep_tags', dict(keep_status=False, only_db=False, keep_tags=True,
+                           not_included=['action', 'status', 'status_reason']))
     ]
 
     def test_kwargs(self):
@@ -2945,7 +2948,8 @@ class StackKwargsForCloningTest(common.HeatTestCase):
                          user_creds_id=123, tenant_id='some-uuid',
                          username='jo', nested_depth=3,
                          strict_validate=True, convergence=False,
-                         current_traversal=45)
+                         current_traversal=45,
+                         tags=['tag1', 'tag2'])
         db_map = {'parent_resource': 'parent_resource_name',
                   'tenant_id': 'tenant', 'timeout_mins': 'timeout'}
         test_db_data = {}
@@ -2956,7 +2960,8 @@ class StackKwargsForCloningTest(common.HeatTestCase):
         self.stack = stack.Stack(ctx, utils.random_name(), tmpl,
                                  **test_data)
         res = self.stack.get_kwargs_for_cloning(keep_status=self.keep_status,
-                                                only_db=self.only_db)
+                                                only_db=self.only_db,
+                                                keep_tags=self.keep_tags)
         for key in self.not_included:
             self.assertNotIn(key, res)
 
