@@ -96,7 +96,7 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         self.assertEqual(expected, observed)
 
     def test_find_flavor_by_name_or_id(self):
-        """Tests the get_flavor_id function."""
+        """Tests the find_flavor_by_name_or_id function."""
         flav_id = str(uuid.uuid4())
         flav_name = 'X-Large'
         my_flavor = mock.MagicMock()
