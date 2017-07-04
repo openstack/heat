@@ -856,21 +856,24 @@ class StackUpdateTest(common.HeatTestCase):
                              cancel_message=rpc_api.THREAD_CANCEL):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
-
+        old_tags = ['tag1', 'tag2']
         self.stack = stack.Stack(self.ctx, 'update_test_stack',
-                                 template.Template(tmpl))
+                                 template.Template(tmpl), tags=old_tags)
         self.stack.store()
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
+        self.assertEqual(old_tags, self.stack.tags)
 
         tmpl2 = {'HeatTemplateFormatVersion': '2012-12-12',
                  'Resources': {
                      'AResource': {'Type': 'GenericResourceType'},
                      'BResource': {'Type': 'MultiStepResourceType'}}}
+        new_tags = ['tag3', 'tag4']
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2),
-                                    disable_rollback=disable_rollback)
+                                    disable_rollback=disable_rollback,
+                                    tags=new_tags)
 
         msgq_mock = mock.MagicMock()
         msgq_mock.get_nowait.return_value = cancel_message
@@ -878,6 +881,10 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack, msg_queue=msgq_mock)
 
         self.assertEqual(state, self.stack.state)
+        if disable_rollback:
+            self.assertEqual(new_tags, self.stack.tags)
+        else:
+            self.assertEqual(old_tags, self.stack.tags)
         msgq_mock.get_nowait.assert_called_once_with()
 
     def test_update_force_cancel_no_rollback(self):

@@ -592,7 +592,8 @@ class Stack(collections.Mapping):
                    nested_depth=stack.nested_depth,
                    deleted_time=stack.deleted_at)
 
-    def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
+    def get_kwargs_for_cloning(self, keep_status=False, only_db=False,
+                               keep_tags=False):
         """Get common kwargs for calling Stack() for cloning.
 
         The point of this method is to reduce the number of places that we
@@ -633,6 +634,8 @@ class Stack(collections.Mapping):
             stack['tenant_id'] = self.tenant_id
             stack['timeout_mins'] = self.timeout_mins
             stack['strict_validate'] = self.strict_validate
+            if keep_tags:
+                stack['tags'] = self.tags
 
         return stack
 
@@ -1196,7 +1199,7 @@ class Stack(collections.Mapping):
             LOG.debug('Loaded existing backup stack')
             return self.load(self.context, stack=s)
         elif create_if_missing:
-            kwargs = self.get_kwargs_for_cloning()
+            kwargs = self.get_kwargs_for_cloning(keep_tags=True)
             kwargs['owner_id'] = self.id
             del(kwargs['prev_raw_template_id'])
             prev = type(self)(self.context, self._backup_name(),
@@ -1512,7 +1515,7 @@ class Stack(collections.Mapping):
         if action == self.UPDATE:
             # Oldstack is useless when the action is not UPDATE , so we don't
             # need to build it, this can avoid some unexpected errors.
-            kwargs = self.get_kwargs_for_cloning()
+            kwargs = self.get_kwargs_for_cloning(keep_tags=True)
             self._ensure_encrypted_param_names_valid()
             oldstack = Stack(self.context, self.name, copy.deepcopy(self.t),
                              **kwargs)
