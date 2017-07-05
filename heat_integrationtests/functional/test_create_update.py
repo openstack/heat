@@ -14,6 +14,7 @@
 import copy
 import json
 
+from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
 
 test_template_one_resource = {
@@ -699,4 +700,11 @@ resources:
                           template=updated_template,
                           expected_status='UPDATE_IN_PROGRESS')
 
-        self.assertIn('test3', self.list_resources(stack_identifier))
+        def check_resources():
+            resources = self.list_resources(stack_identifier)
+            if len(resources) < 2:
+                return False
+            self.assertIn('test3', resources)
+            return True
+
+        self.assertTrue(test.call_until_true(20, 2, check_resources))
