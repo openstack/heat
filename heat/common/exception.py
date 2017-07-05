@@ -227,18 +227,35 @@ class HeatExceptionWithPath(HeatException):
             message=self.error_message
         )
 
-    def error(self):
-        return self.error
-
-    def path(self):
-        return self.path
-
-    def error_message(self):
-        return self.error_message
-
 
 class StackValidationFailed(HeatExceptionWithPath):
-    pass
+    def __init__(self, error=None, path=None, message=None,
+                 resource=None):
+        if path is None:
+            path = []
+        elif isinstance(path, six.string_types):
+            path = [path]
+
+        if resource is not None and not path:
+            path = [resource.stack.t.get_section_name(
+                resource.stack.t.RESOURCES), resource.name]
+        if isinstance(error, Exception):
+            if isinstance(error, StackValidationFailed):
+                str_error = error.error
+                message = error.error_message
+                path = path + error.path
+                # This is a hack to avoid the py3 (chained exception)
+                # json serialization circular reference error from
+                # oslo.messaging.
+                self.args = error.args
+            else:
+                str_error = six.text_type(type(error).__name__)
+                message = six.text_type(error)
+        else:
+            str_error = error
+
+        super(StackValidationFailed, self).__init__(error=str_error, path=path,
+                                                    message=message)
 
 
 class InvalidSchemaError(HeatException):

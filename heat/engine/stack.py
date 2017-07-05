@@ -21,7 +21,6 @@ import warnings
 
 from oslo_config import cfg
 from oslo_log import log as logging
-from oslo_utils import encodeutils
 from oslo_utils import excutils
 from oslo_utils import timeutils as oslo_timeutils
 from oslo_utils import uuidutils
@@ -861,8 +860,8 @@ class Stack(collections.Mapping):
             except Exception as ex:
                 LOG.info("Exception in stack validation",
                          exc_info=True)
-                raise exception.StackValidationFailed(
-                    message=encodeutils.safe_decode(six.text_type(ex)))
+                raise exception.StackValidationFailed(error=ex,
+                                                      resource=res)
             if result:
                 raise exception.StackValidationFailed(message=result)
             eventlet.sleep(0)

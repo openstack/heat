@@ -76,10 +76,20 @@ class StackResource(resource.Resource):
         except AssertionError:
             raise
         except Exception as ex:
+            path = "%s<%s>" % (self.name, self.template_url)
             raise exception.StackValidationFailed(
-                error=_("Failed to validate"),
-                path=[self.stack.t.get_section_name('resources'), self.name],
-                message=six.text_type(ex))
+                ex, path=[self.stack.t.RESOURCES, path])
+
+    @property
+    def template_url(self):
+        """Template url for the stack resource.
+
+        When stack resource is a TemplateResource, it's the template
+        location. For group resources like ResourceGroup where the
+        template is constructed dynamically, it's just a placeholder.
+        """
+
+        return "nested_stack"
 
     def _outputs_to_attribs(self, json_snippet):
         outputs = json_snippet.get('Outputs')

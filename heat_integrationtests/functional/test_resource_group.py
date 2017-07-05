@@ -82,7 +82,9 @@ resources:
 
         # Prove validation works for non-zero create/update
         template_two_nested = self.template.replace("count: 0", "count: 2")
-        expected_err = "Value 'BAD' is not an integer"
+        expected_err = ("resources.random_group<nested_stack>.resources."
+                        "0<provider.yaml>.resources.random: : "
+                        "Value 'BAD' is not an integer")
         ex = self.assertRaises(exc.HTTPBadRequest, self.update_stack,
                                stack_identifier, template_two_nested,
                                environment=env, files=files)

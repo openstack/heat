@@ -77,7 +77,7 @@ class TemplateResource(stack_resource.StackResource):
                 'Only Templates with an extension of .yaml or '
                 '.template are supported'))
         else:
-            self.template_name = tri.template_name
+            self._template_name = tri.template_name
             self.resource_type = tri.name
             self.resource_path = tri.path
             if tri.user_resource:
@@ -170,12 +170,16 @@ class TemplateResource(stack_resource.StackResource):
     def child_template(self):
         if not self._parsed_nested:
             self._parsed_nested = template_format.parse(self.template_data(),
-                                                        self.template_name)
+                                                        self.template_url)
         return self._parsed_nested
 
     def regenerate_info_schema(self, definition):
         self._get_resource_info(definition)
         self._generate_schema()
+
+    @property
+    def template_url(self):
+        return self._template_name
 
     def template_data(self):
         # we want to have the latest possible template.
@@ -183,11 +187,11 @@ class TemplateResource(stack_resource.StackResource):
         # 2. try download
         # 3. look in the db
         reported_excp = None
-        t_data = self.stack.t.files.get(self.template_name)
+        t_data = self.stack.t.files.get(self.template_url)
         stored_t_data = t_data
-        if not t_data and self.template_name.endswith((".yaml", ".template")):
+        if not t_data and self.template_url.endswith((".yaml", ".template")):
             try:
-                t_data = self.get_template_file(self.template_name,
+                t_data = self.get_template_file(self.template_url,
                                                 self.allowed_schemes)
             except exception.NotFound as err:
                 if self.action == self.UPDATE:
@@ -200,14 +204,14 @@ class TemplateResource(stack_resource.StackResource):
 
         if t_data is not None:
             if t_data != stored_t_data:
-                self.stack.t.files[self.template_name] = t_data
+                self.stack.t.files[self.template_url] = t_data
             self.stack.t.env.register_class(self.resource_type,
-                                            self.template_name,
+                                            self.template_url,
                                             path=self.resource_path)
             return t_data
         if reported_excp is None:
             reported_excp = ValueError(_('Unknown error retrieving %s') %
-                                       self.template_name)
+                                       self.template_url)
         raise reported_excp
 
     def _validate_against_facade(self, facade_cls):
