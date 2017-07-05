@@ -129,7 +129,7 @@ class WorkerService(object):
 
         return True
 
-    def _retrigger_replaced(self, is_update, rsrc, stack, msg_queue):
+    def _retrigger_replaced(self, is_update, rsrc, stack, check_resource):
         graph = stack.convergence_dependencies.graph()
         key = (rsrc.id, is_update)
         if key not in graph and rsrc.replaces is not None:
@@ -141,10 +141,8 @@ class WorkerService(object):
             # The old resource might be in the graph (a rollback case);
             # just re-trigger it.
             key = (rsrc.replaces, is_update)
-            cr = check_resource.CheckResource(self.engine_id, self._rpc_client,
-                                              self.thread_group_mgr, msg_queue)
-            cr.retrigger_check_resource(stack.context, is_update, key[0],
-                                        stack)
+            check_resource.retrigger_check_resource(stack.context, is_update,
+                                                    key[0], stack)
 
     @context.request_context
     def check_resource(self, cnxt, resource_id, current_traversal, data,
@@ -166,15 +164,15 @@ class WorkerService(object):
         msg_queue = eventlet.queue.LightQueue()
         try:
             self.thread_group_mgr.add_msg_queue(stack.id, msg_queue)
+            cr = check_resource.CheckResource(self.engine_id,
+                                              self._rpc_client,
+                                              self.thread_group_mgr,
+                                              msg_queue, in_data)
             if current_traversal != stack.current_traversal:
                 LOG.debug('[%s] Traversal cancelled; re-trigerring.',
                           current_traversal)
-                self._retrigger_replaced(is_update, rsrc, stack, msg_queue)
+                self._retrigger_replaced(is_update, rsrc, stack, cr)
             else:
-                cr = check_resource.CheckResource(self.engine_id,
-                                                  self._rpc_client,
-                                                  self.thread_group_mgr,
-                                                  msg_queue, in_data)
                 cr.check(cnxt, resource_id, current_traversal, resource_data,
                          is_update, adopt_stack_data, rsrc, stack)
         finally:
