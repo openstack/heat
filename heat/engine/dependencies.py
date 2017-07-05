@@ -56,7 +56,9 @@ class Node(object):
         return iter(self.satisfy)
 
     def requires(self, target=None):
-        """Add a key that this node requires, and optionally add a new one."""
+        """List the keys that this node requires, and optionally add a new one.
+
+        """
         if target is not None:
             self.require.add(target)
         return iter(self.require)
@@ -205,12 +207,12 @@ class Dependencies(object):
 
         return self._graph[last].required_by()
 
-    def requires(self, target):
-        """List the keys that require the specified node."""
-        if target not in self._graph:
+    def requires(self, source):
+        """List the keys that the specified node requires."""
+        if source not in self._graph:
             raise KeyError
 
-        return self._graph[target].requires()
+        return self._graph[source].requires()
 
     def __getitem__(self, last):
         """Return a partial dependency graph starting with the specified node.
