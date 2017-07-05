@@ -1535,8 +1535,6 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         if self.resource_id is None:
             return
 
-        self._floating_ips_disassociate()
-
         try:
             self.client().servers.delete(self.resource_id)
         except Exception as e:

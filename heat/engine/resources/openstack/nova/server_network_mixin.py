@@ -259,13 +259,6 @@ class ServerNetworkMixin(object):
         self.client('neutron').update_floatingip(
             floating_ip, {'floatingip': floating_ip_data})
 
-    def _floating_ips_disassociate(self):
-        networks = self.properties[self.NETWORKS] or []
-        for network in networks:
-            floating_ip = network.get(self.NETWORK_FLOATING_IP)
-            if floating_ip is not None:
-                self._floating_ip_disassociate(floating_ip)
-
     def _floating_ip_disassociate(self, floating_ip):
         with self.client_plugin('neutron').ignore_not_found:
             self.client('neutron').update_floatingip(
