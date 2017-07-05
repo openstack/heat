@@ -224,7 +224,12 @@ class Cluster(resource.Resource):
 
     def check_update_complete(self, id):
         cluster = self.client().clusters.get(id)
-        if cluster.status == 'UPDATE_IN_PROGRESS':
+        # Check update complete request might get status before the status
+        # got changed to update in progress, so we allow `CREATE_COMPLETE`
+        # for it.
+        # TODO(ricolin): we should find way to make sure status check will
+        # only perform after action really started.
+        if cluster.status in ['UPDATE_IN_PROGRESS', 'CREATE_COMPLETE']:
             return False
         elif cluster.status == 'UPDATE_COMPLETE':
             return True
