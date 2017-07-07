@@ -1851,12 +1851,13 @@ class EngineService(service.ServiceBase):
         if callable(rsrc.signal):
             rsrc._signal_check_action()
             rsrc._signal_check_hook(details)
-            if sync_call:
+            if sync_call or not callable(getattr(rsrc, 'handle_signal', None)):
                 _resource_signal(stack, rsrc, details, False)
-                return rsrc.metadata_get()
             else:
                 self.thread_group_mgr.start(stack.id, _resource_signal,
                                             stack, rsrc, details, False)
+            if sync_call:
+                return rsrc.metadata_get()
 
     @context.request_context
     def resource_mark_unhealthy(self, cnxt, stack_identity, resource_name,
