@@ -899,6 +899,16 @@ outputs:
 '''
 
 
+test_template_external_rsrc = '''
+heat_template_version: ocata
+
+resources:
+  random_str:
+    type: OS::Nova::Server
+    external_id: foobar
+'''
+
+
 class ValidateTest(common.HeatTestCase):
     def setUp(self):
         super(ValidateTest, self).setUp()
@@ -1746,3 +1756,14 @@ class ValidateTest(common.HeatTestCase):
         ex = webob.exc.HTTPBadRequest(explanation=msg)
         self.assertIsInstance(res, webob.exc.HTTPBadRequest)
         self.assertEqual(ex.explanation, res.explanation)
+
+    def test_validate_allowed_external_rsrc(self):
+        t = template_format.parse(test_template_external_rsrc)
+        template = tmpl.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+
+        with mock.patch(
+            'heat.engine.resources.server_base.BaseServer._show_resource',
+            return_value={'id': 'foobar'}
+        ):
+            self.assertIsNone(stack.validate())
