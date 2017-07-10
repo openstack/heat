@@ -203,6 +203,13 @@ class GetAttThenSelect(function.Function):
                                      self).dep_attrs(resource_name),
                                attrs)
 
+    def all_dep_attrs(self):
+        try:
+            attrs = [(self._res_name(), self._attr_path())]
+        except Exception:
+            attrs = []
+        return itertools.chain(function.all_dep_attrs(self.args), attrs)
+
     def dependencies(self, path):
         return itertools.chain(super(GetAttThenSelect,
                                      self).dependencies(path),
