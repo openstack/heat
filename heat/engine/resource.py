@@ -948,7 +948,8 @@ class Resource(status.ResourceStatus):
             self.attributes.reset_resolved_values()
 
     def referenced_attrs(self, stk_defn=None,
-                         in_resources=True, in_outputs=True):
+                         in_resources=True, in_outputs=True,
+                         load_all=False):
         """Return the set of all attributes referenced in the template.
 
         This enables the resource to calculate which of its attributes will
@@ -966,7 +967,8 @@ class Resource(status.ResourceStatus):
             stk_defn = self.stack.defn
 
         def get_dep_attrs(source):
-            return set(itertools.chain.from_iterable(s.dep_attrs(self.name)
+            return set(itertools.chain.from_iterable(s.dep_attrs(self.name,
+                                                                 load_all)
                                                      for s in source))
 
         refd_attrs = set()
@@ -1030,13 +1032,16 @@ class Resource(status.ResourceStatus):
                     except exception.InvalidTemplateAttribute as ita:
                         LOG.info('%s', ita)
 
+        load_all = not self.stack.in_convergence_check
         dep_attrs = self.referenced_attrs(stk_defn,
                                           in_resources=for_resources,
-                                          in_outputs=for_outputs)
+                                          in_outputs=for_outputs,
+                                          load_all=load_all)
 
         # Ensure all attributes referenced in outputs get cached
         if for_outputs is False and self.stack.convergence:
-            out_attrs = self.referenced_attrs(stk_defn, in_resources=False)
+            out_attrs = self.referenced_attrs(stk_defn, in_resources=False,
+                                              load_all=load_all)
             for e in get_attrs(out_attrs - dep_attrs, cacheable_only=True):
                 pass
 

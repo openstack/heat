@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import copy
 import six
 
@@ -27,6 +28,7 @@ class OutputDefinition(object):
         self._resolved_value = None
         self._description = description
         self._deps = None
+        self._all_dep_attrs = None
 
     def validate(self, path=''):
         """Validate the output value without resolving it."""
@@ -44,12 +46,21 @@ class OutputDefinition(object):
                 self._deps = set()
         return self._deps
 
-    def dep_attrs(self, resource_name):
+    def dep_attrs(self, resource_name, load_all=False):
         """Iterate over attributes of a given resource that this references.
 
         Return an iterator over dependent attributes for specified
         resource_name in the output's value field.
         """
+        if self._all_dep_attrs is None and load_all:
+            attr_map = collections.defaultdict(set)
+            for r, a in function.all_dep_attrs(self._value):
+                attr_map[r].add(a)
+            self._all_dep_attrs = attr_map
+
+        if self._all_dep_attrs is not None:
+            return iter(self._all_dep_attrs.get(resource_name, []))
+
         return function.dep_attrs(self._value, resource_name)
 
     def get_value(self):
