@@ -178,7 +178,6 @@ class Stack(collections.Mapping):
         self.tags = tags
         self.prev_raw_template_id = prev_raw_template_id
         self.current_deps = current_deps
-        self.cache_data = cache_data
         self._worker_client = None
         self._convg_deps = None
         self.thread_group_mgr = None
@@ -194,6 +193,8 @@ class Stack(collections.Mapping):
         # dependency tree completely when respective service is not available,
         # especially during template_validate
         self.service_check_defer = service_check_defer
+
+        self.in_convergence_check = cache_data is not None
 
         if use_stored_context:
             self.context = self.stored_context()
@@ -321,7 +322,7 @@ class Stack(collections.Mapping):
 
     def _find_filtered_resources(self, filters=None):
         if filters:
-            assert self.cache_data is None, \
+            assert not self.in_convergence_check, \
                 "Resources should not be loaded from the DB"
             resources = resource_objects.Resource.get_all_by_stack(
                 self.context, self.id, filters)
@@ -366,7 +367,7 @@ class Stack(collections.Mapping):
 
     def _db_resources_get(self):
         if self._db_resources is None:
-            assert self.cache_data is None, \
+            assert not self.in_convergence_check, \
                 "Resources should not be loaded from the DB"
             _db_resources = resource_objects.Resource.get_all_by_stack(
                 self.context, self.id)
@@ -787,7 +788,7 @@ class Stack(collections.Mapping):
                 matches = proxy.FnGetRefId() == refid
 
             if matches:
-                if self.cache_data is not None and r.id is not None:
+                if self.in_convergence_check and r.id is not None:
                     # We don't have resources loaded from the database at this
                     # point, so load the data for just this one from the DB.
                     db_res = resource_objects.Resource.get_obj(self.context,
@@ -1266,7 +1267,6 @@ class Stack(collections.Mapping):
                                                       clear_resource_data=True)
         self.reset_dependencies()
         self._resources = None
-        self.cache_data = None
 
         if action is not self.CREATE:
             self.updated_time = oslo_timeutils.utcnow()
@@ -2046,19 +2046,6 @@ class Stack(collections.Mapping):
             'stack_user_project_id': self.stack_user_project_id,
             'tags': self.tags,
         }
-
-    def has_cache_data(self, resource_name):
-        return (self.cache_data is not None and
-                resource_name in self.cache_data)
-
-    def cache_data_reference_id(self, resource_name):
-        return self.cache_data[resource_name].reference_id()
-
-    def cache_data_resource_attribute(self, resource_name, attribute_key):
-        return self.cache_data[resource_name].attribute(attribute_key)
-
-    def cache_data_resource_all_attributes(self, resource_name):
-        return self.cache_data[resource_name].attributes()
 
     def mark_complete(self):
         """Mark the update as complete.

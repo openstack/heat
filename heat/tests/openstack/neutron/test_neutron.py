@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
 from neutronclient.common import exceptions as qe
 import six
 
@@ -91,7 +90,6 @@ class NeutronTest(common.HeatTestCase):
         self.dummy_stack.store()
 
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
-        self.dummy_stack.has_cache_data = mock.Mock(return_value=False)
         return SomeNeutronResource('aresource', tmpl, self.dummy_stack)
 
     def test_resolve_attribute(self):

@@ -588,9 +588,7 @@ class InstanceUpdateTests(common.HeatTestCase):
 
     def setUp(self):
         super(InstanceUpdateTests, self).setUp()
-        self._stack = mock.Mock()
-        self._stack.has_cache_data.return_value = False
-        self._stack.db_resource_get.return_value = None
+        self._stack = utils.parse_stack(template_format.parse(db_template))
         testprops = {
             "name": "testinstance",
             "flavor": "foo",

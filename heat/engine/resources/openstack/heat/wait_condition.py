@@ -95,6 +95,7 @@ class HeatWaitCondition(resource.Resource):
         if handle is not None and isinstance(
                 handle, wc_base.BaseWaitConditionHandle):
             return
+        LOG.debug("Got %r instead of wait condition handle", handle)
         hn = handle.name if handle else self.properties[self.HANDLE]
         msg = _('%s is not a valid wait condition handle.') % hn
         raise ValueError(msg)

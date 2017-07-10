@@ -254,16 +254,17 @@ class Resource(status.ResourceStatus):
         self._calling_engine_id = None
         self._atomic_key = None
 
-        if stack.cache_data is None:
+        if not self.stack.in_convergence_check:
             resource = stack.db_resource_get(name)
             if resource:
                 self._load_data(resource)
-        elif stack.has_cache_data(name):
-            cached_data = stack.cache_data[name]
-            self.action = cached_data.action
-            self.status = cached_data.status
-            self.id = cached_data.primary_key
-            self.uuid = cached_data.uuid
+        else:
+            proxy = self.stack.defn[self.name]
+            node_data = proxy._resource_data
+            if node_data is not None:
+                self.action, self.status = proxy.state
+                self.id = node_data.primary_key
+                self.uuid = node_data.uuid
 
     def rpc_client(self):
         """Return a client for making engine RPC calls."""
@@ -1025,7 +1026,7 @@ class Resource(status.ResourceStatus):
                         yield attr, None
                 else:
                     try:
-                        yield attr, self._get_attribute_caching(*path)
+                        yield attr, self.FnGetAtt(*path)
                     except exception.InvalidTemplateAttribute as ita:
                         LOG.info('%s', ita)
 
@@ -1040,7 +1041,7 @@ class Resource(status.ResourceStatus):
                 pass
 
         return node_data.NodeData(self.id, self.name, self.uuid,
-                                  self.get_reference_id(),
+                                  self.FnGetRefId(),
                                   dict(get_attrs(dep_attrs)),
                                   self.action, self.status)
 
@@ -2237,8 +2238,6 @@ class Resource(status.ResourceStatus):
 
         :results: the id or name of the resource.
         """
-        if self.stack.has_cache_data(self.name):
-            return self.stack.cache_data_reference_id(self.name)
         return self.get_reference_id()
 
     def physical_resource_name_or_FnGetRefId(self):
@@ -2262,7 +2261,13 @@ class Resource(status.ResourceStatus):
 
         return attributes.select_from_attribute(attribute, path)
 
-    def _get_attribute_caching(self, key, *path):
+    def FnGetAtt(self, key, *path):
+        """For the intrinsic function Fn::GetAtt.
+
+        :param key: the attribute key.
+        :param path: a list of path components to select from the attribute.
+        :returns: the attribute value.
+        """
         cache_custom = ((self.attributes.get_cache_mode(key) !=
                          attributes.Schema.CACHE_NONE) and
                         (type(self).get_attribute != Resource.get_attribute))
@@ -2279,36 +2284,6 @@ class Resource(status.ResourceStatus):
         if cache_custom:
             self.attributes.set_cached_attr(full_key, attr_val)
         return attr_val
-
-    def FnGetAtt(self, key, *path):
-        """For the intrinsic function Fn::GetAtt.
-
-        :param key: the attribute key.
-        :param path: a list of path components to select from the attribute.
-        :returns: the attribute value.
-        """
-        if self.stack.has_cache_data(self.name):
-            # Load from cache for lightweight resources.
-            complex_key = key
-            if path:
-                complex_key = tuple([key] + list(path))
-            attribute = self.stack.cache_data_resource_attribute(
-                self.name, complex_key)
-            return attribute
-        return self._get_attribute_caching(key, *path)
-
-    def FnGetAtts(self):
-        """For the intrinsic function get_attr which returns all attributes.
-
-        :returns: dict of all resource's attributes exclude "show" attribute.
-        """
-        if self.stack.has_cache_data(self.name):
-            attrs = self.stack.cache_data_resource_all_attributes(self.name)
-        else:
-            attrs = dict((k, v) for k, v in six.iteritems(self.attributes))
-        attrs = dict((k, v) for k, v in six.iteritems(attrs)
-                     if k != self.SHOW)
-        return attrs
 
     def _signal_check_action(self):
         if self.action in self.no_signal_actions:

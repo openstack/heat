@@ -166,15 +166,15 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
                 return mockclient()
 
         mock_def = mock.Mock(spec=rsrc_defn.ResourceDefinition)
+        mock_def.resource_type = 'OS::Zaqar::Queue'
         props = mock.Mock()
         props.props = {}
         mock_def.properties.return_value = props
-        mock_stack = mock.Mock()
-        mock_stack.db_resource_get.return_value = None
-        mock_stack.has_cache_data.return_value = False
+        stack = utils.parse_stack(template_format.parse(wp_template))
+        self.patchobject(stack, 'db_resource_get', return_value=None)
         mockplugin = ZaqarClientPlugin(self.ctx)
-        mock_stack.clients = mock.Mock()
-        mock_stack.clients.client_plugin.return_value = mockplugin
+        clients = self.patchobject(stack, 'clients')
+        clients.client_plugin.return_value = mockplugin
 
         mockplugin.is_not_found = mock.Mock()
         mockplugin.is_not_found.return_value = True
@@ -183,10 +183,10 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
         zaqar_q.delete.side_effect = ResourceNotFound()
         mockclient.return_value.queue.return_value = zaqar_q
         zplugin = queue.ZaqarQueue("test_delete_not_found", mock_def,
-                                   mock_stack)
+                                   stack)
         zplugin.resource_id = "test_delete_not_found"
         zplugin.handle_delete()
-        mock_stack.clients.client_plugin.assert_called_once_with('zaqar')
+        clients.client_plugin.assert_called_once_with('zaqar')
         mockplugin.is_not_found.assert_called_once_with(
             zaqar_q.delete.side_effect)
         mockclient.return_value.queue.assert_called_once_with(

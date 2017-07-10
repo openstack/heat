@@ -563,7 +563,7 @@ class Port(neutron.NeutronResource):
             existing_port, rsrc_owning_stack, stack = resource.Resource.load(
                 prev_port.context, prev_port.replaced_by,
                 prev_port.stack.current_traversal, True,
-                prev_port.stack.cache_data
+                prev_port.stack.defn._resource_data
             )
             existing_port_id = existing_port.resource_id
         else:
