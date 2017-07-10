@@ -507,6 +507,38 @@ class SoftwareDeployment(signal_responder.SignalResponder):
             self.context, self.resource_id, details,
             timeutils.utcnow().isoformat())
 
+    def _handle_cancel(self):
+        if self.resource_id is None:
+            return
+
+        sd = self.rpc_client().show_software_deployment(
+            self.context, self.resource_id)
+
+        if sd is None:
+            return
+
+        status = sd[rpc_api.SOFTWARE_DEPLOYMENT_STATUS]
+        if status == SoftwareDeployment.IN_PROGRESS:
+            self.rpc_client().update_software_deployment(
+                self.context, self.resource_id,
+                status=SoftwareDeployment.FAILED,
+                status_reason=_('Deployment cancelled.'))
+
+    def handle_create_cancel(self, cookie):
+        self._handle_cancel()
+
+    def handle_update_cancel(self, cookie):
+        self._handle_cancel()
+
+    def handle_delete_cancel(self, cookie):
+        self._handle_cancel()
+
+    def handle_suspend_cancel(self, cookie):
+        self._handle_cancel()
+
+    def handle_resume_cancel(self, cookie):
+        self._handle_cancel()
+
     def get_attribute(self, key, *path):
         """Resource attributes map to deployment outputs values."""
         sd = self.rpc_client().show_software_deployment(

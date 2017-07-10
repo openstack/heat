@@ -685,6 +685,29 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         self.assertEqual(
             'Deployment to server failed: something wrong', six.text_type(err))
 
+    def test_handle_create_cancel(self):
+        self._create_stack(self.template)
+        mock_sd = self.mock_deployment()
+        self.rpc_client.show_software_deployment.return_value = mock_sd
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
+
+        # status in_progress
+        mock_sd['status'] = self.deployment.IN_PROGRESS
+        self.deployment.handle_create_cancel(None)
+        self.assertEqual(
+            'FAILED',
+            self.rpc_client.update_software_deployment.call_args[1]['status'])
+
+        # status failed
+        mock_sd['status'] = self.deployment.FAILED
+        self.deployment.handle_create_cancel(None)
+
+        # deployment not created
+        mock_sd = None
+        self.deployment.handle_create_cancel(None)
+        self.assertEqual(1,
+                         self.rpc_client.update_software_deployment.call_count)
+
     def test_handle_delete(self):
         self._create_stack(self.template)
         mock_sd = self.mock_deployment()

@@ -551,12 +551,13 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                      parameters=None, environment=None, tags=None,
                      expected_status='CREATE_COMPLETE',
                      disable_rollback=True, enable_cleanup=True,
-                     environment_files=None):
+                     environment_files=None, timeout=None):
         name = stack_name or self._stack_rand_name()
         templ = template or self.template
         templ_files = files or {}
         params = parameters or {}
         env = environment or {}
+        timeout_mins = timeout or self.conf.build_timeout
         self.client.stacks.create(
             stack_name=name,
             template=templ,
@@ -565,7 +566,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             parameters=params,
             environment=env,
             tags=tags,
-            environment_files=environment_files
+            environment_files=environment_files,
+            timeout_mins=timeout_mins
         )
         if expected_status not in ['ROLLBACK_COMPLETE'] and enable_cleanup:
             self.addCleanup(self._stack_delete, name)

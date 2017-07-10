@@ -22,6 +22,7 @@ import yaml
 from oslo_utils import timeutils
 
 from heat_integrationtests.common import exceptions
+from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
 
 
@@ -101,6 +102,30 @@ properties:
         for config_stack in config_stacks:
             self._wait_for_stack_status(config_stack, 'CREATE_COMPLETE')
 
+    def test_deployments_timeout_failed(self):
+        parms = {'flavor': self.conf.minimal_instance_type,
+                 'network': self.conf.fixed_network_name,
+                 'image': self.conf.minimal_image_ref}
+        stack_identifier = self.stack_create(
+            parameters=parms,
+            template=self.server_template,
+            enable_cleanup=self.enable_cleanup)
+        server_stack = self.client.stacks.get(stack_identifier)
+        server = server_stack.outputs[0]['output_value']
+        config_stack = self.deploy_config(server, 3, 1)
+        self._wait_for_stack_status(config_stack, 'CREATE_FAILED')
+        kwargs = {'server_id': server}
+
+        def check_deployment_status():
+            sd_list = self.client.software_deployments.list(**kwargs)
+            for sd in sd_list:
+                if sd.status != 'FAILED':
+                    return False
+            return True
+
+        self.assertTrue(test.call_until_true(
+            20, 0, check_deployment_status))
+
     def deploy_many_configs(self, stack, server, config_stacks,
                             stack_count, deploys_per_stack,
                             deploy_count_start):
@@ -112,7 +137,7 @@ properties:
         self.wait_for_deploy_metadata_set(stack, new_count)
         return new_count
 
-    def deploy_config(self, server, deploy_count):
+    def deploy_config(self, server, deploy_count, timeout=None):
         parms = {'server': server}
         template = yaml.safe_load(self.config_template)
         resources = template['resources']
@@ -123,7 +148,8 @@ properties:
             parameters=parms,
             template=template,
             enable_cleanup=self.enable_cleanup,
-            expected_status=None)
+            expected_status=None,
+            timeout=timeout)
 
     def wait_for_deploy_metadata_set(self, stack, deploy_count):
         build_timeout = self.conf.build_timeout
