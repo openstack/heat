@@ -14,9 +14,11 @@
 # limitations under the License.
 
 import eventlet.queue
+import functools
 
 from oslo_log import log as logging
 import oslo_messaging
+from oslo_utils import excutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
@@ -34,6 +36,18 @@ from heat.rpc import worker_client as rpc_client
 LOG = logging.getLogger(__name__)
 
 CANCEL_RETRIES = 3
+
+
+def log_exceptions(func):
+    @functools.wraps(func)
+    def exception_wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception:
+            with excutils.save_and_reraise_exception():
+                LOG.exception('Unhandled exception in %s', func.__name__)
+
+    return exception_wrapper
 
 
 @profiler.trace_cls("rpc")
@@ -147,6 +161,7 @@ class WorkerService(object):
                                         stack)
 
     @context.request_context
+    @log_exceptions
     def check_resource(self, cnxt, resource_id, current_traversal, data,
                        is_update, adopt_stack_data):
         """Process a node in the dependency graph.
@@ -182,6 +197,7 @@ class WorkerService(object):
                                                    stack.id, msg_queue)
 
     @context.request_context
+    @log_exceptions
     def cancel_check_resource(self, cnxt, stack_id):
         """Cancel check_resource for given stack.
 
