@@ -943,15 +943,39 @@ class Resource(status.ResourceStatus):
         return refd_attrs
 
     def node_data(self):
-        def get_attrs(attrs):
+        """Return a NodeData object representing the resource.
+
+        The NodeData object returned contains basic data about the resource,
+        including its name, ID and state, as well as its reference ID and any
+        attribute values that are used.
+
+        Only those attribute values that are referenced by other
+        resources are included.
+
+        After calling this method, the resource's attribute cache is
+        populated with any cacheable attribute values referenced by stack
+        outputs, even if they are not also referenced by other resources.
+        """
+        def get_attrs(attrs, cacheable_only=False):
             for attr in attrs:
                 path = (attr,) if isinstance(attr, six.string_types) else attr
+                if (cacheable_only and
+                    (self.attributes.get_cache_mode(path[0]) ==
+                     attributes.Schema.CACHE_NONE)):
+                    continue
                 try:
                     yield attr, self._get_attribute_caching(*path)
                 except exception.InvalidTemplateAttribute as ita:
                     LOG.info('%s', ita)
 
         dep_attrs = self.referenced_attrs(in_outputs=False)
+
+        # Ensure all attributes referenced in outputs get cached
+        if self.stack.convergence:
+            out_attrs = self.referenced_attrs(in_resources=False)
+            for e in get_attrs(out_attrs - dep_attrs, cacheable_only=True):
+                pass
+
         return node_data.NodeData(self.id, self.name, self.uuid,
                                   self.get_reference_id(),
                                   dict(get_attrs(dep_attrs)),

@@ -1,0 +1,10 @@
+---
+features:
+  - Resource attributes are now stored at the time a resource is created or
+    updated, allowing for fast resolution of outputs without having to retrieve
+    live data from the underlying physical resource. To minimise compatibility
+    problems, the behaviour of the `show` attribute, the `with_attr` option to
+    the resource show API, and stacks that do not yet use the convergence
+    architecture (due to the convergence_engine being disabled at the time they
+    were created) is unchanged - in each of these cases live data will still be
+    returned.

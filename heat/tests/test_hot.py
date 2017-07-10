@@ -2781,7 +2781,7 @@ class StackGetAttributesTestConvergence(common.HeatTestCase):
             self.stack.t.parse(self.stack, self.snippet),
             self.resource_name)
         with mock.patch.object(rsrc.stack, 'get_dep_attrs') as mock_da:
-            mock_da.return_value = dep_attrs
+            mock_da.return_value = list(dep_attrs)
             rsrc_data = rsrc.node_data()
         # store as cache data
         self.stack.cache_data = {

@@ -530,9 +530,6 @@ class EngineService(service.ServiceBase):
             stack, resolve_outputs=resolve_outputs) for stack in stacks]
         if resolve_outputs:
             # Cases where stored attributes may not exist for a resource:
-            #  * For those resources that have attributes that were
-            #    *not* referenced by other resources, their attributes
-            #    are not resolved/stored over a stack update traversal
             #  * The resource is an AutoScalingGroup that received a signal
             #  * Near simultaneous updates (say by an update and a signal)
             #  * The first time resolving a pre-Pike stack
