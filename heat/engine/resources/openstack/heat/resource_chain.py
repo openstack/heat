@@ -11,12 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
 import six
 
 from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine import output
 from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
@@ -124,6 +126,14 @@ class ResourceChain(stack_resource.StackResource):
             name_def_tuples.append(t)
 
         nested_template = scl_template.make_template(name_def_tuples)
+
+        att_func = 'get_attr'
+        get_attr = functools.partial(nested_template.functions[att_func],
+                                     None, att_func)
+        res_names = [k for k, d in name_def_tuples]
+        for odefn in self._nested_output_defns(res_names, get_attr):
+            nested_template.add_output(odefn)
+
         return nested_template
 
     def child_params(self):
@@ -148,6 +158,31 @@ class ResourceChain(stack_resource.StackResource):
         path = [key] + list(path)
         return [grouputils.get_rsrc_attr(self, key, False, n, *path)
                 for n in names]
+
+    def _nested_output_defns(self, resource_names, get_attr_fn):
+        for attr in self.referenced_attrs():
+            if isinstance(attr, six.string_types):
+                key, path = attr, []
+                output_name = attr
+            else:
+                key, path = attr[0], list(attr[1:])
+                output_name = ', '.join(attr)
+
+            if key.startswith("resource."):
+                keycomponents = key.split('.', 2)
+                res_name = keycomponents[1]
+                attr_name = keycomponents[2:]
+                if attr_name and (res_name in resource_names):
+                    value = get_attr_fn([res_name] + attr_name + path)
+                    yield output.OutputDefinition(output_name, value)
+
+            elif key == self.ATTR_ATTRIBUTES and path:
+                value = {r: get_attr_fn([r] + path) for r in resource_names}
+                yield output.OutputDefinition(output_name, value)
+
+            elif key not in self.ATTRIBUTES:
+                value = [get_attr_fn([r, key] + path) for r in resource_names]
+                yield output.OutputDefinition(output_name, value)
 
     @staticmethod
     def _resource_names(resource_types):
