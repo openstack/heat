@@ -223,6 +223,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             _('A string representation of the list of attachments of the '
               'volume.'),
             type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE,
             support_status=support.SupportStatus(
                 status=support.DEPRECATED,
                 message=_('Use property %s.') % ATTACHMENTS_LIST,
@@ -236,6 +237,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         ATTACHMENTS_LIST: attributes.Schema(
             _('The list of attachments of the volume.'),
             type=attributes.Schema.LIST,
+            cache_mode=attributes.Schema.CACHE_NONE,
             support_status=support.SupportStatus(version='9.0.0'),
         ),
         MULTI_ATTACH_ATTR: attributes.Schema(
