@@ -13,6 +13,7 @@
 
 import collections
 import copy
+import functools
 import itertools
 
 import six
@@ -24,6 +25,7 @@ from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import function
+from heat.engine import output
 from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
@@ -455,6 +457,31 @@ class ResourceGroup(stack_resource.StackResource):
         return [grouputils.get_rsrc_attr(self, key, False, n, *path)
                 for n in names]
 
+    def _nested_output_defns(self, resource_names, get_attr_fn):
+        for attr in self.referenced_attrs():
+            if isinstance(attr, six.string_types):
+                key, path = attr, []
+                output_name = attr
+            else:
+                key, path = attr[0], list(attr[1:])
+                output_name = ', '.join(attr)
+
+            if key.startswith("resource."):
+                keycomponents = key.split('.', 2)
+                res_name = keycomponents[1]
+                attr_name = keycomponents[2:]
+                if attr_name and (res_name in resource_names):
+                    value = get_attr_fn([res_name] + attr_name + path)
+                    yield output.OutputDefinition(output_name, value)
+
+            elif key == self.ATTR_ATTRIBUTES and path:
+                value = {r: get_attr_fn([r] + path) for r in resource_names}
+                yield output.OutputDefinition(output_name, value)
+
+            elif key not in self.ATTRIBUTES:
+                value = [get_attr_fn([r, key] + path) for r in resource_names]
+                yield output.OutputDefinition(output_name, value)
+
     def build_resource_definition(self, res_name, res_defn):
         res_def = copy.deepcopy(res_defn)
 
@@ -533,8 +560,16 @@ class ResourceGroup(stack_resource.StackResource):
         def_dict = self.get_resource_def(include_all)
         definitions = [(k, self.build_resource_definition(k, def_dict))
                        for k in names]
-        return scl_template.make_template(definitions,
+        tmpl = scl_template.make_template(definitions,
                                           version=template_version)
+
+        att_func = 'get_attr'
+        get_attr = functools.partial(tmpl.functions[att_func], None, att_func)
+        for odefn in self._nested_output_defns([k for k, d in definitions],
+                                               get_attr):
+            tmpl.add_output(odefn)
+
+        return tmpl
 
     def _assemble_for_rolling_update(self, total_capacity, max_updates,
                                      include_all=False,

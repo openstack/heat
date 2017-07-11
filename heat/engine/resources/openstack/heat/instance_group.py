@@ -11,6 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+import six
+
 from heat.common import environment_format
 from heat.common import grouputils
 from heat.common.i18n import _
@@ -18,6 +21,7 @@ from heat.common import short_id
 from heat.common import timeutils as iso8601utils
 from heat.engine import attributes
 from heat.engine import environment
+from heat.engine import output
 from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
@@ -257,16 +261,27 @@ class InstanceGroup(stack_resource.StackResource):
         instance_definition = self._get_resource_definition()
         old_resources = grouputils.get_member_definitions(self,
                                                           include_failed=True)
-        definitions = template.member_definitions(
+        definitions = list(template.member_definitions(
             old_resources, instance_definition, num_instances, num_replace,
-            short_id.generate_id)
+            short_id.generate_id))
 
         child_env = environment.get_child_environment(
             self.stack.env,
             self.child_params(), item_to_remove=self.resource_info)
 
-        return template.make_template(definitions, version=template_version,
+        tmpl = template.make_template(definitions, version=template_version,
                                       child_env=child_env)
+
+        # Subclasses use HOT templates
+        att_func = 'get_attr'
+        if att_func not in tmpl.functions:
+            att_func = 'Fn::GetAtt'
+        get_attr = functools.partial(tmpl.functions[att_func], None, att_func)
+        for odefn in self._nested_output_defns([k for k, d in definitions],
+                                               get_attr):
+            tmpl.add_output(odefn)
+
+        return tmpl
 
     def _try_rolling_update(self, prop_diff):
         if (self.update_policy[self.ROLLING_UPDATE] and
@@ -383,6 +398,17 @@ class InstanceGroup(stack_resource.StackResource):
         if name == self.INSTANCE_LIST:
             return u','.join(inst.FnGetAtt('PublicIp')
                              for inst in grouputils.get_members(self)) or None
+
+    def _nested_output_defns(self, resource_names, get_attr_fn):
+        for attr in self.referenced_attrs():
+            if isinstance(attr, six.string_types):
+                key = attr
+            else:
+                key = attr[0]
+
+            if key == self.INSTANCE_LIST:
+                value = [get_attr_fn([r, 'PublicIp']) for r in resource_names]
+                yield output.OutputDefinition(key, value)
 
     def child_template(self):
         num_instances = int(self.properties[self.SIZE])

@@ -11,12 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import six
+
 from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine.hot import template
+from heat.engine import output
 from heat.engine import properties
 from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
 from heat.engine import rsrc_defn
@@ -215,6 +218,31 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
 
         raise exception.InvalidTemplateAttribute(resource=self.name,
                                                  key=key)
+
+    def _nested_output_defns(self, resource_names, get_attr_fn):
+        for attr in self.referenced_attrs():
+            if isinstance(attr, six.string_types):
+                key, path = attr, []
+                output_name = attr
+            else:
+                key, path = attr[0], list(attr[1:])
+                output_name = ', '.join(attr)
+
+            if key.startswith("resource."):
+                keycomponents = key.split('.', 2)
+                res_name = keycomponents[1]
+                attr_name = keycomponents[2:]
+                if attr_name and (res_name in resource_names):
+                    value = get_attr_fn([res_name] + attr_name + path)
+                    yield output.OutputDefinition(output_name, value)
+
+            elif key == self.OUTPUTS and path:
+                value = {r: get_attr_fn([r] + path) for r in resource_names}
+                yield output.OutputDefinition(output_name, value)
+
+            elif key == self.OUTPUTS_LIST and path:
+                value = [get_attr_fn([r] + path) for r in resource_names]
+                yield output.OutputDefinition(output_name, value)
 
 
 def resource_mapping():
