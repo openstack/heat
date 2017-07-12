@@ -72,7 +72,8 @@ def launch_engine(setup_logging=True):
     if not workers:
         workers = max(4, processutils.get_worker_count())
 
-    launcher = service.launch(cfg.CONF, srv, workers=workers)
+    launcher = service.launch(cfg.CONF, srv, workers=workers,
+                              restart_method='mutate')
     if cfg.CONF.enable_cloud_watch_lite:
         # We create the periodic tasks here, which mean they are created
         # only in the parent process when num_engine_workers>1 is specified
