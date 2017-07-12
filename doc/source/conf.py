@@ -77,10 +77,15 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'sphinx.ext.viewcode',
               'sphinx.ext.doctest',
-              'oslosphinx',
+              'openstackdocstheme',
               'ext.resources',
               'ext.tablefromtext',
               'stevedore.sphinxext']
+
+# openstackdocstheme options
+repository_name = 'openstack/heat'
+bug_project = 'heat'
+bug_tag = ''
 
 todo_include_todos = True
 
@@ -148,13 +153,13 @@ nitpicky = False
 # a list of builtin themes.
 # html_theme_path = ['.']
 # html_theme = '_theme'
+html_theme = 'openstackdocs'
 
+html_last_updated_fmt = '%Y-%m-%d %H:%M'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "nosidebar": "false"
-}
+html_theme_options = {"sidebar_mode": "toc"}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
