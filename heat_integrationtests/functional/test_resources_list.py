@@ -41,3 +41,10 @@ class ResourcesList(functional_base.FunctionalTestsBase):
                                              filters={'name': 'test2'})
 
         self.assertEqual('CREATE_COMPLETE', test2.resource_status)
+
+    def test_required_by(self):
+        stack_identifier = self.stack_create(template=test_template_depend)
+        [test1] = self.client.resources.list(stack_identifier,
+                                             filters={'name': 'test1'})
+
+        self.assertEqual(['test2'], test1.required_by)
