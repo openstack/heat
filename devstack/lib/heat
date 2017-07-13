@@ -43,7 +43,7 @@ GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 HEAT_USE_APACHE=${HEAT_USE_APACHE:-${HEAT_USE_MOD_WSGI:-True}}
 
 HEAT_DIR=$DEST/heat
-HEAT_FILES_DIR=$HEAT_DIR/devstack/files
+HEAT_FILES_DIR=$HEAT_DIR/heat/httpd/files
 
 HEAT_AUTH_CACHE_DIR=${HEAT_AUTH_CACHE_DIR:-/var/cache/heat}
 HEAT_STANDALONE=$(trueorfalse False HEAT_STANDALONE)
@@ -61,9 +61,9 @@ HEAT_TRUSTEE_DOMAIN=${HEAT_TRUSTEE_DOMAIN:-default}
 
 # Support entry points installation of console scripts
 HEAT_BIN_DIR=$(get_python_exec_prefix)
-HEAT_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-uwsgi-api.ini
-HEAT_CFN_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-uwsgi-cfn-api.ini
-HEAT_CW_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-uwsgi-cw-api.ini
+HEAT_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-api-uwsgi.ini
+HEAT_CFN_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-api-cfn-uwsgi.ini
+HEAT_CW_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-api-cloudwatch-uwsgi.ini
 HEAT_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api
 HEAT_CFN_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api-cfn
 HEAT_CW_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api-cloudwatch
@@ -394,7 +394,7 @@ function _config_heat_apache_wsgi {
     local heat_cw_api_port=$HEAT_API_CW_PORT
     local venv_path=""
 
-    sudo cp $HEAT_FILES_DIR/apache-heat-api.template $heat_apache_conf
+    sudo cp $HEAT_FILES_DIR/heat-api.conf $heat_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
@@ -407,7 +407,7 @@ function _config_heat_apache_wsgi {
         s|%VIRTUALENV%|$venv_path|g
     " -i $heat_apache_conf
 
-    sudo cp $HEAT_FILES_DIR/apache-heat-api-cfn.template $heat_cfn_apache_conf
+    sudo cp $HEAT_FILES_DIR/heat-api-cfn.conf $heat_cfn_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_cfn_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
@@ -420,7 +420,7 @@ function _config_heat_apache_wsgi {
         s|%VIRTUALENV%|$venv_path|g
     " -i $heat_cfn_apache_conf
 
-    sudo cp $HEAT_FILES_DIR/apache-heat-api-cloudwatch.template $heat_cloudwatch_apache_conf
+    sudo cp $HEAT_FILES_DIR/heat-api-cloudwatch.conf $heat_cloudwatch_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_cw_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
