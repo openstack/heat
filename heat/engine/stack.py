@@ -392,7 +392,9 @@ class Stack(collections.Mapping):
         if defn is None:
             return None
 
-        return resource.Resource(db_res.name, defn, self)
+        res = resource.Resource(db_res.name, defn, self)
+        res._load_data(db_res)
+        return res
 
     def resource_get(self, name):
         """Return a stack resource, even if not in the current template."""
