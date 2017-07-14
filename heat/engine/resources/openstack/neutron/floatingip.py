@@ -150,7 +150,8 @@ class FloatingIP(neutron.NeutronResource):
         ),
         FIXED_IP_ADDRESS_ATTR: attributes.Schema(
             _('IP address of the associated port, if specified.'),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         FLOATING_IP_ADDRESS_ATTR: attributes.Schema(
             _('The allocated address of this IP.'),
@@ -158,7 +159,8 @@ class FloatingIP(neutron.NeutronResource):
         ),
         PORT_ID_ATTR: attributes.Schema(
             _('ID of the port associated with this IP.'),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
 
