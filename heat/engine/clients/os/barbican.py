@@ -11,12 +11,16 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 from barbicanclient import client as barbican_client
-from barbicanclient import containers
 from barbicanclient import exceptions
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+
+try:
+    from barbicanclient import containers
+except ImportError:
+    from barbicanclient.v1 import containers
 
 CLIENT_NAME = 'barbican'
 
