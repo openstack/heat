@@ -27,4 +27,4 @@ reno!=2.3.1,>=1.8.0 # Apache-2.0
 os-collect-config # Apache-2.0
 paramiko>=2.0 # LGPLv2.1+
 tempest>=16.1.0 # Apache-2.0
-gabbi>=1.30.0 # Apache-2.0
+gabbi>=1.35.0 # Apache-2.0
