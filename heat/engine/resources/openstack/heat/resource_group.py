@@ -364,8 +364,7 @@ class ResourceGroup(stack_resource.StackResource):
         else:
             names = self._resource_names()
             self.create_with_template(self._assemble_nested(names),
-                                      self.child_params(),
-                                      self.stack.timeout_secs())
+                                      self.child_params())
 
     def check_create_complete(self, checkers=None):
         if checkers is None:
