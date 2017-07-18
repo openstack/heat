@@ -2554,10 +2554,12 @@ class ServersTest(common.HeatTestCase):
 
         self.assertIsNone(server._build_nics([]))
         self.assertIsNone(server._build_nics(None))
-        self.assertEqual([{'port-id': 'aaaabbbb', 'net-id': None},
-                          {'v4-fixed-ip': '192.0.2.0', 'net-id': None}],
-                         server._build_nics([{'port': 'aaaabbbb'},
-                                             {'fixed_ip': '192.0.2.0'}]))
+        self.assertEqual([
+            {'port-id': 'aaaabbbb', 'net-id': None, 'tag': 'nic1'},
+            {'v4-fixed-ip': '192.0.2.0', 'net-id': None}],
+            server._build_nics([
+                {'port': 'aaaabbbb', 'tag': 'nic1'},
+                {'fixed_ip': '192.0.2.0'}]))
         self.assertEqual([{'port-id': 'aaaabbbb', 'net-id': None},
                           {'port-id': 'aaaabbbb', 'net-id': None}],
                          server._build_nics([{'port': 'aaaabbbb',
@@ -3252,11 +3254,12 @@ class ServersTest(common.HeatTestCase):
     def create_old_net(self, port=None, net=None,
                        ip=None, uuid=None, subnet=None,
                        port_extra_properties=None, floating_ip=None,
-                       str_network=None):
+                       str_network=None, tag=None):
         return {'port': port, 'network': net, 'fixed_ip': ip, 'uuid': uuid,
                 'subnet': subnet, 'floating_ip': floating_ip,
                 'port_extra_properties': port_extra_properties,
-                'allocate_network': str_network}
+                'allocate_network': str_network,
+                'tag': tag}
 
     def create_fake_iface(self, port, net, ip):
         class fake_interface(object):
@@ -3306,7 +3309,7 @@ class ServersTest(common.HeatTestCase):
             for net in new_nets_copy:
                 for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
                             'port_extra_properties', 'floating_ip',
-                            'allocate_network'):
+                            'allocate_network', 'tag'):
                     net.setdefault(key)
 
             matched_nets = server._exclude_not_updated_networks(old_nets,
@@ -3338,7 +3341,7 @@ class ServersTest(common.HeatTestCase):
         for net in new_nets_copy:
             for key in ('port', 'network', 'fixed_ip', 'uuid', 'subnet',
                         'port_extra_properties', 'floating_ip',
-                        'allocate_network'):
+                        'allocate_network', 'tag'):
                 net.setdefault(key)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3363,7 +3366,8 @@ class ServersTest(common.HeatTestCase):
              'uuid': None,
              'port_extra_properties': None,
              'floating_ip': None,
-             'allocate_network': None}]
+             'allocate_network': None,
+             'tag': None}]
         new_nets_copy = copy.deepcopy(new_nets)
 
         matched_nets = server._exclude_not_updated_networks(old_nets, new_nets)
@@ -3407,7 +3411,8 @@ class ServersTest(common.HeatTestCase):
              'floating_ip': None,
              'port_extra_properties': None,
              'uuid': None,
-             'allocate_network': None},
+             'allocate_network': None,
+             'tag': None},
             {'port': 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '1.2.3.4',
@@ -3415,7 +3420,8 @@ class ServersTest(common.HeatTestCase):
              'port_extra_properties': None,
              'floating_ip': None,
              'uuid': None,
-             'allocate_network': None},
+             'allocate_network': None,
+             'tag': None},
             {'port': 'cccccccc-cccc-cccc-cccc-cccccccccccc',
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': None,
@@ -3423,7 +3429,8 @@ class ServersTest(common.HeatTestCase):
              'port_extra_properties': None,
              'floating_ip': None,
              'uuid': None,
-             'allocate_network': None},
+             'allocate_network': None,
+             'tag': None},
             {'port': 'dddddddd-dddd-dddd-dddd-dddddddddddd',
              'network': None,
              'fixed_ip': None,
@@ -3431,7 +3438,8 @@ class ServersTest(common.HeatTestCase):
              'port_extra_properties': None,
              'floating_ip': None,
              'uuid': None,
-             'allocate_network': None},
+             'allocate_network': None,
+             'tag': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
              'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
              'fixed_ip': '5.6.7.8',
@@ -3439,7 +3447,8 @@ class ServersTest(common.HeatTestCase):
              'port_extra_properties': None,
              'floating_ip': None,
              'network': None,
-             'allocate_network': None}]
+             'allocate_network': None,
+             'tag': None}]
 
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',

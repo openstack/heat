@@ -252,6 +252,9 @@ class ServerNetworkMixin(object):
                 self._floating_ip_neutron_associate(
                     net.get(self.NETWORK_FLOATING_IP), floating_ip_data)
 
+            if net.get(self.NIC_TAG):
+                nic_info[self.NIC_TAG] = net.get(self.NIC_TAG)
+
             nics.append(nic_info)
         return nics
 
@@ -458,6 +461,15 @@ class ServerNetworkMixin(object):
             str_net = net.get(self.ALLOCATE_NETWORK)
             if str_net:
                 return str_net
+
+    def _is_nic_tagged(self, networks):
+        # if user specify 'tag', return True
+        # otherwise return False
+        for net in networks or []:
+            if net.get(self.NIC_TAG):
+                return True
+
+        return False
 
     def calculate_networks(self, old_nets, new_nets, ifaces,
                            security_groups=None):

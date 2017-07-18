@@ -110,11 +110,11 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
     _NETWORK_KEYS = (
         NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
         NETWORK_SUBNET, NETWORK_PORT_EXTRA, NETWORK_FLOATING_IP,
-        ALLOCATE_NETWORK,
+        ALLOCATE_NETWORK, NIC_TAG,
     ) = (
         'uuid', 'network', 'fixed_ip', 'port',
         'subnet', 'port_extra_properties', 'floating_ip',
-        'allocate_network',
+        'allocate_network', 'tag',
     )
 
     _SOFTWARE_CONFIG_FORMATS = (
@@ -475,6 +475,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         properties.Schema.STRING,
                         _('ID of the floating IP to associate.'),
                         support_status=support.SupportStatus(version='6.0.0')
+                    ),
+                    NIC_TAG: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Port tag. Heat ignores any update on this property '
+                          'as nova does not support it.'),
+                        support_status=support.SupportStatus(version='9.0.0')
                     )
                 },
             ),
@@ -818,13 +824,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         server = None
         try:
+            api_version = None
             # if 'auto' or 'none' is specified, we get the string type
             # nics after self._build_nics(), and the string network
             # is supported since nova microversion 2.37
             if isinstance(nics, six.string_types):
-                nc = self.client(version=self.client_plugin().V2_37)
-            else:
-                nc = self.client()
+                api_version = self.client_plugin().V2_37
+
+            if self._is_nic_tagged(self.properties[self.NETWORKS]):
+                api_version = self.client_plugin().V2_42
+
+            nc = self.client(version=api_version)
 
             server = nc.servers.create(
                 name=self._server_name(),
@@ -1477,6 +1487,19 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             raise exception.ResourcePropertyConflict(
                 self.SECURITY_GROUPS,
                 "/".join([self.NETWORKS, self.NETWORK_PORT]))
+
+        # Check if nic tag is allowed to use
+        if self._is_nic_tagged(networks=networks):
+            try:
+                self.client(
+                    version=self.client_plugin().V2_42)
+            except exception.InvalidServiceVersion as ex:
+                msg = (_('Cannot use "%(tag)s" property in networks - '
+                         'nova does not support it: %(error)s')) % {
+                    'tag': self.NIC_TAG,
+                    'error': six.text_type(ex)
+                }
+                raise exception.StackValidationFailed(message=msg)
 
         # Check if tags is allowed to use
         if self.properties[self.TAGS]:
