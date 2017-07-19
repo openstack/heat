@@ -135,6 +135,8 @@ class StackUpdate(object):
 
         yield new_res.create()
 
+        self._update_resource_data(new_res)
+
     def _check_replace_restricted(self, res):
         registry = res.stack.env.registry
         restricted_actions = registry.get_rsrc_restricted_actions(res.name)
@@ -146,6 +148,19 @@ class StackUpdate(object):
             existing_res._add_event(existing_res.UPDATE, existing_res.FAILED,
                                     six.text_type(ex))
             raise failure
+
+    def _update_resource_data(self, resource):
+        # Use the *new* template to determine the attrs to cache
+        node_data = resource.node_data(self.new_stack.defn)
+        stk_defn.update_resource_data(self.existing_stack.defn,
+                                      resource.name, node_data)
+
+        # Also update the new stack's definition with the data, so that
+        # following resources can calculate dep_attr values correctly (e.g. if
+        # the actual attribute name in a get_attr function also comes from a
+        # get_attr function.)
+        stk_defn.update_resource_data(self.new_stack.defn,
+                                      resource.name, node_data)
 
     @scheduler.wrappertask
     def _process_new_resource_update(self, new_res):
@@ -175,18 +190,12 @@ class StackUpdate(object):
                              {'res_name': res_name,
                               'stack_name': self.existing_stack.name})
 
-                    stk_defn.update_resource_data(self.existing_stack.defn,
-                                                  res_name,
-                                                  existing_res.node_data())
+                    self._update_resource_data(existing_res)
                     return
             else:
                 self._check_replace_restricted(new_res)
 
         yield self._create_resource(new_res)
-
-        node_data = self.existing_stack[res_name].node_data()
-        stk_defn.update_resource_data(self.existing_stack.defn, res_name,
-                                      node_data)
 
     def _update_in_place(self, existing_res, new_res, is_substituted=False):
         existing_snippet = self.existing_snippets[existing_res.name]

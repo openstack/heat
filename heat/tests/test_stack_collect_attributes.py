@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import six
 
 from heat.common import template_format
@@ -231,9 +232,8 @@ class DepAttrsTest(common.HeatTestCase):
         for res in six.itervalues(self.stack):
             resources = six.itervalues(self.stack.resources)
             self.assertEqual(self.expected[res.name],
-                             self.stack.get_dep_attrs(
-                                 resources,
-                                 res.name))
+                             set(itertools.chain.from_iterable(
+                                 r.t.dep_attrs(res.name) for r in resources)))
 
 
 class ReferencedAttrsTest(common.HeatTestCase):

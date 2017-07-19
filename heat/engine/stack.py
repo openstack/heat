@@ -15,7 +15,6 @@ import collections
 import copy
 import eventlet
 import functools
-import itertools
 import re
 import warnings
 
@@ -213,7 +212,8 @@ class Stack(collections.Mapping):
                                                       owner_id)
         if tmpl is not None:
             self.defn = stk_defn.StackDefinition(context, tmpl,
-                                                 self.identifier(), {},
+                                                 self.identifier(),
+                                                 cache_data or {},
                                                  parent_info)
         else:
             self.defn = None
@@ -485,16 +485,6 @@ class Stack(collections.Mapping):
         """
         if not self.parameters.set_stack_id(self.identifier()):
             LOG.warning("Unable to set parameters StackId identifier")
-
-    @staticmethod
-    def get_dep_attrs(resources, resource_name):
-        """Return the attributes of the specified resource that are referenced.
-
-        Return an iterator over any attributes of the specified resource that
-        are referenced in resources.
-        """
-        return set(itertools.chain.from_iterable(
-            res.dep_attrs(resource_name) for res in resources))
 
     def _explicit_dependencies(self):
         """Return dependencies without making any resource plugin calls.

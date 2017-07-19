@@ -2361,7 +2361,10 @@ class HotStackTest(common.HeatTestCase):
         repeat = self.stack.t.parse(self.stack, snippet)
 
         self.stack.store()
-        self.stack.create()
+        with mock.patch.object(rsrc_defn.ResourceDefinition,
+                               'dep_attrs') as mock_da:
+            mock_da.return_value = ['list']
+            self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual(['this is foo', 'this is bar'],
@@ -2374,7 +2377,10 @@ class HotStackTest(common.HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'test_get_attr',
                                   template.Template(hot_tpl))
         self.stack.store()
-        self.stack.create()
+        with mock.patch.object(rsrc_defn.ResourceDefinition,
+                               'dep_attrs') as mock_da:
+            mock_da.return_value = ['foo']
+            self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
 
@@ -2717,6 +2723,9 @@ class StackAttributesTest(common.HeatTestCase):
         self.stack = parser.Stack(self.ctx, 'test_get_attr',
                                   template.Template(self.hot_tpl))
         self.stack.store()
+
+        parsed = self.stack.t.parse(self.stack, self.snippet)
+
         self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
@@ -2739,9 +2748,7 @@ class StackAttributesTest(common.HeatTestCase):
                 (rsrc.ADOPT, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
 
-            resolved = function.resolve(self.stack.t.parse(self.stack,
-                                                           self.snippet))
-            self.assertEqual(self.expected, resolved)
+            self.assertEqual(self.expected, function.resolve(parsed))
 
 
 class StackGetAttributesTestConvergence(common.HeatTestCase):
@@ -2865,8 +2872,9 @@ class StackGetAttributesTestConvergence(common.HeatTestCase):
         dep_attrs = function.dep_attrs(
             self.stack.t.parse(self.stack, self.snippet),
             self.resource_name)
-        with mock.patch.object(rsrc.stack, 'get_dep_attrs') as mock_da:
-            mock_da.return_value = list(dep_attrs)
+        with mock.patch.object(rsrc_defn.ResourceDefinition,
+                               'dep_attrs') as mock_da:
+            mock_da.return_value = dep_attrs
             rsrc_data = rsrc.node_data()
         # store as cache data
         self.stack.cache_data = {
