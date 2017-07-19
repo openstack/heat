@@ -16,6 +16,7 @@ import hashlib
 import itertools
 
 from oslo_config import cfg
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
 from six.moves.urllib import parse as urlparse
@@ -26,6 +27,9 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import function
+
+
+LOG = logging.getLogger(__name__)
 
 opts = [
     cfg.IntOpt('limit_iterators',
@@ -182,9 +186,17 @@ class GetAttThenSelect(function.Function):
             raise exception.InvalidTemplateReference(resource=resource_name,
                                                      key=path)
 
+    def _attr_path(self):
+        return function.resolve(self._attribute)
+
     def dep_attrs(self, resource_name):
         if self._res_name() == resource_name:
-            attrs = [function.resolve(self._attribute)]
+            try:
+                attrs = [self._attr_path()]
+            except Exception as exc:
+                LOG.debug("Ignoring exception calculating required attributes"
+                          ": %s %s", type(exc).__name__, six.text_type(exc))
+                attrs = []
         else:
             attrs = []
         return itertools.chain(super(GetAttThenSelect,
@@ -266,18 +278,13 @@ class GetAtt(GetAttThenSelect):
         else:
             return None
 
-    def dep_attrs(self, resource_name):
-        if self._res_name() == resource_name:
-            path = function.resolve(self._path_components)
-            attr = [function.resolve(self._attribute)]
-            if path:
-                attrs = [tuple(attr + path)]
-            else:
-                attrs = attr
+    def _attr_path(self):
+        path = function.resolve(self._path_components)
+        attr = function.resolve(self._attribute)
+        if path:
+            return tuple([attr] + path)
         else:
-            attrs = []
-        return itertools.chain(function.dep_attrs(self.args, resource_name),
-                               attrs)
+            return attr
 
 
 class GetAttAllAttributes(GetAtt):
@@ -311,16 +318,10 @@ class GetAttAllAttributes(GetAtt):
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
 
-    def dep_attrs(self, resource_name):
-        """Check if there is no attribute_name defined, return empty chain."""
-        if self._attribute is not None:
-            return super(GetAttAllAttributes, self).dep_attrs(resource_name)
-        elif self._res_name() == resource_name:
-            attrs = [attributes.ALL_ATTRIBUTES]
-        else:
-            attrs = []
-        return itertools.chain(function.dep_attrs(self.args,
-                                                  resource_name), attrs)
+    def _attr_path(self):
+        if self._attribute is None:
+            return attributes.ALL_ATTRIBUTES
+        return super(GetAttAllAttributes, self)._attr_path()
 
     def result(self):
         if self._attribute is None:
