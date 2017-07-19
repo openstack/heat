@@ -319,10 +319,7 @@ class AccessKeyTest(common.HeatTestCase):
         return rsrc
 
     def create_access_key(self, t, stack, resource_name):
-        resource_defns = stack.t.resource_definitions(stack)
-        rsrc = user.AccessKey(resource_name,
-                              resource_defns[resource_name],
-                              stack)
+        rsrc = stack[resource_name]
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

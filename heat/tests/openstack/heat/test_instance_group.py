@@ -342,12 +342,12 @@ class InstanceGroupWithNestedStack(common.HeatTestCase):
         super(InstanceGroupWithNestedStack, self).setUp()
         t = template_format.parse(inline_templates.as_template)
         self.stack = utils.parse_stack(t, params=inline_templates.as_params)
-        lc = self.create_launch_config(t, self.stack)
-        lcid = lc.FnGetRefId()
+        self.create_launch_config(t, self.stack)
+        wsg_props = self.stack['WebServerGroup'].t._properties
         self.defn = rsrc_defn.ResourceDefinition(
             'asg', 'OS::Heat::InstanceGroup',
             {'Size': 2, 'AvailabilityZones': ['zoneb'],
-             'LaunchConfigurationName': lcid})
+             'LaunchConfigurationName': wsg_props['LaunchConfigurationName']})
         self.group = instgrp.InstanceGroup('asg', self.defn, self.stack)
 
         self.group._lb_reload = mock.Mock()
