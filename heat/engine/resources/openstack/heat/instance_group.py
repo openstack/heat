@@ -228,13 +228,14 @@ class InstanceGroup(stack_resource.StackResource):
     def _get_conf_properties(self):
         conf_refid = self.properties[self.LAUNCH_CONFIGURATION_NAME]
         conf = self.stack.resource_by_refid(conf_refid)
-        props = dict((k, v) for k, v in conf.properties.items()
-                     if k in conf.properties.data)
+        c_props = conf.frozen_definition().properties(conf.properties_schema,
+                                                      conf.context)
+        props = {k: v for k, v in c_props.items() if k in c_props.data}
         for key in [conf.BLOCK_DEVICE_MAPPINGS, conf.NOVA_SCHEDULER_HINTS]:
             if props.get(key) is not None:
-                props[key] = list(dict((k, v) for k, v in prop.items()
-                                       if k in conf.properties.data[key][idx])
-                                  for idx, prop in enumerate(props[key]))
+                props[key] = [{k: v for k, v in prop.items()
+                               if k in c_props.data[key][idx]}
+                              for idx, prop in enumerate(props[key])]
         if 'InstanceId' in props:
             props = conf.rebuild_lc_properties(props['InstanceId'])
         props['Tags'] = self._tags()

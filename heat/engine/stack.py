@@ -770,6 +770,14 @@ class Stack(collections.Mapping):
                     (r.UPDATE, r.COMPLETE),
                     (r.CHECK, r.COMPLETE)) and
                     (r.FnGetRefId() == refid or r.name == refid)):
+                if self.cache_data is not None and r.id is not None:
+                    # We don't have resources loaded from the database at this
+                    # point, so load the data for just this one from the DB.
+                    db_res = resource_objects.Resource.get_obj(self.context,
+                                                               r.id)
+                    if db_res is not None:
+                        r._load_data(db_res)
+
                 return r
 
     def register_access_allowed_handler(self, credential_id, handler):
