@@ -909,6 +909,7 @@ class HOTemplateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
                          self.stack.state)
+        self.stack._update_all_resource_data(False, True)
         self.assertEqual('foo-success',
                          self.stack.outputs['replaced'].get_value())
 

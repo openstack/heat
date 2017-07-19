@@ -527,19 +527,26 @@ class EngineService(service.ServiceBase):
         else:
             stacks = parser.Stack.load_all(cnxt)
 
-        retval = [api.format_stack(
-            stack, resolve_outputs=resolve_outputs) for stack in stacks]
-        if resolve_outputs:
-            # Cases where stored attributes may not exist for a resource:
-            #  * The resource is an AutoScalingGroup that received a signal
-            #  * Near simultaneous updates (say by an update and a signal)
-            #  * The first time resolving a pre-Pike stack
-            for stack in stacks:
-                if stack.convergence:
-                    for res in six.itervalues(stack.resources):
-                        if res.id is not None:
-                            res.store_attributes()
-        return retval
+        def show(stack):
+            if resolve_outputs:
+                for res in stack._explicit_dependencies():
+                    node_data = res.node_data(for_outputs=True)
+                    stk_defn.update_resource_data(stack.defn, res.name,
+                                                  node_data)
+
+                    # Cases where stored attributes may not exist for a
+                    # resource:
+                    #  * The resource is an AutoScalingGroup that received a
+                    #    signal
+                    #  * Near simultaneous updates (say by an update and a
+                    #    signal)
+                    #  * The first time resolving a pre-Pike stack
+                    if stack.convergence and res.id is not None:
+                        res.store_attributes()
+
+            return api.format_stack(stack, resolve_outputs=resolve_outputs)
+
+        return [show(stack) for stack in stacks]
 
     def get_revision(self, cnxt):
         return cfg.CONF.revision['heat_revision']
@@ -1353,6 +1360,7 @@ class EngineService(service.ServiceBase):
         s = self._get_stack(cntx, stack_identity)
         stack = parser.Stack.load(cntx, stack=s)
 
+        stack._update_all_resource_data(for_resources=False, for_outputs=True)
         return api.format_stack_outputs(stack.outputs)
 
     @context.request_context
@@ -1373,6 +1381,8 @@ class EngineService(service.ServiceBase):
             raise exception.NotFound(_('Specified output key %s not '
                                        'found.') % output_key)
 
+        stack._update_all_resource_data(for_resources=False,
+                                        for_outputs={output_key})
         return api.format_stack_output(outputs[output_key])
 
     def _remote_call(self, cnxt, lock_engine_id, timeout, call, **kwargs):
