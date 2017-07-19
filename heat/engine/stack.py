@@ -373,8 +373,8 @@ class Stack(collections.Mapping):
             tid = self.t.id
 
         if tid == self.t.id:
-            cur_res = self.resources[db_res.name]
-            if cur_res.id == db_res.id:
+            cur_res = self.resources.get(db_res.name)
+            if cur_res is not None and (cur_res.id == db_res.id):
                 return cur_res
 
         if rsrc_def_cache and tid in rsrc_def_cache:
