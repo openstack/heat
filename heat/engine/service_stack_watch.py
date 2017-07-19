@@ -13,10 +13,10 @@
 
 from oslo_log import log as logging
 from oslo_utils import timeutils
-import six
 
 from heat.common import context
 from heat.engine import stack
+from heat.engine import stk_defn
 from heat.engine import watchrule
 from heat.objects import stack as stack_object
 from heat.objects import watch_rule as watch_rule_object
@@ -88,8 +88,10 @@ class StackWatch(object):
         def run_alarm_action(stk, actions, details):
             for action in actions:
                 action(details=details)
-            for res in six.itervalues(stk):
+            for res in stk._explicit_dependencies():
                 res.metadata_update()
+                stk_defn.update_resource_data(stk.defn, res.name,
+                                              res.node_data())
 
         for wr in wrs:
             rule = watchrule.WatchRule.load(stk.context, watch=wr)
