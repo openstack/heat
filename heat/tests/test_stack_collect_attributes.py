@@ -230,10 +230,11 @@ class DepAttrsTest(common.HeatTestCase):
                                  template.Template(parsed_tmpl))
 
         for res in six.itervalues(self.stack):
-            resources = six.itervalues(self.stack.resources)
+            definitions = (self.stack.defn.resource_definition(n)
+                           for n in parsed_tmpl['resources'])
             self.assertEqual(self.expected[res.name],
                              set(itertools.chain.from_iterable(
-                                 r.t.dep_attrs(res.name) for r in resources)))
+                                 d.dep_attrs(res.name) for d in definitions)))
 
 
 class ReferencedAttrsTest(common.HeatTestCase):

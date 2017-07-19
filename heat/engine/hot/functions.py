@@ -222,9 +222,7 @@ class GetAttThenSelect(function.Function):
                 return
 
         attr = function.resolve(self._attribute)
-        from heat.engine import resource
-        if (type(res).get_attribute == resource.Resource.get_attribute and
-                attr not in res.attributes_schema):
+        if attr not in res.attributes_schema:
             raise exception.InvalidTemplateAttribute(
                 resource=self._resource_name, key=attr)
 

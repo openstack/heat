@@ -369,7 +369,7 @@ class NeutronTrunkTest(common.HeatTestCase):
         t = template_format.parse(update_template)
         stack = utils.parse_stack(t)
 
-        rsrc_defn = stack.t.resource_definitions(stack)['trunk']
+        rsrc_defn = stack.defn.resource_definition('trunk')
         rsrc = trunk.Trunk('trunk', rsrc_defn, stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -390,7 +390,7 @@ class NeutronTrunkTest(common.HeatTestCase):
         t = template_format.parse(update_template)
         stack = utils.parse_stack(t)
 
-        rsrc_defn = stack.t.resource_definitions(stack)['trunk']
+        rsrc_defn = stack.defn.resource_definition('trunk')
         rsrc = trunk.Trunk('trunk', rsrc_defn, stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -411,7 +411,7 @@ class NeutronTrunkTest(common.HeatTestCase):
         t = template_format.parse(update_template)
         stack = utils.parse_stack(t)
 
-        rsrc_defn = stack.t.resource_definitions(stack)['trunk']
+        rsrc_defn = stack.defn.resource_definition('trunk')
         rsrc = trunk.Trunk('trunk', rsrc_defn, stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -440,7 +440,7 @@ class NeutronTrunkTest(common.HeatTestCase):
         t = template_format.parse(update_template)
         stack = utils.parse_stack(t)
 
-        rsrc_defn = stack.t.resource_definitions(stack)['trunk']
+        rsrc_defn = stack.defn.resource_definition('trunk')
         rsrc = trunk.Trunk('trunk', rsrc_defn, stack)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)

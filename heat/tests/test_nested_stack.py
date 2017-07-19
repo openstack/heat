@@ -286,7 +286,7 @@ Resources:
             'reference_id': 'the_nested_convg_mock'
         })}
         stack = parser.Stack(ctx, 'test_stack', tmpl, cache_data=cache_data)
-        nested_stack = stack['the_nested']
+        nested_stack = stack.defn['the_nested']
         self.assertEqual('the_nested_convg_mock', nested_stack.FnGetRefId())
 
     def test_get_attribute(self):

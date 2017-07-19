@@ -205,7 +205,7 @@ class StackUpdate(object):
         # of the existing stack (which is the stack being updated)
         # but with the template of the new stack (in case the update
         # is switching template implementations)
-        new_snippet = new_res.t.reparse(self.existing_stack,
+        new_snippet = new_res.t.reparse(self.existing_stack.defn,
                                         self.new_stack.t)
         if is_substituted:
             substitute = type(new_res)(existing_res.name,

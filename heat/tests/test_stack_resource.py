@@ -470,8 +470,8 @@ class StackResourceTest(StackResourceBaseTest):
         })}
         stack = parser.Stack(utils.dummy_context(), 'test_att', tmpl,
                              cache_data=cache_data)
-        rsrc = stack['my_autoscaling_group']
-        self.assertEqual(4, rsrc.FnGetAtt(rsrc.CURRENT_SIZE))
+        rsrc = stack.defn['my_autoscaling_group']
+        self.assertEqual(4, rsrc.FnGetAtt('current_size'))
 
     def test__validate_nested_resources_checks_num_of_resources(self):
         stack_resource.cfg.CONF.set_override('max_resources_per_stack', 2)

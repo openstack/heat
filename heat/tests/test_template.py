@@ -28,8 +28,10 @@ from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
 from heat.engine.hot import template as hot_t
+from heat.engine import node_data
 from heat.engine import rsrc_defn
 from heat.engine import stack
+from heat.engine import stk_defn
 from heat.engine import template
 from heat.tests import common
 from heat.tests.openstack.nova import fakes as fakes_nova
@@ -697,11 +699,12 @@ class TemplateTest(common.HeatTestCase):
 
     @staticmethod
     def resolve(snippet, template, stack=None):
-        return function.resolve(template.parse(stack, snippet))
+        return function.resolve(template.parse(stack and stack.defn, snippet))
 
     @staticmethod
     def resolve_condition(snippet, template, stack=None):
-        return function.resolve(template.parse_condition(stack, snippet))
+        return function.resolve(template.parse_condition(stack and stack.defn,
+                                                         snippet))
 
     def test_defaults(self):
         empty = template.Template(empty_template)
@@ -900,21 +903,19 @@ class TemplateTest(common.HeatTestCase):
     def test_resource_refs(self):
         tmpl = template.Template(resource_template)
         stk = stack.Stack(self.ctx, 'test', tmpl)
+        stk.validate()
 
-        self.m.StubOutWithMock(stk['foo'], 'FnGetRefId')
-        stk['foo'].FnGetRefId().MultipleTimes().AndReturn('bar')
-        self.m.ReplayAll()
-
+        data = node_data.NodeData.from_dict({'reference_id': 'bar'})
+        stk_defn.update_resource_data(stk.defn, 'foo', data)
         r_snippet = {"Ref": "foo"}
         self.assertEqual("bar", self.resolve(r_snippet, tmpl, stk))
-        self.m.VerifyAll()
 
     def test_resource_refs_param(self):
         tmpl = template.Template(resource_template)
         stk = stack.Stack(self.ctx, 'test', tmpl)
 
         p_snippet = {"Ref": "baz"}
-        parsed = tmpl.parse(stk, p_snippet)
+        parsed = tmpl.parse(stk.defn, p_snippet)
         self.assertIsInstance(parsed, cfn_funcs.ParamRef)
 
     def test_select_from_list(self):
@@ -1654,7 +1655,7 @@ class ResolveDataTest(common.HeatTestCase):
                                  template.Template(empty_template))
 
     def resolve(self, snippet):
-        return function.resolve(self.stack.t.parse(self.stack, snippet))
+        return function.resolve(self.stack.t.parse(self.stack.defn, snippet))
 
     def test_join_split(self):
         # join

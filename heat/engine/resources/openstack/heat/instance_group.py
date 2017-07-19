@@ -309,7 +309,7 @@ class InstanceGroup(stack_resource.StackResource):
         def changing_instances(tmpl):
             instances = grouputils.get_members(self)
             current = set((i.name, i.t) for i in instances)
-            updated = set(tmpl.resource_definitions(self.nested()).items())
+            updated = set(tmpl.resource_definitions(None).items())
             # includes instances to be updated and deleted
             affected = set(k for k, v in current ^ updated)
             return set(i.FnGetRefId() for i in instances if i.name in affected)

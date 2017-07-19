@@ -291,7 +291,7 @@ class SwiftSignalHandleTest(common.HeatTestCase):
             })
         }
         st = create_stack(swiftsignalhandle_template, cache_data=cache_data)
-        rsrc = st['test_wait_condition_handle']
+        rsrc = st.defn['test_wait_condition_handle']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
 

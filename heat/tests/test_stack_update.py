@@ -1269,17 +1269,9 @@ class StackUpdateTest(common.HeatTestCase):
             'AResource',
             self.stack['BResource']._stored_properties_data['Foo'])
 
-        self.ref_id_called = False
-
-        def get_ref_id(*args):
-            ref_id = 'inst-007' if self.ref_id_called else 'AResource'
-            if self.ref_id_called is False:
-                self.ref_id_called = True
-            return ref_id
-
         mock_id = self.patchobject(generic_rsrc.ResourceWithProps,
-                                   'FnGetRefId',
-                                   side_effect=get_ref_id)
+                                   'get_reference_id',
+                                   return_value='inst-007')
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl2))
@@ -1293,7 +1285,6 @@ class StackUpdateTest(common.HeatTestCase):
             'inst-007',
             self.stack['BResource']._stored_properties_data['Foo'])
 
-        # Note: mock_id is called 14 times!!!
         mock_id.assert_called_with()
 
     def test_update_with_new_resources_with_reference(self):
@@ -1383,7 +1374,8 @@ class StackUpdateTest(common.HeatTestCase):
             self.stack['BResource']._stored_properties_data['Foo'])
 
         mock_id = self.patchobject(generic_rsrc.ResourceWithProps,
-                                   'FnGetRefId', return_value='AResource')
+                                   'get_reference_id',
+                                   return_value='AResource')
 
         # mock to make the replace fail when creating the replacement resource
         mock_create = self.patchobject(generic_rsrc.ResourceWithProps,

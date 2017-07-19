@@ -22,10 +22,12 @@ from heat.common import template_format
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import openstacksdk
 from heat.engine.hot import functions as hot_funcs
+from heat.engine import node_data
 from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
+from heat.engine import stk_defn
 from heat.tests import common
 from heat.tests import utils
 
@@ -682,9 +684,10 @@ class NeutronSubnetTest(common.HeatTestCase):
         """
         t = template_format.parse(template)
         stack = utils.parse_stack(t)
-        self.patchobject(stack['net'], 'FnGetRefId',
-                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         rsrc = stack['subnet']
+        nd = {'reference_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'}
+        stk_defn.update_resource_data(stack.defn, 'net',
+                                      node_data.NodeData.from_dict(nd))
         self.create_mock.return_value = {
             "subnet": {
                 "id": "91e47a57-7508-46fe-afc9-fc454e8580e1",
@@ -696,6 +699,7 @@ class NeutronSubnetTest(common.HeatTestCase):
         }
         stack.create()
 
-        self.assertEqual(hot_funcs.GetResource(stack, 'get_resource', 'net'),
+        self.assertEqual(hot_funcs.GetResource(stack.defn, 'get_resource',
+                                               'net'),
                          rsrc.properties.get('network'))
         self.assertIsNone(rsrc.properties.get('network_id'))

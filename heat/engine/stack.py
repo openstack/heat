@@ -298,18 +298,18 @@ class Stack(collections.Mapping):
 
     @property
     def outputs(self):
-        if self._outputs is None:
-            self._outputs = self.t.outputs(self)
-        return self._outputs
+        return {n: self.defn.output_definition(n)
+                for n in self.defn.enabled_output_names()}
 
     @property
     def resources(self):
         if self._resources is None:
-            res_defns = self.t.resource_definitions(self)
-
-            self._resources = dict((name,
-                                    resource.Resource(name, data, self))
-                                   for (name, data) in res_defns.items())
+            self._resources = {
+                name: resource.Resource(name,
+                                        self.defn.resource_definition(name),
+                                        self)
+                for name in self.defn.enabled_rsrc_names()
+            }
 
         return self._resources
 
@@ -320,7 +320,6 @@ class Stack(collections.Mapping):
             stk_defn.update_resource_data(self.defn, rsrc.name, node_data)
 
     def _find_filtered_resources(self, filters=None):
-        rsrc_def_cache = {self.t.id: self.t.resource_definitions(self)}
         if filters:
             assert self.cache_data is None, \
                 "Resources should not be loaded from the DB"
@@ -328,8 +327,10 @@ class Stack(collections.Mapping):
                 self.context, self.id, filters)
         else:
             resources = self._db_resources_get()
+
+        stk_def_cache = {}
         for rsc in six.itervalues(resources):
-            loaded_res = self._resource_from_db_resource(rsc, rsrc_def_cache)
+            loaded_res = self._resource_from_db_resource(rsc, stk_def_cache)
             if loaded_res is not None:
                 yield loaded_res
 
@@ -374,7 +375,7 @@ class Stack(collections.Mapping):
             self._db_resources = _db_resources
         return self._db_resources
 
-    def _resource_from_db_resource(self, db_res, rsrc_def_cache=None):
+    def _resource_from_db_resource(self, db_res, stk_def_cache=None):
         tid = db_res.current_template_id
         if tid is None:
             tid = self.t.id
@@ -384,19 +385,19 @@ class Stack(collections.Mapping):
             if cur_res is not None and (cur_res.id == db_res.id):
                 return cur_res
 
-        if rsrc_def_cache and tid in rsrc_def_cache:
-            rsrc_def = rsrc_def_cache[tid]
+            stk_def = self.defn
+        elif stk_def_cache and tid in stk_def_cache:
+            stk_def = stk_def_cache[tid]
         else:
-            if tid == self.t.id:
-                rsrc_def = self.t.resource_definitions(self)
-            else:
-                t = tmpl.Template.load(self.context, tid)
-                rsrc_def = t.resource_definitions(self)
-            if rsrc_def_cache:
-                rsrc_def_cache[tid] = rsrc_def
-        defn = rsrc_def.get(db_res.name)
+            t = tmpl.Template.load(self.context, tid)
+            stk_def = self.defn.clone_with_new_template(t,
+                                                        self.identifier())
+            if stk_def_cache is not None:
+                stk_def_cache[tid] = stk_def
 
-        if defn is None:
+        try:
+            defn = stk_def.resource_definition(db_res.name)
+        except KeyError:
             return None
 
         return resource.Resource(db_res.name, defn, self)
@@ -724,7 +725,7 @@ class Stack(collections.Mapping):
         """Insert the given resource into the stack."""
         template = resource.stack.t
         resource.stack = self
-        definition = resource.t.reparse(self, template)
+        definition = resource.t.reparse(self.defn, template)
         resource.t = definition
         resource.reparse()
         self.resources[resource.name] = resource
@@ -769,16 +770,23 @@ class Stack(collections.Mapping):
                   not found.
         """
         for r in six.itervalues(self):
-            if (r.state in (
-                    (r.INIT, r.COMPLETE),
-                    (r.CREATE, r.IN_PROGRESS),
-                    (r.CREATE, r.COMPLETE),
-                    (r.RESUME, r.IN_PROGRESS),
-                    (r.RESUME, r.COMPLETE),
-                    (r.UPDATE, r.IN_PROGRESS),
-                    (r.UPDATE, r.COMPLETE),
-                    (r.CHECK, r.COMPLETE)) and
-                    (r.FnGetRefId() == refid or r.name == refid)):
+            if r.state not in ((r.INIT, r.COMPLETE),
+                               (r.CREATE, r.IN_PROGRESS),
+                               (r.CREATE, r.COMPLETE),
+                               (r.RESUME, r.IN_PROGRESS),
+                               (r.RESUME, r.COMPLETE),
+                               (r.UPDATE, r.IN_PROGRESS),
+                               (r.UPDATE, r.COMPLETE),
+                               (r.CHECK, r.COMPLETE)):
+                continue
+
+            proxy = self.defn[r.name]
+            if proxy._resource_data is None:
+                matches = r.FnGetRefId() == refid or r.name == refid
+            else:
+                matches = proxy.FnGetRefId() == refid
+
+            if matches:
                 if self.cache_data is not None and r.id is not None:
                     # We don't have resources loaded from the database at this
                     # point, so load the data for just this one from the DB.
@@ -786,7 +794,6 @@ class Stack(collections.Mapping):
                                                                r.id)
                     if db_res is not None:
                         r._load_data(db_res)
-
                 return r
 
     def register_access_allowed_handler(self, credential_id, handler):
@@ -851,6 +858,8 @@ class Stack(collections.Mapping):
             LOG.debug("Duplicate names %s" % dup_names)
             raise exception.StackValidationFailed(
                 message=_("Duplicate names %s") % dup_names)
+
+        self._update_all_resource_data(for_resources=True, for_outputs=True)
 
         if self.strict_validate:
             iter_rsc = self.dependencies
@@ -1252,7 +1261,9 @@ class Stack(collections.Mapping):
             self.prev_raw_template_id = getattr(self.t, 'id', None)
 
         # switch template and reset dependencies
-        self.t = template
+        self.defn = self.defn.clone_with_new_template(template,
+                                                      self.identifier(),
+                                                      clear_resource_data=True)
         self.reset_dependencies()
         self._resources = None
         self.cache_data = None
@@ -1937,8 +1948,8 @@ class Stack(collections.Mapping):
                                   timeout_mins=self.timeout_mins,
                                   disable_rollback=self.disable_rollback)
 
-        for name, defn in six.iteritems(
-                template.resource_definitions(newstack)):
+        for name in newstack.defn.enabled_rsrc_names():
+            defn = newstack.defn.resource_definition(name)
             rsrc = resource.Resource(name, defn, self)
             data = snapshot.data['resources'].get(name)
             handle_restore = getattr(rsrc, 'handle_restore', None)

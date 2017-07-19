@@ -45,7 +45,8 @@ class Function(object):
             return None
 
         stack = ref()
-        assert stack is not None, "Need a reference to the Stack object"
+        assert stack is not None, ("Need a reference to the "
+                                   "StackDefinition object")
         return stack
 
     def validate(self):

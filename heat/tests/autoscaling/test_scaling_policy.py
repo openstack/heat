@@ -166,7 +166,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
             'reference_id': 'http://convg_signed_url'
         })}
         stack = utils.parse_stack(t, cache_data=cache_data)
-        rsrc = stack['WebServerScaleUpPolicy']
+        rsrc = stack.defn['WebServerScaleUpPolicy']
         self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())
 
 

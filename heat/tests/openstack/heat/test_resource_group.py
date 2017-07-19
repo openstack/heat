@@ -884,8 +884,8 @@ class ResourceGroupAttrTest(common.HeatTestCase):
             'attrs': {'refs': ['rsrc1', 'rsrc2']}
         })}
         stack = utils.parse_stack(template, cache_data=cache_data)
-        rsrc = stack['group1']
-        self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))
+        rsrc = stack.defn['group1']
+        self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt('refs'))
 
     def test_get_attribute_blacklist(self):
         resg = self._create_dummy_stack()

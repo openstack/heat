@@ -357,5 +357,5 @@ class NovaFloatingIPTest(common.HeatTestCase):
             'reference_id': 'convg_xyz'
         })}
         stack = utils.parse_stack(t, cache_data=cache_data)
-        rsrc = stack['MyFloatingIPAssociation']
+        rsrc = stack.defn['MyFloatingIPAssociation']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())

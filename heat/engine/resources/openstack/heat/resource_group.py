@@ -283,8 +283,7 @@ class ResourceGroup(stack_resource.StackResource):
         first_name = next(self._resource_names(update_rsrc_data=False))
         test_tmpl = self._assemble_nested([first_name],
                                           include_all=True)
-        res_def = next(six.itervalues(
-            test_tmpl.resource_definitions(self.stack)))
+        res_def = next(six.itervalues(test_tmpl.resource_definitions(None)))
         # make sure we can resolve the nested resource type
         self.stack.env.get_class_to_instantiate(res_def.resource_type)
 

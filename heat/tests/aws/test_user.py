@@ -292,7 +292,7 @@ class UserTest(common.HeatTestCase):
             'reference_id': 'convg_xyz'
         })}
         stack = utils.parse_stack(t, cache_data=cache_data)
-        rsrc = stack['CfnUser']
+        rsrc = stack.defn['CfnUser']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
 

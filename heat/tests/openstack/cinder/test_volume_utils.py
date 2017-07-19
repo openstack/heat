@@ -73,7 +73,7 @@ class BaseVolumeTest(common.HeatTestCase):
             data['Properties']['AvailabilityZone'] = 'nova'
             Volume = aws_vol.Volume
         vol = Volume(resource_name,
-                     stack.t.resource_definitions(stack)[resource_name],
+                     stack.defn.resource_definition(resource_name),
                      stack)
         return vol
 
@@ -94,9 +94,8 @@ class BaseVolumeTest(common.HeatTestCase):
             Attachment = os_vol.CinderVolumeAttachment
         else:
             Attachment = aws_vol.VolumeAttachment
-        resource_defns = stack.t.resource_definitions(stack)
         rsrc = Attachment(resource_name,
-                          resource_defns[resource_name],
+                          stack.defn.resource_definition(resource_name),
                           stack)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()

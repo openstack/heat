@@ -821,7 +821,7 @@ class TestMistralWorkflow(common.HeatTestCase):
 
         return [FakeWorkflow('create_vm')]
 
-    def test_mistal_workflow_refid(self):
+    def test_mistral_workflow_refid(self):
         tmpl = template_format.parse(workflow_template)
         stack = utils.parse_stack(tmpl, stack_name='test')
         rsrc = stack['workflow']
@@ -830,7 +830,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         rsrc.action = 'CREATE'
         self.assertEqual('test-workflow-owevpzgiqw66', rsrc.FnGetRefId())
 
-    def test_mistal_workflow_refid_convergence_cache_data(self):
+    def test_mistral_workflow_refid_convergence_cache_data(self):
         tmpl = template_format.parse(workflow_template)
         cache_data = {'workflow': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
@@ -841,7 +841,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         })}
         stack = utils.parse_stack(tmpl, stack_name='test',
                                   cache_data=cache_data)
-        rsrc = stack['workflow']
+        rsrc = stack.defn['workflow']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
     def test_policies_translation_successful(self):

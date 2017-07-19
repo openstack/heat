@@ -269,7 +269,10 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
             update_metadata('123', 'foo', 'bar')
 
         def side_effect_popper(sleep_time):
-            if self.run_empty:
+            wh = stack['WH']
+            if wh.status == wh.IN_PROGRESS:
+                return
+            elif self.run_empty:
                 self.run_empty = False
                 check_empty(sleep_time)
             else:
@@ -308,7 +311,7 @@ class MetadataRefreshServerTest(common.HeatTestCase):
                        return_value=1)
     @mock.patch.object(server.Server, 'handle_create')
     @mock.patch.object(server.Server, 'check_create_complete')
-    @mock.patch.object(server.Server, 'FnGetAtt')
+    @mock.patch.object(server.Server, 'get_attribute', new_callable=mock.Mock)
     def test_FnGetAtt_metadata_update(self, mock_get, mock_check,
                                       mock_handle, *args):
         temp = template_format.parse(TEST_TEMPLATE_SERVER)
@@ -321,7 +324,7 @@ class MetadataRefreshServerTest(common.HeatTestCase):
         self.stub_KeypairConstraint_validate()
 
         # Note dummy addresses are from TEST-NET-1 ref rfc5737
-        mock_get.side_effect = ['192.0.2.1', '192.0.2.2', '192.0.2.2']
+        mock_get.side_effect = ['192.0.2.1', '192.0.2.2']
 
         # Test
         stack.create()

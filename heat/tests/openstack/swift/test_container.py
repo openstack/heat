@@ -472,7 +472,7 @@ class SwiftTest(common.HeatTestCase):
             'reference_id': 'xyz_convg'
         })}
         stack = utils.parse_stack(self.t, cache_data=cache_data)
-        rsrc = stack['SwiftContainer']
+        rsrc = stack.defn['SwiftContainer']
         self.assertEqual('xyz_convg', rsrc.FnGetRefId())
 
     @mock.patch('swiftclient.client.Connection.head_account')

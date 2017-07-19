@@ -25,7 +25,7 @@ from heat.engine import resource
 from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
-from heat.engine import stack as parser
+from heat.engine import stk_defn
 from heat.tests.autoscaling import inline_templates
 from heat.tests import common
 from heat.tests import utils
@@ -320,7 +320,7 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         properties = t['Resources']['ElasticLoadBalancer']['Properties']
         properties['AvailabilityZones'] = {'Fn::GetAZs': ''}
 
-        self.patchobject(parser.Stack, 'get_availability_zones',
+        self.patchobject(stk_defn.StackDefinition, 'get_availability_zones',
                          return_value=['abc', 'xyz'])
 
         mock_members = self.patchobject(grouputils, 'get_member_refids')

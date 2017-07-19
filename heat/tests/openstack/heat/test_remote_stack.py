@@ -677,7 +677,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
             'reference_id': 'convg_xyz'
         })}
         stack = utils.parse_stack(t, cache_data=cache_data)
-        rsrc = stack['remote_stack']
+        rsrc = stack.defn['remote_stack']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
     def test_update_in_check_failed_state(self):
