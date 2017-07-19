@@ -213,6 +213,7 @@ class StackUpdate(object):
                                        existing_res.stack)
             existing_res.stack.resources[existing_res.name] = substitute
             existing_res = substitute
+        existing_res.converge = self.new_stack.converge
         return existing_res.update(new_snippet, existing_snippet,
                                    prev_resource=prev_res)
 

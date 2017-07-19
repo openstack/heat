@@ -374,7 +374,7 @@ class StackController(object):
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
 
-    def prepare_args(self, data):
+    def prepare_args(self, data, is_update=False):
         args = data.args()
         key = rpc_api.PARAM_TIMEOUT
         if key in args:
@@ -382,6 +382,11 @@ class StackController(object):
         key = rpc_api.PARAM_TAGS
         if args.get(key) is not None:
             args[key] = self._extract_tags_param(args[key])
+        key = rpc_api.PARAM_CONVERGE
+        if not is_update and key in args:
+            msg = _("%s flag only supported in stack update (or update "
+                    "preview) request.") % key
+            raise exc.HTTPBadRequest(six.text_type(msg))
         return args
 
     @util.policy_enforce
@@ -472,7 +477,7 @@ class StackController(object):
         """Update an existing stack with a new template and/or parameters."""
         data = InstantiationData(body)
 
-        args = self.prepare_args(data)
+        args = self.prepare_args(data, is_update=True)
         self.rpc_client.update_stack(
             req.context,
             identity,
@@ -493,7 +498,7 @@ class StackController(object):
         """
         data = InstantiationData(body, patch=True)
 
-        args = self.prepare_args(data)
+        args = self.prepare_args(data, is_update=True)
         self.rpc_client.update_stack(
             req.context,
             identity,
@@ -518,7 +523,7 @@ class StackController(object):
         """Preview update for existing stack with a new template/parameters."""
         data = InstantiationData(body)
 
-        args = self.prepare_args(data)
+        args = self.prepare_args(data, is_update=True)
         show_nested = self._param_show_nested(req)
         if show_nested is not None:
             args[rpc_api.PARAM_SHOW_NESTED] = show_nested
@@ -538,7 +543,7 @@ class StackController(object):
         """Preview PATCH update for existing stack."""
         data = InstantiationData(body, patch=True)
 
-        args = self.prepare_args(data)
+        args = self.prepare_args(data, is_update=True)
         show_nested = self._param_show_nested(req)
         if show_nested is not None:
             args['show_nested'] = show_nested

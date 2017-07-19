@@ -29,7 +29,7 @@ from heat.tests import utils
 class WorkerServiceTest(common.HeatTestCase):
     def test_make_sure_rpc_version(self):
         self.assertEqual(
-            '1.3',
+            '1.4',
             worker.WorkerService.RPC_API_VERSION,
             ('RPC version is changed, please update this test to new version '
              'and make sure additional test cases are added for RPC APIs '

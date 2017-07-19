@@ -874,7 +874,7 @@ class EngineService(service.ServiceBase):
         """
 
         # Now parse the template and any parameters for the updated
-        # stack definition.  If PARAM_EXISTING is specified, we merge
+        # stack definition. If PARAM_EXISTING is specified, we merge
         # any environment provided into the existing one and attempt
         # to use the existing stack template, if one is not provided.
         if args.get(rpc_api.PARAM_EXISTING):
@@ -947,6 +947,8 @@ class EngineService(service.ServiceBase):
                                  current_stack.timeout_mins)
         common_params.setdefault(rpc_api.PARAM_DISABLE_ROLLBACK,
                                  current_stack.disable_rollback)
+        common_params.setdefault(rpc_api.PARAM_CONVERGE,
+                                 current_stack.converge)
 
         if args.get(rpc_api.PARAM_EXISTING):
             common_params.setdefault(rpc_api.STACK_TAGS,

@@ -1,0 +1,7 @@
+---
+features:
+  - Add `converge` parameter for stack update (and update preview) API.
+    This parameter will force resources to observe the reality of resources
+    before actually update it. The value of this parameter can be any
+    boolean value. This will replace config flag `observe_on_update` in
+    near future.

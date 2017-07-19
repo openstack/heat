@@ -71,7 +71,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(eventlet.queue, 'LightQueue', return_value=msgq_mock)
 
         # do update
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: True}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, api_args)
 
@@ -97,7 +97,9 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             tenant_id='test_tenant_id',
             timeout_mins=60,
             user_creds_id=u'1',
-            username='test_username')
+            username='test_username',
+            converge=True
+        )
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_validate.assert_called_once_with()
 
@@ -127,7 +129,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         # Test
         environment_files = ['env_1']
         self.man.update_stack(self.ctx, old_stack.identifier(),
-                              template, params, None, {},
+                              template, params, None,
+                              {rpc_api.PARAM_CONVERGE: False},
                               environment_files=environment_files)
 
         # Verify
@@ -160,7 +163,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(eventlet.queue, 'LightQueue', return_value=msgq_mock)
 
         # do update
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        None, None, None, api_args,
                                        template_id=tmpl_id)
@@ -186,7 +189,9 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             tenant_id='test_tenant_id',
             timeout_mins=60,
             user_creds_id=u'1',
-            username='test_username')
+            username='test_username',
+            converge=False
+        )
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_validate.assert_called_once_with()
 
@@ -202,7 +207,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
                          'parameters': {'newparam': 123},
                          'resource_registry': {'resources': {}}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
-                    rpc_api.PARAM_EXISTING: True}
+                    rpc_api.PARAM_EXISTING: True,
+                    rpc_api.PARAM_CONVERGE: False}
         t = template_format.parse(tools.wp_template)
 
         stk = tools.get_stack(stack_name, self.ctx, with_params=True)
@@ -265,7 +271,8 @@ resources:
                          'parameters': {},
                          'resource_registry': {'resources': {}}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
-                    rpc_api.PARAM_EXISTING: True}
+                    rpc_api.PARAM_EXISTING: True,
+                    rpc_api.PARAM_CONVERGE: False}
 
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
@@ -297,7 +304,8 @@ resources:
                          'resource_registry': {'resources': {}}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
                     rpc_api.PARAM_EXISTING: True,
-                    rpc_api.PARAM_CLEAR_PARAMETERS: ['removeme']}
+                    rpc_api.PARAM_CLEAR_PARAMETERS: ['removeme'],
+                    rpc_api.PARAM_CONVERGE: False}
         t = template_format.parse(tools.wp_template)
         t['parameters']['removeme'] = {'type': 'string'}
 
@@ -383,7 +391,8 @@ resources:
         update_files = {'newfoo2.yaml': 'newfoo',
                         'myother.yaml': 'myother'}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
-                    rpc_api.PARAM_EXISTING: True}
+                    rpc_api.PARAM_EXISTING: True,
+                    rpc_api.PARAM_CONVERGE: False}
         t = template_format.parse(tools.wp_template)
 
         stk = utils.parse_stack(t, stack_name=stack_name, params=intial_params,
@@ -439,7 +448,8 @@ resources:
                          'parameters': {},
                          'resource_registry': {}}
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
-                    rpc_api.PARAM_EXISTING: True}
+                    rpc_api.PARAM_EXISTING: True,
+                    rpc_api.PARAM_CONVERGE: False}
         t = template_format.parse(tools.wp_template)
 
         stk = utils.parse_stack(t, stack_name=stack_name, params=intial_params)
@@ -489,7 +499,8 @@ resources:
 
         # do update
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
-                                       template, params, None, {})
+                                       template, params, None,
+                                       {rpc_api.PARAM_CONVERGE: False})
 
         # assertions
         self.assertEqual(old_stack.identifier(), result)
@@ -511,7 +522,9 @@ resources:
             strict_validate=True,
             tenant_id='test_tenant_id', timeout_mins=1,
             user_creds_id=u'1',
-            username='test_username')
+            username='test_username',
+            converge=False
+        )
 
     def test_stack_cancel_update_same_engine(self):
         stack_name = 'service_update_stack_test_cancel_same_engine'
@@ -619,7 +632,7 @@ resources:
         # do update
         cfg.CONF.set_override('max_resources_per_stack', 3)
 
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        template, params, None, api_args)
 
@@ -642,7 +655,9 @@ resources:
             stack_user_project_id='1234', strict_validate=True,
             tenant_id='test_tenant_id',
             timeout_mins=60, user_creds_id=u'1',
-            username='test_username')
+            username='test_username',
+            converge=False
+        )
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_validate.assert_called_once_with()
 
@@ -678,7 +693,8 @@ resources:
                                      return_value=old_stack)
 
         result = self.man.update_stack(self.ctx, create_stack.identifier(),
-                                       tpl, {}, None, {})
+                                       tpl, {}, None,
+                                       {rpc_api.PARAM_CONVERGE: False})
 
         old_stack._persist_state()
         self.assertEqual((old_stack.UPDATE, old_stack.COMPLETE),
@@ -710,7 +726,7 @@ resources:
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.update_stack, self.ctx,
                                old_stack.identifier(), tpl, params,
-                               None, {})
+                               None, {rpc_api.PARAM_CONVERGE: False})
         self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
                       six.text_type(ex.exc_info[1]))
@@ -738,7 +754,7 @@ resources:
         mock_validate = self.patchobject(stk, 'validate',
                                          side_effect=ex_expected)
         # do update
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.update_stack,
                                self.ctx, old_stack.identifier(),
@@ -758,7 +774,9 @@ resources:
             stack_user_project_id='1234', strict_validate=True,
             tenant_id='test_tenant_id',
             timeout_mins=60, user_creds_id=u'1',
-            username='test_username')
+            username='test_username',
+            converge=False
+        )
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_validate.assert_called_once_with()
 
@@ -771,7 +789,7 @@ resources:
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.update_stack,
                                self.ctx, stk.identifier(), template,
-                               params, None, {})
+                               params, None, {rpc_api.PARAM_CONVERGE: False})
         self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
     def test_stack_update_no_credentials(self):
@@ -798,7 +816,7 @@ resources:
         mock_env = self.patchobject(environment, 'Environment',
                                     return_value=stk.env)
 
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}
         ex = self.assertRaises(dispatcher.ExpectedException,
                                self.man.update_stack, self.ctx,
                                stk.identifier(),
@@ -820,14 +838,17 @@ resources:
             stack_user_project_id='1234',
             strict_validate=True,
             tenant_id='test_tenant_id', timeout_mins=60,
-            user_creds_id=u'1', username='test_username')
+            user_creds_id=u'1', username='test_username',
+            converge=False
+        )
         mock_load.assert_called_once_with(self.ctx, stack=s)
 
     def test_stack_update_existing_template(self):
         '''Update a stack using the same template.'''
         stack_name = 'service_update_test_stack_existing_template'
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
-                    rpc_api.PARAM_EXISTING: True}
+                    rpc_api.PARAM_EXISTING: True,
+                    rpc_api.PARAM_CONVERGE: False}
         t = template_format.parse(tools.wp_template)
         # Don't actually run the update as the mocking breaks it, instead
         # we just ensure the expected template is passed in to the updated
@@ -859,7 +880,8 @@ resources:
         '''Update a stack using the same template doesn't work when FAILED.'''
         stack_name = 'service_update_test_stack_existing_template'
         api_args = {rpc_api.PARAM_TIMEOUT: 60,
-                    rpc_api.PARAM_EXISTING: True}
+                    rpc_api.PARAM_EXISTING: True,
+                    rpc_api.PARAM_CONVERGE: False}
         t = template_format.parse(tools.wp_template)
         # Don't actually run the update as the mocking breaks it, instead
         # we just ensure the expected template is passed in to the updated
@@ -912,7 +934,7 @@ parameters:
                                 self.man.update_stack,
                                 self.ctx, old_stack.identifier(),
                                 old_stack.t.t, params,
-                                None, {})
+                                None, {rpc_api.PARAM_CONVERGE: False})
         self.assertEqual(exception.ImmutableParameterModified, exc.exc_info[0])
         self.assertEqual('The following parameters are immutable and may not '
                          'be updated: param1', exc.exc_info[1].message)
@@ -948,7 +970,7 @@ parameters:
         params = {'param1': 'bar'}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        templatem.Template(template), params,
-                                       None, {})
+                                       None, {rpc_api.PARAM_CONVERGE: False})
         self.assertEqual(s.id, result['stack_id'])
 
     def test_update_immutable_parameter_same_value(self):
@@ -982,7 +1004,7 @@ parameters:
         params = {'param1': 'foo'}
         result = self.man.update_stack(self.ctx, old_stack.identifier(),
                                        templatem.Template(template), params,
-                                       None, {})
+                                       None, {rpc_api.PARAM_CONVERGE: False})
         self.assertEqual(s.id, result['stack_id'])
 
 
@@ -1057,7 +1079,7 @@ resources:
                          return_value=None)
 
         # do preview_update_stack
-        api_args = {'timeout_mins': 60}
+        api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}
         result = self.man.preview_update_stack(
             self.ctx,
             old_stack.identifier(),
@@ -1073,7 +1095,9 @@ resources:
             disable_rollback=True, nested_depth=0, owner_id=None,
             parent_resource=None, stack_user_project_id='1234',
             strict_validate=True, tenant_id='test_tenant_id', timeout_mins=60,
-            user_creds_id=u'1', username='test_username')
+            user_creds_id=u'1', username='test_username',
+            converge=False
+        )
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_tmpl.assert_called_once_with(new_template, files=None)
         mock_env.assert_called_once_with(params)

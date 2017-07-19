@@ -374,6 +374,7 @@ Request Parameters
    - template: template
    - template_url: template_url
    - timeout_mins: timeout_mins
+   - converge: converge
 
 Request Example
 ---------------
@@ -440,6 +441,7 @@ Request Parameters
    - template: template
    - template_url: template_url
    - timeout_mins: timeout_mins
+   - converge: converge
 
 Request Example
 ---------------
@@ -505,6 +507,7 @@ Request Parameters
    - template: template
    - template_url: template_url
    - timeout_mins: timeout_mins
+   - converge: converge
 
 Request Example
 ---------------
@@ -575,6 +578,7 @@ Request Parameters
    - template: template
    - template_url: template_url
    - timeout_mins: timeout_mins
+   - converge: converge
 
 Request Example
 ---------------

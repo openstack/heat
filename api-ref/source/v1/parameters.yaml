@@ -476,6 +476,14 @@ config_name:
   in: body
   required: true
   type: string
+converge:
+  description: |
+    Set to ``true`` to force the stack to observe the reality
+    before update.
+  in: body
+  required: false
+  default: false
+  type: boolean
 created_at:
   description: |
     The date and time when the service engine was created.

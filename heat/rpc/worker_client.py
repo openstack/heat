@@ -28,6 +28,7 @@ class WorkerClient(object):
         1.1 - Added check_resource.
         1.2 - Add adopt data argument to check_resource.
         1.3 - Added cancel_check_resource API.
+        1.4 - Add converge argument to check_resource
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -50,13 +51,16 @@ class WorkerClient(object):
         client.cast(ctxt, method, **kwargs)
 
     def check_resource(self, ctxt, resource_id,
-                       current_traversal, data, is_update, adopt_stack_data):
+                       current_traversal, data, is_update, adopt_stack_data,
+                       converge=False):
         self.cast(ctxt,
                   self.make_msg(
                       'check_resource', resource_id=resource_id,
                       current_traversal=current_traversal, data=data,
-                      is_update=is_update, adopt_stack_data=adopt_stack_data),
-                  version='1.2')
+                      is_update=is_update, adopt_stack_data=adopt_stack_data,
+                      converge=converge
+                  ),
+                  version='1.4')
 
     def cancel_check_resource(self, ctxt, stack_id, engine_id):
         """Send check-resource cancel message.
