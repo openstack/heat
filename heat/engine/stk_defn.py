@@ -42,6 +42,7 @@ class StackDefinition(object):
                                               template.env.param_defaults)
         self._resource_defns = None
         self._resources = {}
+        self._output_defns = None
 
     def clone_with_new_template(self, new_template, stack_identifier,
                                 clear_resource_data=False):
@@ -74,6 +75,21 @@ class StackDefinition(object):
         if self._resource_defns is None:
             self._load_rsrc_defns()
         return set(self._resource_defns)
+
+    def _load_output_defns(self):
+        self._output_defns = self._template.outputs(self)
+
+    def output_definition(self, output_name):
+        """Return the definition of the given output."""
+        if self._output_defns is None:
+            self._load_output_defns()
+        return self._output_defns[output_name]
+
+    def enabled_output_names(self):
+        """Return the set of names of all enabled outputs in the template."""
+        if self._output_defns is None:
+            self._load_output_defns()
+        return set(self._output_defns)
 
     def all_rsrc_names(self):
         """Return the set of names of all resources in the template.
