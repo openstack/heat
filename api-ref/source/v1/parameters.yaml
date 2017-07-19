@@ -1409,7 +1409,7 @@ stack_tags:
     The stack tags.
   in: body
   required: true
-  type: string
+  type: array
 stack_template:
   description: |
     The template used to create the stack.
