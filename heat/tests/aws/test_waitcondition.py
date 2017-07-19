@@ -30,6 +30,7 @@ from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
+from heat.engine import stk_defn
 from heat.engine import template as tmpl
 from heat.objects import resource as resource_objects
 from heat.tests import common
@@ -641,6 +642,8 @@ class WaitConditionUpdateTest(common.HeatTestCase):
                                                       rsrc.type(),
                                                       uprops)
 
+        stk_defn.update_resource_data(self.stack.defn, 'WaitHandle',
+                                      self.stack['WaitHandle'].node_data())
         updater = scheduler.TaskRunner(rsrc.update, update_snippet)
         updater()
 

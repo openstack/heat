@@ -27,6 +27,7 @@ from heat.engine.resources.aws.ec2 import eip
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
+from heat.engine import stk_defn
 from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests.openstack.nova import fakes as fakes_nova
@@ -228,6 +229,8 @@ class EIPTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
     def create_association(self, t, stack, resource_name):
@@ -238,6 +241,8 @@ class EIPTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
     def _mock_server_get(self, server='WebServer', mock_server=None,
@@ -482,6 +487,8 @@ class AllocTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
     def create_association(self, t, stack, resource_name):
@@ -492,6 +499,8 @@ class AllocTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
     def mock_update_floatingip(self, port='the_nic'):
@@ -833,6 +842,7 @@ class AllocTest(common.HeatTestCase):
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
+        stk_defn.update_resource_data(stack.defn, ass.name, ass.node_data())
 
         # change AllocationId to EIP
         props = copy.deepcopy(ass.properties.data)

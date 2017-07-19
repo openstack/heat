@@ -22,6 +22,7 @@ from heat.common import template_format
 from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron import trunk
 from heat.engine import scheduler
+from heat.engine import stk_defn
 from heat.tests import common
 from heat.tests import utils
 from neutronclient.common import exceptions as ncex
@@ -121,6 +122,8 @@ class NeutronTrunkTest(common.HeatTestCase):
     def _create_trunk(self, stack):
         trunk = stack['trunk']
         scheduler.TaskRunner(trunk.create)()
+        stk_defn.update_resource_data(stack.defn, trunk.name,
+                                      trunk.node_data())
 
         self.assertEqual((trunk.CREATE, trunk.COMPLETE), trunk.state)
 
@@ -146,9 +149,12 @@ class NeutronTrunkTest(common.HeatTestCase):
         del t['resources']['subport_2']
         stack = utils.parse_stack(t)
 
-        self.patchobject(
-            stack['parent_port'], 'FnGetRefId', return_value='parent port id')
+        parent_port = stack['parent_port']
+        self.patchobject(parent_port, 'get_reference_id',
+                         return_value='parent port id')
         self.find_resource_mock.return_value = 'parent port id'
+        stk_defn.update_resource_data(stack.defn, parent_port.name,
+                                      parent_port.node_data())
 
         self._create_trunk(stack)
 
@@ -166,10 +172,17 @@ class NeutronTrunkTest(common.HeatTestCase):
         del t['resources']['subport_2']
         stack = utils.parse_stack(t)
 
-        self.patchobject(
-            stack['parent_port'], 'FnGetRefId', return_value='parent port id')
-        self.patchobject(
-            stack['subport_1'], 'FnGetRefId', return_value='subport id')
+        parent_port = stack['parent_port']
+        self.patchobject(parent_port, 'get_reference_id',
+                         return_value='parent port id')
+        stk_defn.update_resource_data(stack.defn, parent_port.name,
+                                      parent_port.node_data())
+
+        subport_1 = stack['subport_1']
+        self.patchobject(subport_1, 'get_reference_id',
+                         return_value='subport id')
+        stk_defn.update_resource_data(stack.defn, subport_1.name,
+                                      subport_1.node_data())
 
         self._create_trunk(stack)
 
@@ -191,12 +204,23 @@ class NeutronTrunkTest(common.HeatTestCase):
         del t['resources']['trunk']['properties']['sub_ports'][2:]
         stack = utils.parse_stack(t)
 
-        self.patchobject(
-            stack['parent_port'], 'FnGetRefId', return_value='parent_port_id')
-        self.patchobject(
-            stack['subport_1'], 'FnGetRefId', return_value='subport_1_id')
-        self.patchobject(
-            stack['subport_2'], 'FnGetRefId', return_value='subport_2_id')
+        parent_port = stack['parent_port']
+        self.patchobject(parent_port, 'get_reference_id',
+                         return_value='parent_port_id')
+        stk_defn.update_resource_data(stack.defn, parent_port.name,
+                                      parent_port.node_data())
+
+        subport_1 = stack['subport_1']
+        self.patchobject(subport_1, 'get_reference_id',
+                         return_value='subport_1_id')
+        stk_defn.update_resource_data(stack.defn, subport_1.name,
+                                      subport_1.node_data())
+
+        subport_2 = stack['subport_2']
+        self.patchobject(subport_2, 'get_reference_id',
+                         return_value='subport_2_id')
+        stk_defn.update_resource_data(stack.defn, subport_2.name,
+                                      subport_2.node_data())
 
         self._create_trunk(stack)
 
@@ -248,8 +272,11 @@ class NeutronTrunkTest(common.HeatTestCase):
         del t['resources']['trunk']['properties']['sub_ports']
         stack = utils.parse_stack(t)
 
-        self.patchobject(
-            stack['parent_port'], 'FnGetRefId', return_value='parent port id')
+        parent_port = stack['parent_port']
+        self.patchobject(parent_port, 'get_reference_id',
+                         return_value='parent port id')
+        stk_defn.update_resource_data(stack.defn, parent_port.name,
+                                      parent_port.node_data())
 
         def find_resourceid_by_name_or_id(
                 _client, _resource, name_or_id, **_kwargs):
@@ -280,10 +307,17 @@ class NeutronTrunkTest(common.HeatTestCase):
             'properties']['sub_ports'][0]['port'] = 'subport name'
         stack = utils.parse_stack(t)
 
-        self.patchobject(
-            stack['parent_port'], 'FnGetRefId', return_value='parent port id')
-        self.patchobject(
-            stack['subport_1'], 'FnGetRefId', return_value='subport id')
+        parent_port = stack['parent_port']
+        self.patchobject(parent_port, 'get_reference_id',
+                         return_value='parent port id')
+        stk_defn.update_resource_data(stack.defn, parent_port.name,
+                                      parent_port.node_data())
+
+        subport_1 = stack['subport_1']
+        self.patchobject(subport_1, 'get_reference_id',
+                         return_value='subport id')
+        stk_defn.update_resource_data(stack.defn, subport_1.name,
+                                      subport_1.node_data())
 
         def find_resourceid_by_name_or_id(
                 _client, _resource, name_or_id, **_kwargs):

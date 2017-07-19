@@ -28,6 +28,7 @@ from heat.engine import node_data
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
+from heat.engine import stk_defn
 from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import utils
@@ -427,14 +428,17 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
         self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(stack.defn, fip.name, fip.node_data())
 
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
         self.assertEqual((p.CREATE, p.COMPLETE), p.state)
+        stk_defn.update_resource_data(stack.defn, p.name, p.node_data())
 
         fipa = stack['floating_ip_assoc']
         scheduler.TaskRunner(fipa.create)()
         self.assertEqual((fipa.CREATE, fipa.COMPLETE), fipa.state)
+        stk_defn.update_resource_data(stack.defn, fipa.name, fipa.node_data())
         self.assertIsNotNone(fipa.id)
         self.assertEqual(fipa.id, fipa.resource_id)
 
@@ -692,10 +696,12 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         p = stack['port_floating']
         scheduler.TaskRunner(p.create)()
         self.assertEqual((p.CREATE, p.COMPLETE), p.state)
+        stk_defn.update_resource_data(stack.defn, p.name, p.node_data())
 
         fip = stack['floating_ip']
         scheduler.TaskRunner(fip.create)()
         self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(stack.defn, fip.name, fip.node_data())
 
         # test update FloatingIp with port_id
         props = copy.deepcopy(fip.properties.data)
@@ -706,6 +712,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                                                                     props))
         scheduler.TaskRunner(fip.update, update_snippet)()
         self.assertEqual((fip.UPDATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(stack.defn, fip.name, fip.node_data())
 
         # test update FloatingIp with None port_id
         props = copy.deepcopy(fip.properties.data)
