@@ -258,7 +258,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'xyz',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         loaded_stack = stack.Stack.load(self.ctx, self.stack.id)
         stored_props = loaded_stack['AResource']._stored_properties_data
@@ -396,7 +398,9 @@ class StackUpdateTest(common.HeatTestCase):
                                     template.Template(tmpl, env=env2))
 
         def check_and_raise(*args):
-            self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+            self.assertEqual(
+                'abc',
+                self.stack['AResource']._stored_properties_data['Foo'])
             raise resource.UpdateReplace
 
         mock_upd = self.patchobject(generic_rsrc.ResourceWithProps,
@@ -406,7 +410,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'xyz',
+            self.stack['AResource']._stored_properties_data['Foo'])
         after = rsrc_defn.ResourceDefinition('AResource',
                                              'ResourceWithPropsType',
                                              properties={'Foo': 'xyz'})
@@ -449,7 +455,9 @@ class StackUpdateTest(common.HeatTestCase):
         # The hook is not called, and update succeeds properly
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'xyz',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
     def test_update_replace_delete_hook(self):
         tmpl = {
@@ -486,7 +494,9 @@ class StackUpdateTest(common.HeatTestCase):
         # The hook is not called, and update succeeds properly
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'xyz',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
     def test_update_replace_post_hook(self):
         tmpl = {
@@ -520,7 +530,9 @@ class StackUpdateTest(common.HeatTestCase):
         mock_hook.assert_called_once_with('post-update')
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual(2, self.stack['AResource'].properties['an_int'])
+        self.assertEqual(
+            '2',
+            self.stack['AResource']._stored_properties_data['an_int'])
 
     def test_update_modify_update_failed(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1029,7 +1041,9 @@ class StackUpdateTest(common.HeatTestCase):
             events = self.eng.list_events(self.ctx, self.stack.identifier())
             self.assertEqual(11, len(events))
 
-            self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+            self.assertEqual(
+                'abc',
+                self.stack['AResource']._stored_properties_data['Foo'])
             self.assertEqual(5, mock_db_update.call_count)
             self.assertEqual('UPDATE',
                              mock_db_update.call_args_list[0][0][2]['action'])
@@ -1069,7 +1083,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack, msg_queue=msgq_mock)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
         msgq_mock.get_nowait.assert_called_once_with()
 
     def test_update_rollback_fail(self):
@@ -1246,9 +1262,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         self.ref_id_called = False
 
@@ -1267,8 +1286,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('inst-007', self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'inst-007',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         # Note: mock_id is called 14 times!!!
         mock_id.assert_called_with()
@@ -1300,7 +1323,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['CResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['CResource']._stored_properties_data['Foo'])
         self.assertEqual(1, len(self.stack.resources))
 
         mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
@@ -1311,9 +1336,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         self.assertEqual(3, len(self.stack.resources))
 
@@ -1347,9 +1375,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         mock_id = self.patchobject(generic_rsrc.ResourceWithProps,
                                    'FnGetRefId', return_value='AResource')
@@ -1364,7 +1395,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         mock_id.assert_called_with()
         mock_create.assert_called_once_with()
@@ -1407,9 +1440,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource1',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource1',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         # mock to make the replace fail when creating the second
         # replacement resource
@@ -1422,9 +1458,12 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource1',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource1',
+            self.stack['BResource']._stored_properties_data['Foo'])
         mock_create.assert_called_once_with()
 
     def test_update_failure_recovery(self):
@@ -1469,9 +1508,12 @@ class StackUpdateTest(common.HeatTestCase):
 
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource1',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource1',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         # mock to make the replace fail when creating the second
         # replacement resource
@@ -1491,7 +1533,9 @@ class StackUpdateTest(common.HeatTestCase):
 
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         self.stack = stack.Stack.load(self.ctx, self.stack.id)
         updated_stack2 = stack.Stack(self.ctx, 'updated_stack',
@@ -1502,9 +1546,12 @@ class StackUpdateTest(common.HeatTestCase):
 
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource2',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource2',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         self.assertEqual(2, mock_create.call_count)
         self.assertEqual(2, mock_delete.call_count)
@@ -1564,9 +1611,12 @@ class StackUpdateTest(common.HeatTestCase):
 
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource1',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource1',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
                                        'handle_create',
@@ -1584,7 +1634,9 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_once_with()
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         self.stack = stack.Stack.load(self.ctx, self.stack.id)
         updated_stack2 = stack.Stack(self.ctx, 'updated_stack',
@@ -1596,9 +1648,10 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
 
         self.stack = stack.Stack.load(self.ctx, self.stack.id)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource2',
-                         self.stack['BResource'].properties['Foo'])
+        a_props = self.stack['AResource']._stored_properties_data['Foo']
+        self.assertEqual('smelly', a_props)
+        b_props = self.stack['BResource']._stored_properties_data['Foo']
+        self.assertEqual('AResource2', b_props)
 
         self.assertEqual(2, mock_delete.call_count)
         mock_delete_A.assert_called_once_with()
@@ -1658,9 +1711,12 @@ class StackUpdateTest(common.HeatTestCase):
 
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource1',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'AResource1',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         mock_create = self.patchobject(generic_rsrc.ResourceWithProps,
                                        'handle_create',
@@ -1678,7 +1734,9 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_once_with()
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         # check if heat stack-list works, wherein it tries to fetch template
         # parameters value from env
@@ -1696,9 +1754,10 @@ class StackUpdateTest(common.HeatTestCase):
                          self.stack.state)
 
         self.stack = stack.Stack.load(self.ctx, self.stack.id)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('AResource2',
-                         self.stack['BResource'].properties['Foo'])
+        a_props = self.stack['AResource']._stored_properties_data['Foo']
+        self.assertEqual('smelly', a_props)
+        b_props = self.stack['BResource']._stored_properties_data['Foo']
+        self.assertEqual('AResource2', b_props)
 
         self.assertEqual(2, mock_delete.call_count)
         mock_delete_A.assert_called_once_with()
@@ -1725,14 +1784,18 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         updated_stack = stack.Stack(self.ctx, 'updated_stack',
                                     template.Template(tmpl, env=env2))
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('smelly', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'smelly',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
     def test_update_deletion_policy(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1812,7 +1875,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.create()
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
         tmpl2 = {
             'heat_template_version': '2013-05-23',
@@ -1832,7 +1897,9 @@ class StackUpdateTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('foo', self.stack['AResource'].properties['Foo'])
+        self.assertEqual(
+            'foo',
+            self.stack['AResource']._stored_properties_data['Foo'])
 
     def test_delete_stack_when_update_failed_twice(self):
         """Test when stack update failed twice and delete the stack.

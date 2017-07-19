@@ -1190,9 +1190,12 @@ class StackTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
-        self.assertEqual('ID-AResource',
-                         self.stack['BResource'].properties['Foo'])
+        self.assertEqual(
+            'abc',
+            self.stack['AResource']._stored_properties_data['Foo'])
+        self.assertEqual(
+            'ID-AResource',
+            self.stack['BResource']._stored_properties_data['Foo'])
 
         self.m.VerifyAll()
 
