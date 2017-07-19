@@ -145,6 +145,8 @@ outputs:
     value: [{get_attr: [AResource, flat_dict, key2]},
             {get_attr: [AResource, nested_dict, string]},
             {get_attr: [BResource, attr_B3]}]
+  out2:
+    value: {get_resource: BResource}
 """
 
 tmpl7 = """
@@ -257,6 +259,31 @@ class ReferencedAttrsTest(common.HeatTestCase):
                          {('flat_dict', 'key2'), ('nested_dict', 'string')})
         self.assertEqual(self.resB.referenced_attrs(in_resources=False,
                                                     in_outputs=True),
+                         {'attr_B3'})
+
+    def test_referenced_attrs_single_output(self):
+        self.assertEqual(self.resA.referenced_attrs(in_resources=False,
+                                                    in_outputs={'out1'}),
+                         {('flat_dict', 'key2'), ('nested_dict', 'string')})
+        self.assertEqual(self.resB.referenced_attrs(in_resources=False,
+                                                    in_outputs={'out1'}),
+                         {'attr_B3'})
+
+        self.assertEqual(self.resA.referenced_attrs(in_resources=False,
+                                                    in_outputs={'out2'}),
+                         set())
+        self.assertEqual(self.resB.referenced_attrs(in_resources=False,
+                                                    in_outputs={'out2'}),
+                         set())
+
+    def test_referenced_attrs_outputs_list(self):
+        self.assertEqual(self.resA.referenced_attrs(in_resources=False,
+                                                    in_outputs={'out1',
+                                                                'out2'}),
+                         {('flat_dict', 'key2'), ('nested_dict', 'string')})
+        self.assertEqual(self.resB.referenced_attrs(in_resources=False,
+                                                    in_outputs={'out1',
+                                                                'out2'}),
                          {'attr_B3'})
 
     def test_referenced_attrs_both(self):

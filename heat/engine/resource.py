@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import collections
 import contextlib
 import datetime as dt
 import pydoc
@@ -954,7 +955,9 @@ class Resource(status.ResourceStatus):
         This enables the resource to calculate which of its attributes will
         be used. By default, attributes referenced in either other resources
         or outputs will be included. Either can be excluded by setting the
-        `in_resources` or `in_outputs` parameters to False.
+        `in_resources` or `in_outputs` parameters to False. To limit to a
+        subset of outputs, pass an iterable of the output names to examine
+        for the `in_outputs` parameter.
         """
         def get_dep_attrs(source_dict):
             return set(self.stack.get_dep_attrs(six.itervalues(source_dict),
@@ -963,8 +966,14 @@ class Resource(status.ResourceStatus):
         refd_attrs = set()
         if in_resources:
             refd_attrs |= get_dep_attrs(self.stack.resources)
-        if in_outputs:
-            refd_attrs |= get_dep_attrs(self.stack.outputs)
+
+        subset_outputs = isinstance(in_outputs, collections.Iterable)
+        if subset_outputs or in_outputs:
+            if subset_outputs:
+                outputs = {k: self.stack.outputs[k] for k in in_outputs}
+            else:
+                outputs = self.stack.outputs
+            refd_attrs |= get_dep_attrs(outputs)
 
         if attributes.ALL_ATTRIBUTES in refd_attrs:
             refd_attrs.remove(attributes.ALL_ATTRIBUTES)
@@ -972,15 +981,20 @@ class Resource(status.ResourceStatus):
 
         return refd_attrs
 
-    def node_data(self):
+    def node_data(self, for_resources=True, for_outputs=False):
         """Return a NodeData object representing the resource.
 
         The NodeData object returned contains basic data about the resource,
         including its name, ID and state, as well as its reference ID and any
         attribute values that are used.
 
-        Only those attribute values that are referenced by other
-        resources are included.
+        By default, those attribute values that are referenced by other
+        resources are included. These can be ignored by setting the
+        for_resources parameter to False. If the for_outputs parameter is
+        True, those attribute values that are referenced by stack outputs are
+        included. If the for_outputs parameter is an iterable of output names,
+        only those attribute values referenced by the specified stack outputs
+        are included.
 
         After calling this method, the resource's attribute cache is
         populated with any cacheable attribute values referenced by stack
@@ -1005,10 +1019,11 @@ class Resource(status.ResourceStatus):
                     except exception.InvalidTemplateAttribute as ita:
                         LOG.info('%s', ita)
 
-        dep_attrs = self.referenced_attrs(in_outputs=False)
+        dep_attrs = self.referenced_attrs(in_resources=for_resources,
+                                          in_outputs=for_outputs)
 
         # Ensure all attributes referenced in outputs get cached
-        if self.stack.convergence:
+        if for_outputs is False and self.stack.convergence:
             out_attrs = self.referenced_attrs(in_resources=False)
             for e in get_attrs(out_attrs - dep_attrs, cacheable_only=True):
                 pass
