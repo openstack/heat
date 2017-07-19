@@ -397,7 +397,7 @@ class InstanceGroup(stack_resource.StackResource):
         ip addresses.
         """
         if name == self.INSTANCE_LIST:
-            return u','.join(inst.FnGetAtt('PublicIp')
+            return u','.join(inst.FnGetAtt('PublicIp') or '0.0.0.0'
                              for inst in grouputils.get_members(self)) or None
 
     def _nested_output_defns(self, resource_names, get_attr_fn):
