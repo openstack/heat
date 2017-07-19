@@ -182,10 +182,11 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
 
         size_changed = False
         try:
-            group.adjust(
-                self.properties[self.SCALING_ADJUSTMENT],
-                self.properties[self.ADJUSTMENT_TYPE],
-                self.properties[self.MIN_ADJUSTMENT_STEP])
+            with group.frozen_properties():
+                group.adjust(
+                    self.properties[self.SCALING_ADJUSTMENT],
+                    self.properties[self.ADJUSTMENT_TYPE],
+                    self.properties[self.MIN_ADJUSTMENT_STEP])
             size_changed = True
         except resource.NoActionRequired:
             raise

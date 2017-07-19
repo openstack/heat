@@ -553,11 +553,34 @@ class Resource(status.ResourceStatus):
                                              **self.stack.identifier())
 
     def frozen_definition(self):
+        """Return a frozen ResourceDefinition with stored property values.
+
+        The returned definition will contain the property values read from the
+        database, and will have all intrinsic functions resolved (note that
+        this makes it useless for calculating dependencies).
+        """
         if self._stored_properties_data is not None:
             args = {'properties': self._stored_properties_data}
         else:
             args = {}
         return self.t.freeze(**args)
+
+    @contextlib.contextmanager
+    def frozen_properties(self):
+        """Context manager to use the frozen property values from the database.
+
+        The live property values are always substituted back when the context
+        ends.
+        """
+        live_props = self.properties
+        props = self.frozen_definition().properties(self.properties_schema,
+                                                    self.context)
+
+        try:
+            self.properties = props
+            yield props
+        finally:
+            self.properties = live_props
 
     def update_template_diff(self, after, before):
         """Returns the difference between the before and after json snippets.
@@ -2344,7 +2367,10 @@ class Resource(status.ResourceStatus):
             return False
         if need_check:
             self._signal_check_action()
-        self._handle_signal(details)
+
+        with self.frozen_properties():
+            self._handle_signal(details)
+
         return self.signal_needs_metadata_updates
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
