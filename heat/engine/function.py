@@ -269,7 +269,7 @@ def dep_attrs(snippet, resource_name):
         return snippet.dep_attrs(resource_name)
 
     elif isinstance(snippet, collections.Mapping):
-        attrs = (dep_attrs(value, resource_name) for value in snippet.items())
+        attrs = (dep_attrs(val, resource_name) for val in snippet.values())
         return itertools.chain.from_iterable(attrs)
     elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
