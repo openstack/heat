@@ -233,11 +233,6 @@ class GetAttThenSelect(function.Function):
                         r.UPDATE, r.ROLLBACK, r.SNAPSHOT, r.CHECK):
             return True
 
-        # NOTE(sirushtim): Add r.INIT to states above once convergence
-        # is the default.
-        if r.stack.has_cache_data(r.name) and r.action == r.INIT:
-            return True
-
         return False
 
     def result(self):
