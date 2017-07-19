@@ -993,10 +993,17 @@ class Resource(status.ResourceStatus):
                     (self.attributes.get_cache_mode(path[0]) ==
                      attributes.Schema.CACHE_NONE)):
                     continue
-                try:
-                    yield attr, self._get_attribute_caching(*path)
-                except exception.InvalidTemplateAttribute as ita:
-                    LOG.info('%s', ita)
+                if self.action == self.INIT:
+                    if (path[0] in self.attributes or
+                        (type(self).get_attribute != Resource.get_attribute or
+                         type(self).FnGetAtt != Resource.FnGetAtt)):
+                        # TODO(ricolin) make better placeholder values here
+                        yield attr, None
+                else:
+                    try:
+                        yield attr, self._get_attribute_caching(*path)
+                    except exception.InvalidTemplateAttribute as ita:
+                        LOG.info('%s', ita)
 
         dep_attrs = self.referenced_attrs(in_outputs=False)
 
