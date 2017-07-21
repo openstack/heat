@@ -1245,7 +1245,6 @@ class EngineService(service.ServiceBase):
                              service_check_defer=service_check_defer)
         try:
             stack.validate(ignorable_errors=ignorable_errors,
-                           validate_by_deps=False,
                            validate_res_tmpl_only=True)
         except exception.StackValidationFailed as ex:
             return {'Error': six.text_type(ex)}

@@ -163,6 +163,7 @@ class Stack(collections.Mapping):
         self._outputs = None
         self._resources = None
         self._dependencies = None
+        self._implicit_deps_loaded = False
         self._access_allowed_handlers = {}
         self._db_resources = None
         self._tags = tags
@@ -409,12 +410,15 @@ class Stack(collections.Mapping):
 
     @property
     def dependencies(self):
-        if self._dependencies is None:
-            self._dependencies = self._get_dependencies(
-                ignore_errors=self.id is not None)
+        if not self._implicit_deps_loaded:
+            self._explicit_dependencies()
+            self._add_implicit_dependencies(self._dependencies,
+                                            ignore_errors=self.id is not None)
+            self._implicit_deps_loaded = True
         return self._dependencies
 
     def reset_dependencies(self):
+        self._implicit_deps_loaded = False
         self._dependencies = None
 
     def root_stack_id(self):
@@ -486,12 +490,23 @@ class Stack(collections.Mapping):
         return set(itertools.chain.from_iterable(
             res.dep_attrs(resource_name) for res in resources))
 
-    def _get_dependencies(self, ignore_errors=True):
-        """Return the dependency graph for a list of resources."""
-        deps = dependencies.Dependencies()
-        for res in six.itervalues(self.resources):
-            res.add_explicit_dependencies(deps)
+    def _explicit_dependencies(self):
+        """Return dependencies without making any resource plugin calls.
 
+        This includes at least all of the dependencies that are explicitly
+        expressed in the template (via depends_on or an intrinsic function). It
+        may include implicit dependencies defined by resource plugins, but only
+        if they have already been calculated.
+        """
+        if self._dependencies is None:
+            deps = dependencies.Dependencies()
+            for res in six.itervalues(self.resources):
+                res.add_explicit_dependencies(deps)
+            self._dependencies = deps
+        return self._dependencies
+
+    def _add_implicit_dependencies(self, deps, ignore_errors=True):
+        """Augment the given dependencies with implicit ones from plugins."""
         for res in six.itervalues(self.resources):
             try:
                 res.add_dependencies(deps)
@@ -503,8 +518,6 @@ class Stack(collections.Mapping):
                                 'dependencies for %(res)s: %(err)s',
                                 {'res': six.text_type(res),
                                  'err': six.text_type(exc)})
-
-        return deps
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
@@ -801,8 +814,7 @@ class Stack(collections.Mapping):
         return handler and handler(resource_name)
 
     @profiler.trace('Stack.validate', hide_args=False)
-    def validate(self, ignorable_errors=None, validate_by_deps=True,
-                 validate_res_tmpl_only=False):
+    def validate(self, ignorable_errors=None, validate_res_tmpl_only=False):
         """Validates the stack."""
         # TODO(sdake) Should return line number of invalid reference
 
@@ -844,10 +856,10 @@ class Stack(collections.Mapping):
             raise exception.StackValidationFailed(
                 message=_("Duplicate names %s") % dup_names)
 
-        if validate_by_deps:
+        if self.strict_validate:
             iter_rsc = self.dependencies
         else:
-            iter_rsc = six.itervalues(resources)
+            iter_rsc = self._explicit_dependencies()
 
         unique_defns = set(res.t for res in six.itervalues(resources))
         unique_defn_names = set(defn.name for defn in unique_defns)
