@@ -72,7 +72,7 @@ def reset_dummy_db():
 
 
 def dummy_context(user='test_username', tenant_id='test_tenant_id',
-                  password='password', roles=None, user_id=None,
+                  password='', roles=None, user_id=None,
                   trust_id=None, region_name=None, is_admin=False):
     roles = roles or []
     return context.RequestContext.from_dict({

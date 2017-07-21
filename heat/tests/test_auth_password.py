@@ -40,53 +40,34 @@ EXPECTED_ENV_RESPONSE = {
     'HTTP_X_AUTH_TOKEN': 'lalalalalala',
 }
 
-
-TOKEN_V2_RESPONSE = {
-    'token': {
-        'id': 'lalalalalala',
-        'expires': '2020-01-01T00:00:10.000123Z',
-        'tenant': {
-            'id': 'tenant_id1',
-            'name': 'tenant_name1',
-        },
-    },
-    'user': {
-        'id': 'user_id1',
-        'name': 'user_name1',
-        'roles': [
-            {'name': 'role1'},
-            {'name': 'role2'},
-        ],
-    },
-    'serviceCatalog': {}
-}
-
-
 TOKEN_V3_RESPONSE = {
     'version': 'v3',
-    'project': {
-        'id': 'tenant_id1',
-        'name': 'tenant_name1',
-    },
-    'token': {
-        'id': 'lalalalalala',
-        'expires': '2020-01-01T00:00:10.000123Z',
-        'tenant': {
-            'id': 'tenant_id1',
-            'name': 'tenant_name1',
-        },
-        'methods': ['password'],
-    },
-    'user': {
-        'id': 'user_id1',
-        'name': 'user_name1',
-    },
-    'roles': [
-        {'name': 'role1'},
-        {'name': 'role2'},
-    ],
-    'auth_token': 'lalalalalala'
+    'project_id': 'tenant_id1',
+    'project_name': 'tenant_name1',
+    'user_id': 'user_id1',
+    'username': 'user_name1',
+    'service_catalog': None,
+    'role_names': ['role1', 'role2'],
+    'auth_token': 'lalalalalala',
+    'user_domain_id': 'domain1'
 }
+
+TOKEN_V2_RESPONSE = {
+    'version': 'v2',
+    'tenant_id': 'tenant_id1',
+    'tenant_name': 'tenant_name1',
+    'user_id': 'user_id1',
+    'service_catalog': None,
+    'username': 'user_name1',
+    'role_names': ['role1', 'role2'],
+    'auth_token': 'lalalalalala',
+    'user_domain_id': 'domain1'
+}
+
+
+class FakeAccessInfo(object):
+    def __init__(self, **args):
+        self.__dict__.update(args)
 
 
 class FakeApp(object):
@@ -131,9 +112,8 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
             username='user_name1').AndReturn(mock_auth)
 
         m = mock_auth.get_access(mox.IsA(ks_session.Session))
-        m.AndReturn(TOKEN_V2_RESPONSE)
+        m.AndReturn(FakeAccessInfo(**TOKEN_V2_RESPONSE))
 
-        self.app.expected_env['keystone.token_info'] = TOKEN_V2_RESPONSE
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
@@ -154,11 +134,8 @@ class KeystonePasswordAuthProtocolTest(common.HeatTestCase):
                          username='user_name1').AndReturn(mock_auth)
 
         m = mock_auth.get_access(mox.IsA(ks_session.Session))
-        m.AndReturn(TOKEN_V3_RESPONSE)
+        m.AndReturn(FakeAccessInfo(**TOKEN_V3_RESPONSE))
 
-        self.app.expected_env['keystone.token_info'] = {
-            'token': TOKEN_V3_RESPONSE
-        }
         self.m.ReplayAll()
         req = webob.Request.blank('/tenant_id1/')
         req.headers['X_AUTH_USER'] = 'user_name1'
