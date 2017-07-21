@@ -140,7 +140,7 @@ Request Parameters
 .. rest_parameters:: parameters.yaml
 
    - tenant_id: tenant_id
-   - config_id: config_id
+   - config_id: config_id_url
 
 
 Response Parameters
