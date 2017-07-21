@@ -22,6 +22,7 @@ from heat.common import template_format
 from heat.engine.clients.os import neutron
 from heat.engine.clients.os import openstacksdk
 from heat.engine.hot import functions as hot_funcs
+from heat.engine import resource
 from heat.engine.resources.openstack.neutron import subnet
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
@@ -611,6 +612,45 @@ class NeutronSubnetTest(common.HeatTestCase):
         msg = ("At least one of the following properties must be specified: "
                "subnetpool, cidr.")
         self.assertEqual(msg, six.text_type(ex))
+
+    def test_validate_subnetpool_ref_with_cidr(self):
+        t = template_format.parse(neutron_template)
+        props = t['resources']['sub_net']['properties']
+        props['subnetpool'] = {'get_resource': 'subnetpool'}
+        props = t['resources']['sub_net']['properties']
+        stack = utils.parse_stack(t)
+        snippet = rsrc_defn.ResourceDefinition('subnetpool',
+                                               'OS::Neutron::SubnetPool')
+        res = resource.Resource('subnetpool', snippet, stack)
+        stack.add_resource(res)
+        self.patchobject(stack['subnetpool'], 'FnGetRefId',
+                         return_value=None)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        rsrc = stack['sub_net']
+        ex = self.assertRaises(exception.ResourcePropertyConflict,
+                               rsrc.validate)
+        msg = ("Cannot define the following properties at the same time: "
+               "subnetpool, cidr.")
+        self.assertEqual(msg, six.text_type(ex))
+
+    def test_validate_subnetpool_ref_no_cidr(self):
+        t = template_format.parse(neutron_template)
+        props = t['resources']['sub_net']['properties']
+        del props['cidr']
+        props['subnetpool'] = {'get_resource': 'subnetpool'}
+        props = t['resources']['sub_net']['properties']
+        stack = utils.parse_stack(t)
+        snippet = rsrc_defn.ResourceDefinition('subnetpool',
+                                               'OS::Neutron::SubnetPool')
+        res = resource.Resource('subnetpool', snippet, stack)
+        stack.add_resource(res)
+        self.patchobject(stack['subnetpool'], 'FnGetRefId',
+                         return_value=None)
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        rsrc = stack['sub_net']
+        self.assertIsNone(rsrc.validate())
 
     def test_validate_both_prefixlen_cidr(self):
         t = template_format.parse(neutron_template)
