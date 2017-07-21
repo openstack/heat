@@ -899,6 +899,16 @@ outputs:
 '''
 
 
+test_template_external_rsrc = '''
+heat_template_version: pike
+
+resources:
+  random_str:
+    type: OS::Nova::Server
+    external_id: foobar
+'''
+
+
 class ValidateTest(common.HeatTestCase):
     def setUp(self):
         super(ValidateTest, self).setUp()
@@ -1811,3 +1821,16 @@ parameter_groups:
                     'Type': 'OS::Test::TestResource'}},
         }
         self.assertEqual(expected, res)
+
+    def test_validate_allowed_external_rsrc(self):
+        t = template_format.parse(test_template_external_rsrc)
+        template = tmpl.Template(t)
+        stack = parser.Stack(self.ctx, 'test_stack', template)
+
+        self.assertIsNone(stack.validate(validate_res_tmpl_only=True))
+
+        with mock.patch(
+            'heat.engine.resources.server_base.BaseServer._show_resource',
+            return_value={'id': 'foobar'}
+        ):
+            self.assertIsNone(stack.validate(validate_res_tmpl_only=False))

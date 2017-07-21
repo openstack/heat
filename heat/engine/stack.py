@@ -856,6 +856,7 @@ class Stack(collections.Mapping):
             # Don't validate identical definitions multiple times
             if res.name not in unique_defn_names:
                 continue
+            result = None
             try:
                 if not validate_res_tmpl_only:
                     if res.external_id is not None:
