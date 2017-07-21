@@ -1448,15 +1448,21 @@ conditions:
                       six.text_type(exc))
         self.assertIn('if:', six.text_type(exc))
 
-    def test_repeat(self):
+    def _test_repeat(self, templ=hot_kilo_tpl_empty):
         """Test repeat function."""
         snippet = {'repeat': {'template': 'this is %var%',
                               'for_each': {'%var%': ['a', 'b', 'c']}}}
         snippet_resolved = ['this is a', 'this is b', 'this is c']
 
-        tmpl = template.Template(hot_kilo_tpl_empty)
+        tmpl = template.Template(templ)
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
+
+    def test_repeat(self):
+        self._test_repeat()
+
+    def test_repeat_with_pike_version(self):
+        self._test_repeat(templ=hot_pike_tpl_empty)
 
     def test_repeat_get_param(self):
         """Test repeat function with get_param function as an argument."""
@@ -1476,16 +1482,23 @@ conditions:
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl, stack))
 
-    def test_repeat_dict_with_no_replacement(self):
+    def _test_repeat_dict_with_no_replacement(self,
+                                              templ=hot_newton_tpl_empty):
         snippet = {'repeat': {'template': {'SERVICE_enabled': True},
                               'for_each': {'SERVICE': ['x', 'y', 'z']}}}
         snippet_resolved = [{'x_enabled': True},
                             {'y_enabled': True},
                             {'z_enabled': True}]
-        tmpl = template.Template(hot_newton_tpl_empty)
+        tmpl = template.Template(templ)
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
-    def test_repeat_dict_template(self):
+    def test_repeat_dict_with_no_replacement(self):
+        self._test_repeat_dict_with_no_replacement()
+
+    def test_repeat_dict_with_no_replacement_pike_version(self):
+        self._test_repeat_dict_with_no_replacement(templ=hot_pike_tpl_empty)
+
+    def _test_repeat_dict_template(self, templ=hot_kilo_tpl_empty):
         """Test repeat function with a dictionary as a template."""
         snippet = {'repeat': {'template': {'key-%var%': 'this is %var%'},
                               'for_each': {'%var%': ['a', 'b', 'c']}}}
@@ -1493,11 +1506,17 @@ conditions:
                             {'key-b': 'this is b'},
                             {'key-c': 'this is c'}]
 
-        tmpl = template.Template(hot_kilo_tpl_empty)
+        tmpl = template.Template(templ)
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
-    def test_repeat_list_template(self):
+    def test_repeat_dict_template(self):
+        self._test_repeat_dict_template()
+
+    def test_repeat_dict_template_pike_version(self):
+        self._test_repeat_dict_template(templ=hot_pike_tpl_empty)
+
+    def _test_repeat_list_template(self, templ=hot_kilo_tpl_empty):
         """Test repeat function with a list as a template."""
         snippet = {'repeat': {'template': ['this is %var%', 'static'],
                               'for_each': {'%var%': ['a', 'b', 'c']}}}
@@ -1505,11 +1524,17 @@ conditions:
                             ['this is b', 'static'],
                             ['this is c', 'static']]
 
-        tmpl = template.Template(hot_kilo_tpl_empty)
+        tmpl = template.Template(templ)
 
         self.assertEqual(snippet_resolved, self.resolve(snippet, tmpl))
 
-    def test_repeat_multi_list(self):
+    def test_repeat_list_template(self):
+        self._test_repeat_list_template()
+
+    def test_repeat_list_template_pike_version(self):
+        self._test_repeat_list_template(templ=hot_pike_tpl_empty)
+
+    def _test_repeat_multi_list(self, templ=hot_kilo_tpl_empty):
         """Test repeat function with multiple input lists."""
         snippet = {'repeat': {'template': 'this is %var1%-%var2%',
                               'for_each': {'%var1%': ['a', 'b', 'c'],
@@ -1517,12 +1542,18 @@ conditions:
         snippet_resolved = ['this is a-1', 'this is b-1', 'this is c-1',
                             'this is a-2', 'this is b-2', 'this is c-2']
 
-        tmpl = template.Template(hot_kilo_tpl_empty)
+        tmpl = template.Template(templ)
 
         result = self.resolve(snippet, tmpl)
         self.assertEqual(len(result), len(snippet_resolved))
         for item in result:
             self.assertIn(item, snippet_resolved)
+
+    def test_repeat_multi_list(self):
+        self._test_repeat_multi_list()
+
+    def test_repeat_multi_list_pike_version(self):
+        self._test_repeat_multi_list(templ=hot_pike_tpl_empty)
 
     def test_repeat_list_and_map(self):
         """Test repeat function with a list and a map."""
@@ -1538,6 +1569,59 @@ conditions:
         self.assertEqual(len(result), len(snippet_resolved))
         for item in result:
             self.assertIn(item, snippet_resolved)
+
+    def test_repeat_with_no_nested_loop(self):
+        snippet = {'repeat': {'template': {'network': '%net%',
+                                           'port': '%port%',
+                                           'subnet': '%sub%'},
+                              'for_each': {'%net%': ['n1', 'n2', 'n3', 'n4'],
+                                           '%port%': ['p1', 'p2', 'p3', 'p4'],
+                                           '%sub%': ['s1', 's2', 's3', 's4']},
+                              'permutations': False}}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        snippet_resolved = [{'network': 'n1', 'port': 'p1', 'subnet': 's1'},
+                            {'network': 'n2', 'port': 'p2', 'subnet': 's2'},
+                            {'network': 'n3', 'port': 'p3', 'subnet': 's3'},
+                            {'network': 'n4', 'port': 'p4', 'subnet': 's4'}]
+
+        result = self.resolve(snippet, tmpl)
+        self.assertEqual(snippet_resolved, result)
+
+    def test_repeat_no_nested_loop_different_len(self):
+        snippet = {'repeat': {'template': {'network': '%net%',
+                                           'port': '%port%',
+                                           'subnet': '%sub%'},
+                              'for_each': {'%net%': ['n1', 'n2', 'n3'],
+                                           '%port%': ['p1', 'p2'],
+                                           '%sub%': ['s1', 's2']},
+                              'permutations': False}}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        self.assertRaises(ValueError, self.resolve, snippet, tmpl)
+
+    def test_repeat_no_nested_loop_with_dict_type(self):
+        snippet = {'repeat': {'template': {'network': '%net%',
+                                           'port': '%port%',
+                                           'subnet': '%sub%'},
+                              'for_each': {'%net%': ['n1', 'n2'],
+                                           '%port%': {'p1': 'pp', 'p2': 'qq'},
+                                           '%sub%': ['s1', 's2']},
+                              'permutations': False}}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        self.assertRaises(TypeError, self.resolve, snippet, tmpl)
+
+    def test_repeat_permutations_non_bool(self):
+        snippet = {'repeat': {'template': {'network': '%net%',
+                                           'port': '%port%',
+                                           'subnet': '%sub%'},
+                              'for_each': {'%net%': ['n1', 'n2'],
+                                           '%port%': ['p1', 'p2'],
+                                           '%sub%': ['s1', 's2']},
+                              'permutations': 'non bool'}}
+        tmpl = template.Template(hot_pike_tpl_empty)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                self.resolve, snippet, tmpl)
+        self.assertIn('"permutations" should be boolean type '
+                      'for repeat function', six.text_type(exc))
 
     def test_repeat_bad_args(self):
         """Tests reporting error by repeat function.

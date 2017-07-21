@@ -1410,6 +1410,44 @@ nested for-loops in most programming languages.
 From HOT version ``2016-10-14`` you may also pass a map as value for the
 ``for_each`` key, in which case the list of map keys will be used as value.
 
+From HOT version ``2017-09-01`` (or pike) you may specify a argument
+``permutations`` to decide whether to iterate nested the over all the
+permutations of the elements in the given lists. If 'permutations' is not
+specified, we set the default value to true to compatible with before behavior.
+The args have to be lists instead of dicts if 'permutations' is False because
+keys in a dict are unordered, and the list args all have to be of the
+same length.
+
+.. code-block:: yaml
+
+    parameters:
+      subnets:
+        type: comma_delimited_list
+        label: subnets
+        default: "sub1, sub2"
+      networks:
+        type: comma_delimited_list
+        label: networks
+        default: "net1, net2"
+
+    resources:
+      my_server:
+        type: OS::Nova:Server
+        properties:
+          networks:
+            repeat:
+              for_each:
+                <%sub%>: { get_param: subnets }
+                <%net%>: { get_param: networks }
+              template:
+                subnet: <%sub%>
+                network: <%net%>
+              permutations: false
+
+After resolved, we will get the networks of server like:
+[{subnet: sub1, network: net1}, {subnet: sub2, network: net2}]
+
+
 resource_facade
 ---------------
 The ``resource_facade`` function retrieves data in a parent
