@@ -1360,6 +1360,8 @@ class Resource(status.ResourceStatus):
 
             self.update_template_diff_properties(after_props, before_props)
             return True
+        else:
+            return False
 
     def _check_restricted_actions(self, actions, after, before,
                                   after_props, before_props,
@@ -1382,6 +1384,8 @@ class Resource(status.ResourceStatus):
             if 'replace' in actions:
                 raise exception.ResourceActionRestricted(action='replace')
             raise
+
+        return False
 
     def _prepare_update_props(self, after, before):
 
@@ -1472,29 +1476,27 @@ class Resource(status.ResourceStatus):
             registry = self.stack.env.registry
             restr_actions = registry.get_rsrc_restricted_actions(self.name)
             if restr_actions:
-                if not self._check_restricted_actions(restr_actions,
-                                                      after, before,
-                                                      after_props,
-                                                      before_props,
-                                                      prev_resource):
-                    if update_templ_func is not None:
-                        update_templ_func(persist=True)
-                    return
+                needs_update = self._check_restricted_actions(restr_actions,
+                                                              after, before,
+                                                              after_props,
+                                                              before_props,
+                                                              prev_resource)
             else:
-                if not self._needs_update(after, before,
-                                          after_props, before_props,
-                                          prev_resource):
-                    if update_templ_func is not None:
-                        update_templ_func(persist=True)
-                    if self.status == self.FAILED:
-                        status_reason = _('Update status to COMPLETE for '
-                                          'FAILED resource neither update '
-                                          'nor replace.')
-                        lock = (self.LOCK_RESPECT if self.stack.convergence
-                                else self.LOCK_NONE)
-                        self.state_set(self.action, self.COMPLETE,
-                                       status_reason, lock=lock)
-                    return
+                needs_update = self._needs_update(after, before,
+                                                  after_props, before_props,
+                                                  prev_resource)
+            if not needs_update:
+                if update_templ_func is not None:
+                    update_templ_func(persist=True)
+                if self.status == self.FAILED:
+                    status_reason = _('Update status to COMPLETE for '
+                                      'FAILED resource neither update '
+                                      'nor replace.')
+                    lock = (self.LOCK_RESPECT if self.stack.convergence
+                            else self.LOCK_NONE)
+                    self.state_set(self.action, self.COMPLETE,
+                                   status_reason, lock=lock)
+                return
 
             if not self.stack.convergence:
                 if (self.action, self.status) in (
