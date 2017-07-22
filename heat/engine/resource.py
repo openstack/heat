@@ -98,8 +98,11 @@ class PollDelay(Exception):
 class Resource(status.ResourceStatus):
     BASE_ATTRIBUTES = (SHOW, ) = (attributes.SHOW_ATTR, )
 
-    LOCK_ACTIONS = (LOCK_NONE, LOCK_ACQUIRE, LOCK_RELEASE) = (
-        0, 1, -1)
+    LOCK_ACTIONS = (
+        LOCK_NONE, LOCK_ACQUIRE, LOCK_RELEASE, LOCK_RESPECT,
+    ) = (
+        None, 1, -1, 0,
+    )
 
     # If True, this resource must be created before it can be referenced.
     strict_dependency = True
@@ -1297,22 +1300,7 @@ class Resource(status.ResourceStatus):
             if not persist:
                 return
 
-            rs = {'current_template_id': self.current_template_id,
-                  'updated_at': self.updated_time,
-                  'requires': self.requires}
-            if not resource_objects.Resource.select_and_update_by_id(
-                    self.context, self.id, rs, expected_engine_id=None,
-                    atomic_key=self._atomic_key):
-                LOG.info("Resource %s is locked, can't set template",
-                         six.text_type(self))
-                LOG.debug('Resource id:%(resource_id)s locked. '
-                          'Expected atomic_key:%(atomic_key)s, '
-                          'accessing from engine_id:%(engine_id)s',
-                          {'resource_id': self.id,
-                           'atomic_key': self._atomic_key,
-                           'engine_id': self._calling_engine_id})
-                raise exception.UpdateInProgress(self.name)
-            self._incr_atomic_key(self._atomic_key)
+            self.store(lock=self.LOCK_RESPECT)
 
         self._calling_engine_id = engine_id
         registry = new_stack.env.registry
@@ -1502,8 +1490,10 @@ class Resource(status.ResourceStatus):
                         status_reason = _('Update status to COMPLETE for '
                                           'FAILED resource neither update '
                                           'nor replace.')
+                        lock = (self.LOCK_RESPECT if self.stack.convergence
+                                else self.LOCK_NONE)
                         self.state_set(self.action, self.COMPLETE,
-                                       status_reason)
+                                       status_reason, lock=lock)
                     return
 
             if not self.stack.convergence:
@@ -1969,9 +1959,13 @@ class Resource(status.ResourceStatus):
         if lock == self.LOCK_ACQUIRE:
             rs['engine_id'] = self._calling_engine_id
             expected_engine_id = None
-        else:  # self.LOCK_RELEASE
+        elif lock == self.LOCK_RESPECT:
+            expected_engine_id = None
+        elif lock == self.LOCK_RELEASE:
             expected_engine_id = self._calling_engine_id
             rs['engine_id'] = None
+        else:
+            assert False, "Invalid lock action: %s" % lock
         if resource_objects.Resource.select_and_update_by_id(
                 self.context, self.id, rs, expected_engine_id,
                 self._atomic_key):
