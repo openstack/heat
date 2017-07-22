@@ -800,7 +800,7 @@ class TestConvgComputeDependencies(common.HeatTestCase):
         res = mock.MagicMock()
         res.id = 6
         res.name = 'E'
-        res.requires = [3]
+        res.requires = {3}
         res.replaces = 1
         res.current_template_id = 2
         db_resources[6] = res
