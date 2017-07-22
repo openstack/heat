@@ -2089,13 +2089,10 @@ class ResourceTest(common.HeatTestCase):
         res.action = res.CREATE
         res.store()
         self._assert_resource_lock(res.id, None, None)
-        res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         pcb = mock.Mock()
 
         with mock.patch.object(resource.Resource, 'create') as mock_create:
-            res.create_convergence(self.stack.t.id, res_data, 'engine-007',
+            res.create_convergence(self.stack.t.id, {1, 3}, 'engine-007',
                                    -1, pcb)
             self.assertTrue(mock_create.called)
 
@@ -2107,13 +2104,10 @@ class ResourceTest(common.HeatTestCase):
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
         res.store()
-        res_data = {(1, True): {u'id': 1, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
 
         pcb = mock.Mock()
         self.assertRaises(scheduler.Timeout, res.create_convergence,
-                          self.stack.t.id, res_data, 'engine-007', -1, pcb)
+                          self.stack.t.id, {1, 3}, 'engine-007', -1, pcb)
 
     def test_create_convergence_sets_requires_for_failure(self):
         """Ensure that requires are computed correctly.
@@ -2127,11 +2121,8 @@ class ResourceTest(common.HeatTestCase):
         dummy_ex = exception.ResourceNotAvailable(resource_name=res.name)
         res.create = mock.Mock(side_effect=dummy_ex)
         self._assert_resource_lock(res.id, None, None)
-        res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         self.assertRaises(exception.ResourceNotAvailable,
-                          res.create_convergence, self.stack.t.id, res_data,
+                          res.create_convergence, self.stack.t.id, {5, 3},
                           'engine-007', self.dummy_timeout, self.dummy_event)
         self.assertItemsEqual([5, 3], res.requires)
         # The locking happens in create which we mocked out
@@ -2146,11 +2137,8 @@ class ResourceTest(common.HeatTestCase):
         self.stack.adopt_stack_data = {'resources': {'test_res': {
             'resource_id': 'fluffy'}}}
         self._assert_resource_lock(res.id, None, None)
-        res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         tr = scheduler.TaskRunner(res.create_convergence, self.stack.t.id,
-                                  res_data, 'engine-007', self.dummy_timeout,
+                                  {5, 3}, 'engine-007', self.dummy_timeout,
                                   self.dummy_event)
         tr()
         mock_adopt.assert_called_once_with(
@@ -2165,11 +2153,8 @@ class ResourceTest(common.HeatTestCase):
         res.store()
         self.stack.adopt_stack_data = {'resources': {}}
         self._assert_resource_lock(res.id, None, None)
-        res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         tr = scheduler.TaskRunner(res.create_convergence, self.stack.t.id,
-                                  res_data, 'engine-007', self.dummy_timeout,
+                                  {5, 3}, 'engine-007', self.dummy_timeout,
                                   self.dummy_event)
         exc = self.assertRaises(exception.ResourceFailure, tr)
         self.assertIn('Resource ID was not provided', six.text_type(exc))
@@ -2203,11 +2188,8 @@ class ResourceTest(common.HeatTestCase):
                                  new_temp, stack_id=self.stack.id)
         res.stack.convergence = True
 
-        res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
-                                  res_data, 'engine-007', 120, new_stack)
+                                  {4, 3}, 'engine-007', 120, new_stack)
         tr()
 
         self.assertItemsEqual([3, 4], res.requires)
@@ -2238,9 +2220,8 @@ class ResourceTest(common.HeatTestCase):
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
-        res_data = {}
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
-                                  res_data, 'engine-007', -1, new_stack,
+                                  set(), 'engine-007', -1, new_stack,
                                   self.dummy_event)
         self.assertRaises(scheduler.Timeout, tr)
 
@@ -2260,9 +2241,8 @@ class ResourceTest(common.HeatTestCase):
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
-        res_data = {}
         self.assertRaises(resource.UpdateReplace, res.update_convergence,
-                          new_temp.id, res_data, 'engine-007',
+                          new_temp.id, set(), 'engine-007',
                           -1, new_stack)
 
     def test_update_convergence_checks_resource_class(self):
@@ -2282,9 +2262,8 @@ class ResourceTest(common.HeatTestCase):
         new_stack = parser.Stack(ctx, 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
-        res_data = {}
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
-                                  res_data, 'engine-007', -1, new_stack,
+                                  set(), 'engine-007', -1, new_stack,
                                   self.dummy_event)
         self.assertRaises(resource.UpdateReplace, tr)
 
@@ -2301,9 +2280,6 @@ class ResourceTest(common.HeatTestCase):
 
         res.stack.convergence = True
 
-        res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         tmpl = template.Template({
             'HeatTemplateFormatVersion': '2012-12-12',
             'Resources': {
@@ -2312,7 +2288,7 @@ class ResourceTest(common.HeatTestCase):
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  tmpl, stack_id=self.stack.id)
         tr = scheduler.TaskRunner(res.update_convergence, 'template_key',
-                                  res_data, 'engine-007', self.dummy_timeout,
+                                  {4, 3}, 'engine-007', self.dummy_timeout,
                                   new_stack)
         ex = self.assertRaises(exception.UpdateInProgress, tr)
         msg = ("The resource %s is already being updated." %
@@ -2349,9 +2325,6 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         new_temp.store(stack.context)
 
-        res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
 
@@ -2359,7 +2332,7 @@ class ResourceTest(common.HeatTestCase):
         res._calling_engine_id = 'engine-9'
 
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
-                                  res_data, 'engine-007', 120, new_stack,
+                                  {4, 3}, 'engine-007', 120, new_stack,
                                   self.dummy_event)
         self.assertRaises(exception.ResourceFailure, tr)
 
@@ -2395,13 +2368,10 @@ class ResourceTest(common.HeatTestCase):
 
         res.stack.convergence = True
 
-        res_data = {(1, True): {u'id': 4, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
-        res_data = node_data.load_resources_data(res_data)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                  new_temp, stack_id=self.stack.id)
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
-                                  res_data, 'engine-007', 120, new_stack,
+                                  {4, 3}, 'engine-007', 120, new_stack,
                                   self.dummy_event)
         self.assertRaises(resource.UpdateReplace, tr)
 
@@ -2429,7 +2399,7 @@ class ResourceTest(common.HeatTestCase):
         self.stack.state_set(self.stack.ROLLBACK, self.stack.IN_PROGRESS,
                              'Simulate rollback')
         res.restore_prev_rsrc = mock.Mock()
-        tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', {},
+        tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', set(),
                                   'engine-007', self.dummy_timeout,
                                   new_stack, self.dummy_event)
         self.assertRaises(resource.UpdateReplace, tr)
@@ -2453,7 +2423,7 @@ class ResourceTest(common.HeatTestCase):
         self.stack.state_set(self.stack.ROLLBACK, self.stack.IN_PROGRESS,
                              'Simulate rollback')
         res.restore_prev_rsrc = mock.Mock(side_effect=Exception)
-        tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', {},
+        tr = scheduler.TaskRunner(res.update_convergence, 'new_tmpl_id', set(),
                                   'engine-007', self.dummy_timeout, new_stack,
                                   self.dummy_event)
         self.assertRaises(exception.ResourceFailure, tr)
@@ -4330,11 +4300,10 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(self.tmpl, env=self.env),
                                   stack_id=str(uuid.uuid4()))
-        res_data = {}
         res = self.stack['bar']
         pcb = mock.Mock()
         self.patchobject(res, 'lock')
-        res.create_convergence(self.stack.t.id, res_data, 'engine-007',
+        res.create_convergence(self.stack.t.id, set(), 'engine-007',
                                self.dummy_timeout, pcb)
         return res
 
@@ -4456,7 +4425,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(res.update_convergence,
                                                        self.stack.t.id,
-                                                       {},
+                                                       set(),
                                                        'engine-007',
                                                        self.dummy_timeout,
                                                        self.new_stack,
@@ -4488,7 +4457,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         error = self.assertRaises(resource.UpdateReplace,
                                   scheduler.TaskRunner(res.update_convergence,
                                                        self.stack.t.id,
-                                                       {},
+                                                       set(),
                                                        'engine-007',
                                                        self.dummy_timeout,
                                                        self.new_stack,
