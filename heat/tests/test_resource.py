@@ -2366,10 +2366,10 @@ class ResourceTest(common.HeatTestCase):
 
         self.assertEqual(new_temp.id, res.current_template_id)
         # check if requires was updated
-        self.assertItemsEqual([3, 4], res.requires)
+        self.assertItemsEqual([2, 3, 4], res.requires)
         self.assertEqual(res.action, resource.Resource.UPDATE)
         self.assertEqual(res.status, resource.Resource.FAILED)
-        self._assert_resource_lock(res.id, None, 3)
+        self._assert_resource_lock(res.id, None, 2)
 
     def test_update_resource_convergence_update_replace(self):
         tmpl = template.Template({
