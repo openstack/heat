@@ -378,7 +378,7 @@ class Resource(status.ResourceStatus):
         curr_stack.defn = latest_stk_defn
         return resource, initial_stk_defn, curr_stack
 
-    def make_replacement(self, new_tmpl_id):
+    def make_replacement(self, new_tmpl_id, requires):
         """Create a replacement resource in the database.
 
         Returns the DB ID of the new resource, or None if the new resource
@@ -392,7 +392,7 @@ class Resource(status.ResourceStatus):
               'name': self.name,
               'rsrc_prop_data_id': None,
               'needed_by': self.needed_by,
-              'requires': self.requires,
+              'requires': list(requires),
               'replaces': self.id,
               'action': self.INIT,
               'status': self.COMPLETE,

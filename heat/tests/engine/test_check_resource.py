@@ -346,7 +346,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         # lets say C is update-replaced
         is_update = True
         trav_id = self.stack.current_traversal
-        replacementC_id = resC.make_replacement(self.stack.t.id)
+        replacementC_id = resC.make_replacement(self.stack.t.id,
+                                                set(resC.requires))
         replacementC, stack, _ = resource.Resource.load(self.ctx,
                                                         replacementC_id,
                                                         trav_id,

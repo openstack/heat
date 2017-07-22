@@ -110,11 +110,11 @@ class CheckResource(object):
         self._handle_failure(cnxt, stack, failure_reason)
 
     def _handle_resource_replacement(self, cnxt,
-                                     current_traversal, new_tmpl_id,
+                                     current_traversal, new_tmpl_id, requires,
                                      rsrc, stack, adopt_stack_data):
         """Create a replacement resource and trigger a check on it."""
         try:
-            new_res_id = rsrc.make_replacement(new_tmpl_id)
+            new_res_id = rsrc.make_replacement(new_tmpl_id, requires)
         except exception.UpdateInProgress:
             LOG.info("No replacement created - "
                      "resource already locked by new traversal")
@@ -145,7 +145,7 @@ class CheckResource(object):
                                           stack, self.msg_queue)
                 except resource.UpdateReplace:
                     self._handle_resource_replacement(cnxt, current_traversal,
-                                                      tmpl.id,
+                                                      tmpl.id, requires,
                                                       rsrc, stack,
                                                       adopt_stack_data)
                     return False
