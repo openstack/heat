@@ -1421,18 +1421,9 @@ class Resource(status.ResourceStatus):
         resource_data and existing resource's requires, then updates the
         resource by invoking the scheduler TaskRunner.
         """
-        def update_templ_id_and_requires(persist=True):
-            self.current_template_id = template_id
-            self.requires = list(
-                set(data.primary_key for data in resource_data.values()
-                    if data is not None)
-            )
-            if not persist:
-                return
-
-            self.store(lock=self.LOCK_RESPECT)
-
         self._calling_engine_id = engine_id
+        new_requires = set(data.primary_key for data in resource_data.values()
+                           if data is not None)
 
         # Check that the resource type matches. If the type has changed by a
         # legitimate substitution, the load()ed resource will already be of
@@ -1456,18 +1447,10 @@ class Resource(status.ResourceStatus):
                                six.text_type(failure))
                 raise failure
 
-        runner = scheduler.TaskRunner(
-            self.update, new_res_def,
-            update_templ_func=update_templ_id_and_requires)
-        try:
-            runner(timeout=timeout, progress_callback=progress_callback)
-        except UpdateReplace:
-            raise
-        except exception.UpdateInProgress:
-            raise
-        except BaseException:
-            with excutils.save_and_reraise_exception():
-                update_templ_id_and_requires(persist=True)
+        runner = scheduler.TaskRunner(self.update, new_res_def,
+                                      new_template_id=template_id,
+                                      new_requires=new_requires)
+        runner(timeout=timeout, progress_callback=progress_callback)
 
     def preview_update(self, after, before, after_props, before_props,
                        prev_resource, check_init_complete=False):
@@ -1584,9 +1567,24 @@ class Resource(status.ResourceStatus):
                 return is_substituted
             return False
 
+    def _persist_update_no_change(self, new_template_id):
+        """Persist an update where the resource is unchanged."""
+        if new_template_id is not None:
+            self.current_template_id = new_template_id
+        lock = (self.LOCK_RESPECT if self.stack.convergence
+                else self.LOCK_NONE)
+        if self.status == self.FAILED:
+            status_reason = _('Update status to COMPLETE for '
+                              'FAILED resource neither update '
+                              'nor replace.')
+            self.state_set(self.action, self.COMPLETE,
+                           status_reason, lock=lock)
+        elif new_template_id is not None:
+            self.store(lock=lock)
+
     @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None,
-               update_templ_func=None):
+               new_template_id=None, new_requires=None):
         """Return a task to update the resource.
 
         Subclasses should provide a handle_update() method to customise update,
@@ -1607,8 +1605,7 @@ class Resource(status.ResourceStatus):
             raise exception.ResourceFailure(exc, self, action)
         elif after_external_id is not None:
             LOG.debug("Skip update on external resource.")
-            if update_templ_func is not None:
-                update_templ_func(persist=True)
+            self._persist_update_no_change(new_template_id)
             return
 
         after_props, before_props = self._prepare_update_props(after, before)
@@ -1640,17 +1637,7 @@ class Resource(status.ResourceStatus):
             raise failure
 
         if not needs_update:
-            is_failed = self.status == self.FAILED
-            if update_templ_func is not None:
-                update_templ_func(persist=not is_failed)
-            if is_failed:
-                status_reason = _('Update status to COMPLETE for '
-                                  'FAILED resource neither update '
-                                  'nor replace.')
-                lock = (self.LOCK_RESPECT if self.stack.convergence
-                        else self.LOCK_NONE)
-                self.state_set(self.action, self.COMPLETE,
-                               status_reason, lock=lock)
+            self._persist_update_no_change(new_template_id)
             return
 
         if not self.stack.convergence:
@@ -1665,10 +1652,14 @@ class Resource(status.ResourceStatus):
 
         self.updated_time = datetime.utcnow()
 
+        if new_requires is not None:
+            self.requires = list(set(self.requires) | new_requires)
+
         with self._action_recorder(action, UpdateReplace):
             after_props.validate()
             self.properties = before_props
             tmpl_diff = self.update_template_diff(after.freeze(), before)
+            old_template_id = self.current_template_id
 
             try:
                 if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
@@ -1676,19 +1667,23 @@ class Resource(status.ResourceStatus):
 
                 prop_diff = self.update_template_diff_properties(after_props,
                                                                  before_props)
+
+                if new_template_id is not None:
+                    self.current_template_id = new_template_id
+
                 yield self.action_handler_task(action,
                                                args=[after, tmpl_diff,
                                                      prop_diff])
             except UpdateReplace:
                 with excutils.save_and_reraise_exception():
+                    self.current_template_id = old_template_id
                     self._prepare_update_replace(action)
 
             self.t = after
             self.reparse()
             self._update_stored_properties()
-            if update_templ_func is not None:
-                # template/requires will be persisted by _action_recorder()
-                update_templ_func(persist=False)
+            if new_requires is not None:
+                self.requires = list(new_requires)
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_POST_UPDATE)
