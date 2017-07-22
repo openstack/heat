@@ -149,8 +149,7 @@ class CheckResource(object):
                     return False
 
             else:
-                check_resource_cleanup(rsrc, tmpl.id, resource_data,
-                                       self.engine_id,
+                check_resource_cleanup(rsrc, tmpl.id, self.engine_id,
                                        stack.time_remaining(), self.msg_queue)
 
             return True
@@ -401,9 +400,9 @@ def check_resource_update(rsrc, template_id, resource_data, engine_id,
                                 check_message)
 
 
-def check_resource_cleanup(rsrc, template_id, resource_data, engine_id,
+def check_resource_cleanup(rsrc, template_id, engine_id,
                            timeout, msg_queue):
     """Delete the Resource if appropriate."""
     check_message = functools.partial(_check_for_message, msg_queue)
-    rsrc.delete_convergence(template_id, resource_data, engine_id, timeout,
+    rsrc.delete_convergence(template_id, engine_id, timeout,
                             check_message)
