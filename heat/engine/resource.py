@@ -171,12 +171,6 @@ class Resource(status.ResourceStatus):
 
             assert issubclass(ResourceClass, Resource)
 
-        if not stack.service_check_defer:
-            ResourceClass._validate_service_availability(
-                stack.context,
-                definition.resource_type
-            )
-
         return super(Resource, cls).__new__(ResourceClass)
 
     @classmethod
@@ -1743,11 +1737,10 @@ class Resource(status.ResourceStatus):
         in an overridden validate() such as accessing properties
         may not work.
         """
-        if self.stack.service_check_defer:
-            self._validate_service_availability(
-                self.stack.context,
-                self.t.resource_type
-            )
+        self._validate_service_availability(
+            self.stack.context,
+            self.t.resource_type
+        )
         path = '.'.join([self.stack.t.RESOURCES, self.name])
         function.validate(self.t, path)
         self.validate_deletion_policy(self.t.deletion_policy())

@@ -1230,7 +1230,6 @@ class EngineService(service.ServiceBase):
             msg = _("No Template provided.")
             return webob.exc.HTTPBadRequest(explanation=msg)
 
-        service_check_defer = False
         if ignorable_errors:
             invalid_codes = (set(ignorable_errors) -
                              set(exception.ERROR_CODE_MAP.keys()))
@@ -1238,8 +1237,6 @@ class EngineService(service.ServiceBase):
                 msg = (_("Invalid codes in ignore_errors : %s") %
                        list(invalid_codes))
                 return webob.exc.HTTPBadRequest(explanation=msg)
-
-            service_check_defer = True
 
         tmpl = templatem.Template(template, files=files)
         env_util.merge_environments(environment_files, files, params,
@@ -1252,8 +1249,7 @@ class EngineService(service.ServiceBase):
 
         stack_name = 'dummy'
         stack = parser.Stack(cnxt, stack_name, tmpl,
-                             strict_validate=False,
-                             service_check_defer=service_check_defer)
+                             strict_validate=False)
         try:
             stack.validate(ignorable_errors=ignorable_errors,
                            validate_res_tmpl_only=True)
@@ -2391,7 +2387,6 @@ class EngineService(service.ServiceBase):
             try:
                 for st in stacks:
                     if not st.convergence:
-                        st.service_check_defer = True
                         st.migrate_to_convergence()
                 sess.commit()
             except Exception:
@@ -2470,8 +2465,7 @@ class EngineService(service.ServiceBase):
                         lock.release()
                         continue
 
-                    stk = parser.Stack.load(cnxt, stack=s,
-                                            service_check_defer=True)
+                    stk = parser.Stack.load(cnxt, stack=s)
                     LOG.info('Engine %(engine)s went down when stack '
                              '%(stack_id)s was in action %(action)s',
                              {'engine': engine_id, 'action': stk.action,

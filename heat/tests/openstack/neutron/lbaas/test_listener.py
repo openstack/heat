@@ -50,6 +50,9 @@ class ListenerTest(common.HeatTestCase):
             return_value=self.neutron_client)
 
     def test_validate_terminated_https(self):
+        self.patchobject(listener.Listener, 'is_service_available',
+                         return_value=(True, None))
+
         tmpl = yaml.load(inline_templates.LISTENER_TEMPLATE)
         props = tmpl['resources']['listener']['properties']
         props['protocol'] = 'TERMINATED_HTTPS'

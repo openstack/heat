@@ -96,6 +96,9 @@ class L7RuleTest(common.HeatTestCase):
         self.assertTrue(self.l7rule.check_create_complete(props))
 
     def test_create_missing_properties(self):
+        self.patchobject(l7rule.L7Rule, 'is_service_available',
+                         return_value=(True, None))
+
         for prop in ('l7policy', 'type', 'compare_type', 'value'):
             tmpl = yaml.load(inline_templates.L7RULE_TEMPLATE)
             del tmpl['resources']['l7rule']['properties'][prop]

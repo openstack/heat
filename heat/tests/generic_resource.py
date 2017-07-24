@@ -301,10 +301,14 @@ class ResourceWithAttributeType(GenericResource):
 class ResourceWithDefaultClientName(resource.Resource):
     default_client_name = 'sample'
 
+    properties_schema = {}
+
 
 class ResourceWithDefaultClientNameExt(resource.Resource):
     default_client_name = 'sample'
     required_service_extension = 'foo'
+
+    properties_schema = {}
 
 
 class ResourceWithFnGetAttType(GenericResource):
