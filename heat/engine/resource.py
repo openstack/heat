@@ -1104,13 +1104,18 @@ class Resource(status.ResourceStatus):
 
         while (count[self.CREATE] <= retry_limit and
                count[self.DELETE] <= retry_limit):
-            if count[action]:
+            pre_func = None
+            if count[action] > 0:
                 delay = timeutils.retry_backoff_delay(count[action],
                                                       jitter_max=2.0)
                 waiter = scheduler.TaskRunner(self.pause)
                 yield waiter.as_task(timeout=delay)
+            elif action == self.CREATE:
+                # Only validate properties in first create call.
+                pre_func = self.properties.validate
+
             try:
-                yield self._do_action(action, self.properties.validate)
+                yield self._do_action(action, pre_func)
                 if action == self.CREATE:
                     first_failure = None
                     break

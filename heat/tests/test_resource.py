@@ -1022,6 +1022,37 @@ class ResourceTest(common.HeatTestCase):
         scheduler.TaskRunner(res.create)()
         self.assertEqual((res.CREATE, res.COMPLETE), res.state)
 
+    @mock.patch.object(properties.Properties, 'validate')
+    @mock.patch.object(timeutils, 'retry_backoff_delay')
+    def test_create_validate(self, m_re, m_v):
+        tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
+                                            {'Foo': 'abc'})
+        res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
+
+        generic_rsrc.ResourceWithProps.handle_create = mock.Mock()
+        generic_rsrc.ResourceWithProps.handle_delete = mock.Mock()
+        m_v.side_effect = [True, exception.StackValidationFailed()]
+        generic_rsrc.ResourceWithProps.handle_create.side_effect = [
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'),
+            exception.ResourceInError(resource_name='test_resource',
+                                      resource_status='ERROR',
+                                      resource_type='GenericResourceType',
+                                      resource_action='CREATE',
+                                      status_reason='just because'),
+            None
+        ]
+
+        generic_rsrc.ResourceWithProps.handle_delete.return_value = None
+        m_re.return_value = 0.01
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual(2, m_re.call_count)
+        self.assertEqual(1, m_v.call_count)
+        self.assertEqual((res.CREATE, res.COMPLETE), res.state)
+
     def test_create_fail_retry(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo',
                                             {'Foo': 'abc'})
