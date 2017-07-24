@@ -209,9 +209,6 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
         elif name == self.SIGNAL_URL:
             return six.text_type(self._get_heat_signal_url())
 
-    def get_reference_id(self):
-        return resource.Resource.get_reference_id(self)
-
 
 def resource_mapping():
     return {
