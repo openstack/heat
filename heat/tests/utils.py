@@ -91,7 +91,8 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
 
 
 def parse_stack(t, params=None, files=None, stack_name=None,
-                stack_id=None, timeout_mins=None, cache_data=None):
+                stack_id=None, timeout_mins=None,
+                cache_data=None, tags=None):
     params = params or {}
     files = files or {}
     ctx = dummy_context()
@@ -104,7 +105,8 @@ def parse_stack(t, params=None, files=None, stack_name=None,
         cache_data = {n: node_data.NodeData.from_dict(d)
                       for n, d in cache_data.items()}
     stk = stack.Stack(ctx, stack_name, templ, stack_id=stack_id,
-                      timeout_mins=timeout_mins, cache_data=cache_data)
+                      timeout_mins=timeout_mins,
+                      cache_data=cache_data, tags=tags)
     stk.store()
     return stk
 
