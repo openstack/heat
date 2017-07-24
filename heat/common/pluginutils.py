@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+import six
 
 
 LOG = logging.getLogger(__name__)
@@ -21,5 +22,6 @@ def log_fail_msg(manager, entrypoint, exception):
     LOG.warning('Encountered exception while loading %(module_name)s: '
                 '"%(message)s". Not using %(name)s.',
                 {'module_name': entrypoint.module_name,
-                 'message': exception.message,
+                 'message': getattr(exception, 'message',
+                                    six.text_type(exception)),
                  'name': entrypoint.name})
