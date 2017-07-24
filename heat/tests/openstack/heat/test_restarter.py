@@ -15,9 +15,6 @@ import mock
 
 from heat.common import template_format
 from heat.engine.clients.os import nova
-from heat.engine.resources.aws.ec2 import instance
-from heat.engine.resources.openstack.heat import ha_restarter
-from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
 
@@ -28,10 +25,29 @@ restarter_template = '''
   "Description" : "Template to test HARestarter",
   "Parameters" : {},
   "Resources" : {
+    "instance": {
+      "Type": "OS::Heat::None"
+    },
     "restarter": {
       "Type": "OS::Heat::HARestarter",
       "Properties": {
-        "InstanceId": "1234"
+        "InstanceId": {"Ref": "instance"}
+      }
+    }
+  }
+}
+'''
+
+bogus_template = '''
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+  "Description" : "Template to test HARestarter",
+  "Parameters" : {},
+  "Resources" : {
+    "restarter": {
+      "Type": "OS::Heat::HARestarter",
+      "Properties": {
+        "InstanceId": "instance"
       }
     }
   }
@@ -40,72 +56,46 @@ restarter_template = '''
 
 
 class RestarterTest(common.HeatTestCase):
-    def create_restarter(self):
-        snippet = template_format.parse(restarter_template)
+    def create_restarter(self, template=restarter_template):
+        snippet = template_format.parse(template)
         self.stack = utils.parse_stack(snippet)
-        resource_defns = self.stack.t.resource_definitions(self.stack)
-        restarter = ha_restarter.Restarter(
-            'restarter', resource_defns['restarter'], self.stack)
+        restarter = self.stack['restarter']
         self.patchobject(nova.NovaClientPlugin, 'get_server',
                          return_value=mock.MagicMock())
         restarter.handle_create = mock.Mock(return_value=None)
+        self.stack.create()
         return restarter
-
-    def create_mock_instance(self, stack):
-        inst = mock.Mock(spec=instance.Instance)
-        inst.resource_id = '1234'
-        inst.name = 'instance'
-        inst.action = inst.CREATE
-        inst.status = inst.COMPLETE
-        inst.state = (inst.action, inst.status)
-        inst.FnGetRefId = lambda: inst.resource_id
-        stack.resources['instance'] = inst
 
     def test_create(self):
         rsrc = self.create_restarter()
-        scheduler.TaskRunner(rsrc.create)()
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rsrc.handle_create.assert_called_once_with()
 
     def test_handle_signal(self):
         rsrc = self.create_restarter()
-        scheduler.TaskRunner(rsrc.create)()
 
-        self.create_mock_instance(rsrc.stack)
-
-        rsrc.stack.restart_resource = mock.Mock(return_value=None)
-
-        self.assertIsNone(rsrc.handle_signal())
-        rsrc.stack.restart_resource.assert_called_once_with('instance')
+        with mock.patch.object(rsrc.stack, 'restart_resource') as rr:
+            self.assertIsNone(rsrc.handle_signal())
+            rr.assert_called_once_with('instance')
 
     def test_handle_signal_alarm(self):
         rsrc = self.create_restarter()
-        scheduler.TaskRunner(rsrc.create)()
 
-        self.create_mock_instance(rsrc.stack)
-
-        rsrc.stack.restart_resource = mock.Mock(return_value=None)
-
-        self.assertIsNone(rsrc.handle_signal({'state': 'Alarm'}))
-        rsrc.stack.restart_resource.assert_called_once_with('instance')
+        with mock.patch.object(rsrc.stack, 'restart_resource') as rr:
+            self.assertIsNone(rsrc.handle_signal({'state': 'Alarm'}))
+            rr.assert_called_once_with('instance')
 
     def test_handle_signal_not_alarm(self):
         rsrc = self.create_restarter()
-        scheduler.TaskRunner(rsrc.create)()
 
-        self.create_mock_instance(rsrc.stack)
-
-        rsrc.stack.restart_resource = mock.Mock(return_value=None)
-
-        self.assertIsNone(rsrc.handle_signal({'state': 'spam'}))
-        self.assertEqual([], rsrc.stack.restart_resource.mock_calls)
+        with mock.patch.object(rsrc.stack, 'restart_resource') as rr:
+            self.assertIsNone(rsrc.handle_signal({'state': 'spam'}))
+            self.assertEqual([], rr.mock_calls)
 
     def test_handle_signal_no_instance(self):
-        rsrc = self.create_restarter()
-        scheduler.TaskRunner(rsrc.create)()
+        rsrc = self.create_restarter(bogus_template)
 
-        rsrc.stack.restart_resource = mock.Mock(return_value=None)
-
-        self.assertIsNone(rsrc.handle_signal())
-        self.assertEqual([], rsrc.stack.restart_resource.mock_calls)
+        with mock.patch.object(rsrc.stack, 'restart_resource') as rr:
+            self.assertIsNone(rsrc.handle_signal())
+            self.assertEqual([], rr.mock_calls)

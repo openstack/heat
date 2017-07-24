@@ -35,7 +35,6 @@ from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
 from heat.engine import node_data
-from heat.engine import output
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import service
@@ -2757,8 +2756,14 @@ class StackTest(common.HeatTestCase):
             self.assertEqual(expected_msg, six.text_type(expected_exception))
             mock_dependency.validate.assert_called_once_with()
 
-        stc = stack.Stack(self.ctx, utils.random_name(), self.tmpl)
-        stc._outputs = {'foo': output.OutputDefinition('foo', 'bar')}
+        tmpl = template_format.parse("""
+        HeatTemplateFormatVersion: '2012-12-12'
+        Outputs:
+          foo:
+            Value: bar
+        """)
+        stc = stack.Stack(self.ctx, utils.random_name(),
+                          template.Template(tmpl))
         func_val.side_effect = AssertionError(expected_msg)
         expected_exception = self.assertRaises(AssertionError, stc.validate)
         self.assertEqual(expected_msg, six.text_type(expected_exception))
