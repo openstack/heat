@@ -21,6 +21,7 @@ from heat.common.i18n import _
 from heat.common import template_format
 from heat.common import urlfetch
 from heat.engine.clients.os import glance
+from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine.hot import template as hot_tmpl
 from heat.engine import resources
@@ -896,6 +897,21 @@ resources:
 outputs:
   string:
     value: {get_attr: [[random_str, value]]}
+'''
+
+test_template_circular_reference = '''
+heat_template_version: 2013-05-23
+
+resources:
+  res1:
+    type: OS::Heat::None
+    depends_on: res3
+  res2:
+    type: OS::Heat::None
+    depends_on: res1
+  res3:
+    type: OS::Heat::None
+    depends_on: res2
 '''
 
 
@@ -1834,3 +1850,12 @@ parameter_groups:
             return_value={'id': 'foobar'}
         ):
             self.assertIsNone(stack.validate(validate_res_tmpl_only=False))
+
+    def test_validate_circular_reference(self):
+        t = template_format.parse(test_template_circular_reference)
+
+        exc = self.assertRaises(dispatcher.ExpectedException,
+                                self.engine.validate_template,
+                                self.ctx, t, {})
+        self.assertEqual(dependencies.CircularDependencyException,
+                         exc.exc_info[0])
