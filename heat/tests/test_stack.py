@@ -39,6 +39,7 @@ from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack
+from heat.engine import stk_defn
 from heat.engine import template
 from heat.engine import update
 from heat.objects import raw_template as raw_template_object
@@ -1099,9 +1100,13 @@ class StackTest(common.HeatTestCase):
                 (rsrc.UPDATE, rsrc.COMPLETE),
                 (rsrc.CHECK, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
+            stk_defn.update_resource_data(self.stack.defn, rsrc.name,
+                                          rsrc.node_data())
             self.assertEqual(rsrc, self.stack.resource_by_refid('aaaa'))
 
         rsrc.state_set(rsrc.DELETE, rsrc.IN_PROGRESS)
+        stk_defn.update_resource_data(self.stack.defn, rsrc.name,
+                                      rsrc.node_data())
         try:
             self.assertIsNone(self.stack.resource_by_refid('aaaa'))
             self.assertIsNone(self.stack.resource_by_refid('bbbb'))

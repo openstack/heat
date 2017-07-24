@@ -20,6 +20,7 @@ from heat.engine.clients.os import nova
 from heat.engine.resources.aws.ec2 import volume as aws_vol
 from heat.engine.resources.openstack.cinder import volume as os_vol
 from heat.engine import scheduler
+from heat.engine import stk_defn
 from heat.tests import common
 from heat.tests.openstack.nova import fakes as fakes_nova
 
@@ -84,6 +85,8 @@ class BaseVolumeTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
     def create_attachment(self, t, stack, resource_name):
@@ -98,6 +101,8 @@ class BaseVolumeTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
 

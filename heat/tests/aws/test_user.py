@@ -21,6 +21,7 @@ from heat.engine import node_data
 from heat.engine.resources.aws.iam import user
 from heat.engine.resources.openstack.heat import access_policy as ap
 from heat.engine import scheduler
+from heat.engine import stk_defn
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
 from heat.tests import fakes
@@ -316,6 +317,8 @@ class AccessKeyTest(common.HeatTestCase):
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
         return rsrc
 
     def create_access_key(self, t, stack, resource_name):
