@@ -52,6 +52,13 @@ Installing Heat
 
     install/index
 
+Configuring Heat
+================
+
+.. toctree::
+    :maxdepth: 1
+
+    configuration/index
 
 Using Heat
 ==========
