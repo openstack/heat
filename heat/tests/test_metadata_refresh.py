@@ -25,6 +25,7 @@ from heat.engine.resources.openstack.nova import server
 from heat.engine import scheduler
 from heat.engine import service
 from heat.engine import stack as stk
+from heat.engine import stk_defn
 from heat.engine import template as tmpl
 from heat.tests import common
 from heat.tests import utils
@@ -190,8 +191,11 @@ class MetadataRefreshTest(common.HeatTestCase):
         s2.attributes.reset_resolved_values()
 
         # Run metadata update to pick up the new value from S2
-        s1.metadata_update()
+        # (simulating run_alarm_action() in service_stack_watch)
         s2.metadata_update()
+        stk_defn.update_resource_data(stack.defn, s2.name, s2.node_data())
+        s1.metadata_update()
+        stk_defn.update_resource_data(stack.defn, s1.name, s1.node_data())
 
         # Verify the updated value is correct in S1
         content = self._get_metadata_content(s1.metadata_get())
@@ -324,6 +328,7 @@ class MetadataRefreshServerTest(common.HeatTestCase):
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
 
         s1 = stack['instance1']
+        s2 = stack['instance2']
         md = s1.metadata_get()
         self.assertEqual({u'template_data': '192.0.2.1'}, md)
 
@@ -334,6 +339,8 @@ class MetadataRefreshServerTest(common.HeatTestCase):
         s1.metadata_set(new_md)
         md = s1.metadata_get(refresh=True)
         self.assertEqual(new_md, md)
+        s2.attributes.reset_resolved_values()
+        stk_defn.update_resource_data(stack.defn, s2.name, s2.node_data())
         s1.metadata_update()
         md = s1.metadata_get(refresh=True)
         self.assertEqual(new_md, md)

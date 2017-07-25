@@ -55,6 +55,7 @@ from heat.engine import service_software_config
 from heat.engine import service_stack_watch
 from heat.engine import stack as parser
 from heat.engine import stack_lock
+from heat.engine import stk_defn
 from heat.engine import support
 from heat.engine import template as templatem
 from heat.engine import update
@@ -1852,10 +1853,12 @@ class EngineService(service.ServiceBase):
             # update metadata which is used by other resources, e.g
             # when signalling a WaitConditionHandle resource, and other
             # resources may refer to WaitCondition Fn::GetAtt Data
-            for r in stack.dependencies:
-                if (r.name != rsrc.name and r.id is not None and
-                        r.action != r.INIT):
-                    r.metadata_update()
+            for r in stack._explicit_dependencies():
+                if r.action != r.INIT:
+                    if r.name != rsrc.name:
+                        r.metadata_update()
+                    stk_defn.update_resource_data(stack.defn, r.name,
+                                                  r.node_data())
 
         s = self._get_stack(cnxt, stack_identity)
 

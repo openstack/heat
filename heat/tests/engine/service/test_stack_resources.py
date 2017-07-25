@@ -47,7 +47,8 @@ policy_template = '''
       }
     },
     "Random" : {
-      "Type" : "OS::Heat::RandomString"
+      "Type" : "OS::Heat::RandomString",
+      "DependsOn" : "WebServerScaleDownPolicy"
     }
   }
 }
