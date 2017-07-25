@@ -60,6 +60,14 @@ Configuring Heat
 
     configuration/index
 
+Administering Heat
+==================
+
+.. toctree::
+    :maxdepth: 1
+
+    admin/index
+
 Using Heat
 ==========
 
