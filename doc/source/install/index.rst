@@ -1,6 +1,6 @@
-=====================
-Orchestration service
-=====================
+===============
+Installing Heat
+===============
 
 .. toctree::
    :maxdepth: 2
