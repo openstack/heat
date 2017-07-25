@@ -170,6 +170,24 @@ class ProviderNet(net.Net):
             self.client().update_network(self.resource_id,
                                          {'network': prop_diff})
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        # this resource should not have super in case of we don't need to
+        # parse Net resource properties.
+        result = {}
+        provider_keys = [self.PROVIDER_NETWORK_TYPE,
+                         self.PROVIDER_PHYSICAL_NETWORK,
+                         self.PROVIDER_SEGMENTATION_ID]
+        for key in provider_keys:
+            result[key] = resource_data.get('provider:%s' % key)
+        result[self.ROUTER_EXTERNAL] = resource_data.get('router:external')
+        provider_keys.append(self.ROUTER_EXTERNAL)
+
+        provider_keys.append(self.SHARED)
+        for key in set(self.PROPERTIES) - set(provider_keys):
+            if key in resource_data:
+                result[key] = resource_data.get(key)
+        return result
+
 
 def resource_mapping():
     return {

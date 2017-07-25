@@ -490,8 +490,19 @@ class Port(neutron.NeutronResource):
         if self.REPLACEMENT_POLICY in props:
             del(props[self.REPLACEMENT_POLICY])
 
+    def _store_config_default_properties(self, attrs):
+        """A method for storing properties default values.
+
+        A method allows to store properties default values, which cannot be
+        defined in schema in case of specifying in config file.
+        """
+        super(Port, self)._store_config_default_properties(attrs)
+        if self.VNIC_TYPE in attrs:
+            self.data_set(self.VNIC_TYPE, attrs[self.VNIC_TYPE])
+
     def check_create_complete(self, *args):
         attributes = self._show_resource()
+        self._store_config_default_properties(attributes)
         return self.is_built(attributes)
 
     def handle_delete(self):
@@ -501,6 +512,20 @@ class Port(neutron.NeutronResource):
             self.client_plugin().ignore_not_found(ex)
         else:
             return True
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(Port, self).parse_live_resource_data(
+            resource_properties, resource_data)
+        result[self.QOS_POLICY] = resource_data.get('qos_policy_id')
+        result.pop(self.MAC_ADDRESS)
+        fixed_ips = resource_data.get(self.FIXED_IPS) or []
+        if fixed_ips:
+            result.update({self.FIXED_IPS: []})
+            for fixed_ip in fixed_ips:
+                result[self.FIXED_IPS].append(
+                    {self.FIXED_IP_SUBNET: fixed_ip.get('subnet_id'),
+                     self.FIXED_IP_IP_ADDRESS: fixed_ip.get('ip_address')})
+        return result
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
 from oslo_config import cfg
@@ -269,6 +270,37 @@ class FirewallTest(common.HeatTestCase):
                                                       rsrc.type(),
                                                       prop_diff)
         rsrc.handle_update(update_snippet, {}, prop_diff)
+        self.m.VerifyAll()
+
+    def test_get_live_state(self):
+        rsrc = self.create_firewall(value_specs=True)
+        rsrc.client().show_firewall = mock.Mock(return_value={
+            'firewall': {
+                'status': 'ACTIVE',
+                'router_ids': ['router_1', 'router_2'],
+                'name': 'firewall-firewall-pwakkqdrcl7z',
+                'admin_state_up': True,
+                'tenant_id': 'df49ea64e87c43a792a510698364f03e',
+                'firewall_policy_id': '680eb26d-3eea-40be-b484-1476e4c7c1b3',
+                'id': '11425cd4-41b6-4fd4-97aa-17629c63de61',
+                'description': ''
+            }
+        })
+        self.m.ReplayAll()
+        scheduler.TaskRunner(rsrc.create)()
+
+        reality = rsrc.get_live_state(rsrc.properties)
+        expected = {
+            'value_specs': {
+                'router_ids': ['router_1', 'router_2']
+            },
+            'name': 'firewall-firewall-pwakkqdrcl7z',
+            'admin_state_up': True,
+            'firewall_policy_id': '680eb26d-3eea-40be-b484-1476e4c7c1b3',
+            'description': ''
+        }
+
+        self.assertEqual(expected, reality)
         self.m.VerifyAll()
 
 

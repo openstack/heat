@@ -354,6 +354,27 @@ class Router(neutron.NeutronResource):
                 self.client().add_router_to_l3_agent(
                     l3_agent_id, {'router_id': self.resource_id})
 
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(Router, self).parse_live_resource_data(
+            resource_properties, resource_data)
+
+        try:
+            ret = self.client().list_l3_agent_hosting_routers(self.resource_id)
+            if ret:
+                result[self.L3_AGENT_IDS] = list(
+                    agent['id'] for agent in ret['agents'])
+        except self.client_plugin().exceptions.Forbidden:
+            # Just pass if forbidden
+            pass
+
+        gateway = resource_data.get(self.EXTERNAL_GATEWAY)
+        if gateway is not None:
+            result[self.EXTERNAL_GATEWAY] = {
+                self.EXTERNAL_GATEWAY_NETWORK: gateway.get('network_id'),
+                self.EXTERNAL_GATEWAY_ENABLE_SNAT: gateway.get('enable_snat')
+            }
+        return result
+
 
 class RouterInterface(neutron.NeutronResource):
     """A resource for managing Neutron router interfaces.

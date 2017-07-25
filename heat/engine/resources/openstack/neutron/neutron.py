@@ -81,6 +81,16 @@ class NeutronResource(resource.Resource):
             NeutronResource.merge_value_specs(props)
         return props
 
+    def _store_config_default_properties(self, attrs):
+        """A method for storing properties, which defaults stored in config.
+
+        A method allows to store properties default values, which cannot be
+        defined in schema in case of specifying in config file.
+        """
+        if 'port_security_enabled' in attrs:
+            self.data_set('port_security_enabled',
+                          attrs['port_security_enabled'])
+
     @staticmethod
     def merge_value_specs(props):
         value_spec_props = props.pop('value_specs')
@@ -175,3 +185,24 @@ class NeutronResource(resource.Resource):
             self.client().replace_tag(resource_plural,
                                       self.resource_id,
                                       body)
+
+    def parse_live_resource_data(self, resource_properties, resource_data):
+        result = super(NeutronResource, self).parse_live_resource_data(
+            resource_properties, resource_data)
+
+        if 'value_specs' in self.properties.keys():
+            result.update({self.VALUE_SPECS: {}})
+            for key in self.properties.get(self.VALUE_SPECS):
+                if key in resource_data:
+                    result[self.VALUE_SPECS][key] = resource_data.get(key)
+
+        # We already get real `port_security_enabled` from
+        # super().parse_live_resource_data above, so just check and remove
+        # if that's same value as old port value.
+        if 'port_security_enabled' in self.properties.keys():
+            old_port = bool(self.data().get(self.PORT_SECURITY_ENABLED))
+            new_port = resource_data.get(self.PORT_SECURITY_ENABLED)
+            if old_port == new_port:
+                del result[self.PORT_SECURITY_ENABLED]
+
+        return result
