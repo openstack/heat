@@ -367,17 +367,21 @@ class ServerNetworkMixin(object):
                                        security_groups):
         remove_ports = []
         add_nets = []
-        attach_first_free_port = False
         # if update networks between None and empty, no need to
         # detach and attach, the server got first free port already.
         if not new_nets and not old_nets:
             return remove_ports, add_nets
 
-        if not new_nets:
-            new_nets = []
-            attach_first_free_port = True
+        new_nets = new_nets or []
+        old_nets = old_nets or []
+        remove_ports = self._calculate_remove_ports(old_nets, new_nets, ifaces)
+        add_nets = self._calculate_add_nets(new_nets, security_groups)
 
-        # if there is no old_nets, it means that the server got first
+        return remove_ports, add_nets
+
+    def _calculate_remove_ports(self, old_nets, new_nets, ifaces):
+        remove_ports = []
+        # if old nets is empty, it means that the server got first
         # free port. so we should detach this interface.
         if not old_nets:
             for iface in ifaces:
@@ -422,42 +426,48 @@ class ServerNetworkMixin(object):
                     if net.get(self.NETWORK_FLOATING_IP):
                         self._floating_ip_disassociate(
                             net.get(self.NETWORK_FLOATING_IP))
+        return remove_ports
 
-        handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
-        # if new_nets is None, we should attach first free port,
+    def _calculate_add_nets(self, new_nets, security_groups):
+        add_nets = []
+
+        # if new_nets is empty, we should attach first free port,
         # according to similar behavior during instance creation
-        if attach_first_free_port:
+        if not new_nets:
+            handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
             add_nets.append(handler_kwargs)
-        # attach section similar for both variants that
-        # were mentioned above
-        for idx, net in enumerate(new_nets):
-            handler_kwargs = {'port_id': None,
-                              'net_id': None,
-                              'fip': None}
+        else:
+            # attach section similar for both variants that
+            # were mentioned above
+            for idx, net in enumerate(new_nets):
+                handler_kwargs = {'port_id': None,
+                                  'net_id': None,
+                                  'fip': None}
 
-            if net.get(self.NETWORK_PORT):
-                handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
-            elif net.get(self.NETWORK_SUBNET):
-                handler_kwargs['port_id'] = self._create_internal_port(
-                    net, idx, security_groups)
+                if net.get(self.NETWORK_PORT):
+                    handler_kwargs['port_id'] = net.get(self.NETWORK_PORT)
+                elif net.get(self.NETWORK_SUBNET):
+                    handler_kwargs['port_id'] = self._create_internal_port(
+                        net, idx, security_groups)
 
-            if not handler_kwargs['port_id']:
-                handler_kwargs['net_id'] = self._get_network_id(net)
-            if handler_kwargs['net_id']:
-                handler_kwargs['fip'] = net.get('fixed_ip')
+                if not handler_kwargs['port_id']:
+                    handler_kwargs['net_id'] = self._get_network_id(net)
+                if handler_kwargs['net_id']:
+                    handler_kwargs['fip'] = net.get('fixed_ip')
 
-            floating_ip = net.get(self.NETWORK_FLOATING_IP)
-            if floating_ip:
-                flip_associate = {'port_id': handler_kwargs.get('port_id')}
-                if net.get('fixed_ip'):
-                    flip_associate['fixed_ip_address'] = net.get('fixed_ip')
+                floating_ip = net.get(self.NETWORK_FLOATING_IP)
+                if floating_ip:
+                    flip_associate = {'port_id': handler_kwargs.get('port_id')}
+                    if net.get('fixed_ip'):
+                        flip_associate['fixed_ip_address'] = net.get(
+                            'fixed_ip')
 
-                self.update_floating_ip_association(floating_ip,
-                                                    flip_associate)
+                    self.update_floating_ip_association(floating_ip,
+                                                        flip_associate)
 
-            add_nets.append(handler_kwargs)
+                add_nets.append(handler_kwargs)
 
-        return remove_ports, add_nets
+        return add_nets
 
     def _str_network(self, networks):
         # if user specify 'allocate_network', return it
