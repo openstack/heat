@@ -14,6 +14,7 @@
 import collections
 import contextlib
 import datetime as dt
+import itertools
 import pydoc
 import tenacity
 import weakref
@@ -659,9 +660,6 @@ class Resource(status.ResourceStatus):
             text = '%s "%s"' % (class_name, self.name)
         return six.text_type(text)
 
-    def dep_attrs(self, resource_name):
-        return self.t.dep_attrs(resource_name)
-
     def add_explicit_dependencies(self, deps):
         """Add all dependencies explicitly specified in the template.
 
@@ -949,7 +947,8 @@ class Resource(status.ResourceStatus):
             self._rsrc_prop_data = None
             self.attributes.reset_resolved_values()
 
-    def referenced_attrs(self, in_resources=True, in_outputs=True):
+    def referenced_attrs(self, stk_defn=None,
+                         in_resources=True, in_outputs=True):
         """Return the set of all attributes referenced in the template.
 
         This enables the resource to calculate which of its attributes will
@@ -958,22 +957,30 @@ class Resource(status.ResourceStatus):
         `in_resources` or `in_outputs` parameters to False. To limit to a
         subset of outputs, pass an iterable of the output names to examine
         for the `in_outputs` parameter.
+
+        The set of referenced attributes is calculated from the
+        StackDefinition object provided, or from the stack's current
+        definition if none is passed.
         """
-        def get_dep_attrs(source_dict):
-            return set(self.stack.get_dep_attrs(six.itervalues(source_dict),
-                                                self.name))
+        if stk_defn is None:
+            stk_defn = self.stack.defn
+
+        def get_dep_attrs(source):
+            return set(itertools.chain.from_iterable(s.dep_attrs(self.name)
+                                                     for s in source))
 
         refd_attrs = set()
         if in_resources:
-            refd_attrs |= get_dep_attrs(self.stack.resources)
+            enabled_resources = stk_defn.enabled_rsrc_names()
+            refd_attrs |= get_dep_attrs(stk_defn.resource_definition(r_name)
+                                        for r_name in enabled_resources)
 
         subset_outputs = isinstance(in_outputs, collections.Iterable)
         if subset_outputs or in_outputs:
-            if subset_outputs:
-                outputs = {k: self.stack.outputs[k] for k in in_outputs}
-            else:
-                outputs = self.stack.outputs
-            refd_attrs |= get_dep_attrs(outputs)
+            if not subset_outputs:
+                in_outputs = stk_defn.enabled_output_names()
+            refd_attrs |= get_dep_attrs(stk_defn.output_definition(op_name)
+                                        for op_name in in_outputs)
 
         if attributes.ALL_ATTRIBUTES in refd_attrs:
             refd_attrs.remove(attributes.ALL_ATTRIBUTES)
@@ -981,7 +988,7 @@ class Resource(status.ResourceStatus):
 
         return refd_attrs
 
-    def node_data(self, for_resources=True, for_outputs=False):
+    def node_data(self, stk_defn=None, for_resources=True, for_outputs=False):
         """Return a NodeData object representing the resource.
 
         The NodeData object returned contains basic data about the resource,
@@ -995,6 +1002,10 @@ class Resource(status.ResourceStatus):
         included. If the for_outputs parameter is an iterable of output names,
         only those attribute values referenced by the specified stack outputs
         are included.
+
+        The set of referenced attributes is calculated from the
+        StackDefinition object provided, or from the stack's current
+        definition if none is passed.
 
         After calling this method, the resource's attribute cache is
         populated with any cacheable attribute values referenced by stack
@@ -1019,12 +1030,13 @@ class Resource(status.ResourceStatus):
                     except exception.InvalidTemplateAttribute as ita:
                         LOG.info('%s', ita)
 
-        dep_attrs = self.referenced_attrs(in_resources=for_resources,
+        dep_attrs = self.referenced_attrs(stk_defn,
+                                          in_resources=for_resources,
                                           in_outputs=for_outputs)
 
         # Ensure all attributes referenced in outputs get cached
         if for_outputs is False and self.stack.convergence:
-            out_attrs = self.referenced_attrs(in_resources=False)
+            out_attrs = self.referenced_attrs(stk_defn, in_resources=False)
             for e in get_attrs(out_attrs - dep_attrs, cacheable_only=True):
                 pass
 

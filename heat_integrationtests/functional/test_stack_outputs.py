@@ -61,3 +61,41 @@ outputs:
             stack_identifier, 'resource_output_b')['output']
         self.assertEqual(expected_output_a, actual_output_a)
         self.assertEqual(expected_output_b, actual_output_b)
+
+    before_template = '''
+heat_template_version: 2015-10-15
+resources:
+  test_resource_a:
+    type: OS::Heat::TestResource
+    properties:
+      value: 'foo'
+outputs:
+'''
+
+    after_template = '''
+heat_template_version: 2015-10-15
+resources:
+  test_resource_a:
+    type: OS::Heat::TestResource
+    properties:
+      value: 'foo'
+  test_resource_b:
+    type: OS::Heat::TestResource
+    properties:
+      value: {get_attr: [test_resource_a, output]}
+outputs:
+  output_value:
+    description: 'Output of resource b'
+    value: {get_attr: [test_resource_b, output]}
+'''
+
+    def test_outputs_update_new_resource(self):
+        stack_identifier = self.stack_create(template=self.before_template)
+        self.update_stack(stack_identifier, template=self.after_template)
+
+        expected_output_value = {
+            u'output_value': u'foo', u'output_key': u'output_value',
+            u'description': u'Output of resource b'}
+        actual_output_value = self.client.stacks.output_show(
+            stack_identifier, 'output_value')['output']
+        self.assertEqual(expected_output_value, actual_output_value)
