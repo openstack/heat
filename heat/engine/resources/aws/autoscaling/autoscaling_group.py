@@ -397,16 +397,6 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
 
         super(AutoScalingGroup, self).validate()
 
-    def _resolve_attribute(self, name):
-        """Resolves the resource's attributes.
-
-        heat extension: "InstanceList" returns comma delimited list of server
-        ip addresses.
-        """
-        if name == self.INSTANCE_LIST:
-            return u','.join(inst.FnGetAtt('PublicIp')
-                             for inst in grouputils.get_members(self)) or None
-
     def child_template(self):
         if self.properties[self.DESIRED_CAPACITY]:
             num_instances = self.properties[self.DESIRED_CAPACITY]
