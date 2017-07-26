@@ -45,6 +45,7 @@ outputs:
         self.assertEqual(self.rsrc.COMPLETE, self.rsrc.status)
         self.assertEqual(self.stack.CREATE, self.stack.action)
         self.assertEqual(self.stack.COMPLETE, self.stack.status)
+        self.stack._update_all_resource_data(False, True)
         self.assertIsNone(self.stack.outputs['anything'].get_value())
 
     def test_none_stack_create(self):

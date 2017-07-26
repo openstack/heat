@@ -1017,10 +1017,11 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('ADOPT', res.action)
         self.assertEqual((self.stack.ADOPT, self.stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual('AResource',
-                         self.stack.outputs['TestOutput'].get_value())
 
         loaded_stack = stack.Stack.load(self.ctx, self.stack.id)
+        loaded_stack._update_all_resource_data(False, True)
+        self.assertEqual('AResource',
+                         loaded_stack.outputs['TestOutput'].get_value())
         self.assertEqual({}, loaded_stack['AResource']._stored_properties_data)
 
     def test_adopt_stack_fails(self):
@@ -1329,7 +1330,7 @@ class StackTest(common.HeatTestCase):
                 (rsrc.UPDATE, rsrc.FAILED),
                 (rsrc.UPDATE, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
-            self.stack._outputs = None
+            self.stack._update_all_resource_data(False, True)
             self.assertEqual('AResource',
                              self.stack.outputs['TestOutput'].get_value())
         for action, status in (
@@ -1337,8 +1338,9 @@ class StackTest(common.HeatTestCase):
                 (rsrc.DELETE, rsrc.FAILED),
                 (rsrc.DELETE, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
-            self.stack._outputs = None
-            self.assertIsNone(self.stack.outputs['TestOutput'].get_value())
+            self.stack._update_all_resource_data(False, True)
+            self.assertEqual('AResource',
+                             self.stack.outputs['TestOutput'].get_value())
 
     def test_resource_required_by(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1748,6 +1750,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
         # According _resolve_attribute method in GenericResource output
         # value will be equal with name AResource.
+        self.stack._update_all_resource_data(False, True)
         self.assertEqual('AResource',
                          self.stack.outputs['Resource_attr'].get_value())
 

@@ -313,6 +313,12 @@ class Stack(collections.Mapping):
 
         return self._resources
 
+    def _update_all_resource_data(self, for_resources, for_outputs):
+        for rsrc in self._explicit_dependencies():
+            node_data = rsrc.node_data(for_resources=for_resources,
+                                       for_outputs=for_outputs)
+            stk_defn.update_resource_data(self.defn, rsrc.name, node_data)
+
     def _find_filtered_resources(self, filters=None):
         rsrc_def_cache = {self.t.id: self.t.resource_definitions(self)}
         if filters:
