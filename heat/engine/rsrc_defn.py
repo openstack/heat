@@ -220,7 +220,8 @@ class ResourceDefinition(object):
         def strict_func_deps(data, datapath):
             return six.moves.filter(
                 lambda r: getattr(r, 'strict_dependency', True),
-                function.dependencies(data, datapath))
+                six.moves.map(lambda rp: stack[rp.name],
+                              function.dependencies(data, datapath)))
 
         explicit_depends = [] if self._depends is None else self._depends
         prop_deps = strict_func_deps(self._properties, path('Properties'))
