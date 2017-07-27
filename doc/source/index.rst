@@ -43,6 +43,16 @@ Heat's purpose and vision
 This documentation offers information aimed at end-users, operators and
 developers of Heat.
 
+
+Installing Heat
+===============
+
+.. toctree::
+    :maxdepth: 1
+
+    install/index
+
+
 Using Heat
 ==========
 
