@@ -474,9 +474,11 @@ required in later examples:
 
     # Clone the required repositories. Some of these are also available
     # via pypi or as distro packages.
-    git clone https://git.openstack.org/openstack/diskimage-builder.git
     git clone https://git.openstack.org/openstack/tripleo-image-elements.git
     git clone https://git.openstack.org/openstack/heat-agents.git
+
+    # Install diskimage-builder from source
+    sudo pip install git+https://git.openstack.org/openstack/diskimage-builder.git
 
     # Required by diskimage-builder to discover element collections
     export ELEMENTS_PATH=tripleo-image-elements/elements:heat-agents/
@@ -506,7 +508,7 @@ required in later examples:
     export IMAGE_NAME=fedora-software-config
 
     # Create the image
-    diskimage-builder/bin/disk-image-create vm $BASE_ELEMENTS $AGENT_ELEMENTS \
+    disk-image-create vm $BASE_ELEMENTS $AGENT_ELEMENTS \
          $DEPLOYMENT_BASE_ELEMENTS $DEPLOYMENT_TOOL -o $IMAGE_NAME.qcow2
 
     # Upload the image, assuming valid credentials are already sourced
