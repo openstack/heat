@@ -52,10 +52,6 @@ def extract_args(params):
         disable_rollback = param_utils.extract_bool(name, params[name])
         kwargs[name] = disable_rollback
 
-    name = rpc_api.PARAM_SHOW_DELETED
-    if name in params:
-        params[name] = param_utils.extract_bool(name, params[name])
-
     adopt_data = params.get(rpc_api.PARAM_ADOPT_STACK_DATA)
     if adopt_data:
         try:
