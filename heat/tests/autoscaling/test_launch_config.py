@@ -70,7 +70,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
         })}
         stack = utils.parse_stack(t, params=inline_templates.as_params,
                                   cache_data=cache_data)
-        rsrc = stack['LaunchConfig']
+        rsrc = stack.defn['LaunchConfig']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())
 
     def test_launch_config_create_with_instanceid(self):

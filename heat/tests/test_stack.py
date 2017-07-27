@@ -1328,12 +1328,7 @@ class StackTest(common.HeatTestCase):
                 (rsrc.RESUME, rsrc.COMPLETE),
                 (rsrc.UPDATE, rsrc.IN_PROGRESS),
                 (rsrc.UPDATE, rsrc.FAILED),
-                (rsrc.UPDATE, rsrc.COMPLETE)):
-            rsrc.state_set(action, status)
-            self.stack._update_all_resource_data(False, True)
-            self.assertEqual('AResource',
-                             self.stack.outputs['TestOutput'].get_value())
-        for action, status in (
+                (rsrc.UPDATE, rsrc.COMPLETE),
                 (rsrc.DELETE, rsrc.IN_PROGRESS),
                 (rsrc.DELETE, rsrc.FAILED),
                 (rsrc.DELETE, rsrc.COMPLETE)):
@@ -2387,11 +2382,14 @@ class StackTest(common.HeatTestCase):
                                              cache_data=cache_data)
 
         # Check if the property has the appropriate resolved value.
-        cached_property = lightweight_stack['bar'].properties['Foo']
-        self.assertEqual(cached_property, 'baz')
+        bar = resource.Resource(
+            'bar',
+            lightweight_stack.defn.resource_definition('bar'),
+            lightweight_stack)
+        self.assertEqual('baz', bar.properties['Foo'])
 
         # Make sure FnGetAtt returns the cached value.
-        attr_value = lightweight_stack['foo'].FnGetAtt('bar')
+        attr_value = lightweight_stack.defn['foo'].FnGetAtt('bar')
         self.assertEqual('baz', attr_value)
 
         # Make sure calls are not made to the database to retrieve the
@@ -2427,11 +2425,14 @@ class StackTest(common.HeatTestCase):
                                              cache_data=cache_data)
 
         # Check if the property has the appropriate resolved value.
-        cached_property = lightweight_stack['bar'].properties['Foo']
-        self.assertEqual(cached_property, 'physical-resource-id')
+        bar = resource.Resource(
+            'bar',
+            lightweight_stack.defn.resource_definition('bar'),
+            lightweight_stack)
+        self.assertEqual('physical-resource-id', bar.properties['Foo'])
 
         # Make sure FnGetRefId returns the cached value.
-        resource_id = lightweight_stack['foo'].FnGetRefId()
+        resource_id = lightweight_stack.defn['foo'].FnGetRefId()
         self.assertEqual('physical-resource-id', resource_id)
 
         # Make sure calls are not made to the database to retrieve the

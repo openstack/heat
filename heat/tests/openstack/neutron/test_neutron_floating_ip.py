@@ -296,7 +296,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                                      'status': 'COMPLETE',
                                      'reference_id': 'abc'})})
 
-        rsrc = stack['floating_ip']
+        rsrc = stack.defn['floating_ip']
         self.assertEqual('abc', rsrc.FnGetRefId())
 
     def test_floatip_association_port(self):
@@ -449,7 +449,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         update_port_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
         props['port_id'] = update_port_id
         update_snippet = rsrc_defn.ResourceDefinition(fipa.name, fipa.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
 
         scheduler.TaskRunner(fipa.update, update_snippet)()
@@ -708,7 +708,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         update_port_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
         props['port_id'] = update_port_id
         update_snippet = rsrc_defn.ResourceDefinition(fip.name, fip.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(fip.update, update_snippet)()
         self.assertEqual((fip.UPDATE, fip.COMPLETE), fip.state)
@@ -718,7 +718,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         props = copy.deepcopy(fip.properties.data)
         del(props['port_id'])
         update_snippet = rsrc_defn.ResourceDefinition(fip.name, fip.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(fip.update, update_snippet)()
         self.assertEqual((fip.UPDATE, fip.COMPLETE), fip.state)

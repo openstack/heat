@@ -405,7 +405,7 @@ class EIPTest(common.HeatTestCase):
                                      'status': 'COMPLETE',
                                      'reference_id': '1.1.1.1'})})
 
-        rsrc = stack['eip']
+        rsrc = stack.defn['eip']
         self.assertEqual('1.1.1.1', rsrc.FnGetRefId())
 
 
@@ -480,9 +480,8 @@ class AllocTest(common.HeatTestCase):
             self.fc.servers.get(server).AndReturn(mock_server)
 
     def create_eip(self, t, stack, resource_name):
-        resource_defns = stack.t.resource_definitions(stack)
         rsrc = eip.ElasticIp(resource_name,
-                             resource_defns[resource_name],
+                             stack.defn.resource_definition(resource_name),
                              stack)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
@@ -492,9 +491,9 @@ class AllocTest(common.HeatTestCase):
         return rsrc
 
     def create_association(self, t, stack, resource_name):
-        resource_defns = stack.t.resource_definitions(stack)
+        resource_defn = stack.defn.resource_definition(resource_name)
         rsrc = eip.ElasticIpAssociation(resource_name,
-                                        resource_defns[resource_name],
+                                        resource_defn,
                                         stack)
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
@@ -530,7 +529,7 @@ class AllocTest(common.HeatTestCase):
         }).AndReturn({'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
-            "floating_ip_address": "192.168.9.3"
+            "floating_ip_address": "11.0.0.1"
         }})
 
     def mock_show_floatingip(self, refid):
@@ -766,7 +765,6 @@ class AllocTest(common.HeatTestCase):
                               mock_again=True)
 
         self.mock_create_floatingip()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc)
@@ -780,7 +778,7 @@ class AllocTest(common.HeatTestCase):
         update_server_id = '5678'
         props['InstanceId'] = update_server_id
         update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
@@ -791,7 +789,6 @@ class AllocTest(common.HeatTestCase):
         server = self.fc.servers.list()[0]
         self._mock_server_get(mock_server=server, multiple=True)
         self.mock_create_floatingip()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc)
@@ -804,7 +801,7 @@ class AllocTest(common.HeatTestCase):
         update_eip = '11.0.0.2'
         props['EIP'] = update_eip
         update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
@@ -815,7 +812,6 @@ class AllocTest(common.HeatTestCase):
         server = self.fc.servers.list()[0]
         self._mock_server_get(mock_server=server, multiple=True)
         self.mock_create_floatingip()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
         self.mock_list_instance_ports('WebServer')
         self.mock_show_network()
@@ -838,7 +834,7 @@ class AllocTest(common.HeatTestCase):
         props['AllocationId'] = update_allocationId
         props.pop('EIP')
         update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
@@ -850,7 +846,7 @@ class AllocTest(common.HeatTestCase):
         props['EIP'] = update_eip
         props.pop('AllocationId')
         update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
@@ -944,7 +940,7 @@ class AllocTest(common.HeatTestCase):
         props['NetworkInterfaceId'] = update_networkInterfaceId
 
         update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
@@ -956,7 +952,7 @@ class AllocTest(common.HeatTestCase):
         props['InstanceId'] = instance_id
 
         update_snippet = rsrc_defn.ResourceDefinition(ass.name, ass.type(),
-                                                      stack.t.parse(stack,
+                                                      stack.t.parse(stack.defn,
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
@@ -992,5 +988,5 @@ class AllocTest(common.HeatTestCase):
             'reference_id': 'convg_xyz'
         })}
         stack = utils.parse_stack(t, cache_data=cache_data)
-        rsrc = stack['IPAssoc']
+        rsrc = stack.defn['IPAssoc']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())

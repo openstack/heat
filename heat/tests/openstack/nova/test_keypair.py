@@ -286,5 +286,5 @@ class NovaKeyPairTest(common.HeatTestCase):
             'reference_id': 'convg_xyz'
         }}
         stack = utils.parse_stack(self.kp_template, cache_data=cache_data)
-        rsrc = stack['kp']
+        rsrc = stack.defn['kp']
         self.assertEqual('convg_xyz', rsrc.FnGetRefId())

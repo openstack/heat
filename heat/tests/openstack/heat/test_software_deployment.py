@@ -1104,7 +1104,8 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'attrs': {'foo': 'bar'}
         })}
         self._create_stack(self.template, cache_data=cache_data)
-        self.assertEqual('bar', self.deployment.FnGetAtt('foo'))
+        self.assertEqual('bar',
+                         self.stack.defn[self.deployment.name].FnGetAtt('foo'))
 
     def test_fn_get_att_error(self):
         self._create_stack(self.template)

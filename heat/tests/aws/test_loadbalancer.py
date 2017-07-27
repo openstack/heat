@@ -169,7 +169,7 @@ class LoadBalancerTest(common.HeatTestCase):
         self.stack = utils.parse_stack(template, cache_data=cache_data)
 
         resource_name = 'LoadBalancer'
-        lb_defn = self.stack.t.resource_definitions(self.stack)[resource_name]
+        lb_defn = self.stack.defn.resource_definition(resource_name)
         return lb.LoadBalancer(resource_name, lb_defn, self.stack)
 
     def test_loadbalancer_refid(self):
@@ -185,7 +185,8 @@ class LoadBalancerTest(common.HeatTestCase):
             'reference_id': 'LoadBalancer_convg_mock'
         })}
         rsrc = self.setup_loadbalancer(cache_data=cache_data)
-        self.assertEqual('LoadBalancer_convg_mock', rsrc.FnGetRefId())
+        self.assertEqual('LoadBalancer_convg_mock',
+                         self.stack.defn[rsrc.name].FnGetRefId())
 
     def test_loadbalancer_attr_dnsname(self):
         rsrc = self.setup_loadbalancer()

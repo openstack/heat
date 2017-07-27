@@ -171,7 +171,7 @@ Resources:
             'reference_id': 'xyz'
         })}
         stack = utils.parse_stack(t, cache_data=cache_data)
-        rsrc = stack['secret1']
+        rsrc = stack.defn['secret1']
         self.assertEqual('xyz', rsrc.FnGetRefId())
 
     def test_invalid_length(self):

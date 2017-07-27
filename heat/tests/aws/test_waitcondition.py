@@ -282,7 +282,7 @@ class WaitConditionTest(common.HeatTestCase):
                                      'reference_id': 'http://convg_signed_url'
                                  })})
 
-        rsrc = stack['WaitHandle']
+        rsrc = stack.defn['WaitHandle']
         self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())
 
     def test_validate_handle_url_bad_stackid(self):

@@ -228,5 +228,5 @@ class ResourceChainTest(common.HeatTestCase):
             'attrs': {'refs': ['rsrc1', 'rsrc2']}
         })}
         stack = utils.parse_stack(TEMPLATE, cache_data=cache_data)
-        rsrc = stack['test-chain']
-        self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt(rsrc.REFS))
+        rsrc = stack.defn['test-chain']
+        self.assertEqual(['rsrc1', 'rsrc2'], rsrc.FnGetAtt('refs'))

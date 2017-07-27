@@ -30,6 +30,7 @@ from heat.engine import resource
 from heat.engine import resources
 from heat.engine import rsrc_defn
 from heat.engine import stack as parser
+from heat.engine import stk_defn
 from heat.engine import template
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
@@ -162,11 +163,12 @@ class HOTemplateTest(common.HeatTestCase):
 
     @staticmethod
     def resolve(snippet, template, stack=None):
-        return function.resolve(template.parse(stack, snippet))
+        return function.resolve(template.parse(stack and stack.defn, snippet))
 
     @staticmethod
     def resolve_condition(snippet, template, stack=None):
-        return function.resolve(template.parse_condition(stack, snippet))
+        return function.resolve(template.parse_condition(stack and stack.defn,
+                                                         snippet))
 
     def test_defaults(self):
         """Test default content behavior of HOT template."""
@@ -1913,7 +1915,7 @@ conditions:
         self.assertRaisesRegex(exception.StackValidationFailed,
                                regxp,
                                function.validate,
-                               stack.t.parse(stack, snippet))
+                               stack.t.parse(stack.defn, snippet))
 
     def test_add_resource(self):
         hot_tpl = template_format.parse('''
@@ -2349,7 +2351,7 @@ class HotStackTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
     def resolve(self, snippet):
-        return function.resolve(self.stack.t.parse(self.stack, snippet))
+        return function.resolve(self.stack.t.parse(self.stack.defn, snippet))
 
     def test_repeat_get_attr(self):
         """Test repeat function with get_attr function as an argument."""
@@ -2358,7 +2360,7 @@ class HotStackTest(common.HeatTestCase):
 
         snippet = {'repeat': {'template': 'this is %var%',
                    'for_each': {'%var%': {'get_attr': ['resource1', 'list']}}}}
-        repeat = self.stack.t.parse(self.stack, snippet)
+        repeat = self.stack.t.parse(self.stack.defn, snippet)
 
         self.stack.store()
         with mock.patch.object(rsrc_defn.ResourceDefinition,
@@ -2724,7 +2726,8 @@ class StackAttributesTest(common.HeatTestCase):
                                   template.Template(self.hot_tpl))
         self.stack.store()
 
-        parsed = self.stack.t.parse(self.stack, self.snippet)
+        parsed = self.stack.t.parse(self.stack.defn, self.snippet)
+        dep_attrs = list(function.dep_attrs(parsed, self.resource_name))
 
         self.stack.create()
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
@@ -2748,175 +2751,14 @@ class StackAttributesTest(common.HeatTestCase):
                 (rsrc.ADOPT, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
 
+            with mock.patch.object(rsrc_defn.ResourceDefinition,
+                                   'dep_attrs') as mock_da:
+                mock_da.return_value = dep_attrs
+                node_data = rsrc.node_data()
+            stk_defn.update_resource_data(self.stack.defn, rsrc.name,
+                                          node_data)
+
             self.assertEqual(self.expected, function.resolve(parsed))
-
-
-class StackGetAttributesTestConvergence(common.HeatTestCase):
-
-    def setUp(self):
-        super(StackGetAttributesTestConvergence, self).setUp()
-
-        self.ctx = utils.dummy_context()
-
-        self.m.ReplayAll()
-
-    scenarios = [
-        # for hot template 2013-05-23, get_attr: hot_funcs.GetAttThenSelect
-        ('get_flat_attr',
-         dict(hot_tpl=hot_tpl_generic_resource,
-              snippet={'Value': {'get_attr': ['resource1', 'foo']}},
-              resource_name='resource1',
-              expected={'Value': 'resource1'})),
-        ('get_list_attr',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1', 'list', 0]}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.list[0]})),
-        ('get_flat_dict_attr',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'flat_dict',
-                                              'key2']}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  flat_dict['key2']})),
-        ('get_nested_attr_list',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'nested_dict',
-                                              'list',
-                                              0]}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  nested_dict['list'][0]})),
-        ('get_nested_attr_dict',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'nested_dict',
-                                              'dict',
-                                              'a']}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  nested_dict['dict']['a']})),
-        ('get_attr_none',
-         dict(hot_tpl=hot_tpl_complex_attrs,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'none',
-                                              'who_cares']}},
-              resource_name='resource1',
-              expected={'Value': None})),
-        # for hot template version 2014-10-16 and 2015-04-30,
-        # get_attr: hot_funcs.GetAtt
-        ('get_flat_attr',
-         dict(hot_tpl=hot_tpl_generic_resource_20141016,
-              snippet={'Value': {'get_attr': ['resource1', 'foo']}},
-              resource_name='resource1',
-              expected={'Value': 'resource1'})),
-        ('get_list_attr',
-         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
-              snippet={'Value': {'get_attr': ['resource1', 'list', 0]}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.list[0]})),
-        ('get_flat_dict_attr',
-         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'flat_dict',
-                                              'key2']}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  flat_dict['key2']})),
-        ('get_nested_attr_list',
-         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'nested_dict',
-                                              'list',
-                                              0]}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  nested_dict['list'][0]})),
-        ('get_nested_attr_dict',
-         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'nested_dict',
-                                              'dict',
-                                              'a']}},
-              resource_name='resource1',
-              expected={
-                  'Value':
-                  generic_rsrc.ResourceWithComplexAttributes.
-                  nested_dict['dict']['a']})),
-        ('get_attr_none',
-         dict(hot_tpl=hot_tpl_complex_attrs_20141016,
-              snippet={'Value': {'get_attr': ['resource1',
-                                              'none',
-                                              'who_cares']}},
-              resource_name='resource1',
-              expected={'Value': None}))
-    ]
-
-    def _prepare_cache_data(self, rsrc):
-        dep_attrs = function.dep_attrs(
-            self.stack.t.parse(self.stack, self.snippet),
-            self.resource_name)
-        with mock.patch.object(rsrc_defn.ResourceDefinition,
-                               'dep_attrs') as mock_da:
-            mock_da.return_value = dep_attrs
-            rsrc_data = rsrc.node_data()
-        # store as cache data
-        self.stack.cache_data = {
-            rsrc.name: rsrc_data
-        }
-
-    def test_get_attr_convergence(self):
-        """Test resolution of get_attr occurrences with convergence."""
-
-        self.stack = parser.Stack(self.ctx, 'test_get_attr',
-                                  template.Template(self.hot_tpl))
-        self.stack.store()
-        self.stack.create()
-        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
-                         self.stack.state)
-        rsrc = self.stack[self.resource_name]
-        self._prepare_cache_data(rsrc)
-
-        with mock.patch.object(resource.Resource, 'get_attribute') as mock_ga:
-            for action, status in (
-                    (rsrc.CREATE, rsrc.IN_PROGRESS),
-                    (rsrc.CREATE, rsrc.COMPLETE),
-                    (rsrc.RESUME, rsrc.IN_PROGRESS),
-                    (rsrc.RESUME, rsrc.COMPLETE),
-                    (rsrc.SUSPEND, rsrc.IN_PROGRESS),
-                    (rsrc.SUSPEND, rsrc.COMPLETE),
-                    (rsrc.UPDATE, rsrc.IN_PROGRESS),
-                    (rsrc.UPDATE, rsrc.COMPLETE),
-                    (rsrc.SNAPSHOT, rsrc.IN_PROGRESS),
-                    (rsrc.SNAPSHOT, rsrc.COMPLETE),
-                    (rsrc.CHECK, rsrc.IN_PROGRESS),
-                    (rsrc.CHECK, rsrc.COMPLETE),
-                    (rsrc.ADOPT, rsrc.IN_PROGRESS),
-                    (rsrc.ADOPT, rsrc.COMPLETE)):
-                rsrc.state_set(action, status)
-
-                resolved = function.resolve(self.stack.t.parse(self.stack,
-                                                               self.snippet))
-                self.assertEqual(self.expected, resolved)
-                # get_attribute should never be called, everything
-                # should be resolved from cache data
-                self.assertFalse(mock_ga.called)
 
 
 class StackGetAttrValidationTest(common.HeatTestCase):
@@ -3067,7 +2909,8 @@ class StackParametersTest(common.HeatTestCase):
                              stack_id='1ba8c334-2297-4312-8c7c-43763a988ced',
                              tenant_id='9913ef0a-b8be-4b33-b574-9061441bd373')
         self.assertEqual(self.expected,
-                         function.resolve(tmpl.parse(stack, self.snippet)))
+                         function.resolve(tmpl.parse(stack.defn,
+                                                     self.snippet)))
 
 
 class HOTParamValidatorTest(common.HeatTestCase):
@@ -3598,13 +3441,20 @@ class TestGetAttAllAttributes(common.HeatTestCase):
     ]
 
     @staticmethod
-    def resolve(snippet, template, stack=None):
-        return function.resolve(template.parse(stack, snippet))
+    def resolve(snippet, template, stack):
+        return function.resolve(template.parse(stack.defn, snippet))
 
     def test_get_attr_all_attributes(self):
         tmpl = template.Template(self.hot_tpl)
         stack = parser.Stack(utils.dummy_context(), 'test_get_attr', tmpl)
         stack.store()
+
+        if self.raises is None:
+            dep_attrs = list(function.dep_attrs(tmpl.parse(stack.defn,
+                                                           self.snippet),
+                                                'resource1'))
+        else:
+            dep_attrs = []
         stack.create()
 
         self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
@@ -3627,6 +3477,12 @@ class TestGetAttAllAttributes(common.HeatTestCase):
                 (rsrc.ADOPT, rsrc.IN_PROGRESS),
                 (rsrc.ADOPT, rsrc.COMPLETE)):
             rsrc.state_set(action, status)
+
+            with mock.patch.object(rsrc_defn.ResourceDefinition,
+                                   'dep_attrs') as mock_da:
+                mock_da.return_value = dep_attrs
+                node_data = rsrc.node_data()
+            stk_defn.update_resource_data(stack.defn, rsrc.name, node_data)
 
             if self.raises is not None:
                 ex = self.assertRaises(self.raises,

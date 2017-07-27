@@ -340,8 +340,7 @@ class Resource(status.ResourceStatus):
 
         # Load only the resource in question; don't load all resources
         # by invoking stack.resources. Maintain light-weight stack.
-        res_defn = resource_owning_stack.t.resource_definitions(
-            resource_owning_stack)[db_res.name]
+        res_defn = resource_owning_stack.defn.resource_definition(db_res.name)
         resource = cls(db_res.name, res_defn, resource_owning_stack)
         resource._load_data(db_res)
 
@@ -1348,8 +1347,7 @@ class Resource(status.ResourceStatus):
 
         self._calling_engine_id = engine_id
         registry = new_stack.env.registry
-        new_res_def = new_stack.t.resource_definitions(
-            new_stack)[self.name]
+        new_res_def = new_stack.defn.resource_definition(self.name)
         new_res_type = registry.get_class_to_instantiate(
             new_res_def.resource_type, resource_name=self.name)
         restricted_actions = registry.get_rsrc_restricted_actions(
