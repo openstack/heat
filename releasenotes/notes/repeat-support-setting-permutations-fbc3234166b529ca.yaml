@@ -1,0 +1,8 @@
+---
+features:
+  - Added new section ``permutations`` for ``repeat`` function, to decide
+    whether to iterate nested the over all the permutations of the elements
+    in the given lists. If 'permutations' is not specified, we set the default
+    value to true to compatible with before behavior. The args have to be lists
+    instead of dicts if 'permutations' is False because keys in a dict are
+    unordered, and the list args all have to be of the same length.
