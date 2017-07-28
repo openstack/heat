@@ -14,6 +14,7 @@
 import copy
 import six
 
+from heat.common import exception
 from heat.engine import function
 
 
@@ -25,10 +26,23 @@ class OutputDefinition(object):
         self._value = value
         self._resolved_value = None
         self._description = description
+        self._deps = None
 
     def validate(self, path=''):
         """Validate the output value without resolving it."""
         function.validate(self._value, path)
+
+    def required_resource_names(self):
+        if self._deps is None:
+            try:
+                required_resources = function.dependencies(self._value)
+                self._deps = set(six.moves.map(lambda rp: rp.name,
+                                               required_resources))
+            except (exception.InvalidTemplateAttribute,
+                    exception.InvalidTemplateReference):
+                # This output ain't gonna work anyway
+                self._deps = set()
+        return self._deps
 
     def dep_attrs(self, resource_name):
         """Iterate over attributes of a given resource that this references.
