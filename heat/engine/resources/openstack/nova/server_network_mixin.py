@@ -539,7 +539,7 @@ class ServerNetworkMixin(object):
             rsrc, rsrc_owning_stack, stack = resource.Resource.load(
                 prev_server.context, prev_server.replaced_by,
                 prev_server.stack.current_traversal, True,
-                prev_server.stack.cache_data
+                prev_server.stack.defn._resource_data
             )
             existing_server = rsrc
         else:
