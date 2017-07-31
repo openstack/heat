@@ -99,6 +99,7 @@ class ResourceDefinition(object):
 
         self._hash = hash(self.resource_type)
         self._rendering = None
+        self._dep_names = None
 
         assert isinstance(self.description, six.string_types)
 
@@ -202,11 +203,44 @@ class ResourceDefinition(object):
                                function.dep_attrs(self._metadata,
                                                   resource_name))
 
+    def required_resource_names(self):
+        """Return a set of names of all resources on which this depends.
+
+        Note that this is done entirely in isolation from the rest of the
+        template, so the resource names returned may refer to resources that
+        don't actually exist, or would have strict_dependency=False. Use the
+        dependencies() method to get validated dependencies.
+        """
+        if self._dep_names is None:
+            explicit_depends = [] if self._depends is None else self._depends
+
+            def path(section):
+                return '.'.join([self.name, section])
+
+            prop_deps = function.dependencies(self._properties,
+                                              path('Properties'))
+            metadata_deps = function.dependencies(self._metadata,
+                                                  path('Metadata'))
+            implicit_depends = six.moves.map(lambda rp: rp.name,
+                                             itertools.chain(prop_deps,
+                                                             metadata_deps))
+
+            # (ricolin) External resource should not depend on any other
+            # resources. This operation is not allowed for now.
+            if self.external_id():
+                if explicit_depends:
+                    raise exception.InvalidExternalResourceDependency(
+                        external_id=self.external_id(),
+                        resource_type=self.resource_type
+                    )
+                self._dep_names = set()
+            else:
+                self._dep_names = set(itertools.chain(explicit_depends,
+                                                      implicit_depends))
+        return self._dep_names
+
     def dependencies(self, stack):
         """Return the Resource objects in given stack on which this depends."""
-        def path(section):
-            return '.'.join([self.name, section])
-
         def get_resource(res_name):
             if res_name not in stack:
                 if res_name in stack.t.get(stack.t.RESOURCES):
@@ -215,31 +249,13 @@ class ResourceDefinition(object):
                     return
                 raise exception.InvalidTemplateReference(resource=res_name,
                                                          key=self.name)
-            return stack[res_name]
+            res = stack[res_name]
+            if getattr(res, 'strict_dependency', True):
+                return res
 
-        def strict_func_deps(data, datapath):
-            return six.moves.filter(
-                lambda r: getattr(r, 'strict_dependency', True),
-                six.moves.map(lambda rp: stack[rp.name],
-                              function.dependencies(data, datapath)))
-
-        explicit_depends = [] if self._depends is None else self._depends
-        prop_deps = strict_func_deps(self._properties, path('Properties'))
-        metadata_deps = strict_func_deps(self._metadata, path('Metadata'))
-
-        # (ricolin) External resource should not depend on any other resources.
-        # This operation is not allowed for now.
-        if self.external_id():
-            if explicit_depends:
-                raise exception.InvalidExternalResourceDependency(
-                    external_id=self.external_id(),
-                    resource_type=self.resource_type
-                )
-            return itertools.chain()
-
-        return itertools.chain(
-            filter(None, (get_resource(dep) for dep in explicit_depends)),
-            prop_deps, metadata_deps)
+        return six.moves.filter(None,
+                                six.moves.map(get_resource,
+                                              self.required_resource_names()))
 
     def set_translation_rules(self, rules=None, client_resolve=True):
         """Helper method to update properties with translation rules."""

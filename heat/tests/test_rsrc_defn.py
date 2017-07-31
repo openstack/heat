@@ -92,11 +92,13 @@ class ResourceDefinitionTest(common.HeatTestCase):
     def test_dependencies_default(self):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType')
         stack = {'foo': 'FOO', 'bar': 'BAR'}
+        self.assertEqual(set(), rd.required_resource_names())
         self.assertEqual([], list(rd.dependencies(stack)))
 
     def test_dependencies_explicit(self):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType', depends=['foo'])
         stack = {'foo': 'FOO', 'bar': 'BAR'}
+        self.assertEqual({'foo'}, rd.required_resource_names())
         self.assertEqual(['FOO'], list(rd.dependencies(stack)))
 
     def test_dependencies_explicit_ext(self):
@@ -117,6 +119,7 @@ class ResourceDefinitionTest(common.HeatTestCase):
         t = template_format.parse(TEMPLATE_WITH_INVALID_EXPLICIT_DEPEND)
         stack = utils.parse_stack(t)
         rd = stack.t.resource_definitions(stack)['test3']
+        self.assertEqual({'test2'}, rd.required_resource_names())
         self.assertRaises(exception.InvalidTemplateReference,
                           lambda: list(rd.dependencies(stack)))
 
