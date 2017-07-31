@@ -140,10 +140,6 @@ class Bay(resource.Resource):
         bay = self.client().bays.get(id)
         if bay.status == 'UPDATE_IN_PROGRESS':
             return False
-        # check for None due to Magnum bug
-        # https://bugs.launchpad.net/magnum/+bug/1507598
-        elif bay.status is None:
-            return False
         elif bay.status == 'UPDATE_COMPLETE':
             return True
         elif bay.status == 'UPDATE_FAILED':
