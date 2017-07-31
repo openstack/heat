@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from oslo_serialization import jsonutils
 import six
 
@@ -23,6 +24,7 @@ from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import support
+from heat.engine import translation
 from heat.tests import common
 
 
@@ -1084,6 +1086,14 @@ class PropertiesTest(common.HeatTestCase):
         self.assertFalse(self.props['default_bool'])
 
     def test_missing_required(self):
+        self.assertRaises(ValueError, self.props.get, 'required_int')
+
+    @mock.patch.object(translation.Translation, 'has_translation')
+    @mock.patch.object(translation.Translation, 'translate')
+    def test_required_with_translate_no_value(self, m_t, m_ht):
+        m_t.return_value = None
+        m_ht.return_value = True
+
         self.assertRaises(ValueError, self.props.get, 'required_int')
 
     def test_integer_bad(self):
