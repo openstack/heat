@@ -12,6 +12,8 @@
 #    under the License.
 import six
 
+from oslo_log import log as logging
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -22,6 +24,8 @@ from heat.engine.resources.openstack.neutron import port
 from heat.engine.resources.openstack.neutron import router
 from heat.engine import support
 from heat.engine import translation
+
+LOG = logging.getLogger(__name__)
 
 
 class FloatingIP(neutron.NeutronResource):
@@ -217,8 +221,14 @@ class FloatingIP(neutron.NeutronResource):
                 p_net = (resource.properties.get(port.Port.NETWORK) or
                          resource.properties.get(port.Port.NETWORK_ID))
                 if p_net:
-                    network = self.client().show_network(p_net)['network']
-                    return subnet in network['subnets']
+                    try:
+                        network = self.client().show_network(p_net)['network']
+                        return subnet in network['subnets']
+                    except Exception as exc:
+                        LOG.info("Ignoring Neutron error while "
+                                 "getting FloatingIP dependencies: %s",
+                                 six.text_type(exc))
+                        return False
             else:
                 for fixed_ip in resource.properties.get(
                         port.Port.FIXED_IPS):
