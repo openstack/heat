@@ -471,10 +471,9 @@ class DeployedServersTest(common.HeatTestCase):
         self.assertFalse(stack.access_allowed('4567', 'wserver'))
         return stack, server
 
-    def test_server_create_software_config_poll_heat(self):
+    def test_server_software_config_poll_heat(self):
         stack, server = self._server_create_software_config_poll_heat()
-
-        self.assertEqual({
+        md = {
             'os-collect-config': {
                 'heat': {
                     'auth_url': 'http://server.test:5000/v2.0',
@@ -487,7 +486,19 @@ class DeployedServersTest(common.HeatTestCase):
                 'collectors': ['heat', 'local']
             },
             'deployments': []
-        }, server.metadata_get())
+        }
+
+        self.assertEqual(md, server.metadata_get())
+        # update resource.metadata
+        md1 = {'os-collect-config': {'polling_interval': 10}}
+        server.stack.t.t['resources']['server']['metadata'] = md1
+        resource_defns = server.stack.t.resource_definitions(server.stack)
+        scheduler.TaskRunner(server.update, resource_defns['server'])()
+
+        occ = md['os-collect-config']
+        occ.update(md1['os-collect-config'])
+        # os-collect-config merged
+        self.assertEqual(md, server.metadata_get())
 
     def test_server_create_software_config_poll_heat_metadata(self):
         md = {'os-collect-config': {'polling_interval': 10}}
