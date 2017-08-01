@@ -1451,7 +1451,7 @@ class MakeURL(function.Function):
                     if not isinstance(args[arg], (function.Function,
                                                   collections.Mapping)):
                         raise TypeError(_('The "%(arg)s" argument to '
-                                          '"(fn_name)%s" must be a map') %
+                                          '"%(fn_name)s" must be a map') %
                                         {'arg': arg,
                                          'fn_name': self.fn_name})
                     return
@@ -1470,7 +1470,7 @@ class MakeURL(function.Function):
                     if not isinstance(args[arg], (function.Function,
                                                   six.string_types)):
                         raise TypeError(_('The "%(arg)s" argument to '
-                                          '"(fn_name)%s" must be a string') %
+                                          '"%(fn_name)s" must be a string') %
                                         {'arg': arg,
                                          'fn_name': self.fn_name})
 
