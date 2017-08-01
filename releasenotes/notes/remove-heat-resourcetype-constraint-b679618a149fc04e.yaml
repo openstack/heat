@@ -1,0 +1,4 @@
+---
+deprecations:
+  - The heat.resource_type custom constraint has been removed. This constraint
+    never actually worked.
