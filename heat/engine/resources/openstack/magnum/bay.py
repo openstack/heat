@@ -138,7 +138,10 @@ class Bay(resource.Resource):
 
     def check_update_complete(self, id):
         bay = self.client().bays.get(id)
-        if bay.status == 'UPDATE_IN_PROGRESS':
+        # Check update complete request might get status before the status
+        # got changed to update in progress, so we allow `CREATE_COMPLETE`
+        # for it.
+        if bay.status in ['UPDATE_IN_PROGRESS', 'CREATE_COMPLETE']:
             return False
         elif bay.status == 'UPDATE_COMPLETE':
             return True
