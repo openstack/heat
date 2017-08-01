@@ -368,13 +368,18 @@ class ServerNetworkMixin(object):
         remove_ports = []
         add_nets = []
         attach_first_free_port = False
+        # if update networks between None and empty, no need to
+        # detach and attach, the server got first free port already.
+        if not new_nets and not old_nets:
+            return remove_ports, add_nets
+
         if not new_nets:
             new_nets = []
             attach_first_free_port = True
 
-        # if old nets is None, it means that the server got first
+        # if there is no old_nets, it means that the server got first
         # free port. so we should detach this interface.
-        if old_nets is None:
+        if not old_nets:
             for iface in ifaces:
                 remove_ports.append(iface.port_id)
 
