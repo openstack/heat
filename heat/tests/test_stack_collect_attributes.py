@@ -224,17 +224,25 @@ class DepAttrsTest(common.HeatTestCase):
         super(DepAttrsTest, self).setUp()
         self.ctx = utils.dummy_context()
 
-    def test_dep_attrs(self):
-        parsed_tmpl = template_format.parse(self.tmpl)
+        self.parsed_tmpl = template_format.parse(self.tmpl)
         self.stack = stack.Stack(self.ctx, 'test_stack',
-                                 template.Template(parsed_tmpl))
+                                 template.Template(self.parsed_tmpl))
 
+    def test_dep_attrs(self):
         for res in six.itervalues(self.stack):
             definitions = (self.stack.defn.resource_definition(n)
-                           for n in parsed_tmpl['resources'])
+                           for n in self.parsed_tmpl['resources'])
             self.assertEqual(self.expected[res.name],
                              set(itertools.chain.from_iterable(
                                  d.dep_attrs(res.name) for d in definitions)))
+
+    def test_all_dep_attrs(self):
+        for res in six.itervalues(self.stack):
+            definitions = (self.stack.defn.resource_definition(n)
+                           for n in self.parsed_tmpl['resources'])
+            attrs = set(itertools.chain.from_iterable(
+                d.dep_attrs(res.name, load_all=True) for d in definitions))
+            self.assertEqual(self.expected[res.name], attrs)
 
 
 class ReferencedAttrsTest(common.HeatTestCase):

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import six
 
 from heat.common import exception
@@ -244,6 +245,19 @@ def update_resource_data(stack_definition, resource_name, resource_data):
     """
     stack_definition._resource_data[resource_name] = resource_data
     stack_definition._resources.pop(resource_name, None)
+
+    # Clear the cached dep_attrs for any resource or output that directly
+    # depends on the resource whose data we are updating. This ensures that if
+    # any of the data we just updated is referenced in the path of a get_attr
+    # function, future calls to dep_attrs() will reflect this new data.
+    res_defns = stack_definition._resource_defns or {}
+    op_defns = stack_definition._output_defns or {}
+
+    all_defns = itertools.chain(six.itervalues(res_defns),
+                                six.itervalues(op_defns))
+    for defn in all_defns:
+        if resource_name in defn.required_resource_names():
+            defn._all_dep_attrs = None
 
 
 def add_resource(stack_definition, resource_definition):

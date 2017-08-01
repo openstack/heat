@@ -100,6 +100,7 @@ class ResourceDefinition(object):
         self._hash = hash(self.resource_type)
         self._rendering = None
         self._dep_names = None
+        self._all_dep_attrs = None
 
         assert isinstance(self.description, six.string_types)
 
@@ -192,12 +193,23 @@ class ResourceDefinition(object):
             external_id=reparse_snippet(self._external_id),
             condition=self._condition)
 
-    def dep_attrs(self, resource_name):
+    def dep_attrs(self, resource_name, load_all=False):
         """Iterate over attributes of a given resource that this references.
 
         Return an iterator over dependent attributes for specified
         resource_name in resources' properties and metadata fields.
         """
+        if self._all_dep_attrs is None and load_all:
+            attr_map = collections.defaultdict(set)
+            atts = itertools.chain(function.all_dep_attrs(self._properties),
+                                   function.all_dep_attrs(self._metadata))
+            for res_name, att_name in atts:
+                attr_map[res_name].add(att_name)
+            self._all_dep_attrs = attr_map
+
+        if self._all_dep_attrs is not None:
+            return self._all_dep_attrs[resource_name]
+
         return itertools.chain(function.dep_attrs(self._properties,
                                                   resource_name),
                                function.dep_attrs(self._metadata,

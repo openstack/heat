@@ -80,6 +80,32 @@ class Function(object):
         """
         return dep_attrs(self.args, resource_name)
 
+    def all_dep_attrs(self):
+        """Return resource, attribute name pairs of all attributes referenced.
+
+        Return an iterator over the resource name, attribute name tuples of
+        all attributes that this function references.
+
+        The special value heat.engine.attributes.ALL_ATTRIBUTES may be used to
+        indicate that all attributes of the resource are required.
+
+        By default this calls the dep_attrs() method, but subclasses can
+        override to provide a more efficient implementation.
+        """
+        # If we are using the default dep_attrs method then it will only
+        # return data from the args anyway
+        if type(self).dep_attrs == Function.dep_attrs:
+            return all_dep_attrs(self.args)
+
+        def res_dep_attrs(resource_name):
+            return six.moves.zip(itertools.repeat(resource_name),
+                                 self.dep_attrs(resource_name))
+
+        resource_names = self.stack.enabled_rsrc_names()
+
+        return itertools.chain.from_iterable(six.moves.map(res_dep_attrs,
+                                                           resource_names))
+
     def __reduce__(self):
         """Return a representation of the function suitable for pickling.
 
@@ -189,6 +215,25 @@ class Macro(Function):
         """
         return dep_attrs(self.parsed, resource_name)
 
+    def all_dep_attrs(self):
+        """Return resource, attribute name pairs of all attributes referenced.
+
+        Return an iterator over the resource name, attribute name tuples of
+        all attributes that this function references.
+
+        The special value heat.engine.attributes.ALL_ATTRIBUTES may be used to
+        indicate that all attributes of the resource are required.
+
+        By default this calls the dep_attrs() method, but subclasses can
+        override to provide a more efficient implementation.
+        """
+        # If we are using the default dep_attrs method then it will only
+        # return data from the transformed parsed args anyway
+        if type(self).dep_attrs == Macro.dep_attrs:
+            return all_dep_attrs(self.parsed)
+
+        return super(Macro, self).all_dep_attrs()
+
     def __reduce__(self):
         """Return a representation of the macro result suitable for pickling.
 
@@ -296,6 +341,29 @@ def dep_attrs(snippet, resource_name):
           isinstance(snippet, collections.Iterable)):
         attrs = (dep_attrs(value, resource_name) for value in snippet)
         return itertools.chain.from_iterable(attrs)
+    return []
+
+
+def all_dep_attrs(snippet):
+    """Iterator over resource, attribute name pairs referenced in a snippet.
+
+    The snippet should be already parsed to insert Function objects where
+    appropriate.
+
+    :returns: an iterator over the resource name, attribute name tuples of all
+    attributes that are referenced in the template snippet.
+    """
+
+    if isinstance(snippet, Function):
+        return snippet.all_dep_attrs()
+
+    elif isinstance(snippet, collections.Mapping):
+        res_attrs = (all_dep_attrs(value) for value in snippet.values())
+        return itertools.chain.from_iterable(res_attrs)
+    elif (not isinstance(snippet, six.string_types) and
+          isinstance(snippet, collections.Iterable)):
+        res_attrs = (all_dep_attrs(value) for value in snippet)
+        return itertools.chain.from_iterable(res_attrs)
     return []
 
 
