@@ -312,15 +312,25 @@ class ServersTest(common.HeatTestCase):
         return tmpl, stack
 
     def _setup_test_server(self, return_server, name, image_id=None,
-                           override_name=False, stub_create=True):
+                           override_name=False, stub_create=True,
+                           networks=None):
         stack_name = '%s_s' % name
-        self.patchobject(neutron.NeutronClientPlugin,
-                         'find_resourceid_by_name_or_id',
-                         return_value='aaaaaa')
+
+        def _mock_find_id(resource, name_or_id, cmd_resource=None):
+            return name_or_id
+
+        mock_find = self.patchobject(neutron.NeutronClientPlugin,
+                                     'find_resourceid_by_name_or_id')
+        mock_find.side_effect = _mock_find_id
+
         server_name = str(name) if override_name else None
         tmpl, self.stack = self._get_test_template(stack_name, server_name,
                                                    image_id)
-        self.server_props = tmpl.t['Resources']['WebServer']['Properties']
+        props = tmpl.t['Resources']['WebServer']['Properties']
+        # set old_networks for server
+        if networks is not None:
+            props['networks'] = networks
+        self.server_props = props
         resource_defns = tmpl.resource_definitions(self.stack)
         server = servers.Server(str(name), resource_defns['WebServer'],
                                 self.stack)
@@ -339,9 +349,10 @@ class ServersTest(common.HeatTestCase):
         return server
 
     def _create_test_server(self, return_server, name, override_name=False,
-                            stub_create=True):
+                            stub_create=True, networks=None):
         server = self._setup_test_server(return_server, name,
-                                         stub_create=stub_create)
+                                         stub_create=stub_create,
+                                         networks=networks)
         scheduler.TaskRunner(server.create)()
         return server
 
@@ -3451,6 +3462,7 @@ class ServersTest(common.HeatTestCase):
 
         new_networks = [{'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
         update_props = self.server_props.copy()
+        # old_networks is None, and update to new_networks with port
         update_props['networks'] = new_networks
         update_template = server.t.freeze(properties=update_props)
 
@@ -3484,7 +3496,7 @@ class ServersTest(common.HeatTestCase):
                          return_value={'port': {'id': 'abcd1234'}})
 
         server = self._create_test_server(return_server, 'networks_update')
-
+        # old_networks is None, and update to new_networks with port
         new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                          'fixed_ip': '1.2.3.4'}]
         update_props = self.server_props.copy()
@@ -3537,13 +3549,6 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(neutron.NeutronClientPlugin,
                          'get_secgroup_uuids', return_value=sec_uuids)
-        # execute translation rules need to call find_resourceid_by_name_or_id
-        mock_find = self.patchobject(
-            neutron.NeutronClientPlugin,
-            'find_resourceid_by_name_or_id',
-            side_effect=['2a60cbaa-3d33-4af6-a9ce-83594ac546fc',
-                         'aaa09d50-8c23-4498-a542-aa0deb24f73e',
-                         '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'])
         self.patchobject(neutron.NeutronClientPlugin,
                          'network_id_from_subnet_id',
                          return_value='05d8e681-4b37-4570-bc8d-810089f706b2')
@@ -3569,7 +3574,6 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(1, mock_attach.call_count)
         self.assertEqual(1, mock_detach_check.call_count)
         self.assertEqual(1, mock_attach_check.call_count)
-        self.assertEqual(3, mock_find.call_count)
         kwargs = {'network_id': '05d8e681-4b37-4570-bc8d-810089f706b2',
                   'fixed_ips': [
                       {'subnet_id': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}],
@@ -3615,17 +3619,14 @@ class ServersTest(common.HeatTestCase):
         multi_nets = available_multi_nets or []
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        server = self._create_test_server(return_server, 'networks_update')
-
         old_networks = [
             {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'}]
+        server = self._create_test_server(return_server, 'networks_update',
+                                          networks=old_networks)
 
-        before_props = self.server_props.copy()
-        before_props['networks'] = old_networks
         update_props = self.server_props.copy()
         update_props['networks'] = [{'allocate_network': 'auto'}]
         update_template = server.t.freeze(properties=update_props)
-        server.t = server.t.freeze(properties=before_props)
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
@@ -3674,20 +3675,17 @@ class ServersTest(common.HeatTestCase):
     def test_server_update_str_networks_none(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        server = self._create_test_server(return_server, 'networks_update')
-
         old_networks = [
             {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
             {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '31.32.33.34'}]
+        server = self._create_test_server(return_server, 'networks_update',
+                                          networks=old_networks)
 
-        before_props = self.server_props.copy()
-        before_props['networks'] = old_networks
         update_props = self.server_props.copy()
         update_props['networks'] = [{'allocate_network': 'none'}]
         update_template = server.t.freeze(properties=update_props)
-        server.t = server.t.freeze(properties=before_props)
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         port_interfaces = [
@@ -3718,8 +3716,6 @@ class ServersTest(common.HeatTestCase):
     def test_server_update_networks_with_complex_parameters(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        server = self._create_test_server(return_server, 'networks_update')
-
         old_networks = [
             {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -3727,19 +3723,17 @@ class ServersTest(common.HeatTestCase):
             {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '31.32.33.34'}]
+        server = self._create_test_server(return_server, 'networks_update',
+                                          networks=old_networks)
 
         new_networks = [
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '1.2.3.4'},
             {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
 
-        before_props = self.server_props.copy()
-        before_props['networks'] = old_networks
-        update_props = self.server_props.copy()
+        update_props = copy.deepcopy(self.server_props)
         update_props['networks'] = new_networks
         update_template = server.t.freeze(properties=update_props)
-        server.t = server.t.freeze(properties=before_props)
-        # server.reparse()
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
@@ -3770,29 +3764,25 @@ class ServersTest(common.HeatTestCase):
                                              return_value=True)
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
-        self.assertEqual(4, mock_detach.call_count)
-        self.assertEqual(2, mock_attach.call_count)
-        self.assertEqual(4, mock_detach_check.call_count)
-        self.assertEqual(2, mock_attach_check.call_count)
+        # we only detach the three old networks, and attach a new one
+        self.assertEqual(3, mock_detach.call_count)
+        self.assertEqual(1, mock_attach.call_count)
+        self.assertEqual(3, mock_detach_check.call_count)
+        self.assertEqual(1, mock_attach_check.call_count)
 
     def test_server_update_networks_with_None(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        server = self._create_test_server(return_server, 'networks_update')
-
         old_networks = [
             {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
             {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '31.32.33.34'}]
-
-        before_props = self.server_props.copy()
-        before_props['networks'] = old_networks
+        server = self._create_test_server(return_server, 'networks_update',
+                                          networks=old_networks)
         update_props = self.server_props.copy()
         update_props['networks'] = None
         update_template = server.t.freeze(properties=update_props)
-        server.t = server.t.freeze(properties=before_props)
-        # server.reparse()
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
@@ -3826,21 +3816,17 @@ class ServersTest(common.HeatTestCase):
     def test_server_update_networks_with_empty_list(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-        server = self._create_test_server(return_server, 'networks_update')
-
         old_networks = [
             {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
             {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'},
             {'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
              'fixed_ip': '31.32.33.34'}]
+        server = self._create_test_server(return_server, 'networks_update',
+                                          networks=old_networks)
 
-        before_props = self.server_props.copy()
-        before_props['networks'] = old_networks
         update_props = self.server_props.copy()
         update_props['networks'] = []
         update_template = server.t.freeze(properties=update_props)
-        server.t = server.t.freeze(properties=before_props)
-        # server.reparse()
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
