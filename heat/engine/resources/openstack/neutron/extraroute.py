@@ -19,6 +19,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
+from heat.engine.resources.openstack.neutron import router
 from heat.engine import support
 
 
@@ -65,16 +66,29 @@ class ExtraRoute(neutron.NeutronResource):
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if resource.has_interface('OS::Neutron::RouterInterface'):
-                router_id = self.properties[self.ROUTER_ID]
-                dep_router_id = resource.properties['router']
+                try:
+                    router_id = self.properties[self.ROUTER_ID]
+                    dep_router_id = resource.properties.get(
+                        router.RouterInterface.ROUTER)
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 if dep_router_id == router_id:
                     deps += (self, resource)
             # depend on any RouterGateway in this template with the same
             # router_id as this router_id
-            elif (resource.has_interface('OS::Neutron::RouterGateway') and
-                  resource.properties['router_id'] ==
-                    self.properties['router_id']):
-                        deps += (self, resource)
+            elif resource.has_interface('OS::Neutron::RouterGateway'):
+                try:
+                    router_id = self.properties[self.ROUTER_ID]
+                    dep_router_id = resource.properties.get(
+                        router.RouterGateway.ROUTER_ID)
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
+                if dep_router_id == router_id:
+                    deps += (self, resource)
 
     def handle_create(self):
         router_id = self.properties.get(self.ROUTER_ID)

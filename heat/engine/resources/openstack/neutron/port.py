@@ -422,8 +422,13 @@ class Port(neutron.NeutronResource):
         # the ports in that network.
         for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
-                dep_network = res.properties.get(subnet.Subnet.NETWORK)
-                network = self.properties[self.NETWORK]
+                try:
+                    dep_network = res.properties.get(subnet.Subnet.NETWORK)
+                    network = self.properties[self.NETWORK]
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 if dep_network == network:
                     deps += (self, res)
 

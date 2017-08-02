@@ -265,7 +265,12 @@ class Router(neutron.NeutronResource):
             external_gw_net = external_gw.get(self.EXTERNAL_GATEWAY_NETWORK)
             for res in six.itervalues(self.stack):
                 if res.has_interface('OS::Neutron::Subnet'):
-                    subnet_net = res.properties.get(subnet.Subnet.NETWORK)
+                    try:
+                        subnet_net = res.properties.get(subnet.Subnet.NETWORK)
+                    except (ValueError, TypeError):
+                        # Properties errors will be caught later in validation,
+                        # where we can report them in their proper context.
+                        continue
                     if subnet_net == external_gw_net:
                         deps += (self, res)
 
@@ -633,16 +638,26 @@ class RouterGateway(neutron.NeutronResource):
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if resource.has_interface('OS::Neutron::RouterInterface'):
-                dep_router_id = resource.properties[RouterInterface.ROUTER]
-                router_id = self.properties[self.ROUTER_ID]
+                try:
+                    dep_router_id = resource.properties[RouterInterface.ROUTER]
+                    router_id = self.properties[self.ROUTER_ID]
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 if dep_router_id == router_id:
                     deps += (self, resource)
             # depend on any subnet in this template with the same network_id
             # as this network_id, as the gateway implicitly creates a port
             # on that subnet
             if resource.has_interface('OS::Neutron::Subnet'):
-                dep_network = resource.properties[subnet.Subnet.NETWORK]
-                network = self.properties[self.NETWORK]
+                try:
+                    dep_network = resource.properties[subnet.Subnet.NETWORK]
+                    network = self.properties[self.NETWORK]
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 if dep_network == network:
                     deps += (self, resource)
 

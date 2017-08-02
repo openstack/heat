@@ -101,12 +101,20 @@ class VPCGatewayAttachment(resource.Resource):
 
     default_client_name = 'neutron'
 
-    def _vpc_route_tables(self):
+    def _vpc_route_tables(self, ignore_errors=False):
         for res in six.itervalues(self.stack):
-            if (res.has_interface('AWS::EC2::RouteTable') and
-                res.properties.get(route_table.RouteTable.VPC_ID) ==
-                    self.properties.get(self.VPC_ID)):
-                        yield res
+            if res.has_interface('AWS::EC2::RouteTable'):
+                try:
+                    vpc_id = self.properties[self.VPC_ID]
+                    rt_vpc_id = res.properties.get(
+                        route_table.RouteTable.VPC_ID)
+                except (ValueError, TypeError):
+                    if ignore_errors:
+                        continue
+                    else:
+                        raise
+                if rt_vpc_id == vpc_id:
+                    yield res
 
     def add_dependencies(self, deps):
         super(VPCGatewayAttachment, self).add_dependencies(deps)
@@ -114,7 +122,9 @@ class VPCGatewayAttachment(resource.Resource):
         # VpcId as this VpcId.
         # All route tables must exist before gateway attachment
         # as attachment happens to routers (not VPCs)
-        for route_tbl in self._vpc_route_tables():
+        # Properties errors will be caught later in validation,
+        # where we can report them in their proper context.
+        for route_tbl in self._vpc_route_tables(ignore_errors=True):
             deps += (self, route_tbl)
 
     def handle_create(self):
