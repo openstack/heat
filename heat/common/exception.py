@@ -55,6 +55,8 @@ class HeatException(Exception):
     # YYY - Specific error code for a given exception.
     error_code = None
 
+    safe = True
+
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
@@ -447,6 +449,8 @@ class HTTPExceptionDisguise(Exception):
 
     They can be handled by the webob fault application in the wsgi pipeline.
     """
+
+    safe = True
 
     def __init__(self, exception):
         self.exc = exception

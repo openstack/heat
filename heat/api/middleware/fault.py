@@ -110,6 +110,8 @@ class FaultWrapper(wsgi.Middleware):
         trace = None
         traceback_marker = 'Traceback (most recent call last)'
         webob_exc = None
+        safe = getattr(ex, 'safe', False)
+
         if isinstance(ex, exception.HTTPExceptionDisguise):
             # An HTTP exception was disguised so it could make it here
             # let's remove the disguise and set the original HTTP exception
@@ -151,11 +153,12 @@ class FaultWrapper(wsgi.Middleware):
             'title': webob_exc.title,
             'explanation': webob_exc.explanation,
             'error': {
-                'message': message,
                 'type': ex_type,
                 'traceback': trace,
             }
         }
+        if safe:
+            error['error']['message'] = message
 
         return error
 

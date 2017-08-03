@@ -144,8 +144,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
         expected = {'code': 500,
-                    'error': {'message': msg['error']['message'],
-                              'traceback': None,
+                    'error': {'traceback': None,
                               'type': 'RemoteError'},
                     'explanation': msg['explanation'],
                     'title': 'Internal Server Error'}
@@ -211,8 +210,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
         msg = wrapper._error(NotMappedException('A message'))
         expected = {'code': 500,
-                    'error': {'message': u'A message',
-                              'traceback': None,
+                    'error': {'traceback': None,
                               'type': 'NotMappedException'},
                     'explanation': ('The server has either erred or is '
                                     'incapable of performing the requested '
