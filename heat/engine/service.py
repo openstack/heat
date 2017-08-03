@@ -1815,15 +1815,6 @@ class EngineService(service.ServiceBase):
         access_key = ec2_creds.get('access')
         return stack.access_allowed(access_key, resource_name)
 
-    def _verify_stack_resource(self, stack, resource_name):
-        resource = stack.resource_get(resource_name)
-        if not resource:
-            raise exception.ResourceNotFound(resource_name=resource_name,
-                                             stack_name=stack.name)
-
-        if resource.id is None:
-            raise exception.ResourceNotAvailable(resource_name=resource_name)
-
     @context.request_context
     def describe_stack_resource(self, cnxt, stack_identity, resource_name,
                                 with_attr=None):
@@ -1877,9 +1868,13 @@ class EngineService(service.ServiceBase):
         # signal doesn't have permission to read the secret key of
         # the user associated with the cfn-credentials file
         stack = parser.Stack.load(cnxt, stack=s, use_stored_context=True)
-        self._verify_stack_resource(stack, resource_name)
 
         rsrc = stack.resource_get(resource_name)
+        if rsrc is None:
+            raise exception.ResourceNotFound(resource_name=resource_name,
+                                             stack_name=stack.name)
+        if rsrc.id is None:
+            raise exception.ResourceNotAvailable(resource_name=resource_name)
 
         if callable(rsrc.signal):
             rsrc._signal_check_action()
