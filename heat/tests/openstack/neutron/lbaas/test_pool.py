@@ -113,6 +113,9 @@ class PoolTest(common.HeatTestCase):
         self.assertTrue(self.pool.check_create_complete(props))
 
     def test_create_missing_properties(self):
+        self.patchobject(pool.Pool, 'is_service_available',
+                         return_value=(True, None))
+
         for prop in ('lb_algorithm', 'listener', 'protocol'):
             tmpl = yaml.load(inline_templates.POOL_TEMPLATE)
             del tmpl['resources']['pool']['properties']['loadbalancer']

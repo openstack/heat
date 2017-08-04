@@ -67,6 +67,10 @@ class RBACPolicyTest(common.HeatTestCase):
         msg = ("Invalid action %(action)s for object type %(type)s." %
                {'action': invalid_action,
                 'type': obj_type})
+
+        self.patchobject(type(self.rbac), 'is_service_available',
+                         return_value=(True, None))
+
         self.assertRaisesRegex(exception.StackValidationFailed, msg,
                                self.rbac.validate)
 
@@ -86,11 +90,19 @@ class RBACPolicyTest(common.HeatTestCase):
         tpl['resources']['rbac']['properties']['object_type'] = 'networks'
         self._create_stack(tmpl=yaml.safe_dump(tpl))
         msg = "Invalid object_type: networks. "
+
+        self.patchobject(type(self.rbac), 'is_service_available',
+                         return_value=(True, None))
+
         self.assertRaisesRegex(exception.StackValidationFailed, msg,
                                self.rbac.validate)
 
     def test_validate_object_id_reference(self):
         self._create_stack(tmpl=inline_templates.RBAC_REFERENCE_TEMPLATE)
+
+        self.patchobject(type(self.rbac), 'is_service_available',
+                         return_value=(True, None))
+
         # won't check the object_id, so validate() is success
         self.rbac.validate()
 

@@ -63,6 +63,10 @@ class SecurityGroupRuleTest(common.HeatTestCase):
             expected)
 
     def test_validate_conflict_props(self):
+        self.patchobject(security_group_rule.SecurityGroupRule,
+                         'is_service_available',
+                         return_value=(True, None))
+
         tmpl = inline_templates.SECURITY_GROUP_RULE_TEMPLATE
         tmpl += '      remote_ip_prefix: "123"'
         self._create_stack(tmpl=tmpl)
@@ -71,6 +75,10 @@ class SecurityGroupRuleTest(common.HeatTestCase):
                           self.sg_rule.validate)
 
     def test_validate_max_port_less_than_min_port(self):
+        self.patchobject(security_group_rule.SecurityGroupRule,
+                         'is_service_available',
+                         return_value=(True, None))
+
         tmpl = inline_templates.SECURITY_GROUP_RULE_TEMPLATE
         tmpl += '      port_range_max: 50'
         self._create_stack(tmpl=tmpl)

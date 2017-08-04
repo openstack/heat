@@ -225,14 +225,12 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
     @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id')
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
-    @mock.patch.object(instance.Instance, 'is_service_available')
     @mock.patch.object(scheduler.TaskRunner, '_sleep')
     @mock.patch.object(WaitConditionHandle, 'identifier')
-    def test_wait_metadata(self, mock_identifier, mock_sleep, mock_available,
+    def test_wait_metadata(self, mock_identifier, mock_sleep,
                            mock_check, mock_handle, *args):
         """Tests a wait condition metadata update after a signal call."""
 
-        mock_available.return_value = (True, None)
         # Setup Stack
         temp = template_format.parse(TEST_TEMPLATE_WAIT_CONDITION)
         template = tmpl.Template(temp)
@@ -298,7 +296,6 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
             jsonutils.loads(inst.metadata_get(refresh=True)['test']))
 
         # Verify outgoing calls
-        self.assertGreater(mock_available.call_count, 0)
         self.assertEqual(2, mock_handle.call_count)
         self.assertEqual(2, mock_check.call_count)
 

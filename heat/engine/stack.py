@@ -121,7 +121,7 @@ class Stack(collections.Mapping):
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
                  current_deps=None, cache_data=None,
-                 service_check_defer=False, deleted_time=None):
+                 deleted_time=None):
 
         """Initialise the Stack.
 
@@ -187,12 +187,6 @@ class Stack(collections.Mapping):
         # performing validation when properties reference attributes
         # for not-yet-created resources (which return None)
         self.strict_validate = strict_validate
-
-        # service_check_defer can be used to defer the validation of service
-        # availability for a given resource, which helps to create the resource
-        # dependency tree completely when respective service is not available,
-        # especially during template_validate
-        self.service_check_defer = service_check_defer
 
         self.in_convergence_check = cache_data is not None
 
@@ -520,7 +514,7 @@ class Stack(collections.Mapping):
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
              use_stored_context=False, force_reload=False, cache_data=None,
-             service_check_defer=False, load_template=True):
+             load_template=True):
         """Retrieve a Stack from the database."""
         if stack is None:
             stack = stack_object.Stack.get_by_id(
@@ -537,7 +531,6 @@ class Stack(collections.Mapping):
         return cls._from_db(context, stack,
                             use_stored_context=use_stored_context,
                             cache_data=cache_data,
-                            service_check_defer=service_check_defer,
                             load_template=load_template)
 
     @classmethod
@@ -572,7 +565,7 @@ class Stack(collections.Mapping):
     @classmethod
     def _from_db(cls, context, stack,
                  use_stored_context=False, cache_data=None,
-                 service_check_defer=False, load_template=True):
+                 load_template=True):
         if load_template:
             template = tmpl.Template.load(
                 context, stack.raw_template_id, stack.raw_template)
@@ -596,8 +589,7 @@ class Stack(collections.Mapping):
                    prev_raw_template_id=stack.prev_raw_template_id,
                    current_deps=stack.current_deps, cache_data=cache_data,
                    nested_depth=stack.nested_depth,
-                   deleted_time=stack.deleted_at,
-                   service_check_defer=service_check_defer)
+                   deleted_time=stack.deleted_at)
 
     def get_kwargs_for_cloning(self, keep_status=False, only_db=False):
         """Get common kwargs for calling Stack() for cloning.

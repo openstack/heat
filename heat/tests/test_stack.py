@@ -454,8 +454,7 @@ class StackTest(common.HeatTestCase):
                              prev_raw_template_id=None,
                              current_deps=None, cache_data=None,
                              nested_depth=0,
-                             deleted_time=None,
-                             service_check_defer=False)
+                             deleted_time=None)
 
         self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id)

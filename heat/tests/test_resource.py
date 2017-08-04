@@ -3909,15 +3909,15 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                 resource_type='UnavailableResourceType')
 
             mock_stack = mock.MagicMock()
-            mock_stack.service_check_defer = False
+            mock_stack.in_convergence_check = False
+            mock_stack.db_resource_get.return_value = None
+            rsrc = generic_rsrc.ResourceWithDefaultClientName('test_res',
+                                                              definition,
+                                                              mock_stack)
 
             ex = self.assertRaises(
                 exception.ResourceTypeUnavailable,
-                generic_rsrc.ResourceWithDefaultClientName.__new__,
-                cls=generic_rsrc.ResourceWithDefaultClientName,
-                name='test_stack',
-                definition=definition,
-                stack=mock_stack)
+                rsrc.validate_template)
 
             msg = ('HEAT-E99001 Service sample is not available for resource '
                    'type UnavailableResourceType, reason: '
@@ -3945,15 +3945,15 @@ class ResourceAvailabilityTest(common.HeatTestCase):
                 resource_type='UnavailableResourceType')
 
             mock_stack = mock.MagicMock()
-            mock_stack.service_check_defer = False
+            mock_stack.in_convergence_check = False
+            mock_stack.db_resource_get.return_value = None
+            rsrc = generic_rsrc.ResourceWithDefaultClientName('test_res',
+                                                              definition,
+                                                              mock_stack)
 
             ex = self.assertRaises(
                 exception.ResourceTypeUnavailable,
-                generic_rsrc.ResourceWithDefaultClientName.__new__,
-                cls=generic_rsrc.ResourceWithDefaultClientName,
-                name='test_stack',
-                definition=definition,
-                stack=mock_stack)
+                rsrc.validate_template)
 
             msg = ('HEAT-E99001 Service sample is not available for resource '
                    'type UnavailableResourceType, reason: '
