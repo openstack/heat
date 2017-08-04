@@ -686,10 +686,15 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 server.interface_detach(port_id)
                 return True
 
-    def interface_attach(self, server_id, port_id=None, net_id=None, fip=None):
+    def interface_attach(self, server_id, port_id=None, net_id=None, fip=None,
+                         security_groups=None):
         server = self.fetch_server(server_id)
         if server:
-            server.interface_attach(port_id, net_id, fip)
+            attachment = server.interface_attach(port_id, net_id, fip)
+            if not port_id and security_groups:
+                props = {'security_groups': security_groups}
+                self.clients.client('neutron').update_port(
+                    attachment.port_id, {'port': props})
             return True
         else:
             return False

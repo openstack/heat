@@ -342,7 +342,8 @@ class ServerNetworkMixin(object):
 
         return topology['id']
 
-    def _calculate_using_str_network(self, ifaces, str_net):
+    def _calculate_using_str_network(self, ifaces, str_net,
+                                     security_groups=None):
         add_nets = []
         remove_ports = [iface.port_id for iface in ifaces or []]
         if str_net == self.NETWORK_AUTO:
@@ -352,8 +353,12 @@ class ServerNetworkMixin(object):
             if len(nets) > 1:
                 msg = 'Multiple possible networks found.'
                 raise exception.UnableToAutoAllocateNetwork(message=msg)
-
-            add_nets.append({'port_id': None, 'net_id': nets[0], 'fip': None})
+            handle_args = {'port_id': None, 'net_id': nets[0], 'fip': None}
+            if security_groups:
+                sg_ids = self.client_plugin(
+                    'neutron').get_secgroup_uuids(security_groups)
+                handle_args['security_groups'] = sg_ids
+            add_nets.append(handle_args)
         return remove_ports, add_nets
 
     def _calculate_using_list_networks(self, old_nets, new_nets, ifaces,
@@ -428,6 +433,10 @@ class ServerNetworkMixin(object):
         # according to similar behavior during instance creation
         if not new_nets:
             handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
+            if security_groups:
+                sec_uuids = self.client_plugin(
+                    'neutron').get_secgroup_uuids(security_groups)
+                handler_kwargs['security_groups'] = sec_uuids
             add_nets.append(handler_kwargs)
         else:
             # attach section similar for both variants that
@@ -445,6 +454,10 @@ class ServerNetworkMixin(object):
 
                 if not handler_kwargs['port_id']:
                     handler_kwargs['net_id'] = self._get_network_id(net)
+                    if security_groups:
+                        sec_uuids = self.client_plugin(
+                            'neutron').get_secgroup_uuids(security_groups)
+                        handler_kwargs['security_groups'] = sec_uuids
                 if handler_kwargs['net_id']:
                     handler_kwargs['fip'] = net.get('fixed_ip')
 
@@ -483,7 +496,8 @@ class ServerNetworkMixin(object):
                            security_groups=None):
         new_str_net = self._str_network(new_nets)
         if new_str_net:
-            return self._calculate_using_str_network(ifaces, new_str_net)
+            return self._calculate_using_str_network(ifaces, new_str_net,
+                                                     security_groups)
         else:
             return self._calculate_using_list_networks(
                 old_nets, new_nets, ifaces, security_groups)
