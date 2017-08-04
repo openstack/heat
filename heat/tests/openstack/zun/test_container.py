@@ -13,8 +13,9 @@
 
 import copy
 import mock
-from oslo_config import cfg
 import six
+
+from oslo_config import cfg
 
 from heat.common import exception
 from heat.common import template_format
@@ -67,16 +68,27 @@ class ZunContainerTest(common.HeatTestCase):
                                     'Name': 'on-failure'}
         self.fake_interactive = False
         self.fake_image_driver = 'docker'
+        self.fake_network_id = '9c11d847-99ce-4a83-82da-9827362a68e8'
+        self.fake_network_name = 'private'
+        self.fake_networks = {
+            'networks': [
+                {
+                    'id': self.fake_network_id,
+                    'name': self.fake_network_name,
+                }
+            ]
+        }
+        self.fake_address = {
+            'version': 4,
+            'addr': '10.0.0.12',
+            'port': 'ab5c12d8-f414-48a3-b765-8ce34a6714d2'
+        }
         self.fake_addresses = {
-            'addresses': {
-                'private': [
-                    {
-                        'version': 4,
-                        'addr': '10.0.0.12',
-                        'port': 'ab5c12d8-f414-48a3-b765-8ce34a6714d2'
-                    },
-                ],
-            }
+            self.fake_network_id: [self.fake_address]
+        }
+        self.fake_extended_addresses = {
+            self.fake_network_id: [self.fake_address],
+            self.fake_network_name: [self.fake_address],
         }
 
         t = template_format.parse(zun_template)
@@ -86,6 +98,9 @@ class ZunContainerTest(common.HeatTestCase):
         self.client = mock.Mock()
         self.patchobject(container.Container, 'client',
                          return_value=self.client)
+        self.neutron_client = mock.Mock()
+        self.patchobject(container.Container, 'neutron',
+                         return_value=self.neutron_client)
 
     def _mock_get_client(self):
         value = mock.MagicMock()
@@ -242,6 +257,7 @@ class ZunContainerTest(common.HeatTestCase):
             }, reality)
 
     def test_resolve_attributes(self):
+        self.neutron_client.list_networks.return_value = self.fake_networks
         c = self._create_resource('container', self.rsrc_defn, self.stack)
         scheduler.TaskRunner(c.create)()
         self._mock_get_client()
@@ -249,5 +265,49 @@ class ZunContainerTest(common.HeatTestCase):
             self.fake_name,
             c._resolve_attribute(container.Container.NAME))
         self.assertEqual(
-            self.fake_addresses,
+            self.fake_extended_addresses,
             c._resolve_attribute(container.Container.ADDRESSES))
+
+    def test_resolve_attributes_duplicate_net_name(self):
+        self.neutron_client.list_networks.return_value = {
+            'networks': [
+                {'id': 'fake_net_id', 'name': 'test'},
+                {'id': 'fake_net_id2', 'name': 'test'},
+            ]
+        }
+        self.fake_addresses = {
+            'fake_net_id': [{'addr': '10.0.0.12'}],
+            'fake_net_id2': [{'addr': '10.100.0.12'}],
+        }
+        self.fake_extended_addresses = {
+            'fake_net_id': [{'addr': '10.0.0.12'}],
+            'fake_net_id2': [{'addr': '10.100.0.12'}],
+            'test': [{'addr': '10.0.0.12'}, {'addr': '10.100.0.12'}],
+        }
+        c = self._create_resource('container', self.rsrc_defn, self.stack)
+        scheduler.TaskRunner(c.create)()
+        self._mock_get_client()
+        self._assert_addresses(
+            self.fake_extended_addresses,
+            c._resolve_attribute(container.Container.ADDRESSES))
+
+    def _assert_addresses(self, expected, actual):
+        matched = True
+        if len(expected) != len(actual):
+            matched = False
+        for key in expected:
+            if key not in actual:
+                matched = False
+                break
+            list1 = expected[key]
+            list1 = sorted(list1, key=lambda x: sorted(x.values()))
+            list2 = actual[key]
+            list2 = sorted(list2, key=lambda x: sorted(x.values()))
+            if list1 != list2:
+                matched = False
+                break
+
+        if not matched:
+            raise AssertionError(
+                'Addresses is unmatched:\n reference = ' + str(expected) +
+                '\nactual = ' + str(actual))
