@@ -1520,9 +1520,14 @@ class Stack(collections.Mapping):
                 # and new stack resources, we should have user params of both.
                 existing_params.load(newstack.t.env.user_env_as_dict())
                 self.t.env = existing_params
+                # Update the template version, in case new things were used
+                self.t.t[newstack.t.version[0]] = max(
+                    newstack.t.version[1], self.t.version[1])
                 self.t.merge_snippets(newstack.t)
                 self.t.store(self.context)
                 backup_stack.t.env = existing_params
+                backup_stack.t.t[newstack.t.version[0]] = max(
+                    newstack.t.version[1], self.t.version[1])
                 backup_stack.t.merge_snippets(newstack.t)
                 backup_stack.t.store(self.context)
             self.store()
