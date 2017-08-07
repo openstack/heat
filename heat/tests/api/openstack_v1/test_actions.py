@@ -88,30 +88,35 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertIsNone(result)
         self.m.VerifyAll()
 
-    def test_action_cancel_update(self, mock_enforce):
+    def _test_action_cancel_update(self, mock_enforce, with_rollback=True):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         stack_identity = identifier.HeatIdentifier(self.tenant,
                                                    'wordpress', '1')
-        body = {'cancel_update': None}
+        if with_rollback:
+            body = {'cancel_update': None}
+        else:
+            body = {'cancel_without_rollback': None}
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('stack_cancel_update',
-             {'stack_identity': stack_identity,
-              'cancel_with_rollback': True}),
-            version='1.14'
-        ).AndReturn(None)
-        self.m.ReplayAll()
-
+        client = self.patchobject(rpc_client.EngineClient, 'call')
         result = self.controller.action(req, tenant_id=self.tenant,
                                         stack_name=stack_identity.stack_name,
                                         stack_id=stack_identity.stack_id,
                                         body=body)
         self.assertIsNone(result)
-        self.m.VerifyAll()
+        client.assert_called_with(
+            req.context,
+            ('stack_cancel_update',
+             {'stack_identity': stack_identity,
+              'cancel_with_rollback': with_rollback}),
+            version='1.14')
+
+    def test_action_cancel_update(self, mock_enforce):
+        self._test_action_cancel_update(mock_enforce)
+
+    def test_action_cancel_without_rollback(self, mock_enforce):
+        self._test_action_cancel_update(mock_enforce, False)
 
     def test_action_badaction(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)

@@ -30,9 +30,11 @@ class ActionController(object):
     REQUEST_SCOPE = 'actions'
 
     ACTIONS = (
-        SUSPEND, RESUME, CHECK, CANCEL_UPDATE
+        SUSPEND, RESUME, CHECK,
+        CANCEL_UPDATE, CANCEL_WITHOUT_ROLLBACK
     ) = (
-        'suspend', 'resume', 'check', 'cancel_update'
+        'suspend', 'resume', 'check',
+        'cancel_update', 'cancel_without_rollback'
     )
 
     def __init__(self, options):
@@ -64,7 +66,11 @@ class ActionController(object):
         elif ac == self.CHECK:
             self.rpc_client.stack_check(req.context, identity)
         elif ac == self.CANCEL_UPDATE:
-            self.rpc_client.stack_cancel_update(req.context, identity)
+            self.rpc_client.stack_cancel_update(req.context, identity,
+                                                cancel_with_rollback=True)
+        elif ac == self.CANCEL_WITHOUT_ROLLBACK:
+            self.rpc_client.stack_cancel_update(req.context, identity,
+                                                cancel_with_rollback=False)
         else:
             raise exc.HTTPInternalServerError(_("Unexpected action %s") % ac)
 

@@ -1,0 +1,3 @@
+---
+features:
+    Adds REST api support to cancel a stack create/update without rollback.
