@@ -38,12 +38,12 @@ class FloatingIP(neutron.NeutronResource):
     entity = 'floatingip'
 
     PROPERTIES = (
-        FLOATING_NETWORK_ID, FLOATING_NETWORK, VALUE_SPECS,
-        PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
+        FLOATING_NETWORK_ID, FLOATING_NETWORK,  FLOATING_SUBNET,
+        VALUE_SPECS, PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
         DNS_NAME, DNS_DOMAIN,
     ) = (
-        'floating_network_id', 'floating_network', 'value_specs',
-        'port_id', 'fixed_ip_address', 'floating_ip_address',
+        'floating_network_id', 'floating_network', 'floating_subnet',
+        'value_specs', 'port_id', 'fixed_ip_address', 'floating_ip_address',
         'dns_name', 'dns_domain',
     )
 
@@ -78,6 +78,14 @@ class FloatingIP(neutron.NeutronResource):
             required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
+            ],
+        ),
+        FLOATING_SUBNET: properties.Schema(
+            properties.Schema.STRING,
+            _('Subnet to allocate floating IP from.'),
+            support_status=support.SupportStatus(version='9.0.0'),
+            constraints=[
+                constraints.CustomConstraint('neutron.subnet')
             ],
         ),
         VALUE_SPECS: properties.Schema(
@@ -179,6 +187,14 @@ class FloatingIP(neutron.NeutronResource):
                 client_plugin=self.client_plugin(),
                 finder='find_resourceid_by_name_or_id',
                 entity='network'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FLOATING_SUBNET],
+                client_plugin=self.client_plugin(),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet',
             )
         ]
 
@@ -266,6 +282,8 @@ class FloatingIP(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
         props['floating_network_id'] = props.pop(self.FLOATING_NETWORK)
+        if self.FLOATING_SUBNET in props:
+            props['subnet_id'] = props.pop(self.FLOATING_SUBNET)
         fip = self.client().create_floatingip({
             'floatingip': props})['floatingip']
         self.resource_id_set(fip['id'])
