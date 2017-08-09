@@ -140,7 +140,9 @@ function configure_heat {
     fi
 
     iniset $HEAT_CONF database connection `database_connection_url heat`
-    iniset $HEAT_CONF DEFAULT auth_encryption_key $(generate_hex_string 16)
+    # we are using a hardcoded auth_encryption_key as it has to be the same for
+    # multinode deployment.
+    iniset $HEAT_CONF DEFAULT auth_encryption_key "767c3ed056cbaa3b9dfedb8c6f825bf0"
 
     iniset $HEAT_CONF DEFAULT region_name_for_services "$REGION_NAME"
 
