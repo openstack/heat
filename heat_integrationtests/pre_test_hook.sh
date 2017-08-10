@@ -44,8 +44,15 @@ echo -e '[[post-config|$NOVA_CONF]]\n[DEFAULT]\n' >> $localconf
 echo -e 'quota_driver=nova.quota.NoopQuotaDriver\n' >> $localconf
 
 echo "[[local|localrc]]" >> $localconf
-# Create the images required for testing
-echo "IMAGE_URLS+=http://fedora.bhs.mirrors.ovh.net/linux/releases/24/CloudImages/x86_64/images/Fedora-Cloud-Base-24-1.2.x86_64.qcow2" >> $localconf
+
+# NOTE(mnaser): This will use the region local mirrors to avoid going out
+#               to network
+if [[ -e /etc/ci/mirror_info.sh ]]; then
+	source /etc/ci/mirror_info.sh
+	echo "IMAGE_URLS+=${NODEPOOL_FEDORA_MIRROR}/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-26-1.5.x86_64.qcow2" >> $localconf
+else
+	echo "IMAGE_URLS+=https://download.fedoraproject.org/pub/fedora/linux/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-26-1.5.x86_64.qcow2" >> $localconf
+fi
 
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
