@@ -32,6 +32,7 @@ from heat.engine import template as templatem
 from heat.objects import raw_template
 from heat.objects import stack as stack_object
 from heat.objects import stack_lock
+from heat.rpc import api as rpc_api
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -931,9 +932,9 @@ class WithTemplateTest(StackResourceBaseTest):
         rpcc.return_value._create_stack.assert_called_once_with(
             self.ctx,
             stack_name=res_name,
-            args={'disable_rollback': True,
-                  'adopt_stack_data': adopt_data_str,
-                  'timeout_mins': self.timeout_mins},
+            args={rpc_api.PARAM_DISABLE_ROLLBACK: True,
+                  rpc_api.PARAM_ADOPT_STACK_DATA: adopt_data_str,
+                  rpc_api.PARAM_TIMEOUT: self.timeout_mins},
             environment_files=None,
             stack_user_project_id='aprojectid',
             parent_resource_name='test',
@@ -980,9 +981,9 @@ class WithTemplateTest(StackResourceBaseTest):
         rpcc.return_value._create_stack.assert_called_once_with(
             self.ctx,
             stack_name=res_name,
-            args={'disable_rollback': True,
-                  'adopt_stack_data': adopt_data_str,
-                  'timeout_mins': self.timeout_mins},
+            args={rpc_api.PARAM_DISABLE_ROLLBACK: True,
+                  rpc_api.PARAM_ADOPT_STACK_DATA: adopt_data_str,
+                  rpc_api.PARAM_TIMEOUT: self.timeout_mins},
             environment_files=None,
             stack_user_project_id='aprojectid',
             parent_resource_name='test',
@@ -1025,7 +1026,8 @@ class WithTemplateTest(StackResourceBaseTest):
             template=None,
             params=None,
             files=None,
-            args={'timeout_mins': self.timeout_mins})
+            args={rpc_api.PARAM_TIMEOUT: self.timeout_mins,
+                  rpc_api.PARAM_CONVERGE: False})
 
     def test_update_with_template_failure(self):
         class StackValidationFailed_Remote(exception.StackValidationFailed):
@@ -1061,7 +1063,8 @@ class WithTemplateTest(StackResourceBaseTest):
             template=None,
             params=None,
             files=None,
-            args={'timeout_mins': self.timeout_mins})
+            args={rpc_api.PARAM_TIMEOUT: self.timeout_mins,
+                  rpc_api.PARAM_CONVERGE: False})
         self.assertIsNotNone(template_id.match)
         self.assertRaises(exception.NotFound,
                           raw_template.RawTemplate.get_by_id,

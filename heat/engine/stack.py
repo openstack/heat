@@ -121,7 +121,7 @@ class Stack(collections.Mapping):
                  nested_depth=0, strict_validate=True, convergence=False,
                  current_traversal=None, tags=None, prev_raw_template_id=None,
                  current_deps=None, cache_data=None,
-                 deleted_time=None):
+                 deleted_time=None, converge=False):
 
         """Initialise the Stack.
 
@@ -181,6 +181,7 @@ class Stack(collections.Mapping):
         self._worker_client = None
         self._convg_deps = None
         self.thread_group_mgr = None
+        self.converge = converge
 
         # strict_validate can be used to disable value validation
         # in the resource properties schema, this is useful when
@@ -1266,6 +1267,7 @@ class Stack(collections.Mapping):
         if new_stack is not None:
             self.disable_rollback = new_stack.disable_rollback
             self.timeout_mins = new_stack.timeout_mins
+            self.converge = new_stack.converge
 
             self.defn = new_stack.defn
             self._set_param_stackid()
@@ -1345,7 +1347,8 @@ class Stack(collections.Mapping):
                 self.worker_client.check_resource(self.context, rsrc_id,
                                                   self.current_traversal,
                                                   input_data, is_update,
-                                                  self.adopt_stack_data)
+                                                  self.adopt_stack_data,
+                                                  self.converge)
                 if scheduler.ENABLE_SLEEP:
                     eventlet.sleep(1)
 

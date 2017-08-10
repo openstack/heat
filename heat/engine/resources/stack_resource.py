@@ -497,7 +497,8 @@ class StackResource(resource.Resource):
 
         kwargs.update({
             'stack_identity': dict(self.nested_identifier()),
-            'args': {rpc_api.PARAM_TIMEOUT: timeout_mins}
+            'args': {rpc_api.PARAM_TIMEOUT: timeout_mins,
+                     rpc_api.PARAM_CONVERGE: self.converge}
         })
         with self.translate_remote_exceptions:
             try:

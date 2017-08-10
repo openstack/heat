@@ -28,13 +28,14 @@ class Worker(message_processor.MessageProcessor):
     @message_processor.asynchronous
     def check_resource(self, ctxt, resource_id,
                        current_traversal, data,
-                       is_update, adopt_stack_data):
+                       is_update, adopt_stack_data, converge=False):
         worker.WorkerService("fake_host", "fake_topic",
                              "fake_engine", mock.Mock()).check_resource(
                                  ctxt, resource_id,
                                  current_traversal,
                                  data, is_update,
-                                 adopt_stack_data)
+                                 adopt_stack_data,
+                                 converge)
 
     def stop_all_workers(self, current_stack):
         pass

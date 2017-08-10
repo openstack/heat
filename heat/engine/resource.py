@@ -247,6 +247,7 @@ class Resource(status.ResourceStatus):
         self.root_stack_id = None
         self._calling_engine_id = None
         self._atomic_key = None
+        self.converge = False
 
         if not self.stack.in_convergence_check:
             resource = stack.db_resource_get(name)
@@ -1438,7 +1439,7 @@ class Resource(status.ResourceStatus):
         self.translate_properties(after_props)
         self.translate_properties(before_props)
 
-        if cfg.CONF.observe_on_update and before_props:
+        if (cfg.CONF.observe_on_update or self.converge) and before_props:
             if not self.resource_id:
                 raise UpdateReplace(self)
 
