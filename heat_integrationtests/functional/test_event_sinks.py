@@ -12,7 +12,7 @@
 
 import uuid
 
-from zaqarclient.queues.v1 import client as zaqarclient
+from zaqarclient.queues.v2 import client as zaqarclient
 
 from heat_integrationtests.functional import functional_base
 
@@ -52,7 +52,7 @@ resources:
             }
         }
 
-        zaqar = zaqarclient.Client(conf=conf, version=1.1)
+        zaqar = zaqarclient.Client(conf=conf)
         queue = zaqar.queue(queue_id)
         messages = list(queue.messages())
         self.assertEqual(4, len(messages))
