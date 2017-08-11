@@ -246,6 +246,8 @@ class Macro(Function):
         """
         if isinstance(self.parsed, Function):
             return self.parsed.__reduce__()
+        if self.parsed is None:
+            return lambda x: None, (None,)
         return type(self.parsed), (self.parsed,)
 
     def _repr_result(self):
