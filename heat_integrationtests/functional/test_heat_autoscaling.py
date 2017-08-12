@@ -146,7 +146,7 @@ outputs:
 
     def test_asg_cooldown(self):
         cooldown_tmpl = self.template.replace('cooldown: 0',
-                                              'cooldown: 10')
+                                              'cooldown: 60')
         stack_id = self.stack_create(template=cooldown_tmpl,
                                      expected_status='CREATE_COMPLETE')
         stack = self.client.stacks.get(stack_id)
