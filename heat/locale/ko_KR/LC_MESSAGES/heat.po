@@ -6,16 +6,17 @@
 # Mario Cho <hephaex@gmail.com>, 2014
 # Ying Chun Guo <daisy.ycguo@gmail.com>, 2015
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# minwook-shin <minwook0106@gmail.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
+"Project-Id-Version: heat 9.0.0.0b4.dev55\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-07-03 02:49+0000\n"
+"POT-Creation-Date: 2017-08-12 12:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-12 05:30+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-08-05 01:52+0000\n"
+"Last-Translator: minwook-shin <minwook0106@gmail.com>\n"
 "Language: ko-KR\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
@@ -1127,6 +1128,9 @@ msgstr ""
 msgid "Context for this stack."
 msgstr "이 스택의 컨텍스트입니다."
 
+msgid "Continue ? [y/N]"
+msgstr "계속하시겠습니까 ? [y/N]"
+
 msgid "Control how the disk is partitioned when the server is created."
 msgstr "서버가 작성될 때 디스크가 파티셔닝되는 방법을 제어합니다."
 
@@ -1868,17 +1872,6 @@ msgstr "Bay '%(name)s' - %(reason)s 업데이트 실패"
 msgid "Failed to update, can not found port info."
 msgstr "업데이트에 실패했고 포트 정보를 찾을 수 없습니다."
 
-msgid "Failed to validate"
-msgstr "유효성 검증 실패"
-
-#, python-format
-msgid "Failed to validate nested template: %s"
-msgstr "중첩된 템플릿을 검증하는 데 실패: %s"
-
-#, python-format
-msgid "Failed to validate: %s"
-msgstr "유효성 검증 실패: %s"
-
 #, python-format
 msgid ""
 "Failed validating stack template using Heat endpoint at region \"%(region)s"
@@ -2496,9 +2489,6 @@ msgid ""
 msgstr ""
 "인스턴스 메타데이터는 %s개를 초과하는 항목을 포함해서는 안됩니다. 이는 서비"
 "스 제공자가 허용하는 최대 수입니다."
-
-msgid "Integer used for ordering the boot disks."
-msgstr "부트 디스크의 순서를 지정하는 데 사용되는 정수입니다."
 
 msgid "Interface type of keystone service endpoint."
 msgstr "keystone 서비스 엔드포인트의 인터페이스 타입입니다."
@@ -4328,6 +4318,9 @@ msgstr "경로가 기존 경로를 중복합니다."
 msgid "Route table ID."
 msgstr "라우트 테이블 ID입니다."
 
+msgid "Rule type."
+msgstr "규칙 유형"
+
 msgid "Safety assessment lifetime configuration for the ike policy."
 msgstr "ike 정책의 안전 평가 유효시간 구성입니다."
 
@@ -4621,6 +4614,9 @@ msgstr "스택 ID"
 
 msgid "Stack Name"
 msgstr "스택 이름"
+
+msgid "Stack id"
+msgstr "스택 ID"
 
 msgid "Stack name may not contain \"/\""
 msgstr "스택 이름이 \"/\"을(를) 포함하지 않을 수 있음 "
@@ -5276,6 +5272,9 @@ msgstr "클라이언트(%(client_name)s)를 사용할 수 없습니다."
 
 msgid "The cluster ID this node belongs to."
 msgstr "이 노드가 속한 클러스터 ID입니다."
+
+msgid "The cluster name."
+msgstr "클러스터 이름."
 
 msgid "The config value of the software config."
 msgstr "소프트웨어 구성의 구성 값입니다."
@@ -6638,6 +6637,9 @@ msgstr "사용자에게 조치를 수행할 권한이 부여되지 않음"
 msgid "User name to create a user on instance creation."
 msgstr "인스턴스 작성 시 사용자를 작성할 사용자 이름입니다."
 
+msgid "User name."
+msgstr "사용자 이름."
+
 msgid "Username associated with the AccessKey."
 msgstr "액세스 키와 연관된 사용자 이름입니다."
 
@@ -6949,6 +6951,9 @@ msgstr "테넌트당 최대 스택 수(%d)에 도달했습니다. 일부 스택�
 msgid "could not find user %s"
 msgstr "사용자 %s을(를) 찾을 수 없음"
 
+msgid "decrypt"
+msgstr "복호화"
+
 msgid "deployment_id must be specified"
 msgstr "deployment_id를 지정해야 함"
 
@@ -6962,6 +6967,9 @@ msgstr ""
 #, python-format
 msgid "deployments of server %s"
 msgstr "서버 %s 배포"
+
+msgid "encrypt"
+msgstr "암호화"
 
 #, python-format
 msgid "environment has wrong section \"%s\""

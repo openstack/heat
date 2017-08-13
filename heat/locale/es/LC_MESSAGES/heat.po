@@ -8,9 +8,9 @@
 # Omar Rivera <gr113x@att.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
+"Project-Id-Version: heat 9.0.0.0b4.dev55\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-07-03 02:49+0000\n"
+"POT-Creation-Date: 2017-08-12 12:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -2009,17 +2009,6 @@ msgstr "No se ha podido actualizar la bahía '%(name)s' - %(reason)s"
 msgid "Failed to update, can not found port info."
 msgstr "Ha fallado la actualización, no se encuentra información de puerto."
 
-msgid "Failed to validate"
-msgstr "Ha fallado la validación"
-
-#, python-format
-msgid "Failed to validate nested template: %s"
-msgstr "No se ha podido validar la plantilla anidada: %s"
-
-#, python-format
-msgid "Failed to validate: %s"
-msgstr "Error al validar: %s"
-
 #, python-format
 msgid ""
 "Failed validating stack template using Heat endpoint at region \"%(region)s"
@@ -2689,9 +2678,6 @@ msgid ""
 msgstr ""
 "Los metadatos de instancia no deben contener más de %s entradas. Este es el "
 "número máximo permitido por el proveedor de servicio"
-
-msgid "Integer used for ordering the boot disks."
-msgstr "Entero utilizado para la ordenación de discos de arranque."
 
 msgid "Interface type of keystone service endpoint."
 msgstr "Tipo de interfaz del punto final del servicio de keystone."
