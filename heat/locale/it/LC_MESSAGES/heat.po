@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
+"Project-Id-Version: heat 9.0.0.0b4.dev55\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-07-03 02:49+0000\n"
+"POT-Creation-Date: 2017-08-12 12:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -2000,17 +2000,6 @@ msgid "Failed to update, can not found port info."
 msgstr ""
 "Impossibile aggiornare, non è possibile reperire le informazioni sulla porta."
 
-msgid "Failed to validate"
-msgstr "Impossibile eseguire la convalida"
-
-#, python-format
-msgid "Failed to validate nested template: %s"
-msgstr "Impossibile convalidare il modello nidificato: %s"
-
-#, python-format
-msgid "Failed to validate: %s"
-msgstr "Convalida non riuscita: %s"
-
 #, python-format
 msgid ""
 "Failed validating stack template using Heat endpoint at region \"%(region)s"
@@ -2668,9 +2657,6 @@ msgid ""
 msgstr ""
 "I metadati dell'istanza non devono contenere più di %s voci. Questo è il "
 "numero massimo consentito dal proprio provider del servizio"
-
-msgid "Integer used for ordering the boot disks."
-msgstr "Numero intero utilizzato per l'ordinazione dei dischi di avvio."
 
 msgid "Interface type of keystone service endpoint."
 msgstr "Tipo di interfaccia dell'endpoint del servizio keystone. "

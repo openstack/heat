@@ -8,9 +8,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b3.dev84\n"
+"Project-Id-Version: heat 9.0.0.0b4.dev55\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-07-03 02:49+0000\n"
+"POT-Creation-Date: 2017-08-12 12:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1998,17 +1998,6 @@ msgstr "Echec de mise à jour de la baie '%(name)s' - %(reason)s"
 msgid "Failed to update, can not found port info."
 msgstr "Echec de la mise à jour, les informations de port sont introuvables."
 
-msgid "Failed to validate"
-msgstr "Echec de validation"
-
-#, python-format
-msgid "Failed to validate nested template: %s"
-msgstr "Echec de validation du modèle imbriqué : %s"
-
-#, python-format
-msgid "Failed to validate: %s"
-msgstr "Echec de la validation : %s"
-
 #, python-format
 msgid ""
 "Failed validating stack template using Heat endpoint at region \"%(region)s"
@@ -2676,9 +2665,6 @@ msgid ""
 msgstr ""
 "Les métadonnées d'instance ne doivent pas contenir plus de %s entrées. Il "
 "s'agit du nombre maximal autorisé par votre fournisseur de services"
-
-msgid "Integer used for ordering the boot disks."
-msgstr "Entier utilisé pour commander les disques d'amorçage."
 
 msgid "Interface type of keystone service endpoint."
 msgstr "Type d'interface du noeud final de service Keystone."
