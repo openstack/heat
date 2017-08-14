@@ -19,6 +19,7 @@ import eventlet.queue
 import functools
 
 from oslo_log import log as logging
+from oslo_utils import excutils
 
 from heat.common import exception
 from heat.engine import resource
@@ -280,17 +281,25 @@ class CheckResource(object):
                     rsrc.current_template_id != tmpl.id):
                 return
 
-        check_resource_done = self._do_check_resource(cnxt, current_traversal,
-                                                      tmpl, resource_data,
-                                                      is_update,
-                                                      rsrc, stack,
-                                                      adopt_stack_data)
+        try:
+            check_resource_done = self._do_check_resource(cnxt,
+                                                          current_traversal,
+                                                          tmpl, resource_data,
+                                                          is_update,
+                                                          rsrc, stack,
+                                                          adopt_stack_data)
 
-        if check_resource_done:
-            # initiate check on next set of resources from graph
-            self._initiate_propagate_resource(cnxt, resource_id,
-                                              current_traversal, is_update,
-                                              rsrc, stack)
+            if check_resource_done:
+                # initiate check on next set of resources from graph
+                self._initiate_propagate_resource(cnxt, resource_id,
+                                                  current_traversal, is_update,
+                                                  rsrc, stack)
+        except BaseException as exc:
+            with excutils.save_and_reraise_exception():
+                msg = six.text_type(exc)
+                LOG.exception("Unexpected exception in resource check.")
+                self._handle_resource_failure(cnxt, is_update, rsrc.id,
+                                              stack, msg)
 
 
 def load_resource(cnxt, resource_id, resource_data,
