@@ -295,7 +295,7 @@ Resources:
         stack.store()
 
         stack_res = stack['the_nested']
-        stack_res._store()
+        stack_res.store()
 
         nested_t = template_format.parse(self.nested_template)
         nested_t['Parameters']['KeyName']['Default'] = 'Key'
@@ -383,7 +383,7 @@ Outputs:
         self.res = stack_res.NestedStack('test_t_res',
                                          self.defn, self.stack)
         self.assertIsNone(self.res.validate())
-        self.res._store()
+        self.res.store()
 
     def test_handle_create(self):
         self.res.create_with_template = mock.Mock(return_value=None)

@@ -125,7 +125,7 @@ class UserTest(common.HeatTestCase):
         rsrc = user.User(resource_name,
                          resource_defns[resource_name],
                          stack)
-        rsrc._store()
+        rsrc.store()
 
         self.m.StubOutWithMock(short_id, 'get_id')
         short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')

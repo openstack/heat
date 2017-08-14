@@ -882,7 +882,7 @@ class TestConvergenceMigration(common.HeatTestCase):
                                      template=tools.string_template_five)
         self.stack.store()
         for r in self.stack.resources.values():
-            r._store()
+            r.store()
         self.stack.migrate_to_convergence()
         self.stack = self.stack.load(self.ctx, self.stack.id)
 

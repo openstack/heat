@@ -58,7 +58,7 @@ class StackUserTest(common.HeatTestCase):
         else:
             self.stack.set_stack_user_project_id(project_id)
 
-        rsrc._store()
+        rsrc.store()
         self.m.StubOutWithMock(short_id, 'get_id')
         short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')
 

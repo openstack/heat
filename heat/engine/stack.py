@@ -700,8 +700,7 @@ class Stack(collections.Mapping):
         self.t.add_resource(definition)
         if self.t.id is not None:
             self.t.store(self.context)
-        if resource.action == resource.INIT:
-            resource._store()
+        resource.store()
 
     def remove_resource(self, resource_name):
         """Remove the resource with the specified name."""
@@ -982,7 +981,7 @@ class Stack(collections.Mapping):
     def _store_resources(self):
         for r in reversed(self.dependencies):
             if r.action == r.INIT:
-                r._store()
+                r.store()
 
     @profiler.trace('Stack.create', hide_args=False)
     @reset_state_on_error
@@ -1353,7 +1352,7 @@ class Stack(collections.Mapping):
             if existing_rsrc_db is None:
                 update_needed_by(rsrc)
                 rsrc.current_template_id = self.t.id
-                rsrc._store()
+                rsrc.store()
                 rsrcs[rsrc.name] = rsrc
             else:
                 update_needed_by(existing_rsrc_db)

@@ -539,7 +539,6 @@ class StackTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
-
         self.assertEqual(
             stack_arn, self.stack['AResource'].metadata_get()['Bar'])
 
