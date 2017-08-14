@@ -13,7 +13,7 @@
 import json
 
 from keystoneclient.v3 import client as keystoneclient
-from zaqarclient.queues.v1 import client as zaqarclient
+from zaqarclient.queues.v2 import client as zaqarclient
 
 from heat_integrationtests.functional import functional_base
 
@@ -63,7 +63,7 @@ outputs:
             }
         }
 
-        zaqar = zaqarclient.Client(endpoint, conf=conf, version=1.1)
+        zaqar = zaqarclient.Client(endpoint, conf=conf)
 
         queue = zaqar.queue(signal['queue_id'])
         queue.post({'body': {'data': 'here!', 'id': 'data_id'}, 'ttl': 600})
