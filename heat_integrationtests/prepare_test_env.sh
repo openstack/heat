@@ -51,7 +51,7 @@ iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 openstack flavor create m1.heat_int --ram 512
 openstack flavor create m1.heat_micro --ram 128
 
-iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-24-1.2.x86_64
+iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-26-1.5.x86_64
 iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
 iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
