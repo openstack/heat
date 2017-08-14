@@ -1,0 +1,7 @@
+---
+issues:
+  - |
+    Heat does not work with keystone identity federation. This is a known
+    limitation as heat uses keystone trusts for deferred authentication and
+    trusts don't work with federated keystone. For more details check
+    `https://etherpad.openstack.org/p/pike-ptg-cross-project-federation`.
