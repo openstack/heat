@@ -70,8 +70,8 @@ class StackResourcesServiceTest(common.HeatTestCase):
     def _test_describe_stack_resource(self, mock_load):
         mock_load.return_value = self.stack
 
-        # Patch _resolve_all_attributes or it tries to call novaclient
-        self.patchobject(res.Resource, '_resolve_all_attributes',
+        # Patch _resolve_any_attribute or it tries to call novaclient
+        self.patchobject(res.Resource, '_resolve_any_attribute',
                          return_value=None)
 
         r = self.eng.describe_stack_resource(self.ctx, self.stack.identifier(),

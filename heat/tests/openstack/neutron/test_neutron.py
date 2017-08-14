@@ -98,7 +98,7 @@ class NeutronTest(common.HeatTestCase):
             {'attr2': attributes.Schema(type=attributes.Schema.STRING)})
         res.attributes = attributes.Attributes(res.name,
                                                res.attributes_schema,
-                                               res._resolve_all_attributes)
+                                               res._resolve_any_attribute)
         side_effect = [{'attr1': 'val1', 'attr2': 'val2'},
                        {'attr1': 'val1', 'attr2': 'val2'},
                        {'attr1': 'val1', 'attr2': 'val2'},
@@ -108,8 +108,8 @@ class NeutronTest(common.HeatTestCase):
         self.assertEqual({'attr1': 'val1', 'attr2': 'val2'},
                          res.FnGetAtt('show'))
         self.assertEqual('val2', res.attributes['attr2'])
-        self.assertRaises(KeyError, res._resolve_all_attributes, 'attr3')
-        self.assertIsNone(res._resolve_all_attributes('attr1'))
+        self.assertRaises(KeyError, res._resolve_any_attribute, 'attr3')
+        self.assertIsNone(res._resolve_any_attribute('attr1'))
 
         res.resource_id = None
         # use local cached object for non-show attribute
