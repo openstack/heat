@@ -39,10 +39,6 @@ echo -e '[eventlet_opts]\nclient_socket_timeout=120\n' >> $localconf
 
 echo -e '[oslo_messaging_notifications]\ndriver=messagingv2\n' >> $localconf
 
-# Disable nova quota check.
-echo -e '[[post-config|$NOVA_CONF]]\n[DEFAULT]\n' >> $localconf
-echo -e 'quota_driver=nova.quota.NoopQuotaDriver\n' >> $localconf
-
 echo "[[local|localrc]]" >> $localconf
 # Create the images required for testing
 echo "IMAGE_URLS+=http://fedora.bhs.mirrors.ovh.net/linux/releases/24/CloudImages/x86_64/images/Fedora-Cloud-Base-24-1.2.x86_64.qcow2" >> $localconf
