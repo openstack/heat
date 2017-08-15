@@ -123,14 +123,16 @@ class Port(neutron.NeutronResource):
         DEVICE_ID: properties.Schema(
             properties.Schema.STRING,
             _('Device ID of this port.'),
-            update_allowed=True
+            update_allowed=True,
+            default=''
         ),
         DEVICE_OWNER: properties.Schema(
             properties.Schema.STRING,
             _('Name of the network owning the port. '
               'The value is typically network:floatingip '
               'or network:router_interface or network:dhcp.'),
-            update_allowed=True
+            update_allowed=True,
+            default=''
         ),
         FIXED_IPS: properties.Schema(
             properties.Schema.LIST,
@@ -284,7 +286,8 @@ class Port(neutron.NeutronResource):
                                            'direct-physical', 'baremetal']),
             ],
             support_status=support.SupportStatus(version='2015.1'),
-            update_allowed=True
+            update_allowed=True,
+            default='normal'
         ),
         PORT_SECURITY_ENABLED: properties.Schema(
             properties.Schema.BOOLEAN,

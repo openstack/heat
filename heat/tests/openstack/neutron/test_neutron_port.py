@@ -114,7 +114,10 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}})
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }})
         self.port_show_mock.assert_called_once_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
@@ -140,7 +143,10 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}})
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }})
         self.port_show_mock.assert_called_once_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
 
@@ -168,7 +174,10 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}})
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }})
 
     def test_allowed_address_pair(self):
         t = template_format.parse(neutron_port_with_address_pair_template)
@@ -193,7 +202,11 @@ class NeutronPortTest(common.HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName(stack.name, 'port'),
-            'admin_state_up': True}})
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_id': '',
+            'device_owner': ''
+        }})
 
     def test_port_security_enabled(self):
         t = template_format.parse(neutron_port_security_template)
@@ -217,7 +230,11 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'abcd1234',
             'port_security_enabled': False,
             'name': utils.PhysName(stack.name, 'port'),
-            'admin_state_up': True}})
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_id': '',
+            'device_owner': ''
+            }})
 
     def test_missing_mac_address(self):
         t = template_format.parse(neutron_port_with_address_pair_template)
@@ -244,7 +261,10 @@ class NeutronPortTest(common.HeatTestCase):
                 'ip_address': u'10.0.3.21',
             }],
             'name': utils.PhysName(stack.name, 'port'),
-            'admin_state_up': True}})
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_owner': '',
+            'device_id': ''}})
 
     def test_ip_address_is_cidr(self):
         t = template_format.parse(neutron_port_with_address_pair_template)
@@ -271,7 +291,11 @@ class NeutronPortTest(common.HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName(stack.name, 'port'),
-            'admin_state_up': True}})
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_owner': '',
+            'device_id': ''
+        }})
 
     def _mock_create_with_props(self):
         self.find_mock.return_value = 'net_or_sub'
@@ -300,7 +324,10 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }
 
         set_tag_mock = self.patchobject(neutronclient.Client, 'replace_tag')
         self._mock_create_with_props()
@@ -328,7 +355,10 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }
 
         self._mock_create_with_props()
 
@@ -350,7 +380,10 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }
 
         self._mock_create_with_props()
         port = stack['port']
@@ -373,7 +406,9 @@ class NeutronPortTest(common.HeatTestCase):
             ],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
         }
 
         self._mock_create_with_props()
@@ -412,7 +447,9 @@ class NeutronPortTest(common.HeatTestCase):
         props = {'network_id': u'net1234',
                  'name': utils.PhysName(stack.name, 'port'),
                  'admin_state_up': True,
-                 'device_owner': u'network:dhcp'}
+                 'device_owner': u'network:dhcp',
+                 'device_id': '',
+                 'binding:vnic_type': 'normal'}
 
         self.find_mock.return_value = 'net1234'
         self.create_mock.return_value = {'port': {
@@ -456,7 +493,10 @@ class NeutronPortTest(common.HeatTestCase):
         net2 = '0064eec9-5681-4ba7-a745-6f8e32db9503'
         props = {'network_id': net1,
                  'name': 'test_port',
-                 'device_owner': u'network:dhcp'}
+                 'device_owner': u'network:dhcp',
+                 'binding:vnic_type': 'normal',
+                 'device_id': ''
+                 }
         create_kwargs = props.copy()
         create_kwargs['admin_state_up'] = True
 
@@ -555,7 +595,10 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}})
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''
+        }})
         self.assertEqual('DOWN', port.FnGetAtt('status'))
         self.assertEqual([], port.FnGetAtt('allowed_address_pairs'))
         self.assertTrue(port.FnGetAtt('admin_state_up'))
@@ -613,7 +656,9 @@ class NeutronPortTest(common.HeatTestCase):
             'network_id': u'net1234',
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
-            'device_owner': u'network:dhcp'}}
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''}}
         )
 
     def test_prepare_for_replace_port_not_created(self):
