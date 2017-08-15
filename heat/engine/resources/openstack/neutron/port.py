@@ -565,8 +565,10 @@ class Port(neutron.NeutronResource):
                 self.set_tags(tags)
 
             self._prepare_port_properties(prop_diff, prepare_for_update=True)
-            LOG.debug('updating port with %s', prop_diff)
-            self.client().update_port(self.resource_id, {'port': prop_diff})
+            if prop_diff:
+                LOG.debug('updating port with %s', prop_diff)
+                self.client().update_port(self.resource_id,
+                                          {'port': prop_diff})
 
     def check_update_complete(self, *args):
         attributes = self._show_resource()
