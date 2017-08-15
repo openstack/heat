@@ -867,7 +867,6 @@ class UpdatePortTest(common.HeatTestCase):
 
     def test_update_port(self):
         t = template_format.parse(neutron_port_template)
-        t['resources']['port']['properties'].pop('fixed_ips')
         stack = utils.parse_stack(t)
 
         self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
@@ -939,6 +938,10 @@ class UpdatePortTest(common.HeatTestCase):
                                                                create_snippet)
         self.assertIsNotNone(
             port.update_template_diff_properties(after_props, before_props))
+
+        # With fixed_ips removed
+        scheduler.TaskRunner(port.handle_update, update_snippet,
+                             {}, {'fixed_ips': None})()
 
         # update with empty prop_diff
         scheduler.TaskRunner(port.handle_update, update_snippet, {}, {})()
