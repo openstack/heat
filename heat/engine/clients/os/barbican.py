@@ -18,9 +18,9 @@ from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
 try:
-    from barbicanclient import containers
-except ImportError:
     from barbicanclient.v1 import containers
+except ImportError:
+    from barbicanclient import containers
 
 CLIENT_NAME = 'barbican'
 
