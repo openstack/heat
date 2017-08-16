@@ -161,6 +161,11 @@ class TemplateOutputError(HeatException):
     msg_fmt = _('Error in %(resource)s output %(attribute)s: %(message)s')
 
 
+class InvalidEncryptionKey(HeatException):
+    msg_fmt = _('Can not decrypt data with the auth_encryption_key'
+                ' in heat config.')
+
+
 class InvalidExternalResourceDependency(HeatException):
     msg_fmt = _("Invalid dependency with external %(resource_type)s "
                 "resource: %(external_id)s")
