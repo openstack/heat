@@ -321,10 +321,10 @@ class Subnet(neutron.NeutronResource):
         subnetpool = self.properties[self.SUBNETPOOL]
         prefixlen = self.properties[self.PREFIXLEN]
         cidr = self.properties[self.CIDR]
-        if subnetpool and cidr:
+        if subnetpool is not None and cidr:
             raise exception.ResourcePropertyConflict(self.SUBNETPOOL,
                                                      self.CIDR)
-        if not subnetpool and not cidr:
+        if subnetpool is None and not cidr:
             raise exception.PropertyUnspecifiedError(self.SUBNETPOOL,
                                                      self.CIDR)
         if prefixlen and cidr:
