@@ -82,7 +82,7 @@ tests:
 
 - name: signal resource
   POST: $LAST_URL/signal
-  status: 200
+  status: 400
 
 - name: delete stack with resources
   DELETE: /stacks/$ENVIRON['PREFIX']-rsrcstack
