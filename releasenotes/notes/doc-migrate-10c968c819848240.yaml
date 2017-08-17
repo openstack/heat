@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    All developer, contributor, and user content from various guides
+    in openstack-manuals has been moved in-tree and are published at
+    `https://docs.openstack.org/heat/pike/`.
