@@ -21,10 +21,7 @@ if is_heat_enabled; then
         cleanup_heat
         echo_summary "Configuring heat"
         configure_heat
-
-        if is_service_enabled key; then
-            create_heat_accounts
-        fi
+        create_heat_accounts
 
     elif [[ "$1" == "stack" && "$2" == "extra" ]]; then
         # Initialize heat
