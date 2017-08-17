@@ -348,8 +348,10 @@ class ZaqarMistralTriggerTest(common.HeatTestCase):
         def client(name='zaqar'):
             if name == 'mistral':
                 client = mock.Mock()
-                client.http_client = mock.Mock()
-                client.http_client.base_url = 'http://mistral.example.net:8989'
+                http_client = mock.Mock()
+                client.executions = mock.Mock(spec=['http_client'])
+                client.executions.http_client = http_client
+                http_client.base_url = 'http://mistral.example.net:8989'
                 return client
             elif name == 'zaqar':
                 return self.fc

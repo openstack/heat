@@ -193,7 +193,9 @@ class MistralTrigger(ZaqarSubscription):
 
     def _subscriber_url(self):
         mistral_client = self.client('mistral')
-        return 'trust+%s/executions' % mistral_client.http_client.base_url
+        manager = getattr(mistral_client.executions, 'client',
+                          mistral_client.executions)
+        return 'trust+%s/executions' % manager.http_client.base_url
 
     def _subscription_options(self):
         params = dict(self.properties[self.PARAMS])
