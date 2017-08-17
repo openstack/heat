@@ -51,10 +51,6 @@ def extract_args(params):
             bool_value = param_utils.extract_bool(name, params[name])
             kwargs[name] = bool_value
 
-    name = rpc_api.PARAM_SHOW_DELETED
-    if name in params:
-        params[name] = param_utils.extract_bool(name, params[name])
-
     adopt_data = params.get(rpc_api.PARAM_ADOPT_STACK_DATA)
     if adopt_data:
         try:
