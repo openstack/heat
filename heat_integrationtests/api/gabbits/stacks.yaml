@@ -45,3 +45,115 @@ tests:
   DELETE: $LAST_URL
   redirects: True
   status: 204
+
+- name: create stack
+  POST: /stacks
+  request_headers:
+    content-type: application/json
+  data:
+    files: {}
+    disable_rollback: true
+    parameters: {'test_val': value}
+    stack_name: $ENVIRON['PREFIX']-stack
+    template:
+      heat_template_version: pike
+      parameters:
+        test_val:
+          type: string
+      resources:
+        test:
+          type: OS::Heat::TestResource
+          properties:
+            value: {get_param: test_val}
+      outputs:
+        output_value:
+          value: {get_attr: [test, output]}
+
+  status: 201
+  response_headers:
+    location: //stacks/$ENVIRON['PREFIX']-stack/[a-f0-9-]+/
+
+- name: poll for stack CREATE_COMPLETE
+  GET: $LOCATION
+  redirects: True
+  poll:
+    count: 5
+    delay: 1.0
+  response_json_paths:
+    $.stack.stack_status: CREATE_COMPLETE
+
+- name: show stack
+  GET: $LAST_URL
+  redirects: True
+  status: 200
+
+- name: update stack
+  PUT: $LAST_URL
+  request_headers:
+    content-type: application/json
+  data:
+    files: {}
+    disable_rollback: true
+    parameters: {'test_val': new_value}
+    stack_name: $ENVIRON['PREFIX']-stack
+    template:
+      heat_template_version: pike
+      parameters:
+        test_val:
+          type: string
+      resources:
+        test:
+          type: OS::Heat::TestResource
+          properties:
+            value: {get_param: test_val}
+      outputs:
+        output_value:
+          value: {get_attr: [test, output]}
+
+  status: 202
+
+- name: poll for stack UPDATE_COMPLETE
+  GET: $LAST_URL
+  redirects: True
+  poll:
+    count: 5
+    delay: 1.0
+  response_json_paths:
+    $.stack.stack_status: UPDATE_COMPLETE
+
+- name: patch update stack
+  PATCH: $LAST_URL
+  request_headers:
+    content-type: application/json
+  data:
+    parameters: {'test_val': new_patched_value}
+
+  status: 202
+
+- name: poll for stack patch UPDATE_COMPLETE
+  GET: $LAST_URL
+  redirects: True
+  poll:
+    count: 5
+    delay: 1.0
+  response_json_paths:
+    $.stack.stack_status: UPDATE_COMPLETE
+
+- name: list stack outputs
+  GET: $LAST_URL/outputs
+  redirects: True
+  status: 200
+  response_json_paths:
+    $.outputs[0].output_key: output_value
+
+- name: get stack output
+  GET: $LAST_URL/output_value
+  redirects: True
+  status: 200
+  response_json_paths:
+    $.output.output_value: new_patched_value
+
+- name: delete stack
+  DELETE: /stacks/$ENVIRON['PREFIX']-stack
+  redirects: True
+  status: 204
