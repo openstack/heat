@@ -1211,6 +1211,14 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         if self.TAGS in prop_diff:
             self._update_server_tags(after_props[self.TAGS] or [])
 
+        if self.NAME in prop_diff:
+            if not server:
+                server = self.client_plugin().get_server(self.resource_id)
+            self.client_plugin().rename(server, after_props[self.NAME])
+
+        if self.NETWORKS in prop_diff:
+            updaters.extend(self._update_networks(server, after_props))
+
         if self.FLAVOR in prop_diff:
             updaters.extend(self._update_flavor(after_props))
 
@@ -1220,14 +1228,6 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             if not server:
                 server = self.client_plugin().get_server(self.resource_id)
             server.change_password(after_props[self.ADMIN_PASS])
-
-        if self.NAME in prop_diff:
-            if not server:
-                server = self.client_plugin().get_server(self.resource_id)
-            self.client_plugin().rename(server, after_props[self.NAME])
-
-        if self.NETWORKS in prop_diff:
-            updaters.extend(self._update_networks(server, after_props))
 
         # NOTE(pas-ha) optimization is possible (starting first task
         # right away), but we'd rather not, as this method already might
