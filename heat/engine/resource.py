@@ -662,11 +662,18 @@ class Resource(object):
         directly.
         """
         try:
-            return [r.name for r in self.stack.dependencies.required_by(self)]
+            reqd_by = self.stack.dependencies.required_by(self)
         except KeyError:
-            # for convergence, fall back to building from needed_by
-            return [r.name for r in self.stack.resources.values()
-                    if r.id in self.needed_by]
+            if self.stack.convergence:
+                # for convergence, fall back to building from needed_by
+                needed_by_ids = self.needed_by or set()
+                reqd_by = [r for r in self.stack.resources.values()
+                           if r.id in needed_by_ids]
+            else:
+                LOG.error('Getting required_by list for Resource not in '
+                          'dependency graph.')
+                return []
+        return [r.name for r in reqd_by]
 
     def client(self, name=None, version=None):
         client_name = name or self.default_client_name

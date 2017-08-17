@@ -364,15 +364,19 @@ class Stack(collections.Mapping):
         if tid is None:
             tid = self.t.id
 
+        if tid == self.t.id:
+            cur_res = self.resources.get(db_res.name)
+            if cur_res is not None and (cur_res.id == db_res.id):
+                return cur_res
+
         if rsrc_def_cache and tid in rsrc_def_cache:
             rsrc_def = rsrc_def_cache[tid]
-        elif tid == self.t.id:
-            rsrc_def = self.t.resource_definitions(self)
-            if rsrc_def_cache:
-                rsrc_def_cache[tid] = rsrc_def
         else:
-            t = tmpl.Template.load(self.context, tid)
-            rsrc_def = t.resource_definitions(self)
+            if tid == self.t.id:
+                rsrc_def = self.t.resource_definitions(self)
+            else:
+                t = tmpl.Template.load(self.context, tid)
+                rsrc_def = t.resource_definitions(self)
             if rsrc_def_cache:
                 rsrc_def_cache[tid] = rsrc_def
 
