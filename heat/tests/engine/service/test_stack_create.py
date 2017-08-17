@@ -73,7 +73,7 @@ class StackCreateTest(common.HeatTestCase):
         if environment_files:
             mock_merge.assert_called_once_with(environment_files, None,
                                                params, mock.ANY)
-        mock_validate.assert_called_once_with(validate_resources=True)
+        mock_validate.assert_called_once_with()
 
     def test_stack_create(self):
         stack_name = 'service_create_test_stack'
@@ -304,7 +304,7 @@ class StackCreateTest(common.HeatTestCase):
                                            convergence=convergence_engine,
                                            parent_resource=None)
 
-        mock_validate.assert_called_once_with(validate_resources=False)
+        mock_validate.assert_called_once_with()
 
     def test_stack_validate(self):
         stack_name = 'stack_create_test_validate'

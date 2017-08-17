@@ -710,7 +710,7 @@ class EngineService(service.ServiceBase):
         self.resource_enforcer.enforce_stack(stack)
         self._validate_deferred_auth_context(cnxt, stack)
         is_root = stack.nested_depth == 0
-        stack.validate(validate_resources=is_root)
+        stack.validate()
         # For the root stack, log a summary of the TemplateResources loaded
         if is_root:
             tmpl.env.registry.log_resource_info(prefix=stack_name)
@@ -940,8 +940,7 @@ class EngineService(service.ServiceBase):
         updated_stack.parameters.set_stack_id(current_stack.identifier())
 
         self._validate_deferred_auth_context(cnxt, updated_stack)
-        is_root = current_stack.nested_depth == 0
-        updated_stack.validate(validate_resources=is_root)
+        updated_stack.validate()
 
         return tmpl, current_stack, updated_stack
 

@@ -246,7 +246,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
                      convergence=True).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        stack.validate(validate_resources=True).AndReturn(None)
+        stack.validate().AndReturn(None)
 
         self.m.ReplayAll()
         api_args = {'timeout_mins': 60, 'disable_rollback': False}
@@ -298,7 +298,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
                      current_deps=old_stack.current_deps).AndReturn(stack)
 
         self.m.StubOutWithMock(stack, 'validate')
-        stack.validate(validate_resources=True).AndReturn(None)
+        stack.validate().AndReturn(None)
 
         self.m.ReplayAll()
 
