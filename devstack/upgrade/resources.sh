@@ -36,9 +36,11 @@ function _heat_set_user {
     OS_PROJECT_DOMAIN_ID=$DEFAULT_DOMAIN
 }
 
-function create {
-    # run heat_integrationtests instead of tempest smoke before create
-    pushd $BASE_DEVSTACK_DIR/../tempest
+function _run_heat_api_tests {
+    local devstack_dir=$1
+
+    pushd $devstack_dir/../tempest
+    sed -i -e '/group_regex/c\group_regex=heat_integrationtests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .testr.conf
     conf_file=etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     iniset $conf_file heat_plugin username $OS_USERNAME
@@ -50,8 +52,14 @@ function create {
     iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
-    tempest run --regex '(test_create_update.CreateStackTest|test_create_update.UpdateStackTest)'
+    iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
+    tempest run --regex heat_integrationtests.api
     popd
+}
+
+function create {
+    # run heat api tests instead of tempest smoke before create
+    _run_heat_api_tests $BASE_DEVSTACK_DIR
 
     # creates a tenant for the server
     eval $(openstack project create -f shell -c id $HEAT_PROJECT)
@@ -84,6 +92,10 @@ function create {
 
 function verify {
     _heat_set_user
+    local side="$1"
+    if [[ "$side" = "post-upgrade" ]]; then
+        _run_heat_api_tests $TARGET_DEVSTACK_DIR
+    fi
     stack_name=$(resource_get heat stack_name)
     heat stack-show $stack_name
     # TODO(sirushtim): Create more granular checks for Heat.
@@ -115,7 +127,7 @@ case $1 in
         verify_noapi
         ;;
     "verify")
-        verify
+        verify $2
         ;;
     "destroy")
         destroy
