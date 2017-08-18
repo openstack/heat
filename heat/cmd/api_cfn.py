@@ -37,32 +37,34 @@ from heat.common import profiler
 from heat.common import wsgi
 from heat import version
 
+
 i18n.enable_lazy()
 
-LOG = logging.getLogger('heat.api.cfn')
+CONF = cfg.CONF
 
 
 def launch_cfn_api(setup_logging=True):
     if setup_logging:
-        logging.register_options(cfg.CONF)
-    cfg.CONF(project='heat',
-             prog='heat-api-cfn',
-             version=version.version_info.version_string())
+        logging.register_options(CONF)
+    CONF(project='heat',
+         prog='heat-api-cfn',
+         version=version.version_info.version_string())
     if setup_logging:
-        logging.setup(cfg.CONF, 'heat-api-cfn')
+        logging.setup(CONF, CONF.prog)
         logging.set_defaults()
+    LOG = logging.getLogger(CONF.prog)
     config.set_config_defaults()
     messaging.setup()
 
     app = config.load_paste_app()
 
-    port = cfg.CONF.heat_api_cfn.bind_port
-    host = cfg.CONF.heat_api_cfn.bind_host
+    port = CONF.heat_api_cfn.bind_port
+    host = CONF.heat_api_cfn.bind_host
     LOG.info('Starting Heat API on %(host)s:%(port)s',
              {'host': host, 'port': port})
-    profiler.setup('heat-api-cfn', host)
+    profiler.setup(CONF.prog, host)
     gmr.TextGuruMeditation.setup_autorun(version)
-    server = wsgi.Server('heat-api-cfn', cfg.CONF.heat_api_cfn)
+    server = wsgi.Server(CONF.prog, CONF.heat_api_cfn)
     server.start(app, default_port=port)
     return server
 

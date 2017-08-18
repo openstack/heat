@@ -36,8 +36,6 @@ from oslo_service import systemd
 
 i18n.enable_lazy()
 
-LOG = logging.getLogger('heat.all')
-
 API_LAUNCH_OPTS = {'setup_logging': False}
 
 LAUNCH_SERVICES = {
