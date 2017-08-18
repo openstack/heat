@@ -115,7 +115,7 @@ class RequestContext(context.RequestContext):
             **config.get_ssl_options('keystone'))
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
-        self.policy = policy.Enforcer()
+        self.policy = policy.get_enforcer()
         self._auth_plugin = auth_plugin
         self._trusts_auth_plugin = trusts_auth_plugin
 
