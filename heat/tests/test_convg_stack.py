@@ -21,7 +21,6 @@ from heat.engine import stack as parser
 from heat.engine import template as templatem
 from heat.objects import raw_template as raw_template_object
 from heat.objects import resource as resource_objects
-from heat.objects import snapshot as snapshot_objects
 from heat.objects import stack as stack_object
 from heat.objects import sync_point as sync_point_object
 from heat.rpc import worker_client
@@ -552,37 +551,6 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.converge_stack(template=stack.t, action=stack.UPDATE)
         self.assertTrue(mock_syncpoint_del.called)
         self.assertTrue(mock_ccu.called)
-
-    def test_snapshot_delete(self, mock_cr):
-        tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
-                'Resources': {'R1': {'Type': 'GenericResourceType'}}}
-        stack = parser.Stack(utils.dummy_context(), 'updated_time_test',
-                             templatem.Template(tmpl))
-        stack.current_traversal = 'prev_traversal'
-        stack.action, stack.status = stack.CREATE, stack.COMPLETE
-        stack.store()
-        stack.thread_group_mgr = tools.DummyThreadGroupManager()
-        snapshot_values = {
-            'stack_id': stack.id,
-            'name': 'fake_snapshot',
-            'tenant': stack.context.tenant_id,
-            'status': 'COMPLETE',
-            'data': None
-        }
-        snapshot_objects.Snapshot.create(stack.context, snapshot_values)
-
-        # Ensure that snapshot is not deleted on stack update
-        stack.converge_stack(template=stack.t, action=stack.UPDATE)
-        db_snapshot_obj = snapshot_objects.Snapshot.get_all(
-            stack.context, stack.id)
-        self.assertEqual('fake_snapshot', db_snapshot_obj[0].name)
-        self.assertEqual(stack.id, db_snapshot_obj[0].stack_id)
-
-        # Ensure that snapshot is deleted on stack delete
-        stack.converge_stack(template=stack.t, action=stack.DELETE)
-        self.assertEqual([], snapshot_objects.Snapshot.get_all(
-            stack.context, stack.id))
-        self.assertTrue(mock_cr.called)
 
 
 @mock.patch.object(parser.Stack, '_persist_state')
