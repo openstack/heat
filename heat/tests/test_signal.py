@@ -20,9 +20,9 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format
+from heat.db.sqlalchemy import models
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import swift
-from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as stk
 from heat.engine import template
@@ -528,26 +528,30 @@ class SignalTest(common.HeatTestCase):
         mock_handle.assert_called_once_with(test_d)
         self.assertTrue(result)
 
-    @mock.patch.object(generic_resource.SignalResource, '_add_event')
     @mock.patch.object(generic_resource.SignalResource, 'handle_signal')
-    def test_signal_no_action(self, mock_handle, mock_add):
+    def test_handle_signal_no_reraise_deleted(self, mock_handle):
         # Setup
         test_d = {'Data': 'foo', 'Reason': 'bar',
                   'Status': 'SUCCESS', 'UniqueId': '123'}
 
         stack = self._create_stack(TEMPLATE_CFN_SIGNAL)
 
-        mock_handle.side_effect = resource.NoActionRequired()
+        mock_handle.side_effect = exception.ResourceNotAvailable(
+            resource_name='test')
         rsrc = stack['signal_handler']
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertTrue(rsrc.requires_deferred_auth)
 
-        # Test
-        mock_add.reset_mock()  # clean up existing calls before test
-        rsrc.signal(details=test_d)
+        # In the midst of handling a signal, an update happens on the
+        # db resource concurrently, deleting it
+
+        # Test exception not re-raised in DELETE case
+        res_obj = stack.context.session.query(
+            models.Resource).get(rsrc.id)
+        res_obj.update({'action': 'DELETE'})
+        rsrc._db_res_is_deleted = True
+        rsrc._handle_signal(details=test_d)
         mock_handle.assert_called_once_with(test_d)
-        mock_add.assert_not_called()
 
     @mock.patch.object(generic_resource.SignalResource, '_add_event')
     def test_signal_different_reason_types(self, mock_add):
