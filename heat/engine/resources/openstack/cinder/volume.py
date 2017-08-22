@@ -676,8 +676,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
         if (resource_data.get(self.METADATA) and
                 resource_data.get(self.METADATA).get(
-                    self.READ_ONLY) is not None):
-            read_only = resource_data.get(self.METADATA).pop(self.READ_ONLY)
+                    'readonly') is not None):
+            read_only = resource_data.get(self.METADATA).pop('readonly')
             volume_reality.update({self.READ_ONLY: read_only})
 
         old_vt = self.data().get(self.VOLUME_TYPE)

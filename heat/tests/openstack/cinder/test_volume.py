@@ -1318,7 +1318,7 @@ class CinderVolumeTest(vt_base.BaseVolumeTest):
             'availability_zone': 'nova',
             'snapshot_id': None,
             'size': 1,
-            'metadata': {'test': 'test_value', 'read_only': False},
+            'metadata': {'test': 'test_value', 'readonly': False},
             'consistencygroup_id': '4444',
             'volume_image_metadata': {'image_id': '1234',
                                       'image_name': 'test'},
