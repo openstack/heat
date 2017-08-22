@@ -136,7 +136,7 @@ class Resource(
             else:
                 resource._properties_data = db_resource['properties_data']
         else:
-            resource._properties_data = {}
+            resource._properties_data = None
 
         if db_resource['attr_data'] is not None:
             resource._attr_data = rpd.ResourcePropertiesData._from_db_object(
