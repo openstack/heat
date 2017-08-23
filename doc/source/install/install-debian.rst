@@ -23,16 +23,6 @@ Install and configure components
       :doc:`service endpoint registration <debconf/debconf-api-endpoints>`,
       and :doc:`message broker credentials <debconf/debconf-rabbitmq>`.
 
-#. Edit the ``/etc/heat/heat.conf`` file and complete the following
-   actions:
-
-   * In the ``[ec2authtoken]`` section, configure Identity service access:
-
-     .. code-block:: none
-
-        [ec2authtoken]
-        ...
-        auth_uri = http://controller:5000/v2.0
 
 Finalize installation
 ---------------------

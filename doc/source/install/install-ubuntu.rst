@@ -347,8 +347,8 @@ Install and configure components
      Replace ``RABBIT_PASS`` with the password you chose for the
      ``openstack`` account in ``RabbitMQ``.
 
-   * In the ``[keystone_authtoken]``, ``[trustee]``,
-     ``[clients_keystone]``, and ``[ec2authtoken]`` sections,
+   * In the ``[keystone_authtoken]``, ``[trustee]`` and
+     ``[clients_keystone]`` sections,
      configure Identity service access:
 
      .. code-block:: none
@@ -374,10 +374,6 @@ Install and configure components
         user_domain_name = default
 
         [clients_keystone]
-        ...
-        auth_uri = http://controller:35357
-
-        [ec2authtoken]
         ...
         auth_uri = http://controller:5000
 
