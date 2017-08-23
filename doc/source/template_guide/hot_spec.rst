@@ -334,6 +334,44 @@ for the ``heat_template_version`` key:
       yaql
       contains
 
+2018-03-02 | queens
+-------------------
+    The key with value ``2018-03-02`` or ``queens`` indicates that the YAML
+    document is a HOT template and it may contain features added and/or removed
+    up until the Queens release. The complete list of supported functions is::
+
+      digest
+      filter
+      get_attr
+      get_file
+      get_param
+      get_resource
+      list_join
+      make_url
+      list_concat
+      list_concat_unique
+      contains
+      map_merge
+      map_replace
+      repeat
+      resource_facade
+      str_replace
+      str_replace_strict
+      str_replace_vstrict
+      str_split
+      yaql
+      if
+
+    The complete list of supported condition functions is::
+
+      equals
+      get_param
+      not
+      and
+      or
+      yaql
+      contains
+
 .. _hot_spec_parameter_groups:
 
 Parameter groups section
