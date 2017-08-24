@@ -328,7 +328,11 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName(stack.name, 'port_floating'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'device_owner': '',
+            'device_id': '',
+            'binding:vnic_type': 'normal'
+            }}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
@@ -653,7 +657,10 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                 {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
             ],
             'name': utils.PhysName(stack.name, 'port_floating'),
-            'admin_state_up': True}}
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_owner': '',
+            'device_id': ''}}
         ).AndReturn({'port': {
             "status": "BUILD",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
