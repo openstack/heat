@@ -23,5 +23,4 @@ Getting Started Guides
    on_fedora
    on_ubuntu
    on_other
-   jeos_building
    standalone
