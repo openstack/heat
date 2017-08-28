@@ -266,7 +266,14 @@ class HOTemplate20130523(template_common.CommonTemplate):
 
         if self.t.get(self.RESOURCES) is None:
             self.t[self.RESOURCES] = {}
-        self.t[self.RESOURCES][name] = definition.render_hot()
+        rendered = definition.render_hot()
+
+        dep_list = rendered.get(self.RES_DEPENDS_ON)
+        if dep_list:
+            rendered[self.RES_DEPENDS_ON] = [d for d in dep_list
+                                             if d in self.t[self.RESOURCES]]
+
+        self.t[self.RESOURCES][name] = rendered
 
     def add_output(self, definition):
         if self.t.get(self.OUTPUTS) is None:
