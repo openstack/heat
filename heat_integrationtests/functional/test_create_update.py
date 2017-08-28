@@ -620,6 +620,8 @@ resources:
         # Fixing the template should fix the stack
         template = _change_rsrc_properties(template,
                                            ['test1'], {'fail': False})
+        template['resources']['test2'][
+            'properties'] = {'action_wait_secs': {'update': 1}}
         self.update_stack(stack_identifier,
                           template=template,
                           environment=env)
@@ -649,6 +651,8 @@ resources:
 
         template = _change_rsrc_properties(template,
                                            ['test2'], {'value': 'Test2'})
+        template['resources']['test1'][
+            'properties']['action_wait_secs'] = {'create': 1}
         self.update_stack(stack_identifier,
                           template=template,
                           expected_status='UPDATE_FAILED')
