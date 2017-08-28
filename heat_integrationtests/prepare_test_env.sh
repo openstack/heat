@@ -58,12 +58,11 @@ iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
 
 # Skip test_cancel_update_server_with_port till bug #1607714 is fixed in nova
 # Skip ReloadOnSighupTest. Most jobs now run with apache+uwsgi, so the test has no significance
-iniset $conf_file heat_plugin skip_functional_test_list 'CancelUpdateTest.test_cancel_update_server_with_port, ReloadOnSighupTest, StackSnapshotRestoreTest'
+iniset $conf_file heat_plugin skip_functional_test_list 'CancelUpdateTest.test_cancel_update_server_with_port, ReloadOnSighupTest'
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
 # test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
-# StackSnapshotRestoreTest skipped until bug #1694371 is resolved
 iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
 
 cat $conf_file
