@@ -1621,7 +1621,9 @@ class Resource(status.ResourceStatus):
                 exc = Exception(_('Resource %s not created yet.') % self.name)
                 failure = exception.ResourceFailure(exc, self, action)
                 raise failure
-            return self._do_action(action)
+
+            with self.frozen_properties():
+                return self._do_action(action)
         else:
             reason = '%s not supported for %s' % (action, self.type())
             self.state_set(action, self.COMPLETE, reason)
@@ -1660,7 +1662,8 @@ class Resource(status.ResourceStatus):
             raise exception.ResourceFailure(exc, self, action)
 
         LOG.info('suspending %s', self)
-        return self._do_action(action)
+        with self.frozen_properties():
+            return self._do_action(action)
 
     def resume(self):
         """Return a task to resume the resource.
@@ -1678,13 +1681,16 @@ class Resource(status.ResourceStatus):
             exc = exception.Error(_('State %s invalid for resume')
                                   % six.text_type(self.state))
             raise exception.ResourceFailure(exc, self, action)
+
         LOG.info('resuming %s', self)
-        return self._do_action(action)
+        with self.frozen_properties():
+            return self._do_action(action)
 
     def snapshot(self):
         """Snapshot the resource and return the created data, if any."""
         LOG.info('snapshotting %s', self)
-        return self._do_action(self.SNAPSHOT)
+        with self.frozen_properties():
+            return self._do_action(self.SNAPSHOT)
 
     @scheduler.wrappertask
     def delete_snapshot(self, data):
