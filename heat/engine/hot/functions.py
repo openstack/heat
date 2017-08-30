@@ -1469,10 +1469,17 @@ class MakeURL(function.Function):
                             try:
                                 port = int(port)
                             except ValueError:
-                                raise ValueError(_('Invalid URL port "%s"') %
-                                                 port)
+                                raise ValueError(
+                                    _('Invalid URL port "%(port)s" '
+                                      'for %(fn_name)s called with '
+                                      '%(args)s')
+                                    % {'fn_name': self.fn_name,
+                                       'port': port, 'args': args})
+
                         if not (0 < port <= 65535):
-                            raise ValueError(_('Invalid URL port %d') % port)
+                            raise ValueError(
+                                _('Invalid URL port %d, '
+                                  'must be in range 1-65535') % port)
                 else:
                     if not isinstance(args[arg], (function.Function,
                                                   six.string_types)):
