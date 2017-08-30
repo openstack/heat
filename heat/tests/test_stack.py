@@ -1021,7 +1021,7 @@ class StackTest(common.HeatTestCase):
         loaded_stack._update_all_resource_data(False, True)
         self.assertEqual('AResource',
                          loaded_stack.outputs['TestOutput'].get_value())
-        self.assertEqual({}, loaded_stack['AResource']._stored_properties_data)
+        self.assertIsNone(loaded_stack['AResource']._stored_properties_data)
 
     def test_adopt_stack_fails(self):
         adopt_data = '''{
