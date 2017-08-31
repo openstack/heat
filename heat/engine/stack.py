@@ -318,7 +318,9 @@ class Stack(collections.Mapping):
         else:
             resources = self._db_resources_get()
         for rsc in six.itervalues(resources):
-            yield self._resource_from_db_resource(rsc, rsrc_def_cache)
+            loaded_res = self._resource_from_db_resource(rsc, rsrc_def_cache)
+            if loaded_res is not None:
+                yield loaded_res
 
     def iter_resources(self, nested_depth=0, filters=None):
         """Iterates over all the resources in a stack.
@@ -379,8 +381,12 @@ class Stack(collections.Mapping):
                 rsrc_def = t.resource_definitions(self)
             if rsrc_def_cache:
                 rsrc_def_cache[tid] = rsrc_def
+        defn = rsrc_def.get(db_res.name)
 
-        return resource.Resource(db_res.name, rsrc_def[db_res.name], self)
+        if defn is None:
+            return None
+
+        return resource.Resource(db_res.name, defn, self)
 
     def resource_get(self, name):
         """Return a stack resource, even if not in the current template."""
