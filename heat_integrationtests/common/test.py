@@ -297,11 +297,15 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             return False
         return res.resource_status == status
 
-    def _verify_status(self, stack, stack_identifier, status, fail_regexp):
+    def _verify_status(self, stack, stack_identifier, status,
+                       fail_regexp, is_action_cancelled=False):
         if stack.stack_status == status:
             # Handle UPDATE_COMPLETE/FAILED case: Make sure we don't
             # wait for a stale UPDATE_COMPLETE/FAILED status.
             if status in ('UPDATE_FAILED', 'UPDATE_COMPLETE'):
+                if is_action_cancelled:
+                    return True
+
                 if self.updated_time.get(
                         stack_identifier) != stack.updated_time:
                     self.updated_time[stack_identifier] = stack.updated_time
@@ -335,7 +339,8 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                                failure_pattern=None,
                                success_on_not_found=False,
                                signal_required=False,
-                               resources_to_signal=None):
+                               resources_to_signal=None,
+                               is_action_cancelled=False):
         """Waits for a Stack to reach a given status.
 
         Note this compares the full $action_$status, e.g
@@ -365,7 +370,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                 # been created yet
             else:
                 if self._verify_status(stack, stack_identifier, status,
-                                       fail_regexp):
+                                       fail_regexp, is_action_cancelled):
                     return
             if signal_required:
                 self.signal_resources(resources_to_signal)
@@ -436,7 +441,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
         self._wait_for_stack_status(**kwargs)
 
-    def cancel_update_stack(self, stack_identifier,
+    def cancel_update_stack(self, stack_identifier, rollback=True,
                             expected_status='ROLLBACK_COMPLETE'):
 
         stack_name = stack_identifier.split('/')[0]
@@ -444,10 +449,16 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.updated_time[stack_identifier] = self.client.stacks.get(
             stack_identifier, resolve_outputs=False).updated_time
 
-        self.client.actions.cancel_update(stack_name)
+        if rollback:
+            self.client.actions.cancel_update(stack_name)
+        else:
+            self.client.actions.cancel_without_rollback(stack_name)
 
         kwargs = {'stack_identifier': stack_identifier,
                   'status': expected_status}
+        if expected_status == 'UPDATE_FAILED':
+            kwargs['is_action_cancelled'] = True
+
         if expected_status in ['ROLLBACK_COMPLETE']:
             # To trigger rollback you would intentionally fail the stack
             # Hence check for rollback failures
