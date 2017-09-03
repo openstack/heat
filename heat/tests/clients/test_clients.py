@@ -20,6 +20,7 @@ from heatclient import exc as heat_exc
 from keystoneauth1 import exceptions as keystone_exc
 from keystoneauth1.identity import generic
 from manilaclient import exceptions as manila_exc
+from mistralclient.api import base as mistral_base
 import mock
 from neutronclient.common import exceptions as neutron_exc
 from openstack import exceptions
@@ -791,6 +792,22 @@ class TestIsNotFound(common.HeatTestCase):
             is_conflict=True,
             plugin='manila',
             exception=lambda: manila_exc.Conflict(),
+        )),
+        ('mistral_not_found1', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=False,
+            is_conflict=False,
+            plugin='mistral',
+            exception=lambda: mistral_base.APIException(404),
+        )),
+        ('mistral_not_found2', dict(
+            is_not_found=True,
+            is_over_limit=False,
+            is_client_exception=False,
+            is_conflict=False,
+            plugin='mistral',
+            exception=lambda: keystone_exc.NotFound(),
         )),
     ]
 
