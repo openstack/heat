@@ -352,9 +352,6 @@ function stop_heat {
 
     if [[ "$HEAT_USE_APACHE" == "True" ]]; then
         if [[ "$WSGI_MODE" == "uwsgi" ]]; then
-            remove_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI"
-            remove_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI"
-            remove_uwsgi_config "$HEAT_CW_API_UWSGI_CONF" "$HEAT_CW_API_UWSGI"
             _stop_processes
         else
             disable_apache_site heat-api
