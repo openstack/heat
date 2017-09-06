@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from keystoneauth1.exceptions import http as ka_exceptions
 from mistralclient.api import base as mistral_base
 from mistralclient.api import client as mistral_client
 
@@ -39,16 +40,28 @@ class MistralClientPlugin(client_plugin.ClientPlugin):
         return client
 
     def is_not_found(self, ex):
-        return (isinstance(ex, mistral_base.APIException) and
-                ex.error_code == 404)
+        # check for keystoneauth exceptions till requirements change
+        # to python-mistralclient > 3.1.2
+        ka_not_found = isinstance(ex, ka_exceptions.NotFound)
+        mistral_not_found = (isinstance(ex, mistral_base.APIException) and
+                             ex.error_code == 404)
+        return ka_not_found or mistral_not_found
 
     def is_over_limit(self, ex):
-        return (isinstance(ex, mistral_base.APIException) and
-                ex.error_code == 413)
+        # check for keystoneauth exceptions till requirements change
+        # to python-mistralclient > 3.1.2
+        ka_overlimit = isinstance(ex, ka_exceptions.RequestEntityTooLarge)
+        mistral_overlimit = (isinstance(ex, mistral_base.APIException) and
+                             ex.error_code == 413)
+        return ka_overlimit or mistral_overlimit
 
     def is_conflict(self, ex):
-        return (isinstance(ex, mistral_base.APIException) and
-                ex.error_code == 409)
+        # check for keystoneauth exceptions till requirements change
+        # to python-mistralclient > 3.1.2
+        ka_conflict = isinstance(ex, ka_exceptions.Conflict)
+        mistral_conflict = (isinstance(ex, mistral_base.APIException) and
+                            ex.error_code == 409)
+        return ka_conflict or mistral_conflict
 
     def get_workflow_by_identifier(self, workflow_identifier):
         try:
