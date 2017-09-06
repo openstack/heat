@@ -44,7 +44,21 @@ resources:
           publish:
             result: <% $.hello %>
 """
-
+workflow_template_with_tags = """
+heat_template_version: queens
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      type: direct
+      tags:
+        - tagged
+      tasks:
+        - name: hello
+          action: std.echo output='Good morning!'
+          publish:
+            result: <% $.hello %>
+"""
 workflow_template_with_params = """
 heat_template_version: 2013-05-23
 resources:
@@ -740,6 +754,22 @@ class TestMistralWorkflow(common.HeatTestCase):
             FakeWorkflow('create_vm')]
         scheduler.TaskRunner(wf.create)()
         details = {'input': {'flavor': '3'},
+                   'params': {'test': 'param_value', 'test1': 'param_value_1'}}
+        execution = mock.Mock()
+        execution.id = '12345'
+        self.mistral.executions.create.side_effect = (
+            lambda *args, **kw: self.verify_params(*args, **kw))
+        scheduler.TaskRunner(wf.signal, details)()
+
+    def test_workflow_tags(self):
+        tmpl = template_format.parse(workflow_template_with_tags)
+        stack = utils.parse_stack(tmpl)
+        rsrc_defns = stack.t.resource_definitions(stack)['workflow']
+        wf = workflow.Workflow('workflow', rsrc_defns, stack)
+        self.mistral.workflows.create.return_value = [
+            FakeWorkflow('workflow')]
+        scheduler.TaskRunner(wf.create)()
+        details = {'tags': ['mytag'],
                    'params': {'test': 'param_value', 'test1': 'param_value_1'}}
         execution = mock.Mock()
         execution.id = '12345'

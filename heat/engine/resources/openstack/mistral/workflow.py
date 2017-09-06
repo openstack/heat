@@ -48,10 +48,10 @@ class Workflow(signal_responder.SignalResponder,
 
     PROPERTIES = (
         NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS,
-        TASK_DEFAULTS, USE_REQUEST_BODY_AS_INPUT
+        TASK_DEFAULTS, USE_REQUEST_BODY_AS_INPUT, TAGS
     ) = (
         'name', 'type', 'description', 'input', 'output', 'tasks', 'params',
-        'task_defaults', 'use_request_body_as_input'
+        'task_defaults', 'use_request_body_as_input', 'tags'
     )
 
     _TASKS_KEYS = (
@@ -108,6 +108,12 @@ class Workflow(signal_responder.SignalResponder,
               '"params".'),
             update_allowed=True,
             support_status=support.SupportStatus(version='6.0.0')
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of tags to set on the workflow.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='10.0.0')
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
@@ -532,6 +538,7 @@ class Workflow(signal_responder.SignalResponder,
                       defn_name: {self.TYPE: props.get(self.TYPE),
                                   self.DESCRIPTION: props.get(
                                       self.DESCRIPTION),
+                                  self.TAGS: props.get(self.TAGS),
                                   self.OUTPUT: props.get(self.OUTPUT)}}
         for key in list(definition[defn_name].keys()):
             if definition[defn_name][key] is None:
