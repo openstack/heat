@@ -478,8 +478,9 @@ that updates require the engine to delete and re-create the resource
 
   :param json_snippet: the resource definition from the updated template
   :type json_snippet: collections.Mapping
-  :param templ_diff: changed values from the original template definition
-  :type templ_diff: collections.Mapping
+  :param tmpl_diff: values in the updated definition that have changed
+                    with respect to the original template definition.
+  :type tmpl_diff: collections.Mapping
   :param prop_diff: property values that are different between the original
                     definition and the updated definition; keys are
                     property names and values are the new values. Deleted or
