@@ -385,8 +385,6 @@ class ServiceEngineTest(common.HeatTestCase):
         self.eng.reset()
         setup_logging_mock.assert_called_once_with(cfg.CONF, 'heat')
 
-    @mock.patch('oslo_messaging.Target',
-                return_value=mock.Mock())
     @mock.patch('heat.common.messaging.get_rpc_client',
                 return_value=mock.Mock())
     @mock.patch('heat.common.service_utils.generate_engine_id',
@@ -406,8 +404,7 @@ class ServiceEngineTest(common.HeatTestCase):
             engine_listener_class,
             thread_group_manager_class,
             sample_uuid_method,
-            rpc_client_class,
-            target_class):
+            rpc_client_class):
         self.eng.start()
         self.assertEqual(cfg.CONF.executor_thread_pool_size,
                          cfg.CONF.database.max_overflow)
