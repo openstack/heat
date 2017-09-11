@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import mock
 
 from heat.engine import resource
@@ -41,14 +42,6 @@ class KeystoneRoleTest(common.HeatTestCase):
         super(KeystoneRoleTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-
-        self.stack = stack.Stack(
-            self.ctx, 'test_stack_keystone',
-            template.Template(keystone_role_template)
-        )
-
-        self.test_role = self.stack['test_role']
-
         # Mock client
         self.keystoneclient = mock.Mock()
         self.patchobject(resource.Resource, 'client',
@@ -56,53 +49,75 @@ class KeystoneRoleTest(common.HeatTestCase):
                              client=self.keystoneclient))
         self.roles = self.keystoneclient.roles
 
-    def _get_mock_role(self):
+    def _get_rsrc(self, domain='default', without_name=False):
+        t = template.Template(keystone_role_template)
+        tmpl = copy.deepcopy(t)
+        tmpl['resources']['test_role']['Properties']['domain'] = domain
+        if without_name:
+            tmpl['resources']['test_role']['Properties'].pop('name')
+        test_stack = stack.Stack(self.ctx, 'test_keystone_role', tmpl)
+        test_role = test_stack['test_role']
+        return test_role
+
+    def _get_mock_role(self, domain='default'):
         value = mock.MagicMock()
         role_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        domain_id = domain
         value.id = role_id
-
+        value.domain_id = domain_id
         return value
 
-    def test_role_handle_create(self):
-        mock_role = self._get_mock_role()
+    def _test_handle_create(self, domain='default'):
+        test_role = self._get_rsrc(domain)
+        mock_role = self._get_mock_role(domain)
         self.roles.create.return_value = mock_role
 
         # validate the properties
         self.assertEqual('test_role_1',
-                         self.test_role.properties.get(role.KeystoneRole.NAME))
+                         test_role.properties.get(role.KeystoneRole.NAME))
+        self.assertEqual(domain,
+                         test_role.properties.get(role.KeystoneRole.DOMAIN))
 
-        self.test_role.handle_create()
+        test_role.handle_create()
 
         # validate role creation with given name
-        self.roles.create.assert_called_once_with(name='test_role_1')
+        self.roles.create.assert_called_once_with(name='test_role_1',
+                                                  domain=domain)
 
         # validate physical resource id
-        self.assertEqual(mock_role.id, self.test_role.resource_id)
+        self.assertEqual(mock_role.id, test_role.resource_id)
+
+    def test_role_handle_create(self):
+        self._test_handle_create()
+
+    def test_role_handle_create_with_domain(self):
+        self._test_handle_create(domain='d_test')
 
     def test_role_handle_create_default_name(self):
         # reset the NAME value to None, to make sure role is
         # created with physical_resource_name
-        self.test_role.properties = mock.MagicMock()
-        self.test_role.properties.__getitem__.return_value = None
-
-        self.test_role.handle_create()
+        test_role = self._get_rsrc(without_name=True)
+        test_role.physical_resource_name = mock.Mock(
+            return_value='phy_role_name')
+        test_role.handle_create()
 
         # validate role creation with default name
-        physical_resource_name = self.test_role.physical_resource_name()
-        self.roles.create.assert_called_once_with(name=physical_resource_name)
+        self.roles.create.assert_called_once_with(name='phy_role_name',
+                                                  domain='default')
 
     def test_role_handle_update(self):
-        self.test_role.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+        test_role = self._get_rsrc()
+        test_role.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
         # update the name property
         prop_diff = {role.KeystoneRole.NAME: 'test_role_1_updated'}
 
-        self.test_role.handle_update(json_snippet=None,
-                                     tmpl_diff=None,
-                                     prop_diff=prop_diff)
+        test_role.handle_update(json_snippet=None,
+                                tmpl_diff=None,
+                                prop_diff=prop_diff)
 
         self.roles.update.assert_called_once_with(
-            role=self.test_role.resource_id,
+            role=test_role.resource_id,
             name=prop_diff[role.KeystoneRole.NAME]
         )
 
@@ -110,5 +125,6 @@ class KeystoneRoleTest(common.HeatTestCase):
         role = mock.Mock()
         role.to_dict.return_value = {'attr': 'val'}
         self.roles.get.return_value = role
-        res = self.test_role._show_resource()
+        test_role = self._get_rsrc()
+        res = test_role._show_resource()
         self.assertEqual({'attr': 'val'}, res)
