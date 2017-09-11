@@ -1413,6 +1413,15 @@ class HOTemplateTest(common.HeatTestCase):
         resolved = self.resolve(snippet, tmpl, stack)
         self.assertEqual('value_if_false', resolved)
 
+    def test_if_null_return(self):
+        snippet = {'if': [True, None, 'value_if_false']}
+        # when condition is true, if function resolve to value_if_true
+        tmpl = template.Template(hot_newton_tpl_empty)
+        stack = parser.Stack(utils.dummy_context(),
+                             'test_if_null_return', tmpl)
+        resolved = self.resolve(snippet, tmpl, stack)
+        self.assertIsNone(resolved)
+
     def test_if_using_condition_function(self):
         tmpl_with_conditions = template_format.parse('''
 heat_template_version: 2016-10-14
@@ -1428,6 +1437,54 @@ conditions:
 
         resolved = self.resolve(snippet, tmpl, stack)
         self.assertEqual('value_if_true', resolved)
+
+    def test_if_referenced_by_resource(self):
+        tmpl_with_conditions = template_format.parse('''
+heat_template_version: pike
+conditions:
+  create_prod: False
+resources:
+  AResource:
+    type: ResourceWithPropsType
+    properties:
+      Foo:
+        if:
+          - create_prod
+          - "one"
+          - "two"
+''')
+        tmpl = template.Template(tmpl_with_conditions)
+        self.stack = parser.Stack(utils.dummy_context(),
+                                  'test_if_referenced_by_resource', tmpl)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('two', self.stack['AResource'].properties['Foo'])
+
+    def test_if_referenced_by_resource_null(self):
+        tmpl_with_conditions = template_format.parse('''
+heat_template_version: pike
+conditions:
+  create_prod: True
+resources:
+  AResource:
+    type: ResourceWithPropsType
+    properties:
+      Foo:
+        if:
+          - create_prod
+          - null
+          - "two"
+''')
+        tmpl = template.Template(tmpl_with_conditions)
+        self.stack = parser.Stack(utils.dummy_context(),
+                                  'test_if_referenced_by_resource_null', tmpl)
+        self.stack.store()
+        self.stack.create()
+        self.assertEqual((parser.Stack.CREATE, parser.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual('', self.stack['AResource'].properties['Foo'])
 
     def test_if_invalid_args(self):
         snippet = {'if': ['create_prod', 'one_value']}
