@@ -536,17 +536,18 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         mock_image = self.patchobject(glance.GlanceClientPlugin,
                                       'find_image_by_name_or_id')
-        mock_image.side_effect = [glance.exceptions.NotFound(
-            'Image Slackware Not Found')]
+        mock_image.side_effect = [
+            glance.client_exception.EntityMatchNotFound(
+                entity='image', args={'name': 'Slackware'})]
         # Init a server with non exist image name
         tmpl['Resources']['WebServer']['Properties']['image'] = 'Slackware'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        error = self.assertRaises(glance.exceptions.NotFound,
+        error = self.assertRaises(glance.client_exception.EntityMatchNotFound,
                                   scheduler.TaskRunner(server.create))
-        self.assertEqual("Image Slackware Not Found (HTTP 404)",
+        self.assertEqual("No image matching {'name': 'Slackware'}.",
                          six.text_type(error))
 
     def test_server_duplicate_image_name_err(self):
@@ -554,15 +555,17 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         mock_image = self.patchobject(glance.GlanceClientPlugin,
                                       'find_image_by_name_or_id')
-        mock_image.side_effect = [glance.exceptions.NoUniqueMatch(
-            'No image unique match found for CentOS 5.2.')]
+        mock_image.side_effect = [
+            glance.client_exception.EntityUniqueMatchNotFound(
+                entity='image', args='CentOS 5.2')]
         tmpl['Resources']['WebServer']['Properties']['image'] = 'CentOS 5.2'
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
 
-        error = self.assertRaises(glance.exceptions.NoUniqueMatch,
-                                  scheduler.TaskRunner(server.create))
+        error = self.assertRaises(
+            glance.client_exception.EntityUniqueMatchNotFound,
+            scheduler.TaskRunner(server.create))
         self.assertEqual('No image unique match found for CentOS 5.2.',
                          six.text_type(error))
 
@@ -2581,8 +2584,9 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('image_not_found',
                                 resource_defns['WebServer'], stack)
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
-                         side_effect=[glance.exceptions.NotFound(),
-                                      self.mock_image])
+                         side_effect=[
+                             glance.client_exception.EntityMatchNotFound,
+                             self.mock_image])
         self.patchobject(nova.NovaClientPlugin, 'get_flavor',
                          side_effect=nova.exceptions.NotFound(''))
         self.assertIsNone(server.validate())
@@ -3472,7 +3476,8 @@ class ServersTest(common.HeatTestCase):
         server = self._create_test_server(return_server,
                                           'my_server')
 
-        ex = glance.exceptions.NotFound()
+        ex = glance.client_exception.EntityMatchNotFound(entity='image',
+                                                         args='Update Image')
         self.patchobject(glance.GlanceClientPlugin,
                          'find_image_by_name_or_id',
                          side_effect=[1, ex])
@@ -3482,8 +3487,9 @@ class ServersTest(common.HeatTestCase):
 
         # update
         updater = scheduler.TaskRunner(server.update, update_template)
-        err = self.assertRaises(glance.exceptions.NotFound, updater)
-        self.assertEqual('Not Found (HTTP 404)',
+        err = self.assertRaises(glance.client_exception.EntityMatchNotFound,
+                                updater)
+        self.assertEqual('No image matching Update Image.',
                          six.text_type(err))
 
     def test_server_snapshot(self):

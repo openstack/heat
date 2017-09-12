@@ -14,9 +14,9 @@
 import uuid
 
 from glanceclient import exc
-from glanceclient.openstack.common.apiclient import exceptions
 import mock
 
+from heat.engine.clients import client_exception as exception
 from heat.engine.clients.os import glance
 from heat.tests import common
 from heat.tests import utils
@@ -53,10 +53,10 @@ class GlanceUtilsTest(common.HeatTestCase):
                          self.glance_plugin.find_image_by_name_or_id(img_id))
         self.assertEqual(img_id,
                          self.glance_plugin.find_image_by_name_or_id(img_name))
-        self.assertRaises(exceptions.NotFound,
+        self.assertRaises(exception.EntityMatchNotFound,
                           self.glance_plugin.find_image_by_name_or_id,
                           'noimage')
-        self.assertRaises(exceptions.NoUniqueMatch,
+        self.assertRaises(exception.EntityUniqueMatchNotFound,
                           self.glance_plugin.find_image_by_name_or_id,
                           'myfakeimage')
 
@@ -72,9 +72,9 @@ class ImageConstraintTest(common.HeatTestCase):
         self.constraint = glance.ImageConstraint()
 
     def test_validation(self):
-        self.mock_find_image.side_effect = ["id1",
-                                            exceptions.NotFound(),
-                                            exceptions.NoUniqueMatch()]
+        self.mock_find_image.side_effect = [
+            "id1", exception.EntityMatchNotFound(),
+            exception.EntityUniqueMatchNotFound()]
         self.assertTrue(self.constraint.validate("foo", self.ctx))
         self.assertFalse(self.constraint.validate("bar", self.ctx))
         self.assertFalse(self.constraint.validate("baz", self.ctx))
