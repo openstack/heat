@@ -77,7 +77,8 @@ class CheckResource(object):
             return False
 
         if (not stack.disable_rollback and
-                stack.action in (stack.CREATE, stack.ADOPT, stack.UPDATE)):
+                stack.action in (stack.CREATE, stack.ADOPT, stack.UPDATE,
+                                 stack.RESTORE)):
             self._trigger_rollback(stack)
         else:
             stack.purge_db()

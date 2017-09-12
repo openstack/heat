@@ -655,15 +655,16 @@ class TestConvgStackStateSet(common.HeatTestCase):
         self.assertIsNone(ret_val)
 
     def test_state_set_stack_restore(self, mock_ps):
+        mock_ps.return_value = 'updated'
         ret_val = self.stack.state_set(
             self.stack.RESTORE, self.stack.IN_PROGRESS, 'Restore started')
         self.assertTrue(mock_ps.called)
-        self.assertIsNone(ret_val)
+        self.assertEqual('updated', ret_val)
         mock_ps.reset_mock()
         ret_val = self.stack.state_set(
             self.stack.RESTORE, self.stack.COMPLETE, 'Restore complete')
-        self.assertFalse(mock_ps.called)
-        self.assertIsNone(ret_val)
+        self.assertTrue(mock_ps.called)
+        self.assertEqual('updated', ret_val)
 
 
 class TestConvgStackRollback(common.HeatTestCase):
