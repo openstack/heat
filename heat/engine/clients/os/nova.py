@@ -715,6 +715,26 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         self.clients.client('neutron').update_floatingip(floatingip_id,
                                                          request_body)
 
+    def associate_floatingip_address(self, server_id, fip_address):
+        fips = self.clients.client(
+            'neutron').list_floatingips(
+                floating_ip_address=fip_address)['floatingips']
+        if len(fips) == 0:
+            args = {'ip_address': fip_address}
+            raise client_exception.EntityMatchNotFound(entity='floatingip',
+                                                       args=args)
+        self.associate_floatingip(server_id, fips[0]['id'])
+
+    def dissociate_floatingip_address(self, fip_address):
+        fips = self.clients.client(
+            'neutron').list_floatingips(
+                floating_ip_address=fip_address)['floatingips']
+        if len(fips) == 0:
+            args = {'ip_address': fip_address}
+            raise client_exception.EntityMatchNotFound(entity='floatingip',
+                                                       args=args)
+        self.dissociate_floatingip(fips[0]['id'])
+
     def interface_detach(self, server_id, port_id):
         with self.ignore_not_found:
             server = self.fetch_server(server_id)
