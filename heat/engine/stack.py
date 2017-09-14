@@ -1935,7 +1935,8 @@ class Stack(collections.Mapping):
             snapshot_data = snapshot.data
             if snapshot_data:
                 data = snapshot.data['resources'].get(name)
-                scheduler.TaskRunner(rsrc.delete_snapshot, data)()
+                if data:
+                    scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
     def restore_data(self, snapshot):
         env = environment.Environment(snapshot.data['environment'])
