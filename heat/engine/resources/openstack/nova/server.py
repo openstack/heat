@@ -1697,7 +1697,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     def handle_delete_snapshot(self, snapshot):
         image_id = snapshot['resource_data'].get('snapshot_image_id')
-        with self.client_plugin().ignore_not_found:
+        with self.client_plugin('glance').ignore_not_found:
             self.client('glance').images.delete(image_id)
 
     def handle_restore(self, defn, restore_data):
