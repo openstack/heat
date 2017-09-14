@@ -63,27 +63,26 @@ floating_ip_template_with_assoc = '''
 class NovaFloatingIPTest(common.HeatTestCase):
     def setUp(self):
         super(NovaFloatingIPTest, self).setUp()
-        self.novaclient = mock.Mock()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(self.novaclient.servers, 'get')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
+        self.novaclient = fakes_nova.FakeClient()
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.novaclient)
         self.m.StubOutWithMock(neutronclient.Client,
                                'create_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'show_floatingip')
         self.m.StubOutWithMock(neutronclient.Client,
                                'update_floatingip')
         self.m.StubOutWithMock(neutronclient.Client,
                                'delete_floatingip')
-        self.m.StubOutWithMock(self.novaclient.servers, 'add_floating_ip')
-        self.m.StubOutWithMock(self.novaclient.servers, 'remove_floating_ip')
-        self.patchobject(nova.NovaClientPlugin, 'get_server',
-                         return_value=mock.MagicMock())
-        self.patchobject(nova.NovaClientPlugin, 'has_extension',
-                         return_value=True)
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
                          return_value='eeee')
+
+    def mock_interface(self, port, ip):
+        class MockIface(object):
+            def __init__(self, port_id, fixed_ip):
+                self.port_id = port_id
+                self.fixed_ips = [{'ip_address': fixed_ip}]
+
+        return MockIface(port, ip)
 
     def mock_create_floatingip(self):
         neutronclient.Client.create_floatingip({
@@ -95,22 +94,28 @@ class NovaFloatingIPTest(common.HeatTestCase):
             "floating_ip_address": "11.0.0.1"
         }})
 
-    def mock_show_floatingip(self, refid):
-        if refid == 'fc68ea2c-b60b-4b4f-bd82-94ec81110766':
-            address = '11.0.0.1'
+    def mock_update_floatingip(self,
+                               fip='fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                               ex=None, fip_request=None,
+                               delete_assc=False):
+        if fip_request:
+            request_body = fip_request
+        elif delete_assc:
+            request_body = {
+                'floatingip': {
+                    'port_id': None,
+                    'fixed_ip_address': None}}
         else:
-            address = '11.0.0.2'
-        neutronclient.Client.show_floatingip(
-            refid,
-        ).AndReturn({'floatingip': {
-            'router_id': None,
-            'tenant_id': 'e936e6cd3e0b48dcb9ff853a8f253257',
-            'floating_network_id': 'eeee',
-            'fixed_ip_address': None,
-            'floating_ip_address': address,
-            'port_id': None,
-            'id': 'ffff'
-        }})
+            request_body = {
+                'floatingip': {
+                    'port_id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                    'fixed_ip_address': '1.2.3.4'}}
+        if ex:
+            neutronclient.Client.update_floatingip(
+                fip, request_body).AndRaise(ex)
+        else:
+            neutronclient.Client.update_floatingip(
+                fip, request_body).AndReturn(None)
 
     def mock_delete_floatingip(self):
         id = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
@@ -127,10 +132,12 @@ class NovaFloatingIPTest(common.HeatTestCase):
                                          self.stack)
 
     def prepare_floating_ip_assoc(self):
-        nova.NovaClientPlugin._create().AndReturn(
-            self.novaclient)
-        self.novaclient.servers.get('67dc62f9-efde-4c8b-94af-013e00f5dc57')
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        return_server = self.novaclient.servers.list()[1]
+        self.patchobject(self.novaclient.servers, 'get',
+                         return_value=return_server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(return_server, 'interface_list', return_value=[iface])
         template = template_format.parse(floating_ip_template_with_assoc)
         self.stack = utils.parse_stack(template)
         resource_defns = self.stack.t.resource_definitions(self.stack)
@@ -169,9 +176,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
 
     def test_delete_floating_ip_assoc_successful_if_create_failed(self):
         rsrc = self.prepare_floating_ip_assoc()
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1').AndRaise(
-            fakes_nova.fake_exception(400))
-
+        self.mock_update_floatingip(fakes_nova.fake_exception(400))
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -185,7 +190,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
 
     def test_floating_ip_assoc_create(self):
         rsrc = self.prepare_floating_ip_assoc()
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        self.mock_update_floatingip()
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -200,12 +205,8 @@ class NovaFloatingIPTest(common.HeatTestCase):
 
     def test_floating_ip_assoc_delete(self):
         rsrc = self.prepare_floating_ip_assoc()
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
-        self.novaclient.servers.get(
-            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
-        self.novaclient.servers.remove_floating_ip('server', '11.0.0.1')
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-
+        self.mock_update_floatingip()
+        self.mock_update_floatingip(delete_assc=True)
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -215,47 +216,44 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
         self.m.VerifyAll()
-
-    def create_delete_assoc_with_exc(self, exc_code):
-        rsrc = self.prepare_floating_ip_assoc()
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
-        self.novaclient.servers.get(
-            "67dc62f9-efde-4c8b-94af-013e00f5dc57").AndReturn("server")
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.novaclient.servers.remove_floating_ip("server",
-                                                   "11.0.0.1").AndRaise(
-            fakes_nova.fake_exception(exc_code))
-
-        self.m.ReplayAll()
-
-        rsrc.validate()
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        scheduler.TaskRunner(rsrc.delete)()
-        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
-    def test_floating_ip_assoc_delete_conflict(self):
-        self.create_delete_assoc_with_exc(exc_code=409)
 
     def test_floating_ip_assoc_delete_not_found(self):
-        self.create_delete_assoc_with_exc(exc_code=404)
+        rsrc = self.prepare_floating_ip_assoc()
+        self.mock_update_floatingip()
+        self.mock_update_floatingip(ex=fakes_nova.fake_exception(404),
+                                    delete_assc=True)
+        self.m.ReplayAll()
+
+        rsrc.validate()
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
+
+        self.m.VerifyAll()
 
     def test_floating_ip_assoc_update_server_id(self):
         rsrc = self.prepare_floating_ip_assoc()
-        # for create
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
-        # for update
-        self.novaclient.servers.get(
-            '2146dfbf-ba77-4083-8e86-d052f671ece5').AndReturn('server')
-        self.novaclient.servers.add_floating_ip('server', '11.0.0.1')
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        self.mock_update_floatingip()
+        fip_request = {'floatingip': {
+            'fixed_ip_address': '4.5.6.7',
+            'port_id': 'bbbbb-bbbb-bbbb-bbbbbbbbb'}
+        }
+        self.mock_update_floatingip(fip_request=fip_request)
         self.m.ReplayAll()
 
         rsrc.validate()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        # for update
+        return_server = self.novaclient.servers.list()[2]
+        self.patchobject(self.novaclient.servers, 'get',
+                         return_value=return_server)
+        iface = self.mock_interface('bbbbb-bbbb-bbbb-bbbbbbbbb',
+                                    '4.5.6.7')
+        self.patchobject(return_server, 'interface_list', return_value=[iface])
+
         # update with the new server_id
         props = copy.deepcopy(rsrc.properties.data)
         update_server_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
@@ -270,17 +268,11 @@ class NovaFloatingIPTest(common.HeatTestCase):
     def test_floating_ip_assoc_update_fl_ip(self):
         rsrc = self.prepare_floating_ip_assoc()
         # for create
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        self.mock_update_floatingip()
         # mock for delete the old association
-        self.novaclient.servers.get(
-            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
-        self.novaclient.servers.remove_floating_ip('server', '11.0.0.1')
+        self.mock_update_floatingip(delete_assc=True)
         # mock for new association
-        self.novaclient.servers.get(
-            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
-        self.novaclient.servers.add_floating_ip('server', '11.0.0.2')
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_show_floatingip('fc68ea2c-cccc-4b4f-bd82-94ec81110766')
+        self.mock_update_floatingip(fip='fc68ea2c-dddd-4b4f-bd82-94ec81110766')
         self.m.ReplayAll()
 
         rsrc.validate()
@@ -288,7 +280,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         # update with the new floatingip
         props = copy.deepcopy(rsrc.properties.data)
-        props['floating_ip'] = 'fc68ea2c-cccc-4b4f-bd82-94ec81110766'
+        props['floating_ip'] = 'fc68ea2c-dddd-4b4f-bd82-94ec81110766'
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
@@ -299,28 +291,33 @@ class NovaFloatingIPTest(common.HeatTestCase):
     def test_floating_ip_assoc_update_both(self):
         rsrc = self.prepare_floating_ip_assoc()
         # for create
-        self.novaclient.servers.add_floating_ip(None, '11.0.0.1')
+        self.mock_update_floatingip()
         # mock for delete the old association
-        self.novaclient.servers.get(
-            '67dc62f9-efde-4c8b-94af-013e00f5dc57').AndReturn('server')
-        self.novaclient.servers.remove_floating_ip('server', '11.0.0.1')
+        self.mock_update_floatingip(delete_assc=True)
         # mock for new association
-        self.novaclient.servers.get(
-            '2146dfbf-ba77-4083-8e86-d052f671ece5').AndReturn('new_server')
-        self.novaclient.servers.add_floating_ip('new_server', '11.0.0.2')
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_show_floatingip('fc68ea2c-cccc-4b4f-bd82-94ec81110766')
-
+        fip_request = {'floatingip': {
+            'fixed_ip_address': '4.5.6.7',
+            'port_id': 'bbbbb-bbbb-bbbb-bbbbbbbbb'}
+        }
+        self.mock_update_floatingip(fip='fc68ea2c-dddd-4b4f-bd82-94ec81110766',
+                                    fip_request=fip_request)
         self.m.ReplayAll()
 
         rsrc.validate()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        # update with the new floatingip
+        # update with the new floatingip and server
+        return_server = self.novaclient.servers.list()[2]
+        self.patchobject(self.novaclient.servers, 'get',
+                         return_value=return_server)
+        iface = self.mock_interface('bbbbb-bbbb-bbbb-bbbbbbbbb',
+                                    '4.5.6.7')
+        self.patchobject(return_server, 'interface_list', return_value=[iface])
+
         props = copy.deepcopy(rsrc.properties.data)
         update_server_id = '2146dfbf-ba77-4083-8e86-d052f671ece5'
         props['server_id'] = update_server_id
-        props['floating_ip'] = 'fc68ea2c-cccc-4b4f-bd82-94ec81110766'
+        props['floating_ip'] = 'fc68ea2c-dddd-4b4f-bd82-94ec81110766'
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
