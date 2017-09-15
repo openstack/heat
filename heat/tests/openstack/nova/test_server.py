@@ -2870,96 +2870,84 @@ class ServersTest(common.HeatTestCase):
                'block_device_mapping, block_device_mapping_v2.')
         self.assertEqual(msg, six.text_type(exc))
 
+    def _test_validate_bdm_v2(self, stack_name, bdm_v2, with_image=True,
+                              error_msg=None, raise_exc=None):
+        tmpl, stack = self._setup_test_stack(stack_name)
+        if not with_image:
+            del tmpl['Resources']['WebServer']['Properties']['image']
+        wsp = tmpl.t['Resources']['WebServer']['Properties']
+        wsp['block_device_mapping_v2'] = bdm_v2
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
+                         return_value=self.mock_flavor)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        self.stub_VolumeConstraint_validate()
+        if raise_exc:
+            ex = self.assertRaises(raise_exc, server.validate)
+            self.assertIn(error_msg, six.text_type(ex))
+        else:
+            self.assertIsNone(server.validate())
+
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_validate_conflict_block_device_mapping_v2_props(self,
                                                              mock_create):
         stack_name = 'val_blkdev2'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-
         bdm_v2 = [{'volume_id': '1', 'snapshot_id': 2}]
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['block_device_mapping_v2'] = bdm_v2
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
-                                resource_defns['WebServer'], stack)
-        self.stub_VolumeConstraint_validate()
+        error_msg = ('Cannot define the following properties at '
+                     'the same time: volume_id, snapshot_id')
         self.stub_SnapshotConstraint_validate()
-        self.assertRaises(exception.ResourcePropertyConflict, server.validate)
+        self._test_validate_bdm_v2(
+            stack_name, bdm_v2,
+            raise_exc=exception.ResourcePropertyConflict,
+            error_msg=error_msg)
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
-    def test_validate_without_bootable_source_in_bdm_v2(self, mock_create):
+    def test_validate_bdm_v2_with_empty_mapping(self, mock_create):
         stack_name = 'val_blkdev2'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-
         bdm_v2 = [{}]
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['block_device_mapping_v2'] = bdm_v2
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
-                                resource_defns['WebServer'], stack)
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                server.validate)
         msg = ('Either volume_id, snapshot_id, image_id, swap_size, '
                'ephemeral_size or ephemeral_format must be specified.')
-        self.assertEqual(msg, six.text_type(exc))
+        self._test_validate_bdm_v2(stack_name, bdm_v2,
+                                   raise_exc=exception.StackValidationFailed,
+                                   error_msg=msg)
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_validate_bdm_v2_properties_success(self, mock_create):
-        stack_name = 'v2_properties'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-
-        bdm_v2 = [{'volume_id': '1'}]
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['block_device_mapping_v2'] = bdm_v2
-
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
-                                resource_defns['WebServer'], stack)
-        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
-                         return_value=self.mock_flavor)
-        self.patchobject(glance.GlanceClientPlugin, 'get_image',
-                         return_value=self.mock_image)
-        self.stub_VolumeConstraint_validate()
-        self.assertIsNone(server.validate())
+        stack_name = 'bdm_v2_success'
+        bdm_v2 = [{'volume_id': '1', 'boot_index': -1}]
+        self._test_validate_bdm_v2(stack_name, bdm_v2)
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_validate_bdm_v2_with_unresolved_volume(self, mock_create):
-        stack_name = 'v2_properties'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-        del tmpl['Resources']['WebServer']['Properties']['image']
-
+        stack_name = 'bdm_v2_with_unresolved_vol'
         # empty string indicates that volume is unresolved
         bdm_v2 = [{'volume_id': ''}]
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['block_device_mapping_v2'] = bdm_v2
+        self._test_validate_bdm_v2(stack_name, bdm_v2, with_image=False)
 
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
-                                resource_defns['WebServer'], stack)
-        self.patchobject(nova.NovaClientPlugin, 'get_flavor',
-                         return_value=self.mock_flavor)
-        self.patchobject(glance.GlanceClientPlugin, 'get_image',
-                         return_value=self.mock_image)
-        self.stub_VolumeConstraint_validate()
-        self.assertIsNone(server.validate())
+    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    def test_validate_bdm_v2_multiple_bootable_source(self, mock_create):
+        stack_name = 'v2_multiple_bootable'
+        # with two bootable sources: volume_id and image
+        bdm_v2 = [{'volume_id': '1', 'boot_index': 0}]
+        msg = ('Multiple bootable sources for instance')
+        self._test_validate_bdm_v2(stack_name, bdm_v2,
+                                   raise_exc=exception.StackValidationFailed,
+                                   error_msg=msg)
 
     @mock.patch.object(nova.NovaClientPlugin, '_create')
     def test_validate_bdm_v2_properties_no_bootable_vol(self, mock_create):
-        stack_name = 'v2_properties'
-        (tmpl, stack) = self._setup_test_stack(stack_name)
-
+        stack_name = 'bdm_v2_no_bootable'
         bdm_v2 = [{'swap_size': 10}]
-        wsp = tmpl.t['Resources']['WebServer']['Properties']
-        wsp['block_device_mapping_v2'] = bdm_v2
-        wsp.pop('image')
-        resource_defns = tmpl.resource_definitions(stack)
-        server = servers.Server('server_create_image_err',
-                                resource_defns['WebServer'], stack)
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                server.validate)
         msg = ('Neither image nor bootable volume is specified for instance '
                'server_create_image_err')
-        self.assertEqual(msg, six.text_type(exc))
+        self._test_validate_bdm_v2(stack_name, bdm_v2,
+                                   raise_exc=exception.StackValidationFailed,
+                                   error_msg=msg,
+                                   with_image=False)
 
     def test_validate_metadata_too_many(self):
         stack_name = 'srv_val_metadata'
