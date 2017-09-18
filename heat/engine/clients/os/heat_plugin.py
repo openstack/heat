@@ -13,6 +13,7 @@
 
 from oslo_config import cfg
 import six
+from six.moves import urllib
 
 from heatclient import client as hc
 from heatclient import exc
@@ -91,12 +92,23 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
 
     def get_watch_server_url(self):
         cfn_url = self.get_heat_cfn_url()
-        url_parts = cfn_url.split(':')
-        port_and_version = url_parts[-1].split('/')
-        port_and_version[0] = (
-            six.text_type(cfg.CONF.heat_api_cloudwatch.bind_port))
-        url_parts[-1] = '/'.join(port_and_version)
-        return ':'.join(url_parts)
+        parsed_url = urllib.parse.urlparse(cfn_url)
+        separator = ':'
+        (host, separator, port) = parsed_url.netloc.partition(separator)
+        # The old url model, like http://localhost:port/v1
+        if port:
+            watch_api_port = (
+                six.text_type(cfg.CONF.heat_api_cloudwatch.bind_port))
+            replaced_netloc = ':'.join([host, str(watch_api_port)])
+            parsed_url = parsed_url._replace(netloc=replaced_netloc)
+        # The uwsgi url mode, like http://ip/heat-api-cfn/v1
+        else:
+            paths = parsed_url.path.split('/')
+            paths[1] = 'heat-api-cloudwatch'
+            replaced_paths = '/'.join(paths)
+            parsed_url = parsed_url._replace(path=replaced_paths)
+
+        return urllib.parse.urlunparse(parsed_url)
 
     def get_insecure_option(self):
         return self._get_client_option(CLIENT_NAME, 'insecure')

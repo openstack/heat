@@ -75,7 +75,7 @@ class ClientsTest(common.HeatTestCase):
         obj._get_client_option.return_value = result
         self.assertEqual(result, obj.get_heat_url())
 
-    def _client_cfn_url(self):
+    def _client_cfn_url(self, use_uwsgi=False):
         con = mock.Mock()
         c = clients.Clients(con)
         con.clients = c
@@ -83,7 +83,10 @@ class ClientsTest(common.HeatTestCase):
         obj._get_client_option = mock.Mock()
         obj._get_client_option.return_value = None
         obj.url_for = mock.Mock(name="url_for")
-        obj.url_for.return_value = "http://0.0.0.0:8000/v1/"
+        if use_uwsgi:
+            obj.url_for.return_value = "http://0.0.0.0/heat-api-cfn/v1/"
+        else:
+            obj.url_for.return_value = "http://0.0.0.0:8000/v1/"
         return obj
 
     def test_clients_get_heat_cfn_url(self):
@@ -92,7 +95,13 @@ class ClientsTest(common.HeatTestCase):
 
     def test_clients_get_watch_server_url(self):
         obj = self._client_cfn_url()
-        self.assertEqual("http://0.0.0.0:8003/v1/", obj.get_watch_server_url())
+        self.assertEqual("http://0.0.0.0:8003/v1/",
+                         obj.get_watch_server_url())
+
+    def test_clients_get_watch_server_url_use_uwsgi(self):
+        obj = self._client_cfn_url(use_uwsgi=True)
+        self.assertEqual("http://0.0.0.0/heat-api-cloudwatch/v1/",
+                         obj.get_watch_server_url())
 
     def test_clients_get_heat_cfn_metadata_url(self):
         obj = self._client_cfn_url()
