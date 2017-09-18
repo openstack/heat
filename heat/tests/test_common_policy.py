@@ -17,7 +17,6 @@
 import os.path
 
 from oslo_config import fixture as config_fixture
-from oslo_policy import policy as base_policy
 
 from heat.common import exception
 from heat.common import policy
@@ -177,55 +176,70 @@ class TestPolicyEnforcer(common.HeatTestCase):
 
     def test_resource_default_rule(self):
         context = utils.dummy_context(roles=['non-admin'])
-        enforcer = policy.ResourceEnforcer(
-            policy_file=self.get_policy_file('resources.json'))
+        enforcer = policy.ResourceEnforcer()
         res_type = "OS::Test::NotInPolicy"
-        self.assertTrue(enforcer.enforce(context, res_type))
+        self.assertTrue(enforcer.enforce(context, res_type,
+                                         is_registered_policy=True))
 
     def test_resource_enforce_success(self):
         context = utils.dummy_context(roles=['admin'])
-        enforcer = policy.ResourceEnforcer(
-            policy_file=self.get_policy_file('resources.json'))
-        res_type = "OS::Test::AdminOnly"
-        self.assertTrue(enforcer.enforce(context, res_type))
+        enforcer = policy.ResourceEnforcer()
+        res_type = "OS::Keystone::User"
+        self.assertTrue(enforcer.enforce(context, res_type,
+                                         is_registered_policy=True))
 
     def test_resource_enforce_fail(self):
         context = utils.dummy_context(roles=['non-admin'])
-        enforcer = policy.ResourceEnforcer(
-            policy_file=self.get_policy_file('resources.json'))
-        res_type = "OS::Test::AdminOnly"
+        enforcer = policy.ResourceEnforcer()
+        res_type = "OS::Nova::Quota"
         ex = self.assertRaises(exception.Forbidden,
                                enforcer.enforce,
-                               context, res_type)
+                               context, res_type,
+                               None, None,
+                               True)
         self.assertIn(res_type, ex.message)
 
     def test_resource_wildcard_enforce_fail(self):
         context = utils.dummy_context(roles=['non-admin'])
-        enforcer = policy.ResourceEnforcer(
-            policy_file=self.get_policy_file('resources.json'))
+        enforcer = policy.ResourceEnforcer()
         res_type = "OS::Keystone::User"
         ex = self.assertRaises(exception.Forbidden,
                                enforcer.enforce,
-                               context, res_type)
+                               context, res_type,
+                               None, None,
+                               True)
+
         self.assertIn(res_type.split("::", 1)[0], ex.message)
 
     def test_resource_enforce_returns_false(self):
         context = utils.dummy_context(roles=['non-admin'])
-        enforcer = policy.ResourceEnforcer(
-            policy_file=self.get_policy_file('resources.json'),
-            exc=None)
-        res_type = "OS::Test::AdminOnly"
-        self.assertFalse(enforcer.enforce(context, res_type))
-        self.assertIsNotNone(enforcer.enforce(context, res_type))
+        enforcer = policy.ResourceEnforcer(exc=None)
+        res_type = "OS::Keystone::User"
+        self.assertFalse(enforcer.enforce(context, res_type,
+                                          is_registered_policy=True))
+        self.assertIsNotNone(enforcer.enforce(context, res_type,
+                                              is_registered_policy=True))
 
     def test_resource_enforce_exc_on_false(self):
         context = utils.dummy_context(roles=['non-admin'])
-        enforcer = policy.ResourceEnforcer(
-            policy_file=self.get_policy_file('resources.json'))
-        res_type = "OS::Test::AdminOnly"
-        self.patchobject(base_policy.Enforcer, 'enforce',
-                         return_value=False)
+        enforcer = policy.ResourceEnforcer()
+        res_type = "OS::Keystone::User"
         ex = self.assertRaises(exception.Forbidden,
                                enforcer.enforce,
-                               context, res_type)
+                               context, res_type,
+                               None, None,
+                               True)
+
+        self.assertIn(res_type, ex.message)
+
+    def test_resource_enforce_override_deny_admin(self):
+        context = utils.dummy_context(roles=['admin'])
+        enforcer = policy.ResourceEnforcer(
+            policy_file=self.get_policy_file('resources.json'))
+        res_type = "OS::Cinder::Quota"
+        ex = self.assertRaises(exception.Forbidden,
+                               enforcer.enforce,
+                               context, res_type,
+                               None, None,
+                               True)
         self.assertIn(res_type, ex.message)

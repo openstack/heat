@@ -125,12 +125,15 @@ class ResourceEnforcer(Enforcer):
         super(ResourceEnforcer, self).__init__(
             default_rule=default_rule, **kwargs)
 
-    def _enforce(self, context, res_type, scope=None, target=None):
+    def _enforce(self, context, res_type, scope=None, target=None,
+                 is_registered_policy=False):
         try:
             result = super(ResourceEnforcer, self).enforce(
                 context, res_type,
                 scope=scope or 'resource_types',
-                target=target)
+                target=target,  is_registered_policy=is_registered_policy)
+        except policy.PolicyNotRegistered:
+            result = True
         except self.exc as ex:
             LOG.info(six.text_type(ex))
             raise
@@ -139,19 +142,27 @@ class ResourceEnforcer(Enforcer):
                 raise self.exc(action=res_type)
         return result
 
-    def enforce(self, context, res_type, scope=None, target=None):
+    def enforce(self, context, res_type, scope=None, target=None,
+                is_registered_policy=False):
         # NOTE(pas-ha): try/except just to log the exception
-        result = self._enforce(context, res_type, scope, target)
+        result = self._enforce(context, res_type, scope, target,
+                               is_registered_policy=is_registered_policy)
 
         if result:
             # check for wildcard resource types
             subparts = res_type.split("::")[:-1]
             subparts.append('*')
             res_type_wc = "::".join(subparts)
-            return self._enforce(context, res_type_wc, scope, target)
+            try:
+                return self._enforce(context, res_type_wc, scope, target,
+                                     is_registered_policy=is_registered_policy)
+            except self.exc:
+                raise self.exc(action=res_type)
 
         return result
 
-    def enforce_stack(self, stack, scope=None, target=None):
+    def enforce_stack(self, stack, scope=None, target=None,
+                      is_registered_policy=False):
         for res in stack.resources.values():
-            self.enforce(stack.context, res.type(), scope=scope, target=target)
+            self.enforce(stack.context, res.type(), scope=scope, target=target,
+                         is_registered_policy=is_registered_policy)

@@ -618,7 +618,7 @@ class ResourceRegistry(object):
             if cnxt is None:
                 return True
             try:
-                enforcer.enforce(cnxt, name)
+                enforcer.enforce(cnxt, name, is_registered_policy=True)
             except enforcer.exc:
                 return False
             else:
