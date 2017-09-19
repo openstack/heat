@@ -163,7 +163,7 @@ common_properties_schema = {
                 TIMEZONE: properties.Schema(
                     properties.Schema.STRING,
                     _("Timezone for the time constraint "
-                      "(eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."),
+                      "(eg. 'Asia/Taipei', 'Europe/Amsterdam')."),
                     constraints=[
                         constraints.CustomConstraint('timezone')
                     ],
