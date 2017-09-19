@@ -49,9 +49,9 @@ class StackController(object):
         raise exception.HeatInvalidActionError()
 
     def _enforce(self, req, action):
-        """Authorize an action against the policy.json."""
+        """Authorize an action against the policy.json and policies in code."""
         try:
-            self.policy.enforce(req.context, action)
+            self.policy.enforce(req.context, action, is_registered_policy=True)
         except heat_exception.Forbidden:
             msg = _('Action %s not allowed for user') % action
             raise exception.HeatAccessDeniedError(msg)
