@@ -1346,10 +1346,11 @@ class Stack(collections.Mapping):
             self.context, self.id, self.current_traversal, True, self.id)
 
         leaves = set(self.convergence_dependencies.leaves())
-        if not any(leaves):
+        if not leaves:
             self.mark_complete()
         else:
-            for rsrc_id, is_update in self.convergence_dependencies.leaves():
+            for rsrc_id, is_update in sorted(leaves,
+                                             key=lambda n: n.is_update):
                 if is_update:
                     LOG.info("Triggering resource %s for update", rsrc_id)
                 else:

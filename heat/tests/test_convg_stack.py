@@ -67,7 +67,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual({'edges': [[[1, True], None]]}, stack_db.current_deps)
         leaves = stack.convergence_dependencies.leaves()
         expected_calls = []
-        for rsrc_id, is_update in leaves:
+        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
@@ -123,7 +123,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         leaves = stack.convergence_dependencies.leaves()
         expected_calls = []
-        for rsrc_id, is_update in leaves:
+        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
@@ -263,15 +263,15 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         leaves = stack.convergence_dependencies.leaves()
         expected_calls = []
-        for rsrc_id, is_update in leaves:
+        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
                     {'input_data': {}},
                     is_update, None, False))
 
-        leaves = curr_stack.convergence_dependencies.leaves()
-        for rsrc_id, is_update in leaves:
+        leaves = set(curr_stack.convergence_dependencies.leaves())
+        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     curr_stack.context, rsrc_id, curr_stack.current_traversal,
@@ -346,7 +346,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         leaves = stack.convergence_dependencies.leaves()
         expected_calls = []
-        for rsrc_id, is_update in leaves:
+        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     stack.context, rsrc_id, stack.current_traversal,
@@ -354,7 +354,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     is_update, None, False))
 
         leaves = curr_stack.convergence_dependencies.leaves()
-        for rsrc_id, is_update in leaves:
+        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
                     curr_stack.context, rsrc_id, curr_stack.current_traversal,

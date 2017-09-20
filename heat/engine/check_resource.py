@@ -249,7 +249,8 @@ class CheckResource(object):
 
         try:
             input_forward_data = None
-            for req_node in deps.required_by(graph_key):
+            for req_node in sorted(deps.required_by(graph_key),
+                                   key=lambda n: n.is_update):
                 input_data = _get_input_data(req_node, input_forward_data)
                 if req_node.is_update:
                     input_forward_data = input_data
