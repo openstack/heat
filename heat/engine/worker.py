@@ -145,7 +145,7 @@ class WorkerService(object):
 
     def _retrigger_replaced(self, is_update, rsrc, stack, check_resource):
         graph = stack.convergence_dependencies.graph()
-        key = (rsrc.id, is_update)
+        key = parser.ConvergenceNode(rsrc.id, is_update)
         if key not in graph and rsrc.replaces is not None:
             # This resource replaces old one and is not needed in
             # current traversal. You need to mark the resource as
@@ -154,9 +154,9 @@ class WorkerService(object):
             db_api.resource_update_and_save(stack.context, rsrc.id, values)
             # The old resource might be in the graph (a rollback case);
             # just re-trigger it.
-            key = (rsrc.replaces, is_update)
+            key = parser.ConvergenceNode(rsrc.replaces, is_update)
             check_resource.retrigger_check_resource(stack.context, is_update,
-                                                    key[0], stack)
+                                                    key.rsrc_id, stack)
 
     @context.request_context
     @log_exceptions

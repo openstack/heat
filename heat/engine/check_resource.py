@@ -195,7 +195,7 @@ class CheckResource(object):
                                      stack):
         deps = stack.convergence_dependencies
         graph = deps.graph()
-        graph_key = (resource_id, is_update)
+        graph_key = parser.ConvergenceNode(resource_id, is_update)
 
         if graph_key not in graph and rsrc.replaces is not None:
             # If we are a replacement, impersonate the replaced resource for
@@ -204,10 +204,10 @@ class CheckResource(object):
             # graph. Our real resource ID is sent in the input_data, so the
             # dependencies will get updated to point to this resource in time
             # for the next traversal.
-            graph_key = (rsrc.replaces, is_update)
+            graph_key = parser.ConvergenceNode(rsrc.replaces, is_update)
 
-        def _get_input_data(req, fwd, input_forward_data=None):
-            if fwd:
+        def _get_input_data(req_node, input_forward_data=None):
+            if req_node.is_update:
                 if input_forward_data is None:
                     return rsrc.node_data().as_dict()
                 else:
@@ -216,7 +216,7 @@ class CheckResource(object):
             else:
                 # Don't send data if initiating clean-up for self i.e.
                 # initiating delete of a replaced resource
-                if req not in graph_key:
+                if req_node.rsrc_id != graph_key.rsrc_id:
                     # send replaced resource as needed_by if it exists
                     return (rsrc.replaced_by
                             if rsrc.replaced_by is not None
@@ -225,13 +225,14 @@ class CheckResource(object):
 
         try:
             input_forward_data = None
-            for req, fwd in deps.required_by(graph_key):
-                input_data = _get_input_data(req, fwd, input_forward_data)
-                if fwd:
+            for req_node in deps.required_by(graph_key):
+                input_data = _get_input_data(req_node, input_forward_data)
+                if req_node.is_update:
                     input_forward_data = input_data
                 propagate_check_resource(
-                    cnxt, self._rpc_client, req, current_traversal,
-                    set(graph[(req, fwd)]), graph_key, input_data, fwd,
+                    cnxt, self._rpc_client, req_node.rsrc_id,
+                    current_traversal, set(graph[req_node]),
+                    graph_key, input_data, req_node.is_update,
                     stack.adopt_stack_data)
             if is_update:
                 if input_forward_data is None:
@@ -241,7 +242,7 @@ class CheckResource(object):
                 else:
                     rsrc.store_attributes()
             check_stack_complete(cnxt, stack, current_traversal,
-                                 graph_key[0], deps, graph_key[1])
+                                 graph_key.rsrc_id, deps, graph_key.is_update)
         except exception.EntityNotFound as e:
             if e.entity == "Sync Point":
                 # Reload the stack to determine the current traversal, and
