@@ -54,8 +54,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
-        self.assertEqual('Dependencies([((1, True), None)])',
-                         repr(stack.convergence_dependencies))
+        self.assertEqual([((1, True), None)],
+                         list(stack.convergence_dependencies._graph.edges()))
 
         stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
         self.assertIsNotNone(stack_db.current_traversal)
@@ -82,12 +82,11 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.store()
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
-        self.assertEqual('Dependencies(['
-                         '((1, True), (3, True)), '
-                         '((2, True), (3, True)), '
-                         '((3, True), (4, True)), '
-                         '((3, True), (5, True))])',
-                         repr(stack.convergence_dependencies))
+        self.assertEqual([((1, True), (3, True)),
+                          ((2, True), (3, True)),
+                          ((3, True), (4, True)),
+                          ((3, True), (5, True))],
+                         sorted(stack.convergence_dependencies._graph.edges()))
 
         stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
         self.assertIsNotNone(stack_db.current_traversal)
@@ -179,18 +178,18 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             curr_stack.converge_stack(template=template2, action=stack.UPDATE)
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
-        self.assertEqual('Dependencies(['
-                         '((3, False), (1, False)), '
-                         '((3, False), (2, False)), '
-                         '((4, False), (3, False)), '
-                         '((4, False), (4, True)), '
-                         '((5, False), (3, False)), '
-                         '((5, False), (5, True)), '
-                         '((6, True), (8, True)), '
-                         '((7, True), (8, True)), '
-                         '((8, True), (4, True)), '
-                         '((8, True), (5, True))])',
-                         repr(curr_stack.convergence_dependencies))
+        deps = curr_stack.convergence_dependencies
+        self.assertEqual([((3, False), (1, False)),
+                          ((3, False), (2, False)),
+                          ((4, False), (3, False)),
+                          ((4, False), (4, True)),
+                          ((5, False), (3, False)),
+                          ((5, False), (5, True)),
+                          ((6, True), (8, True)),
+                          ((7, True), (8, True)),
+                          ((8, True), (4, True)),
+                          ((8, True), (5, True))],
+                         sorted(deps._graph.edges()))
 
         stack_db = stack_object.Stack.get_by_id(curr_stack.context,
                                                 curr_stack.id)
@@ -305,12 +304,12 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             curr_stack.converge_stack(template=template2, action=stack.DELETE)
 
         self.assertIsNotNone(curr_stack.ext_rsrcs_db)
-        self.assertEqual('Dependencies(['
-                         '((3, False), (1, False)), '
-                         '((3, False), (2, False)), '
-                         '((4, False), (3, False)), '
-                         '((5, False), (3, False))])',
-                         repr(curr_stack.convergence_dependencies))
+        deps = curr_stack.convergence_dependencies
+        self.assertEqual([((3, False), (1, False)),
+                          ((3, False), (2, False)),
+                          ((4, False), (3, False)),
+                          ((5, False), (3, False))],
+                         sorted(deps._graph.edges()))
 
         stack_db = stack_object.Stack.get_by_id(curr_stack.context,
                                                 curr_stack.id)
@@ -722,12 +721,11 @@ class TestConvgComputeDependencies(common.HeatTestCase):
         self.stack._compute_convg_dependencies(self.stack.ext_rsrcs_db,
                                                self.stack.dependencies,
                                                self.current_resources)
-        self.assertEqual('Dependencies(['
-                         '((1, True), (3, True)), '
-                         '((2, True), (3, True)), '
-                         '((3, True), (4, True)), '
-                         '((3, True), (5, True))])',
-                         repr(self.stack._convg_deps))
+        self.assertEqual([((1, True), (3, True)),
+                          ((2, True), (3, True)),
+                          ((3, True), (4, True)),
+                          ((3, True), (5, True))],
+                         sorted(self.stack._convg_deps._graph.edges()))
 
     def test_dependencies_update_same_template(self):
         t = template_format.parse(tools.string_template_five)
@@ -740,21 +738,20 @@ class TestConvgComputeDependencies(common.HeatTestCase):
         self.stack._compute_convg_dependencies(db_resources,
                                                self.stack.dependencies,
                                                curr_resources)
-        self.assertEqual('Dependencies(['
-                         '((1, False), (1, True)), '
-                         '((1, True), (3, True)), '
-                         '((2, False), (2, True)), '
-                         '((2, True), (3, True)), '
-                         '((3, False), (1, False)), '
-                         '((3, False), (2, False)), '
-                         '((3, False), (3, True)), '
-                         '((3, True), (4, True)), '
-                         '((3, True), (5, True)), '
-                         '((4, False), (3, False)), '
-                         '((4, False), (4, True)), '
-                         '((5, False), (3, False)), '
-                         '((5, False), (5, True))])',
-                         repr(self.stack._convg_deps))
+        self.assertEqual([((1, False), (1, True)),
+                          ((1, True), (3, True)),
+                          ((2, False), (2, True)),
+                          ((2, True), (3, True)),
+                          ((3, False), (1, False)),
+                          ((3, False), (2, False)),
+                          ((3, False), (3, True)),
+                          ((3, True), (4, True)),
+                          ((3, True), (5, True)),
+                          ((4, False), (3, False)),
+                          ((4, False), (4, True)),
+                          ((5, False), (3, False)),
+                          ((5, False), (5, True))],
+                         sorted(self.stack._convg_deps._graph.edges()))
 
     def test_dependencies_update_new_template(self):
         t = template_format.parse(tools.string_template_five_update)
@@ -777,18 +774,17 @@ class TestConvgComputeDependencies(common.HeatTestCase):
         self.stack._compute_convg_dependencies(db_resources,
                                                self.stack.dependencies,
                                                curr_resources)
-        self.assertEqual('Dependencies(['
-                         '((3, False), (1, False)), '
-                         '((3, False), (2, False)), '
-                         '((4, False), (3, False)), '
-                         '((4, False), (4, True)), '
-                         '((5, False), (3, False)), '
-                         '((5, False), (5, True)), '
-                         '((6, True), (8, True)), '
-                         '((7, True), (8, True)), '
-                         '((8, True), (4, True)), '
-                         '((8, True), (5, True))])',
-                         repr(self.stack._convg_deps))
+        self.assertEqual([((3, False), (1, False)),
+                          ((3, False), (2, False)),
+                          ((4, False), (3, False)),
+                          ((4, False), (4, True)),
+                          ((5, False), (3, False)),
+                          ((5, False), (5, True)),
+                          ((6, True), (8, True)),
+                          ((7, True), (8, True)),
+                          ((8, True), (4, True)),
+                          ((8, True), (5, True))],
+                         sorted(self.stack._convg_deps._graph.edges()))
 
     def test_dependencies_update_replace_rollback(self):
         t = template_format.parse(tools.string_template_five)
@@ -815,23 +811,22 @@ class TestConvgComputeDependencies(common.HeatTestCase):
         self.stack._compute_convg_dependencies(db_resources,
                                                self.stack.dependencies,
                                                curr_resources)
-        self.assertEqual('Dependencies(['
-                         '((1, False), (1, True)), '
-                         '((1, False), (6, False)), '
-                         '((1, True), (3, True)), '
-                         '((2, False), (2, True)), '
-                         '((2, True), (3, True)), '
-                         '((3, False), (1, False)), '
-                         '((3, False), (2, False)), '
-                         '((3, False), (3, True)), '
-                         '((3, False), (6, False)), '
-                         '((3, True), (4, True)), '
-                         '((3, True), (5, True)), '
-                         '((4, False), (3, False)), '
-                         '((4, False), (4, True)), '
-                         '((5, False), (3, False)), '
-                         '((5, False), (5, True))])',
-                         repr(self.stack._convg_deps))
+        self.assertEqual([((1, False), (1, True)),
+                          ((1, False), (6, False)),
+                          ((1, True), (3, True)),
+                          ((2, False), (2, True)),
+                          ((2, True), (3, True)),
+                          ((3, False), (1, False)),
+                          ((3, False), (2, False)),
+                          ((3, False), (3, True)),
+                          ((3, False), (6, False)),
+                          ((3, True), (4, True)),
+                          ((3, True), (5, True)),
+                          ((4, False), (3, False)),
+                          ((4, False), (4, True)),
+                          ((5, False), (3, False)),
+                          ((5, False), (5, True))],
+                         sorted(self.stack._convg_deps._graph.edges()))
 
     def test_dependencies_update_delete(self):
         tmpl = templatem.Template.create_empty_template(
@@ -844,12 +839,11 @@ class TestConvgComputeDependencies(common.HeatTestCase):
         self.stack._compute_convg_dependencies(db_resources,
                                                self.stack.dependencies,
                                                curr_resources)
-        self.assertEqual('Dependencies(['
-                         '((3, False), (1, False)), '
-                         '((3, False), (2, False)), '
-                         '((4, False), (3, False)), '
-                         '((5, False), (3, False))])',
-                         repr(self.stack._convg_deps))
+        self.assertEqual([((3, False), (1, False)),
+                          ((3, False), (2, False)),
+                          ((4, False), (3, False)),
+                          ((5, False), (3, False))],
+                         sorted(self.stack._convg_deps._graph.edges()))
 
 
 class TestConvergenceMigration(common.HeatTestCase):

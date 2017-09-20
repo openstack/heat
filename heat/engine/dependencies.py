@@ -270,8 +270,7 @@ class Dependencies(object):
 
     def __repr__(self):
         """Return a consistent string representation of the object."""
-        edge_reprs = list(repr(e) for e in self._graph.edges())
-        edge_reprs.sort()
+        edge_reprs = sorted(repr(e) for e in self._graph.edges())
         text = 'Dependencies([%s])' % ', '.join(edge_reprs)
         return text
 
