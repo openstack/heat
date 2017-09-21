@@ -80,6 +80,22 @@ class HOTParamSchema(parameters.Schema):
                 message=_("No constraint expressed"))
 
     @classmethod
+    def _constraints(cls, param_name, schema_dict):
+        constraints = schema_dict.get(cls.CONSTRAINTS)
+        if constraints is None:
+            return
+
+        if not isinstance(constraints, list):
+            raise exception.InvalidSchemaError(
+                message=_("Invalid parameter constraints for parameter "
+                          "%s, expected a list") % param_name)
+
+        for constraint in constraints:
+            cls._check_dict(constraint, PARAM_CONSTRAINTS,
+                            'parameter constraints')
+            yield cls._constraint_from_def(constraint)
+
+    @classmethod
     def from_dict(cls, param_name, schema_dict):
         """Return a Parameter Schema object from a legacy schema dictionary.
 
@@ -89,27 +105,12 @@ class HOTParamSchema(parameters.Schema):
         """
         cls._validate_dict(param_name, schema_dict)
 
-        def constraints():
-            constraints = schema_dict.get(cls.CONSTRAINTS)
-            if constraints is None:
-                return
-
-            if not isinstance(constraints, list):
-                raise exception.InvalidSchemaError(
-                    message=_("Invalid parameter constraints for parameter "
-                              "%s, expected a list") % param_name)
-
-            for constraint in constraints:
-                cls._check_dict(constraint, PARAM_CONSTRAINTS,
-                                'parameter constraints')
-                yield cls._constraint_from_def(constraint)
-
         # make update_allowed true by default on TemplateResources
         # as the template should deal with this.
         return cls(schema_dict[cls.TYPE],
                    description=schema_dict.get(HOTParamSchema.DESCRIPTION),
                    default=schema_dict.get(HOTParamSchema.DEFAULT),
-                   constraints=list(constraints()),
+                   constraints=list(cls._constraints(param_name, schema_dict)),
                    hidden=schema_dict.get(HOTParamSchema.HIDDEN, False),
                    label=schema_dict.get(HOTParamSchema.LABEL),
                    immutable=schema_dict.get(HOTParamSchema.IMMUTABLE, False))
@@ -129,6 +130,35 @@ class HOTParamSchema20170224(HOTParamSchema):
         else:
             return super(HOTParamSchema20170224, cls)._constraint_from_def(
                 constraint)
+
+
+class HOTParamSchema20180302(HOTParamSchema20170224):
+
+    KEYS_20180302 = (TAGS,) = ('tags',)
+    KEYS = HOTParamSchema20170224.KEYS + KEYS_20180302
+
+    PARAMETER_KEYS = KEYS
+
+    @classmethod
+    def from_dict(cls, param_name, schema_dict):
+        """Return a Parameter Schema object from a legacy schema dictionary.
+
+        :param param_name: name of the parameter owning the schema; used
+               for more verbose logging
+        :type  param_name: str
+        """
+        cls._validate_dict(param_name, schema_dict)
+
+        # make update_allowed true by default on TemplateResources
+        # as the template should deal with this.
+        return cls(schema_dict[cls.TYPE],
+                   description=schema_dict.get(HOTParamSchema.DESCRIPTION),
+                   default=schema_dict.get(HOTParamSchema.DEFAULT),
+                   constraints=list(cls._constraints(param_name, schema_dict)),
+                   hidden=schema_dict.get(HOTParamSchema.HIDDEN, False),
+                   label=schema_dict.get(HOTParamSchema.LABEL),
+                   immutable=schema_dict.get(HOTParamSchema.IMMUTABLE, False),
+                   tags=schema_dict.get(HOTParamSchema20180302.TAGS))
 
 
 class HOTParameters(parameters.Parameters):

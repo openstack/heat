@@ -695,3 +695,5 @@ class HOTemplate20180302(HOTemplate20170901):
         'yaql': hot_funcs.Yaql,
         'contains': hot_funcs.Contains
     }
+
+    param_schema_class = parameters.HOTParamSchema20180302

@@ -924,6 +924,46 @@ resources:
     external_id: foobar
 '''
 
+test_template_hot_parameter_tags_older = '''
+heat_template_version: 2013-05-23
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+    label: Nova KeyPair Name
+    tags:
+      - feature1
+      - feature2
+
+'''
+
+test_template_hot_parameter_tags_pass = '''
+heat_template_version: 2018-03-02
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+    label: Nova KeyPair Name
+    tags:
+      - feature1
+      - feature2
+
+'''
+
+test_template_hot_parameter_tags_fail = '''
+heat_template_version: 2018-03-02
+
+parameters:
+  KeyName:
+    type: string
+    description: Name of an existing key pair to use for the instance
+    label: Nova KeyPair Name
+    tags: feature
+
+'''
+
 
 class ValidateTest(common.HeatTestCase):
     def setUp(self):
@@ -1858,4 +1898,40 @@ parameter_groups:
                                 self.engine.validate_template,
                                 self.ctx, t, {})
         self.assertEqual(dependencies.CircularDependencyException,
+                         exc.exc_info[0])
+
+    def test_validate_hot_parameter_tags_older(self):
+        t = template_format.parse(test_template_hot_parameter_tags_older)
+
+        exc = self.assertRaises(dispatcher.ExpectedException,
+                                self.engine.validate_template,
+                                self.ctx, t, {})
+        self.assertEqual(exception.InvalidSchemaError,
+                         exc.exc_info[0])
+
+    def test_validate_hot_parameter_tags_pass(self):
+        t = template_format.parse(test_template_hot_parameter_tags_pass)
+
+        res = dict(self.engine.validate_template(self.ctx, t, {}))
+        parameters = res['Parameters']
+
+        expected = {'KeyName': {
+            'Description': 'Name of an existing key pair to use for the '
+                           'instance',
+            'NoEcho': 'false',
+            'Label': 'Nova KeyPair Name',
+            'Type': 'String',
+            'Tags': [
+                'feature1',
+                'feature2'
+            ]}}
+        self.assertEqual(expected, parameters)
+
+    def test_validate_hot_parameter_tags_fail(self):
+        t = template_format.parse(test_template_hot_parameter_tags_fail)
+
+        exc = self.assertRaises(dispatcher.ExpectedException,
+                                self.engine.validate_template,
+                                self.ctx, t, {})
+        self.assertEqual(exception.InvalidSchemaError,
                          exc.exc_info[0])
