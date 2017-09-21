@@ -105,6 +105,11 @@ def setup(url=None, optional=False):
         eventlet.monkey_patch(time=True)
     if not TRANSPORT or not NOTIFICATIONS_TRANSPORT:
         setup_transports(url, optional)
+        # In the fake driver, make the dict of exchanges local to each exchange
+        # manager, instead of using the shared class attribute. Doing otherwise
+        # breaks the unit tests.
+        if url and url.startswith("fake://"):
+            TRANSPORT._driver._exchange_manager._exchanges = {}
 
     if not NOTIFIER and NOTIFICATIONS_TRANSPORT:
         serializer = RequestContextSerializer(JsonPayloadSerializer())
