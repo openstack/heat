@@ -51,13 +51,20 @@ class NodeData(object):
 
     def attributes(self):
         """Return a dict of all available top-level attribute values."""
-        return {k: v
-                for k, v in self._attributes.items()
-                if isinstance(k, six.string_types)}
+        attrs = {k: v
+                 for k, v in self._attributes.items()
+                 if isinstance(k, six.string_types)}
+        for v in six.itervalues(attrs):
+            if isinstance(v, Exception):
+                raise v
+        return attrs
 
     def attribute(self, attr_name):
         """Return the specified attribute value."""
-        return self._attributes[attr_name]
+        val = self._attributes[attr_name]
+        if isinstance(val, Exception):
+            raise val
+        return val
 
     def attribute_names(self):
         """Iterate over valid top-level attribute names."""
@@ -73,6 +80,10 @@ class NodeData(object):
         This is the format that is serialised and stored in the database's
         SyncPoints.
         """
+        for v in six.itervalues(self._attributes):
+            if isinstance(v, Exception):
+                raise v
+
         return {
             'id': self.primary_key,
             'name': self.name,
