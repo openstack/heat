@@ -1028,7 +1028,15 @@ class Resource(status.ResourceStatus):
                     try:
                         yield attr, self.FnGetAtt(*path)
                     except exception.InvalidTemplateAttribute as ita:
+                        # Attribute doesn't exist, so don't store it. Whatever
+                        # tries to access it will get another
+                        # InvalidTemplateAttribute exception at that point
                         LOG.info('%s', ita)
+                    except Exception as exc:
+                        # Store the exception that occurred. It will be
+                        # re-raised when something tries to access it, or when
+                        # we try to serialise the NodeData.
+                        yield attr, exc
 
         load_all = not self.stack.in_convergence_check
         dep_attrs = self.referenced_attrs(stk_defn,

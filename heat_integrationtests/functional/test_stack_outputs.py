@@ -99,3 +99,57 @@ outputs:
         actual_output_value = self.client.stacks.output_show(
             stack_identifier, 'output_value')['output']
         self.assertEqual(expected_output_value, actual_output_value)
+
+    nested_template = '''
+heat_template_version: 2015-10-15
+resources:
+  parent:
+    type: 1.yaml
+outputs:
+  resource_output_a:
+    value: { get_attr: [parent, resource_output_a] }
+    description: 'parent a'
+  resource_output_b:
+    value: { get_attr: [parent, resource_output_b] }
+    description: 'parent b'
+    '''
+    error_template = '''
+heat_template_version: 2015-10-15
+resources:
+  test_resource_a:
+    type: OS::Heat::TestResource
+    properties:
+      value: 'a'
+  test_resource_b:
+    type: OS::Heat::TestResource
+    properties:
+      value: 'b'
+outputs:
+  resource_output_a:
+    description: 'Output of resource a'
+    value: { get_attr: [test_resource_a, output] }
+  resource_output_b:
+    description: 'Output of resource b'
+    value: { get_param: foo }
+'''
+
+    def test_output_error_nested(self):
+        stack_identifier = self.stack_create(
+            template=self.nested_template,
+            files={'1.yaml': self.error_template}
+        )
+        self.update_stack(stack_identifier, template=self.nested_template,
+                          files={'1.yaml': self.error_template})
+        expected_list = [{u'output_key': u'resource_output_a',
+                          u'output_value': u'a',
+                          u'description': u'parent a'},
+                         {u'output_key': u'resource_output_b',
+                          u'output_value': None,
+                          u'output_error': u'Error in parent output '
+                                           u'resource_output_b: The Parameter'
+                                           u' (foo) was not provided.',
+                          u'description': u'parent b'}]
+
+        actual_list = self.client.stacks.get(stack_identifier).outputs
+        sorted_actual_list = sorted(actual_list, key=lambda x: x['output_key'])
+        self.assertEqual(expected_list, sorted_actual_list)
