@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
+
 from oslo_log import log as logging
 
 from heat.common import exception
@@ -25,6 +27,15 @@ from heat.engine import support
 from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
+
+# NOTE(jfreud, pshchelo): copied from sahara/utils/api_validator.py
+SAHARA_NAME_REGEX = (r"^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]"
+                     r"*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z]"
+                     r"[A-Za-z0-9\-]*[A-Za-z0-9])$")
+
+# NOTE(jfreud): we do not use physical_resource_name_limit attr because we
+# prefer to truncate _after_ removing invalid characters
+SAHARA_CLUSTER_NAME_MAX_LENGTH = 80
 
 
 class SaharaCluster(resource.Resource):
@@ -69,6 +80,10 @@ class SaharaCluster(resource.Resource):
         NAME: properties.Schema(
             properties.Schema.STRING,
             _('Hadoop cluster name.'),
+            constraints=[
+                constraints.Length(min=1, max=SAHARA_CLUSTER_NAME_MAX_LENGTH),
+                constraints.AllowedPattern(SAHARA_NAME_REGEX),
+            ],
         ),
         PLUGIN_NAME: properties.Schema(
             properties.Schema.STRING,
@@ -207,7 +222,9 @@ class SaharaCluster(resource.Resource):
         name = self.properties[self.NAME]
         if name:
             return name
-        return self.physical_resource_name()
+        return self.reduce_physical_resource_name(
+            re.sub('[^a-zA-Z0-9-]', '', self.physical_resource_name()),
+            SAHARA_CLUSTER_NAME_MAX_LENGTH)
 
     def handle_create(self):
         plugin_name = self.properties[self.PLUGIN_NAME]
