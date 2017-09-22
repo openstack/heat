@@ -222,6 +222,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         ),
         ATTACHMENTS: attributes.Schema(
             _('The list of attachments of the volume.'),
+            cache_mode=attributes.Schema.CACHE_NONE,
             type=attributes.Schema.STRING
         ),
         MULTI_ATTACH_ATTR: attributes.Schema(
