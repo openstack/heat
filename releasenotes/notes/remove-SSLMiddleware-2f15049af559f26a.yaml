@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The SSL middleware ``heat.api.middleware.ssl:SSLMiddleware`` that has
+    been deprecated since 6.0.0 has now been removed, check your paste
+    config and ensure it has been replaced by
+    ``oslo_middleware.http_proxy_to_wsgi`` instead.
