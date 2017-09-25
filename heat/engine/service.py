@@ -530,7 +530,9 @@ class EngineService(service.ServiceBase):
         def show(stack):
             if resolve_outputs:
                 for res in stack._explicit_dependencies():
-                    node_data = res.node_data(for_outputs=True)
+                    ensure_cache = stack.convergence and res.id is not None
+                    node_data = res.node_data(for_resources=ensure_cache,
+                                              for_outputs=True)
                     stk_defn.update_resource_data(stack.defn, res.name,
                                                   node_data)
 
@@ -541,7 +543,7 @@ class EngineService(service.ServiceBase):
                     #  * Near simultaneous updates (say by an update and a
                     #    signal)
                     #  * The first time resolving a pre-Pike stack
-                    if stack.convergence and res.id is not None:
+                    if ensure_cache:
                         res.store_attributes()
 
             return api.format_stack(stack, resolve_outputs=resolve_outputs)
