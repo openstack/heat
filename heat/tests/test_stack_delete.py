@@ -84,6 +84,46 @@ class StackTest(common.HeatTestCase):
         self.assertEqual([], snapshot_object.Snapshot.get_all(
             self.ctx, stack_id))
 
+    def test_delete_with_snapshot_after_stack_add_resource(self):
+        tpl = {'heat_template_version': 'queens',
+               'resources':
+                   {'A': {'type': 'ResourceWithRestoreType'}}}
+        self.stack = stack.Stack(self.ctx, 'stack_delete_with_snapshot',
+                                 template.Template(tpl))
+        stack_id = self.stack.store()
+        self.stack.create()
+
+        data = copy.deepcopy(self.stack.prepare_abandon())
+        data['resources']['A']['resource_data']['a_string'] = 'foo'
+        snapshot_fake = {
+            'tenant': self.ctx.tenant_id,
+            'name': 'Snapshot',
+            'stack_id': stack_id,
+            'status': 'COMPLETE',
+            'data': data
+        }
+        snapshot_object.Snapshot.create(self.ctx, snapshot_fake)
+
+        self.assertIsNotNone(snapshot_object.Snapshot.get_all(
+            self.ctx, stack_id))
+
+        new_tmpl = {'heat_template_version': 'queens',
+                    'resources':
+                        {'A': {'type': 'ResourceWithRestoreType'},
+                         'B': {'type': 'ResourceWithRestoreType'}}}
+        updated_stack = stack.Stack(self.ctx, 'update_stack_add_res',
+                                    template.Template(new_tmpl))
+        self.stack.update(updated_stack)
+        self.assertEqual(2, len(self.stack.resources))
+
+        self.stack.delete()
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
+        self.assertIsNone(db_s)
+        self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
+                         self.stack.state)
+        self.assertEqual([], snapshot_object.Snapshot.get_all(
+            self.ctx, stack_id))
+
     def test_delete_user_creds(self):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
