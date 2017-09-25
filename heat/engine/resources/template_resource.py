@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from requests import exceptions
 import six
@@ -26,6 +27,8 @@ from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import template
 from heat.rpc import api as rpc_api
+
+LOG = logging.getLogger(__name__)
 
 
 REMOTE_SCHEMES = ('http', 'https')
@@ -316,6 +319,8 @@ class TemplateResource(stack_resource.StackResource):
                     resource=self.name,
                     attribute=STACK_ID_OUTPUT,
                     message=output[rpc_api.OUTPUT_ERROR])
+        except exception.TemplateOutputError as err:
+            LOG.info('%s', err)
         except (exception.InvalidTemplateAttribute, exception.NotFound):
             pass
         else:
