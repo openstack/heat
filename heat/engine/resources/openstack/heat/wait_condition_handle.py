@@ -222,8 +222,8 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
 class UpdateWaitConditionHandle(aws_wch.WaitConditionHandle):
     """WaitConditionHandle that clears signals and changes handle on update.
 
-    This works identically to a regular WaitConditionHandle, except that
-    on update it clears all signals received and changes the handle. Using
+    This works similarly to an AWS::CloudFormation::WaitConditionHandle, except
+    that on update it clears all signals received and changes the handle. Using
     this handle means that you must setup the signal senders to send their
     signals again any time the update handle changes. This allows us to roll
     out new configurations and be confident that they are rolled out once
