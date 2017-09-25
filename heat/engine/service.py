@@ -1363,8 +1363,7 @@ class EngineService(service.ServiceBase):
         s = self._get_stack(cntx, stack_identity)
         stack = parser.Stack.load(cntx, stack=s)
 
-        stack._update_all_resource_data(for_resources=False, for_outputs=True)
-        return api.format_stack_outputs(stack.outputs)
+        return api.format_stack_outputs(stack.outputs, resolve_value=False)
 
     @context.request_context
     def show_output(self, cntx, stack_identity, output_key):
