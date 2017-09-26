@@ -13,6 +13,7 @@
 
 import copy
 import mock
+from neutronclient.neutron import v2_0 as neutronV20
 import six
 
 from heat.common import exception
@@ -66,9 +67,9 @@ class TestMagnumClusterTemplate(common.HeatTestCase):
         'flavor_id': 'm1.small',
         'master_flavor_id': 'm1.medium',
         'keypair_id': 'heat_key',
-        'external_network_id': '0244b54d-ae1f-44f0-a24a-442760f1d681',
-        'fixed_network': '0f59a3dd-fac1-4d03-b41a-d4115fbffa89',
-        'fixed_subnet': '27a8c89c-0d28-4946-8c78-82cfec1d670a',
+        'external_network_id': 'id_for_net_or_sub',
+        'fixed_network': 'id_for_net_or_sub',
+        'fixed_subnet': 'id_for_net_or_sub',
         'dns_nameserver': '8.8.8.8',
         'docker_volume_size': 5,
         'docker_storage_driver': 'devicemapper',
@@ -99,6 +100,9 @@ class TestMagnumClusterTemplate(common.HeatTestCase):
         self.client = mock.Mock()
         self.patchobject(cluster_template.ClusterTemplate, 'client',
                          return_value=self.client)
+        self.find_mock = self.patchobject(neutronV20,
+                                          'find_resourceid_by_name_or_id')
+        self.find_mock.return_value = 'id_for_net_or_sub'
         self.stub_FlavorConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_ImageConstraint_validate()
