@@ -6,16 +6,17 @@
 # Mario Cho <hephaex@gmail.com>, 2014
 # Ying Chun Guo <daisy.ycguo@gmail.com>, 2015
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# johjuhyun <juhyun.joh@samsung.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 8.0.4.dev2\n"
+"Project-Id-Version: heat 8.0.5.dev7\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-08-13 17:29+0000\n"
+"POT-Creation-Date: 2017-09-22 13:59+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-12 05:30+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2017-09-25 12:08+0000\n"
+"Last-Translator: johjuhyun <juhyun.joh@samsung.com>\n"
 "Language: ko-KR\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
@@ -875,6 +876,10 @@ msgid "Arguments to %s not fully resolved"
 msgstr "%s에 대한 인수가 완전히 해결되지 않음"
 
 #, python-format
+msgid "At least one of the following properties must be specified: %(props)s."
+msgstr "다음의 속성들 중 적어도 하나 이상은 명시되어야 합니다: %(props)s."
+
+#, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
 msgstr "ID로 스택을 삭제하려고 시도: %(id)s %(msg)s"
 
@@ -1157,6 +1162,9 @@ msgstr ""
 
 msgid "Context for this stack."
 msgstr "이 스택의 컨텍스트입니다."
+
+msgid "Continue ? [y/N]"
+msgstr "계속하시겠습니까? [Y/N]"
 
 msgid "Control how the disk is partitioned when the server is created."
 msgstr "서버가 작성될 때 디스크가 파티셔닝되는 방법을 제어합니다."
@@ -1779,6 +1787,10 @@ msgstr "\"{0}\" 공유 작성 중에 오류 발생"
 
 msgid "Error during deleting share \"{0}\"."
 msgstr "공유 \"{0}\" 삭제 중에 오류가 발생했습니다."
+
+#, python-format
+msgid "Error in %(resource)s output %(attribute)s: %(message)s"
+msgstr "%(resource)s 아웃풋 %(attribute)s에 에러가 발생함 : %(message)s"
 
 #, python-format
 msgid "Error parsing template: %s"
@@ -2546,9 +2558,6 @@ msgstr ""
 "인스턴스 메타데이터는 %s개를 초과하는 항목을 포함해서는 안됩니다. 이는 서비"
 "스 제공자가 허용하는 최대 수입니다."
 
-msgid "Integer used for ordering the boot disks."
-msgstr "부트 디스크의 순서를 지정하는 데 사용되는 정수입니다."
-
 msgid "Interface type of keystone service endpoint."
 msgstr "keystone 서비스 엔드포인트의 인터페이스 타입입니다."
 
@@ -2671,12 +2680,20 @@ msgid "Invalid parameter constraints for parameter %s, expected a list"
 msgstr "%s 매개변수에 올바르지 않은 매개변수 제한조건. 목록이 예상됨"
 
 #, python-format
+msgid "Invalid parameter in environment %s."
+msgstr "환경 %s에 유효하지 않은 파라미터가 있음."
+
+#, python-format
 msgid ""
 "Invalid restricted_action type \"%(value)s\" for resource, acceptable "
 "restricted_action types are: %(types)s"
 msgstr ""
 "자원에 올바르지 않은 restricted_action 타입 \"%(value)s\", 허용 가능한 "
 "restricted_action 타입: %(types)s"
+
+#, python-format
+msgid "Invalid service %(service)s version %(version)s"
+msgstr "유효하지않은 서비스 %(service)s 버전 %(version)s"
 
 #, python-format
 msgid ""
@@ -3261,6 +3278,10 @@ msgstr "이름이 %s인 여러 라우터를 찾음"
 
 msgid "Must specify 'InstanceId' if you specify 'EIP'."
 msgstr "'EIP'를 지정한 경우 'InstanceId'를 지정해야 합니다."
+
+#, python-format
+msgid "Name '%s' must not start or end with a hyphen."
+msgstr "이름 '%s'은(는) 반드시 하이픈으로 시작되거나 끝나면 안됩니다."
 
 msgid "Name for the Sahara Cluster Template."
 msgstr "Sahara 클러스터 템플리트의 이름입니다."
@@ -4614,6 +4635,9 @@ msgstr "이 방화벽 규칙의 공유 상태입니다."
 msgid "Shared status of this firewall."
 msgstr "이 방화벽의 공유 상태입니다."
 
+msgid "Show available commands."
+msgstr "이용가능한 명령어를 보여줌"
+
 msgid "Shrinking volume"
 msgstr "볼륨 축소 중"
 
@@ -4731,6 +4755,9 @@ msgstr "스택 ID"
 msgid "Stack Name"
 msgstr "스택 이름"
 
+msgid "Stack id"
+msgstr "스택 id"
+
 msgid "Stack name may not contain \"/\""
 msgstr "스택 이름이 \"/\"을(를) 포함하지 않을 수 있음 "
 
@@ -4739,6 +4766,10 @@ msgstr "스택 자원 ID"
 
 msgid "Stack unknown status"
 msgstr "스택 알 수 없음 상태"
+
+#, python-format
+msgid "Stack with id %s can not be found."
+msgstr "id %s를 가진 Stack을 찾을 수 없습니다"
 
 #, python-format
 msgid "Stack with id %s not found"
@@ -4858,6 +4889,10 @@ msgid ""
 "TCP port on which to listen for client traffic that is associated with the "
 "vip address."
 msgstr "vip 주소와 연관된 클라이언트 트래픽을 청취하는 TCP 포트입니다."
+
+#, python-format
+msgid "TLD '%s' must not be all numeric."
+msgstr "TLD '%s'은(는) 반드시 모두 숫자가 되어서는 안됩니다."
 
 msgid ""
 "TTL, in seconds, for any cached item in the dogpile.cache region used for "
@@ -5447,6 +5482,10 @@ msgstr ""
 "각 이미지에 설정된 기본 cloud-init 사용자(예: Ubuntu 12.04+의 경우 \"ubuntu"
 "\", Fedora 19+의 경우 \"fedora\" 및 CentOS/RHEL 6.5의 경우 \"cloud-user\")."
 
+#, python-format
+msgid "The definition of condition \"%(cd)s\" is invalid: %(definition)s"
+msgstr "상태 \"%(cd)s\"의 정의가 유효하지 않습니다:  %(definition)s"
+
 msgid "The description for the QoS policy."
 msgstr "QoS 정책에 대한 설명입니다."
 
@@ -5498,6 +5537,9 @@ msgstr ""
 
 msgid "The directory to search for environment files."
 msgstr "환경 파일을 검색할 디렉토리입니다."
+
+msgid "The directory to search for template files."
+msgstr "템플릿 파일을 검색할 디렉토리입니다."
 
 msgid "The ebs volume to attach to the instance."
 msgstr "인스턴스에 접속할 ebs 볼륨입니다."
@@ -7124,6 +7166,10 @@ msgstr ""
 #, python-format
 msgid "deployments of server %s"
 msgstr "서버 %s 배포"
+
+#, python-format
+msgid "environment has empty section \"%s\""
+msgstr "환경에 비어있는 섹션 \"%s\"이(가) 있음"
 
 #, python-format
 msgid "environment has wrong section \"%s\""
