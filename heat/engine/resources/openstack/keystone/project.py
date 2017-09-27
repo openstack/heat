@@ -39,9 +39,9 @@ class KeystoneProject(resource.Resource):
     entity = 'projects'
 
     PROPERTIES = (
-        NAME, DOMAIN, DESCRIPTION, ENABLED, PARENT,
+        NAME, DOMAIN, DESCRIPTION, ENABLED, PARENT, TAGS,
     ) = (
-        'name', 'domain', 'description', 'enabled', 'parent',
+        'name', 'domain', 'description', 'enabled', 'parent', 'tags',
     )
 
     properties_schema = {
@@ -75,6 +75,13 @@ class KeystoneProject(resource.Resource):
               'in hierarchy.'),
             support_status=support.SupportStatus(version='6.0.0'),
             constraints=[constraints.CustomConstraint('keystone.project')]
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of tags for labeling and sorting projects.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            default=[],
+            update_allowed=True
         ),
     }
 
@@ -145,13 +152,15 @@ class KeystoneProject(resource.Resource):
         domain = self.properties[self.DOMAIN]
         enabled = self.properties[self.ENABLED]
         parent = self.properties[self.PARENT]
+        tags = self.properties[self.TAGS]
 
         project = self.client().projects.create(
             name=project_name,
             domain=domain,
             description=description,
             enabled=enabled,
-            parent=parent)
+            parent=parent,
+            tags=tags)
 
         self.resource_id_set(project.id)
 
@@ -165,13 +174,16 @@ class KeystoneProject(resource.Resource):
             description = prop_diff.get(self.DESCRIPTION)
             enabled = prop_diff.get(self.ENABLED)
             domain = prop_diff.get(self.DOMAIN, self.properties[self.DOMAIN])
+            tags = (prop_diff.get(self.TAGS) or
+                    self.properties[self.TAGS])
 
             self.client().projects.update(
                 project=self.resource_id,
                 name=name,
                 description=description,
                 enabled=enabled,
-                domain=domain
+                domain=domain,
+                tags=tags
             )
 
     def parse_live_resource_data(self, resource_properties, resource_data):

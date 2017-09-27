@@ -1,0 +1,5 @@
+---
+features:
+  - Add `tags` parameter for create and update keystone projects.
+    Defined comma deliniated list will insert tags into newly
+    created or updated projects.
