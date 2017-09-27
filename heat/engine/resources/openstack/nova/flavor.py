@@ -149,7 +149,7 @@ class NovaFlavor(resource.Resource):
                 properties,
                 translation.TranslationRule.RESOLVE,
                 [self.TENANTS],
-                client_plugin=self.client_plugin(),
+                client_plugin=self.client_plugin('keystone'),
                 finder='get_project_id'
             )
         ]
