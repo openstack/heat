@@ -702,7 +702,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
     @tenacity.retry(
         stop=tenacity.stop_after_attempt(
             cfg.CONF.max_interface_check_attempts),
-        wait=tenacity.wait_exponential(multiplier=0.5, max=2.0),
+        wait=tenacity.wait_exponential(multiplier=0.5, max=12.0),
         retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
     def check_interface_detach(self, server_id, port_id):
         with self.ignore_not_found:
