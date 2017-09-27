@@ -118,7 +118,6 @@ class NovaFlavorTest(common.HeatTestCase):
         flavor_id = '927202df-1afb-497f-8368-9c2d2f26e5db'
         value.id = flavor_id
         value.is_public = False
-        self.my_flavor.IS_PUBLIC = False
         self.flavors.create.return_value = value
         self.flavors.get.return_value = value
         self.my_flavor.handle_create()
@@ -143,12 +142,11 @@ class NovaFlavorTest(common.HeatTestCase):
         value.set_keys.assert_called_once_with(new_keys)
 
     def test_flavor_handle_update_add_tenants(self):
-        self.create_flavor()
+        self.create_flavor(is_public=False)
         value = mock.MagicMock()
 
         new_tenants = ["new_foo", "new_bar"]
         prop_diff = {'tenants': new_tenants}
-        self.my_flavor.IS_PUBLIC = False
         self.flavors.get.return_value = value
 
         self.my_flavor.handle_update(json_snippet=None,
@@ -165,7 +163,6 @@ class NovaFlavorTest(common.HeatTestCase):
 
         new_tenants = []
         prop_diff = {'tenants': new_tenants}
-        self.my_flavor.IS_PUBLIC = False
         self.flavors.get.return_value = value
 
         itemFoo = mock.MagicMock()
