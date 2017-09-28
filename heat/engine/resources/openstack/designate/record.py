@@ -29,10 +29,13 @@ class DesignateRecord(resource.Resource):
     """
 
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
-        version='8.0.0',
+        status=support.HIDDEN,
+        version='10.0.0',
         message=_('Use OS::Designate::RecordSet instead.'),
-        previous_status=support.SupportStatus(version='5.0.0'))
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            version='8.0.0',
+            previous_status=support.SupportStatus(version='5.0.0')))
 
     entity = 'records'
 

@@ -43,9 +43,7 @@ class ResourceTypeTest(common.HeatTestCase):
                                             mock_is_service_available):
         mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
-        self.assertEqual(set(['OS::Designate::Domain',
-                              'OS::Designate::Record',
-                              'OS::Heat::HARestarter',
+        self.assertEqual(set(['OS::Heat::HARestarter',
                               'OS::Magnum::Bay',
                               'OS::Magnum::BayModel',
                               'OS::Glance::Image',
@@ -77,12 +75,6 @@ class ResourceTypeTest(common.HeatTestCase):
         resources = self.eng.list_resource_types(self.ctx,
                                                  with_description=True)
         self.assertIsInstance(resources, list)
-        description = ("Heat Template Resource for Designate Domain.\n\n"
-                       "Designate provides DNS-as-a-Service services for "
-                       "OpenStack. So, domain\nis a realm with an "
-                       "identification string, unique in DNS.")
-        self.assertIn({'resource_type': 'OS::Designate::Domain',
-                       'description': description}, resources)
         self.assertIn({'resource_type': 'AWS::RDS::DBInstance',
                        'description': 'Builtin AWS::RDS::DBInstance'},
                       resources)

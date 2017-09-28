@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    Hidden Designate resource plugins ``OS::Designate::Domain`` and
+    ``OS::Designate::Record``. To use ``OS::Designate::Zone`` and
+    ``OS::Designate::RecordSet`` instead.
