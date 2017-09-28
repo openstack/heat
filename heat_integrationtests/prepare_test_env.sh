@@ -58,7 +58,8 @@ iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
 
 # Skip ReloadOnSighupTest. Most jobs now run with apache+uwsgi, so the test has no significance
 # Skip NotificationTest till bug #1721202 is fixed
-iniset $conf_file heat_plugin skip_functional_test_list 'ReloadOnSighupTest, NotificationTest'
+# Skip StackCancelTest till the python-heatclient is bumped
+iniset $conf_file heat_plugin skip_functional_test_list 'ReloadOnSighupTest, NotificationTest, StackCancelTest'
 
 # Add scenario tests to skip
 # VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300

@@ -82,6 +82,10 @@
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin barbican https://git.openstack.org/openstack/barbican"
           # the lbaas v2 driver choice is in the gate pre test hook
 
+          # use heat-tempest-plugin
+          export PROJECTS="openstack/heat-tempest-plugin $PROJECTS"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/heat-tempest-plugin'"
+
           export OVERRIDE_ENABLED_SERVICES=$services
 
           if [ "{{ branch_override }}" != "default" ] ; then
