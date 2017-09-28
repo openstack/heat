@@ -382,6 +382,9 @@ class ResourceWithRestoreType(ResWithComplexPropsAndAttrs):
         props['a_string'] = value
         return defn.freeze(properties=props)
 
+    def handle_delete_snapshot(self, snapshot):
+        return snapshot['resource_data'].get('a_string')
+
 
 class ResourceTypeUnSupportedLiberty(GenericResource):
     support_status = support.SupportStatus(
