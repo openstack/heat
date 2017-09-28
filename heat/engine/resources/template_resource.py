@@ -60,6 +60,8 @@ class TemplateResource(stack_resource.StackResource):
         self.stack = stack
         self.validation_exception = None
 
+        self._reference_id = None
+
         tri = self._get_resource_info(json_snippet)
 
         self.properties_schema = {}
@@ -306,25 +308,33 @@ class TemplateResource(stack_resource.StackResource):
         if self.resource_id is None:
             return six.text_type(self.name)
 
-        stack_identity = self.nested_identifier()
-        try:
-            if self._outputs is not None:
-                return self.get_output(STACK_ID_OUTPUT)
+        if self._reference_id is not None:
+            return self._reference_id
 
-            output = self.rpc_client().show_output(self.context,
-                                                   dict(stack_identity),
-                                                   STACK_ID_OUTPUT)
-            if rpc_api.OUTPUT_ERROR in output:
-                raise exception.TemplateOutputError(
-                    resource=self.name,
-                    attribute=STACK_ID_OUTPUT,
-                    message=output[rpc_api.OUTPUT_ERROR])
-        except exception.TemplateOutputError as err:
-            LOG.info('%s', err)
-        except (exception.InvalidTemplateAttribute, exception.NotFound):
-            pass
-        else:
-            return output[rpc_api.OUTPUT_VALUE]
+        stack_identity = self.nested_identifier()
+        with self.frozen_properties():
+            nest_defn = self.child_definition(nested_identifier=stack_identity)
+        if STACK_ID_OUTPUT in nest_defn.enabled_output_names():
+            try:
+                if self._outputs is not None:
+                    self._reference_id = self.get_output(STACK_ID_OUTPUT)
+                    return self._reference_id
+
+                output = self.rpc_client().show_output(self.context,
+                                                       dict(stack_identity),
+                                                       STACK_ID_OUTPUT)
+                if rpc_api.OUTPUT_ERROR in output:
+                    raise exception.TemplateOutputError(
+                        resource=self.name,
+                        attribute=STACK_ID_OUTPUT,
+                        message=output[rpc_api.OUTPUT_ERROR])
+            except exception.TemplateOutputError as err:
+                LOG.info('%s', err)
+            except (exception.InvalidTemplateAttribute, exception.NotFound):
+                pass
+            else:
+                self._reference_id = output[rpc_api.OUTPUT_VALUE]
+                return self._reference_id
 
         return stack_identity.arn()
 

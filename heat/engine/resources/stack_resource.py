@@ -29,6 +29,7 @@ from heat.engine import environment
 from heat.engine import resource
 from heat.engine import scheduler
 from heat.engine import stack as parser
+from heat.engine import stk_defn
 from heat.engine import template
 from heat.objects import raw_template
 from heat.objects import stack as stack_object
@@ -316,12 +317,15 @@ class StackResource(resource.Resource):
 
         self.resource_id_set(result['stack_id'])
 
-    def _stack_kwargs(self, user_params, child_template, adopt_data=None):
-
+    def child_definition(self, child_template=None, user_params=None,
+                         nested_identifier=None):
         if user_params is None:
             user_params = self.child_params()
         if child_template is None:
             child_template = self.child_template()
+        if nested_identifier is None:
+            nested_identifier = self.nested_identifier()
+
         child_env = environment.get_child_environment(
             self.stack.env,
             user_params,
@@ -330,6 +334,14 @@ class StackResource(resource.Resource):
 
         parsed_template = self._child_parsed_template(child_template,
                                                       child_env)
+        return stk_defn.StackDefinition(self.context, parsed_template,
+                                        nested_identifier,
+                                        None)
+
+    def _stack_kwargs(self, user_params, child_template, adopt_data=None):
+        defn = self.child_definition(child_template, user_params)
+        parsed_template = defn.t
+
         if adopt_data is None:
             template_id = parsed_template.store(self.context)
             return {
@@ -341,7 +353,7 @@ class StackResource(resource.Resource):
         else:
             return {
                 'template': parsed_template.t,
-                'params': child_env.user_env_as_dict(),
+                'params': defn.env.user_env_as_dict(),
                 'files': parsed_template.files,
             }
 
