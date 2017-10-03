@@ -1,0 +1,93 @@
+- job:
+    name: heat-functional-devstack-base
+    parent: legacy-dsvm-base
+    run: playbooks/devstack/functional/run.yaml
+    post-run: playbooks/devstack/functional/post.yaml
+    timeout: 7800
+    required-projects:
+      - openstack-infra/devstack-gate
+      - openstack/aodh
+      - openstack/barbican
+      - openstack/barbican-tempest-plugin
+      - openstack/ceilometer
+      - openstack/devstack-plugin-amqp1
+      - openstack/heat
+      - openstack/neutron
+      - openstack/neutron-lbaas
+      - openstack/oslo.messaging
+      - openstack/python-barbicanclient
+      - openstack/python-heatclient
+      - openstack/python-zaqarclient
+      - openstack/zaqar
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^api-ref/.*$
+      - ^doc/.*$
+      - ^heat/locale/.*$
+      - ^heat/tests/.*$
+      - ^releasenotes/.*$
+    vars:
+      disable_convergence: 'false'
+      sql: mysql
+      use_amqp1: 0
+      use_apache: 1
+      use_python3: 0
+      use_identity_v3_only: 0
+      branch_override: default
+
+- job:
+    name: heat-functional-orig-mysql-lbaasv2
+    parent: heat-functional-devstack-base
+    vars:
+      disable_convergence: 'true'
+
+- job:
+    name: heat-functional-convg-mysql-lbaasv2
+    parent: heat-functional-devstack-base
+
+- job:
+    name: heat-functional-convg-mysql-lbaasv2-amqp1
+    parent: heat-functional-devstack-base
+    voting: false
+    branches: master
+    vars:
+      use_amqp1: 1
+
+- job:
+    name: heat-functional-convg-mysql-lbaasv2-non-apache
+    parent: heat-functional-devstack-base
+    branches: ^(?!stable/newton).*$
+    vars:
+      use_apache: 0
+
+- job:
+    name: heat-functional-convg-mysql-lbaasv2-py35
+    parent: heat-functional-devstack-base
+    branches: ^(?!stable/(newton|ocata)).*$
+    vars:
+      use_python3: 1
+
+- job:
+    name: heat-functional-convg-mysql-lbaasv2-identity-v3-only
+    parent: heat-functional-devstack-base
+    voting: false
+    branches: master
+    vars:
+      use_identity_v3_only: 1
+
+- project:
+    name: openstack/heat
+    check:
+      jobs:
+        - heat-functional-orig-mysql-lbaasv2
+        - heat-functional-convg-mysql-lbaasv2
+        - heat-functional-convg-mysql-lbaasv2-amqp1
+        - heat-functional-convg-mysql-lbaasv2-non-apache
+        - heat-functional-convg-mysql-lbaasv2-py35
+        - heat-functional-convg-mysql-lbaasv2-identity-v3-only
+    gate:
+      jobs:
+        - heat-functional-orig-mysql-lbaasv2
+        - heat-functional-convg-mysql-lbaasv2
+        - heat-functional-convg-mysql-lbaasv2-non-apache
+        - heat-functional-convg-mysql-lbaasv2-py35
