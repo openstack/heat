@@ -786,14 +786,14 @@ class ServersTest(common.HeatTestCase):
 
     @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
     def test_server_create_software_config(self, fake_url):
-        fake_url.return_value = 'http://ip:port/v1'
+        fake_url.return_value = 'http://ip:8000/v1'
         server = self._server_create_software_config()
 
         self.assertEqual({
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': 'http://ip:port/v1/',
+                    'metadata_url': 'http://ip:8000/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'software_config_s'
@@ -1650,7 +1650,7 @@ class ServersTest(common.HeatTestCase):
 
     @mock.patch.object(heat_plugin.HeatClientPlugin, 'url_for')
     def test_server_update_metadata_software_config(self, fake_url):
-        fake_url.return_value = 'http://ip:port/v1'
+        fake_url.return_value = 'http://ip:8000/v1'
         server, ud_tmpl = self._server_create_software_config(
             stack_name='update_meta_sc', ret_tmpl=True)
 
@@ -1658,7 +1658,7 @@ class ServersTest(common.HeatTestCase):
             'os-collect-config': {
                 'cfn': {
                     'access_key_id': '4567',
-                    'metadata_url': 'http://ip:port/v1/',
+                    'metadata_url': 'http://ip:8000/v1/',
                     'path': 'WebServer.Metadata',
                     'secret_access_key': '8901',
                     'stack_name': 'update_meta_sc'
