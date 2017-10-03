@@ -75,10 +75,46 @@
     vars:
       use_identity_v3_only: 1
 
+- job:
+    name: grenade-heat
+    parent: legacy-dsvm-base
+    run: playbooks/devstack/grenade/run.yaml
+    post-run: playbooks/devstack/functional/post.yaml
+    timeout: 7800
+    branches: ^(?!(driverfixes|stable/(mitaka|newton))).*$
+    required-projects:
+      - openstack-dev/grenade
+      - openstack-infra/devstack-gate
+      - openstack/heat
+    irrelevant-files:
+      - ^(test-|)requirements.txt$
+      - ^.*\.rst$
+      - ^api-ref/.*$
+      - ^doc/.*$
+      - ^heat/locale/.*$
+      - ^heat/tests/.*$
+      - ^releasenotes/.*$
+      - ^setup.cfg$
+    vars:
+      topology: aio
+      branch_override: default
+
+- job:
+    name: grenade-heat-multinode
+    parent: grenade-heat
+    nodeset: ubuntu-xenial-2-node
+    roles:
+      - zuul: openstack-infra/zuul-jobs
+    pre-run: playbooks/devstack/multinode-networking/pre
+    voting: false
+    vars:
+      topology: multinode
+
 - project:
     name: openstack/heat
     check:
       jobs:
+        - grenade-heat
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-amqp1
@@ -87,7 +123,11 @@
         - heat-functional-convg-mysql-lbaasv2-identity-v3-only
     gate:
       jobs:
+        - grenade-heat
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
+    experimental:
+      jobs:
+        - grenade-heat-multinode
