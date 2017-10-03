@@ -76,8 +76,6 @@ source $HEAT_DEVSTACK_DIR/plugin.sh stack install
 upgrade_project heat $RUN_DIR $BASE_DEVSTACK_BRANCH $TARGET_DEVSTACK_BRANCH
 
 # Simulate init_heat()
-create_heat_cache_dir
-
 HEAT_BIN_DIR=$(dirname $(which heat-manage))
 $HEAT_BIN_DIR/heat-manage --config-file $HEAT_CONF db_sync || die $LINENO "DB sync error"
 
