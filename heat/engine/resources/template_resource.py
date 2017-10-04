@@ -25,10 +25,13 @@ from heat.engine import environment
 from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import template
+from heat.rpc import api as rpc_api
 
 
 REMOTE_SCHEMES = ('http', 'https')
 LOCAL_SCHEMES = ('file',)
+
+STACK_ID_OUTPUT = 'OS::stack_id'
 
 
 def generate_class_from_template(name, data, param_defaults):
@@ -300,10 +303,25 @@ class TemplateResource(stack_resource.StackResource):
         if self.resource_id is None:
             return six.text_type(self.name)
 
+        stack_identity = self.nested_identifier()
         try:
-            return self.get_output('OS::stack_id')
-        except exception.InvalidTemplateAttribute:
-            return self.nested_identifier().arn()
+            if self._outputs is not None:
+                return self.get_output(STACK_ID_OUTPUT)
+
+            output = self.rpc_client().show_output(self.context,
+                                                   dict(stack_identity),
+                                                   STACK_ID_OUTPUT)
+            if rpc_api.OUTPUT_ERROR in output:
+                raise exception.TemplateOutputError(
+                    resource=self.name,
+                    attribute=STACK_ID_OUTPUT,
+                    message=output[rpc_api.OUTPUT_ERROR])
+        except (exception.InvalidTemplateAttribute, exception.NotFound):
+            pass
+        else:
+            return output[rpc_api.OUTPUT_VALUE]
+
+        return stack_identity.arn()
 
     def get_attribute(self, key, *path):
         if self.resource_id is None:

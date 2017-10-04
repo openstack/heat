@@ -1043,9 +1043,12 @@ class Resource(status.ResourceStatus):
             for e in get_attrs(out_attrs - dep_attrs, cacheable_only=True):
                 pass
 
+        # Calculate attribute values *before* reference ID, to potentially
+        # save an extra RPC call in TemplateResource
+        attribute_values = dict(get_attrs(dep_attrs))
+
         return node_data.NodeData(self.id, self.name, self.uuid,
-                                  self.FnGetRefId(),
-                                  dict(get_attrs(dep_attrs)),
+                                  self.FnGetRefId(), attribute_values,
                                   self.action, self.status)
 
     def preview(self):
