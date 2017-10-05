@@ -77,6 +77,7 @@ class FaultWrapper(wsgi.Middleware):
         'StopActionFailed': webob.exc.HTTPInternalServerError,
         'EventSendFailed': webob.exc.HTTPInternalServerError,
         'ServerBuildFailed': webob.exc.HTTPInternalServerError,
+        'InvalidEncryptionKey': webob.exc.HTTPInternalServerError,
         'NotSupported': webob.exc.HTTPBadRequest,
         'MissingCredentialError': webob.exc.HTTPBadRequest,
         'UserParameterMissing': webob.exc.HTTPBadRequest,

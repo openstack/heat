@@ -21,6 +21,7 @@ from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import importutils
 
+from heat.common import exception
 from heat.common.i18n import _
 
 auth_opts = [
@@ -128,7 +129,10 @@ def cryptography_decrypt_v1(value, encryption_key=None):
     encryption_key = get_valid_encryption_key(encryption_key, fix_length=True)
     encoded_key = base64.b64encode(encryption_key.encode('utf-8'))
     sym = fernet.Fernet(encoded_key)
-    return sym.decrypt(encodeutils.safe_encode(value))
+    try:
+        return sym.decrypt(encodeutils.safe_encode(value))
+    except fernet.InvalidToken:
+        raise exception.InvalidEncryptionKey()
 
 
 def get_valid_encryption_key(encryption_key, fix_length=False):
