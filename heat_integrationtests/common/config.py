@@ -140,6 +140,10 @@ HeatGroup = [
     cfg.ListOpt('skip_test_stack_action_list',
                 help="List of stack actions in tests to skip "
                      "ex. ABANDON, ADOPT, SUSPEND, RESUME"),
+    cfg.BoolOpt('convergence_engine_enabled',
+                default=True,
+                help="Test features that are only present for stacks with "
+                     "convergence enabled."),
     cfg.IntOpt('volume_size',
                default=1,
                help='Default size in GB for volumes created by volumes tests'),

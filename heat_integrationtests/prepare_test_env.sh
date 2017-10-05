@@ -66,4 +66,8 @@ iniset $conf_file heat_plugin skip_functional_test_list 'CancelUpdateTest.test_c
 # test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
 iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
 
+if [ "$DISABLE_CONVERGENCE" == "true" ]; then
+    iniset $conf_file heat_plugin convergence_engine_enabled false
+fi
+
 cat $conf_file
