@@ -167,10 +167,10 @@ class NovaFlavor(resource.Resource):
         if flavor_keys:
             flavor.set_keys(flavor_keys)
 
-        if not self.IS_PUBLIC:
+        if not self.properties[self.IS_PUBLIC]:
             if not tenants:
-                LOG.info('Tenant property is recommended if IS_PUBLIC '
-                         'is false.')
+                LOG.info('Tenant property is recommended '
+                         'for the private flavors.')
                 tenant = self.stack.context.tenant_id
                 self.client().flavor_access.add_tenant_access(flavor, tenant)
             else:
@@ -189,7 +189,7 @@ class NovaFlavor(resource.Resource):
             if new_keys is not None:
                 flavor.set_keys(new_keys)
         """Update tenant access list."""
-        if self.TENANTS in prop_diff and not self.IS_PUBLIC:
+        if self.TENANTS in prop_diff and not self.properties[self.IS_PUBLIC]:
             kwargs = {'flavor': self.resource_id}
             old_tenants = [
                 x.tenant_id for x in self.client().flavor_access.list(**kwargs)
