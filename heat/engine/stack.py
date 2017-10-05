@@ -57,6 +57,10 @@ from heat.rpc import worker_client as rpc_worker_client
 LOG = logging.getLogger(__name__)
 
 
+ConvergenceNode = collections.namedtuple('ConvergenceNode',
+                                         ['rsrc_id', 'is_update'])
+
+
 class ForcedCancel(Exception):
     """Exception raised to cancel task execution."""
 
@@ -1442,27 +1446,32 @@ class Stack(collections.Mapping):
     def _compute_convg_dependencies(self, existing_resources,
                                     current_template_deps, current_resources):
         def make_graph_key(rsrc):
-            return current_resources[rsrc.name].id, True
+            return ConvergenceNode(current_resources[rsrc.name].id, True)
+
         dep = current_template_deps.translate(make_graph_key)
         if existing_resources:
             for rsrc_id, rsrc in existing_resources.items():
-                dep += (rsrc_id, False), None
+                dep += ConvergenceNode(rsrc_id, False), None
 
                 for requirement in rsrc.requires:
                     if requirement in existing_resources:
-                        dep += (requirement, False), (rsrc_id, False)
+                        dep += (ConvergenceNode(requirement, False),
+                                ConvergenceNode(rsrc_id, False))
                 if rsrc.replaces in existing_resources:
-                    dep += (rsrc.replaces, False), (rsrc_id, False)
+                    dep += (ConvergenceNode(rsrc.replaces, False),
+                            ConvergenceNode(rsrc_id, False))
 
-                if (rsrc.id, True) in dep:
-                    dep += (rsrc_id, False), (rsrc_id, True)
+                if ConvergenceNode(rsrc.id, True) in dep:
+                    dep += (ConvergenceNode(rsrc_id, False),
+                            ConvergenceNode(rsrc_id, True))
 
         self._convg_deps = dep
 
     @property
     def convergence_dependencies(self):
         if self._convg_deps is None:
-            current_deps = ([tuple(i), (tuple(j) if j is not None else None)]
+            current_deps = ((ConvergenceNode(*i),
+                             ConvergenceNode(*j) if j is not None else None)
                             for i, j in self.current_deps['edges'])
             self._convg_deps = dependencies.Dependencies(edges=current_deps)
 

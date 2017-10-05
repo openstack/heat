@@ -74,7 +74,7 @@ def update_input_data(context, entity_id, current_traversal,
 
 
 def str_pack_tuple(t):
-    return u'tuple:' + str(t)
+    return u'tuple:' + str(tuple(t))
 
 
 def _str_unpack_tuple(s):
