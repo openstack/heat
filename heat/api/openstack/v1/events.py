@@ -84,7 +84,8 @@ class EventController(object):
 
     Implements the API actions.
     """
-    # Define request scope (must match what is in policy.json)
+    # Define request scope (must match what is in policy.json or policies in
+    # code)
     REQUEST_SCOPE = 'events'
 
     def __init__(self, options):
@@ -106,7 +107,7 @@ class EventController(object):
 
         return [format_event(req, e, keys) for e in events]
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def index(self, req, identity, resource_name=None):
         """Lists summary information for all events."""
         whitelist = {
@@ -149,7 +150,7 @@ class EventController(object):
 
         return {'events': events}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def show(self, req, identity, resource_name, event_id):
         """Gets detailed information for an event."""
 

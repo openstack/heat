@@ -25,14 +25,15 @@ from heat.rpc import client as rpc_client
 
 class ServiceController(object):
     """WSGI controller for reporting the heat engine status in Heat v1 API."""
-    # Define request scope (must match what is in policy.json)
+    # Define request scope (must match what is in policy.json or policies in
+    # code)
     REQUEST_SCOPE = 'service'
 
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def index(self, req):
         try:
             services = self.rpc_client.list_services(req.context)

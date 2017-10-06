@@ -26,7 +26,8 @@ class ActionController(object):
 
     Implements the API for stack actions
     """
-    # Define request scope (must match what is in policy.json)
+    # Define request scope (must match what is in policy.json or policies in
+    # code)
     REQUEST_SCOPE = 'actions'
 
     ACTIONS = (
@@ -41,7 +42,7 @@ class ActionController(object):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def action(self, req, identity, body=None):
         """Performs a specified action on a stack.
 

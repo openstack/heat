@@ -24,14 +24,15 @@ class BuildInfoController(object):
 
     Returns build information for current app.
     """
-    # Define request scope (must match what is in policy.json)
+    # Define request scope (must match what is in policy.json or policies in
+    # code)
     REQUEST_SCOPE = 'build_info'
 
     def __init__(self, options):
         self.options = options
         self.rpc_client = rpc_client.EngineClient()
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def build_info(self, req):
         engine_revision = self.rpc_client.get_revision(req.context)
         build_info = {

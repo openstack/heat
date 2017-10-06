@@ -75,7 +75,8 @@ class ResourceController(object):
 
     Implements the API actions.
     """
-    # Define request scope (must match what is in policy.json)
+    # Define request scope (must match what is in policy.json or policies in
+    # code)
     REQUEST_SCOPE = 'resource'
 
     def __init__(self, options):
@@ -92,7 +93,7 @@ class ResourceController(object):
         else:
             return default
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def index(self, req, identity):
         """Lists information for all resources."""
 
@@ -131,7 +132,7 @@ class ResourceController(object):
 
         return {'resources': [format_resource(req, res) for res in res_list]}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def show(self, req, identity, resource_name):
         """Gets detailed information for a resource."""
 
@@ -146,7 +147,7 @@ class ResourceController(object):
 
         return {'resource': format_resource(req, res)}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def metadata(self, req, identity, resource_name):
         """Gets metadata information for a resource."""
 
@@ -156,14 +157,14 @@ class ResourceController(object):
 
         return {rpc_api.RES_METADATA: res[rpc_api.RES_METADATA]}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def signal(self, req, identity, resource_name, body=None):
         self.rpc_client.resource_signal(req.context,
                                         stack_identity=identity,
                                         resource_name=resource_name,
                                         details=body)
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def mark_unhealthy(self, req, identity, resource_name, body):
         """Mark a resource as healthy or unhealthy."""
         data = dict()
