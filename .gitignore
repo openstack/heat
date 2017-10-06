@@ -25,5 +25,8 @@ etc/heat/heat.conf.sample
 # integration tests requirements are auto-generated from stub file
 heat_integrationtests/requirements.txt
 
+# generated policy file
+etc/heat/policy.json.sample
+
 # Files created by releasenotes build
 releasenotes/build

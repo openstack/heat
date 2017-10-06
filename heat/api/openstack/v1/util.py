@@ -22,17 +22,34 @@ def policy_enforce(handler):
     """Decorator that enforces policies.
 
     Checks the path matches the request context and enforce policy defined in
-    policy.json.
+    policy.json or in policies.
 
     This is a handler method decorator.
     """
+    return _policy_enforce(handler)
+
+
+def registered_policy_enforce(handler):
+    """Decorator that enforces policies.
+
+    Checks the path matches the request context and enforce policy defined in
+    policies.
+
+    This is a handler method decorator.
+    """
+    return _policy_enforce(handler, is_registered_policy=True)
+
+
+def _policy_enforce(handler, is_registered_policy=False):
     @six.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
         if req.context.tenant_id != tenant_id and not req.context.is_admin:
             raise exc.HTTPForbidden()
-        allowed = req.context.policy.enforce(context=req.context,
-                                             action=handler.__name__,
-                                             scope=controller.REQUEST_SCOPE)
+        allowed = req.context.policy.enforce(
+            context=req.context,
+            action=handler.__name__,
+            scope=controller.REQUEST_SCOPE,
+            is_registered_policy=is_registered_policy)
         if not allowed:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
@@ -45,7 +62,21 @@ def identified_stack(handler):
 
     This is a handler method decorator.
     """
-    @policy_enforce
+
+    return _identified_stack(handler)
+
+
+def registered_identified_stack(handler):
+    """Decorator that passes a stack identifier instead of path components.
+
+    This is a handler method decorator.
+    """
+
+    return _identified_stack(handler, is_registered_policy=True)
+
+
+def _identified_stack(handler, is_registered_policy=False):
+
     @six.wraps(handler)
     def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
         stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
@@ -53,7 +84,8 @@ def identified_stack(handler):
                                                    stack_id)
         return handler(controller, req, dict(stack_identity), **kwargs)
 
-    return handle_stack_method
+    return _policy_enforce(handle_stack_method,
+                           is_registered_policy=is_registered_policy)
 
 
 def make_url(req, identity):

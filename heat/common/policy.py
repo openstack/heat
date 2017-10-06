@@ -20,9 +20,12 @@
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_policy import policy
+from oslo_utils import excutils
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
+from heat import policies
 
 
 CONF = cfg.CONF
@@ -45,6 +48,9 @@ class Enforcer(object):
         self.enforcer = policy.Enforcer(
             CONF, default_rule=default_rule, policy_file=policy_file)
 
+        # register rules
+        self.enforcer.register_defaults(policies.list_rules())
+
     def set_rules(self, rules, overwrite=True):
         """Create a new Rules object based on the provided dict of rules."""
         rules_obj = policy.Rules(rules, self.default_rule)
@@ -54,7 +60,8 @@ class Enforcer(object):
         """Set the rules found in the json file on disk."""
         self.enforcer.load_rules(force_reload)
 
-    def _check(self, context, rule, target, exc, *args, **kwargs):
+    def _check(self, context, rule, target, exc,
+               is_registered_policy=False, *args, **kwargs):
         """Verifies that the action is valid on the target in this context.
 
            :param context: Heat request context
@@ -65,10 +72,20 @@ class Enforcer(object):
         """
         do_raise = False if not exc else True
         credentials = context.to_policy_values()
-        return self.enforcer.enforce(rule, target, credentials,
-                                     do_raise, exc=exc, *args, **kwargs)
+        if is_registered_policy:
+            try:
+                return self.enforcer.authorize(rule, target, credentials,
+                                               do_raise=do_raise,
+                                               exc=exc, action=rule)
+            except policy.PolicyNotRegistered:
+                with excutils.save_and_reraise_exception():
+                    LOG.exception(_('Policy not registered.'))
+        else:
+            return self.enforcer.enforce(rule, target, credentials,
+                                         do_raise, exc=exc, *args, **kwargs)
 
-    def enforce(self, context, action, scope=None, target=None):
+    def enforce(self, context, action, scope=None, target=None,
+                is_registered_policy=False):
         """Verifies that the action is valid on the target in this context.
 
            :param context: Heat request context
@@ -79,10 +96,11 @@ class Enforcer(object):
         """
         _action = '%s:%s' % (scope or self.scope, action)
         _target = target or {}
-        return self._check(context, _action, _target, self.exc, action=action)
+        return self._check(context, _action, _target, self.exc, action=action,
+                           is_registered_policy=is_registered_policy)
 
     def check_is_admin(self, context):
-        """Whether or not is admin according to policy.json.
+        """Whether or not is admin according to policy.
 
         By default the rule will check whether or not roles contains
         'admin' role and is admin project.

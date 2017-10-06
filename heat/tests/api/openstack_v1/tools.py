@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 from oslo_config import cfg
 from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
@@ -117,7 +118,9 @@ class ControllerTest(object):
             self.mock_enforce.assert_called_with(
                 action=self.action,
                 context=self.context,
-                scope=self.controller.REQUEST_SCOPE)
+                scope=self.controller.REQUEST_SCOPE,
+                is_registered_policy=mock.ANY
+            )
             self.assertEqual(self.expected_request_count,
                              len(self.mock_enforce.call_args_list))
         super(ControllerTest, self).tearDown()

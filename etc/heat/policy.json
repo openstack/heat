@@ -1,9 +1,4 @@
 {
-    "context_is_admin": "role:admin and is_admin_project:True",
-    "project_admin": "role:admin",
-    "deny_stack_user": "not role:heat_stack_user",
-    "deny_everybody": "!",
-
     "cloudformation:ListStacks": "rule:deny_stack_user",
     "cloudformation:CreateStack": "rule:deny_stack_user",
     "cloudformation:DescribeStacks": "rule:deny_stack_user",
