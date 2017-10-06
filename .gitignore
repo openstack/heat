@@ -26,7 +26,10 @@ etc/heat/heat.conf.sample
 heat_integrationtests/requirements.txt
 
 # generated policy file
-etc/heat/policy.json.sample
+etc/heat/policy.yaml.sample
+
+# sample policy file included in docs
+doc/source/_static/heat.policy.yaml.sample
 
 # Files created by releasenotes build
 releasenotes/build
