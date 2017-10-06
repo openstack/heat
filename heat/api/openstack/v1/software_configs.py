@@ -59,11 +59,11 @@ class SoftwareConfigController(object):
                                                     **params)
         return {'software_configs': scs}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def global_index(self, req):
         return self._index(req, use_admin_cnxt=True)
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def index(self, req):
         """Lists summary information for all software configs."""
         global_tenant = False
@@ -78,14 +78,14 @@ class SoftwareConfigController(object):
 
         return self._index(req)
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def show(self, req, config_id):
         """Gets detailed information for a software config."""
         sc = self.rpc_client.show_software_config(
             req.context, config_id)
         return {'software_config': sc}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def create(self, req, body):
         """Create a new software config."""
         create_data = {
@@ -100,7 +100,7 @@ class SoftwareConfigController(object):
             req.context, **create_data)
         return {'software_config': sc}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def delete(self, req, config_id):
         """Delete an existing software config."""
         res = self.rpc_client.delete_software_config(req.context, config_id)

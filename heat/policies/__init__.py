@@ -20,6 +20,8 @@ from heat.policies import events
 from heat.policies import resource
 from heat.policies import resource_types
 from heat.policies import service
+from heat.policies import software_configs
+from heat.policies import software_deployments
 from heat.policies import stacks
 
 
@@ -32,5 +34,7 @@ def list_rules():
         resource.list_rules(),
         resource_types.list_rules(),
         service.list_rules(),
+        software_configs.list_rules(),
+        software_deployments.list_rules(),
         stacks.list_rules(),
     )
