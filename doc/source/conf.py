@@ -78,6 +78,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.doctest',
               'openstackdocstheme',
+              'oslo_config.sphinxconfiggen',
               'oslo_policy.sphinxext',
               'oslo_policy.sphinxpolicygen',
               'ext.resources',
@@ -87,6 +88,10 @@ extensions = ['sphinx.ext.autodoc',
 # policy sample file generation
 policy_generator_config_file = '../../etc/heat/heat-policy-generator.conf'
 sample_policy_basename = '_static/heat'
+
+# oslo_config.sphinxconfiggen options
+config_generator_config_file = '../../config-generator.conf'
+sample_config_basename = '_static/heat'
 
 # openstackdocstheme options
 repository_name = 'openstack/heat'
