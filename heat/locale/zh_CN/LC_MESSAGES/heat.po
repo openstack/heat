@@ -7,9 +7,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b4.dev55\n"
+"Project-Id-Version: heat 10.0.0.dev107\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-08-12 12:09+0000\n"
+"POT-Creation-Date: 2017-10-06 21:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -5559,10 +5559,6 @@ msgstr "通告接收器时要传递至操作的参数。"
 msgid "The parent URL of the container."
 msgstr "容器的父 URL。"
 
-msgid ""
-"The passphrase the created key. Can be set only for asymmetric type of order."
-msgstr "所生成密钥的密码。只能针对非对称类型的指令设置。"
-
 msgid "The payload of the created certificate, if available."
 msgstr "所创建证书的有效内容（如果提供）。"
 
@@ -6003,10 +5999,6 @@ msgstr "针对创建支架的超时（以分钟计）。设置为 0 表示无超
 
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr "堆栈操作（即，创建或更新）的超时，以秒计。"
-
-msgid ""
-"Timezone for the time constraint (eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."
-msgstr "时间约束的时区（例如，“Taiwan/Taipei”，“Europe/Amsterdam”）。"
 
 msgid ""
 "Toggle to enable/disable caching when Orchestration Engine looks for other "

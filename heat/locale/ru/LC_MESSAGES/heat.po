@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 9.0.0.0b4.dev55\n"
+"Project-Id-Version: heat 10.0.0.dev107\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-08-12 12:09+0000\n"
+"POT-Creation-Date: 2017-10-06 21:39+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -6028,12 +6028,6 @@ msgstr ""
 msgid "The parent URL of the container."
 msgstr "Родительский URL контейнера."
 
-msgid ""
-"The passphrase the created key. Can be set only for asymmetric type of order."
-msgstr ""
-"Пароль созданного ключа. Может быть задан только для заказов асимметричных "
-"типов."
-
 msgid "The payload of the created certificate, if available."
 msgstr "Полезная нагрузка созданного сертификата, если она задана."
 
@@ -6520,12 +6514,6 @@ msgstr "Тайм-аут в минутах для создания отсека. 
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr ""
 "Тайм-аут в секундах для действия над стеком (например, создать или обновить)."
-
-msgid ""
-"Timezone for the time constraint (eg. 'Taiwan/Taipei', 'Europe/Amsterdam')."
-msgstr ""
-"Часовой пояс ограничения времени, (например, 'Taiwan/Taipei', 'Europe/"
-"Amsterdam')."
 
 msgid ""
 "Toggle to enable/disable caching when Orchestration Engine looks for other "
