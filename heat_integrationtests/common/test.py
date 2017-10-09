@@ -350,6 +350,11 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             except heat_exceptions.HTTPNotFound:
                 if success_on_not_found:
                     return
+                elif not any(s in status for s in ['CREATE', 'ADOPT']):
+                    # raise exception when stack not found, if it's not
+                    # in create or adopt (which should be the only two possible
+                    # reason that stack may not have been created yet)
+                    raise
                 # ignore this, as the resource may not have
                 # been created yet
             else:
