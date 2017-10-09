@@ -106,6 +106,8 @@ tests:
           type: OS::Heat::TestResource
           properties:
             value: {get_param: test_val}
+            action_wait_secs:
+              update: 1
       outputs:
         output_value:
           value: {get_attr: [test, output]}
