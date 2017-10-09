@@ -393,14 +393,15 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             attachments.append((jsonutils.dumps(metadata),
                                 'cfn-init-data', 'x-cfninitdata'))
 
-        heat_client_plugin = self.context.clients.client_plugin('heat')
-        watch_url = cfg.CONF.heat_watch_server_url
-        if not watch_url:
-            watch_url = heat_client_plugin.get_watch_server_url()
-
-        attachments.append((watch_url, 'cfn-watch-server', 'x-cfninitdata'))
-
         if is_cfntools:
+            heat_client_plugin = self.context.clients.client_plugin('heat')
+            watch_url = cfg.CONF.heat_watch_server_url
+            if not watch_url:
+                watch_url = heat_client_plugin.get_watch_server_url()
+
+            attachments.append((watch_url,
+                                'cfn-watch-server', 'x-cfninitdata'))
+
             cfn_md_url = heat_client_plugin.get_cfn_metadata_server_url()
             attachments.append((cfn_md_url,
                                 'cfn-metadata-server', 'x-cfninitdata'))
