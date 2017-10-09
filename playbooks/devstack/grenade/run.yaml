@@ -52,6 +52,7 @@
               export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
           fi
           export DEVSTACK_GATE_TOPOLOGY="{{ topology }}"
+          export DEVSTACK_LOCAL_CONFIG=$'\n'"HOST_TOPOLOGY={{ topology }}"
           cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
           ./safe-devstack-vm-gate-wrap.sh
         executable: /bin/bash

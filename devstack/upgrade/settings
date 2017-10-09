@@ -4,3 +4,5 @@ devstack_localrc base enable_service h-api h-api-cfn h-eng heat tempest
 devstack_localrc target enable_service h-api h-api-cfn h-eng heat tempest
 BASE_RUN_SMOKE=False
 TARGET_RUN_SMOKE=False
+
+export HOST_TOPOLOGY=${HOST_TOPOLOGY}
