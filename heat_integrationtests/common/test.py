@@ -68,6 +68,17 @@ def rand_name(name=''):
         return randbits
 
 
+def requires_convergence(test_method):
+    '''Decorator for convergence-only tests.
+
+    The decorated test will be skipped when convergence is disabled.
+    '''
+    convergence_enabled = config.CONF.heat_plugin.convergence_engine_enabled
+    skipper = testtools.skipUnless(convergence_enabled,
+                                   "Convergence-only tests are disabled")
+    return skipper(test_method)
+
+
 class HeatIntegrationTest(testscenarios.WithScenarios,
                           testtools.TestCase):
 
