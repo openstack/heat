@@ -42,8 +42,6 @@ keystone_endpoint_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::Endpoint'
-
 
 class KeystoneEndpointTest(common.HeatTestCase):
     def setUp(self):

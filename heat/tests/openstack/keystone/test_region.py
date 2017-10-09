@@ -37,8 +37,6 @@ KEYSTONE_REGION_TEMPLATE = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::Region'
-
 
 class KeystoneRegionTest(common.HeatTestCase):
     def setUp(self):

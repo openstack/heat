@@ -37,8 +37,6 @@ keystone_group_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::Group'
-
 
 class KeystoneGroupTest(common.HeatTestCase):
     def setUp(self):

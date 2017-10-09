@@ -41,8 +41,6 @@ sample_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Monasca::AlarmDefinition'
-
 
 class MonascaAlarmDefinitionTest(common.HeatTestCase):
 

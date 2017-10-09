@@ -44,8 +44,6 @@ sample_template = {
         }
     }
 
-RESOURCE_TYPE = 'OS::Neutron::FlowClassifier'
-
 
 class FlowClassifierTest(common.HeatTestCase):
 

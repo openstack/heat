@@ -41,8 +41,6 @@ keystone_user_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::User'
-
 
 class KeystoneUserTest(common.HeatTestCase):
     def setUp(self):
