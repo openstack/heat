@@ -2038,7 +2038,7 @@ For example
 
 .. code-block:: yaml
 
-    list_concat_unique: [['v1', 'v2'], ['v2', 'v43']]
+    list_concat_unique: [['v1', 'v2'], ['v2', 'v3']]
 
 Will resolve to the list ``['v1', 'v2', 'v3']``.
 
