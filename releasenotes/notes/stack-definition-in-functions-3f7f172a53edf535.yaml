@@ -1,0 +1,11 @@
+---
+other:
+  - Intrinsic function plugins will now be passed a StackDefinition object
+    instead of a Stack object. When accessing resources, the StackDefinition
+    will return ResourceProxy objects instead of Resource objects. These
+    classes replicate the parts of the Stack and Resource APIs that are used by
+    the built-in Function plugins, but authors of custom third-party
+    Template/Function plugins should audit them to ensure they do not depend on
+    unstable parts of the API that are no longer accessible. The
+    StackDefinition and ResourceProxy APIs are considered stable and any future
+    changes to them will go through the standard deprecation process.
