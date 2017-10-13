@@ -13,14 +13,14 @@
 
 from heat.common import identifier
 from heat.objects import event as event_object
-from heat.objects import resource_properties_data as rpd_objects
 
 
 class Event(object):
     """Class representing a Resource state change."""
 
     def __init__(self, context, stack, action, status, reason,
-                 physical_resource_id, resource_properties, resource_name,
+                 physical_resource_id, resource_prop_data_id,
+                 resource_properties, resource_name,
                  resource_type, uuid=None, timestamp=None, id=None):
         """Initialise from a context, stack, and event information.
 
@@ -35,17 +35,10 @@ class Event(object):
         self.physical_resource_id = physical_resource_id
         self.resource_name = resource_name
         self.resource_type = resource_type
-        self.rsrc_prop_data = None
-        if isinstance(resource_properties,
-                      rpd_objects.ResourcePropertiesData):
-            self.rsrc_prop_data = resource_properties
-            self.resource_properties = self.rsrc_prop_data.data
-        elif resource_properties is None:
+        self.rsrc_prop_data_id = resource_prop_data_id
+        self.resource_properties = resource_properties
+        if self.resource_properties is None:
             self.resource_properties = {}
-        else:
-            raise AssertionError(
-                'resource_properties is unexpected type %s' %
-                type(resource_properties).__name__)
         self.uuid = uuid
         self.timestamp = timestamp
         self.id = id
@@ -68,8 +61,8 @@ class Event(object):
         if self.timestamp is not None:
             ev['created_at'] = self.timestamp
 
-        if self.rsrc_prop_data:
-            ev['rsrc_prop_data_id'] = self.rsrc_prop_data.id
+        if self.rsrc_prop_data_id is not None:
+            ev['rsrc_prop_data_id'] = self.rsrc_prop_data_id
 
         new_ev = event_object.Event.create(self.context, ev)
 

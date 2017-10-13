@@ -174,9 +174,14 @@ def raw_template_files_get(context, files_id):
     return result
 
 
-def resource_get(context, resource_id, refresh=False, refresh_data=False):
-    result = context.session.query(models.Resource).get(resource_id)
+def resource_get(context, resource_id, refresh=False, refresh_data=False,
+                 eager=True):
+    query = context.session.query(models.Resource)
+    if eager:
+        query = query.options(orm.joinedload("data")).options(
+            orm.joinedload("rsrc_prop_data"))
 
+    result = query.get(resource_id)
     if not result:
         raise exception.NotFound(_("resource with id %s not found") %
                                  resource_id)
@@ -443,7 +448,7 @@ def resource_get_all_by_stack(context, stack_id, filters=None):
         models.Resource
     ).filter_by(
         stack_id=stack_id
-    ).options(orm.joinedload("data"))
+    ).options(orm.joinedload("data")).options(orm.joinedload("rsrc_prop_data"))
 
     query = db_filters.exact_filter(query, models.Resource, filters)
     results = query.all()

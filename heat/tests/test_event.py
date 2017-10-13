@@ -85,14 +85,16 @@ class EventTest(EventCommon):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'alabama', self.resource._rsrc_prop_data,
+                        'alabama', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type())
         e.store()
         self.assertEqual(1, len(event_object.Event.get_all_by_stack(
             self.ctx,
             self.stack.id)))
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arizona', self.resource._rsrc_prop_data,
+                        'arizona', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type())
         e.store()
         events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
@@ -105,7 +107,7 @@ class EventTest(EventCommon):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arkansas', self.resource._rsrc_prop_data,
+                        'arkansas', None, None,
                         self.resource.name, self.resource.type())
         e.store()
 
@@ -114,7 +116,7 @@ class EventTest(EventCommon):
             mock_random_uniform.return_value = 2.0 / 100 - .0001
             e = event.Event(self.ctx, self.stack, 'TEST',
                             'IN_PROGRESS', 'Testing',
-                            'alaska', self.resource._rsrc_prop_data,
+                            'alaska', None, None,
                             self.resource.name, self.resource.type())
             e.store()
         events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
@@ -126,7 +128,7 @@ class EventTest(EventCommon):
             mock_random_uniform.return_value = 2.0 / 100 + .0001
             e = event.Event(self.ctx, self.stack, 'TEST',
                             'IN_PROGRESS', 'Testing',
-                            'aardvark', self.resource._rsrc_prop_data,
+                            'aardvark', None, None,
                             self.resource.name, self.resource.type())
             e.store()
         events = event_object.Event.get_all_by_stack(self.ctx, self.stack.id)
@@ -138,16 +140,17 @@ class EventTest(EventCommon):
         self.resource.resource_id_set('resource_physical_id')
 
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'alabama', self.resource._rsrc_prop_data,
+                        'alabama', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type())
         e.store()
-        rpd1_id = self.resource._rsrc_prop_data.id
+        rpd1_id = self.resource._rsrc_prop_data_id
 
         rpd2 = rpd_object.ResourcePropertiesData.create(
             self.ctx, {'encrypted': False, 'data': {'foo': 'bar'}})
         rpd2_id = rpd2.id
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arizona', rpd2,
+                        'arizona', rpd2_id, rpd2.data,
                         self.resource.name, self.resource.type())
         e.store()
 
@@ -155,7 +158,7 @@ class EventTest(EventCommon):
             self.ctx, {'encrypted': False, 'data': {'foo': 'bar'}})
         rpd3_id = rpd3.id
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arkansas', rpd3,
+                        'arkansas', rpd3_id, rpd3.data,
                         self.resource.name, self.resource.type())
         e.store()
 
@@ -163,7 +166,7 @@ class EventTest(EventCommon):
             self.ctx, {'encrypted': False, 'data': {'foo': 'bar'}})
         rpd4_id = rpd4.id
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'arkansas', rpd4,
+                        'arkansas', rpd4_id, rpd4.data,
                         self.resource.name, self.resource.type())
         e.store()
 
@@ -187,7 +190,8 @@ class EventTest(EventCommon):
     def test_identifier(self):
         event_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource._rsrc_prop_data,
+                        'wibble', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type(),
                         uuid=event_uuid)
 
@@ -202,7 +206,7 @@ class EventTest(EventCommon):
 
     def test_identifier_is_none(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource._rsrc_prop_data,
+                        'wibble', None, None,
                         self.resource.name, self.resource.type())
 
         self.assertIsNone(e.identifier())
@@ -211,7 +215,8 @@ class EventTest(EventCommon):
 
     def test_as_dict(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource._rsrc_prop_data,
+                        'wibble', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type())
 
         e.store()
@@ -233,7 +238,8 @@ class EventTest(EventCommon):
 
     def test_load_deprecated_prop_data(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource._rsrc_prop_data,
+                        'wibble', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type())
         e.store()
 
@@ -273,7 +279,8 @@ class EventEncryptedTest(EventCommon):
 
     def test_props_encrypted(self):
         e = event.Event(self.ctx, self.stack, 'TEST', 'IN_PROGRESS', 'Testing',
-                        'wibble', self.resource._rsrc_prop_data,
+                        'wibble', self.resource._rsrc_prop_data_id,
+                        self.resource._stored_properties_data,
                         self.resource.name, self.resource.type())
         e.store()
 

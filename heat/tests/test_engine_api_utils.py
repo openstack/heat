@@ -63,7 +63,9 @@ class FormatTest(common.HeatTestCase):
         ev = event.Event(self.context, self.stack, 'CREATE',
                          'COMPLETE', 'state changed',
                          'z3455xyc-9f88-404d-a85b-5315293e67de',
-                         res_properties, resource.name, resource.type(),
+                         resource._rsrc_prop_data_id,
+                         resource._stored_properties_data,
+                         resource.name, resource.type(),
                          uuid=ev_uuid)
         ev.store()
         return event_object.Event.get_all_by_stack(
@@ -322,7 +324,8 @@ class FormatTest(common.HeatTestCase):
         resource = self.stack['generic1']
         resource._update_stored_properties()
         resource.store()
-        event = self._dummy_event(res_properties=resource._rsrc_prop_data)
+        event = self._dummy_event(
+            res_properties=resource._stored_properties_data)
         formatted = api.format_event(event, self.stack.identifier(),
                                      include_rsrc_prop_data=True)
         self.assertEqual({'k1': 'v1'}, formatted[rpc_api.EVENT_RES_PROPERTIES])

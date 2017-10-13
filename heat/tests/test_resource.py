@@ -680,13 +680,13 @@ class ResourceTest(common.HeatTestCase):
             ctx2, res_obj2.id)
 
         # verify the resource_properties_data association
-        # can be set by id or object
-        self.assertEqual(rpd_db_obj.id, res_obj1.rsrc_prop_data.id)
-        self.assertEqual(res_obj1.rsrc_prop_data.id,
-                         res_obj2.rsrc_prop_data.id)
+        # can be set by id
+        self.assertEqual(rpd_db_obj.id, res_obj1.rsrc_prop_data_id)
+        self.assertEqual(res_obj1.rsrc_prop_data_id,
+                         res_obj2.rsrc_prop_data_id)
         # properties data appears unencrypted to resource object
-        self.assertEqual(data, res_obj1.rsrc_prop_data.data)
-        self.assertEqual(data, res_obj2.rsrc_prop_data.data)
+        self.assertEqual(data, res_obj1.properties_data)
+        self.assertEqual(data, res_obj2.properties_data)
 
     def test_make_replacement(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
@@ -921,7 +921,10 @@ class ResourceTest(common.HeatTestCase):
         res.state_set(res.CREATE, res.IN_PROGRESS, 'test_rpd')
 
         # Modernity, the data is where it belongs
-        self.assertEqual(res._rsrc_prop_data.data, {'Foo': 'lucky'})
+        rsrc_prop_data_db_obj = db_api.resource_prop_data_get(
+            self.stack.context, res._rsrc_prop_data_id)
+        self.assertEqual(rsrc_prop_data_db_obj['data'], {'Foo': 'lucky'})
+        # legacy locations aren't being used anymore
         self.assertFalse(hasattr(res, 'properties_data'))
         self.assertFalse(hasattr(res, 'properties_data_encrypted'))
 
@@ -962,11 +965,14 @@ class ResourceTest(common.HeatTestCase):
         # Modernity, the data is where it belongs
         # The db object data is encrypted
         rsrc_prop_data_db_obj = db_api.resource_prop_data_get(
-            self.stack.context, res._rsrc_prop_data.id)
+            self.stack.context, res._rsrc_prop_data_id)
         self.assertNotEqual(rsrc_prop_data_db_obj['data'], {'Foo': 'lucky'})
-        self.assertEqual(rsrc_prop_data_db_obj.encrypted, True)
         # But the objects/ rsrc_prop_data.data is always unencrypted
-        self.assertEqual(res._rsrc_prop_data.data, {'Foo': 'lucky'})
+        rsrc_prop_data_obj = rpd_object.ResourcePropertiesData._from_db_object(
+            rpd_object.ResourcePropertiesData(), self.stack.context,
+            rsrc_prop_data_db_obj)
+        self.assertEqual(rsrc_prop_data_obj.data, {'Foo': 'lucky'})
+        # legacy locations aren't being used anymore
         self.assertFalse(hasattr(res, 'properties_data'))
         self.assertFalse(hasattr(res, 'properties_data_encrypted'))
 
@@ -1996,20 +2002,20 @@ class ResourceTest(common.HeatTestCase):
         # The properties data should be decrypted when the object is
         # loaded using get_obj
         res_obj = resource_objects.Resource.get_obj(res.context, res.id)
-        self.assertEqual('string', res_obj.rsrc_prop_data.data['prop1'])
+        self.assertEqual('string', res_obj.properties_data['prop1'])
 
         # _stored_properties_data should be decrypted when the object is
         # loaded using get_all_by_stack
         res_objs = resource_objects.Resource.get_all_by_stack(res.context,
                                                               self.stack.id)
         res_obj = res_objs['test_res_enc']
-        self.assertEqual('string', res_obj.rsrc_prop_data.data['prop1'])
+        self.assertEqual('string', res_obj.properties_data['prop1'])
 
         # The properties data should be decrypted when the object is
         # refreshed
         res_obj = resource_objects.Resource.get_obj(res.context, res.id)
         res_obj.refresh()
-        self.assertEqual('string', res_obj.rsrc_prop_data.data['prop1'])
+        self.assertEqual('string', res_obj.properties_data['prop1'])
 
     def test_properties_data_no_encryption(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', False)
@@ -2040,16 +2046,16 @@ class ResourceTest(common.HeatTestCase):
         # is loaded using get_obj
         prev_rsrc_prop_data_id = db_res.rsrc_prop_data.id
         res_obj = resource_objects.Resource.get_obj(res.context, res.id)
-        self.assertEqual('string', res_obj.rsrc_prop_data.data['prop1'])
-        self.assertEqual(prev_rsrc_prop_data_id, res_obj.rsrc_prop_data.id)
+        self.assertEqual('string', res_obj.properties_data['prop1'])
+        self.assertEqual(prev_rsrc_prop_data_id, res_obj.rsrc_prop_data_id)
 
         # The properties data should not be modified when the object
         # is loaded using get_all_by_stack
         res_objs = resource_objects.Resource.get_all_by_stack(res.context,
                                                               self.stack.id)
         res_obj = res_objs['test_res_enc']
-        self.assertEqual('string', res_obj.rsrc_prop_data.data['prop1'])
-        self.assertEqual(prev_rsrc_prop_data_id, res_obj.rsrc_prop_data.id)
+        self.assertEqual('string', res_obj.properties_data['prop1'])
+        self.assertEqual(prev_rsrc_prop_data_id, res_obj.rsrc_prop_data_id)
 
     def _assert_resource_lock(self, res_id, engine_id, atomic_key):
         rs = resource_objects.Resource.get_obj(self.stack.context, res_id)
@@ -4555,19 +4561,11 @@ class TestResourcePropDataUpdate(common.HeatTestCase):
     def test_create_or_replace_rsrc_prop_data(self):
         res = self.res
         res._stored_properties_data = self.old_rpd
-        if self.replaced:
-            res._rsrc_prop_data = None
         res.store()
-        if res._rsrc_prop_data is None:
-            old_rpd_id = -1
-        else:
-            old_rpd_id = res._rsrc_prop_data.id
-        res._stored_properties_data = self.new_rpd
-        if self.replaced:
-            res._rsrc_prop_data = None
+        old_rpd_id = res._rsrc_prop_data_id
+        with mock.patch("heat.engine.function.resolve") as mock_fr:
+            mock_fr.return_value = self.new_rpd
+            res._update_stored_properties()
         res.store()
-        if res._rsrc_prop_data is None:
-            new_rpd_id = -1
-        else:
-            new_rpd_id = res._rsrc_prop_data.id
+        new_rpd_id = res._rsrc_prop_data_id
         self.assertEqual(self.replaced, old_rpd_id != new_rpd_id)
