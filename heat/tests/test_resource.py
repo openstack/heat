@@ -655,6 +655,27 @@ class ResourceTest(common.HeatTestCase):
             self.assertEqual('word', res.attributes['string'])
             self.assertEqual(0, res_attr.call_count)
 
+    def test_store_attributes_fail(self):
+        res_def = rsrc_defn.ResourceDefinition('test_resource',
+                                               'ResWithStringPropAndAttr')
+        res = generic_rsrc.ResWithStringPropAndAttr(
+            'test_res_attr_store', res_def, self.stack)
+
+        res.action = res.UPDATE
+        res.status = res.COMPLETE
+        res.store()
+        attr_data = {'string': 'word'}
+        # set the attr_data_id first
+        resource_objects.Resource.update_by_id(res.context, res.id,
+                                               {'attr_data_id': 99})
+        new_attr_data_id = resource_objects.Resource.store_attributes(
+            res.context, res.id, res._atomic_key, attr_data, None)
+        # fail to store new attr data
+        self.assertIsNone(new_attr_data_id)
+        res._load_data(resource_objects.Resource.get_obj(
+            res.context, res.id))
+        self.assertEqual({}, res.attributes._resolved_values)
+
     def test_resource_object_resource_properties_data(self):
         cfg.CONF.set_override('encrypt_parameters_and_properties', True)
         data = {'p1': 'i see',

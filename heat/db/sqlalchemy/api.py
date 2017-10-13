@@ -304,7 +304,7 @@ def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
                       {'rid': resource_id, 'aid': attr_id})
             session.query(
                 models.ResourcePropertiesData).filter(
-                    models.ResourcePropertiesData.attr_id == attr_id).delete()
+                    models.ResourcePropertiesData.id == attr_id).delete()
             return False
 
 
