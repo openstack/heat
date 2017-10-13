@@ -865,8 +865,10 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         resg = self._create_dummy_stack()
         self.assertEqual("ID-0", resg.FnGetAtt('resource.0'))
         self.assertEqual("ID-1", resg.FnGetAtt('resource.1'))
-        self.assertRaises(exception.InvalidTemplateAttribute, resg.FnGetAtt,
-                          'resource.2')
+        ex = self.assertRaises(exception.NotFound, resg.FnGetAtt,
+                               'resource.2')
+        self.assertIn("Member '2' not found in group resource 'group1'.",
+                      six.text_type(ex))
 
     @mock.patch.object(grouputils, 'get_rsrc_id')
     def test_get_attribute(self, mock_get_rsrc_id):

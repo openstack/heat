@@ -14,6 +14,7 @@
 import six
 
 from heat.common import exception
+from heat.common.i18n import _
 
 
 def get_size(group, include_failed=False):
@@ -69,7 +70,7 @@ def get_member_names(group):
     return [r.name for r in get_members(group)]
 
 
-def get_resource(stack, resource_name, use_indices, key):
+def get_resource(stack, resource_name, use_indices, key=None):
     nested_stack = stack.nested()
     if not nested_stack:
         return None
@@ -79,18 +80,20 @@ def get_resource(stack, resource_name, use_indices, key):
         else:
             return nested_stack[resource_name]
     except (IndexError, KeyError):
-        raise exception.InvalidTemplateAttribute(resource=stack.name,
-                                                 key=key)
+        raise exception.NotFound(_("Member '%(mem)s' not found "
+                                   "in group resource '%(grp)s'.")
+                                 % {'mem': resource_name,
+                                    'grp': stack.name})
 
 
 def get_rsrc_attr(stack, key, use_indices, resource_name, *attr_path):
-    resource = get_resource(stack, resource_name, use_indices, key)
+    resource = get_resource(stack, resource_name, use_indices)
     if resource:
         return resource.FnGetAtt(*attr_path)
 
 
 def get_rsrc_id(stack, key, use_indices, resource_name):
-    resource = get_resource(stack, resource_name, use_indices, key)
+    resource = get_resource(stack, resource_name, use_indices)
     if resource:
         return resource.FnGetRefId()
 
