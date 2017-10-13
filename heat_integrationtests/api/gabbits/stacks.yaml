@@ -140,7 +140,7 @@ tests:
     delay: 1.0
   response_json_paths:
     $.stack.stack_status: UPDATE_COMPLETE
-    $.stack.updated_time: /(?!$HISTORY['poll for stack UPDATE_COMPLETE'].$RESPONSE['$.stack.updated_time'])/
+    $.stack.updated_time: /^(?!$HISTORY['poll for stack UPDATE_COMPLETE'].$RESPONSE['$.stack.updated_time'])/
 
 - name: list stack outputs
   GET: $LAST_URL/outputs
