@@ -18,12 +18,12 @@ import six
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import stack as parser
 from heat.engine import template as templatem
-from heat.tests import fakes as test_fakes
 from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
@@ -169,7 +169,7 @@ def get_stack(stack_name, ctx, template=None, with_params=True,
 
 
 def setup_keystone_mocks(mocks, stack):
-    fkc = test_fakes.FakeKeystoneClient()
+    fkc = fake_ks.FakeKeystoneClient()
 
     mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
     keystone.KeystoneClientPlugin._create().AndReturn(fkc)

@@ -23,6 +23,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os.keystone import heat_keystoneclient as hkc
 from heat.engine import scheduler
 from heat.engine import stack
@@ -31,7 +32,6 @@ from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
 from heat.objects import user_creds as ucreds_object
 from heat.tests import common
-from heat.tests import fakes
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
 
@@ -272,7 +272,7 @@ class StackTest(common.HeatTestCase):
             self.ctx, user_creds_id)
         self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
 
-        mock_kc.return_value = fakes.FakeKeystoneClient(user_id='nottrustor')
+        mock_kc.return_value = fake_ks.FakeKeystoneClient(user_id='nottrustor')
 
         loaded_stack = stack.Stack.load(other_ctx, self.stack.id)
         loaded_stack.delete()
@@ -284,7 +284,7 @@ class StackTest(common.HeatTestCase):
                          loaded_stack.state)
 
     def test_delete_trust_backup(self):
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+        class FakeKeystoneClientFail(fake_ks.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
@@ -306,7 +306,7 @@ class StackTest(common.HeatTestCase):
         mock_kcp.assert_called_once_with()
 
     def test_delete_trust_nested(self):
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+        class FakeKeystoneClientFail(fake_ks.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise Exception("Shouldn't delete")
 
@@ -335,7 +335,7 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_delete_trust_fail(self):
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+        class FakeKeystoneClientFail(fake_ks.FakeKeystoneClient):
             def delete_trust(self, trust_id):
                 raise kc_exceptions.Forbidden("Denied!")
 
@@ -360,7 +360,7 @@ class StackTest(common.HeatTestCase):
         self.assertIn('Error deleting trust', self.stack.status_reason)
 
     def test_delete_deletes_project(self):
-        fkc = fakes.FakeKeystoneClient()
+        fkc = fake_ks.FakeKeystoneClient()
         fkc.delete_stack_domain_project = mock.Mock()
 
         mock_kcp = self.patchobject(keystone.KeystoneClientPlugin, '_create',
@@ -489,7 +489,7 @@ class StackTest(common.HeatTestCase):
 
     def test_stack_user_project_id_delete_fail(self):
 
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+        class FakeKeystoneClientFail(fake_ks.FakeKeystoneClient):
             def delete_stack_domain_project(self, project_id):
                 raise kc_exceptions.Forbidden("Denied!")
 

@@ -17,6 +17,7 @@ from oslo_config import cfg
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine import node_data
 from heat.engine.resources.aws.iam import user
 from heat.engine.resources.openstack.heat import access_policy as ap
@@ -24,7 +25,6 @@ from heat.engine import scheduler
 from heat.engine import stk_defn
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
-from heat.tests import fakes
 from heat.tests import utils
 
 
@@ -109,7 +109,7 @@ class UserTest(common.HeatTestCase):
         super(UserTest, self).setUp()
         self.stack_name = 'test_user_stack_%s' % utils.random_name()
         self.username = '%s-CfnUser-aabbcc' % self.stack_name
-        self.fc = fakes.FakeKeystoneClient(username=self.username)
+        self.fc = fake_ks.FakeKeystoneClient(username=self.username)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
     def create_user(self, t, stack, resource_name,
@@ -118,9 +118,9 @@ class UserTest(common.HeatTestCase):
         self.m.StubOutWithMock(user.User, 'keystone')
         user.User.keystone().MultipleTimes().AndReturn(self.fc)
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'create_stack_domain_project')
-        fakes.FakeKeystoneClient.create_stack_domain_project(
+        fake_ks.FakeKeystoneClient.create_stack_domain_project(
             stack.id).AndReturn(project_id)
 
         resource_defns = stack.t.resource_definitions(stack)
@@ -132,9 +132,9 @@ class UserTest(common.HeatTestCase):
         self.m.StubOutWithMock(short_id, 'get_id')
         short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'create_stack_domain_user')
-        fakes.FakeKeystoneClient.create_stack_domain_user(
+        fake_ks.FakeKeystoneClient.create_stack_domain_user(
             username=self.username, password=password,
             project_id=project_id).AndReturn(user_id)
         self.m.ReplayAll()
@@ -301,9 +301,9 @@ class AccessKeyTest(common.HeatTestCase):
         super(AccessKeyTest, self).setUp()
         self.username = utils.PhysName('test_stack', 'CfnUser')
         self.credential_id = 'acredential123'
-        self.fc = fakes.FakeKeystoneClient(username=self.username,
-                                           user_id='dummy_user',
-                                           credential_id=self.credential_id)
+        self.fc = fake_ks.FakeKeystoneClient(username=self.username,
+                                             user_id='dummy_user',
+                                             credential_id=self.credential_id)
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
     def create_user(self, t, stack, resource_name,

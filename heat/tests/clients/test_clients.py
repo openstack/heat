@@ -36,6 +36,7 @@ from heat.common import exception
 from heat.engine import clients
 from heat.engine.clients import client_exception
 from heat.engine.clients import client_plugin
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.tests import common
 from heat.tests import fakes
 from heat.tests.openstack.nova import fakes as fakes_nova
@@ -257,7 +258,7 @@ class ClientPluginTest(common.HeatTestCase):
 
     @mock.patch.object(generic, "Token", name="v3_token")
     def test_get_missing_service_catalog(self, mock_v3):
-        class FakeKeystone(fakes.FakeKeystoneClient):
+        class FakeKeystone(fake_ks.FakeKeystoneClient):
             def __init__(self):
                 super(FakeKeystone, self).__init__()
                 self.client = self
@@ -285,7 +286,7 @@ class ClientPluginTest(common.HeatTestCase):
 
     @mock.patch.object(generic, "Token", name="v3_token")
     def test_endpoint_not_found(self, mock_v3):
-        class FakeKeystone(fakes.FakeKeystoneClient):
+        class FakeKeystone(fake_ks.FakeKeystoneClient):
             def __init__(self):
                 super(FakeKeystone, self).__init__()
                 self.client = self

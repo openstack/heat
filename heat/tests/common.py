@@ -28,6 +28,7 @@ from heat.engine.clients.os import barbican
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os.keystone import keystone_constraints as ks_constr
 from heat.engine.clients.os.neutron import neutron_constraints as neutron
 from heat.engine.clients.os import nova
@@ -220,7 +221,7 @@ class HeatTestCase(testscenarios.WithScenarios,
 
     def stub_keystoneclient(self, fake_client=None, **kwargs):
         client = self.patchobject(keystone.KeystoneClientPlugin, "_create")
-        fkc = fake_client or fakes.FakeKeystoneClient(**kwargs)
+        fkc = fake_client or fake_ks.FakeKeystoneClient(**kwargs)
         client.return_value = fkc
         return fkc
 
