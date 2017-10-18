@@ -151,11 +151,8 @@ class CheckResource(object):
             self._handle_resource_failure(cnxt, is_update, rsrc.id,
                                           stack, reason)
         except scheduler.Timeout:
-            # reload the stack to verify current traversal
-            stack = parser.Stack.load(cnxt, stack_id=stack.id)
-            if stack.current_traversal != current_traversal:
-                return
-            self._handle_stack_timeout(cnxt, stack)
+            self._handle_resource_failure(cnxt, is_update, rsrc.id,
+                                          stack, u'Timed out')
         except CancelOperation:
             pass
 
