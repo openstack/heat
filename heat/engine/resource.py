@@ -1384,6 +1384,8 @@ class Resource(status.ResourceStatus):
             runner(timeout=timeout, progress_callback=progress_callback)
         except UpdateReplace:
             raise
+        except exception.UpdateInProgress:
+            raise
         except BaseException:
             with excutils.save_and_reraise_exception():
                 update_templ_id_and_requires(persist=True)
