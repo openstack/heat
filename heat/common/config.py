@@ -369,6 +369,13 @@ volumes_opts = [
                        "This is a temporary workaround until cinder-backup "
                        "service becomes discoverable, see LP#1334856."))]
 
+noauth_group = cfg.OptGroup('noauth')
+noauth_opts = [
+    cfg.StrOpt('token_response',
+               default='',
+               help=_("JSON file containing the content returned by the "
+                      "noauth middleware."))]
+
 
 def startup_sanity_check():
     if (not cfg.CONF.stack_user_domain_id and
@@ -403,6 +410,7 @@ def list_opts():
     yield auth_password_group.name, auth_password_opts
     yield revision_group.name, revision_opts
     yield volumes_group.name, volumes_opts
+    yield noauth_group.name, noauth_opts
     yield profiler.list_opts()[0]
     yield 'clients', default_clients_opts
 

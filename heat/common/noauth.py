@@ -16,6 +16,10 @@
 
 """Middleware that accepts any authentication."""
 
+import json
+import os
+
+from oslo_config import cfg
 from oslo_log import log as logging
 
 LOG = logging.getLogger(__name__)
@@ -25,6 +29,11 @@ class NoAuthProtocol(object):
     def __init__(self, app, conf):
         self.conf = conf
         self.app = app
+        self._token_info = {}
+        response_file = cfg.CONF.noauth.token_response
+        if os.path.exists(response_file):
+            with open(response_file) as f:
+                self._token_info = json.loads(f.read())
 
     def __call__(self, env, start_response):
         """Handle incoming request.
@@ -56,6 +65,8 @@ class NoAuthProtocol(object):
             'HTTP_X_SERVICE_CATALOG': {},
             'HTTP_X_AUTH_USER': username,
             'HTTP_X_AUTH_KEY': 'unset',
+            'HTTP_X_AUTH_URL': 'url',
+            'keystone.token_info': self._token_info,
         }
 
         return headers
