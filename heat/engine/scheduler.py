@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import sys
 import types
 
@@ -47,7 +46,6 @@ def task_description(task):
     return encodeutils.safe_decode(repr(task))
 
 
-@functools.total_ordering
 class Timeout(BaseException):
     """Raised when task has exceeded its allotted (wallclock) running time.
 
@@ -78,14 +76,11 @@ class Timeout(BaseException):
             generator.close()
             return False
 
-    def __eq__(self, other):
-        if not isinstance(other, Timeout):
-            return NotImplemented
-        return not (self < other or other < self)
+    def earlier_than(self, other):
+        if other is None:
+            return True
 
-    def __lt__(self, other):
-        if not isinstance(other, Timeout):
-            return NotImplemented
+        assert isinstance(other, Timeout), "Invalid type for Timeout compare"
         return self._duration.endtime() < other._duration.endtime()
 
 
@@ -245,7 +240,7 @@ class TaskRunner(object):
         else:
             if timeout is not None:
                 new_timeout = Timeout(self, timeout)
-                if self._timeout is None or new_timeout < self._timeout:
+                if new_timeout.earlier_than(self._timeout):
                     self._timeout = new_timeout
 
         done = self.step() if resuming else self.done()
@@ -281,7 +276,7 @@ class TaskRunner(object):
                 self._runner.close()
         else:
             timeout = TimedCancel(self, grace_period)
-            if self._timeout is None or timeout < self._timeout:
+            if timeout.earlier_than(self._timeout):
                 self._timeout = timeout
 
     def started(self):
