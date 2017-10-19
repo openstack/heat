@@ -310,6 +310,8 @@ class ServiceEngineTest(common.HeatTestCase):
 
         self.patchobject(self.eng.manage_thread_grp, 'stop',
                          new=mock.Mock(wraps=self.eng.manage_thread_grp.stop))
+        self.patchobject(self.eng, '_stop_rpc_server',
+                         new=mock.Mock(wraps=self.eng._stop_rpc_server))
         orig_stop = self.eng.thread_group_mgr.stop
 
         with mock.patch.object(self.eng.thread_group_mgr, 'stop') as stop:
@@ -340,8 +342,6 @@ class ServiceEngineTest(common.HeatTestCase):
                 self.eng.service_id
             )
 
-    @mock.patch.object(service.EngineService,
-                       '_stop_rpc_server')
     @mock.patch.object(worker.WorkerService,
                        'stop')
     @mock.patch('heat.common.context.get_admin_context',
@@ -352,15 +352,13 @@ class ServiceEngineTest(common.HeatTestCase):
             self,
             service_delete_method,
             admin_context_method,
-            worker_service_stop,
-            rpc_server_stop):
+            worker_service_stop):
         cfg.CONF.set_default('convergence_engine', True)
         self._test_engine_service_stop(
             service_delete_method,
             admin_context_method
         )
 
-    @mock.patch.object(service.EngineService, '_stop_rpc_server')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
     @mock.patch('heat.objects.service.Service.delete',
@@ -368,8 +366,7 @@ class ServiceEngineTest(common.HeatTestCase):
     def test_engine_service_stop_in_non_convergence_mode(
             self,
             service_delete_method,
-            admin_context_method,
-            rpc_server_stop):
+            admin_context_method):
         cfg.CONF.set_default('convergence_engine', False)
         self._test_engine_service_stop(
             service_delete_method,
@@ -401,6 +398,7 @@ class ServiceEngineTest(common.HeatTestCase):
             thread_group_manager_class,
             sample_uuid_method,
             rpc_client_class):
+        self.addCleanup(self.eng._stop_rpc_server)
         self.eng.start()
         self.assertEqual(cfg.CONF.executor_thread_pool_size,
                          cfg.CONF.database.max_overflow)
