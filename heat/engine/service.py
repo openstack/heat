@@ -93,8 +93,8 @@ class ThreadGroupManager(object):
         self.msg_queues = collections.defaultdict(list)
 
         # Create dummy service task, because when there is nothing queued
-        # on self.tg the process exits
-        self.add_timer(cfg.CONF.periodic_interval, self._service_task)
+        # on any of the service's ThreadGroups, the process exits.
+        self.add_timer(None, self._service_task)
 
     def _service_task(self):
         """Dummy task which gets queued on the service.Service threadgroup.
