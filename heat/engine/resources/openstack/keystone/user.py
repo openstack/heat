@@ -106,8 +106,8 @@ class KeystoneUser(resource.Resource,
         NAME_ATTR, DEFAULT_PROJECT_ATTR, DOMAIN_ATTR, ENABLED_ATTR,
         PASSWORD_EXPIRES_AT_ATTR
     ) = (
-        'name', 'default_project_id', 'domain_id',
-        'enabled', 'password_expires_at'
+        'name', 'default_project_id', 'domain_id', 'enabled',
+        'password_expires_at'
     )
     attributes_schema = {
         NAME_ATTR: attributes.Schema(
