@@ -462,7 +462,7 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         mock_members.return_value = members
         self.assertEqual(output[0], self.group.FnGetAtt('resource.0', 'Bar'))
         self.assertEqual(output[1], self.group.FnGetAtt('resource.1.Bar'))
-        self.assertRaises(exception.InvalidTemplateAttribute,
+        self.assertRaises(exception.NotFound,
                           self.group.FnGetAtt, 'resource.2')
 
 
