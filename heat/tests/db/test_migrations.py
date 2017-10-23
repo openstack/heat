@@ -26,11 +26,13 @@ import os
 import uuid
 
 from migrate.versioning import repository
-from oslo_db.sqlalchemy import test_base
+from oslo_db.sqlalchemy import enginefacade
+from oslo_db.sqlalchemy import test_fixtures
 from oslo_db.sqlalchemy import test_migrations
 from oslo_db.sqlalchemy import utils
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
+from oslotest import base as test_base
 import six
 import sqlalchemy
 import testtools
@@ -738,18 +740,24 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
                                 'attr_data_id')
 
 
-class TestHeatMigrationsMySQL(HeatMigrationsCheckers,
-                              test_base.MySQLOpportunisticTestCase):
-    pass
+class DbTestCase(test_fixtures.OpportunisticDBTestMixin,
+                 test_base.BaseTestCase):
+    def setUp(self):
+        super(DbTestCase, self).setUp()
+
+        self.engine = enginefacade.writer.get_engine()
+        self.sessionmaker = enginefacade.writer.get_sessionmaker()
 
 
-class TestHeatMigrationsPostgreSQL(HeatMigrationsCheckers,
-                                   test_base.PostgreSQLOpportunisticTestCase):
-    pass
+class TestHeatMigrationsMySQL(DbTestCase, HeatMigrationsCheckers):
+    FIXTURE = test_fixtures.MySQLOpportunisticFixture
 
 
-class TestHeatMigrationsSQLite(HeatMigrationsCheckers,
-                               test_base.DbTestCase):
+class TestHeatMigrationsPostgreSQL(DbTestCase, HeatMigrationsCheckers):
+    FIXTURE = test_fixtures.PostgresqlOpportunisticFixture
+
+
+class TestHeatMigrationsSQLite(DbTestCase, HeatMigrationsCheckers):
     pass
 
 
@@ -770,19 +778,19 @@ class ModelsMigrationSyncMixin(object):
         return True
 
 
-class ModelsMigrationsSyncMysql(ModelsMigrationSyncMixin,
-                                test_migrations.ModelsMigrationsSync,
-                                test_base.MySQLOpportunisticTestCase):
-    pass
+class ModelsMigrationsSyncMysql(DbTestCase,
+                                ModelsMigrationSyncMixin,
+                                test_migrations.ModelsMigrationsSync):
+    FIXTURE = test_fixtures.MySQLOpportunisticFixture
 
 
-class ModelsMigrationsSyncPostgres(ModelsMigrationSyncMixin,
-                                   test_migrations.ModelsMigrationsSync,
-                                   test_base.PostgreSQLOpportunisticTestCase):
-    pass
+class ModelsMigrationsSyncPostgres(DbTestCase,
+                                   ModelsMigrationSyncMixin,
+                                   test_migrations.ModelsMigrationsSync):
+    FIXTURE = test_fixtures.PostgresqlOpportunisticFixture
 
 
-class ModelsMigrationsSyncSQLite(ModelsMigrationSyncMixin,
-                                 test_migrations.ModelsMigrationsSync,
-                                 test_base.DbTestCase):
+class ModelsMigrationsSyncSQLite(DbTestCase,
+                                 ModelsMigrationSyncMixin,
+                                 test_migrations.ModelsMigrationsSync):
     pass
