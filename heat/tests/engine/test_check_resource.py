@@ -476,15 +476,15 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_hf.assert_called_once_with(self.ctx, self.stack, u'Timed out')
 
     @mock.patch.object(check_resource.CheckResource,
-                       '_handle_stack_timeout')
+                       '_handle_failure')
     def test_do_check_resource_marks_stack_as_failed_if_stack_timesout(
-            self, mock_hst, mock_cru, mock_crc, mock_pcr, mock_csc):
+            self, mock_hf, mock_cru, mock_crc, mock_pcr, mock_csc):
         mock_cru.side_effect = scheduler.Timeout(None, 60)
         self.is_update = True
         self.cr._do_check_resource(self.ctx, self.stack.current_traversal,
                                    self.stack.t, {}, self.is_update,
                                    self.resource, self.stack, {})
-        mock_hst.assert_called_once_with(self.ctx, self.stack)
+        mock_hf.assert_called_once_with(self.ctx, self.stack, u'Timed out')
 
     @mock.patch.object(check_resource.CheckResource,
                        '_handle_stack_timeout')
