@@ -126,6 +126,7 @@ class SaharaCluster(resource.Resource):
         MANAGEMENT_NETWORK: properties.Schema(
             properties.Schema.STRING,
             _('Name or UUID of network.'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -281,13 +282,6 @@ class SaharaCluster(resource.Resource):
 
         if res:
             return res
-
-        # check if running on neutron and MANAGEMENT_NETWORK missing
-        if (self.is_using_neutron() and
-                not self.properties[self.MANAGEMENT_NETWORK]):
-            msg = _("%s must be provided"
-                    ) % self.MANAGEMENT_NETWORK
-            raise exception.StackValidationFailed(message=msg)
 
         self.client_plugin().validate_hadoop_version(
             self.properties[self.PLUGIN_NAME],
