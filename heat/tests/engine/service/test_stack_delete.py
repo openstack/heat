@@ -104,7 +104,7 @@ class StackDeleteTest(common.HeatTestCase):
                                                      mock_acquire, mock_try,
                                                      mock_load):
         cfg.CONF.set_override('error_wait_time', 0)
-        self.man.start()
+        self.man.engine_id = service_utils.generate_engine_id()
         stack_name = 'service_delete_test_stack_current_active_lock'
         stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
@@ -144,7 +144,10 @@ class StackDeleteTest(common.HeatTestCase):
                                                           mock_load):
         cfg.CONF.set_override('error_wait_time', 0)
         OTHER_ENGINE = "other-engine-fake-uuid"
-        self.man.start()
+        self.man.engine_id = service_utils.generate_engine_id()
+        self.man.listener = service.EngineListener(self.man.host,
+                                                   self.man.engine_id,
+                                                   self.man.thread_group_mgr)
         stack_name = 'service_delete_test_stack_other_engine_lock_fail'
         stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
@@ -184,7 +187,10 @@ class StackDeleteTest(common.HeatTestCase):
         cfg.CONF.set_override('error_wait_time', 0)
 
         OTHER_ENGINE = "other-engine-fake-uuid"
-        self.man.start()
+        self.man.engine_id = service_utils.generate_engine_id()
+        self.man.listener = service.EngineListener(self.man.host,
+                                                   self.man.engine_id,
+                                                   self.man.thread_group_mgr)
         stack_name = 'service_delete_test_stack_other_engine_lock'
         stack = tools.get_stack(stack_name, self.ctx)
         sid = stack.store()
