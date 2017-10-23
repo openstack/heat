@@ -30,7 +30,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         super(StackServiceActionsTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
-        self.man.create_periodic_tasks()
+        self.man.thread_group_mgr = service.ThreadGroupManager()
 
     @mock.patch.object(stack.Stack, 'load')
     @mock.patch.object(service.ThreadGroupManager, 'start')

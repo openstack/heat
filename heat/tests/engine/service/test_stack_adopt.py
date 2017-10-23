@@ -21,7 +21,6 @@ from heat.engine import service
 from heat.engine import stack as parser
 from heat.objects import stack as stack_object
 from heat.tests import common
-from heat.tests.engine import tools
 from heat.tests import utils
 
 
@@ -31,7 +30,7 @@ class StackServiceAdoptTest(common.HeatTestCase):
         super(StackServiceAdoptTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
-        self.man.thread_group_mgr = tools.DummyThreadGroupManager()
+        self.man.thread_group_mgr = service.ThreadGroupManager()
 
     def _get_adopt_data_and_template(self, environment=None):
         template = {
@@ -55,14 +54,20 @@ class StackServiceAdoptTest(common.HeatTestCase):
                     "metadata": {}}}}
         return template, adopt_data
 
+    def _do_adopt(self, stack_name, template, input_params, adopt_data):
+        result = self.man.create_stack(self.ctx, stack_name,
+                                       template, input_params, None,
+                                       {'adopt_stack_data': str(adopt_data)})
+        self.man.thread_group_mgr.stop(result['stack_id'], graceful=True)
+        return result
+
     def test_stack_adopt_with_params(self):
         cfg.CONF.set_override('enable_stack_adopt', True)
         cfg.CONF.set_override('convergence_engine', False)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
-        result = self.man.create_stack(self.ctx, "test_adopt_with_params",
-                                       template, {}, None,
-                                       {'adopt_stack_data': str(adopt_data)})
+        result = self._do_adopt("test_adopt_with_params", template, {},
+                                adopt_data)
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
@@ -78,9 +83,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
         cfg.CONF.set_override('convergence_engine', True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
-        result = self.man.create_stack(self.ctx, "test_adopt_with_params",
-                                       template, {}, None,
-                                       {'adopt_stack_data': str(adopt_data)})
+        result = self._do_adopt("test_adopt_with_params", template, {},
+                                adopt_data)
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
@@ -96,9 +100,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
             "parameters": {"app_dbx": "bar"}
         }
         template, adopt_data = self._get_adopt_data_and_template(env)
-        result = self.man.create_stack(self.ctx, "test_adopt_saves_inputs",
-                                       template, input_params, None,
-                                       {'adopt_stack_data': str(adopt_data)})
+        result = self._do_adopt("test_adopt_saves_inputs", template,
+                                input_params, adopt_data)
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
@@ -116,9 +119,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
             "parameters": {"app_dbx": "bar"}
         }
         template, adopt_data = self._get_adopt_data_and_template(env)
-        result = self.man.create_stack(self.ctx, "test_adopt_saves_inputs",
-                                       template, input_params, None,
-                                       {'adopt_stack_data': str(adopt_data)})
+        result = self._do_adopt("test_adopt_saves_inputs", template,
+                                input_params, adopt_data)
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual(template, stack.raw_template.template)
@@ -131,12 +133,11 @@ class StackServiceAdoptTest(common.HeatTestCase):
         cfg.CONF.set_override('convergence_engine', False)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
-        result = self.man.create_stack(self.ctx, "test_adopt_stack_state",
-                                       template, {}, None,
-                                       {'adopt_stack_data': str(adopt_data)})
+        result = self._do_adopt("test_adopt_stack_state", template, {},
+                                adopt_data)
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
-        self.assertEqual((parser.Stack.ADOPT, parser.Stack.IN_PROGRESS),
+        self.assertEqual((parser.Stack.ADOPT, parser.Stack.COMPLETE),
                          (stack.action, stack.status))
 
     @mock.patch.object(parser.Stack, '_converge_create_or_update')
@@ -147,9 +148,8 @@ class StackServiceAdoptTest(common.HeatTestCase):
         cfg.CONF.set_override('convergence_engine', True)
         env = {'parameters': {"app_dbx": "test"}}
         template, adopt_data = self._get_adopt_data_and_template(env)
-        result = self.man.create_stack(self.ctx, "test_adopt_stack_state",
-                                       template, {}, None,
-                                       {'adopt_stack_data': str(adopt_data)})
+        result = self._do_adopt("test_adopt_stack_state", template, {},
+                                adopt_data)
 
         stack = stack_object.Stack.get_by_id(self.ctx, result['stack_id'])
         self.assertEqual((parser.Stack.ADOPT, parser.Stack.IN_PROGRESS),

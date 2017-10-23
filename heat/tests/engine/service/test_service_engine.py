@@ -15,7 +15,6 @@ import datetime
 
 import mock
 from oslo_config import cfg
-from oslo_service import threadgroup
 from oslo_utils import timeutils
 
 from heat.common import context
@@ -309,6 +308,8 @@ class ServiceEngineTest(common.HeatTestCase):
         self.eng.thread_group_mgr.groups['sample-uuid2'] = dtg2
         self.eng.service_id = 'sample-service-uuid'
 
+        self.patchobject(self.eng.manage_thread_grp, 'stop',
+                         new=mock.Mock(wraps=self.eng.manage_thread_grp.stop))
         orig_stop = self.eng.thread_group_mgr.stop
 
         with mock.patch.object(self.eng.thread_group_mgr, 'stop') as stop:
@@ -328,7 +329,7 @@ class ServiceEngineTest(common.HeatTestCase):
                      mock.call('sample-uuid2', True)]
             self.eng.thread_group_mgr.stop.assert_has_calls(calls, True)
 
-            # # Manage Thread group
+            # Manage Thread group
             self.eng.manage_thread_grp.stop.assert_called_with()
 
             # Service delete
@@ -343,8 +344,6 @@ class ServiceEngineTest(common.HeatTestCase):
                        '_stop_rpc_server')
     @mock.patch.object(worker.WorkerService,
                        'stop')
-    @mock.patch.object(threadgroup.ThreadGroup,
-                       'stop')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
     @mock.patch('heat.objects.service.Service.delete',
@@ -353,7 +352,6 @@ class ServiceEngineTest(common.HeatTestCase):
             self,
             service_delete_method,
             admin_context_method,
-            thread_group_stop,
             worker_service_stop,
             rpc_server_stop):
         cfg.CONF.set_default('convergence_engine', True)
@@ -363,7 +361,6 @@ class ServiceEngineTest(common.HeatTestCase):
         )
 
     @mock.patch.object(service.EngineService, '_stop_rpc_server')
-    @mock.patch.object(threadgroup.ThreadGroup, 'stop')
     @mock.patch('heat.common.context.get_admin_context',
                 return_value=mock.Mock())
     @mock.patch('heat.objects.service.Service.delete',
@@ -372,7 +369,6 @@ class ServiceEngineTest(common.HeatTestCase):
             self,
             service_delete_method,
             admin_context_method,
-            thread_group_stop,
             rpc_server_stop):
         cfg.CONF.set_default('convergence_engine', False)
         self._test_engine_service_stop(

@@ -33,7 +33,7 @@ class StackDeleteTest(common.HeatTestCase):
         super(StackDeleteTest, self).setUp()
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
-        self.man.create_periodic_tasks()
+        self.man.thread_group_mgr = service.ThreadGroupManager()
 
     @mock.patch.object(parser.Stack, 'load')
     def test_stack_delete(self, mock_load):
@@ -117,16 +117,20 @@ class StackDeleteTest(common.HeatTestCase):
 
         mock_load.return_value = stack
         mock_try.return_value = self.man.engine_id
-        mock_stop = self.patchobject(self.man.thread_group_mgr, 'stop')
         mock_send = self.patchobject(self.man.thread_group_mgr, 'send')
         mock_expired.side_effect = [False, True]
 
-        self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
+        with mock.patch.object(self.man.thread_group_mgr, 'stop') as mock_stop:
+            self.assertIsNone(self.man.delete_stack(self.ctx,
+                                                    stack.identifier()))
+            self.man.thread_group_mgr.groups[sid].wait()
 
-        mock_load.assert_called_with(self.ctx, stack=st)
-        mock_send.assert_called_once_with(stack.id, 'cancel')
-        mock_stop.assert_called_once_with(stack.id)
+            mock_load.assert_called_with(self.ctx, stack=st)
+            mock_send.assert_called_once_with(stack.id, 'cancel')
+            mock_stop.assert_called_once_with(stack.id)
+
+        self.man.thread_group_mgr.stop(sid, graceful=True)
+
         self.assertEqual(2, len(mock_load.mock_calls))
         mock_try.assert_called_with()
         mock_acquire.assert_called_once_with(True)
@@ -197,7 +201,7 @@ class StackDeleteTest(common.HeatTestCase):
                                      return_value=None)
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
+        self.man.thread_group_mgr.stop(sid, graceful=True)
 
         self.assertEqual(2, len(mock_load.mock_calls))
         mock_load.assert_called_with(self.ctx, stack=st)
@@ -236,7 +240,7 @@ class StackDeleteTest(common.HeatTestCase):
         mock_expired.side_effect = [False, True]
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
-        self.man.thread_group_mgr.groups[sid].wait()
+        self.man.thread_group_mgr.stop(sid, graceful=True)
 
         mock_load.assert_called_with(self.ctx, stack=st)
         mock_try.assert_called_with()
