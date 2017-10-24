@@ -86,7 +86,7 @@ start_heat
 
 # Don't succeed unless the services come up
 # Truncating some service names to 11 characters
-ensure_services_started heat-api heat-engine heat-api-cl heat-api-cf
+ensure_services_started heat-api heat-engine heat-api-cf
 
 set +o xtrace
 echo "*********************************************************************"
