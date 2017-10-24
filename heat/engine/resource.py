@@ -796,6 +796,22 @@ class Resource(status.ResourceStatus):
         else:
             self._atomic_key = last_key + 1
 
+    def _should_lock_on_action(self, action):
+        """Return whether we should take a resource-level lock for an action.
+
+        In the legacy path, we always took a lock at the Stack level and never
+        at the Resource level. In convergence, we lock at the Resource level
+        for most operations. However, there are currently some exceptions:
+        the SUSPEND, RESUME, SNAPSHOT, and CHECK actions, and stack abandon.
+        """
+        return (self.stack.convergence and
+                not self.abandon_in_progress and
+                action in {self.ADOPT,
+                           self.CREATE,
+                           self.UPDATE,
+                           self.ROLLBACK,
+                           self.DELETE})
+
     @contextlib.contextmanager
     def _action_recorder(self, action, expected_exceptions=tuple()):
         """Return a context manager to record the progress of an action.
@@ -811,8 +827,12 @@ class Resource(status.ResourceStatus):
         attempts = 1
         first_iter = [True]  # work around no nonlocal in py27
         if self.stack.convergence:
-            lock_acquire = self.LOCK_ACQUIRE
-            lock_release = self.LOCK_RELEASE
+            if self._should_lock_on_action(action):
+                lock_acquire = self.LOCK_ACQUIRE
+                lock_release = self.LOCK_RELEASE
+            else:
+                lock_acquire = lock_release = self.LOCK_RESPECT
+
             if action != self.CREATE:
                 attempts += max(cfg.CONF.client_retry_limit, 0)
         else:
@@ -2000,11 +2020,14 @@ class Resource(status.ResourceStatus):
             self._rsrc_metadata = metadata
 
         if self.id is not None:
-            if (lock == self.LOCK_NONE or self._calling_engine_id is None):
+            if (lock == self.LOCK_NONE or
+                (lock in {self.LOCK_ACQUIRE, self.LOCK_RELEASE} and
+                 self._calling_engine_id is None)):
                 resource_objects.Resource.update_by_id(
                     self.context, self.id, rs)
                 if lock != self.LOCK_NONE:
-                    LOG.warning("no calling_engine_id in store %s", str(rs))
+                    LOG.error('No calling_engine_id in store() %s',
+                              six.text_type(rs))
             else:
                 self._store_with_lock(rs, lock)
         else:
