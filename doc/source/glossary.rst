@@ -168,7 +168,7 @@
      configure instances at boot time. See also `User data (OpenStack
      End User Guide)`_.
 
-     .. _User data (OpenStack End User Guide): http://docs.openstack.org/user-guide/cli_provide_user_data_to_instances.html
+     .. _User data (OpenStack End User Guide): https://docs.openstack.org/nova/latest/user/user-data.html
      .. _cloud-init: https://help.ubuntu.com/community/CloudInit
 
    Wait condition
