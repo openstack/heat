@@ -176,11 +176,11 @@ class SaharaClusterTest(common.HeatTestCase):
         self.t['resources']['super-cluster']['properties'].pop(
             'neutron_management_network')
         cluster = self._init_cluster(self.t)
-        self.patchobject(cluster, 'is_using_neutron', return_value=True)
         ex = self.assertRaises(exception.StackValidationFailed,
                                cluster.validate)
-        self.assertEqual("neutron_management_network must be provided",
-                         six.text_type(ex))
+        error_msg = ('Property error: resources.super-cluster.properties: '
+                     'Property neutron_management_network not assigned')
+        self.assertEqual(error_msg, six.text_type(ex))
 
     def test_deprecated_properties_correctly_translates(self):
         tmpl = '''
