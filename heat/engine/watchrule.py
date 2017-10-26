@@ -54,7 +54,8 @@ class WatchRule(object):
 
     def __init__(self, context, watch_name, rule, stack_id=None,
                  state=NODATA, wid=None, watch_data=None,
-                 last_evaluated=timeutils.utcnow()):
+                 last_evaluated=None):
+
         self.context = context
         self.now = timeutils.utcnow()
         self.name = watch_name
@@ -69,7 +70,7 @@ class WatchRule(object):
         self.timeperiod = datetime.timedelta(seconds=period)
         self.id = wid
         self.watch_data = watch_data or []
-        self.last_evaluated = last_evaluated
+        self.last_evaluated = last_evaluated or timeutils.utcnow()
 
     @classmethod
     def load(cls, context, watch_name=None, watch=None):
