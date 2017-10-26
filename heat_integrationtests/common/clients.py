@@ -12,8 +12,8 @@
 
 import os
 
-from ceilometerclient import client as ceilometer_client
 from cinderclient import client as cinder_client
+from gnocchiclient import client as gnocchi_client
 from heat.common.i18n import _
 from heatclient import client as heat_client
 from keystoneauth1 import exceptions as kc_exceptions
@@ -65,7 +65,7 @@ class ClientManager(object):
     CINDERCLIENT_VERSION = '2'
     HEATCLIENT_VERSION = '1'
     NOVA_API_VERSION = '2.1'
-    CEILOMETER_VERSION = '2'
+    GNOCCHI_VERSION = '1'
 
     def __init__(self, conf, admin_credentials=False):
         self.conf = conf
@@ -87,7 +87,7 @@ class ClientManager(object):
         self.network_client = self._get_network_client()
         self.volume_client = self._get_volume_client()
         self.object_client = self._get_object_client()
-        self.metering_client = self._get_metering_client()
+        self.metric_client = self._get_metric_client()
 
     def _username(self):
         if self.admin_credentials:
@@ -187,18 +187,13 @@ class ClientManager(object):
         }
         return swift_client.Connection(**args)
 
-    def _get_metering_client(self):
-        try:
-            endpoint = self.identity_client.get_endpoint_url('metering',
-                                                             self.conf.region)
-        except kc_exceptions.EndpointNotFound:
-            return None
-        else:
-            args = {
-                'session': self.identity_client.session,
-                'region_name': self.conf.region,
-                'endpoint_type': 'publicURL',
-                'service_type': 'metering',
-            }
-            return ceilometer_client.Client(self.CEILOMETER_VERSION,
-                                            endpoint, **args)
+    def _get_metric_client(self):
+
+        adapter_options = {'interface': 'public',
+                           'region_name': self.conf.region}
+        args = {
+            'session': self.identity_client.session,
+            'adapter_options': adapter_options
+        }
+        return gnocchi_client.Client(version=self.GNOCCHI_VERSION,
+                                     **args)

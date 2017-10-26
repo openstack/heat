@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import datetime
+from heat.common import timeutils
 from oslo_log import log as logging
 
 from heat_integrationtests.common import test
@@ -36,22 +38,27 @@ class AodhAlarmTest(scenario_base.ScenarioTestsBase):
 
     def test_alarm(self):
         """Confirm we can create an alarm and trigger it."""
+        # create metric
+        metric = self.metric_client.metric.create({
+            'name': 'my_metric',
+            'archive_policy_name': 'high',
+        })
 
-        # 1. create the stack
-        stack_identifier = self.stack_create(template=self.template)
+        # create the stack
+        parameters = {'metric_id': metric['id']}
+        stack_identifier = self.stack_create(template=self.template,
+                                             parameters=parameters)
+        measures = [{'timestamp': timeutils.isotime(datetime.datetime.now()),
+                     'value': 100}, {'timestamp': timeutils.isotime(
+                         datetime.datetime.now() + datetime.timedelta(
+                             minutes=1)), 'value': 100}]
+        # send measures(should cause the alarm to fire)
+        self.metric_client.metric.add_measures(metric['id'], measures)
 
-        # 2. send ceilometer a metric (should cause the alarm to fire)
-        sample = {}
-        sample['counter_type'] = 'gauge'
-        sample['counter_name'] = 'test_meter'
-        sample['counter_volume'] = 1
-        sample['counter_unit'] = 'count'
-        sample['resource_metadata'] = {'metering.stack_id':
-                                       stack_identifier.split('/')[-1]}
-        sample['resource_id'] = 'shouldnt_matter'
-        self.metering_client.samples.create(**sample)
-
-        # 3. confirm we get a scaleup.
+        # confirm we get a scaleup.
         # Note: there is little point waiting more than 60s+time to scale up.
         self.assertTrue(test.call_until_true(
             120, 2, self.check_instance_count, stack_identifier, 2))
+
+        # cleanup metric
+        self.metric_client.metric.delete(metric['id'])
