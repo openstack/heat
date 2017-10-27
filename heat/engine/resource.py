@@ -2449,9 +2449,6 @@ class Resource(status.ResourceStatus):
                     # this is from Ceilometer.
                     auto = '%(previous)s to %(current)s (%(reason)s)' % details
                     return 'alarm state changed from %s' % auto
-                elif 'state' in details:
-                    # this is from watchrule
-                    return 'alarm state changed to %(state)s' % details
 
             return 'Unknown'
 

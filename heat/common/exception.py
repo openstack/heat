@@ -304,11 +304,6 @@ class ClientNotAvailable(HeatException):
     msg_fmt = _("The client (%(client_name)s) is not available.")
 
 
-class WatchRuleNotFound(EntityNotFound):
-    """Keep this for AWS compatibility."""
-    msg_fmt = _("The Watch Rule (%(watch_name)s) could not be found.")
-
-
 class ResourceFailure(HeatExceptionWithPath):
     def __init__(self, exception_or_error, resource, action=None):
         self.resource = resource

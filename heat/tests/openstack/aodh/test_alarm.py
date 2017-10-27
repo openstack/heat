@@ -26,7 +26,6 @@ from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
-from heat.engine import watchrule
 from heat.tests import common
 from heat.tests import utils
 
@@ -404,48 +403,6 @@ class AodhAlarmTest(common.HeatTestCase):
                 'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
             self.assertIsNone(rsrc.validate())
 
-    def test_delete_watchrule_destroy(self):
-        t = template_format.parse(alarm_template)
-
-        test_stack = self.create_stack(template=json.dumps(t))
-        rsrc = test_stack['MEMAlarmHigh']
-
-        wr = mock.MagicMock()
-        self.patchobject(watchrule.WatchRule, 'load', return_value=wr)
-        wr.destroy.return_value = None
-
-        self.patchobject(aodh.AodhClientPlugin, 'client',
-                         return_value=self.fa)
-        self.patchobject(self.fa.alarm, 'delete')
-        rsrc.resource_id = '12345'
-
-        self.assertEqual('12345', rsrc.handle_delete())
-        self.assertEqual(1, wr.destroy.call_count)
-        # check that super method has been called and execute deleting
-        self.assertEqual(1, self.fa.alarm.delete.call_count)
-
-    def test_delete_no_watchrule(self):
-        t = template_format.parse(alarm_template)
-
-        test_stack = self.create_stack(template=json.dumps(t))
-        rsrc = test_stack['MEMAlarmHigh']
-
-        wr = mock.MagicMock()
-        self.patchobject(watchrule.WatchRule, 'load',
-                         side_effect=[exception.EntityNotFound(
-                             entity='Watch Rule', name='test')])
-        wr.destroy.return_value = None
-
-        self.patchobject(aodh.AodhClientPlugin, 'client',
-                         return_value=self.fa)
-        self.patchobject(self.fa.alarm, 'delete')
-        rsrc.resource_id = '12345'
-
-        self.assertEqual('12345', rsrc.handle_delete())
-        self.assertEqual(0, wr.destroy.call_count)
-        # check that super method has been called and execute deleting
-        self.assertEqual(1, self.fa.alarm.delete.call_count)
-
     def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(not_string_alarm_template)
         self.stack = utils.parse_stack(snippet)
@@ -457,25 +414,12 @@ class AodhAlarmTest(common.HeatTestCase):
         res.client().alarm.get.return_value = mock_alarm
         return res
 
-    @mock.patch.object(alarm.watchrule.WatchRule, 'load')
-    def test_check(self, mock_load):
+    def test_check(self):
         res = self._prepare_resource()
         scheduler.TaskRunner(res.check)()
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
 
-    @mock.patch.object(alarm.watchrule.WatchRule, 'load')
-    def test_check_watchrule_failure(self, mock_load):
-        res = self._prepare_resource()
-        exc = alarm.exception.EntityNotFound(entity='Watch Rule', name='Boom')
-        mock_load.side_effect = exc
-
-        self.assertRaises(exception.ResourceFailure,
-                          scheduler.TaskRunner(res.check))
-        self.assertEqual((res.CHECK, res.FAILED), res.state)
-        self.assertIn('Boom', res.status_reason)
-
-    @mock.patch.object(alarm.watchrule.WatchRule, 'load')
-    def test_check_alarm_failure(self, mock_load):
+    def test_check_alarm_failure(self):
         res = self._prepare_resource()
         res.client().alarm.get.side_effect = Exception('Boom')
 

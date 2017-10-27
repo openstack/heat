@@ -676,60 +676,6 @@ class EngineClient(object):
                           resource_status_reason=resource_status_reason),
             version='1.26')
 
-    def create_watch_data(self, ctxt, watch_name, stats_data):
-        """Creates data for CloudWatch and WaitConditions.
-
-        This could be used by CloudWatch and WaitConditions and treat HA
-        service events like any other CloudWatch.
-
-        :param ctxt: RPC context.
-        :param watch_name: Name of the watch/alarm
-        :param stats_data: The data to post.
-        """
-        return self.call(ctxt, self.make_msg('create_watch_data',
-                                             watch_name=watch_name,
-                                             stats_data=stats_data))
-
-    def show_watch(self, ctxt, watch_name):
-        """Returns the attributes of one watch/alarm.
-
-        The show_watch method returns the attributes of one watch
-        or all watches if no watch_name is passed.
-
-        :param ctxt: RPC context.
-        :param watch_name: Name of the watch/alarm you want to see,
-                           or None to see all
-        """
-        return self.call(ctxt, self.make_msg('show_watch',
-                                             watch_name=watch_name))
-
-    def show_watch_metric(self, ctxt, metric_namespace=None, metric_name=None):
-        """Returns the datapoints for a metric.
-
-        The show_watch_metric method returns the datapoints associated
-        with a specified metric, or all metrics if no metric_name is passed.
-
-        :param ctxt: RPC context.
-        :param metric_namespace: Name of the namespace you want to see,
-                           or None to see all
-        :param metric_name: Name of the metric you want to see,
-                           or None to see all
-        """
-        return self.call(ctxt, self.make_msg('show_watch_metric',
-                                             metric_namespace=metric_namespace,
-                                             metric_name=metric_name))
-
-    def set_watch_state(self, ctxt, watch_name, state):
-        """Temporarily set the state of a given watch.
-
-        :param ctxt: RPC context.
-        :param watch_name: Name of the watch
-        :param state: State (must be one defined in WatchRule class)
-        """
-        return self.call(ctxt, self.make_msg('set_watch_state',
-                                             watch_name=watch_name,
-                                             state=state))
-
     def get_revision(self, ctxt):
         return self.call(ctxt, self.make_msg('get_revision'))
 

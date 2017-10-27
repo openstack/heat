@@ -301,23 +301,6 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               details={u'wordpress': []},
                               sync_call=True)
 
-    def test_create_watch_data(self):
-        self._test_engine_api('create_watch_data', 'call',
-                              watch_name='watch1',
-                              stats_data={})
-
-    def test_show_watch(self):
-        self._test_engine_api('show_watch', 'call',
-                              watch_name='watch1')
-
-    def test_show_watch_metric(self):
-        self._test_engine_api('show_watch_metric', 'call',
-                              metric_namespace=None, metric_name=None)
-
-    def test_set_watch_state(self):
-        self._test_engine_api('set_watch_state', 'call',
-                              watch_name='watch1', state="xyz")
-
     def test_list_software_configs(self):
         self._test_engine_api('list_software_configs', 'call',
                               limit=mock.ANY, marker=mock.ANY)
