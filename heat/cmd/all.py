@@ -25,7 +25,6 @@ import sys
 
 from heat.cmd import api
 from heat.cmd import api_cfn
-from heat.cmd import api_cloudwatch
 from heat.cmd import engine
 from heat.common import config
 from heat.common import messaging
@@ -45,7 +44,6 @@ LAUNCH_SERVICES = {
     'engine': [engine.launch_engine, {'setup_logging': False}],
     'api': [api.launch_api, API_LAUNCH_OPTS],
     'api_cfn': [api_cfn.launch_cfn_api, API_LAUNCH_OPTS],
-    'api_cloudwatch': [api_cloudwatch.launch_cloudwatch_api, API_LAUNCH_OPTS],
 }
 
 services_opt = cfg.ListOpt(
@@ -53,7 +51,7 @@ services_opt = cfg.ListOpt(
     default=['engine', 'api', 'api_cfn'],
     help='Specifies the heat services that are enabled when running heat-all. '
          'Valid options are all or any combination of '
-         'api, engine, api_cfn, or api_cloudwatch.'
+         'api, engine or api_cfn.'
 )
 
 cfg.CONF.register_opt(services_opt, group='heat_all')

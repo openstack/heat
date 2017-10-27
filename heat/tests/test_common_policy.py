@@ -87,26 +87,6 @@ class TestPolicyEnforcer(common.HeatTestCase):
             # Everything should be allowed
             enforcer.enforce(ctx, action, is_registered_policy=True)
 
-    def test_policy_cw_deny_stack_user(self):
-        enforcer = policy.Enforcer(scope='cloudwatch')
-
-        ctx = utils.dummy_context(roles=['heat_stack_user'])
-        for action in self.cw_actions:
-            # Everything apart from PutMetricData should be Forbidden
-            if action == "PutMetricData":
-                enforcer.enforce(ctx, action, is_registered_policy=True)
-            else:
-                self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
-                                  action, {}, is_registered_policy=True)
-
-    def test_policy_cw_allow_non_stack_user(self):
-        enforcer = policy.Enforcer(scope='cloudwatch')
-
-        ctx = utils.dummy_context(roles=['not_a_stack_user'])
-        for action in self.cw_actions:
-            # Everything should be allowed
-            enforcer.enforce(ctx, action, is_registered_policy=True)
-
     def test_set_rules_overwrite_true(self):
         enforcer = policy.Enforcer()
         enforcer.load_rules(True)

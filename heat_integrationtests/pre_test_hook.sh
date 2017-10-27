@@ -31,7 +31,6 @@ echo -e 'logging_exception_prefix=%(asctime)s.%(msecs)03d %(process)d TRACE %(na
 
 echo -e '[heat_api]\nworkers=2\n' >> $localconf
 echo -e '[heat_api_cfn]\nworkers=2\n' >> $localconf
-echo -e '[heat_api_cloudwatch]\nworkers=2\n' >> $localconf
 
 echo -e '[cache]\nenabled=True\n' >> $localconf
 

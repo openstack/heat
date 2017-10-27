@@ -17,7 +17,6 @@ from heat.policies import actions
 from heat.policies import base
 from heat.policies import build_info
 from heat.policies import cloudformation
-from heat.policies import cloudwatch
 from heat.policies import events
 from heat.policies import resource
 from heat.policies import resource_types
@@ -33,7 +32,6 @@ def list_rules():
         actions.list_rules(),
         build_info.list_rules(),
         cloudformation.list_rules(),
-        cloudwatch.list_rules(),
         events.list_rules(),
         resource.list_rules(),
         resource_types.list_rules(),
