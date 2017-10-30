@@ -93,16 +93,45 @@ class CheckResource(object):
             # Another concurrent update has taken over. But there is a
             # possibility for that update to be waiting for this rsrc to
             # complete, hence retrigger current rsrc for latest traversal.
-            traversal = stack.current_traversal
-            latest_stack = parser.Stack.load(cnxt, stack_id=stack.id,
+            self._retrigger_new_traversal(cnxt, stack.current_traversal,
+                                          is_update,
+                                          stack.id, rsrc_id)
+
+    def _retrigger_new_traversal(self, cnxt, current_traversal, is_update,
+                                 stack_id, rsrc_id):
+            latest_stack = parser.Stack.load(cnxt, stack_id=stack_id,
                                              force_reload=True)
-            if traversal != latest_stack.current_traversal:
+            if current_traversal != latest_stack.current_traversal:
                 self.retrigger_check_resource(cnxt, is_update, rsrc_id,
                                               latest_stack)
 
     def _handle_stack_timeout(self, cnxt, stack):
         failure_reason = u'Timed out'
         self._handle_failure(cnxt, stack, failure_reason)
+
+    def _handle_resource_replacement(self, cnxt,
+                                     current_traversal, new_tmpl_id,
+                                     rsrc, stack, adopt_stack_data):
+        """Create a replacement resource and trigger a check on it."""
+        try:
+            new_res_id = rsrc.make_replacement(new_tmpl_id)
+        except exception.UpdateInProgress:
+            LOG.info("No replacement created - "
+                     "resource already locked by new traversal")
+            return
+        if new_res_id is None:
+            LOG.info("No replacement created - "
+                     "new traversal already in progress")
+            self._retrigger_new_traversal(cnxt, current_traversal, True,
+                                          stack.id, rsrc.id)
+            return
+        LOG.info("Replacing resource with new id %s", new_res_id)
+        rpc_data = sync_point.serialize_input_data(self.input_data)
+        self._rpc_client.check_resource(cnxt,
+                                        new_res_id,
+                                        current_traversal,
+                                        rpc_data, True,
+                                        adopt_stack_data)
 
     def _do_check_resource(self, cnxt, current_traversal, tmpl, resource_data,
                            is_update, rsrc, stack, adopt_stack_data):
@@ -113,15 +142,10 @@ class CheckResource(object):
                                           self.engine_id,
                                           stack, self.msg_queue)
                 except resource.UpdateReplace:
-                    new_res_id = rsrc.make_replacement(tmpl.id)
-                    LOG.info("Replacing resource with new id %s",
-                             new_res_id)
-                    rpc_data = sync_point.serialize_input_data(self.input_data)
-                    self._rpc_client.check_resource(cnxt,
-                                                    new_res_id,
-                                                    current_traversal,
-                                                    rpc_data, is_update,
-                                                    adopt_stack_data)
+                    self._handle_resource_replacement(cnxt, current_traversal,
+                                                      tmpl.id,
+                                                      rsrc, stack,
+                                                      adopt_stack_data)
                     return False
 
             else:
