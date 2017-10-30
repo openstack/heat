@@ -177,8 +177,11 @@ class CheckResource(object):
         except scheduler.Timeout:
             self._handle_resource_failure(cnxt, is_update, rsrc.id,
                                           stack, u'Timed out')
-        except CancelOperation:
-            pass
+        except CancelOperation as ex:
+            # Stack is already marked FAILED, so we just need to retrigger
+            # in case a new traversal has started and is waiting on us.
+            self._retrigger_new_traversal(cnxt, current_traversal, is_update,
+                                          stack.id, rsrc.id)
 
         return False
 
