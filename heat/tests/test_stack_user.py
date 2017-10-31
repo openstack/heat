@@ -17,11 +17,11 @@ import six
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.resources import stack_user
 from heat.engine import scheduler
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
-from heat.tests import fakes
 from heat.tests import utils
 
 
@@ -38,7 +38,7 @@ class StackUserTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackUserTest, self).setUp()
-        self.fc = fakes.FakeKeystoneClient()
+        self.fc = fake_ks.FakeKeystoneClient()
 
     def _user_create(self, stack_name, project_id, user_id,
                      resource_name='user', create_project=True,
@@ -51,9 +51,9 @@ class StackUserTest(common.HeatTestCase):
         stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fc)
 
         if create_project:
-            self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+            self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                    'create_stack_domain_project')
-            fakes.FakeKeystoneClient.create_stack_domain_project(
+            fake_ks.FakeKeystoneClient.create_stack_domain_project(
                 self.stack.id).AndReturn(project_id)
         else:
             self.stack.set_stack_user_project_id(project_id)
@@ -62,10 +62,10 @@ class StackUserTest(common.HeatTestCase):
         self.m.StubOutWithMock(short_id, 'get_id')
         short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'create_stack_domain_user')
         expected_username = '%s-%s-%s' % (stack_name, resource_name, 'aabbcc')
-        fakes.FakeKeystoneClient.create_stack_domain_user(
+        fake_ks.FakeKeystoneClient.create_stack_domain_user(
             username=expected_username, password=password,
             project_id=project_id).AndReturn(user_id)
 
@@ -101,9 +101,9 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'delete_stack_domain_user')
-        fakes.FakeKeystoneClient.delete_stack_domain_user(
+        fake_ks.FakeKeystoneClient.delete_stack_domain_user(
             user_id='auserdel', project_id='aprojectdel').AndReturn(None)
 
         self.m.ReplayAll()
@@ -119,9 +119,9 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel2',
                                  user_id='auserdel2')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'delete_stack_domain_user')
-        fakes.FakeKeystoneClient.delete_stack_domain_user(
+        fake_ks.FakeKeystoneClient.delete_stack_domain_user(
             user_id='auserdel2', project_id='aprojectdel2').AndRaise(
                 kc_exceptions.NotFound)
 
@@ -152,9 +152,9 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'disable_stack_domain_user')
-        fakes.FakeKeystoneClient.disable_stack_domain_user(
+        fake_ks.FakeKeystoneClient.disable_stack_domain_user(
             user_id='auserdel', project_id='aprojectdel').AndReturn(None)
 
         self.m.ReplayAll()
@@ -170,13 +170,13 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'disable_stack_domain_user')
-        fakes.FakeKeystoneClient.disable_stack_domain_user(
+        fake_ks.FakeKeystoneClient.disable_stack_domain_user(
             user_id='auserdel', project_id='aprojectdel').AndRaise(ValueError)
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'disable_stack_user')
-        fakes.FakeKeystoneClient.disable_stack_user(
+        fake_ks.FakeKeystoneClient.disable_stack_user(
             user_id='auserdel').AndReturn(None)
 
         self.m.ReplayAll()
@@ -192,9 +192,9 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'enable_stack_domain_user')
-        fakes.FakeKeystoneClient.enable_stack_domain_user(
+        fake_ks.FakeKeystoneClient.enable_stack_domain_user(
             user_id='auserdel', project_id='aprojectdel').AndReturn(None)
 
         self.m.ReplayAll()
@@ -211,13 +211,13 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'enable_stack_domain_user')
-        fakes.FakeKeystoneClient.enable_stack_domain_user(
+        fake_ks.FakeKeystoneClient.enable_stack_domain_user(
             user_id='auserdel', project_id='aprojectdel').AndRaise(ValueError)
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'enable_stack_user')
-        fakes.FakeKeystoneClient.enable_stack_user(
+        fake_ks.FakeKeystoneClient.enable_stack_user(
             user_id='auserdel').AndReturn(None)
 
         self.m.ReplayAll()
@@ -235,9 +235,9 @@ class StackUserTest(common.HeatTestCase):
                                  user_id='auserdel')
 
         # create_stack_domain_user_keypair(self, user_id, project_id):
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'create_stack_domain_user_keypair')
-        fakes.FakeKeystoneClient.create_stack_domain_user_keypair(
+        fake_ks.FakeKeystoneClient.create_stack_domain_user_keypair(
             user_id='auserdel', project_id='aprojectdel').AndReturn(
                 self.fc.creds)
         self.m.ReplayAll()
@@ -260,9 +260,9 @@ class StackUserTest(common.HeatTestCase):
                                  user_id='auserdel')
 
         # create_stack_domain_user_keypair(self, user_id, project_id):
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'create_stack_domain_user_keypair')
-        fakes.FakeKeystoneClient.create_stack_domain_user_keypair(
+        fake_ks.FakeKeystoneClient.create_stack_domain_user_keypair(
             user_id='auserdel', project_id='aprojectdel').AndReturn(None)
         self.m.ReplayAll()
 
@@ -276,9 +276,9 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'delete_stack_domain_user_keypair')
-        fakes.FakeKeystoneClient.delete_stack_domain_user_keypair(
+        fake_ks.FakeKeystoneClient.delete_stack_domain_user_keypair(
             user_id='auserdel', project_id='aprojectdel',
             credential_id='acredential').AndReturn(None)
         self.m.ReplayAll()
@@ -304,14 +304,14 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'delete_stack_domain_user_keypair')
-        fakes.FakeKeystoneClient.delete_stack_domain_user_keypair(
+        fake_ks.FakeKeystoneClient.delete_stack_domain_user_keypair(
             user_id='auserdel', project_id='aprojectdel',
             credential_id='acredential').AndRaise(ValueError())
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'delete_ec2_keypair')
-        fakes.FakeKeystoneClient.delete_ec2_keypair(
+        fake_ks.FakeKeystoneClient.delete_ec2_keypair(
             user_id='auserdel', credential_id='acredential').AndReturn(None)
         self.m.ReplayAll()
 
@@ -330,9 +330,9 @@ class StackUserTest(common.HeatTestCase):
                                  project_id='aprojectdel',
                                  user_id='auserdel')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'delete_stack_domain_user_keypair')
-        fakes.FakeKeystoneClient.delete_stack_domain_user_keypair(
+        fake_ks.FakeKeystoneClient.delete_stack_domain_user_keypair(
             user_id='auserdel', project_id='aprojectdel',
             credential_id='acredential').AndReturn(None)
         self.m.ReplayAll()
@@ -351,9 +351,9 @@ class StackUserTest(common.HeatTestCase):
                                  user_id='aabbcc',
                                  password='apassword')
 
-        self.m.StubOutWithMock(fakes.FakeKeystoneClient,
+        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
                                'stack_domain_user_token')
-        fakes.FakeKeystoneClient.stack_domain_user_token(
+        fake_ks.FakeKeystoneClient.stack_domain_user_token(
             user_id='aabbcc', project_id='aproject123',
             password='apassword').AndReturn('atoken123')
         self.m.ReplayAll()

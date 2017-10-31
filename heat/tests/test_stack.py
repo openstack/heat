@@ -31,6 +31,7 @@ from heat.common import template_format
 from heat.common import timeutils
 from heat.db.sqlalchemy import api as db_api
 from heat.engine.clients.os import keystone
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import function
@@ -1485,9 +1486,9 @@ class StackTest(common.HeatTestCase):
 
         self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
         keystone.KeystoneClientPlugin._create().AndReturn(
-            fakes.FakeKeystoneClient(user_id='auser123'))
+            fake_ks.FakeKeystoneClient(user_id='auser123'))
         keystone.KeystoneClientPlugin._create().AndReturn(
-            fakes.FakeKeystoneClient(user_id='auser123'))
+            fake_ks.FakeKeystoneClient(user_id='auser123'))
         self.m.ReplayAll()
 
         self.stack = stack.Stack(self.ctx, 'creds_stack', self.tmpl)

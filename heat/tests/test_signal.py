@@ -22,13 +22,13 @@ from heat.common import exception
 from heat.common import template_format
 from heat.db.sqlalchemy import models
 from heat.engine.clients.os import heat_plugin
+from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os import swift
 from heat.engine import scheduler
 from heat.engine import stack as stk
 from heat.engine import template
 from heat.objects import resource_data as resource_data_object
 from heat.tests import common
-from heat.tests import fakes
 from heat.tests import generic_resource
 from heat.tests import utils
 
@@ -467,7 +467,7 @@ class SignalTest(common.HeatTestCase):
 
     def test_delete_not_found(self):
         # Setup
-        class FakeKeystoneClientFail(fakes.FakeKeystoneClient):
+        class FakeKeystoneClientFail(fake_ks.FakeKeystoneClient):
             def delete_stack_user(self, name):
                 raise kc_exceptions.NotFound()
         self.stub_keystoneclient(fake_client=FakeKeystoneClientFail())
