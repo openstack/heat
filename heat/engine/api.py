@@ -524,6 +524,12 @@ def format_validate_parameter(param):
     if param.user_value:
         res[rpc_api.PARAM_VALUE] = param.user_value
 
+    _build_parameter_constraints(res, param)
+
+    return res
+
+
+def _build_parameter_constraints(res, param):
     constraint_description = []
 
     # build constraints
@@ -564,8 +570,6 @@ def format_validate_parameter(param):
     if constraint_description:
         res[rpc_api.PARAM_CONSTRAINT_DESCRIPTION] = " ".join(
             constraint_description)
-
-    return res
 
 
 def format_software_config(sc, detail=True, include_project=False):
