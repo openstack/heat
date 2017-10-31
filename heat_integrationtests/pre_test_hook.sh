@@ -47,6 +47,7 @@ echo "[[local|localrc]]" >> $localconf
 # Create the images required for testing
 echo "IMAGE_URLS+=http://fedora.bhs.mirrors.ovh.net/linux/releases/24/CloudImages/x86_64/images/Fedora-Cloud-Base-24-1.2.x86_64.qcow2" >> $localconf
 
+echo "CEILOMETER_BACKEND=mysql" >> $localconf
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
 # Use the lbaas v2 namespace driver for devstack integration testing since
