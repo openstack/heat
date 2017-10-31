@@ -40,6 +40,17 @@ echo -e '[eventlet_opts]\nclient_socket_timeout=120\n' >> $localconf
 
 
 echo "[[local|localrc]]" >> $localconf
+
+# NOTE(mnaser): This will use the region local mirrors to avoid going out
+#               to network
+if [[ -e /etc/ci/mirror_info.sh ]]; then
+	source /etc/ci/mirror_info.sh
+	echo "IMAGE_URLS+=${NODEPOOL_FEDORA_MIRROR}/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-26-1.5.x86_64.qcow2" >> $localconf
+else
+	echo "IMAGE_URLS+=https://download.fedoraproject.org/pub/fedora/linux/releases/26/CloudImages/x86_64/images/Fedora-Cloud-Base-26-1.5.x86_64.qcow2" >> $localconf
+fi
+
+echo "CEILOMETER_BACKEND=mysql" >> $localconf
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
 # Use the lbaas v2 namespace driver for devstack integration testing since
