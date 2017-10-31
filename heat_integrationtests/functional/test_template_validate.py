@@ -94,7 +94,12 @@ resources:
                                    'Description': 'the param description',
                                    'Label': 'aparam',
                                    'NoEcho': 'false',
-                                   'Type': 'Number'}}}
+                                   'Type': 'Number'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_override_default(self):
@@ -108,7 +113,12 @@ resources:
                                    'Description': 'the param description',
                                    'Label': 'aparam',
                                    'NoEcho': 'false',
-                                   'Type': 'Number'}}}
+                                   'Type': 'Number'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {'aparam': 5},
+                        'resource_registry': {u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_override_none(self):
@@ -122,7 +132,14 @@ resources:
                                    'Description': 'the param description',
                                    'Label': 'aparam',
                                    'NoEcho': 'false',
-                                   'Type': 'Number'}}}
+                                   'Type': 'Number'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {
+                            'OS::Heat::RandomString': 'OS::Heat::None',
+                            u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_basic_required_param(self):
@@ -133,7 +150,12 @@ resources:
                         'aparam': {'Description': 'the param description',
                                    'Label': 'aparam',
                                    'NoEcho': 'false',
-                                   'Type': 'Number'}}}
+                                   'Type': 'Number'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_fail_version(self):
@@ -168,7 +190,12 @@ resources:
                       'Description': '',
                       'Label': 'cparam',
                       'NoEcho': 'true',
-                      'Type': 'String'}}}
+                      'Type': 'String'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_nested_off(self):
@@ -181,7 +208,14 @@ resources:
                                    'Description': 'the param description',
                                    'Label': 'pparam',
                                    'NoEcho': 'false',
-                                   'Type': 'Number'}}}
+                                   'Type': 'Number'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {
+                            u'mynested.yaml': u'mynested.yaml',
+                            u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_nested_on(self):
@@ -200,7 +234,14 @@ resources:
                                                            'Label': 'aparam',
                                                            'NoEcho': 'false',
                                                            'Type': 'Number'}},
-                                 'Type': 'mynested.yaml'}}}
+                                 'Type': 'mynested.yaml'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {
+                            u'mynested.yaml': u'mynested.yaml',
+                            u'resources': {}}}}
         self.assertEqual(expected, ret)
 
     def test_template_validate_nested_on_multiple(self):
@@ -240,5 +281,12 @@ resources:
                                                            'NoEcho': 'false',
                                                            'Type': 'Number'}},
                                  'NestedParameters': n_param2,
-                                 'Type': 'mynested.yaml'}}}
+                                 'Type': 'mynested.yaml'}},
+                    'Environment': {
+                        'event_sinks': [],
+                        'parameter_defaults': {},
+                        'parameters': {},
+                        'resource_registry': {
+                            u'mynested.yaml': u'mynested.yaml',
+                            'resources': {}}}}
         self.assertEqual(expected, ret)

@@ -1310,6 +1310,7 @@ class EngineService(service.ServiceBase):
 
             result.update(nested_params(stack))
 
+        result['Environment'] = tmpl.env.user_env_as_dict()
         return result
 
     @context.request_context
