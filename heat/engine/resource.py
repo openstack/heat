@@ -337,11 +337,28 @@ class Resource(object):
             resource_owning_stack = stack_mod.Stack.load(context,
                                                          stack=db_stack)
 
-        # Load only the resource in question; don't load all resources
-        # by invoking stack.resources. Maintain light-weight stack.
         res_defn = resource_owning_stack.t.resource_definitions(
             resource_owning_stack)[db_res.name]
-        resource = cls(db_res.name, res_defn, resource_owning_stack)
+        res_type = resource_owning_stack.env.registry.get_class_to_instantiate(
+            res_defn.resource_type, resource_name=db_res.name)
+
+        # If the resource type has changed and the new one is a valid
+        # substitution, use that as the class to instantiate.
+        if is_update and (curr_stack is not resource_owning_stack):
+            new_res_defns = curr_stack.t.resource_definitions(
+                resource_owning_stack)
+            if db_res.name in new_res_defns:
+                new_res_defn = new_res_defns[db_res.name]
+                new_registry = curr_stack.env.registry
+                new_res_type = new_registry.get_class_to_instantiate(
+                    new_res_defn.resource_type, resource_name=db_res.name)
+
+                if res_type.check_is_substituted(new_res_type):
+                    res_type = new_res_type
+
+        # Load only the resource in question; don't load all resources
+        # by invoking stack.resources. Maintain light-weight stack.
+        resource = res_type(db_res.name, res_defn, resource_owning_stack)
         resource._load_data(db_res)
 
         # assign current stack to the resource for updates
@@ -1164,6 +1181,9 @@ class Resource(object):
             )
 
         with self.lock(engine_id):
+            # Check that the resource type matches. If the type has changed by
+            # a legitimate substitution, the load()ed resource will already be
+            # of the new type.
             registry = new_stack.env.registry
             new_res_def = new_stack.t.resource_definitions(
                 new_stack)[self.name]
@@ -1171,8 +1191,7 @@ class Resource(object):
                 new_res_def.resource_type, resource_name=self.name)
             restricted_actions = registry.get_rsrc_restricted_actions(
                 self.name)
-            is_substituted = self.check_is_substituted(new_res_type)
-            if type(self) is not new_res_type and not is_substituted:
+            if type(self) is not new_res_type:
                 self._check_for_convergence_replace(restricted_actions)
 
             action_rollback = self.stack.action == self.stack.ROLLBACK
@@ -1186,15 +1205,7 @@ class Resource(object):
                                    six.text_type(failure))
                     raise failure
 
-            # Use new resource as update method if existing resource
-            # need to be substituted.
-            if is_substituted:
-                substitute = new_res_type(self.name, self.t, self.stack)
-                self.stack.resources[self.name] = substitute
-                updater = substitute.update
-            else:
-                updater = self.update
-            runner = scheduler.TaskRunner(updater, new_res_def)
+            runner = scheduler.TaskRunner(self.update, new_res_def)
             try:
                 runner(timeout=timeout, progress_callback=progress_callback)
                 update_tmpl_id_and_requires()

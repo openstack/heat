@@ -69,24 +69,28 @@ properties:
             parameters=parms,
             template=deployments_template,
             enable_cleanup=self.enable_cleanup)
+
         expected_resources = {'config': 'OS::Heat::SoftwareConfig',
                               'dep': 'OS::Heat::SoftwareDeployments',
                               'server': 'OS::Nova::Server'}
-        resource = self.client.resources.get(stack_identifier, 'server')
         self.assertEqual(expected_resources,
                          self.list_resources(stack_identifier))
+
+        resource = self.client.resources.get(stack_identifier, 'dep')
         initial_phy_id = resource.physical_resource_id
+
         resources = deployments_template['resources']
         resources['dep'] = yaml.safe_load(self.deployment_group_snippet)
         self.update_stack(
             stack_identifier,
             deployments_template,
             parameters=parms)
-        resource = self.client.resources.get(stack_identifier, 'server')
-        self.assertEqual(initial_phy_id,
-                         resource.physical_resource_id)
+
         expected_new_resources = {'config': 'OS::Heat::SoftwareConfig',
                                   'dep': 'OS::Heat::SoftwareDeploymentGroup',
                                   'server': 'OS::Nova::Server'}
         self.assertEqual(expected_new_resources,
                          self.list_resources(stack_identifier))
+
+        resource = self.client.resources.get(stack_identifier, 'dep')
+        self.assertEqual(initial_phy_id, resource.physical_resource_id)
