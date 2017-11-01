@@ -1207,6 +1207,9 @@ class Stack(collections.Mapping):
     @profiler.trace('Stack.check', hide_args=False)
     @reset_state_on_error
     def check(self, notify=None):
+        if self.convergence:
+            self._update_or_store_resources()
+
         self.updated_time = oslo_timeutils.utcnow()
         checker = scheduler.TaskRunner(
             self.stack_task, self.CHECK,
@@ -1959,6 +1962,9 @@ class Stack(collections.Mapping):
             LOG.info('%s is already suspended', self)
             return
 
+        if self.convergence:
+            self._update_or_store_resources()
+
         self.updated_time = oslo_timeutils.utcnow()
         sus_task = scheduler.TaskRunner(
             self.stack_task,
@@ -1985,6 +1991,9 @@ class Stack(collections.Mapping):
         if self.state == (self.RESUME, self.COMPLETE):
             LOG.info('%s is already resumed', self)
             return
+
+        if self.convergence:
+            self._update_or_store_resources()
 
         self.updated_time = oslo_timeutils.utcnow()
         sus_task = scheduler.TaskRunner(
