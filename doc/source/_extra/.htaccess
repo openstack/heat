@@ -1,0 +1,3 @@
+# The top-level docs project will redirect URLs from the old /developer docs
+# to their equivalent pages on the new docs.openstack.org only if this file
+# exists.
