@@ -964,13 +964,11 @@ class Stack(collections.Mapping):
             # delete, stack lock is not used, hence persist state
             updated = self._persist_state()
             if not updated:
-                # Possibly failed concurrent update
-                LOG.warning("Failed to set state of stack %(name)s with"
-                            " traversal ID %(trvsl_id)s, to"
-                            " %(action)s_%(status)s",
-                            {'name': self.name,
-                             'trvsl_id': self.current_traversal,
-                             'action': action, 'status': status})
+                LOG.info("Stack %(name)s traversal %(trvsl_id)s no longer "
+                         "active; not setting state to %(action)s_%(status)s",
+                         {'name': self.name,
+                          'trvsl_id': self.current_traversal,
+                          'action': action, 'status': status})
             return updated
 
         # Persist state to db only if status == IN_PROGRESS
