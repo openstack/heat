@@ -33,6 +33,13 @@ class AodhAlarm(alarm_base.BaseAlarm):
     instance if the instance has been up for more than 10 min, some action will
     be called.
     """
+    support_status = support.SupportStatus(
+        status=support.DEPRECATED,
+        message=_('Theshold alarm relies on ceilometer-api and has been '
+                  'deprecated in aodh since Ocata. Use '
+                  'OS::Aodh::GnocchiAggregationByResourcesAlarm instead.'),
+        version='10.0.0',
+        previous_status=support.SupportStatus(version='2014.1'))
 
     PROPERTIES = (
         COMPARISON_OPERATOR, EVALUATION_PERIODS, METER_NAME, PERIOD,

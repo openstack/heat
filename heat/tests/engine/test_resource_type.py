@@ -43,7 +43,8 @@ class ResourceTypeTest(common.HeatTestCase):
                                             mock_is_service_available):
         mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
-        self.assertEqual(set(['OS::Heat::HARestarter',
+        self.assertEqual(set(['OS::Aodh::Alarm',
+                              'OS::Heat::HARestarter',
                               'OS::Magnum::Bay',
                               'OS::Magnum::BayModel',
                               'OS::Glance::Image',
