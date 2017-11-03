@@ -2003,10 +2003,8 @@ class Resource(status.ResourceStatus):
             if (lock == self.LOCK_NONE or self._calling_engine_id is None):
                 resource_objects.Resource.update_by_id(
                     self.context, self.id, rs)
-                if (lock != self.LOCK_NONE and
-                        self._calling_engine_id is None):
-                    LOG.warning('no calling_engine_id in store %s',
-                                str(rs))
+                if lock != self.LOCK_NONE:
+                    LOG.warning("no calling_engine_id in store %s", str(rs))
             else:
                 self._store_with_lock(rs, lock)
         else:
