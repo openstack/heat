@@ -57,16 +57,13 @@ class RBACPolicyTest(common.HeatTestCase):
     def test_create_qos_policy_rbac(self):
         self._test_create(obj_type='qos_policy')
 
-    def _test_validate_invalid_action(self,
+    def _test_validate_invalid_action(self, msg,
                                       invalid_action='invalid',
                                       obj_type='network'):
         tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
         tpl['resources']['rbac']['properties']['action'] = invalid_action
         tpl['resources']['rbac']['properties']['object_type'] = obj_type
         self._create_stack(tmpl=yaml.safe_dump(tpl))
-        msg = ("Invalid action %(action)s for object type %(type)s." %
-               {'action': invalid_action,
-                'type': obj_type})
 
         self.patchobject(type(self.rbac), 'is_service_available',
                          return_value=(True, None))
@@ -75,21 +72,29 @@ class RBACPolicyTest(common.HeatTestCase):
                                self.rbac.validate)
 
     def test_validate_action_for_network(self):
-        self._test_validate_invalid_action()
+        msg = ('Property error: resources.rbac.properties.action: '
+               '"invalid" is not an allowed value '
+               r'\[access_as_shared, access_as_external\]')
+        self._test_validate_invalid_action(msg)
 
     def test_validate_action_for_qos_policy(self):
-        self._test_validate_invalid_action(
-            obj_type='qos_policy')
+        msg = ('Property error: resources.rbac.properties.action: '
+               '"invalid" is not an allowed value '
+               r'\[access_as_shared, access_as_external\]')
+        self._test_validate_invalid_action(msg, obj_type='qos_policy')
         # we dont support access_as_external for qos_policy
-        self._test_validate_invalid_action(
-            obj_type='qos_policy',
-            invalid_action='access_as_external')
+        msg = ('Property error: resources.rbac.properties.action: '
+               'Invalid action "access_as_external" for object type '
+               'qos_policy. Valid actions: access_as_shared')
+        self._test_validate_invalid_action(msg,
+                                           obj_type='qos_policy',
+                                           invalid_action='access_as_external')
 
     def test_validate_invalid_type(self):
         tpl = yaml.safe_load(inline_templates.RBAC_TEMPLATE)
         tpl['resources']['rbac']['properties']['object_type'] = 'networks'
         self._create_stack(tmpl=yaml.safe_dump(tpl))
-        msg = "Invalid object_type: networks. "
+        msg = '"networks" is not an allowed value'
 
         self.patchobject(type(self.rbac), 'is_service_available',
                          return_value=(True, None))
