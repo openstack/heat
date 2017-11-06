@@ -150,8 +150,9 @@ class HealthMonitor(neutron.NeutronResource):
     @property
     def lb_id(self):
         if self._lb_id is None:
-            pool_id = self.client_plugin().find_resourceid_by_name_or_id(
-                self.POOL,
+            client_plugin = self.client_plugin()
+            pool_id = client_plugin.find_resourceid_by_name_or_id(
+                client_plugin.RES_TYPE_LB_POOL,
                 self.properties[self.POOL])
             pool = self.client().show_lbaas_pool(pool_id)['pool']
 

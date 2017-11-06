@@ -183,6 +183,7 @@ class SaharaCluster(resource.Resource):
     entity = 'clusters'
 
     def translation_rules(self, props):
+        neutron_client_plugin = self.client_plugin('neutron')
         rules = [
             translation.TranslationRule(
                 props,
@@ -199,9 +200,10 @@ class SaharaCluster(resource.Resource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.MANAGEMENT_NETWORK],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network')]
+                entity=neutron_client_plugin.RES_TYPE_NETWORK)
+        ]
         return rules
 
     def _cluster_name(self):

@@ -134,8 +134,9 @@ class PoolMember(neutron.NeutronResource):
     @property
     def pool_id(self):
         if self._pool_id is None:
-            self._pool_id = self.client_plugin().find_resourceid_by_name_or_id(
-                self.POOL,
+            client_plugin = self.client_plugin()
+            self._pool_id = client_plugin.find_resourceid_by_name_or_id(
+                client_plugin.RES_TYPE_LB_POOL,
                 self.properties[self.POOL])
         return self._pool_id
 

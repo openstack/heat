@@ -150,6 +150,7 @@ class VPNService(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
@@ -161,9 +162,9 @@ class VPNService(neutron.NeutronResource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.SUBNET],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='subnet'
+                entity=client_plugin.RES_TYPE_SUBNET
             ),
             translation.TranslationRule(
                 props,
@@ -175,9 +176,9 @@ class VPNService(neutron.NeutronResource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.ROUTER],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='router'
+                entity=client_plugin.RES_TYPE_ROUTER
             ),
 
         ]

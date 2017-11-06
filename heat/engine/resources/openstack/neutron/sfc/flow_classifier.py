@@ -138,22 +138,23 @@ class FlowClassifier(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.LOGICAL_SOURCE_PORT],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='port'
+                entity=client_plugin.RES_TYPE_PORT
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.LOGICAL_DESTINATION_PORT],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='port'
+                entity=client_plugin.RES_TYPE_PORT
             )
         ]
 

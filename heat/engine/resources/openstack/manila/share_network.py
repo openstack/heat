@@ -143,10 +143,10 @@ class ManilaShareNetwork(resource.Resource):
                 self.properties[self.NEUTRON_SUBNET]):
             plg = self.client_plugin('neutron')
             subnet_id = plg.find_resourceid_by_name_or_id(
-                'subnet', self.properties[self.NEUTRON_SUBNET])
+                plg.RES_TYPE_SUBNET, self.properties[self.NEUTRON_SUBNET])
             net_id = plg.network_id_from_subnet_id(subnet_id)
             provided_net_id = plg.find_resourceid_by_name_or_id(
-                'network', self.properties[self.NEUTRON_NETWORK])
+                plg.RES_TYPE_NETWORK, self.properties[self.NEUTRON_NETWORK])
             if net_id != provided_net_id:
                 msg = (_('Provided %(subnet)s does not belong '
                          'to provided %(network)s.')
@@ -155,22 +155,23 @@ class ManilaShareNetwork(resource.Resource):
                 raise exception.StackValidationFailed(message=msg)
 
     def translation_rules(self, props):
+        neutron_client_plugin = self.client_plugin('neutron')
         translation_rules = [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.NEUTRON_NETWORK],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network'
+                entity=neutron_client_plugin.RES_TYPE_NETWORK
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.NEUTRON_SUBNET],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='subnet'
+                entity=neutron_client_plugin.RES_TYPE_SUBNET
             )
         ]
         return translation_rules

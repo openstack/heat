@@ -28,12 +28,28 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [NETWORK] = ['network']
 
-    res_cmdres_mapping = {
+    RES_TYPES = (
+        RES_TYPE_NETWORK, RES_TYPE_SUBNET, RES_TYPE_ROUTER, RES_TYPE_PORT,
+        RES_TYPE_SUBNET_POOL, RES_TYPE_ADDRESS_SCOPE,
+        RES_TYPE_SECURITY_GROUP,
+        RES_TYPE_QOS_POLICY,
+        RES_TYPE_LOADBALANCER,
+        RES_TYPE_LB_LISTENER, RES_TYPE_LB_POOL, RES_TYPE_LB_L7POLICY,
+    ) = (
+        'network', 'subnet', 'router', 'port',
+        'subnetpool', 'address_scope',
+        'security_group',
+        'policy',
+        'loadbalancer',
+        'listener', 'pool', 'l7policy',
+    )
+
+    _res_cmdres_mapping = {
         # resource: cmd_resource
-        'policy': 'qos_policy',
-        'loadbalancer': 'lbaas_loadbalancer',
-        'pool': 'lbaas_pool',
-        'l7policy': 'lbaas_l7policy'
+        RES_TYPE_QOS_POLICY: 'qos_policy',
+        RES_TYPE_LOADBALANCER: 'lbaas_loadbalancer',
+        RES_TYPE_LB_POOL: 'lbaas_pool',
+        RES_TYPE_LB_L7POLICY: 'lbaas_l7policy'
     }
 
     def _create(self):
@@ -75,8 +91,13 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
 
     def find_resourceid_by_name_or_id(self, resource, name_or_id,
                                       cmd_resource=None):
+        """Find a resource ID given either a name or an ID.
+
+        The `resource` argument should be one of the constants defined in
+        RES_TYPES.
+        """
         cmd_resource = (cmd_resource or
-                        self.res_cmdres_mapping.get(resource))
+                        self._res_cmdres_mapping.get(resource))
         return self._find_resource_id(self.context.tenant_id,
                                       resource, name_or_id,
                                       cmd_resource)

@@ -132,22 +132,23 @@ class SecurityGroupRule(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.SECURITY_GROUP],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='security_group'
+                entity=client_plugin.RES_TYPE_SECURITY_GROUP
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.REMOTE_GROUP],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='security_group'
+                entity=client_plugin.RES_TYPE_SECURITY_GROUP
             ),
         ]
 
