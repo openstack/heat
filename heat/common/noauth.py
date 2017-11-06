@@ -66,8 +66,9 @@ class NoAuthProtocol(object):
             'HTTP_X_AUTH_USER': username,
             'HTTP_X_AUTH_KEY': 'unset',
             'HTTP_X_AUTH_URL': 'url',
-            'keystone.token_info': self._token_info,
         }
+        if self._token_info:
+            headers['keystone.token_info'] = self._token_info
 
         return headers
 
