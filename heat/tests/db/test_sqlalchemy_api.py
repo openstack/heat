@@ -1387,6 +1387,7 @@ def create_resource(ctx, stack, legacy_prop_data=False, **kwargs):
         'status_reason': 'create_complete',
         'rsrc_metadata': json.loads('{"foo": "123"}'),
         'stack_id': stack.id,
+        'atomic_key': 1,
     }
     if not legacy_prop_data:
         values['rsrc_prop_data'] = rpd
@@ -2541,6 +2542,135 @@ class DBAPIResourceTest(common.HeatTestCase):
         engines = db_api.engine_get_all_locked_by_stack(self.ctx,
                                                         self.stack.id)
         self.assertEqual({'engine-001', 'engine-002'}, engines)
+
+
+class DBAPIResourceReplacementTest(common.HeatTestCase):
+    def setUp(self):
+        self.useFixture(utils.ForeignKeyConstraintFixture())
+        super(DBAPIResourceReplacementTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.template = create_raw_template(self.ctx)
+        self.user_creds = create_user_creds(self.ctx)
+        self.stack = create_stack(self.ctx, self.template, self.user_creds)
+
+    def test_resource_create_replacement(self):
+        orig = create_resource(self.ctx, self.stack)
+
+        tmpl_id = create_raw_template(self.ctx).id
+
+        repl = db_api.resource_create_replacement(
+            self.ctx,
+            orig.id,
+            {'status_reason': 'test replacement'},
+            {'name': orig.name, 'replaces': orig.id,
+             'stack_id': orig.stack_id, 'current_template_id': tmpl_id},
+            1, None)
+
+        self.assertIsNotNone(repl)
+        self.assertEqual(orig.name, repl.name)
+        self.assertNotEqual(orig.id, repl.id)
+        self.assertEqual(orig.id, repl.replaces)
+
+    def test_resource_create_replacement_template_gone(self):
+        orig = create_resource(self.ctx, self.stack)
+
+        other_ctx = utils.dummy_context()
+        tmpl_id = create_raw_template(self.ctx).id
+        db_api.raw_template_delete(other_ctx, tmpl_id)
+
+        repl = db_api.resource_create_replacement(
+            self.ctx,
+            orig.id,
+            {'status_reason': 'test replacement'},
+            {'name': orig.name, 'replaces': orig.id,
+             'stack_id': orig.stack_id, 'current_template_id': tmpl_id},
+            1, None)
+
+        self.assertIsNone(repl)
+
+    def test_resource_create_replacement_updated(self):
+        orig = create_resource(self.ctx, self.stack)
+
+        other_ctx = utils.dummy_context()
+        tmpl_id = create_raw_template(self.ctx).id
+        db_api.resource_update_and_save(other_ctx, orig.id, {'atomic_key': 2})
+
+        self.assertRaises(exception.UpdateInProgress,
+                          db_api.resource_create_replacement,
+                          self.ctx,
+                          orig.id,
+                          {'status_reason': 'test replacement'},
+                          {'name': orig.name, 'replaces': orig.id,
+                           'stack_id': orig.stack_id,
+                           'current_template_id': tmpl_id},
+                          1, None)
+
+    def test_resource_create_replacement_updated_concurrent(self):
+        orig = create_resource(self.ctx, self.stack)
+
+        other_ctx = utils.dummy_context()
+        tmpl_id = create_raw_template(self.ctx).id
+
+        def update_atomic_key(*args, **kwargs):
+            db_api.resource_update_and_save(other_ctx, orig.id,
+                                            {'atomic_key': 2})
+
+        self.patchobject(db_api, 'resource_update',
+                         new=mock.Mock(wraps=db_api.resource_update,
+                                       side_effect=update_atomic_key))
+
+        self.assertRaises(exception.UpdateInProgress,
+                          db_api.resource_create_replacement,
+                          self.ctx,
+                          orig.id,
+                          {'status_reason': 'test replacement'},
+                          {'name': orig.name, 'replaces': orig.id,
+                           'stack_id': orig.stack_id,
+                           'current_template_id': tmpl_id},
+                          1, None)
+
+    def test_resource_create_replacement_locked(self):
+        orig = create_resource(self.ctx, self.stack)
+
+        other_ctx = utils.dummy_context()
+        tmpl_id = create_raw_template(self.ctx).id
+        db_api.resource_update_and_save(other_ctx, orig.id, {'engine_id': 'a',
+                                                             'atomic_key': 2})
+
+        self.assertRaises(exception.UpdateInProgress,
+                          db_api.resource_create_replacement,
+                          self.ctx,
+                          orig.id,
+                          {'status_reason': 'test replacement'},
+                          {'name': orig.name, 'replaces': orig.id,
+                           'stack_id': orig.stack_id,
+                           'current_template_id': tmpl_id},
+                          1, None)
+
+    def test_resource_create_replacement_locked_concurrent(self):
+        orig = create_resource(self.ctx, self.stack)
+
+        other_ctx = utils.dummy_context()
+        tmpl_id = create_raw_template(self.ctx).id
+
+        def lock_resource(*args, **kwargs):
+            db_api.resource_update_and_save(other_ctx, orig.id,
+                                            {'engine_id': 'a',
+                                             'atomic_key': 2})
+
+        self.patchobject(db_api, 'resource_update',
+                         new=mock.Mock(wraps=db_api.resource_update,
+                                       side_effect=lock_resource))
+
+        self.assertRaises(exception.UpdateInProgress,
+                          db_api.resource_create_replacement,
+                          self.ctx,
+                          orig.id,
+                          {'status_reason': 'test replacement'},
+                          {'name': orig.name, 'replaces': orig.id,
+                           'stack_id': orig.stack_id,
+                           'current_template_id': tmpl_id},
+                          1, None)
 
 
 class DBAPIStackLockTest(common.HeatTestCase):

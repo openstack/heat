@@ -200,6 +200,21 @@ class Resource(
                                    db_api.resource_create(context, values))
 
     @classmethod
+    def replacement(cls, context,
+                    existing_res_id, existing_res_values,
+                    new_res_values,
+                    atomic_key=0, expected_engine_id=None):
+        replacement = db_api.resource_create_replacement(context,
+                                                         existing_res_id,
+                                                         existing_res_values,
+                                                         new_res_values,
+                                                         atomic_key,
+                                                         expected_engine_id)
+        if replacement is None:
+            return None
+        return cls._from_db_object(cls(context), context, replacement)
+
+    @classmethod
     def delete(cls, context, resource_id):
         db_api.resource_delete(context, resource_id)
 

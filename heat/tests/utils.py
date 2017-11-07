@@ -15,6 +15,7 @@ import random
 import string
 import uuid
 
+import fixtures
 import mox
 from oslo_config import cfg
 from oslo_db import options
@@ -187,3 +188,15 @@ class JsonEquals(mox.Comparator):
 
     def __repr__(self):
         return "<equals to json '%s'>" % self.other_json
+
+
+class ForeignKeyConstraintFixture(fixtures.Fixture):
+    def __init__(self, sqlite_fk=True):
+        self.enable_fkc = sqlite_fk
+
+    def _setUp(self):
+        new_context = db_api.db_context.make_new_manager()
+        new_context.configure(sqlite_fk=self.enable_fkc)
+
+        self.useFixture(fixtures.MockPatchObject(db_api, '_facade', None))
+        self.addCleanup(db_api.db_context.patch_factory(new_context._factory))

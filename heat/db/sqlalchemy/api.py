@@ -18,6 +18,7 @@ import random
 
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
+from oslo_db import exception as db_exception
 from oslo_db import options
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
@@ -441,6 +442,32 @@ def resource_create(context, values):
     resource_ref.update(values)
     resource_ref.save(context.session)
     return resource_ref
+
+
+def resource_create_replacement(context,
+                                existing_res_id, existing_res_values,
+                                new_res_values,
+                                atomic_key, expected_engine_id=None):
+    session = context.session
+    try:
+        with session.begin(subtransactions=True):
+            new_res = resource_create(context, new_res_values)
+            update_data = {'replaced_by': new_res.id}
+            update_data.update(existing_res_values)
+            if not resource_update(context,
+                                   existing_res_id, update_data,
+                                   atomic_key,
+                                   expected_engine_id=expected_engine_id):
+                data = {}
+                if 'name' in new_res_values:
+                    data['resource_name'] = new_res_values['name']
+                raise exception.UpdateInProgress(**data)
+    except db_exception.DBReferenceError as exc:
+        # New template_id no longer exists
+        LOG.debug('Not creating replacement resource: %s', exc)
+        return None
+    else:
+        return new_res
 
 
 def resource_get_all_by_stack(context, stack_id, filters=None):
