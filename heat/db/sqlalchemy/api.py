@@ -1316,12 +1316,14 @@ def service_get_all_by_args(context, host, binary, hostname):
 def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
     def _validate_positive_integer(val, argname):
         try:
-            return int(val)
+            val = int(val)
         except ValueError:
             raise exception.Error(_("%s should be an integer") % argname)
+
         if val < 0:
             raise exception.Error(_("%s should be a positive integer")
                                   % argname)
+        return val
 
     age = _validate_positive_integer(age, 'age')
     batch_size = _validate_positive_integer(batch_size, 'batch_size')
