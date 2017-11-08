@@ -2018,6 +2018,9 @@ class DBAPIStackTest(common.HeatTestCase):
         self._deleted_stack_existance(admin_ctx, stacks, resources,
                                       events, tmpl_files, (), (0, 1, 2, 3, 4))
 
+        # test wrong age
+        self.assertRaises(exception.Error, db_api.purge_deleted, -1, 'seconds')
+
     def test_purge_project_deleted(self):
         now = timeutils.utcnow()
         delta = datetime.timedelta(seconds=3600 * 7)
