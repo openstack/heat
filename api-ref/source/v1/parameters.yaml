@@ -431,6 +431,13 @@ cancel_update:
   in: body
   required: true
   type: string
+cancel_without_rollback:
+  description: |
+    Specify the ``cancel_without_rollback`` action in
+    the request body..
+  in: body
+  required: true
+  type: string
 capabilities:
   description: |
     List of stack capabilities for stack.

@@ -1151,10 +1151,12 @@ class EngineService(service.ServiceBase):
         db_stack = self._get_stack(cnxt, stack_identity)
 
         current_stack = parser.Stack.load(cnxt, stack=db_stack)
-        if cancel_with_rollback:  # Commanded by user
+
+        if cancel_with_rollback:
             allowed_actions = (current_stack.UPDATE,)
-        else:  # Cancelled by parent stack
+        else:
             allowed_actions = (current_stack.UPDATE, current_stack.CREATE)
+
         if not (current_stack.status == current_stack.IN_PROGRESS and
                 current_stack.action in allowed_actions):
             state = '_'.join(current_stack.state)

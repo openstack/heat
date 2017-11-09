@@ -154,6 +154,55 @@ Response Example
 This operation does not return a response body.
 
 
+Cancel stack create/update without rollback
+===========================================
+
+.. rest_method::  POST /v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions
+
+Cancels a currently running create/update of a stack without rollback.
+
+Response Codes
+--------------
+
+.. rest_status_code:: success status.yaml
+
+   - 200
+
+.. rest_status_code:: error status.yaml
+
+   - 400
+   - 401
+   - 404
+
+Request Parameters
+------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - tenant_id: tenant_id
+   - stack_name: stack_name_url
+   - stack_id: stack_id_url
+   - cancel_without_rollback: cancel_without_rollback
+
+Request Example
+---------------
+
+.. literalinclude:: samples/stack-action-cancel-without-rollback-request.json
+   :language: javascript
+
+Response Parameters
+-------------------
+
+.. rest_parameters:: parameters.yaml
+
+   - X-Openstack-Request-Id: request_id
+
+Response Example
+----------------
+
+This operation does not return a response body.
+
+
 Check stack resources
 =====================
 
