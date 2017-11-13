@@ -3955,6 +3955,45 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(3, mock_detach_check.call_count)
         self.assertEqual(1, mock_attach_check.call_count)
 
+    def test_server_update_remove_network_non_empty(self):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = '5678'
+        old_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'},
+            {'port': '4121f61a-1b2e-4ab0-901e-eade9b1cb09d'}]
+        new_networks = [
+            {'port': '95e25541-d26a-478d-8f36-ae1c8f6b74dc'}]
+
+        server = self._create_test_server(return_server, 'networks_update',
+                                          networks=old_networks)
+
+        update_props = self.server_props.copy()
+        update_props['networks'] = new_networks
+        update_template = server.t.freeze(properties=update_props)
+
+        self.patchobject(self.fc.servers, 'get', return_value=return_server)
+        poor_interfaces = [
+            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '11.12.13.14'),
+            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   '21.22.23.24'),
+        ]
+
+        self.patchobject(return_server, 'interface_list',
+                         return_value=poor_interfaces)
+        mock_detach = self.patchobject(return_server, 'interface_detach')
+        mock_attach = self.patchobject(return_server, 'interface_attach')
+        mock_detach_check = self.patchobject(nova.NovaClientPlugin,
+                                             'check_interface_detach',
+                                             return_value=True)
+        scheduler.TaskRunner(server.update, update_template)()
+        self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
+        self.assertEqual(1, mock_detach.call_count)
+        self.assertEqual(1, mock_detach_check.call_count)
+        self.assertEqual(0, mock_attach.call_count)
+
     def test_server_properties_validation_create_and_update(self):
         return_server = self.fc.servers.list()[1]
 

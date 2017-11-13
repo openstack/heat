@@ -372,13 +372,16 @@ class ServerNetworkMixin(object):
 
         new_nets = new_nets or []
         old_nets = old_nets or []
-        remove_ports = self._calculate_remove_ports(old_nets, new_nets, ifaces)
-        add_nets = self._calculate_add_nets(new_nets, security_groups)
+        remove_ports, not_updated_nets = self._calculate_remove_ports(
+            old_nets, new_nets, ifaces)
+        add_nets = self._calculate_add_nets(new_nets, not_updated_nets,
+                                            security_groups)
 
         return remove_ports, add_nets
 
     def _calculate_remove_ports(self, old_nets, new_nets, ifaces):
         remove_ports = []
+        not_updated_nets = []
         # if old nets is empty, it means that the server got first
         # free port. so we should detach this interface.
         if not old_nets:
@@ -424,14 +427,16 @@ class ServerNetworkMixin(object):
                     if net.get(self.NETWORK_FLOATING_IP):
                         self._floating_ip_disassociate(
                             net.get(self.NETWORK_FLOATING_IP))
-        return remove_ports
+        return remove_ports, not_updated_nets
 
-    def _calculate_add_nets(self, new_nets, security_groups):
+    def _calculate_add_nets(self, new_nets, not_updated_nets,
+                            security_groups):
         add_nets = []
 
-        # if new_nets is empty, we should attach first free port,
-        # according to similar behavior during instance creation
-        if not new_nets:
+        # if new_nets is empty (including the non_updated_nets), we should
+        # attach first free port, similar to the behavior for instance
+        # creation
+        if not new_nets and not not_updated_nets:
             handler_kwargs = {'port_id': None, 'net_id': None, 'fip': None}
             if security_groups:
                 sec_uuids = self.client_plugin(
