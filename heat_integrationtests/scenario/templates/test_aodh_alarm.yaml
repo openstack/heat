@@ -1,4 +1,7 @@
 heat_template_version: 2013-05-23
+parameters:
+  metric_id:
+    type: string
 resources:
   asg:
     type: OS::Heat::AutoScalingGroup
@@ -15,22 +18,20 @@ resources:
       cooldown: 0
       scaling_adjustment: 1
   alarm:
-    type: OS::Aodh::Alarm
+    type: OS::Aodh::GnocchiAggregationByMetricsAlarm
     properties:
-      description: Scale-up if the average CPU > 50% for 1 minute
-      meter_name: test_meter
-      statistic: count
+      metrics:
+        - {get_param: metric_id}
       comparison_operator: ge
-      threshold: 1
-      period: 60
       evaluation_periods: 1
+      granularity: 60
+      aggregation_method: mean
+      threshold: 10
       alarm_actions:
         - str_replace:
             template: trust+url
             params:
               url: {get_attr: [scaleup_policy, signal_url]}
-      matching_metadata:
-        metadata.metering.stack_id: {get_param: "OS::stack_id"}
 outputs:
   asg_size:
     value: {get_attr: [asg, current_size]}
