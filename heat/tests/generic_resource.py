@@ -378,6 +378,9 @@ class ResourceWithRestoreType(ResWithComplexPropsAndAttrs):
         props['a_string'] = value
         return defn.freeze(properties=props)
 
+    def handle_delete_snapshot(self, snapshot):
+        return snapshot['resource_data'].get('a_string')
+
 
 class DynamicSchemaResource(resource.Resource):
     """Resource with an attribute not registered in the attribute schema."""
