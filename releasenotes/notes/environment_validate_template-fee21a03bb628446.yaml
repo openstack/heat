@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The template validate API call now returns the Environment calculated by
+    heat - this enables preview of the merged environment when using
+    parameter_merge_strategy prior to creating the stack

@@ -72,6 +72,12 @@ outputs:
                     'Label': u'\u6807\u7b7e',
                     'NoEcho': 'false',
                     'Type': 'Number'}
+            },
+            'Environment': {
+                'event_sinks': [],
+                'parameter_defaults': {},
+                'parameters': {},
+                'resource_registry': {u'resources': {}}
             }
         }
         self.assertEqual(expected, ret)
@@ -90,6 +96,12 @@ outputs:
                     'Label': u'\u6807\u7b7e',
                     'NoEcho': 'false',
                     'Type': 'Number'}
+            },
+            'Environment': {
+                'event_sinks': [],
+                'parameter_defaults': {},
+                'parameters': {u'\u53c2\u6570': 5},
+                'resource_registry': {u'resources': {}}
             }
         }
         self.assertEqual(expected, ret)

@@ -880,6 +880,10 @@ parameters:
     type: string
     description: Name of private network to be created
 
+  merged_param:
+    type: comma_delimited_list
+    description: A merged list of values
+
 resources:
   private_net:
     type: OS::Neutron::Net
@@ -939,6 +943,11 @@ class ValidateTest(common.HeatTestCase):
         self.mock_is_service_available = self.mock_isa.start()
         self.addCleanup(self.mock_isa.stop)
         self.engine = service.EngineService('a', 't')
+        self.empty_environment = {
+            'event_sinks': [],
+            'parameter_defaults': {},
+            'parameters': {},
+            'resource_registry': {'resources': {}}}
 
     def _mock_get_image_id_success(self, imageId):
         self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
@@ -1043,7 +1052,8 @@ class ValidateTest(common.HeatTestCase):
         other_template = test_template_no_default.replace(
             'net_name', 'net_name2')
 
-        files = {'env1': 'parameter_defaults:\n  net_name: net1',
+        files = {'env1': 'parameter_defaults:'
+                         '\n  net_name: net1',
                  'env2': 'parameter_defaults:'
                          '\n  net_name: net2'
                          '\n  net_name2: net3',
@@ -1051,12 +1061,72 @@ class ValidateTest(common.HeatTestCase):
                  'tmpl2.yaml': other_template}
         params = {'parameters': {}, 'parameter_defaults': {}}
 
-        self.engine.validate_template(
+        ret = self.engine.validate_template(
             self.ctx, t,
             params=params,
             files=files, environment_files=['env1', 'env2'])
         self.assertEqual('net2', params['parameter_defaults']['net_name'])
         self.assertEqual('net3', params['parameter_defaults']['net_name2'])
+        expected = {
+            'Description': 'No description',
+            'Parameters': {
+                'size': {'AllowedValues': [1, 4, 8],
+                         'Description': '',
+                         'Label': u'size',
+                         'NoEcho': 'false',
+                         'Type': 'Number'}},
+            'Environment': {
+                'event_sinks': [],
+                'parameter_defaults': {
+                    'net_name': u'net2',
+                    'net_name2': u'net3'},
+                'parameters': {},
+                'resource_registry': {'resources': {}}}}
+
+        self.assertEqual(expected, ret)
+
+    def test_validate_parameters_merged_env(self):
+        t = template_format.parse(test_template_allowed_integers)
+
+        other_template = test_template_no_default.replace(
+            'net_name', 'net_name2')
+
+        files = {'env1': 'parameter_defaults:'
+                         '\n  net_name: net1'
+                         '\n  merged_param: [net1, net2]'
+                         '\nparameter_merge_strategies:'
+                         '\n  merged_param: merge',
+                 'env2': 'parameter_defaults:'
+                         '\n  net_name: net2'
+                         '\n  net_name2: net3'
+                         '\n  merged_param: [net3, net4]'
+                         '\nparameter_merge_strategies:'
+                         '\n  merged_param: merge',
+                 'tmpl1.yaml': test_template_no_default,
+                 'tmpl2.yaml': other_template}
+        params = {'parameters': {}, 'parameter_defaults': {}}
+
+        expected = {
+            'Description': 'No description',
+            'Parameters': {
+                'size': {'AllowedValues': [1, 4, 8],
+                         'Description': '',
+                         'Label': u'size',
+                         'NoEcho': 'false',
+                         'Type': 'Number'}},
+            'Environment': {
+                'event_sinks': [],
+                'parameter_defaults': {
+                    'net_name': u'net2',
+                    'net_name2': u'net3',
+                    'merged_param': ['net1', 'net2', 'net3', 'net4']},
+                'parameters': {},
+                'resource_registry': {'resources': {}}}}
+        ret = self.engine.validate_template(
+            self.ctx, t,
+            params=params,
+            files=files, environment_files=['env1', 'env2'])
+        self.assertEqual(expected, ret)
 
     def test_validate_hot_empty_parameters_valid(self):
         t = template_format.parse(
@@ -1149,7 +1219,8 @@ class ValidateTest(common.HeatTestCase):
 
         res = dict(self.engine.validate_template(self.ctx, t, {}))
         expected = {"Description": "test.",
-                    "Parameters": {}}
+                    "Parameters": {},
+                    "Environment": self.empty_environment}
         self.assertEqual(expected, res)
 
     def test_validate_hot_empty_outputs_valid(self):
@@ -1162,7 +1233,8 @@ class ValidateTest(common.HeatTestCase):
 
         res = dict(self.engine.validate_template(self.ctx, t, {}))
         expected = {"Description": "test.",
-                    "Parameters": {}}
+                    "Parameters": {},
+                    "Environment": self.empty_environment}
         self.assertEqual(expected, res)
 
     def test_validate_properties(self):
@@ -1239,7 +1311,9 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_volume_snapshot)
 
         res = dict(self.engine.validate_template(self.ctx, t, {}))
-        self.assertEqual({'Description': u'test.', 'Parameters': {}}, res)
+        expected = {'Description': u'test.', 'Parameters': {},
+                    'Environment': self.empty_environment}
+        self.assertEqual(expected, res)
 
     def test_validate_template_without_resources(self):
         hot_tpl = template_format.parse('''
@@ -1247,7 +1321,8 @@ class ValidateTest(common.HeatTestCase):
         ''')
 
         res = dict(self.engine.validate_template(self.ctx, hot_tpl, {}))
-        expected = {'Description': 'No description', 'Parameters': {}}
+        expected = {'Description': 'No description', 'Parameters': {},
+                    'Environment': self.empty_environment}
         self.assertEqual(expected, res)
 
     def test_validate_template_with_invalid_resource_type(self):
@@ -1755,7 +1830,8 @@ class ValidateTest(common.HeatTestCase):
             t,
             {},
             ignorable_errors=[exception.ResourceTypeUnavailable.error_code]))
-        expected = {'Description': 'No description', 'Parameters': {}}
+        expected = {'Description': 'No description', 'Parameters': {},
+                    'Environment': self.empty_environment}
         self.assertEqual(expected, res)
 
     def test_validate_with_ignorable_errors_invalid_error_code(self):
@@ -1835,7 +1911,14 @@ parameter_groups:
                             'NoEcho': 'false',
                             'Type': 'String'}},
                     'Type': 'OS::Test::TestResource'}},
-        }
+            'Environment': {
+                'event_sinks': [],
+                'parameter_defaults': {},
+                'parameters': {},
+                'resource_registry': {
+                    'OS::Test::TestResource':
+                    'https://server.test/nested.template',
+                    'resources': {}}}}
         self.assertEqual(expected, res)
 
     def test_validate_allowed_external_rsrc(self):

@@ -646,6 +646,12 @@ engine_status:
   in: body
   required: true
   type: string
+Environment:
+  description: |
+    Environment for the stack, where multiple environment files are provided this will be the merged result.
+  in: body
+  required: false
+  type: object
 environment:
   description: |
     A JSON environment for the stack.
@@ -943,7 +949,7 @@ ParameterGroups:
   type: array
 Parameters:
   description: |
-    Key and value pairs that contain CFN template parameters.
+    Parameter schema in CFN format.
   in: body
   required: true
   type: object

@@ -37,5 +37,13 @@
                 "param_name-2"
             ]
         }
-    ]
+    ],
+    "Environment": {
+        "event_sinks": [],
+        "parameter_defaults": {},
+        "parameters": {},
+        "resource_registry": {
+            "resources": {}
+        }
+    }
 }
