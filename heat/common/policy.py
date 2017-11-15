@@ -82,7 +82,10 @@ class Enforcer(object):
         return self._check(context, _action, _target, self.exc, action=action)
 
     def check_is_admin(self, context):
-        """Whether or not roles contains 'admin' role according to policy.json.
+        """Whether or not is admin according to policy.json.
+
+        By default the rule will check whether or not roles contains
+        'admin' role and is admin project.
 
            :param context: Heat request context
            :returns: A non-False value if the user is admin according to policy
