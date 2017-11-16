@@ -1800,19 +1800,19 @@ class Resource(status.ResourceStatus):
             self.stack.context,
             self.t.resource_type
         )
-        path = '.'.join([self.stack.t.RESOURCES, self.name])
-        function.validate(self.t, path)
-        self.validate_deletion_policy(self.t.deletion_policy())
-        self.t.update_policy(self.update_policy_schema,
-                             self.context).validate()
         try:
+            self.t.validate()
+            self.validate_deletion_policy(self.t.deletion_policy())
+            self.t.update_policy(self.update_policy_schema,
+                                 self.context).validate()
             validate = self.properties.validate(
                 with_value=self.stack.strict_validate,
                 template=self.t)
         except exception.StackValidationFailed as ex:
-            path = [self.stack.t.RESOURCES, self.t.name,
-                    self.stack.t.get_section_name(ex.path[0])]
-            path.extend(ex.path[1:])
+            path = [self.stack.t.RESOURCES, self.t.name]
+            if ex.path:
+                path.append(self.stack.t.get_section_name(ex.path[0]))
+                path.extend(ex.path[1:])
             raise exception.StackValidationFailed(
                 error=ex.error,
                 path=path,
@@ -1821,14 +1821,15 @@ class Resource(status.ResourceStatus):
 
     @classmethod
     def validate_deletion_policy(cls, policy):
+        path = rsrc_defn.DELETION_POLICY
         if policy not in rsrc_defn.ResourceDefinition.DELETION_POLICIES:
             msg = _('Invalid deletion policy "%s"') % policy
-            raise exception.StackValidationFailed(message=msg)
+            raise exception.StackValidationFailed(message=msg, path=path)
 
         if policy == rsrc_defn.ResourceDefinition.SNAPSHOT:
             if not callable(getattr(cls, 'handle_snapshot_delete', None)):
                 msg = _('"%s" deletion policy not supported') % policy
-                raise exception.StackValidationFailed(message=msg)
+                raise exception.StackValidationFailed(message=msg, path=path)
 
     def _update_replacement_data(self, template_id):
         # Update the replacement resource's needed_by and replaces

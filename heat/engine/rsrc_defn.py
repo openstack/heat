@@ -204,6 +204,15 @@ class ResourceDefinition(object):
             external_id=reparse_snippet(self._external_id),
             condition=self._condition)
 
+    def validate(self):
+        """Validate intrinsic functions that appear in the definition."""
+        function.validate(self._properties, PROPERTIES)
+        function.validate(self._metadata, METADATA)
+        function.validate(self._depends, DEPENDS_ON)
+        function.validate(self._deletion_policy, DELETION_POLICY)
+        function.validate(self._update_policy, UPDATE_POLICY)
+        function.validate(self._external_id, EXTERNAL_ID)
+
     def dep_attrs(self, resource_name, load_all=False):
         """Iterate over attributes of a given resource that this references.
 

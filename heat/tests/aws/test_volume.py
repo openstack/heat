@@ -168,6 +168,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.m.ReplayAll()
 
         stack = utils.parse_stack(self.t, stack_name=stack_name)
+        stack._update_all_resource_data(True, False)
 
         rsrc = stack['DataVolume']
         self.assertIsNone(rsrc.validate())
@@ -740,7 +741,7 @@ class VolumeTest(vt_base.BaseVolumeTest):
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.m.VerifyAll()
 
-    def test_vaildate_deletion_policy(self):
+    def test_validate_deletion_policy(self):
         cfg.CONF.set_override('backups_enabled', False, group='volumes')
         stack_name = 'test_volume_validate_deletion_policy'
         self.t['Resources']['DataVolume']['DeletionPolicy'] = 'Snapshot'
