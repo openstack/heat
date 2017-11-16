@@ -18,6 +18,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import support
 
 
@@ -105,8 +106,8 @@ class JobBinary(resource.Resource):
                 and uuidutils.is_uuid_like(url[len("internal-db://"):]))):
             msg = _("%s is not a valid job location.") % url
             raise exception.StackValidationFailed(
-                path=[self.stack.t.get_section_name('resources'), self.name,
-                      self.stack.t.get_section_name('properties')],
+                path=[self.stack.t.RESOURCES, self.name,
+                      self.stack.t.get_section_name(rsrc_defn.PROPERTIES)],
                 message=msg)
 
     def handle_create(self):

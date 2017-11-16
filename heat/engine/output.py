@@ -19,6 +19,15 @@ from heat.common import exception
 from heat.engine import function
 
 
+# Field names that can be passed to Template.get_section_name() in order to
+# determine the appropriate name for a particular template format.
+FIELDS = (
+    VALUE, DESCRIPTION,
+) = (
+    'Value', 'Description',
+)
+
+
 class OutputDefinition(object):
     """A definition of a stack output, independent of any template format."""
 
@@ -30,9 +39,9 @@ class OutputDefinition(object):
         self._deps = None
         self._all_dep_attrs = None
 
-    def validate(self, path=''):
+    def validate(self):
         """Validate the output value without resolving it."""
-        function.validate(self._value, path)
+        function.validate(self._value, VALUE)
 
     def required_resource_names(self):
         if self._deps is None:

@@ -213,7 +213,16 @@ class Template(collections.Mapping):
 
     @abc.abstractmethod
     def get_section_name(self, section):
-        """Return a correct section name."""
+        """Get the name of a field within a resource or output definition.
+
+        Return the name of the given field (specified by the constants given
+        in heat.engine.rsrc_defn and heat.engine.output) in the template
+        format. This is used in error reporting to help users find the
+        location of errors in the template.
+
+        Note that 'section' here does not refer to a top-level section of the
+        template (like parameters, resources, &c.) as it does everywhere else.
+        """
         pass
 
     @abc.abstractmethod

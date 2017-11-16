@@ -26,6 +26,17 @@ from heat.engine import properties
 __all__ = ['ResourceDefinition']
 
 
+# Field names that can be passed to Template.get_section_name() in order to
+# determine the appropriate name for a particular template format.
+FIELDS = (
+    TYPE, PROPERTIES, METADATA, DELETION_POLICY, UPDATE_POLICY,
+    DEPENDS_ON, DESCRIPTION, EXTERNAL_ID,
+) = (
+    'Type', 'Properties', 'Metadata', 'DeletionPolicy', 'UpdatePolicy',
+    'DependsOn', 'Description', 'external_id',
+)
+
+
 @repr_wrapper
 class ResourceDefinition(object):
     """A definition of a resource, independent of any template format."""
@@ -230,9 +241,9 @@ class ResourceDefinition(object):
                 return '.'.join([self.name, section])
 
             prop_deps = function.dependencies(self._properties,
-                                              path('Properties'))
+                                              path(PROPERTIES))
             metadata_deps = function.dependencies(self._metadata,
-                                                  path('Metadata'))
+                                                  path(METADATA))
             implicit_depends = six.moves.map(lambda rp: rp.name,
                                              itertools.chain(prop_deps,
                                                              metadata_deps))
@@ -282,7 +293,7 @@ class ResourceDefinition(object):
         """
         props = properties.Properties(schema, self._properties or {},
                                       function.resolve, context=context,
-                                      section='Properties')
+                                      section=PROPERTIES)
         props.update_translation(self._rules, self._client_resolve)
         return props
 
@@ -301,7 +312,7 @@ class ResourceDefinition(object):
         """
         props = properties.Properties(schema, self._update_policy or {},
                                       function.resolve, context=context,
-                                      section='UpdatePolicy')
+                                      section=UPDATE_POLICY)
         props.update_translation(self._rules, self._client_resolve)
         return props
 

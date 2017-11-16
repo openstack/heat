@@ -904,13 +904,15 @@ class Stack(collections.Mapping):
 
         for op_name, output in six.iteritems(self.outputs):
             try:
-                path = '.'.join([self.t.OUTPUTS, op_name,
-                                 self.t.OUTPUT_VALUE])
-                output.validate(path)
-            except exception.StackValidationFailed:
-                raise
-            except AssertionError:
-                raise
+                output.validate()
+            except exception.StackValidationFailed as ex:
+                path = [self.t.OUTPUTS, op_name,
+                        self.t.get_section_name(ex.path[0])]
+                path.extend(ex.path[1:])
+                raise exception.StackValidationFailed(
+                    error=ex.error,
+                    path=path,
+                    message=ex.error_message)
 
     def requires_deferred_auth(self):
         """Determine whether to perform API requests with deferred auth.

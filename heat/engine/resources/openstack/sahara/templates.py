@@ -24,6 +24,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import rsrc_defn
 from heat.engine import support
 from heat.engine import translation
 
@@ -346,9 +347,9 @@ class SaharaNodeGroupTemplate(resource.Resource):
                     'unsupported': ', '.join(unsupported_processes),
                     'allowed': ', '.join(allowed_processes)})
             raise exception.StackValidationFailed(
-                path=[self.stack.t.get_section_name('resources'),
+                path=[self.stack.t.RESOURCES,
                       self.name,
-                      self.stack.t.get_section_name('properties')],
+                      self.stack.t.get_section_name(rsrc_defn.PROPERTIES)],
                 message=msg)
 
     def parse_live_resource_data(self, resource_properties, resource_data):
