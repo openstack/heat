@@ -864,7 +864,7 @@ class HOTemplateTest(common.HeatTestCase):
 
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.resolve, snippet, tmpl)
-        self.assertIn('.str_replace: "str_replace" parameters must be a'
+        self.assertIn('str_replace: "str_replace" parameters must be a'
                       ' mapping', six.text_type(ex))
 
     def test_str_replace_invalid_param_type_init(self):
@@ -1027,13 +1027,13 @@ class HOTemplateTest(common.HeatTestCase):
         l_tmpl = template.Template(hot_liberty_tpl_empty)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve, snippet, l_tmpl)
-        self.assertIn('.list_join: Incorrect arguments to "list_join"',
+        self.assertIn('list_join: Incorrect arguments to "list_join"',
                       six.text_type(exc))
 
         k_tmpl = template.Template(hot_kilo_tpl_empty)
         exc1 = self.assertRaises(exception.StackValidationFailed,
                                  self.resolve, snippet, k_tmpl)
-        self.assertIn('.list_join: Incorrect arguments to "list_join"',
+        self.assertIn('list_join: Incorrect arguments to "list_join"',
                       six.text_type(exc1))
 
     def test_join_int_invalid(self):
@@ -1041,25 +1041,25 @@ class HOTemplateTest(common.HeatTestCase):
         l_tmpl = template.Template(hot_liberty_tpl_empty)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve, snippet, l_tmpl)
-        self.assertIn('.list_join: Incorrect arguments', six.text_type(exc))
+        self.assertIn('list_join: Incorrect arguments', six.text_type(exc))
 
         k_tmpl = template.Template(hot_kilo_tpl_empty)
         exc1 = self.assertRaises(exception.StackValidationFailed,
                                  self.resolve, snippet, k_tmpl)
-        self.assertIn('.list_join: Incorrect arguments', six.text_type(exc1))
+        self.assertIn('list_join: Incorrect arguments', six.text_type(exc1))
 
     def test_join_invalid_value(self):
         snippet = {'list_join': [',']}
         l_tmpl = template.Template(hot_liberty_tpl_empty)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve, snippet, l_tmpl)
-        self.assertIn('.list_join: Incorrect arguments to "list_join"',
+        self.assertIn('list_join: Incorrect arguments to "list_join"',
                       six.text_type(exc))
 
         k_tmpl = template.Template(hot_kilo_tpl_empty)
         exc1 = self.assertRaises(exception.StackValidationFailed,
                                  self.resolve, snippet, k_tmpl)
-        self.assertIn('.list_join: Incorrect arguments to "list_join"',
+        self.assertIn('list_join: Incorrect arguments to "list_join"',
                       six.text_type(exc1))
 
     def test_join_invalid_multiple(self):
@@ -1269,7 +1269,7 @@ class HOTemplateTest(common.HeatTestCase):
     def test_yaql_non_map_args(self):
         snippet = {'yaql': 'invalid'}
         tmpl = template.Template(hot_newton_tpl_empty)
-        msg = '.yaql: Arguments to "yaql" must be a map.'
+        msg = 'yaql: Arguments to "yaql" must be a map.'
         self.assertRaisesRegex(exception.StackValidationFailed,
                                msg, self.resolve, snippet, tmpl)
 
@@ -1278,7 +1278,7 @@ class HOTemplateTest(common.HeatTestCase):
                    'data': {'var1': [1, 2, 3, 4]}}}
         tmpl = template.Template(hot_newton_tpl_empty)
         yaql = tmpl.parse(None, snippet)
-        regxp = ('.yaql: Bad expression Parse error: unexpected end '
+        regxp = ('yaql: Bad expression Parse error: unexpected end '
                  'of statement.')
         self.assertRaisesRegex(exception.StackValidationFailed, regxp,
                                function.validate, yaql)
@@ -1363,7 +1363,7 @@ class HOTemplateTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.resolve_condition, snippet, tmpl)
 
-        error_msg = ('.equals: Arguments to "equals" must be '
+        error_msg = ('equals: Arguments to "equals" must be '
                      'of the form: [value_1, value_2]')
         self.assertIn(error_msg, six.text_type(exc))
 
@@ -1715,7 +1715,7 @@ resources:
         snippet = {'repeat': {'template': 'this is %var%',
                               'for_each': '%var%'}}
         repeat = tmpl.parse(None, snippet)
-        regxp = ('.repeat: The "for_each" argument to "repeat" '
+        regxp = ('repeat: The "for_each" argument to "repeat" '
                  'must contain a map')
         self.assertRaisesRegex(exception.StackValidationFailed, regxp,
                                function.validate, repeat)
@@ -1968,7 +1968,7 @@ resources:
         snippet = {'Fn::GetAZs': ''}
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(hot_juno_tpl_empty))
-        regxp = '.Fn::GetAZs: The template version is invalid'
+        regxp = 'Fn::GetAZs: The template version is invalid'
         self.assertRaisesRegex(exception.StackValidationFailed,
                                regxp,
                                function.validate,
