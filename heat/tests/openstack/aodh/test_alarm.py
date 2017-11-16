@@ -372,8 +372,9 @@ class AodhAlarmTest(common.HeatTestCase):
             # python 3.4.3 returns another error message
             # so try to handle this by regexp
             msg = ("Property error: Resources.MEMAlarmHigh.Properties.%s: "
-                   "int\(\) argument must be a string(, a bytes-like "
-                   "object)? or a number, not 'list'" % p)
+                   r"int\(\) argument must be a string"
+                   "(, a bytes-like object)?"
+                   " or a number, not 'list'" % p)
             self.assertRaisesRegex(exception.StackValidationFailed,
                                    msg, rsrc.validate)
 

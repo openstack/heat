@@ -137,7 +137,7 @@ class SwiftSignalHandleTest(common.HeatTestCase):
         obj_name = "%s-%s-abcdefghijkl" % (st.name, handle.name)
         regexp = ("http://fake-host.com:8080/v1/AUTH_test_tenant/%s/test_st-"
                   "test_wait_condition_handle-abcdefghijkl"
-                  "\?temp_url_sig=[0-9a-f]{40}&temp_url_expires=[0-9]{10}"
+                  r"\?temp_url_sig=[0-9a-f]{40}&temp_url_expires=[0-9]{10}"
                   % st.id)
         res_id = st.resources['test_wait_condition_handle'].resource_id
         self.assertEqual(res_id, handle.physical_resource_name())
@@ -718,7 +718,7 @@ class SwiftSignalTest(common.HeatTestCase):
         st.create()
         self.assertEqual(('CREATE', 'COMPLETE'), st.state)
         expected = ('http://fake-host.com:8080/v1/AUTH_test_tenant/%s/'
-                    'test_st-test_wait_condition_handle-abcdefghijkl\?temp_'
+                    r'test_st-test_wait_condition_handle-abcdefghijkl\?temp_'
                     'url_sig=[0-9a-f]{40}&temp_url_expires=[0-9]{10}') % st.id
         self.assertThat(handle.FnGetAtt('endpoint'),
                         matchers.MatchesRegex(expected))
@@ -749,7 +749,7 @@ class SwiftSignalTest(common.HeatTestCase):
         self.assertEqual(('CREATE', 'COMPLETE'), st.state)
         expected = ("curl -i -X PUT 'http://fake-host.com:8080/v1/"
                     "AUTH_test_tenant/%s/test_st-test_wait_condition_"
-                    "handle-abcdefghijkl\?temp_url_sig=[0-9a-f]{40}&"
+                    r"handle-abcdefghijkl\?temp_url_sig=[0-9a-f]{40}&"
                     "temp_url_expires=[0-9]{10}'") % st.id
         self.assertThat(handle.FnGetAtt('curl_cli'),
                         matchers.MatchesRegex(expected))

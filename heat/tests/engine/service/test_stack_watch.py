@@ -245,7 +245,7 @@ class StackWatchTest(common.HeatTestCase):
                                       state='NORMAL')
         self.wr.store()
 
-        for state in ["HGJHGJHG", "1234", "!\*(&%"]:
+        for state in ["HGJHGJHG", "1234", "!\\*(&%"]:
             self.assertRaises(ValueError,
                               self.eng.set_watch_state,
                               self.ctx, watch_name="OverrideAlarm2",
@@ -253,7 +253,7 @@ class StackWatchTest(common.HeatTestCase):
 
         calls = [mock.call("HGJHGJHG"),
                  mock.call("1234"),
-                 mock.call("!\*(&%")]
+                 mock.call("!\\*(&%")]
         mock_set.assert_has_calls(calls)
 
     @mock.patch.object(watchrule.WatchRule, 'load')

@@ -116,7 +116,7 @@ Resources:
         self.assert_min('[0-9]', random_string, 1)
         self.assert_min('[A-Z]', random_string, 1)
         self.assert_min('[a-z]', random_string, 20)
-        self.assert_min('[(),\[\]{}]', random_string, 1)
+        self.assert_min(r'[(),\[\]{}]', random_string, 1)
         self.assert_min('[$_]', random_string, 2)
         self.assert_min('@', random_string, 5)
         self.assertEqual(secret3.FnGetRefId(), random_string)
@@ -132,7 +132,7 @@ Resources:
         secret5 = stack['secret5']
         random_string = secret5.FnGetAtt('value')
         self.assertEqual(10, len(random_string))
-        self.assert_min('[(),\[\]{}]', random_string, 1)
+        self.assert_min(r'[(),\[\]{}]', random_string, 1)
         self.assert_min('[$_]', random_string, 2)
         self.assert_min('@', random_string, 5)
         self.assertEqual(secret5.FnGetRefId(), random_string)
