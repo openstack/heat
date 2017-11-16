@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Added a new schema property tags, to parameters, to categorize
+    parameters based on features.

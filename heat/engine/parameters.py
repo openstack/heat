@@ -42,10 +42,10 @@ class Schema(constr.Schema):
 
     KEYS = (
         TYPE, DESCRIPTION, DEFAULT, SCHEMA, CONSTRAINTS, HIDDEN,
-        LABEL, IMMUTABLE
+        LABEL, IMMUTABLE, TAGS,
     ) = (
         'Type', 'Description', 'Default', 'Schema', 'Constraints', 'NoEcho',
-        'Label', 'Immutable'
+        'Label', 'Immutable', 'Tags',
     )
 
     PARAMETER_KEYS = PARAMETER_KEYS
@@ -59,7 +59,8 @@ class Schema(constr.Schema):
     )
 
     def __init__(self, data_type, description=None, default=None, schema=None,
-                 constraints=None, hidden=False, label=None, immutable=False):
+                 constraints=None, hidden=False, label=None, immutable=False,
+                 tags=None):
         super(Schema, self).__init__(data_type=data_type,
                                      description=description,
                                      default=default,
@@ -69,6 +70,7 @@ class Schema(constr.Schema):
                                      label=label,
                                      immutable=immutable)
         self.hidden = hidden
+        self.tags = tags
 
     # Schema class validates default value for lists assuming list type. For
     # comma delimited list string supported in parameters Schema class, the
@@ -127,6 +129,11 @@ class Schema(constr.Schema):
         if cls.TYPE not in schema_dict:
             raise exception.InvalidSchemaError(
                 message=_("Missing parameter type for parameter: %s") %
+                param_name)
+
+        if not isinstance(schema_dict.get(cls.TAGS, []), list):
+            raise exception.InvalidSchemaError(
+                message=_("Tags property should be a list for parameter: %s") %
                 param_name)
 
     @classmethod
@@ -275,6 +282,10 @@ class Parameter(object):
     def label(self):
         """Return the label or param name."""
         return self.schema.label or self.name
+
+    def tags(self):
+        """Return the tags associated with the parameter"""
+        return self.schema.tags or []
 
     def has_default(self):
         """Return whether the parameter has a default value."""

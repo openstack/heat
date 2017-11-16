@@ -524,6 +524,9 @@ def format_validate_parameter(param):
     if param.user_value:
         res[rpc_api.PARAM_VALUE] = param.user_value
 
+    if param.tags():
+        res[rpc_api.PARAM_TAG] = param.tags()
+
     _build_parameter_constraints(res, param)
 
     return res

@@ -437,6 +437,7 @@ default value defined as nested elements.
       constraints:
         <parameter constraints>
       immutable: <true | false>
+      tags: <list of parameter categories>
 
 param name
     The name of the parameter.
@@ -477,6 +478,11 @@ immutable
     Defines whether the parameter is updatable. Stack update fails, if this is
     set to ``true`` and the parameter value is changed.
     This attribute is optional and defaults to ``false``.
+
+tags
+    A list of strings to specify the category of a parameter. This value is
+    used to categorize a parameter so that users can group the parameters.
+    This attribute is optional.
 
 The table below describes all currently supported types with examples:
 
