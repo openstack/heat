@@ -254,6 +254,8 @@ def _add_atomic_key_to_values(values, atomic_key):
         values['atomic_key'] = atomic_key + 1
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     session = context.session
