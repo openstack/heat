@@ -111,50 +111,46 @@ class SoftwareConfigService(object):
 
         metadata_put_url = None
         metadata_queue_id = None
-        metadata_headers = None
         for rd in rs.data:
             if rd.key == 'metadata_put_url':
                 metadata_put_url = rd.value
             if rd.key == 'metadata_queue_id':
                 metadata_queue_id = rd.value
-        if metadata_put_url:
-            data = requests.head(metadata_put_url)
-            etag = data.headers.get('etag')
-            if etag:
-                metadata_headers = {'if-match': etag}
-            else:
-                LOG.warning("Couldn't find existing Swift metadata "
-                            "for server %s", server_id)
 
+        action = _('deployments of server %s') % server_id
+        atomic_key = rs.atomic_key
         rows_updated = db_api.resource_update(
-            cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
+            cnxt, rs.id, {'rsrc_metadata': md}, atomic_key)
         if not rows_updated:
-            LOG.debug('Conflict on deployment metadata update for '
-                      'server %s; retrying', server_id)
-            action = _('deployments of server %s') % server_id
+            LOG.debug('Retrying server %s deployment metadata update',
+                      server_id)
             raise exception.ConcurrentTransaction(action=action)
-        LOG.debug('Updated deployment metadata for server %s', server_id)
+
+        LOG.debug('Updated server %s deployment metadata', server_id)
 
         if metadata_put_url:
             json_md = jsonutils.dumps(md)
-            resp = requests.put(metadata_put_url, json_md,
-                                headers=metadata_headers)
-            if resp.status_code == requests.codes.precondition_failed:
-                LOG.debug('Conflict on Swift deployment update for '
-                          'server %s; retrying', server_id)
-                action = _('deployments of server %s') % server_id
-                raise exception.ConcurrentTransaction(action=action)
-            else:
-                try:
-                    resp.raise_for_status()
-                except requests.HTTPError as exc:
-                    LOG.error('Failed to deliver deployment data to '
-                              'server %s: %s', server_id, exc)
+            resp = requests.put(metadata_put_url, json_md)
+            try:
+                resp.raise_for_status()
+            except requests.HTTPError as exc:
+                LOG.error('Failed to deliver deployment data to '
+                          'server %s: %s', server_id, exc)
         if metadata_queue_id:
             project = stack_user_project_id
             queue = self._get_zaqar_queue(cnxt, rs, project, metadata_queue_id)
             zaqar_plugin = cnxt.clients.client_plugin('zaqar')
             queue.post({'body': md, 'ttl': zaqar_plugin.DEFAULT_TTL})
+
+        # Bump the atomic key again to serialise updates to the data sent to
+        # the server via Swift.
+        if metadata_put_url is not None:
+            rows_updated = db_api.resource_update(cnxt, rs.id, {},
+                                                  atomic_key + 1)
+            if not rows_updated:
+                LOG.debug('Concurrent update to server %s deployments data '
+                          'detected - retrying.', server_id)
+                raise exception.ConcurrentTransaction(action=action)
 
     def _refresh_swift_software_deployment(self, cnxt, sd, deploy_signal_id):
         container, object_name = urlparse.urlparse(
