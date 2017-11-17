@@ -594,7 +594,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             environment_files=environment_files,
             timeout_mins=timeout_mins
         )
-        if expected_status not in ['ROLLBACK_COMPLETE'] and enable_cleanup:
+        if enable_cleanup:
             self.addCleanup(self._stack_delete, name)
 
         stack = self.client.stacks.get(name, resolve_outputs=False)
