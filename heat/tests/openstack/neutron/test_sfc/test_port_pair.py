@@ -147,13 +147,7 @@ class PortPairTest(common.HeatTestCase):
                 'name-updated',
             port_pair.PortPair.DESCRIPTION:
                 'description-updated',
-            port_pair.PortPair.INGRESS:
-                '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            port_pair.PortPair.EGRESS:
-                '6af055d3-26f6-48dd-a597-7611d7e58d35',
-            port_pair.PortPair.SERVICE_FUNCTION_PARAMETERS:
-                {'correlation': None}
-            }
+        }
         self.test_resource.handle_update(json_snippet=None,
                                          tmpl_diff=None,
                                          prop_diff=prop_diff)
@@ -163,7 +157,4 @@ class PortPairTest(common.HeatTestCase):
             {
                 'name': 'name-updated',
                 'description': 'description-updated',
-                'ingress': '6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'egress': '6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'service_function_parameters': {'correlation': None},
             },  self.test_resource.resource_id)
