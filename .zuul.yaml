@@ -131,3 +131,6 @@
     experimental:
       jobs:
         - grenade-heat-multinode
+    experimental-tripleo:
+      jobs:
+        - tripleo-ci-centos-7-ovb-ha-oooq
