@@ -56,14 +56,12 @@
 - job:
     name: heat-functional-convg-mysql-lbaasv2-non-apache
     parent: heat-functional-devstack-base
-    branches: ^(?!stable/newton).*$
     vars:
       use_apache: 0
 
 - job:
     name: heat-functional-convg-mysql-lbaasv2-py35
     parent: heat-functional-devstack-base
-    branches: ^(?!stable/(newton|ocata)).*$
     vars:
       use_python3: 1
 
@@ -81,7 +79,6 @@
     run: playbooks/devstack/grenade/run.yaml
     post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
-    branches: ^(?!(driverfixes|stable/(mitaka|newton))).*$
     required-projects:
       - openstack-dev/grenade
       - openstack-infra/devstack-gate
