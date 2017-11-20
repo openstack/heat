@@ -1746,7 +1746,7 @@ class EngineService(service.ServiceBase):
                 root_stack_identifier = st.identifier()
                 # find all resources associated with a root stack
                 all_r = resource_objects.Resource.get_all_by_root_stack(
-                    cnxt, st.id, None)
+                    cnxt, st.id, None, eager=False)
 
                 # find stacks to the requested nested_depth
                 stack_ids = {r.stack_id for r in six.itervalues(all_r)}

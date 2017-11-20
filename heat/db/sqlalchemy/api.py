@@ -178,9 +178,9 @@ def raw_template_files_get(context, files_id):
 def resource_get(context, resource_id, refresh=False, refresh_data=False,
                  eager=True):
     query = context.session.query(models.Resource)
+    query = query.options(orm.joinedload("data"))
     if eager:
-        query = query.options(orm.joinedload("data")).options(
-            orm.joinedload("rsrc_prop_data"))
+        query = query.options(orm.joinedload("rsrc_prop_data"))
 
     result = query.get(resource_id)
     if not result:
@@ -495,12 +495,16 @@ def resource_get_all_active_by_stack(context, stack_id):
     return dict((res.id, res) for res in results)
 
 
-def resource_get_all_by_root_stack(context, stack_id, filters=None):
+def resource_get_all_by_root_stack(context, stack_id, filters=None,
+                                   eager=True):
     query = context.session.query(
         models.Resource
     ).filter_by(
         root_stack_id=stack_id
     ).options(orm.joinedload("data"))
+
+    if eager:
+        query = query.options(orm.joinedload("rsrc_prop_data"))
 
     query = db_filters.exact_filter(query, models.Resource, filters)
     results = query.all()

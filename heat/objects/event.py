@@ -79,7 +79,7 @@ class Event(
     @property
     def resource_properties(self):
         if self._resource_properties is None:
-            LOG.info('rsrp_prop_data lazy load')
+            LOG.info('rsrc_prop_data lazy load')
             rpd_obj = rpd.ResourcePropertiesData.get_by_id(
                 self._context, self.rsrc_prop_data_id)
             self._resource_properties = rpd_obj.data or {}

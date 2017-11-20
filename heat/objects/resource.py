@@ -164,7 +164,7 @@ class Resource(
     def properties_data(self):
         if (not self._properties_data and
                 self.rsrc_prop_data_id is not None):
-            LOG.info('rsrp_prop_data lazy load')
+            LOG.info('rsrc_prop_data lazy load')
             rpd_obj = rpd.ResourcePropertiesData.get_by_id(
                 self._context, self.rsrc_prop_data_id)
             self._properties_data = rpd_obj.data or {}
@@ -264,11 +264,13 @@ class Resource(
         return dict(resources)
 
     @classmethod
-    def get_all_by_root_stack(cls, context, stack_id, filters, cache=False):
+    def get_all_by_root_stack(cls, context, stack_id, filters, cache=False,
+                              eager=True):
         resources_db = db_api.resource_get_all_by_root_stack(
             context,
             stack_id,
-            filters)
+            filters,
+            eager=eager)
         all = cls._resources_to_dict(context, resources_db)
         if cache:
             context.cache(ResourceCache).set_by_stack_id(all)
