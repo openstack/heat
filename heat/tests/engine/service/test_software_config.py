@@ -692,8 +692,9 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
     @mock.patch.object(db_api, 'resource_update')
     @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(service_software_config.requests, 'put')
+    @mock.patch.object(service_software_config.requests, 'head')
     def test_push_metadata_software_deployments_temp_url(
-            self, put, res_get, res_upd, md_sd):
+            self, head, put, res_get, res_upd, md_sd):
         rs = mock.Mock()
         rs.rsrc_metadata = {'original': 'metadata'}
         rs.id = '1234'
@@ -704,6 +705,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         rs.data = [rd]
         res_get.return_value = rs
         res_upd.return_value = 1
+
+        head_response = mock.Mock()
+        head_response.headers = {'etag': '1234'}
+        head_response.status_code = 200
+        head.return_value = head_response
+
+        put_response = mock.Mock()
+        put_response.status_code = 201
 
         deployments = {'deploy': 'this'}
         md_sd.return_value = deployments
@@ -719,7 +728,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
 
         put.assert_called_once_with(
-            'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
+            'http://192.168.2.2/foo/bar', json.dumps(result_metadata),
+            headers={'if-match': '1234'})
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')

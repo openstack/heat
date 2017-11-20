@@ -108,22 +108,37 @@ class SoftwareConfigService(object):
         deployments = self.metadata_software_deployments(cnxt, server_id)
         md = rs.rsrc_metadata or {}
         md['deployments'] = deployments
-        rows_updated = db_api.resource_update(
-            cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
-        if not rows_updated:
-            action = _('deployments of server %s') % server_id
-            raise exception.ConcurrentTransaction(action=action)
 
         metadata_put_url = None
         metadata_queue_id = None
+        metadata_headers = None
         for rd in rs.data:
             if rd.key == 'metadata_put_url':
                 metadata_put_url = rd.value
             if rd.key == 'metadata_queue_id':
                 metadata_queue_id = rd.value
         if metadata_put_url:
+            data = requests.head(metadata_put_url)
+            etag = data.headers.get('etag')
+            if etag:
+                metadata_headers = {'if-match': etag}
+            else:
+                LOG.warning('Couldn\'t find existing Swift metadata')
+
+        rows_updated = db_api.resource_update(
+            cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
+        if not rows_updated:
+            LOG.debug('Conflict on database deployment update, retrying')
+            action = _('deployments of server %s') % server_id
+            raise exception.ConcurrentTransaction(action=action)
+        if metadata_put_url:
             json_md = jsonutils.dumps(md)
-            requests.put(metadata_put_url, json_md)
+            resp = requests.put(metadata_put_url, json_md,
+                                headers=metadata_headers)
+            if resp.status_code == 412:
+                LOG.debug('Conflict on Swift deployment update, retrying')
+                action = _('deployments of server %s') % server_id
+                raise exception.ConcurrentTransaction(action=action)
         if metadata_queue_id:
             project = stack_user_project_id
             queue = self._get_zaqar_queue(cnxt, rs, project, metadata_queue_id)
