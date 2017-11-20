@@ -1744,12 +1744,12 @@ class EngineService(service.ServiceBase):
 
             if nested_depth:
                 root_stack_identifier = st.identifier()
-                # find all resources associated with a root stack
-                all_r = resource_objects.Resource.get_all_by_root_stack(
-                    cnxt, st.id, None, eager=False)
+                # find all stacks with resources associated with a root stack
+                ResObj = resource_objects.Resource
+                stack_ids = ResObj.get_all_stack_ids_by_root_stack(cnxt,
+                                                                   st.id)
 
                 # find stacks to the requested nested_depth
-                stack_ids = {r.stack_id for r in six.itervalues(all_r)}
                 stack_filters = {
                     'id': stack_ids,
                     'nested_depth': list(range(nested_depth + 1))

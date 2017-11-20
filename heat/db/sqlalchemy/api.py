@@ -496,15 +496,18 @@ def resource_get_all_active_by_stack(context, stack_id):
 
 
 def resource_get_all_by_root_stack(context, stack_id, filters=None,
-                                   eager=True):
+                                   stack_id_only=False):
     query = context.session.query(
         models.Resource
     ).filter_by(
         root_stack_id=stack_id
-    ).options(orm.joinedload("data"))
+    )
 
-    if eager:
-        query = query.options(orm.joinedload("rsrc_prop_data"))
+    if stack_id_only:
+        query = query.options(orm.load_only("id", "stack_id"))
+    else:
+        query = query.options(orm.joinedload("data")).options(
+            orm.joinedload("rsrc_prop_data"))
 
     query = db_filters.exact_filter(query, models.Resource, filters)
     results = query.all()
