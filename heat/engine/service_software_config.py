@@ -123,22 +123,33 @@ class SoftwareConfigService(object):
             if etag:
                 metadata_headers = {'if-match': etag}
             else:
-                LOG.warning('Couldn\'t find existing Swift metadata')
+                LOG.warning("Couldn't find existing Swift metadata "
+                            "for server %s", server_id)
 
         rows_updated = db_api.resource_update(
             cnxt, rs.id, {'rsrc_metadata': md}, rs.atomic_key)
         if not rows_updated:
-            LOG.debug('Conflict on database deployment update, retrying')
+            LOG.debug('Conflict on deployment metadata update for '
+                      'server %s; retrying', server_id)
             action = _('deployments of server %s') % server_id
             raise exception.ConcurrentTransaction(action=action)
+        LOG.debug('Updated deployment metadata for server %s', server_id)
+
         if metadata_put_url:
             json_md = jsonutils.dumps(md)
             resp = requests.put(metadata_put_url, json_md,
                                 headers=metadata_headers)
-            if resp.status_code == 412:
-                LOG.debug('Conflict on Swift deployment update, retrying')
+            if resp.status_code == requests.codes.precondition_failed:
+                LOG.debug('Conflict on Swift deployment update for '
+                          'server %s; retrying', server_id)
                 action = _('deployments of server %s') % server_id
                 raise exception.ConcurrentTransaction(action=action)
+            else:
+                try:
+                    resp.raise_for_status()
+                except requests.HTTPError as exc:
+                    LOG.error('Failed to deliver deployment data to '
+                              'server %s: %s', server_id, exc)
         if metadata_queue_id:
             project = stack_user_project_id
             queue = self._get_zaqar_queue(cnxt, rs, project, metadata_queue_id)
