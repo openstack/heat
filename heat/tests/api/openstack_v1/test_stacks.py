@@ -473,6 +473,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.controller.index(req, tenant_id=self.tenant)
         mock_enforce.assert_called_with(action='global_index',
                                         scope=self.controller.REQUEST_SCOPE,
+                                        is_registered_policy=False,
                                         context=self.context)
 
     def test_global_index_uses_admin_context(self, mock_enforce):
