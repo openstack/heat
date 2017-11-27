@@ -35,6 +35,7 @@ class SaharaUtilsTest(common.HeatTestCase):
         self.sahara_plugin.client = lambda: self.sahara_client
         self.my_image = mock.MagicMock()
         self.my_plugin = mock.MagicMock()
+        self.my_jobtype = mock.MagicMock()
 
     def test_get_image_id(self):
         """Tests the get_image_id function."""
@@ -155,12 +156,31 @@ class SaharaUtilsTest(common.HeatTestCase):
         calls = [mock.call(plugin_name), mock.call(plugin_name)]
         self.sahara_client.plugins.get.assert_has_calls(calls)
 
+    def test_get_job_type(self):
+        """Tests the get_job_type function."""
+        job_type = 'myfakejobtype'
+        self.my_jobtype = job_type
+
+        def side_effect(name):
+            if name == job_type:
+                return self.my_jobtype
+            else:
+                raise sahara_base.APIException(error_code=404,
+                                               error_name='NOT_FOUND')
+
+        self.sahara_client.job_types.find_unique.side_effect = side_effect
+        self.assertEqual(self.sahara_plugin.get_job_type(job_type), job_type)
+        self.assertRaises(exception.EntityNotFound,
+                          self.sahara_plugin.get_job_type, 'nojobtype')
+        calls = [mock.call(name=job_type), mock.call(name='nojobtype')]
+        self.sahara_client.job_types.find_unique.assert_has_calls(calls)
+
 
 class SaharaConstraintsTest(common.HeatTestCase):
     scenarios = [
         ('JobType', dict(
             constraint=sahara.JobTypeConstraint(),
-            resource_name='job_types'
+            resource_name=None
         )),
         ('ClusterTemplate', dict(
             constraint=sahara.ClusterTemplateConstraint(),
@@ -196,6 +216,7 @@ class SaharaConstraintsTest(common.HeatTestCase):
         cl_plgn.find_resource_by_name_or_id = self.mock_get
         cl_plgn.get_image_id = self.mock_get
         cl_plgn.get_plugin_id = self.mock_get
+        cl_plgn.get_job_type = self.mock_get
 
     def test_validation(self):
         self.mock_get.return_value = "fake_val"
