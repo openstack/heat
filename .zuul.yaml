@@ -1,8 +1,8 @@
 - job:
     name: heat-functional-devstack-base
     parent: legacy-dsvm-base
-    run: playbooks/devstack/functional/run
-    post-run: playbooks/devstack/functional/post
+    run: playbooks/devstack/functional/run.yaml
+    post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
@@ -78,8 +78,8 @@
 - job:
     name: grenade-heat
     parent: legacy-dsvm-base
-    run: playbooks/devstack/grenade/run
-    post-run: playbooks/devstack/functional/post
+    run: playbooks/devstack/grenade/run.yaml
+    post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
     branches: ^(?!(driverfixes|stable/(mitaka|newton))).*$
     required-projects:
@@ -105,7 +105,7 @@
     nodeset: ubuntu-xenial-2-node
     roles:
       - zuul: openstack-infra/zuul-jobs
-    pre-run: playbooks/devstack/multinode-networking/pre
+    pre-run: playbooks/devstack/multinode-networking/pre.yaml
     voting: false
     vars:
       topology: multinode
