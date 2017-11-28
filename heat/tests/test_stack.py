@@ -382,6 +382,31 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('A', all_resources[0].name)
 
     @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
+    def test_iter_resources_with_nonexistent_template(self, mock_db_call):
+        tpl = {'HeatTemplateFormatVersion': '2012-12-12',
+               'Resources':
+                   {'A': {'Type': 'GenericResourceType'},
+                    'B': {'Type': 'GenericResourceType'}}}
+        self.stack = stack.Stack(self.ctx, 'test_stack',
+                                 template.Template(tpl),
+                                 status_reason='blarg')
+
+        self.stack.store()
+
+        mock_rsc_a = mock.MagicMock(current_template_id=self.stack.t.id)
+        mock_rsc_a.name = 'A'
+        mock_rsc_b = mock.MagicMock(current_template_id=self.stack.t.id + 1)
+        mock_rsc_b.name = 'B'
+        mock_db_call.return_value = {
+            'A': mock_rsc_a,
+            'B': mock_rsc_b
+        }
+
+        all_resources = list(self.stack.iter_resources())
+
+        self.assertEqual(1, len(all_resources))
+
+    @mock.patch.object(resource_objects.Resource, 'get_all_by_stack')
     def test_iter_resources_nested_with_filters(self, mock_db_call):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Resources':

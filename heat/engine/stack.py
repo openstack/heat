@@ -389,7 +389,10 @@ class Stack(collections.Mapping):
         elif stk_def_cache and tid in stk_def_cache:
             stk_def = stk_def_cache[tid]
         else:
-            t = tmpl.Template.load(self.context, tid)
+            try:
+                t = tmpl.Template.load(self.context, tid)
+            except exception.NotFound:
+                return None
             stk_def = self.defn.clone_with_new_template(t,
                                                         self.identifier())
             if stk_def_cache is not None:
