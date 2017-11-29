@@ -12,6 +12,7 @@
       - openstack/ceilometer
       - openstack/devstack-plugin-amqp1
       - openstack/heat
+      - openstack/heat-tempest-plugin
       - openstack/neutron
       - openstack/neutron-lbaas
       - openstack/oslo.messaging
