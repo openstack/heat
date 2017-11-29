@@ -30,6 +30,7 @@
           cat << 'EOF' >>"/tmp/dg-local.conf"
           [[local|localrc]]
           enable_plugin heat git://git.openstack.org/openstack/heat
+          TEMPEST_PLUGINS+=' ../heat-tempest-plugin'
           EOF
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
@@ -40,6 +41,7 @@
           set -e
           set -x
           export PROJECTS="openstack-dev/grenade $PROJECTS"
+          export PROJECTS="openstack/heat-tempest-plugin $PROJECTS"
           export PYTHONUNBUFFERED=true
           export GRENADE_PLUGINRC="enable_grenade_plugin heat https://git.openstack.org/openstack/heat"
           export DEVSTACK_GATE_NEUTRON=1

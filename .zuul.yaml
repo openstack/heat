@@ -87,6 +87,7 @@
       - openstack-dev/grenade
       - openstack-infra/devstack-gate
       - openstack/heat
+      - openstack/heat-tempest-plugin
     irrelevant-files:
       - ^(test-|)requirements.txt$
       - ^.*\.rst$
