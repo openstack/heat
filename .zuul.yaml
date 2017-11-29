@@ -1,8 +1,8 @@
 - job:
     name: heat-functional-devstack-base
     parent: legacy-dsvm-base
-    run: playbooks/devstack/functional/run
-    post-run: playbooks/devstack/functional/post
+    run: playbooks/devstack/functional/run.yaml
+    post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
     required-projects:
       - openstack-infra/devstack-gate
