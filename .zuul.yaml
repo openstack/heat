@@ -117,6 +117,7 @@
     check:
       jobs:
         - grenade-heat
+        - grenade-heat-multinode
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-amqp1
@@ -130,9 +131,6 @@
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
-    experimental:
-      jobs:
-        - grenade-heat-multinode
     experimental-tripleo:
       jobs:
         - tripleo-ci-centos-7-ovb-ha-oooq
