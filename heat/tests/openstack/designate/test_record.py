@@ -40,8 +40,6 @@ sample_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Designate::Record'
-
 
 class DesignateRecordTest(common.HeatTestCase):
 

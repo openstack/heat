@@ -39,8 +39,6 @@ sample_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Monasca::Notification'
-
 
 class MonascaNotificationTest(common.HeatTestCase):
 

@@ -39,8 +39,6 @@ keystone_service_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::Service'
-
 
 class KeystoneServiceTest(common.HeatTestCase):
     def setUp(self):

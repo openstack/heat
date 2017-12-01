@@ -38,8 +38,6 @@ sample_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Designate::Domain'
-
 
 class DesignateDomainTest(common.HeatTestCase):
 

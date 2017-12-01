@@ -38,8 +38,6 @@ port_chain_template = {
         }
     }
 
-RESOURCE_TYPE = 'OS::Neutron::PortChain'
-
 
 class PortChainTest(common.HeatTestCase):
 

@@ -34,8 +34,6 @@ keystone_role_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::Role'
-
 
 class KeystoneRoleTest(common.HeatTestCase):
     def setUp(self):

@@ -35,8 +35,6 @@ sample_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Neutron::PortPair'
-
 
 class PortPairTest(common.HeatTestCase):
 

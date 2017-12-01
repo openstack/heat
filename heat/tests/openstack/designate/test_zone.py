@@ -38,8 +38,6 @@ sample_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Designate::Zone'
-
 
 class DesignateZoneTest(common.HeatTestCase):
 

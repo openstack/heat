@@ -37,8 +37,6 @@ keystone_project_template = {
     }
 }
 
-RESOURCE_TYPE = 'OS::Keystone::Project'
-
 
 class KeystoneProjectTest(common.HeatTestCase):
     def setUp(self):
