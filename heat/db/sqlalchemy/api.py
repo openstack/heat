@@ -18,6 +18,7 @@ import random
 
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
+from oslo_db import exception as db_exception
 from oslo_db import options
 from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
@@ -770,8 +771,13 @@ def stack_delete(context, stack_id):
         delete_softly(context, s)
 
 
+def _is_duplicate_error(exc):
+    return isinstance(exc, db_exception.DBDuplicateEntry)
+
+
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+                           retry_interval=0.5, inc_retry_interval=True,
+                           exception_checker=_is_duplicate_error)
 def stack_lock_create(context, stack_id, engine_id):
     with db_context.writer.independent.using(context) as session:
         lock = session.query(models.StackLock).get(stack_id)

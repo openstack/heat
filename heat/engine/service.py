@@ -2446,15 +2446,17 @@ class EngineService(service.ServiceBase):
                 service_objects.Service.delete(cnxt, service_ref['id'])
 
     def reset_stack_status(self):
-        cnxt = context.get_admin_context()
         filters = {
             'status': parser.Stack.IN_PROGRESS,
             'convergence': False
         }
-        stacks = stack_object.Stack.get_all(cnxt,
+        stacks = stack_object.Stack.get_all(context.get_admin_context(),
                                             filters=filters,
                                             show_nested=True)
         for s in stacks:
+            # Build one context per stack, so that it can safely be passed to
+            # to thread.
+            cnxt = context.get_admin_context()
             stack_id = s.id
             lock = stack_lock.StackLock(cnxt, stack_id, self.engine_id)
             engine_id = lock.get_engine_id()
