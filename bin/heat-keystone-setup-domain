@@ -29,7 +29,9 @@ DEBUG = False
 USERNAME = os.environ.get('OS_USERNAME')
 PASSWORD = os.environ.get('OS_PASSWORD')
 AUTH_URL = os.environ.get('OS_AUTH_URL', '').replace('v2.0', 'v3')
-TENANT_NAME = os.environ.get('OS_TENANT_NAME')
+PROJECT_NAME = os.environ.get('OS_PROJECT_NAME')
+USER_DOMAIN_NAME = os.environ.get('OS_USER_DOMAIN_NAME')
+PROJECT_DOMAIN_NAME = os.environ.get('OS_PROJECT_DOMAIN_NAME')
 
 opts = [
     cfg.StrOpt('stack-user-domain-name',
@@ -82,9 +84,6 @@ HEAT_DOMAIN_PASSWORD = os.environ.get('HEAT_DOMAIN_PASSWORD',
                                       cfg.CONF.stack_domain_admin_password)
 HEAT_DOMAIN_DESCRIPTION = 'Contains users and projects created by heat'
 
-logger.debug("USERNAME=%s" % USERNAME)
-logger.debug("AUTH_URL=%s" % AUTH_URL)
-
 CACERT = os.environ.get('OS_CACERT', cfg.CONF.os_cacert)
 CERT = os.environ.get('OS_CERT', cfg.CONF.os_cert)
 KEY = os.environ.get('OS_KEY', cfg.CONF.os_key)
@@ -98,8 +97,11 @@ def main():
         'password': PASSWORD,
         'auth_url': AUTH_URL,
         'endpoint': AUTH_URL,
-        'tenant_name': TENANT_NAME
+        'project_name': PROJECT_NAME,
+        'user_domain_name': USER_DOMAIN_NAME,
+        'project_domain_name': PROJECT_DOMAIN_NAME
     }
+
 
     if insecure:
         client_kwargs['verify'] = False
