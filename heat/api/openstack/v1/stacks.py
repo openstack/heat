@@ -168,7 +168,8 @@ class StackController(object):
 
     Implements the API actions.
     """
-    # Define request scope (must match what is in policy.json)
+    # Define request scope (must match what is in policy.json or policies in
+    # code)
     REQUEST_SCOPE = 'stacks'
 
     def __init__(self, options):
@@ -329,11 +330,11 @@ class StackController(object):
                                       count=count,
                                       include_project=cnxt.is_admin)
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def global_index(self, req):
         return self._index(req, use_admin_cnxt=True)
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def index(self, req):
         """Lists summary information for all stacks."""
         global_tenant = False
@@ -348,14 +349,14 @@ class StackController(object):
 
         return self._index(req)
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def detail(self, req):
         """Lists detailed information for all stacks."""
         stacks = self.rpc_client.list_stacks(req.context)
 
         return {'stacks': [stacks_view.format_stack(req, s) for s in stacks]}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def preview(self, req, body):
         """Preview the outcome of a template and its params."""
 
@@ -389,7 +390,7 @@ class StackController(object):
             raise exc.HTTPBadRequest(six.text_type(msg))
         return args
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def create(self, req, body):
         """Create a new stack."""
         data = InstantiationData(body)
@@ -410,7 +411,7 @@ class StackController(object):
         )
         return {'stack': formatted_stack}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def lookup(self, req, stack_name, path='', body=None):
         """Redirect to the canonical URL for a stack."""
         try:
@@ -429,7 +430,7 @@ class StackController(object):
 
         raise exc.HTTPFound(location=location)
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def show(self, req, identity):
         """Gets detailed information for a stack."""
         params = req.params
@@ -450,7 +451,7 @@ class StackController(object):
 
         return {'stack': stacks_view.format_stack(req, stack)}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def template(self, req, identity):
         """Get the template body for an existing stack."""
 
@@ -460,19 +461,19 @@ class StackController(object):
         # TODO(zaneb): always set Content-type to application/json
         return templ
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def environment(self, req, identity):
         """Get the environment for an existing stack."""
         env = self.rpc_client.get_environment(req.context, identity)
 
         return env
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def files(self, req, identity):
         """Get the files for an existing stack."""
         return self.rpc_client.get_files(req.context, identity)
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def update(self, req, identity, body):
         """Update an existing stack with a new template and/or parameters."""
         data = InstantiationData(body)
@@ -489,7 +490,7 @@ class StackController(object):
 
         raise exc.HTTPAccepted()
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def update_patch(self, req, identity, body):
         """Update an existing stack with a new template.
 
@@ -518,7 +519,7 @@ class StackController(object):
         if p_name in params:
             return self._extract_bool_param(p_name, params[p_name])
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def preview_update(self, req, identity, body):
         """Preview update for existing stack with a new template/parameters."""
         data = InstantiationData(body)
@@ -538,7 +539,7 @@ class StackController(object):
 
         return {'resource_changes': changes}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def preview_update_patch(self, req, identity, body):
         """Preview PATCH update for existing stack."""
         data = InstantiationData(body, patch=True)
@@ -558,7 +559,7 @@ class StackController(object):
 
         return {'resource_changes': changes}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def delete(self, req, identity):
         """Delete the specified stack."""
 
@@ -567,7 +568,7 @@ class StackController(object):
                                      cast=False)
         raise exc.HTTPNoContent()
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def abandon(self, req, identity):
         """Abandons specified stack.
 
@@ -577,7 +578,7 @@ class StackController(object):
         return self.rpc_client.abandon_stack(req.context,
                                              identity)
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def export(self, req, identity):
         """Export specified stack.
 
@@ -585,7 +586,7 @@ class StackController(object):
         """
         return self.rpc_client.export_stack(req.context, identity)
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def validate_template(self, req, body):
         """Implements the ValidateTemplate API action.
 
@@ -623,7 +624,7 @@ class StackController(object):
 
         return result
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def list_resource_types(self, req):
         """Returns a resource types list which may be used in template."""
         support_status = req.params.get('support_status')
@@ -646,7 +647,7 @@ class StackController(object):
                 heat_version=version,
                 with_description=with_description)}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def list_template_versions(self, req):
         """Returns a list of available template versions."""
         return {
@@ -654,7 +655,7 @@ class StackController(object):
             self.rpc_client.list_template_versions(req.context)
         }
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def list_template_functions(self, req, template_version):
         """Returns a list of available functions in a given template."""
         if req.params.get('with_condition_func') is not None:
@@ -671,14 +672,14 @@ class StackController(object):
                                                     with_condition)
         }
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def resource_schema(self, req, type_name, with_description=False):
         """Returns the schema of the given resource type."""
         return self.rpc_client.resource_schema(
             req.context, type_name,
             self._extract_bool_param('with_description', with_description))
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def generate_template(self, req, type_name):
         """Generates a template based on the specified type."""
         template_type = 'cfn'
@@ -694,42 +695,42 @@ class StackController(object):
                                                  type_name,
                                                  template_type)
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def snapshot(self, req, identity, body):
         name = body.get('name')
         return self.rpc_client.stack_snapshot(req.context, identity, name)
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def show_snapshot(self, req, identity, snapshot_id):
         snapshot = self.rpc_client.show_snapshot(
             req.context, identity, snapshot_id)
         return {'snapshot': snapshot}
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def delete_snapshot(self, req, identity, snapshot_id):
         self.rpc_client.delete_snapshot(req.context, identity, snapshot_id)
         raise exc.HTTPNoContent()
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def list_snapshots(self, req, identity):
         return {
             'snapshots': self.rpc_client.stack_list_snapshots(
                 req.context, identity)
         }
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def restore_snapshot(self, req, identity, snapshot_id):
         self.rpc_client.stack_restore(req.context, identity, snapshot_id)
         raise exc.HTTPAccepted()
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def list_outputs(self, req, identity):
         return {
             'outputs': self.rpc_client.list_outputs(
                 req.context, identity)
         }
 
-    @util.identified_stack
+    @util.registered_identified_stack
     def show_output(self, req, identity, output_key):
         return {'output': self.rpc_client.show_output(req.context,
                                                       identity,

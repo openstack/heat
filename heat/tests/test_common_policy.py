@@ -159,8 +159,7 @@ class TestPolicyEnforcer(common.HeatTestCase):
         self.assertFalse(enforcer.enforce(ctx, action))
 
     def test_check_admin(self):
-        enforcer = policy.Enforcer(
-            policy_file=self.get_policy_file('check_admin.json'))
+        enforcer = policy.Enforcer()
 
         ctx = utils.dummy_context(roles=[])
         self.assertFalse(enforcer.check_is_admin(ctx))
@@ -174,11 +173,6 @@ class TestPolicyEnforcer(common.HeatTestCase):
     def test_enforce_creds(self):
         enforcer = policy.Enforcer()
         ctx = utils.dummy_context(roles=['admin'])
-        self.m.StubOutWithMock(base_policy.Enforcer, 'enforce')
-        base_policy.Enforcer.enforce('context_is_admin', {},
-                                     ctx.to_policy_values(),
-                                     False, exc=None).AndReturn(True)
-        self.m.ReplayAll()
         self.assertTrue(enforcer.check_is_admin(ctx))
 
     def test_resource_default_rule(self):

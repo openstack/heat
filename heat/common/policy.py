@@ -108,7 +108,8 @@ class Enforcer(object):
            :param context: Heat request context
            :returns: A non-False value if the user is admin according to policy
         """
-        return self._check(context, 'context_is_admin', target={}, exc=None)
+        return self._check(context, 'context_is_admin', target={}, exc=None,
+                           is_registered_policy=True)
 
 
 def get_enforcer():

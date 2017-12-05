@@ -14,9 +14,11 @@
 import itertools
 
 from heat.policies import base
+from heat.policies import stacks
 
 
 def list_rules():
     return itertools.chain(
         base.list_rules(),
+        stacks.list_rules(),
     )
