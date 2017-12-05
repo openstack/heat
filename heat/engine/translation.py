@@ -197,8 +197,7 @@ class Translation(object):
         return (self.is_active and
                 (key in self._rules or key in self.resolved_translations))
 
-    def translate(self, key, prop_value=None, prop_data=None, validate=False,
-                  template=None):
+    def translate(self, key, prop_value=None, prop_data=None, validate=False):
         if key in self.resolved_translations:
             return self.resolved_translations[key]
 
@@ -212,12 +211,10 @@ class Translation(object):
                 result = None
 
             if rule.rule == TranslationRule.REPLACE:
-                result = self.replace(key, rule, result, prop_data, validate,
-                                      template)
+                result = self.replace(key, rule, result, prop_data, validate)
 
             if rule.rule == TranslationRule.ADD:
-                result = self.add(key, rule, result, prop_data, validate,
-                                  template)
+                result = self.add(key, rule, result, prop_data, validate)
 
             if rule.rule == TranslationRule.RESOLVE:
                 resolved_value = resolve_and_find(result,
@@ -231,7 +228,7 @@ class Translation(object):
         return result
 
     def add(self, key, add_rule, prop_value=None, prop_data=None,
-            validate=False, template=None):
+            validate=False):
         value_path = add_rule.get_value_absolute_path()
         if prop_value is None:
             prop_value = []
@@ -252,8 +249,7 @@ class Translation(object):
             value = get_value(value_path,
                               prop_data if add_rule.value_name else
                               self.properties,
-                              validate,
-                              template)
+                              validate)
             self.is_active = True
             if value is not None:
                 translation_value.extend(value if isinstance(value, list)
@@ -264,7 +260,7 @@ class Translation(object):
         return translation_value
 
     def replace(self, key, replace_rule, prop_value=None, prop_data=None,
-                validate=False, template=None):
+                validate=False):
         value = None
         value_path = replace_rule.get_value_absolute_path(full_value_name=True)
         short_path = replace_rule.get_value_absolute_path()
@@ -280,7 +276,7 @@ class Translation(object):
                 subpath = value_path
             props = prop_data if replace_rule.value_name else self.properties
             self.is_active = False
-            value = get_value(subpath, props, validate, template)
+            value = get_value(subpath, props, validate)
             self.is_active = True
 
             if self.has_translation(prop_path):
@@ -304,7 +300,7 @@ class Translation(object):
         return result
 
 
-def get_value(path, props, validate=False, template=None):
+def get_value(path, props, validate=False):
     if not props:
         return None
 
@@ -312,7 +308,7 @@ def get_value(path, props, validate=False, template=None):
     if isinstance(props, dict):
         prop = props.get(key)
     else:
-        prop = props._get_property_value(key, validate, template)
+        prop = props._get_property_value(key, validate)
     if len(path[1:]) == 0:
         return prop
     elif prop is None:
