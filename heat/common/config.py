@@ -281,6 +281,7 @@ engine_opts = [
 rpc_opts = [
     cfg.StrOpt('host',
                default=socket.gethostname(),
+               sample_default='<Hostname>',
                help=_('Name of the engine node. '
                       'This can be an opaque identifier. '
                       'It is not necessarily a hostname, FQDN, '
