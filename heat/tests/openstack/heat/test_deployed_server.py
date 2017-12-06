@@ -128,9 +128,6 @@ resources:
 
 
 class DeployedServersTest(common.HeatTestCase):
-    def setUp(self):
-        super(DeployedServersTest, self).setUp()
-
     def _create_test_server(self, name, override_name=False):
         server = self._setup_test_server(name, override_name)
         scheduler.TaskRunner(server.create)()
