@@ -264,17 +264,23 @@ class Resource(
         return dict(resources)
 
     @classmethod
-    def get_all_by_root_stack(cls, context, stack_id, filters, cache=False,
-                              eager=True):
+    def get_all_by_root_stack(cls, context, stack_id, filters, cache=False):
         resources_db = db_api.resource_get_all_by_root_stack(
             context,
             stack_id,
-            filters,
-            eager=eager)
+            filters)
         all = cls._resources_to_dict(context, resources_db)
         if cache:
             context.cache(ResourceCache).set_by_stack_id(all)
         return all
+
+    @classmethod
+    def get_all_stack_ids_by_root_stack(cls, context, stack_id):
+        resources_db = db_api.resource_get_all_by_root_stack(
+            context,
+            stack_id,
+            stack_id_only=True)
+        return {db_res.stack_id for db_res in six.itervalues(resources_db)}
 
     @classmethod
     def purge_deleted(cls, context, stack_id):
