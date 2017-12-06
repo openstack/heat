@@ -14,6 +14,7 @@
 import itertools
 
 from heat.policies import base
+from heat.policies import resource_types
 from heat.policies import stacks
 
 
@@ -21,4 +22,5 @@ def list_rules():
     return itertools.chain(
         base.list_rules(),
         stacks.list_rules(),
+        resource_types.list_rules(),
     )

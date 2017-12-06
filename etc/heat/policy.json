@@ -47,21 +47,5 @@
     "software_deployments:delete": "rule:deny_stack_user",
     "software_deployments:metadata": "",
 
-    "service:index": "rule:context_is_admin",
-
-    "resource_types:OS::Nova::Flavor": "rule:project_admin",
-    "resource_types:OS::Cinder::EncryptedVolumeType": "rule:project_admin",
-    "resource_types:OS::Cinder::VolumeType": "rule:project_admin",
-    "resource_types:OS::Cinder::Quota": "rule:project_admin",
-    "resource_types:OS::Neutron::Quota": "rule:project_admin",
-    "resource_types:OS::Nova::Quota": "rule:project_admin",
-    "resource_types:OS::Manila::ShareType": "rule:project_admin",
-    "resource_types:OS::Neutron::ProviderNet": "rule:project_admin",
-    "resource_types:OS::Neutron::QoSPolicy": "rule:project_admin",
-    "resource_types:OS::Neutron::QoSBandwidthLimitRule": "rule:project_admin",
-    "resource_types:OS::Neutron::Segment": "rule:project_admin",
-    "resource_types:OS::Nova::HostAggregate": "rule:project_admin",
-    "resource_types:OS::Cinder::QoSSpecs": "rule:project_admin",
-    "resource_types:OS::Cinder::QoSAssociation": "rule:project_admin",
-    "resource_types:OS::Keystone::*": "rule:project_admin"
+    "service:index": "rule:context_is_admin"
 }
