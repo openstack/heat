@@ -25,16 +25,6 @@
     "cloudwatch:PutMetricData": "",
     "cloudwatch:SetAlarmState": "rule:deny_stack_user",
 
-    "actions:action": "rule:deny_stack_user",
-    "build_info:build_info": "rule:deny_stack_user",
-    "events:index": "rule:deny_stack_user",
-    "events:show": "rule:deny_stack_user",
-    "resource:index": "rule:deny_stack_user",
-    "resource:metadata": "",
-    "resource:signal": "",
-    "resource:mark_unhealthy": "rule:deny_stack_user",
-    "resource:show": "rule:deny_stack_user",
-
     "software_configs:global_index": "rule:deny_everybody",
     "software_configs:index": "rule:deny_stack_user",
     "software_configs:create": "rule:deny_stack_user",
@@ -45,7 +35,5 @@
     "software_deployments:show": "rule:deny_stack_user",
     "software_deployments:update": "rule:deny_stack_user",
     "software_deployments:delete": "rule:deny_stack_user",
-    "software_deployments:metadata": "",
-
-    "service:index": "rule:context_is_admin"
+    "software_deployments:metadata": ""
 }
