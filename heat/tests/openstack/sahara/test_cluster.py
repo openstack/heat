@@ -47,6 +47,25 @@ resources:
           access_level: ro
 """
 
+# NOTE(jfreud): the resource name contains an invalid character
+cluster_stack_template_without_name = """
+heat_template_version: 2013-05-23
+description: Hadoop Cluster by Sahara
+resources:
+  lots_of_underscore_name:
+    type: OS::Sahara::Cluster
+    properties:
+      plugin_name: vanilla
+      hadoop_version: 2.3.0
+      cluster_template_id: some_cluster_template_id
+      default_image_id: some_image
+      key_name: admin
+      neutron_management_network: some_network
+      shares:
+        - id: some_share_id
+          access_level: ro
+"""
+
 
 class FakeCluster(object):
     def __init__(self, status='Active'):
@@ -79,10 +98,11 @@ class SaharaClusterTest(common.HeatTestCase):
         self.fake_cl = FakeCluster()
 
         self.t = template_format.parse(cluster_stack_template)
+        self.t2 = template_format.parse(cluster_stack_template_without_name)
 
-    def _init_cluster(self, template):
+    def _init_cluster(self, template, name='super-cluster'):
         self.stack = utils.parse_stack(template)
-        cluster = self.stack['super-cluster']
+        cluster = self.stack[name]
         return cluster
 
     def _create_cluster(self, template):
@@ -109,6 +129,14 @@ class SaharaClusterTest(common.HeatTestCase):
         self.cl_mgr.create.assert_called_once_with(*expected_args,
                                                    **expected_kwargs)
         self.cl_mgr.get.assert_called_once_with(self.fake_cl.id)
+
+    def test_cluster_create_invalid_name(self):
+        cluster = self._init_cluster(self.t2, 'lots_of_underscore_name')
+        self.cl_mgr.create.return_value = self.fake_cl
+        self.cl_mgr.get.return_value = self.fake_cl
+        scheduler.TaskRunner(cluster.create)()
+        name = self.cl_mgr.create.call_args[0][0]
+        self.assertIn('lotsofunderscorename', name)
 
     def test_cluster_create_fails(self):
         cfg.CONF.set_override('action_retry_limit', 0)
