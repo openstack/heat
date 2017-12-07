@@ -47,6 +47,7 @@ class Enforcer(object):
         self.default_rule = default_rule
         self.enforcer = policy.Enforcer(
             CONF, default_rule=default_rule, policy_file=policy_file)
+        self.log_not_registered = True
 
         # register rules
         self.enforcer.register_defaults(policies.list_rules())
@@ -78,8 +79,11 @@ class Enforcer(object):
                                                do_raise=do_raise,
                                                exc=exc, action=rule)
             except policy.PolicyNotRegistered:
-                with excutils.save_and_reraise_exception():
-                    LOG.exception(_('Policy not registered.'))
+                if self.log_not_registered:
+                    with excutils.save_and_reraise_exception():
+                        LOG.exception(_('Policy not registered.'))
+                else:
+                    raise
         else:
             return self.enforcer.enforce(rule, target, credentials,
                                          do_raise, exc=exc, *args, **kwargs)
@@ -124,6 +128,7 @@ class ResourceEnforcer(Enforcer):
                  **kwargs):
         super(ResourceEnforcer, self).__init__(
             default_rule=default_rule, **kwargs)
+        self.log_not_registered = False
 
     def _enforce(self, context, res_type, scope=None, target=None,
                  is_registered_policy=False):
