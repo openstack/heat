@@ -154,7 +154,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
 
     def check_attach_volume_complete(self, vol_id):
         vol = self.client().volumes.get(vol_id)
-        if vol.status in ('available', 'attaching'):
+        if vol.status in ('available', 'attaching', 'reserved'):
             LOG.debug("Volume %(id)s is being attached - "
                       "volume status: %(status)s",
                       {'id': vol_id, 'status': vol.status})
