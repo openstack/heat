@@ -2409,7 +2409,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(stack.t.id, res.current_template_id)
         # ensure that requires was not updated
         self.assertItemsEqual([2], res.requires)
-        self._assert_resource_lock(res.id, None, None)
+        self._assert_resource_lock(res.id, None, 2)
 
     def test_convergence_update_replace_rollback(self):
         rsrc_def = rsrc_defn.ResourceDefinition('test_res',
