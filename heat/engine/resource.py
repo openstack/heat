@@ -1640,9 +1640,10 @@ class Resource(status.ResourceStatus):
             raise failure
 
         if not needs_update:
+            is_failed = self.status == self.FAILED
             if update_templ_func is not None:
-                update_templ_func(persist=True)
-            if self.status == self.FAILED:
+                update_templ_func(persist=not is_failed)
+            if is_failed:
                 status_reason = _('Update status to COMPLETE for '
                                   'FAILED resource neither update '
                                   'nor replace.')
