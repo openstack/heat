@@ -29,16 +29,10 @@
           export PYTHONUNBUFFERED=true
           services=rabbit,tempest,mysql,dstat,key
           services+=,n-api,n-api-meta,n-cpu,n-cond,n-sch,n-crt
-
-          # TODO(ricolin) replace the usage of ZUUL_BRANCH
-          # placement services mandatory for nova from ocata
-          if [[ "stable/newton" != $ZUUL_BRANCH ]]; then
-             services+=,placement-api,placement-client
-          fi
-
+          services+=,placement-api,placement-client
           services+=,g-api,g-reg
           services+=,c-sch,c-api,c-vol,c-bak
-          services+=,q-svc,q-dhcp,q-meta,q-agt,q-l3
+          services+=,q-svc,q-dhcp,q-meta,q-agt,q-l3,q-trunk
 
           if [ "{{ use_python3 }}" -eq 1 ] ; then
              export DEVSTACK_GATE_USE_PYTHON3=True
@@ -46,10 +40,6 @@
           else
              export DEVSTACK_GATE_USE_PYTHON3=False
              services+=,s-proxy,s-object,s-container,s-account
-          fi
-          # TODO(ricolin) replace the usage of ZUUL_BRANCH
-          if [[ ! "stable/newton stable/ocata" =~ $ZUUL_BRANCH ]]; then
-              services+=,q-trunk
           fi
 
           export DEVSTACK_GATE_NEUTRON=1
