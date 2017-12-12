@@ -947,11 +947,15 @@ class Repeat(function.Function):
         keys, lists = six.moves.zip(*for_each.items())
 
         # use empty list for references(None) else validation will fail
-        values = [[] if value is None else value for value in lists]
         value_lens = []
-        for arg in values:
-            self._valid_arg(arg)
-            value_lens.append(len(arg))
+        values = []
+        for value in lists:
+            if value is None:
+                values.append([])
+            else:
+                self._valid_arg(value)
+                values.append(value)
+                value_lens.append(len(value))
         if not self._nested_loop:
             if len(set(value_lens)) != 1:
                 raise ValueError(_('For %s, the length of for_each values '
