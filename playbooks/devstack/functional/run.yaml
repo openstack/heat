@@ -64,13 +64,13 @@
           # Enable LBaaS V2 plugin
           export PROJECTS="openstack/neutron-lbaas $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin octavia https://git.openstack.org/openstack/octavia"
           # enabling lbaas plugin does not enable the lbaasv2 service, explicitly enable it
-          services+=,q-lbaasv2
+          services+=,q-lbaasv2,octavia,o-cw,o-hk,o-hm,o-api
           export PROJECTS="openstack/barbican $PROJECTS"
           export PROJECTS="openstack/python-barbicanclient $PROJECTS"
           export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin barbican https://git.openstack.org/openstack/barbican"
-          # the lbaas v2 driver choice is in the gate pre test hook
 
           # use heat-tempest-plugin
           export PROJECTS="openstack/heat-tempest-plugin $PROJECTS"
