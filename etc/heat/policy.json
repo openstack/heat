@@ -23,17 +23,5 @@
     "cloudwatch:ListMetrics": "rule:deny_stack_user",
     "cloudwatch:PutMetricAlarm": "rule:deny_stack_user",
     "cloudwatch:PutMetricData": "",
-    "cloudwatch:SetAlarmState": "rule:deny_stack_user",
-
-    "software_configs:global_index": "rule:deny_everybody",
-    "software_configs:index": "rule:deny_stack_user",
-    "software_configs:create": "rule:deny_stack_user",
-    "software_configs:show": "rule:deny_stack_user",
-    "software_configs:delete": "rule:deny_stack_user",
-    "software_deployments:index": "rule:deny_stack_user",
-    "software_deployments:create": "rule:deny_stack_user",
-    "software_deployments:show": "rule:deny_stack_user",
-    "software_deployments:update": "rule:deny_stack_user",
-    "software_deployments:delete": "rule:deny_stack_user",
-    "software_deployments:metadata": ""
+    "cloudwatch:SetAlarmState": "rule:deny_stack_user"
 }

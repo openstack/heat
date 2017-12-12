@@ -34,7 +34,7 @@ class SoftwareDeploymentController(object):
     def default(self, req, **args):
         raise exc.HTTPNotFound()
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def index(self, req):
         """List software deployments."""
         whitelist = {
@@ -44,7 +44,7 @@ class SoftwareDeploymentController(object):
         sds = self.rpc_client.list_software_deployments(req.context, **params)
         return {'software_deployments': sds}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def metadata(self, req, server_id):
         """List software deployments grouped by the group name.
 
@@ -54,14 +54,14 @@ class SoftwareDeploymentController(object):
             req.context, server_id=server_id)
         return {'metadata': sds}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def show(self, req, deployment_id):
         """Gets detailed information for a software deployment."""
         sd = self.rpc_client.show_software_deployment(req.context,
                                                       deployment_id)
         return {'software_deployment': sd}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def create(self, req, body):
         """Create a new software deployment."""
         create_data = dict((k, body.get(k)) for k in (
@@ -72,7 +72,7 @@ class SoftwareDeploymentController(object):
                                                         **create_data)
         return {'software_deployment': sd}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def update(self, req, deployment_id, body):
         """Update an existing software deployment."""
         update_data = dict((k, body.get(k)) for k in (
@@ -84,7 +84,7 @@ class SoftwareDeploymentController(object):
                                                         **update_data)
         return {'software_deployment': sd}
 
-    @util.policy_enforce
+    @util.registered_policy_enforce
     def delete(self, req, deployment_id):
         """Delete an existing software deployment."""
         res = self.rpc_client.delete_software_deployment(req.context,
