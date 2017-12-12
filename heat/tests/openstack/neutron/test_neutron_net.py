@@ -334,7 +334,6 @@ class NeutronNetTest(common.HeatTestCase):
 
         reality = rsrc.get_live_state(rsrc.properties)
         expected = {
-            'name': 'net1-net-wkkl2vwupdee',
             'admin_state_up': True,
             'qos_policy': "some",
             'value_specs': {

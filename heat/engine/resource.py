@@ -2207,6 +2207,13 @@ class Resource(status.ResourceStatus):
         resource_result = {}
         for key in self._update_allowed_properties:
             if key in resource_data:
+                if key == 'name' and resource_properties.get(key) is None:
+                    # We use `physical_resource_name` for name property in some
+                    # resources when name not provided during create, so we
+                    # shouldn't add name in resource_data if it's None in
+                    # property (might just the cases that we using
+                    # `physical_resource_name`).
+                    continue
                 resource_result[key] = resource_data.get(key)
 
         return resource_result
