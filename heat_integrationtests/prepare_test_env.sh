@@ -13,7 +13,8 @@
 # under the License.
 
 # This script creates required cloud resources and sets test options
-# in tempest.conf.
+# in heat_integrationtests.conf and in tempest.conf.
+# Credentials are required for creating nova flavors and glance images.
 
 set -e
 
@@ -23,51 +24,66 @@ source $DEST/devstack/inc/ini-config
 
 set -x
 
-conf_file=$DEST/tempest/etc/tempest.conf
+function _config_iniset {
+    local conf_file=$1
 
-iniset_multiline $conf_file service_available heat_plugin True
+    source $DEST/devstack/openrc demo demo
+    # user creds
+    iniset $conf_file heat_plugin username $OS_USERNAME
+    iniset $conf_file heat_plugin password $OS_PASSWORD
+    iniset $conf_file heat_plugin project_name $OS_PROJECT_NAME
+    iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
+    iniset $conf_file heat_plugin user_domain_id $OS_USER_DOMAIN_ID
+    iniset $conf_file heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
+    iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
+    iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
+    iniset $conf_file heat_plugin region $OS_REGION_NAME
+    iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
 
-source $DEST/devstack/openrc demo demo
-# user creds
-iniset $conf_file heat_plugin username $OS_USERNAME
-iniset $conf_file heat_plugin password $OS_PASSWORD
-iniset $conf_file heat_plugin project_name $OS_PROJECT_NAME
-iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
-iniset $conf_file heat_plugin user_domain_id $OS_USER_DOMAIN_ID
-iniset $conf_file heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
-iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
-iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
-iniset $conf_file heat_plugin region $OS_REGION_NAME
-iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
+    source $DEST/devstack/openrc admin admin
+    iniset $conf_file heat_plugin admin_username $OS_USERNAME
+    iniset $conf_file heat_plugin admin_password $OS_PASSWORD
 
-source $DEST/devstack/openrc admin admin
-iniset $conf_file heat_plugin admin_username $OS_USERNAME
-iniset $conf_file heat_plugin admin_password $OS_PASSWORD
+    # Register the flavors for booting test servers
+    iniset $conf_file heat_plugin instance_type m1.heat_int
+    iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
+
+    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-26-1.5.x86_64
+    iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
+    iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
+    iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
+
+    # Skip ReloadOnSighupTest. Most jobs now run with apache+uwsgi, so the test has no significance
+    # Skip NotificationTest till bug #1721202 is fixed
+    # Skip StackCancelTest till the python-heatclient is bumped
+    iniset $conf_file heat_plugin skip_functional_test_list 'ReloadOnSighupTest, NotificationTest, StackCancelTest'
+
+    # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
+    # Skip test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
+    iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+
+    if [ "$DISABLE_CONVERGENCE" == "true" ]; then
+        iniset $conf_file heat_plugin convergence_engine_enabled false
+    fi
+    cat $conf_file
+}
 
 
-# Register the flavors for booting test servers
-iniset $conf_file heat_plugin instance_type m1.heat_int
-iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
+function _config_functionaltests
+{
+    local conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
+    _config_iniset $conf_file
+}
+
+function _config_tempest_plugin
+{
+    local conf_file=$DEST/tempest/etc/tempest.conf
+    iniset_multiline $conf_file service_available heat_plugin True
+    _config_iniset $conf_file
+}
+
+_config_functionaltests
+_config_tempest_plugin
+
 openstack flavor create m1.heat_int --ram 512
 openstack flavor create m1.heat_micro --ram 128
-
-iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-26-1.5.x86_64
-iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
-iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
-iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
-
-# Skip ReloadOnSighupTest. Most jobs now run with apache+uwsgi, so the test has no significance
-# Skip NotificationTest till bug #1721202 is fixed
-# Skip StackCancelTest till the python-heatclient is bumped
-iniset $conf_file heat_plugin skip_functional_test_list 'ReloadOnSighupTest, NotificationTest, StackCancelTest'
-
-# Add scenario tests to skip
-# VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-# test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
-iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
-
-if [ "$DISABLE_CONVERGENCE" == "true" ]; then
-    iniset $conf_file heat_plugin convergence_engine_enabled false
-fi
-
-cat $conf_file
