@@ -110,7 +110,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.network_client = self.manager.network_client
         self.volume_client = self.manager.volume_client
         self.object_client = self.manager.object_client
-        self.metric_client = self.manager.metric_client
 
         self.client = self.orchestration_client
 

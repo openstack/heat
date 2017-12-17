@@ -50,7 +50,6 @@ function _config_iniset {
 
     iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-26-1.5.x86_64
     iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
-    iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
     iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
 
     # Skip ReloadOnSighupTest. Most jobs now run with apache+uwsgi, so the test has no significance
@@ -65,7 +64,6 @@ function _config_iniset {
     if [ "$DISABLE_CONVERGENCE" == "true" ]; then
         iniset $conf_file heat_plugin convergence_engine_enabled false
     fi
-    cat $conf_file
 }
 
 
@@ -73,6 +71,7 @@ function _config_functionaltests
 {
     local conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
     _config_iniset $conf_file
+    cat $conf_file
 }
 
 function _config_tempest_plugin
@@ -80,6 +79,8 @@ function _config_tempest_plugin
     local conf_file=$DEST/tempest/etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     _config_iniset $conf_file
+    iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
+    cat $conf_file
 }
 
 _config_functionaltests
