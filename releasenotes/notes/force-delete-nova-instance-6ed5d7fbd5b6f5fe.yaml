@@ -1,0 +1,9 @@
+---
+fixes:
+  - Force delete the nova instance.
+    If a resource is related with a nova instance which
+    is in 'SOFT_DELETED' status, the resource can't be
+    deleted, when nova config 'reclaim_instance_interval'.
+    so, force-delete the nova instance, and then all the
+    resources are related with the instance would be
+    processed properly.
