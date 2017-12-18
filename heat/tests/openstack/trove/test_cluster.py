@@ -18,6 +18,7 @@ from troveclient import exceptions as troveexc
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import trove
 from heat.engine.resources.openstack.trove import cluster
 from heat.engine import scheduler
@@ -38,10 +39,16 @@ resources:
       instances:
         - flavor: m1.heat
           volume_size: 1
+          networks:
+            - port: port1
         - flavor: m1.heat
           volume_size: 1
+          networks:
+            - port: port2
         - flavor: m1.heat
           volume_size: 1
+          networks:
+            - port: port3
 '''
 
 
@@ -86,6 +93,9 @@ class TroveClusterTest(common.HeatTestCase):
         self.client = mock_client.return_value
         self.troveclient = mock.Mock()
         self.troveclient.flavors.get.return_value = FakeFlavor(1, 'm1.heat')
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'find_resourceid_by_name_or_id',
+                         return_value='someportid')
         self.troveclient.datastore_versions.list.return_value = [FakeVersion()]
         self.patchobject(trove.TroveClientPlugin, 'client',
                          return_value=self.troveclient)
@@ -106,9 +116,12 @@ class TroveClusterTest(common.HeatTestCase):
         expected_state = (tc.CREATE, tc.COMPLETE)
         self.assertEqual(expected_state, tc.state)
         args = self.client.clusters.create.call_args[1]
-        self.assertEqual([{'flavorRef': 1, 'volume': {'size': 1}},
-                          {'flavorRef': 1, 'volume': {'size': 1}},
-                          {'flavorRef': 1, 'volume': {'size': 1}}],
+        self.assertEqual([{'flavorRef': '1', 'volume': {'size': 1},
+                           'nics': [{'port-id': 'someportid'}]},
+                          {'flavorRef': '1', 'volume': {'size': 1},
+                           'nics': [{'port-id': 'someportid'}]},
+                          {'flavorRef': '1', 'volume': {'size': 1},
+                           'nics': [{'port-id': 'someportid'}]}],
                          args['instances'])
         self.assertEqual('mongodb', args['datastore'])
         self.assertEqual('2.6.1', args['datastore_version'])

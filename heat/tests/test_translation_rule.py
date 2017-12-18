@@ -597,6 +597,63 @@ class TestTranslationRule(common.HeatTestCase):
         self.assertEqual('yellow', result)
         self.assertEqual('yellow', tran.resolved_translations['far.0.red'])
 
+    def test_resolve_rule_nested_list_populated(self):
+        client_plugin, schema = self._test_resolve_rule_nested_list()
+        data = {
+            'instances': [{'networks': [{'port': 'port1', 'net': 'net1'}]}]
+        }
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['instances', 'networks', 'port'],
+            client_plugin=client_plugin,
+            finder='find_name_id',
+            entity='port'
+        )
+        tran = translation.Translation(props)
+        tran.set_rules([rule])
+        self.assertTrue(tran.has_translation('instances.networks.port'))
+        result = tran.translate('instances.0.networks.0.port',
+                                data['instances'][0]['networks'][0]['port'])
+        self.assertEqual('port1_id', result)
+        self.assertEqual('port1_id', tran.resolved_translations[
+            'instances.0.networks.0.port'])
+
+    def _test_resolve_rule_nested_list(self):
+        class FakeClientPlugin(object):
+            def find_name_id(self, entity=None, value=None):
+                if entity == 'net':
+                    return 'net1_id'
+                if entity == 'port':
+                    return 'port1_id'
+
+        schema = {
+            'instances': properties.Schema(
+                properties.Schema.LIST,
+                schema=properties.Schema(
+                    properties.Schema.MAP,
+                    schema={
+                        'networks': properties.Schema(
+                            properties.Schema.LIST,
+                            schema=properties.Schema(
+                                properties.Schema.MAP,
+                                schema={
+                                    'port': properties.Schema(
+                                        properties.Schema.STRING,
+                                    ),
+                                    'net': properties.Schema(
+                                        properties.Schema.STRING,
+                                    ),
+                                }
+                            )
+                        )
+                    }
+                )
+            )}
+
+        return FakeClientPlugin(), schema
+
     def test_resolve_rule_list_with_function(self):
         client_plugin, schema = self._test_resolve_rule(is_list=True)
         join_func = cfn_funcs.Join(None,

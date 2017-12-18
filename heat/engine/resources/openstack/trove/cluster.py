@@ -20,6 +20,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
 
@@ -62,9 +63,15 @@ class TroveCluster(resource.Resource):
     )
 
     _INSTANCE_KEYS = (
-        FLAVOR, VOLUME_SIZE,
+        FLAVOR, VOLUME_SIZE, NETWORKS,
     ) = (
-        'flavor', 'volume_size',
+        'flavor', 'volume_size', 'networks',
+    )
+
+    _NICS_KEYS = (
+        NET, PORT, V4_FIXED_IP
+    ) = (
+        'network', 'port', 'fixed_ip'
     )
 
     ATTRIBUTES = (
@@ -121,10 +128,50 @@ class TroveCluster(resource.Resource):
                         constraints=[
                             constraints.Range(1, 150),
                         ]
-                    )
+                    ),
+                    NETWORKS: properties.Schema(
+                        properties.Schema.LIST,
+                        _("List of network interfaces to create on instance."),
+                        support_status=support.SupportStatus(version='10.0.0'),
+                        default=[],
+                        schema=properties.Schema(
+                            properties.Schema.MAP,
+                            schema={
+                                NET: properties.Schema(
+                                    properties.Schema.STRING,
+                                    _('Name or UUID of the network to attach '
+                                      'this NIC to. Either %(port)s or '
+                                      '%(net)s must be specified.') % {
+                                        'port': PORT, 'net': NET},
+                                    constraints=[
+                                        constraints.CustomConstraint(
+                                            'neutron.network')
+                                    ]
+                                ),
+                                PORT: properties.Schema(
+                                    properties.Schema.STRING,
+                                    _('Name or UUID of Neutron port to '
+                                      'attach this NIC to. Either %(port)s '
+                                      'or %(net)s must be specified.')
+                                    % {'port': PORT, 'net': NET},
+                                    constraints=[
+                                        constraints.CustomConstraint(
+                                            'neutron.port')
+                                    ],
+                                ),
+                                V4_FIXED_IP: properties.Schema(
+                                    properties.Schema.STRING,
+                                    _('Fixed IPv4 address for this NIC.'),
+                                    constraints=[
+                                        constraints.CustomConstraint('ip_addr')
+                                    ]
+                                ),
+                            },
+                        ),
+                    ),
                 }
             )
-        )
+        ),
     }
 
     attributes_schema = {
@@ -142,6 +189,30 @@ class TroveCluster(resource.Resource):
 
     entity = 'clusters'
 
+    def translation_rules(self, properties):
+        return [
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.INSTANCES, self.NETWORKS, self.NET],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.INSTANCES, self.NETWORKS, self.PORT],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='port'),
+            translation.TranslationRule(
+                properties,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.INSTANCES, self.FLAVOR],
+                client_plugin=self.client_plugin(),
+                finder='find_flavor_by_name_or_id'),
+        ]
+
     def _cluster_name(self):
         return self.properties[self.NAME] or self.physical_resource_name()
 
@@ -152,11 +223,14 @@ class TroveCluster(resource.Resource):
         # convert instances to format required by troveclient
         instances = []
         for instance in self.properties[self.INSTANCES]:
-            instances.append({
-                'flavorRef': self.client_plugin().find_flavor_by_name_or_id(
-                    instance[self.FLAVOR]),
-                'volume': {'size': instance[self.VOLUME_SIZE]}
-            })
+            instance_dict = {
+                'flavorRef': instance[self.FLAVOR],
+                'volume': {'size': instance[self.VOLUME_SIZE]},
+            }
+            instance_nics = self.get_instance_nics(instance)
+            if instance_nics:
+                instance_dict["nics"] = instance_nics
+            instances.append(instance_dict)
 
         args = {
             'name': self._cluster_name(),
@@ -167,6 +241,21 @@ class TroveCluster(resource.Resource):
         cluster = self.client().clusters.create(**args)
         self.resource_id_set(cluster.id)
         return cluster.id
+
+    def get_instance_nics(self, instance):
+        nics = []
+        for nic in instance[self.NETWORKS]:
+            nic_dict = {}
+            if nic.get(self.NET):
+                nic_dict['net-id'] = nic.get(self.NET)
+            if nic.get(self.PORT):
+                nic_dict['port-id'] = nic.get(self.PORT)
+            ip = nic.get(self.V4_FIXED_IP)
+            if ip:
+                nic_dict['v4-fixed-ip'] = ip
+            nics.append(nic_dict)
+
+        return nics
 
     def _refresh_cluster(self, cluster_id):
         try:
@@ -255,6 +344,24 @@ class TroveCluster(resource.Resource):
         self.client_plugin().validate_datastore(
             datastore_type, datastore_version,
             self.DATASTORE_TYPE, self.DATASTORE_VERSION)
+
+        # check validity of instances' NETWORKS
+        is_neutron = self.is_using_neutron()
+        for instance in self.properties[self.INSTANCES]:
+            for nic in instance[self.NETWORKS]:
+                # 'nic.get(self.PORT) is not None' including two cases:
+                # 1. has set port value in template
+                # 2. using 'get_resource' to reference a new resource
+                if not is_neutron and nic.get(self.PORT) is not None:
+                    msg = (_("Can not use %s property on Nova-network.")
+                           % self.PORT)
+                    raise exception.StackValidationFailed(message=msg)
+
+                if (bool(nic.get(self.NET) is not None) ==
+                        bool(nic.get(self.PORT) is not None)):
+                    msg = (_("Either %(net)s or %(port)s must be provided.")
+                           % {'net': self.NET, 'port': self.PORT})
+                    raise exception.StackValidationFailed(message=msg)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:
