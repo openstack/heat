@@ -11,6 +11,24 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+POOL_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a pool
+resources:
+  pool:
+    type: OS::Octavia::Pool
+    properties:
+      name: my_pool
+      description: my pool
+      session_persistence:
+        type: HTTP_COOKIE
+      lb_algorithm: ROUND_ROBIN
+      loadbalancer: my_lb
+      listener: 123
+      protocol: HTTP
+      admin_state_up: True
+'''
+
 MEMBER_TEMPLATE = '''
 heat_template_version: 2016-04-08
 description: Create a pool member
