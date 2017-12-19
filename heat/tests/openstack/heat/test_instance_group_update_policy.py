@@ -297,6 +297,6 @@ class InstanceGroupReplaceTest(common.HeatTestCase):
         # (6 - 1)*14*60 > 3600, so to raise error
 
         group = instgrp.InstanceGroup('asg', defn, stack)
-        group.nested = mock.MagicMock(return_value=range(12))
+        group._group_data().size = mock.Mock(return_value=12)
         self.assertRaises(ValueError,
                           group._replace, 10, 1, 14 * 60)

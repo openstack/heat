@@ -13,38 +13,29 @@
 
 import copy
 
-import six
-
 from heat.common import exception
-from heat.common import grouputils
 from heat.common.i18n import _
-from heat.engine import rsrc_defn
 from heat.engine import scheduler
 
 
-def reload_loadbalancers(group, load_balancers, exclude=None):
+def reconfigure_loadbalancers(load_balancers, id_list):
     """Notify the LoadBalancer to reload its config.
 
     This must be done after activation (instance in ACTIVE state), otherwise
     the instances' IP addresses may not be available.
     """
-    exclude = exclude or []
-    id_list = grouputils.get_member_refids(group, exclude=exclude)
-    for name, lb in six.iteritems(load_balancers):
-        props = copy.copy(lb.properties.data)
+    for lb in load_balancers:
+        existing_defn = lb.frozen_definition()
+        props = copy.copy(existing_defn.properties(lb.properties_schema,
+                                                   lb.context).data)
         if 'Instances' in lb.properties_schema:
             props['Instances'] = id_list
         elif 'members' in lb.properties_schema:
             props['members'] = id_list
         else:
             raise exception.Error(
-                _("Unsupported resource '%s' in LoadBalancerNames") % name)
+                _("Unsupported resource '%s' in LoadBalancerNames") % lb.name)
 
-        lb_defn = rsrc_defn.ResourceDefinition(
-            lb.name,
-            lb.type(),
-            properties=props,
-            metadata=lb.t.metadata(),
-            deletion_policy=lb.t.deletion_policy())
+        lb_defn = existing_defn.freeze(properties=props)
 
         scheduler.TaskRunner(lb.update, lb_defn)()

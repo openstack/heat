@@ -58,8 +58,6 @@ class GroupUtilsTest(common.HeatTestCase):
         # refids
         actual_ids = grouputils.get_member_refids(group)
         self.assertEqual(['ID-r0', 'ID-r1'], actual_ids)
-        partial_ids = grouputils.get_member_refids(group, exclude=['ID-r1'])
-        self.assertEqual(['ID-r0'], partial_ids)
 
     def test_group_with_failed_members(self):
         group = mock.Mock()

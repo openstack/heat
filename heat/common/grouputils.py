@@ -129,19 +129,12 @@ def get_members(group, include_failed=False):
                   key=lambda r: (r.status != r.FAILED, r.created_time, r.name))
 
 
-def get_member_refids(group, exclude=None):
+def get_member_refids(group):
     """Get a list of member resources managed by the specified group.
 
     The list of resources is sorted first by created_time then by name.
     """
-    members = get_members(group)
-    if len(members) == 0:
-        return []
-
-    if exclude is None:
-        exclude = []
-    return [r.FnGetRefId() for r in members
-            if r.FnGetRefId() not in exclude]
+    return [r.FnGetRefId() for r in get_members(group)]
 
 
 def get_member_names(group):

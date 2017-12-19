@@ -255,8 +255,7 @@ class LoadbalancerReloadTest(common.HeatTestCase):
              "LoadBalancerNames": ["ElasticLoadBalancer"]})
         group = instgrp.InstanceGroup('asg', defn, stack)
 
-        mock_members = self.patchobject(grouputils, 'get_member_refids')
-        mock_members.return_value = ['aaaa', 'bbb']
+        mocks = self.setup_mocks(group, ['aaaa', 'bbb'])
         expected = rsrc_defn.ResourceDefinition(
             'ElasticLoadBalancer',
             'AWS::ElasticLoadBalancing::LoadBalancer',
@@ -264,13 +263,11 @@ class LoadbalancerReloadTest(common.HeatTestCase):
              'Listeners': [{'InstancePort': u'80',
                             'LoadBalancerPort': u'80',
                             'Protocol': 'HTTP'}],
-             'AvailabilityZones': ['nova']},
-            metadata={},
-            deletion_policy='Delete'
+             'AvailabilityZones': ['nova']}
         )
 
         group._lb_reload()
-        mock_members.assert_called_once_with(group, exclude=[])
+        self.check_mocks(group, mocks)
         lb.update.assert_called_once_with(expected)
 
     def test_members(self):
@@ -297,18 +294,15 @@ class LoadbalancerReloadTest(common.HeatTestCase):
              "LoadBalancerNames": ["ElasticLoadBalancer"]})
         group = instgrp.InstanceGroup('asg', defn, stack)
 
-        mock_members = self.patchobject(grouputils, 'get_member_refids')
-        mock_members.return_value = ['aaaa', 'bbb']
+        mocks = self.setup_mocks(group, ['aaaa', 'bbb'])
         expected = rsrc_defn.ResourceDefinition(
             'ElasticLoadBalancer',
             'OS::Neutron::LoadBalancer',
             {'protocol_port': 8080,
-             'members': ['aaaa', 'bbb']},
-            metadata={},
-            deletion_policy='Delete')
+             'members': ['aaaa', 'bbb']})
 
         group._lb_reload()
-        mock_members.assert_called_once_with(group, exclude=[])
+        self.check_mocks(group, mocks)
         lb.update.assert_called_once_with(expected)
 
     def test_lb_reload_invalid_resource(self):
@@ -332,9 +326,7 @@ class LoadbalancerReloadTest(common.HeatTestCase):
              "LoadBalancerNames": ["ElasticLoadBalancer"]})
         group = instgrp.InstanceGroup('asg', defn, stack)
 
-        mock_members = self.patchobject(grouputils, 'get_member_refids')
-        mock_members.return_value = ['aaaa', 'bbb']
-
+        self.setup_mocks(group, ['aaaa', 'bbb'])
         error = self.assertRaises(exception.Error,
                                   group._lb_reload)
         self.assertEqual(
@@ -350,18 +342,47 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         self.patchobject(stk_defn.StackDefinition, 'get_availability_zones',
                          return_value=['abc', 'xyz'])
 
-        mock_members = self.patchobject(grouputils, 'get_member_refids')
-        mock_members.return_value = ['aaaabbbbcccc']
-
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         lb = stack['ElasticLoadBalancer']
         lb.state_set(lb.CREATE, lb.COMPLETE)
         lb.handle_update = mock.Mock(return_value=None)
         group = stack['WebServerGroup']
+        self.setup_mocks(group, ['aaaabbbbcccc'])
         group._lb_reload()
         lb.handle_update.assert_called_once_with(
             mock.ANY, mock.ANY,
             {'Instances': ['aaaabbbbcccc']})
+
+    def setup_mocks(self, group, member_refids):
+        refs = {str(i): r for i, r in enumerate(member_refids)}
+        group.get_output = mock.Mock(return_value=refs)
+        names = sorted(refs.keys())
+        group_data = group._group_data()
+        group_data.member_names = mock.Mock(return_value=names)
+        group._group_data = mock.Mock(return_value=group_data)
+
+    def check_mocks(self, group, unused):
+        pass
+
+
+class LoadbalancerReloadFallbackTest(LoadbalancerReloadTest):
+    def setup_mocks(self, group, member_refids):
+        # Raise NotFound when getting output, to force fallback to old-school
+        # grouputils functions
+        group.get_output = mock.Mock(side_effect=exception.NotFound)
+
+        def make_mock_member(refid):
+            mem = mock.Mock()
+            mem.FnGetRefId = mock.Mock(return_value=refid)
+            return mem
+
+        members = [make_mock_member(r) for r in member_refids]
+        mock_members = self.patchobject(grouputils, 'get_members',
+                                        return_value=members)
+        return mock_members
+
+    def check_mocks(self, group, mock_members):
+        mock_members.assert_called_once_with(group)
 
 
 class InstanceGroupWithNestedStack(common.HeatTestCase):
@@ -417,7 +438,10 @@ class ReplaceTest(InstanceGroupWithNestedStack):
 
     def setUp(self):
         super(ReplaceTest, self).setUp()
-        self.group._nested = self.get_fake_nested_stack(2)
+        nested = self.get_fake_nested_stack(2)
+        inspector = self.group._group_data()
+        inspector.size = mock.Mock(return_value=2)
+        inspector.template = mock.Mock(return_value=nested.defn._template)
 
     def test_rolling_updates(self):
         self.group._replace(self.min_in_service, self.batch_size, 0)
