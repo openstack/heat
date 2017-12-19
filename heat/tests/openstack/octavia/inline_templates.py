@@ -11,6 +11,22 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+LB_TEMPLATE = '''
+heat_template_version: 2016-04-08
+description: Create a loadbalancer
+resources:
+  lb:
+    type: OS::Octavia::LoadBalancer
+    properties:
+      name: my_lb
+      description: my loadbalancer
+      vip_address: 10.0.0.4
+      vip_subnet: sub123
+      provider: octavia
+      tenant_id: 1234
+      admin_state_up: True
+'''
+
 LISTENER_TEMPLATE = '''
 heat_template_version: 2016-04-08
 description: Create a listener
