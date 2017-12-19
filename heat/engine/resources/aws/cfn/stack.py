@@ -85,7 +85,11 @@ class NestedStack(stack_resource.StackResource):
         if key and not key.startswith('Outputs.'):
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
-        attribute = self.get_output(key.partition('.')[-1])
+        try:
+            attribute = self.get_output(key.partition('.')[-1])
+        except exception.NotFound:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
         return attributes.select_from_attribute(attribute, path)
 
     def get_reference_id(self):

@@ -606,10 +606,7 @@ class StackResource(resource.Resource):
     def get_output(self, op):
         """Return the specified Output value from the nested stack.
 
-        If the output key does not exist, raise an InvalidTemplateAttribute
-        exception. (Note that TemplateResource.get_attribute() relies on this
-        particular exception, not KeyError, being raised if the key does not
-        exist.)
+        If the output key does not exist, raise a NotFound exception.
         """
         if (self._outputs is None or
                 (op in self._outputs and
@@ -626,8 +623,8 @@ class StackResource(resource.Resource):
             self._outputs = {o[rpc_api.OUTPUT_KEY]: o for o in outputs}
 
         if op not in self._outputs:
-            raise exception.InvalidTemplateAttribute(resource=self.name,
-                                                     key=op)
+            raise exception.NotFound(_('Specified output key %s not '
+                                       'found.') % op)
 
         output_data = self._outputs[op]
         if rpc_api.OUTPUT_ERROR in output_data:
@@ -639,4 +636,8 @@ class StackResource(resource.Resource):
         return output_data[rpc_api.OUTPUT_VALUE]
 
     def _resolve_attribute(self, name):
-        return self.get_output(name)
+        try:
+            return self.get_output(name)
+        except exception.NotFound:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=name)

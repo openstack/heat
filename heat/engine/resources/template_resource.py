@@ -330,7 +330,7 @@ class TemplateResource(stack_resource.StackResource):
                         message=output[rpc_api.OUTPUT_ERROR])
             except exception.TemplateOutputError as err:
                 LOG.info('%s', err)
-            except (exception.InvalidTemplateAttribute, exception.NotFound):
+            except exception.NotFound:
                 pass
             else:
                 self._reference_id = output[rpc_api.OUTPUT_VALUE]
@@ -347,4 +347,9 @@ class TemplateResource(stack_resource.StackResource):
             return grouputils.get_nested_attrs(self, key, False, *path)
 
         # then look for normal outputs
-        return attributes.select_from_attribute(self.get_output(key), path)
+        try:
+            return attributes.select_from_attribute(self.get_output(key),
+                                                    path)
+        except exception.NotFound:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
