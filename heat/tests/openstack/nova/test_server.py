@@ -123,7 +123,7 @@ resources:
       image: F17-x86_64-gold
       flavor: m1.large
       networks:
-      - { uuid: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }
+      - { network: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' }
   subnet:
     type: OS::Neutron::Subnet
     properties:
@@ -216,6 +216,17 @@ resources:
       flavor: m1.large
       personality: { /tmp/test: { get_attr: [swconfig, config]}}
 """
+
+
+def create_fake_iface(port=None, net=None, mac=None, ip=None, subnet=None):
+    class fake_interface(object):
+        def __init__(self, port_id, net_id, mac_addr, fixed_ip, subnet_id):
+            self.port_id = port_id
+            self.net_id = net_id
+            self.mac_addr = mac_addr
+            self.fixed_ips = [{'ip_address': fixed_ip, 'subnet_id': subnet_id}]
+
+    return fake_interface(port, net, mac, ip, subnet)
 
 
 class ServersTest(common.HeatTestCase):
@@ -356,15 +367,6 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.create)()
         return server
 
-    def _create_fake_iface(self, port, mac, ip):
-        class fake_interface(object):
-            def __init__(self, port_id, mac_addr, fixed_ip):
-                self.port_id = port_id
-                self.mac_addr = mac_addr
-                self.fixed_ips = [{'ip_address': fixed_ip}]
-
-        return fake_interface(port, mac, ip)
-
     def test_subnet_dependency_by_network_id(self):
         templ, stack = self._setup_test_stack('subnet-test',
                                               subnet_template)
@@ -414,11 +416,15 @@ class ServersTest(common.HeatTestCase):
         # this makes sure the auto increment worked on server creation
         self.assertGreater(server.id, 0)
 
-        interfaces = [
-            self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),
-            self._create_fake_iface('5678', 'fa:16:3e:8c:33:bb', '5.6.9.8'),
-            self._create_fake_iface(
-                '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
+        interfaces = [create_fake_iface(port='1234',
+                                        mac='fa:16:3e:8c:22:aa',
+                                        ip='4.5.6.7'),
+                      create_fake_iface(port='5678',
+                                        mac='fa:16:3e:8c:33:bb',
+                                        ip='5.6.9.8'),
+                      create_fake_iface(port='1013',
+                                        mac='fa:16:3e:8c:44:cc',
+                                        ip='10.13.12.13')]
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(return_server, 'interface_list',
@@ -555,11 +561,15 @@ class ServersTest(common.HeatTestCase):
                                          override_name=True)
         server.resource_id = '1234'
 
-        interfaces = [
-            self._create_fake_iface('1234', 'fa:16:3e:8c:22:aa', '4.5.6.7'),
-            self._create_fake_iface('5678', 'fa:16:3e:8c:33:bb', '5.6.9.8'),
-            self._create_fake_iface(
-                '1013', 'fa:16:3e:8c:44:cc', '10.13.12.13')]
+        interfaces = [create_fake_iface(port='1234',
+                                        mac='fa:16:3e:8c:22:aa',
+                                        ip='4.5.6.7'),
+                      create_fake_iface(port='5678',
+                                        mac='fa:16:3e:8c:33:bb',
+                                        ip='5.6.9.8'),
+                      create_fake_iface(port='1013',
+                                        mac='fa:16:3e:8c:44:cc',
+                                        ip='10.13.12.13')]
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(return_server, 'interface_list',
@@ -1949,28 +1959,20 @@ class ServersTest(common.HeatTestCase):
         server.properties.data['networks'] = [{'network': 'public_id',
                                                'fixed_ip': '5.6.9.8'}]
 
-        class fake_interface(object):
-            def __init__(self, port_id, net_id, fixed_ip, mac_addr):
-                self.port_id = port_id
-                self.net_id = net_id
-                self.mac_addr = mac_addr
-
-                self.fixed_ips = [{'ip_address': fixed_ip}]
-
-        iface = fake_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                               'public',
-                               '5.6.9.8',
-                               'fa:16:3e:8c:33:aa')
-        iface1 = fake_interface('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-                                'public',
-                                '4.5.6.7',
-                                'fa:16:3e:8c:22:aa')
-        iface2 = fake_interface('cccccccc-cccc-cccc-cccc-cccccccccccc',
-                                'private',
-                                '10.13.12.13',
-                                'fa:16:3e:8c:44:cc')
+        iface0 = create_fake_iface(port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                   net='public',
+                                   ip='5.6.9.8',
+                                   mac='fa:16:3e:8c:33:aa')
+        iface1 = create_fake_iface(port='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                                   net='public',
+                                   ip='4.5.6.7',
+                                   mac='fa:16:3e:8c:22:aa')
+        iface2 = create_fake_iface(port='cccccccc-cccc-cccc-cccc-cccccccccccc',
+                                   net='private',
+                                   ip='10.13.12.13',
+                                   mac='fa:16:3e:8c:44:cc')
         self.patchobject(return_server, 'interface_list',
-                         return_value=[iface, iface1, iface2])
+                         return_value=[iface0, iface1, iface2])
 
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
@@ -3260,15 +3262,6 @@ class ServersTest(common.HeatTestCase):
                 'allocate_network': str_network,
                 'tag': tag}
 
-    def create_fake_iface(self, port, net, ip):
-        class fake_interface(object):
-            def __init__(self, port_id, net_id, fixed_ip):
-                self.port_id = port_id
-                self.net_id = net_id
-                self.fixed_ips = [{'ip_address': fixed_ip}]
-
-        return fake_interface(port, net, ip)
-
     def test_get_network_id_neutron(self):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
@@ -3385,22 +3378,25 @@ class ServersTest(common.HeatTestCase):
                                 ip='1.2.3.4'),
             self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg'),
             self.create_old_net(port='dddddddd-dddd-dddd-dddd-dddddddddddd'),
-            self.create_old_net(uuid='gggggggg-1111-1111-1111-gggggggggggg',
+            self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg',
                                 ip='5.6.7.8')]
         # new order 2 3 0 1 4
         interfaces = [
-            self.create_fake_iface('cccccccc-cccc-cccc-cccc-cccccccccccc',
-                                   nets[2]['network'], '10.0.0.11'),
-            self.create_fake_iface(nets[3]['port'],
-                                   'gggggggg-1111-1111-1111-gggggggggggg',
-                                   '10.0.0.12'),
-            self.create_fake_iface(nets[0]['port'],
-                                   'gggggggg-1111-1111-1111-gggggggggggg',
-                                   '10.0.0.13'),
-            self.create_fake_iface('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-                                   nets[1]['network'], nets[1]['fixed_ip']),
-            self.create_fake_iface('eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-                                   nets[4]['network'], nets[4]['fixed_ip'])]
+            create_fake_iface(port='cccccccc-cccc-cccc-cccc-cccccccccccc',
+                              net=nets[2]['network'],
+                              ip='10.0.0.11'),
+            create_fake_iface(port=nets[3]['port'],
+                              net='gggggggg-1111-1111-1111-gggggggggggg',
+                              ip='10.0.0.12'),
+            create_fake_iface(port=nets[0]['port'],
+                              net='gggggggg-1111-1111-1111-gggggggggggg',
+                              ip='10.0.0.13'),
+            create_fake_iface(port='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                              net=nets[1]['network'],
+                              ip=nets[1]['fixed_ip']),
+            create_fake_iface(port='eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
+                              net=nets[4]['network'],
+                              ip=nets[4]['fixed_ip'])]
         # all networks should get port id
         expected = [
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -3440,12 +3436,12 @@ class ServersTest(common.HeatTestCase):
              'allocate_network': None,
              'tag': None},
             {'port': 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
-             'uuid': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'uuid': None,
              'fixed_ip': '5.6.7.8',
              'subnet': None,
              'port_extra_properties': None,
              'floating_ip': None,
-             'network': None,
+             'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'allocate_network': None,
              'tag': None}]
 
@@ -3468,9 +3464,10 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
-        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
-                                       '1.2.3.4')
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+            ip='1.2.3.4')
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
@@ -3505,9 +3502,10 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
-        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
-                                       '1.2.3.4')
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+            ip='1.2.3.4')
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
@@ -3555,9 +3553,11 @@ class ServersTest(common.HeatTestCase):
         mock_create_port = self.patchobject(
             neutronclient.Client, 'create_port')
 
-        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                       '05d8e681-4b37-4570-bc8d-810089f706b2',
-                                       '1.2.3.4')
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='05d8e681-4b37-4570-bc8d-810089f706b2',
+            subnet='aaa09d50-8c23-4498-a542-aa0deb24f73e',
+            ip='1.2.3.4')
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
@@ -3611,9 +3611,11 @@ class ServersTest(common.HeatTestCase):
                          'network_id_from_subnet_id',
                          return_value='05d8e681-4b37-4570-bc8d-810089f706b2')
 
-        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                       '05d8e681-4b37-4570-bc8d-810089f706b2',
-                                       '1.2.3.4')
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='05d8e681-4b37-4570-bc8d-810089f706b2',
+            subnet='aaa09d50-8c23-4498-a542-aa0deb24f73e',
+            ip='1.2.3.4')
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
@@ -3662,9 +3664,10 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
-        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
-                                       '1.2.3.4')
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+            ip='1.2.3.4')
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
@@ -3692,9 +3695,10 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
-        iface = self.create_fake_iface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                       '450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
-                                       '1.2.3.4')
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+            ip='1.2.3.4')
         self.patchobject(return_server, 'interface_list', return_value=[iface])
         mock_detach = self.patchobject(return_server, 'interface_detach')
         mock_attach = self.patchobject(return_server, 'interface_attach')
@@ -3727,10 +3731,9 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14')
-        ]
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='11.12.13.14')]
 
         self.patchobject(return_server, 'interface_list',
                          return_value=poor_interfaces)
@@ -3786,16 +3789,15 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         port_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14'),
-            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '21.22.23.24'),
-            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '31.32.33.34')
-        ]
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='11.12.13.14'),
+            create_fake_iface(port='4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='21.22.23.24'),
+            create_fake_iface(port='0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='31.32.33.34')]
 
         self.patchobject(return_server, 'interface_list',
                          return_value=port_interfaces)
@@ -3835,19 +3837,18 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
 
         poor_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14'),
-            self.create_fake_iface('450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '1.2.3.4'),
-            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '21.22.23.24'),
-            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '31.32.33.34')
-        ]
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='11.12.13.14'),
+            create_fake_iface(port='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='1.2.3.4'),
+            create_fake_iface(port='4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='21.22.23.24'),
+            create_fake_iface(port='0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='31.32.33.34')]
 
         self.patchobject(return_server, 'interface_list',
                          return_value=poor_interfaces)
@@ -3883,16 +3884,15 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14'),
-            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '21.22.23.24'),
-            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '31.32.33.34')
-        ]
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='11.12.13.14'),
+            create_fake_iface(port='4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='21.22.23.24'),
+            create_fake_iface(port='0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='31.32.33.34')]
         self.patchobject(return_server, 'interface_list',
                          return_value=poor_interfaces)
         mock_detach = self.patchobject(return_server, 'interface_detach')
@@ -3927,16 +3927,15 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14'),
-            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '21.22.23.24'),
-            self.create_fake_iface('0907fa82-a024-43c2-9fc5-efa1bccaa74a',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '31.32.33.34')
-        ]
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='11.12.13.14'),
+            create_fake_iface(port='4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='21.22.23.24'),
+            create_fake_iface(port='0907fa82-a024-43c2-9fc5-efa1bccaa74a',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='31.32.33.34')]
 
         self.patchobject(return_server, 'interface_list',
                          return_value=poor_interfaces)
@@ -3973,13 +3972,12 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         poor_interfaces = [
-            self.create_fake_iface('95e25541-d26a-478d-8f36-ae1c8f6b74dc',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '11.12.13.14'),
-            self.create_fake_iface('4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
-                                   'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                   '21.22.23.24'),
-        ]
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='11.12.13.14'),
+            create_fake_iface(port='4121f61a-1b2e-4ab0-901e-eade9b1cb09d',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='21.22.23.24')]
 
         self.patchobject(return_server, 'interface_list',
                          return_value=poor_interfaces)
@@ -4586,10 +4584,10 @@ class ServerInternalPortTest(ServersTest):
         self.port_create.return_value = {'port': {'id': '7788'}}
         data_set = self.patchobject(resource.Resource, 'data_set')
 
-        old_net = [{'network': '4321',
-                    'subnet': '1234',
-                    'fixed_ip': '127.0.0.1'},
-                   {'port': '3344'}]
+        old_net = [self.create_old_net(net='4321',
+                                       subnet='1234',
+                                       ip='127.0.0.1'),
+                   self.create_old_net(port='3344')]
 
         new_net = [{'port': '3344'},
                    {'port': '5566'},
@@ -4597,10 +4595,11 @@ class ServerInternalPortTest(ServersTest):
                     'subnet': '5678',
                     'fixed_ip': '10.0.0.1'}
                    ]
-        interfaces = [
-            self.create_fake_iface('1122', '4321', '127.0.0.1'),
-            self.create_fake_iface('3344', '4321', '10.0.0.2'),
-        ]
+
+        interfaces = [create_fake_iface(port='1122', net='4321',
+                                        ip='127.0.0.1', subnet='1234'),
+                      create_fake_iface(port='3344', net='4321', ip='10.0.0.2',
+                                        subnet='subnet')]
 
         server.calculate_networks(old_net, new_net, interfaces)
 
@@ -4657,16 +4656,12 @@ class ServerInternalPortTest(ServersTest):
                                              '11910',
                                              '1199'])
 
-        old_net = [{'network': '4321',
-                    'subnet': '1234',
-                    'fixed_ip': '127.0.0.1',
-                    'port': '1122',
-                    'floating_ip': '1199'},
-                   {'network': '8765',
-                    'subnet': '5678',
-                    'fixed_ip': '127.0.0.2',
-                    'port': '3344',
-                    'floating_ip': '9911'}]
+        old_net = [
+            self.create_old_net(net='4321', subnet='1234', ip='127.0.0.1',
+                                port='1122', floating_ip='1199'),
+            self.create_old_net(net='8765', subnet='5678', ip='127.0.0.2',
+                                port='3344', floating_ip='9911')
+        ]
 
         new_net = [{'network': '8765',
                     'subnet': '5678',
