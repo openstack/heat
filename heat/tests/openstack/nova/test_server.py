@@ -134,7 +134,7 @@ resources:
       network: 'bbccbbcc-bbcc-bbcc-bbcc-bbccbbccbbcc'
 '''
 
-mult_subnet_template = '''
+multi_subnet_template = '''
 heat_template_version: 2013-05-23
 resources:
   server:
@@ -381,7 +381,7 @@ class ServersTest(common.HeatTestCase):
         # The use case here is creating a network + subnets + server
         # from within one stack
         templ, stack = self._setup_test_stack('subnet-test',
-                                              mult_subnet_template)
+                                              multi_subnet_template)
         server_rsrc = stack['server']
         subnet1_rsrc = stack['subnet1']
         subnet2_rsrc = stack['subnet2']
