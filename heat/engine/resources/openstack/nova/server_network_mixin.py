@@ -315,15 +315,18 @@ class ServerNetworkMixin(object):
 
     def update_networks_matching_iface_port(self, nets, interfaces):
         iface_managed_keys = (self.NETWORK_PORT, self.NETWORK_ID,
-                              self.NETWORK_FIXED_IP)
+                              self.NETWORK_FIXED_IP, self.NETWORK_SUBNET)
 
         def get_iface_props(iface):
             ipaddr = None
+            subnet = None
             if len(iface.fixed_ips) > 0:
                 ipaddr = iface.fixed_ips[0]['ip_address']
+                subnet = iface.fixed_ips[0]['subnet_id']
             return {self.NETWORK_PORT: iface.port_id,
                     self.NETWORK_ID: iface.net_id,
-                    self.NETWORK_FIXED_IP: ipaddr}
+                    self.NETWORK_FIXED_IP: ipaddr,
+                    self.NETWORK_SUBNET: subnet}
 
         interfaces_net_props = [get_iface_props(iface) for iface in interfaces]
         for net in nets:
