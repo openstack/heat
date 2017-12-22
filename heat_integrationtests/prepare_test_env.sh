@@ -51,11 +51,6 @@ function _config_iniset {
     iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-26-1.5.x86_64
     iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
 
-    # Skip ReloadOnSighupTest. Most jobs now run with apache+uwsgi, so the test has no significance
-    # Skip NotificationTest till bug #1721202 is fixed
-    # Skip StackCancelTest till the python-heatclient is bumped
-    iniset $conf_file heat_plugin skip_functional_test_list 'ReloadOnSighupTest, NotificationTest, StackCancelTest'
-
     if [ "$DISABLE_CONVERGENCE" == "true" ]; then
         iniset $conf_file heat_plugin convergence_engine_enabled false
     fi
@@ -66,6 +61,11 @@ function _config_functionaltests
 {
     local conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
     _config_iniset $conf_file
+
+    # Skip NotificationTest till bug #1721202 is fixed
+    # Skip StackCancelTest till the python-heatclient is bumped
+    iniset $conf_file heat_plugin skip_functional_test_list 'NotificationTest, StackCancelTest'
+
     cat $conf_file
 }
 
@@ -80,6 +80,7 @@ function _config_tempest_plugin
     # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
     # Skip test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
     iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+    iniset $conf_file heat_plugin skip_functional_test_list ''
 
     cat $conf_file
 }
