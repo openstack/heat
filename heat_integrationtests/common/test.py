@@ -19,7 +19,6 @@ import time
 import fixtures
 from heatclient import exc as heat_exceptions
 from keystoneauth1 import exceptions as kc_exceptions
-from neutronclient.common import exceptions as network_exceptions
 from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
@@ -30,7 +29,6 @@ import testtools
 from heat_integrationtests.common import clients
 from heat_integrationtests.common import config
 from heat_integrationtests.common import exceptions
-from heat_integrationtests.common import remote_client
 
 LOG = logging.getLogger(__name__)
 _LOG_FORMAT = "%(levelname)8s [%(name)s] %(message)s"
@@ -116,25 +114,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def setup_clients_for_admin(self):
         self.setup_clients(self.conf, True)
 
-    def get_remote_client(self, server_or_ip, username, private_key=None):
-        if isinstance(server_or_ip, six.string_types):
-            ip = server_or_ip
-        else:
-            network_name_for_ssh = self.conf.network_for_ssh
-            ip = server_or_ip.networks[network_name_for_ssh][0]
-        if private_key is None:
-            private_key = self.keypair.private_key
-        linux_client = remote_client.RemoteClient(ip, username,
-                                                  pkey=private_key,
-                                                  conf=self.conf)
-        try:
-            linux_client.validate_authentication()
-        except exceptions.SSHTimeout:
-            LOG.exception('ssh connection to %s failed', ip)
-            raise
-
-        return linux_client
-
     def check_connectivity(self, check_ip):
         def try_connect(ip):
             try:
@@ -198,13 +177,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         for net in networks['networks']:
             if net['name'] == net_name:
                 return net
-
-    def is_network_extension_supported(self, extension_alias):
-        try:
-            self.network_client.show_extension(extension_alias)
-        except network_exceptions.NeutronClientException:
-            return False
-        return True
 
     def is_service_available(self, service_type):
         try:

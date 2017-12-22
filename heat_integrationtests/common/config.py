@@ -96,32 +96,9 @@ HeatGroup = [
     cfg.StrOpt('floating_network_name',
                default='public',
                help="Visible floating network name "),
-    cfg.StrOpt('boot_config_env',
-               default=('heat_integrationtests/scenario/templates'
-                        '/boot_config_none_env.yaml'),
-               help="Path to environment file which defines the "
-                    "resource type Heat::InstallConfigAgent. Needs to "
-                    "be appropriate for the image_ref."),
     cfg.StrOpt('fixed_subnet_name',
                default='heat-subnet',
                help="Visible fixed sub-network name "),
-    cfg.IntOpt('ssh_timeout',
-               default=300,
-               help="Timeout in seconds to wait for authentication to "
-                    "succeed."),
-    cfg.IntOpt('ip_version_for_ssh',
-               default=4,
-               help="IP version used for SSH connections."),
-    cfg.IntOpt('ssh_channel_timeout',
-               default=60,
-               help="Timeout in seconds to wait for output from ssh "
-                    "channel."),
-    cfg.IntOpt('tenant_network_mask_bits',
-               default=28,
-               help="The mask bits for tenant ipv4 subnets"),
-    cfg.BoolOpt('skip_scenario_tests',
-                default=False,
-                help="Skip all scenario tests"),
     cfg.BoolOpt('skip_functional_tests',
                 default=False,
                 help="Skip all functional tests"),
@@ -129,10 +106,6 @@ HeatGroup = [
                 help="List of functional test class or class.method "
                      "names to skip ex. AutoscalingGroupTest, "
                      "InstanceGroupBasicTest.test_size_updates_work"),
-    cfg.ListOpt('skip_scenario_test_list',
-                help="List of scenario test class or class.method "
-                     "names to skip ex. NeutronLoadBalancerTest, "
-                     "AodhAlarmTest.test_alarm"),
     cfg.ListOpt('skip_test_stack_action_list',
                 help="List of stack actions in tests to skip "
                      "ex. ABANDON, ADOPT, SUSPEND, RESUME"),
@@ -140,9 +113,6 @@ HeatGroup = [
                 default=True,
                 help="Test features that are only present for stacks with "
                      "convergence enabled."),
-    cfg.IntOpt('volume_size',
-               default=1,
-               help='Default size in GB for volumes created by volumes tests'),
     cfg.IntOpt('connectivity_timeout',
                default=120,
                help="Timeout in seconds to wait for connectivity to "
