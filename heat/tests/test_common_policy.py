@@ -17,6 +17,7 @@
 import os.path
 
 from oslo_config import fixture as config_fixture
+from oslo_policy import policy as base_policy
 
 from heat.common import exception
 from heat.common import policy
@@ -48,14 +49,12 @@ class TestPolicyEnforcer(common.HeatTestCase):
         return policy_path + filename
 
     def test_policy_cfn_default(self):
-        enforcer = policy.Enforcer(
-            scope='cloudformation',
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer(scope='cloudformation')
 
         ctx = utils.dummy_context(roles=[])
         for action in self.cfn_actions:
             # Everything should be allowed
-            enforcer.enforce(ctx, action)
+            enforcer.enforce(ctx, action, is_registered_policy=True)
 
     def test_policy_cfn_notallowed(self):
         enforcer = policy.Enforcer(
@@ -66,96 +65,87 @@ class TestPolicyEnforcer(common.HeatTestCase):
         for action in self.cfn_actions:
             # Everything should raise the default exception.Forbidden
             self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
-                              action, {})
+                              action, {}, is_registered_policy=True)
 
     def test_policy_cfn_deny_stack_user(self):
-        enforcer = policy.Enforcer(
-            scope='cloudformation',
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer(scope='cloudformation')
 
         ctx = utils.dummy_context(roles=['heat_stack_user'])
         for action in self.cfn_actions:
             # Everything apart from DescribeStackResource should be Forbidden
             if action == "DescribeStackResource":
-                enforcer.enforce(ctx, action)
+                enforcer.enforce(ctx, action, is_registered_policy=True)
             else:
                 self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
-                                  action, {})
+                                  action, {}, is_registered_policy=True)
 
     def test_policy_cfn_allow_non_stack_user(self):
-        enforcer = policy.Enforcer(
-            scope='cloudformation',
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer(scope='cloudformation')
 
         ctx = utils.dummy_context(roles=['not_a_stack_user'])
         for action in self.cfn_actions:
             # Everything should be allowed
-            enforcer.enforce(ctx, action)
+            enforcer.enforce(ctx, action, is_registered_policy=True)
 
     def test_policy_cw_deny_stack_user(self):
-        enforcer = policy.Enforcer(
-            scope='cloudwatch',
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer(scope='cloudwatch')
 
         ctx = utils.dummy_context(roles=['heat_stack_user'])
         for action in self.cw_actions:
             # Everything apart from PutMetricData should be Forbidden
             if action == "PutMetricData":
-                enforcer.enforce(ctx, action)
+                enforcer.enforce(ctx, action, is_registered_policy=True)
             else:
                 self.assertRaises(exception.Forbidden, enforcer.enforce, ctx,
-                                  action, {})
+                                  action, {}, is_registered_policy=True)
 
     def test_policy_cw_allow_non_stack_user(self):
-        enforcer = policy.Enforcer(
-            scope='cloudwatch',
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer(scope='cloudwatch')
 
         ctx = utils.dummy_context(roles=['not_a_stack_user'])
         for action in self.cw_actions:
             # Everything should be allowed
-            enforcer.enforce(ctx, action)
+            enforcer.enforce(ctx, action, is_registered_policy=True)
 
     def test_set_rules_overwrite_true(self):
-        enforcer = policy.Enforcer(
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer()
         enforcer.load_rules(True)
         enforcer.set_rules({'test_heat_rule': 1}, True)
         self.assertEqual({'test_heat_rule': 1}, enforcer.enforcer.rules)
 
     def test_set_rules_overwrite_false(self):
-        enforcer = policy.Enforcer(
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer()
         enforcer.load_rules(True)
         enforcer.load_rules(True)
         enforcer.set_rules({'test_heat_rule': 1}, False)
         self.assertIn('test_heat_rule', enforcer.enforcer.rules)
 
     def test_load_rules_force_reload_true(self):
-        enforcer = policy.Enforcer(
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer()
         enforcer.load_rules(True)
         enforcer.set_rules({'test_heat_rule': 'test'})
         enforcer.load_rules(True)
         self.assertNotIn({'test_heat_rule': 'test'}, enforcer.enforcer.rules)
 
     def test_load_rules_force_reload_false(self):
-        enforcer = policy.Enforcer(
-            policy_file=self.get_policy_file('deny_stack_user.json'))
+        enforcer = policy.Enforcer()
         enforcer.load_rules(True)
         enforcer.load_rules(True)
         enforcer.set_rules({'test_heat_rule': 'test'})
         enforcer.load_rules(False)
         self.assertIn('test_heat_rule', enforcer.enforcer.rules)
 
-    def test_default_rule(self):
+    def test_no_such_action(self):
         ctx = utils.dummy_context(roles=['not_a_stack_user'])
-        enforcer = policy.Enforcer(
-            scope='cloudformation',
-            policy_file=self.get_policy_file('deny_stack_user.json'),
-            exc=None, default_rule='!')
+        enforcer = policy.Enforcer(scope='cloudformation')
         action = 'no_such_action'
-        self.assertFalse(enforcer.enforce(ctx, action))
+        msg = 'cloudformation:no_such_action has not been registered'
+        self.assertRaisesRegex(base_policy.PolicyNotRegistered,
+                               msg,
+                               enforcer.enforce,
+                               ctx, action,
+                               None, None,
+                               True)
 
     def test_check_admin(self):
         enforcer = policy.Enforcer()

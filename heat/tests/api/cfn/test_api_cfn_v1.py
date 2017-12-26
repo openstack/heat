@@ -72,14 +72,11 @@ class CfnStackControllerTest(common.HeatTestCase):
         return req
 
     def _stub_enforce(self, req, action, allowed=True):
-        self.m.StubOutWithMock(policy.Enforcer, 'enforce')
+        mock_enforce = self.patchobject(policy.Enforcer, 'enforce')
         if allowed:
-            policy.Enforcer.enforce(req.context, action
-                                    ).AndReturn(True)
+            mock_enforce.return_value = True
         else:
-            policy.Enforcer.enforce(req.context, action
-                                    ).AndRaise(heat_exception.Forbidden)
-        self.m.ReplayAll()
+            mock_enforce.side_effect = heat_exception.Forbidden
 
     # The tests
     def test_stackid_addprefix(self):
@@ -118,10 +115,8 @@ class CfnStackControllerTest(common.HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         dummy_req.context.roles = ['heat_stack_user']
 
-        self.m.StubOutWithMock(policy.Enforcer, 'enforce')
-        policy.Enforcer.enforce(dummy_req.context, 'ListStacks'
-                                ).AndRaise(AttributeError)
-        self.m.ReplayAll()
+        mock_enforce = self.patchobject(policy.Enforcer, 'enforce')
+        mock_enforce.side_effect = AttributeError
 
         self.assertRaises(exception.HeatInternalFailureError,
                           self.controller._enforce, dummy_req, 'ListStacks')
@@ -512,10 +507,9 @@ class CfnStackControllerTest(common.HeatTestCase):
                                             engine_parms, engine_args,
                                             failure, need_stub=True):
         if need_stub:
-            self.m.StubOutWithMock(policy.Enforcer, 'enforce')
+            mock_enforce = self.patchobject(policy.Enforcer, 'enforce')
             self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        policy.Enforcer.enforce(req_context,
-                                'CreateStack').AndReturn(True)
+            mock_enforce.return_value = True
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
