@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Heat now support policy in code, which means if you didn't modify any of
+    policy rules, you won't need to add rules in the `policy.yaml` or
+    `policy.json` file. Because from now, heat keeps all default policies under
+    `heat/policies`. You can still generate and modify a `policy.yaml` file
+    which will override policy rules in code if those rules appear in the
+    `policy.yaml` file.
+upgrade:
+  - |
+    Default policy.json file is now removed as we now generate the default
+    policies in code. Please be aware that when using that file in your
+    environment. You still can generate a `policy.yaml` file if that's required
+    in your environment.

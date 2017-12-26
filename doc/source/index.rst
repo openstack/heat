@@ -113,7 +113,6 @@ API Documentation
 
    .. _`Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`: http://developer.openstack.org/api-ref/orchestration/v1/
 
-
 Code Documentation
 ==================
 .. toctree::
