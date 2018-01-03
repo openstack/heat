@@ -956,7 +956,7 @@ class Repeat(function.Function):
                 self._valid_arg(value)
                 values.append(value)
                 value_lens.append(len(value))
-        if not self._nested_loop:
+        if not self._nested_loop and value_lens:
             if len(set(value_lens)) != 1:
                 raise ValueError(_('For %s, the length of for_each values '
                                    'should be equal if no nested '

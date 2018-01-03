@@ -1109,7 +1109,17 @@ class HOTemplateTest(common.HeatTestCase):
         snippet = {'map_merge': {'repeat': {
             'template': {'ROLE': 'ROLE', 'NAME': 'NAME'},
             'for_each': {'ROLE': None, 'NAME': ['n1', 'n2']},
-            'permutations': None}}}
+            'permutations': False}}}
+        tmpl = template.Template(hot_mitaka_tpl_empty)
+        resolved = self.resolve(snippet, tmpl)
+
+        self.assertEqual({}, resolved)
+
+    def test_merge_containing_repeat_multi_list_no_nested_loop_all_none(self):
+        snippet = {'map_merge': {'repeat': {
+            'template': {'ROLE': 'ROLE', 'NAME': 'NAME'},
+            'for_each': {'ROLE': None, 'NAME': None},
+            'permutations': False}}}
         tmpl = template.Template(hot_mitaka_tpl_empty)
         resolved = self.resolve(snippet, tmpl)
 
