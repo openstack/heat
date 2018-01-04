@@ -267,6 +267,31 @@ class ServerNetworkMixin(object):
             self.client('neutron').update_floatingip(
                 floating_ip, {'floatingip': {'port_id': None}})
 
+    def _find_best_match(self, existing_interfaces, specified_net):
+        specified_net_items = set(specified_net.items())
+        if specified_net.get(self.NETWORK_PORT) is not None:
+            for iface in existing_interfaces:
+                if (iface[self.NETWORK_PORT] ==
+                        specified_net[self.NETWORK_PORT] and
+                        specified_net_items.issubset(set(iface.items()))):
+                    return iface
+        elif specified_net.get(self.NETWORK_FIXED_IP) is not None:
+            for iface in existing_interfaces:
+                if (iface[self.NETWORK_FIXED_IP] ==
+                        specified_net[self.NETWORK_FIXED_IP] and
+                        specified_net_items.issubset(set(iface.items()))):
+                    return iface
+        else:
+            # Best subset intersection
+            best, matches, num = None, 0, 0
+            for iface in existing_interfaces:
+                iface_items = set(iface.items())
+                if specified_net_items.issubset(iface_items):
+                    num = len(specified_net_items.intersection(iface_items))
+                if num > matches:
+                    best, matches = iface, num
+            return best
+
     def _exclude_not_updated_networks(self, old_nets, new_nets):
         # make networks similar by adding None vlues for not used keys
         for key in self._NETWORK_KEYS:
@@ -289,38 +314,28 @@ class ServerNetworkMixin(object):
         return net_id
 
     def update_networks_matching_iface_port(self, nets, interfaces):
+        iface_managed_keys = (self.NETWORK_PORT, self.NETWORK_ID,
+                              self.NETWORK_FIXED_IP)
 
-        def find_equal(port, net_id, ip, nets):
-            for net in nets:
-                if (net.get('port') == port or
-                        (net.get('fixed_ip') == ip and
-                         self._get_network_id(net) == net_id)):
-                    return net
-
-        def find_poor_net(net_id, nets):
-            for net in nets:
-                if (not net.get('port') and not net.get('fixed_ip') and
-                        self._get_network_id(net) == net_id):
-                    return net
-
-        for iface in interfaces:
-            # get interface properties
+        def get_iface_props(iface):
             ipaddr = None
             if len(iface.fixed_ips) > 0:
                 ipaddr = iface.fixed_ips[0]['ip_address']
-            props = {'port': iface.port_id,
-                     'net_id': iface.net_id,
-                     'ip': ipaddr,
-                     'nets': nets}
-            # try to match by port or network_id with fixed_ip
-            net = find_equal(**props)
-            if net is not None:
-                net['port'] = props['port']
-                continue
-            # find poor net that has only network_id
-            net = find_poor_net(props['net_id'], nets)
-            if net is not None:
-                net['port'] = props['port']
+            return {self.NETWORK_PORT: iface.port_id,
+                    self.NETWORK_ID: iface.net_id,
+                    self.NETWORK_FIXED_IP: ipaddr}
+
+        interfaces_net_props = [get_iface_props(iface) for iface in interfaces]
+        for net in nets:
+            if net[self.NETWORK_PORT] is None:
+                net[self.NETWORK_ID] = self._get_network_id(net)
+            net_reduced = {k: v for k, v in net.items()
+                           if k in iface_managed_keys and v is not None}
+            match = self._find_best_match(interfaces_net_props,
+                                          net_reduced)
+            if match is not None:
+                net.update(match)
+                interfaces_net_props.remove(match)
 
     def _get_available_networks(self):
         # first we get the private networks owned by the tenant
