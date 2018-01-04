@@ -3371,7 +3371,7 @@ class ServersTest(common.HeatTestCase):
         return_server = self.fc.servers.list()[3]
         server = self._create_test_server(return_server, 'networks_update')
 
-        # old order 0 1 2 3 4
+        # old order 0 1 2 3 4 5 6
         nets = [
             self.create_old_net(port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
             self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg',
@@ -3379,8 +3379,11 @@ class ServersTest(common.HeatTestCase):
             self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg'),
             self.create_old_net(port='dddddddd-dddd-dddd-dddd-dddddddddddd'),
             self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg',
-                                ip='5.6.7.8')]
-        # new order 2 3 0 1 4
+                                ip='5.6.7.8'),
+            self.create_old_net(net='gggggggg-1111-1111-1111-gggggggggggg',
+                                subnet='hhhhhhhh-1111-1111-1111-hhhhhhhhhhhh'),
+            self.create_old_net(subnet='iiiiiiii-1111-1111-1111-iiiiiiiiiiii')]
+        # new order 2 3 0 1 4 6 5
         interfaces = [
             create_fake_iface(port='cccccccc-cccc-cccc-cccc-cccccccccccc',
                               net=nets[2]['network'],
@@ -3396,7 +3399,16 @@ class ServersTest(common.HeatTestCase):
                               ip=nets[1]['fixed_ip']),
             create_fake_iface(port='eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee',
                               net=nets[4]['network'],
-                              ip=nets[4]['fixed_ip'])]
+                              ip=nets[4]['fixed_ip']),
+            create_fake_iface(port='gggggggg-gggg-gggg-gggg-gggggggggggg',
+                              net='gggggggg-1111-1111-1111-gggggggggggg',
+                              ip='10.0.0.14',
+                              subnet=nets[6]['subnet']),
+            create_fake_iface(port='ffffffff-ffff-ffff-ffff-ffffffffffff',
+                              net=nets[5]['network'],
+                              ip='10.0.0.15',
+                              subnet=nets[5]['subnet'])]
+
         # all networks should get port id
         expected = [
             {'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -3443,10 +3455,31 @@ class ServersTest(common.HeatTestCase):
              'floating_ip': None,
              'network': 'gggggggg-1111-1111-1111-gggggggggggg',
              'allocate_network': None,
+             'tag': None},
+            {'port': 'ffffffff-ffff-ffff-ffff-ffffffffffff',
+             'uuid': None,
+             'fixed_ip': '10.0.0.15',
+             'subnet': 'hhhhhhhh-1111-1111-1111-hhhhhhhhhhhh',
+             'port_extra_properties': None,
+             'floating_ip': None,
+             'network': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'allocate_network': None,
+             'tag': None},
+            {'port': 'gggggggg-gggg-gggg-gggg-gggggggggggg',
+             'uuid': None,
+             'fixed_ip': '10.0.0.14',
+             'subnet': 'iiiiiiii-1111-1111-1111-iiiiiiiiiiii',
+             'port_extra_properties': None,
+             'floating_ip': None,
+             'network': 'gggggggg-1111-1111-1111-gggggggggggg',
+             'allocate_network': None,
              'tag': None}]
 
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
+                         return_value='gggggggg-1111-1111-1111-gggggggggggg')
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'network_id_from_subnet_id',
                          return_value='gggggggg-1111-1111-1111-gggggggggggg')
         server.update_networks_matching_iface_port(nets, interfaces)
         self.assertEqual(expected, nets)
