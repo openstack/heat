@@ -76,8 +76,10 @@ class ResourceGroup(stack_resource.StackResource):
 
     PROPERTIES = (
         COUNT, INDEX_VAR, RESOURCE_DEF, REMOVAL_POLICIES,
+        REMOVAL_POLICIES_MODE,
     ) = (
         'count', 'index_var', 'resource_def', 'removal_policies',
+        'removal_policies_mode'
     )
 
     _RESOURCE_DEF_KEYS = (
@@ -90,6 +92,12 @@ class ResourceGroup(stack_resource.StackResource):
         REMOVAL_RSRC_LIST,
     ) = (
         'resource_list',
+    )
+
+    _REMOVAL_POLICY_MODES = (
+        REMOVAL_POLICY_APPEND, REMOVAL_POLICY_UPDATE
+    ) = (
+        'append', 'update'
     )
 
     _ROLLING_UPDATES_SCHEMA_KEYS = (
@@ -194,6 +202,18 @@ class ResourceGroup(stack_resource.StackResource):
             update_allowed=True,
             default=[],
             support_status=support.SupportStatus(version='2015.1')
+        ),
+        REMOVAL_POLICIES_MODE: properties.Schema(
+            properties.Schema.STRING,
+            _('How to handle changes to removal_policies on update. '
+              'The default "append" mode appends to the internal list, '
+              '"update" replaces it on update.'),
+            default=REMOVAL_POLICY_APPEND,
+            constraints=[
+                constraints.AllowedValues(_REMOVAL_POLICY_MODES)
+            ],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='10.0.0')
         ),
     }
 
@@ -313,12 +333,18 @@ class ResourceGroup(stack_resource.StackResource):
         nested = self.nested()
 
         # To avoid reusing names after removal, we store a comma-separated
-        # blacklist in the resource data
+        # blacklist in the resource data - in cases where you want to
+        # overwrite the stored data, removal_policies_mode: update can be used
         current_blacklist = self._current_blacklist()
+        p_mode = self.properties[self.REMOVAL_POLICIES_MODE]
+        if p_mode == self.REMOVAL_POLICY_UPDATE:
+            new_blacklist = []
+        else:
+            new_blacklist = current_blacklist
 
         # Now we iterate over the removal policies, and update the blacklist
         # with any additional names
-        rsrc_names = set(current_blacklist)
+        rsrc_names = set(new_blacklist)
 
         for r in self.properties[self.REMOVAL_POLICIES]:
             if self.REMOVAL_RSRC_LIST in r:

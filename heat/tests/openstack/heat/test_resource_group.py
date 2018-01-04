@@ -638,26 +638,34 @@ class ResourceGroupBlackList(common.HeatTestCase):
     scenarios = [
         ('1', dict(data_in=None, rm_list=[],
                    nested_rsrcs=[], expected=[],
-                   saved=False)),
+                   saved=False, rm_mode='append')),
         ('2', dict(data_in='0,1,2', rm_list=[],
                    nested_rsrcs=[], expected=['0', '1', '2'],
-                   saved=False)),
+                   saved=False, rm_mode='append')),
         ('3', dict(data_in='1,3', rm_list=['6'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['1', '3'],
-                   saved=False)),
+                   saved=False, rm_mode='append')),
         ('4', dict(data_in='0,1', rm_list=['id-7'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['0', '1'],
-                   saved=False)),
+                   saved=False, rm_mode='append')),
         ('5', dict(data_in='0,1', rm_list=['3'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['0', '1', '3'],
-                   saved=True)),
+                   saved=True, rm_mode='append')),
         ('6', dict(data_in='0,1', rm_list=['id-3'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['0', '1', '3'],
-                   saved=True)),
+                   saved=True, rm_mode='append')),
+        ('7', dict(data_in='0,1', rm_list=['id-3'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['3'],
+                   saved=True, rm_mode='update')),
+        ('8', dict(data_in='1', rm_list=[],
+                   nested_rsrcs=['0', '1', '2'],
+                   expected=[],
+                   saved=True, rm_mode='update')),
     ]
 
     def test_blacklist(self):
@@ -666,8 +674,9 @@ class ResourceGroupBlackList(common.HeatTestCase):
 
         # mock properties
         resg.properties = mock.MagicMock()
-        resg.properties.__getitem__.return_value = [
-            {'resource_list': self.rm_list}]
+        p_data = {'removal_policies': [{'resource_list': self.rm_list}],
+                  'removal_policies_mode': self.rm_mode}
+        resg.properties.__getitem__.side_effect = p_data.__getitem__
 
         # mock data get/set
         resg.data = mock.Mock()

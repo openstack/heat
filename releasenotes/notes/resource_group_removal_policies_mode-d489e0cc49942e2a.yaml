@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    OS::Heat::ResourceGroup now supports a removal_policies_mode property.
+    This can be used to optionally select different behavior on update where
+    you may wish to overwrite vs append to the current policy.
