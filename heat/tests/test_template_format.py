@@ -82,7 +82,7 @@ class JsonToYamlTest(common.HeatTestCase):
         with open(path, 'r') as f:
             json_str = f.read()
             yml_str = template_format.convert_json_to_yaml(json_str)
-            match = re.search('[\s,{]\d+\s*:', yml_str)
+            match = re.search(r'[\s,{]\d+\s*:', yml_str)
             # Check that there are no matches of integer-only keys
             # lacking explicit quotes
             self.assertIsNone(match)

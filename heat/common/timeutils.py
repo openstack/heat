@@ -20,7 +20,7 @@ import time
 from heat.common.i18n import _
 
 
-iso_duration_re = re.compile('PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$')
+iso_duration_re = re.compile(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$')
 wallclock = time.time
 
 

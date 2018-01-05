@@ -844,7 +844,7 @@ class ResourceRegistryTest(common.HeatTestCase):
 
     def test_list_type_with_invalid_type_name(self):
         registry = resources.global_env().registry
-        types = registry.get_types(type_name="r'[^\+]'")
+        types = registry.get_types(type_name="r'[^\\+]'")
         self.assertEqual([], types)
 
     def test_list_type_with_version(self):

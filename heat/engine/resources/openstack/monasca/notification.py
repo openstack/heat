@@ -140,7 +140,7 @@ class MonascaNotification(resource.Resource):
                 }
                 raise exception.StackValidationFailed(message=msg)
         elif (self.properties[self.TYPE] == self.EMAIL and
-              not re.match('^\S+@\S+$', address)):
+              not re.match(r'^\S+@\S+$', address)):
             msg = _('Address "%(addr)s" doesn\'t satisfies allowed format for '
                     '"%(email)s" type of "%(type)s" property') % {
                 'addr': address,

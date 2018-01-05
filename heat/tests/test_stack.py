@@ -1305,8 +1305,8 @@ class StackTest(common.HeatTestCase):
                         'abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuv')
         stack_names = ['_foo', '1bad', '.kcats', 'test stack', ' teststack',
                        '^-^', '"stack"', '1234', 'cat|dog', '$(foo)',
-                       'test/stack', 'test\stack', 'test::stack', 'test;stack',
-                       'test~stack', '#test', gt_255_chars]
+                       'test/stack', 'test\\stack', 'test::stack',
+                       'test;stack', 'test~stack', '#test', gt_255_chars]
         for stack_name in stack_names:
             ex = self.assertRaises(
                 exception.StackValidationFailed, stack.Stack,
@@ -1904,7 +1904,7 @@ class StackTest(common.HeatTestCase):
         self.assertRaisesRegex(
             exception.StackValidationFailed,
             ('Outputs.Resource_attr.Value.Fn::GetAtt: The Referenced '
-             'Attribute \(AResource Bar\) is incorrect.'),
+             r'Attribute \(AResource Bar\) is incorrect.'),
             self.stack.validate)
 
     def test_incorrect_outputs_cfn_incorrect_reference(self):
@@ -2267,7 +2267,7 @@ class StackTest(common.HeatTestCase):
         self.assertRaisesRegex(
             exception.StackValidationFailed,
             ('outputs.resource_attr.value.get_attr: The Referenced Attribute '
-             '\(AResource Bar\) is incorrect.'),
+             r'\(AResource Bar\) is incorrect.'),
             self.stack.validate)
 
     def test_snapshot_save_called_first(self):

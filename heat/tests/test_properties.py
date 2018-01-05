@@ -784,8 +784,9 @@ class PropertyTest(common.HeatTestCase):
         # python 3.4.3 returns another error message
         # try to handle this by regexp
         self.assertRaisesRegex(
-            TypeError, "int\(\) argument must be a string(, a bytes-like "
-                       "object)? or a number, not 'list'", p.get_value, [1])
+            TypeError, r"int\(\) argument must be a string"
+                       "(, a bytes-like object)?"
+                       " or a number, not 'list'", p.get_value, [1])
 
     def test_str_from_int(self):
         schema = {'Type': 'String'}

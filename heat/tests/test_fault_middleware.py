@@ -174,7 +174,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
             if hasattr(obj, 'msg_fmt'):
                 kwargs = {}
-                spec_names = re.findall('%\((\w+)\)([cdeEfFgGinorsxX])',
+                spec_names = re.findall(r'%\((\w+)\)([cdeEfFgGinorsxX])',
                                         obj.msg_fmt)
 
                 for key, convtype in spec_names:
