@@ -12,7 +12,7 @@
 #    under the License.
 
 import mock
-from senlinclient.common import exc
+from openstack import exceptions
 
 from heat.engine.clients.os import senlin as senlin_plugin
 from heat.tests import common
@@ -32,10 +32,10 @@ class SenlinClientPluginTest(common.HeatTestCase):
 
     def test_is_bad_request(self):
         self.assertTrue(self.plugin.is_bad_request(
-            exc.sdkexc.HttpException(http_status=400)))
+            exceptions.HttpException(http_status=400)))
         self.assertFalse(self.plugin.is_bad_request(Exception))
         self.assertFalse(self.plugin.is_bad_request(
-            exc.sdkexc.HttpException(http_status=404)))
+            exceptions.HttpException(http_status=404)))
 
     def test_check_action_success(self):
         mock_action = mock.MagicMock()
@@ -87,10 +87,10 @@ class ProfileConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("PROFILE_ID", self.ctx))
 
     def test_validate_false(self):
-        self.mock_get_profile.side_effect = exc.sdkexc.ResourceNotFound(
+        self.mock_get_profile.side_effect = exceptions.ResourceNotFound(
             'PROFILE_ID')
         self.assertFalse(self.constraint.validate("PROFILE_ID", self.ctx))
-        self.mock_get_profile.side_effect = exc.sdkexc.HttpException(
+        self.mock_get_profile.side_effect = exceptions.HttpException(
             'PROFILE_ID')
         self.assertFalse(self.constraint.validate("PROFILE_ID", self.ctx))
 
@@ -112,10 +112,10 @@ class ClusterConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("CLUSTER_ID", self.ctx))
 
     def test_validate_false(self):
-        self.mock_get_cluster.side_effect = exc.sdkexc.ResourceNotFound(
+        self.mock_get_cluster.side_effect = exceptions.ResourceNotFound(
             'CLUSTER_ID')
         self.assertFalse(self.constraint.validate("CLUSTER_ID", self.ctx))
-        self.mock_get_cluster.side_effect = exc.sdkexc.HttpException(
+        self.mock_get_cluster.side_effect = exceptions.HttpException(
             'CLUSTER_ID')
         self.assertFalse(self.constraint.validate("CLUSTER_ID", self.ctx))
 
@@ -137,10 +137,10 @@ class PolicyConstraintTest(common.HeatTestCase):
         self.assertTrue(self.constraint.validate("POLICY_ID", self.ctx))
 
     def test_validate_false(self):
-        self.mock_get_policy.side_effect = exc.sdkexc.ResourceNotFound(
+        self.mock_get_policy.side_effect = exceptions.ResourceNotFound(
             'POLICY_ID')
         self.assertFalse(self.constraint.validate("POLICY_ID", self.ctx))
-        self.mock_get_policy.side_effect = exc.sdkexc.HttpException(
+        self.mock_get_policy.side_effect = exceptions.HttpException(
             'POLICY_ID')
         self.assertFalse(self.constraint.validate("POLICY_ID", self.ctx))
 

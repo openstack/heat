@@ -25,7 +25,7 @@ from heat.engine import scheduler
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-from senlinclient.common import exc
+from openstack import exceptions
 
 
 node_stack_template = """
@@ -127,7 +127,7 @@ class SenlinNodeTest(common.HeatTestCase):
     def test_node_delete_success(self):
         node = self._create_node()
         self.senlin_mock.get_node.side_effect = [
-            exc.sdkexc.ResourceNotFound('SenlinNode'),
+            exceptions.ResourceNotFound('SenlinNode'),
         ]
         scheduler.TaskRunner(node.delete)()
         self.senlin_mock.delete_node.assert_called_once_with(

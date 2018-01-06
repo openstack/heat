@@ -11,12 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from openstack.config import cloud_region
 from openstack import connection
 from openstack import exceptions
-from openstack import profile
+import os_service_types
 
+from heat.common import config
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
+import heat.version
 
 CLIENT_NAME = 'openstack'
 
@@ -25,24 +28,39 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
-    service_types = [NETWORK] = ['network']
-    service_client_map = {NETWORK: 'neutron'}
-    api_version_map = {NETWORK: '2.0'}
+    service_types = [NETWORK, CLUSTERING] = ['network', 'clustering']
 
     def _create(self, version=None):
-        prof = profile.Profile()
-        for svc_type in self.service_types:
-            interface = self._get_client_option(
-                self.service_client_map[svc_type], 'endpoint_type')
-            prof.set_interface(svc_type, interface)
-            prof.set_region(svc_type, self._get_region_name())
-            prof.set_version(svc_type, self.api_version_map[svc_type])
+        config = cloud_region.from_session(
+            # TODO(mordred) The way from_session calculates a cloud name
+            # doesn't interact well with the mocks in the test cases. The
+            # name is used in logging to distinguish requests made to different
+            # clouds. For now, set it to local - but maybe find a way to set
+            # it to something more meaningful later.
+            name='local',
+            session=self.context.keystone_session,
+            config=self._get_service_interfaces(),
+            region_name=self._get_region_name(),
+            app_name='heat',
+            app_version=heat.version.version_info.version_string())
+        return connection.Connection(config=config)
 
-        key_session = self.context.keystone_session
-        return connection.Connection(authenticator=key_session.auth,
-                                     verify=key_session.verify,
-                                     cert=key_session.cert,
-                                     profile=prof)
+    def _get_service_interfaces(self):
+        interfaces = {}
+        if not os_service_types:
+            return interfaces
+        types = os_service_types.ServiceTypes()
+        for name, _ in config.list_opts():
+            if not name or not name.startswith('clients_'):
+                continue
+            project_name = name.split("_", 1)[0]
+            service_data = types.get_service_data_for_project(project_name)
+            if not service_data:
+                continue
+            service_type = service_data['service_type']
+            interfaces[service_type + '_interface'] = self._get_client_option(
+                service_type, 'endpoint_type')
+        return interfaces
 
     def is_not_found(self, ex):
         return isinstance(ex, exceptions.ResourceNotFound)

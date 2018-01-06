@@ -15,8 +15,8 @@
 import copy
 import mock
 
+from openstack import exceptions
 from oslo_config import cfg
-from senlinclient.common import exc
 
 from heat.common import exception
 from heat.common import template_format
@@ -134,7 +134,7 @@ class SenlinPolicyTest(common.HeatTestCase):
             'action': 'fake_action'}
         policy = self._create_policy(self.t)
         self.senlin_mock.get_policy.side_effect = [
-            exc.sdkexc.ResourceNotFound('SenlinPolicy'),
+            exceptions.ResourceNotFound('SenlinPolicy'),
         ]
         scheduler.TaskRunner(policy.delete)()
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(
@@ -145,10 +145,10 @@ class SenlinPolicyTest(common.HeatTestCase):
     def test_policy_delete_not_attached(self):
         policy = self._create_policy(self.t)
         self.senlin_mock.get_policy.side_effect = [
-            exc.sdkexc.ResourceNotFound('SenlinPolicy'),
+            exceptions.ResourceNotFound('SenlinPolicy'),
         ]
         self.senlin_mock.cluster_detach_policy.side_effect = [
-            exc.sdkexc.HttpException(http_status=400),
+            exceptions.HttpException(http_status=400),
         ]
         scheduler.TaskRunner(policy.delete)()
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(

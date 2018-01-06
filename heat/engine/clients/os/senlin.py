@@ -11,30 +11,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from openstack import exceptions
+
 from heat.common import exception
 from heat.common.i18n import _
-from heat.engine.clients import client_plugin
+from heat.engine.clients.os import openstacksdk as sdk_plugin
 from heat.engine import constraints
-
-from openstack import profile
-from senlinclient.common import exc
-from senlinclient.v1 import client
 
 CLIENT_NAME = 'senlin'
 
 
-class SenlinClientPlugin(client_plugin.ClientPlugin):
+class SenlinClientPlugin(sdk_plugin.OpenStackSDKPlugin):
 
-    service_types = [CLUSTERING] = ['clustering']
+    exceptions_module = exceptions
 
-    def _create(self):
-        interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        prof = profile.Profile()
-        prof.set_interface(self.CLUSTERING, interface)
-        prof.set_region(self.CLUSTERING, self._get_region_name())
-        key_session = self.context.keystone_session
-        return client.Client(prof=prof,
-                             authenticator=key_session.auth)
+    def _create(self, version=None):
+        client = super(SenlinClientPlugin, self)._create(version=version)
+        return client.clustering
 
     def generate_spec(self, spec_type, spec_props):
         spec = {'properties': spec_props}
@@ -64,11 +57,8 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
         policy = self.client().get_policy(policy_name)
         return policy.id
 
-    def is_not_found(self, ex):
-        return isinstance(ex, exc.sdkexc.ResourceNotFound)
-
     def is_bad_request(self, ex):
-        return (isinstance(ex, exc.sdkexc.HttpException) and
+        return (isinstance(ex, exceptions.HttpException) and
                 ex.status_code == 400)
 
     def execute_actions(self, actions):
@@ -93,24 +83,24 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
 
 
 class ProfileConstraint(constraints.BaseCustomConstraint):
-    # If name is not unique, will raise exc.sdkexc.HttpException
-    expected_exceptions = (exc.sdkexc.HttpException,)
+    # If name is not unique, will raise exceptions.HttpException
+    expected_exceptions = (exceptions.HttpException,)
 
     def validate_with_client(self, client, profile):
         client.client(CLIENT_NAME).get_profile(profile)
 
 
 class ClusterConstraint(constraints.BaseCustomConstraint):
-    #  If name is not unique, will raise exc.sdkexc.HttpException
-    expected_exceptions = (exc.sdkexc.HttpException,)
+    #  If name is not unique, will raise exceptions.HttpException
+    expected_exceptions = (exceptions.HttpException,)
 
     def validate_with_client(self, client, value):
         client.client(CLIENT_NAME).get_cluster(value)
 
 
 class PolicyConstraint(constraints.BaseCustomConstraint):
-    #  If name is not unique, will raise exc.sdkexc.HttpException
-    expected_exceptions = (exc.sdkexc.HttpException,)
+    #  If name is not unique, will raise exceptions.HttpException
+    expected_exceptions = (exceptions.HttpException,)
 
     def validate_with_client(self, client, value):
         client.client(CLIENT_NAME).get_policy(value)
@@ -121,8 +111,8 @@ class ProfileTypeConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.StackValidationFailed,)
 
     def validate_with_client(self, client, value):
-        senlin_client = client.client(CLIENT_NAME)
-        type_list = senlin_client.profile_types()
+        conn = client.client(CLIENT_NAME)
+        type_list = conn.profile_types()
         names = [pt.name for pt in type_list]
         if value not in names:
             not_found_message = (
@@ -138,8 +128,8 @@ class PolicyTypeConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.StackValidationFailed,)
 
     def validate_with_client(self, client, value):
-        senlin_client = client.client(CLIENT_NAME)
-        type_list = senlin_client.policy_types()
+        conn = client.client(CLIENT_NAME)
+        type_list = conn.policy_types()
         names = [pt.name for pt in type_list]
         if value not in names:
             not_found_message = (
