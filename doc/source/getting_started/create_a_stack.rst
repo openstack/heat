@@ -33,6 +33,15 @@ This should return an empty line
 Preparing to create a stack
 ---------------------------
 
+Download and register the image::
+
+    $ wget http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2
+    $ openstack image create \
+                          --disk-format=qcow2 \
+                          --container-format=bare \
+                          --file=fedora-20.x86_64.qcow2 \
+                          fedora-20.x86_64
+
 Your cloud will have different flavors and images available for
 launching instances, you can discover what is available by running::
 
