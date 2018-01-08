@@ -175,6 +175,51 @@ class ResourceGroupTest(common.HeatTestCase):
 
         self.assertEqual(templ, resg._assemble_nested(['0', '1', '2']).t)
 
+    def test_assemble_nested_outputs(self):
+        """Tests nested stack creation based on props.
+
+        Tests that the nested stack that implements the group is created
+        appropriately based on properties.
+        """
+        stack = utils.parse_stack(template)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        templ = {
+            "heat_template_version": "2015-04-30",
+            "resources": {
+                "0": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "Foo": "Bar"
+                    }
+                },
+                "1": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "Foo": "Bar"
+                    }
+                },
+                "2": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "Foo": "Bar"
+                    }
+                }
+            },
+            "outputs": {
+                "foo": {
+                    "value": [
+                        {"get_attr": ["0", "foo"]},
+                        {"get_attr": ["1", "foo"]},
+                        {"get_attr": ["2", "foo"]},
+                    ]
+                }
+            }
+        }
+
+        resg.referenced_attrs = mock.Mock(return_value=["foo"])
+        self.assertEqual(templ, resg._assemble_nested(['0', '1', '2']).t)
+
     def test_assemble_nested_include(self):
         templ = copy.deepcopy(template)
         res_def = templ["resources"]["group1"]["properties"]['resource_def']
@@ -261,6 +306,45 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         resg._nested = get_fake_nested_stack(['0', '1'])
         resg.build_resource_definition = mock.Mock(return_value=resource_def)
+        self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
+
+    def test_assemble_nested_rolling_update_outputs(self):
+        expect = {
+            "heat_template_version": "2015-04-30",
+            "resources": {
+                "0": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "bar"
+                    }
+                },
+                "1": {
+                    "type": "OverwrittenFnGetRefIdType",
+                    "properties": {
+                        "foo": "baz"
+                    }
+                }
+            },
+            "outputs": {
+                "bar": {
+                    "value": [
+                        {"get_attr": ["0", "bar"]},
+                        {"get_attr": ["1", "bar"]},
+                    ]
+                }
+            }
+        }
+        resource_def = rsrc_defn.ResourceDefinition(
+            None,
+            "OverwrittenFnGetRefIdType",
+            {"foo": "baz"})
+
+        stack = utils.parse_stack(template)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resg = resource_group.ResourceGroup('test', snip, stack)
+        resg._nested = get_fake_nested_stack(['0', '1'])
+        resg.build_resource_definition = mock.Mock(return_value=resource_def)
+        resg.referenced_attrs = mock.Mock(return_value=["bar"])
         self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
 
     def test_assemble_nested_rolling_update_none(self):
