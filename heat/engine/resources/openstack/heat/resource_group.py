@@ -303,7 +303,7 @@ class ResourceGroup(stack_resource.StackResource):
         if not self.get_size():
             return
 
-        first_name = next(self._resource_names(update_rsrc_data=False))
+        first_name = next(self._resource_names())
         test_tmpl = self._assemble_nested([first_name],
                                           include_all=True)
         res_def = next(six.itervalues(test_tmpl.resource_definitions(None)))
@@ -330,44 +330,69 @@ class ResourceGroup(stack_resource.StackResource):
         else:
             return []
 
-    def _name_blacklist(self, update_rsrc_data=True):
-        """Resolve the remove_policies to names for removal."""
-
-        nested = self.nested()
-
-        # To avoid reusing names after removal, we store a comma-separated
-        # blacklist in the resource data - in cases where you want to
-        # overwrite the stored data, removal_policies_mode: update can be used
-        current_blacklist = self._current_blacklist()
-        p_mode = self.properties[self.REMOVAL_POLICIES_MODE]
-        if p_mode == self.REMOVAL_POLICY_UPDATE:
-            new_blacklist = []
-        else:
-            new_blacklist = current_blacklist
+    def _get_new_blacklist_entries(self, properties, current_blacklist):
+        insp = grouputils.GroupInspector.from_parent_resource(self)
 
         # Now we iterate over the removal policies, and update the blacklist
         # with any additional names
-        rsrc_names = set(new_blacklist)
-
-        for r in self.properties[self.REMOVAL_POLICIES]:
+        for r in properties.get(self.REMOVAL_POLICIES, []):
             if self.REMOVAL_RSRC_LIST in r:
                 # Tolerate string or int list values
                 for n in r[self.REMOVAL_RSRC_LIST]:
                     str_n = six.text_type(n)
-                    if not nested or str_n in nested:
-                        rsrc_names.add(str_n)
-                        continue
-                    rsrc = nested.resource_by_refid(str_n)
-                    if rsrc:
-                        rsrc_names.add(rsrc.name)
+                    if (str_n in current_blacklist or
+                            self.resource_id is None or
+                            str_n in insp.member_names(include_failed=True)):
+                        yield str_n
+                    elif isinstance(n, six.string_types):
+                        try:
+                            refids = self.get_output(self.REFS_MAP)
+                        except (exception.NotFound,
+                                exception.TemplateOutputError) as op_err:
+                            LOG.debug('Falling back to resource_by_refid() '
+                                      ' due to %s', op_err)
+                            rsrc = self.nested().resource_by_refid(n)
+                            if rsrc is not None:
+                                yield rsrc.name
+                        else:
+                            if refids is not None:
+                                for name, refid in refids.items():
+                                    if refid == n:
+                                        yield name
+                                        break
+
+        # Clear output cache from prior to stack update, so we don't get
+        # outdated values after stack update.
+        self._outputs = None
+
+    def _update_name_blacklist(self, properties):
+        """Resolve the remove_policies to names for removal."""
+        # To avoid reusing names after removal, we store a comma-separated
+        # blacklist in the resource data - in cases where you want to
+        # overwrite the stored data, removal_policies_mode: update can be used
+        curr_bl = set(self._current_blacklist())
+        p_mode = properties.get(self.REMOVAL_POLICIES_MODE,
+                                self.REMOVAL_POLICY_APPEND)
+        if p_mode == self.REMOVAL_POLICY_UPDATE:
+            init_bl = set()
+        else:
+            init_bl = curr_bl
+        updated_bl = init_bl | set(self._get_new_blacklist_entries(properties,
+                                                                   curr_bl))
 
         # If the blacklist has changed, update the resource data
-        if update_rsrc_data and rsrc_names != set(current_blacklist):
-            self.data_set('name_blacklist', ','.join(rsrc_names))
-        return rsrc_names
+        if updated_bl != curr_bl:
+            self.data_set('name_blacklist', ','.join(sorted(updated_bl)))
 
-    def _resource_names(self, size=None, update_rsrc_data=True):
-        name_blacklist = self._name_blacklist(update_rsrc_data)
+    def _name_blacklist(self):
+        """Get the list of resource names to blacklist."""
+        bl = set(self._current_blacklist())
+        if self.resource_id is None:
+            bl |= set(self._get_new_blacklist_entries(self.properties, bl))
+        return bl
+
+    def _resource_names(self, size=None):
+        name_blacklist = self._name_blacklist()
         if size is None:
             size = self.get_size()
 
@@ -385,6 +410,7 @@ class ResourceGroup(stack_resource.StackResource):
         return len(self._name_blacklist() & set(existing_members))
 
     def handle_create(self):
+        self._update_name_blacklist(self.properties)
         if self.update_policy.get(self.BATCH_CREATE):
             batch_create = self.update_policy[self.BATCH_CREATE]
             max_batch_size = batch_create[self.MAX_BATCH_SIZE]
@@ -443,6 +469,7 @@ class ResourceGroup(stack_resource.StackResource):
         checkers = []
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
+        self._update_name_blacklist(self.properties)
         if prop_diff and self.res_def_changed(prop_diff):
             updaters = self._try_rolling_update()
             if updaters:
@@ -540,11 +567,12 @@ class ResourceGroup(stack_resource.StackResource):
 
             if key == self.REFS:
                 value = [get_res_fn(r) for r in resource_names]
-            elif key == self.REFS_MAP:
-                value = {r: get_res_fn(r) for r in resource_names}
 
             if value is not None:
                 yield output.OutputDefinition(output_name, value)
+
+        value = {r: get_res_fn(r) for r in resource_names}
+        yield output.OutputDefinition(self.REFS_MAP, value)
 
     def build_resource_definition(self, res_name, res_defn):
         res_def = copy.deepcopy(res_defn)

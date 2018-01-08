@@ -174,6 +174,15 @@ class ResourceGroupTest(common.HeatTestCase):
                         "Foo": "Bar"
                     }
                 }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
+                        "2": {"get_resource": "2"},
+                    }
+                }
             }
         }
 
@@ -211,6 +220,13 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             },
             "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
+                        "2": {"get_resource": "2"},
+                    }
+                },
                 "foo": {
                     "value": [
                         {"get_attr": ["0", "foo"]},
@@ -238,6 +254,13 @@ class ResourceGroupTest(common.HeatTestCase):
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {}
                 }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                    }
+                }
             }
         }
         self.assertEqual(expect, resg._assemble_nested(['0']).t)
@@ -253,6 +276,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resg = resource_group.ResourceGroup('test', snip, stack)
         expect = {
             "heat_template_version": "2015-04-30",
+            "outputs": {"refs_map": {"value": {}}},
         }
         self.assertEqual(expect, resg._assemble_nested([]).t)
 
@@ -278,6 +302,13 @@ class ResourceGroupTest(common.HeatTestCase):
                         'role': 'webserver'
                     }
                 }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                    }
+                }
             }
         }
         self.assertEqual(expect, resg._assemble_nested(['0']).t)
@@ -296,6 +327,14 @@ class ResourceGroupTest(common.HeatTestCase):
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "foo": "baz"
+                    }
+                }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
                     }
                 }
             }
@@ -332,6 +371,12 @@ class ResourceGroupTest(common.HeatTestCase):
                 }
             },
             "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
+                    }
+                },
                 "bar": {
                     "value": [
                         {"get_attr": ["0", "bar"]},
@@ -371,6 +416,14 @@ class ResourceGroupTest(common.HeatTestCase):
                         "foo": "bar"
                     }
                 }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
+                    }
+                }
             }
         }
 
@@ -402,6 +455,14 @@ class ResourceGroupTest(common.HeatTestCase):
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {
                         "foo": "bar"
+                    }
+                }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
                     }
                 }
             }
@@ -449,6 +510,14 @@ class ResourceGroupTest(common.HeatTestCase):
                     "type": "OverwrittenFnGetRefIdType",
                     "properties": {}
                 }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
+                    }
+                }
             }
         }
         self.assertEqual(expected, nested_tmpl.t)
@@ -488,6 +557,15 @@ class ResourceGroupTest(common.HeatTestCase):
                         ]
                     }
                 }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
+                        "1": {"get_resource": "1"},
+                        "2": {"get_resource": "2"},
+                    }
+                }
             }
         }
         nested = resg._assemble_nested(['0', '1', '2']).t
@@ -512,6 +590,13 @@ class ResourceGroupTest(common.HeatTestCase):
                         "listprop": [
                             "%index%_0", "%index%_1", "%index%_2"
                         ]
+                    }
+                }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
                     }
                 }
             }
@@ -541,6 +626,13 @@ class ResourceGroupTest(common.HeatTestCase):
                         "listprop": [
                             "0_0", "0_1", "0_2"
                         ]
+                    }
+                }
+            },
+            "outputs": {
+                "refs_map": {
+                    "value": {
+                        "0": {"get_resource": "0"},
                     }
                 }
             }
@@ -710,7 +802,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp._assemble_nested = mock.Mock(return_value='tmpl')
         resgrp.properties.data[resgrp.COUNT] = 2
         self.patchobject(scheduler.TaskRunner, 'start')
-        resgrp.handle_update(snip, None, None)
+        resgrp.handle_update(snip, mock.Mock(), {})
         self.assertTrue(resgrp._assemble_nested.called)
 
     def test_handle_delete(self):
@@ -728,7 +820,7 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp._assemble_nested = mock.Mock(return_value=None)
         resgrp.properties.data[resgrp.COUNT] = 5
         self.patchobject(scheduler.TaskRunner, 'start')
-        resgrp.handle_update(snip, None, None)
+        resgrp.handle_update(snip, mock.Mock(), {})
         self.assertTrue(resgrp._assemble_nested.called)
 
 
@@ -741,48 +833,63 @@ class ResourceGroupBlackList(common.HeatTestCase):
     # 4) resource_list (refid) not in nested()
     # 5) resource_list in nested() -> saved
     # 6) resource_list (refid) in nested() -> saved
+    # 7) resource_list (refid) in nested(), update -> saved
+    # 8) resource_list, update -> saved
+    # 9) resource_list (refid) in nested(), grouputils fallback -> saved
+    # A) resource_list (refid) in nested(), update, grouputils -> saved
     scenarios = [
         ('1', dict(data_in=None, rm_list=[],
                    nested_rsrcs=[], expected=[],
-                   saved=False, rm_mode='append')),
+                   saved=False, fallback=False, rm_mode='append')),
         ('2', dict(data_in='0,1,2', rm_list=[],
                    nested_rsrcs=[], expected=['0', '1', '2'],
-                   saved=False, rm_mode='append')),
+                   saved=False, fallback=False, rm_mode='append')),
         ('3', dict(data_in='1,3', rm_list=['6'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['1', '3'],
-                   saved=False, rm_mode='append')),
+                   saved=False, fallback=False, rm_mode='append')),
         ('4', dict(data_in='0,1', rm_list=['id-7'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['0', '1'],
-                   saved=False, rm_mode='append')),
+                   saved=False, fallback=False, rm_mode='append')),
         ('5', dict(data_in='0,1', rm_list=['3'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['0', '1', '3'],
-                   saved=True, rm_mode='append')),
+                   saved=True, fallback=False, rm_mode='append')),
         ('6', dict(data_in='0,1', rm_list=['id-3'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['0', '1', '3'],
-                   saved=True, rm_mode='append')),
+                   saved=True, fallback=False, rm_mode='append')),
         ('7', dict(data_in='0,1', rm_list=['id-3'],
                    nested_rsrcs=['0', '1', '3'],
                    expected=['3'],
-                   saved=True, rm_mode='update')),
+                   saved=True, fallback=False, rm_mode='update')),
         ('8', dict(data_in='1', rm_list=[],
                    nested_rsrcs=['0', '1', '2'],
                    expected=[],
-                   saved=True, rm_mode='update')),
+                   saved=True, fallback=False, rm_mode='update')),
+        ('9', dict(data_in='0,1', rm_list=['id-3'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['0', '1', '3'],
+                   saved=True, fallback=True, rm_mode='append')),
+        ('A', dict(data_in='0,1', rm_list=['id-3'],
+                   nested_rsrcs=['0', '1', '3'],
+                   expected=['3'],
+                   saved=True, fallback=True, rm_mode='update')),
     ]
 
     def test_blacklist(self):
         stack = utils.parse_stack(template)
         resg = stack['group1']
 
+        if self.data_in is not None:
+            resg.resource_id = 'foo'
+
         # mock properties
-        resg.properties = mock.MagicMock()
+        properties = mock.MagicMock()
         p_data = {'removal_policies': [{'resource_list': self.rm_list}],
                   'removal_policies_mode': self.rm_mode}
-        resg.properties.__getitem__.side_effect = p_data.__getitem__
+        properties.get.side_effect = p_data.get
 
         # mock data get/set
         resg.data = mock.Mock()
@@ -790,28 +897,41 @@ class ResourceGroupBlackList(common.HeatTestCase):
         resg.data_set = mock.Mock()
 
         # mock nested access
-        def stack_contains(name):
-            return name in self.nested_rsrcs
+        mock_inspect = mock.Mock()
+        self.patchobject(grouputils.GroupInspector, 'from_parent_resource',
+                         return_value=mock_inspect)
+        mock_inspect.member_names.return_value = self.nested_rsrcs
 
-        def by_refid(name):
-            rid = name.replace('id-', '')
-            if rid not in self.nested_rsrcs:
-                return None
-            res = mock.Mock()
-            res.name = rid
-            return res
+        if not self.fallback:
+            refs_map = {n: 'id-%s' % n for n in self.nested_rsrcs}
+            resg.get_output = mock.Mock(return_value=refs_map)
+        else:
+            resg.get_output = mock.Mock(side_effect=exception.NotFound)
 
-        nested = mock.MagicMock()
-        nested.__contains__.side_effect = stack_contains
-        nested.__iter__.side_effect = iter(self.nested_rsrcs)
-        nested.resource_by_refid.side_effect = by_refid
-        resg.nested = mock.Mock(return_value=nested)
+            def stack_contains(name):
+                return name in self.nested_rsrcs
 
-        blacklist = resg._name_blacklist()
-        self.assertEqual(set(self.expected), blacklist)
+            def by_refid(name):
+                rid = name.replace('id-', '')
+                if rid not in self.nested_rsrcs:
+                    return None
+                res = mock.Mock()
+                res.name = rid
+                return res
+
+            nested = mock.MagicMock()
+            nested.__contains__.side_effect = stack_contains
+            nested.__iter__.side_effect = iter(self.nested_rsrcs)
+            nested.resource_by_refid.side_effect = by_refid
+            resg.nested = mock.Mock(return_value=nested)
+
+        resg._update_name_blacklist(properties)
         if self.saved:
             resg.data_set.assert_called_once_with('name_blacklist',
-                                                  ','.join(blacklist))
+                                                  ','.join(self.expected))
+        else:
+            resg.data_set.assert_not_called()
+            self.assertEqual(set(self.expected), resg._name_blacklist())
 
 
 class ResourceGroupEmptyParams(common.HeatTestCase):
@@ -1261,12 +1381,15 @@ class RollingUpdatePolicyDiffTest(common.HeatTestCase):
         tmpl_diff = updated_grp.update_template_diff(
             updated_grp_json, current_grp_json)
         self.assertTrue(tmpl_diff.update_policy_changed())
+        prop_diff = current_grp.update_template_diff_properties(
+            updated_grp.properties,
+            current_grp.properties)
 
         # test application of the new update policy in handle_update
         current_grp._try_rolling_update = mock.Mock()
         current_grp._assemble_nested_for_size = mock.Mock()
         self.patchobject(scheduler.TaskRunner, 'start')
-        current_grp.handle_update(updated_grp_json, tmpl_diff, None)
+        current_grp.handle_update(updated_grp_json, tmpl_diff, prop_diff)
         self.assertEqual(updated_grp_json._update_policy or {},
                          current_grp.update_policy.data)
 
