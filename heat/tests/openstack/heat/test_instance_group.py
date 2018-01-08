@@ -411,22 +411,21 @@ class ResizeWithFailedInstancesTest(InstanceGroupWithNestedStack):
 
     def setUp(self):
         super(ResizeWithFailedInstancesTest, self).setUp()
-        self.group._nested = self.get_fake_nested_stack(4)
-        self.nested = self.group.nested()
-        self.group.nested = mock.Mock(return_value=self.nested)
+        nested = self.get_fake_nested_stack(4)
 
-    def set_failed_instance(self, instance):
-        for r in six.itervalues(self.group.nested()):
-            if r.name == instance:
-                r.status = "FAILED"
+        inspector = mock.Mock(spec=grouputils.GroupInspector)
+        self.patchobject(grouputils.GroupInspector, 'from_parent_resource',
+                         return_value=inspector)
+        inspector.member_names.return_value = (self.failed +
+                                               sorted(self.content -
+                                                      set(self.failed)))
+        inspector.template.return_value = nested.defn._template
 
     def test_resize(self):
-        for inst in self.failed:
-            self.set_failed_instance(inst)
         self.group.resize(self.size)
         tmpl = self.group.update_with_template.call_args[0][0]
-        resources = tmpl.resource_definitions(self.group.nested())
-        self.assertEqual(set(resources.keys()), self.content)
+        resources = tmpl.resource_definitions(None)
+        self.assertEqual(self.content, set(resources.keys()))
 
 
 class TestGetBatches(common.HeatTestCase):
