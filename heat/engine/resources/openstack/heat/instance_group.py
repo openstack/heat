@@ -274,12 +274,13 @@ class InstanceGroup(stack_resource.StackResource):
                                       child_env=child_env)
 
         # Subclasses use HOT templates
-        att_func = 'get_attr'
-        if att_func not in tmpl.functions:
-            att_func = 'Fn::GetAtt'
+        att_func, res_func = 'get_attr', 'get_resource'
+        if att_func not in tmpl.functions or res_func not in tmpl.functions:
+            att_func, res_func = 'Fn::GetAtt', 'Ref'
         get_attr = functools.partial(tmpl.functions[att_func], None, att_func)
+        get_res = functools.partial(tmpl.functions[res_func], None, res_func)
         for odefn in self._nested_output_defns([k for k, d in definitions],
-                                               get_attr):
+                                               get_attr, get_res):
             tmpl.add_output(odefn)
 
         return tmpl
@@ -400,7 +401,7 @@ class InstanceGroup(stack_resource.StackResource):
             return u','.join(inst.FnGetAtt('PublicIp') or '0.0.0.0'
                              for inst in grouputils.get_members(self)) or None
 
-    def _nested_output_defns(self, resource_names, get_attr_fn):
+    def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
             if isinstance(attr, six.string_types):
                 key = attr
@@ -408,7 +409,8 @@ class InstanceGroup(stack_resource.StackResource):
                 key = attr[0]
 
             if key == self.INSTANCE_LIST:
-                value = [get_attr_fn([r, 'PublicIp']) for r in resource_names]
+                value = {r: get_attr_fn([r, 'PublicIp'])
+                         for r in resource_names}
                 yield output.OutputDefinition(key, value)
 
     def child_template(self):
