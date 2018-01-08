@@ -628,7 +628,11 @@ backend servers
     def _resolve_attribute(self, name):
         """We don't really support any of these yet."""
         if name == self.DNS_NAME:
-            return self.get_output('PublicIp')
+            try:
+                return self.get_output('PublicIp')
+            except exception.NotFound:
+                raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                         key=name)
         elif name in self.attributes_schema:
             # Not sure if we should return anything for the other attribs
             # since they aren't really supported in any meaningful way

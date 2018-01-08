@@ -689,7 +689,7 @@ class StackResourceAttrTest(StackResourceBaseTest):
         output = {'outputs': []}
         self.parent_resource._rpc_client.show_stack.return_value = [output]
 
-        self.assertRaises(exception.InvalidTemplateAttribute,
+        self.assertRaises(exception.NotFound,
                           self.parent_resource.get_output,
                           "key")
 
@@ -701,7 +701,7 @@ class StackResourceAttrTest(StackResourceBaseTest):
         output = {}
         self.parent_resource._rpc_client.show_stack.return_value = [output]
 
-        self.assertRaises(exception.InvalidTemplateAttribute,
+        self.assertRaises(exception.NotFound,
                           self.parent_resource.get_output,
                           "key")
 
