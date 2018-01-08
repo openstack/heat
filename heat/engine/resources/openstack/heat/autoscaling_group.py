@@ -13,6 +13,8 @@
 
 import six
 
+from oslo_log import log as logging
+
 from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
@@ -24,6 +26,8 @@ from heat.engine import properties
 from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
 from heat.engine import rsrc_defn
 from heat.engine import support
+
+LOG = logging.getLogger(__name__)
 
 
 class HOTInterpreter(template.HOTemplate20150430):
@@ -195,26 +199,73 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
                      self)._create_template(num_instances, num_replace,
                                             template_version=template_version)
 
+    def _attribute_output_name(self, *attr_path):
+        return ', '.join(six.text_type(a) for a in attr_path)
+
     def get_attribute(self, key, *path):
         if key == self.CURRENT_SIZE:
             return grouputils.get_size(self)
-        if key == self.REFS:
-            refs = grouputils.get_member_refids(self)
-            return refs
-        if key == self.REFS_MAP:
-            members = grouputils.get_members(self)
-            refs_map = {m.name: m.resource_id for m in members}
-            return refs_map
-        if path:
-            members = grouputils.get_members(self)
-            attrs = ((rsrc.name, rsrc.FnGetAtt(*path)) for rsrc in members)
-            if key == self.OUTPUTS:
-                return dict(attrs)
-            if key == self.OUTPUTS_LIST:
-                return [value for name, value in attrs]
 
-        if key.startswith("resource."):
-            return grouputils.get_nested_attrs(self, key, True, *path)
+        op_key = key
+        op_path = path
+        keycomponents = None
+        if key == self.OUTPUTS_LIST:
+            op_key = self.OUTPUTS
+        elif key == self.REFS:
+            op_key = self.REFS_MAP
+        elif key.startswith("resource."):
+            keycomponents = key.split('.', 2)
+            if len(keycomponents) > 2:
+                op_path = (keycomponents[2],) + path
+            op_key = self.OUTPUTS if op_path else self.REFS_MAP
+        try:
+            output = self.get_output(self._attribute_output_name(op_key,
+                                                                 *op_path))
+        except (exception.NotFound,
+                exception.TemplateOutputError) as op_err:
+            LOG.debug('Falling back to grouputils due to %s', op_err)
+
+            if key == self.REFS:
+                return grouputils.get_member_refids(self)
+            if key == self.REFS_MAP:
+                members = grouputils.get_members(self)
+                return {m.name: m.resource_id for m in members}
+            if path and key in {self.OUTPUTS, self.OUTPUTS_LIST}:
+                members = grouputils.get_members(self)
+                attrs = ((rsrc.name,
+                          rsrc.FnGetAtt(*path)) for rsrc in members)
+                if key == self.OUTPUTS:
+                    return dict(attrs)
+                if key == self.OUTPUTS_LIST:
+                    return [value for name, value in attrs]
+            if keycomponents is not None:
+                return grouputils.get_nested_attrs(self, key, True, *path)
+        else:
+            if key in {self.REFS, self.REFS_MAP}:
+                names = self._group_data().member_names(False)
+                if key == self.REFS:
+                    return [output[n] for n in names if n in output]
+                else:
+                    return {n: output[n] for n in names if n in output}
+
+            if path and key in {self.OUTPUTS_LIST, self.OUTPUTS}:
+                names = self._group_data().member_names(False)
+                if key == self.OUTPUTS_LIST:
+                    return [output[n] for n in names if n in output]
+                else:
+                    return {n: output[n] for n in names if n in output}
+
+            if keycomponents is not None:
+                names = list(self._group_data().member_names(False))
+                index = keycomponents[1]
+                try:
+                    resource_name = names[int(index)]
+                    return output[resource_name]
+                except (IndexError, KeyError):
+                    raise exception.NotFound(_("Member '%(mem)s' not found "
+                                               "in group resource '%(grp)s'.")
+                                             % {'mem': index,
+                                                'grp': self.name})
 
         raise exception.InvalidTemplateAttribute(resource=self.name,
                                                  key=key)
@@ -238,7 +289,7 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
                     key = self.OUTPUTS
                 else:
                     key = self.REFS_MAP
-            output_name = ', '.join(six.text_type(a) for a in [key] + path)
+            output_name = self._attribute_output_name(key, *path)
             value = None
 
             if key == self.REFS_MAP:
