@@ -267,29 +267,30 @@ def resolve(snippet):
     return snippet
 
 
-def validate(snippet, path=''):
+def validate(snippet, path=None):
+    if path is None:
+        path = []
+    elif isinstance(path, six.string_types):
+        path = [path]
+
     if isinstance(snippet, Function):
         try:
             snippet.validate()
         except AssertionError:
             raise
         except Exception as e:
-            path = '.'.join([path, snippet.fn_name])
             raise exception.StackValidationFailed(
-                path=path, message=six.text_type(e))
+                path=path + [snippet.fn_name],
+                message=six.text_type(e))
     elif isinstance(snippet, collections.Mapping):
-        def mkpath(key):
-            return '.'.join([path, key])
-
         for k, v in six.iteritems(snippet):
-            validate(v, mkpath(k))
+            validate(v, path + [k])
     elif (not isinstance(snippet, six.string_types) and
           isinstance(snippet, collections.Iterable)):
-        def mkpath(indx):
-            return '.'.join([path, '[%d]' % indx])
-
+        basepath = list(path)
+        parent = basepath.pop() if basepath else ''
         for i, v in enumerate(snippet):
-            validate(v, mkpath(i))
+            validate(v, basepath + ['%s[%d]' % (parent, i)])
 
 
 def dependencies(snippet, path=''):
