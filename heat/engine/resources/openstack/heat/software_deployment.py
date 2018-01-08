@@ -739,7 +739,8 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         for attr in self.referenced_attrs():
             key = attr if isinstance(attr, six.string_types) else attr[0]
             n_attr = self._member_attribute_name(key)
-            output_name = '%s, %s' % (self.ATTR_ATTRIBUTES, n_attr)
+            output_name = self._attribute_output_name(self.ATTR_ATTRIBUTES,
+                                                      n_attr)
             value = {r: get_attr_fn([r, n_attr])
                      for r in resource_names}
             yield output.OutputDefinition(output_name, value)

@@ -15,8 +15,9 @@ import collections
 import copy
 import functools
 import itertools
-
 import six
+
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common import grouputils
@@ -33,6 +34,8 @@ from heat.engine import scheduler
 from heat.engine import support
 from heat.scaling import rolling_update
 from heat.scaling import template as scl_template
+
+LOG = logging.getLogger(__name__)
 
 
 class ResourceGroup(stack_resource.StackResource):
@@ -455,7 +458,44 @@ class ResourceGroup(stack_resource.StackResource):
         checkers[0].start()
         return checkers
 
+    def _attribute_output_name(self, *attr_path):
+        if attr_path[0] == self.REFS:
+            return self.REFS
+        return ', '.join(six.text_type(a) for a in attr_path)
+
     def get_attribute(self, key, *path):
+        if key == self.REMOVED_RSRC_LIST:
+            return self._current_blacklist()
+        if key == self.ATTR_ATTRIBUTES and not path:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
+
+        is_resource_ref = (key.startswith("resource.") and
+                           not path and (len(key.split('.', 2)) == 2))
+        if is_resource_ref:
+            output_name = self.REFS_MAP
+        else:
+            output_name = self._attribute_output_name(key, *path)
+        try:
+            output = self.get_output(output_name)
+        except (exception.NotFound,
+                exception.TemplateOutputError) as op_err:
+            LOG.debug('Falling back to grouputils due to %s', op_err)
+        else:
+            if is_resource_ref:
+                try:
+                    target = key.split('.', 2)[1]
+                    return output[target]
+                except KeyError:
+                    raise exception.NotFound(_("Member '%(mem)s' not "
+                                               "found in group resource "
+                                               "'%(grp)s'.") %
+                                             {'mem': target,
+                                              'grp': self.name})
+            if key == self.REFS:
+                return attributes.select_from_attribute(output, path)
+            return output
+
         if key.startswith("resource."):
             return grouputils.get_nested_attrs(self, key, False, *path)
 
@@ -467,12 +507,7 @@ class ResourceGroup(stack_resource.StackResource):
             refs_map = {n: grouputils.get_rsrc_id(self, key, False, n)
                         for n in names}
             return refs_map
-        if key == self.REMOVED_RSRC_LIST:
-            return self._current_blacklist()
         if key == self.ATTR_ATTRIBUTES:
-            if not path:
-                raise exception.InvalidTemplateAttribute(
-                    resource=self.name, key=key)
             return dict((n, grouputils.get_rsrc_attr(
                 self, key, False, n, *path)) for n in names)
 
@@ -484,10 +519,9 @@ class ResourceGroup(stack_resource.StackResource):
         for attr in self.referenced_attrs():
             if isinstance(attr, six.string_types):
                 key, path = attr, []
-                output_name = attr
             else:
                 key, path = attr[0], list(attr[1:])
-                output_name = ', '.join(six.text_type(a) for a in attr)
+            output_name = self._attribute_output_name(key, *path)
             value = None
 
             if key.startswith("resource."):

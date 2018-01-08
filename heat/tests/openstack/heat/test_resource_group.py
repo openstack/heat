@@ -985,13 +985,6 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         self.assertIn("Member '2' not found in group resource 'group1'.",
                       six.text_type(ex))
 
-    @mock.patch.object(grouputils, 'get_rsrc_id')
-    def test_get_attribute(self, mock_get_rsrc_id):
-        stack = utils.parse_stack(template)
-        mock_get_rsrc_id.side_effect = ['0', '1']
-        rsrc = stack['group1']
-        self.assertEqual(['0', '1'], rsrc.FnGetAtt(rsrc.REFS))
-
     def test_get_attribute_convg(self):
         cache_data = {'group1': node_data.NodeData.from_dict({
             'uuid': mock.ANY,
@@ -1030,6 +1023,44 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         return resg
 
     def _stub_get_attr(self, resg, refids, attrs):
+        def ref_id_fn(res_name):
+            return refids[int(res_name)]
+
+        def attr_fn(args):
+            res_name = args[0]
+            return attrs[int(res_name)]
+
+        def get_output(output_name):
+            outputs = resg._nested_output_defns(resg._resource_names(),
+                                                attr_fn, ref_id_fn)
+            op_defns = {od.name: od for od in outputs}
+            self.assertIn(output_name, op_defns)
+            return op_defns[output_name].get_value()
+
+        orig_get_attr = resg.FnGetAtt
+
+        def get_attr(attr_name, *path):
+            if not path:
+                attr = attr_name
+            else:
+                attr = (attr_name,) + path
+            # Mock referenced_attrs() so that _nested_output_definitions()
+            # will include the output required for this attribute
+            resg.referenced_attrs = mock.Mock(return_value=[attr])
+
+            # Pass through to actual function under test
+            return orig_get_attr(attr_name, *path)
+
+        resg.FnGetAtt = mock.Mock(side_effect=get_attr)
+        resg.get_output = mock.Mock(side_effect=get_output)
+
+
+class ResourceGroupAttrFallbackTest(ResourceGroupAttrTest):
+    def _stub_get_attr(self, resg, refids, attrs):
+        # Raise NotFound when getting output, to force fallback to old-school
+        # grouputils functions
+        resg.get_output = mock.Mock(side_effect=exception.NotFound)
+
         def make_fake_res(idx):
             fr = mock.Mock()
             fr.stack = resg.stack
@@ -1039,6 +1070,14 @@ class ResourceGroupAttrTest(common.HeatTestCase):
 
         fake_res = {str(i): make_fake_res(i) for i in refids}
         resg.nested = mock.Mock(return_value=fake_res)
+
+    @mock.patch.object(grouputils, 'get_rsrc_id')
+    def test_get_attribute(self, mock_get_rsrc_id):
+        stack = utils.parse_stack(template)
+        mock_get_rsrc_id.side_effect = ['0', '1']
+        rsrc = stack['group1']
+        rsrc.get_output = mock.Mock(side_effect=exception.NotFound)
+        self.assertEqual(['0', '1'], rsrc.FnGetAtt(rsrc.REFS))
 
 
 class ReplaceTest(common.HeatTestCase):

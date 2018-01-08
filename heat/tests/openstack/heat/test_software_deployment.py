@@ -1602,6 +1602,47 @@ class SoftwareDeploymentGroupAttrTest(common.HeatTestCase):
         return resg
 
     def _stub_get_attr(self, resg):
+        def ref_id_fn(args):
+            self.fail('Getting member reference ID for some reason')
+
+        def attr_fn(args):
+            res_name = args[0]
+            return self.values[self.server_names.index(res_name)]
+
+        def get_output(output_name):
+            outputs = resg._nested_output_defns(resg._resource_names(),
+                                                attr_fn, ref_id_fn)
+            op_defns = {od.name: od for od in outputs}
+            self.assertIn(output_name, op_defns)
+            return op_defns[output_name].get_value()
+
+        orig_get_attr = resg.FnGetAtt
+
+        def get_attr(attr_name, *path):
+            if not path:
+                attr = attr_name
+            else:
+                attr = (attr_name,) + path
+            # Mock referenced_attrs() so that _nested_output_definitions()
+            # will include the output required for this attribute
+            resg.referenced_attrs = mock.Mock(return_value=[attr])
+
+            # Pass through to actual function under test
+            return orig_get_attr(attr_name, *path)
+
+        resg.FnGetAtt = mock.Mock(side_effect=get_attr)
+        resg.get_output = mock.Mock(side_effect=get_output)
+
+    def check_calls(self, count=1):
+        pass
+
+
+class SoftwareDeploymentGroupAttrFallbackTest(SoftwareDeploymentGroupAttrTest):
+    def _stub_get_attr(self, resg):
+        # Raise NotFound when getting output, to force fallback to old-school
+        # grouputils functions
+        resg.get_output = mock.Mock(side_effect=exc.NotFound)
+
         for server, value in zip(self.servers, self.values):
             server.FnGetAtt.return_value = value
 

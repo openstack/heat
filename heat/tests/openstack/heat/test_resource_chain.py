@@ -340,6 +340,46 @@ class ResourceChainAttrTest(common.HeatTestCase):
         return chain
 
     def _stub_get_attr(self, chain, refids, attrs):
+        def ref_id_fn(res_name):
+            return refids[int(res_name)]
+
+        def attr_fn(args):
+            res_name = args[0]
+            return attrs[int(res_name)]
+
+        def get_output(output_name):
+            outputs = chain._nested_output_defns(chain._resource_names(),
+                                                 attr_fn, ref_id_fn)
+            op_defns = {od.name: od for od in outputs}
+            if output_name not in op_defns:
+                raise exception.NotFound('Specified output key %s not found.' %
+                                         output_name)
+            return op_defns[output_name].get_value()
+
+        orig_get_attr = chain.FnGetAtt
+
+        def get_attr(attr_name, *path):
+            if not path:
+                attr = attr_name
+            else:
+                attr = (attr_name,) + path
+            # Mock referenced_attrs() so that _nested_output_definitions()
+            # will include the output required for this attribute
+            chain.referenced_attrs = mock.Mock(return_value=[attr])
+
+            # Pass through to actual function under test
+            return orig_get_attr(attr_name, *path)
+
+        chain.FnGetAtt = mock.Mock(side_effect=get_attr)
+        chain.get_output = mock.Mock(side_effect=get_output)
+
+
+class ResourceChainAttrFallbackTest(ResourceChainAttrTest):
+    def _stub_get_attr(self, chain, refids, attrs):
+        # Raise NotFound when getting output, to force fallback to old-school
+        # grouputils functions
+        chain.get_output = mock.Mock(side_effect=exception.NotFound)
+
         def make_fake_res(idx):
             fr = mock.Mock()
             fr.stack = chain.stack
