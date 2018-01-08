@@ -207,6 +207,19 @@ test_template_findinmap_invalid = '''
 }
 '''
 
+test_template_bad_yaql_metadata = '''
+heat_template_version: 2016-10-14
+parameters:
+resources:
+  my_instance:
+    type: OS::Heat::TestResource
+    metadata:
+      test:
+        yaql:
+          expression: {'foo': 'bar'}
+          data: "$.data"
+'''
+
 test_template_invalid_resources = '''
 {
   "AWSTemplateFormatVersion" : "2010-09-09",
@@ -1054,6 +1067,12 @@ class ValidateTest(common.HeatTestCase):
         res = dict(self.engine.validate_template(self.ctx, t, {}))
         self.assertNotEqual(res['Description'], 'Successfully validated')
 
+    def test_validate_bad_yaql_metadata(self):
+        t = template_format.parse(test_template_bad_yaql_metadata)
+        res = dict(self.engine.validate_template(self.ctx, t, {}))
+        self.assertIn('Error', res)
+        self.assertIn('yaql', res['Error'])
+
     def test_validate_parameters(self):
         t = template_format.parse(test_template_ref % 'WikiDatabase')
         res = dict(self.engine.validate_template(self.ctx, t, {}))
@@ -1344,8 +1363,10 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_snapshot_deletion_policy)
 
         res = dict(self.engine.validate_template(self.ctx, t, {}))
-        self.assertEqual(
-            {'Error': '"Snapshot" deletion policy not supported'}, res)
+        self.assertEqual({'Error': 'Resources.WikiDatabase.DeletionPolicy: '
+                                   '"Snapshot" deletion policy '
+                                   'not supported'},
+                         res)
 
     def test_volume_snapshot_deletion_policy(self):
         t = template_format.parse(test_template_volume_snapshot)
