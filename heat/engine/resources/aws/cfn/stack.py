@@ -93,10 +93,11 @@ class NestedStack(stack_resource.StackResource):
         return attributes.select_from_attribute(attribute, path)
 
     def get_reference_id(self):
-        if self.nested() is None:
+        identifier = self.nested_identifier()
+        if identifier is None:
             return six.text_type(self.name)
 
-        return self.nested().identifier().arn()
+        return identifier.arn()
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         # Nested stack template may be changed even if the prop_diff is empty.
