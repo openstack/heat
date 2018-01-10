@@ -47,6 +47,11 @@ resources:
       restart_policy: on-failure:2
       interactive: false
       image_driver: docker
+      hints:
+        hintkey: hintval
+      hostname: myhost
+      security_groups:
+        - my_seg
 '''
 
 
@@ -69,6 +74,10 @@ class ZunContainerTest(common.HeatTestCase):
                                     'Name': 'on-failure'}
         self.fake_interactive = False
         self.fake_image_driver = 'docker'
+        self.fake_hints = {'hintkey': 'hintval'}
+        self.fake_hostname = 'myhost'
+        self.fake_security_groups = ['my_seg']
+
         self.fake_network_id = '9c11d847-99ce-4a83-82da-9827362a68e8'
         self.fake_network_name = 'private'
         self.fake_networks = {
@@ -117,6 +126,9 @@ class ZunContainerTest(common.HeatTestCase):
         value.restart_policy = self.fake_restart_policy
         value.interactive = self.fake_interactive
         value.image_driver = self.fake_image_driver
+        value.hints = self.fake_hints
+        value.hostname = self.fake_hostname
+        value.security_groups = self.fake_security_groups
         value.addresses = self.fake_addresses
         value.to_dict.return_value = value.__dict__
 
@@ -170,6 +182,15 @@ class ZunContainerTest(common.HeatTestCase):
         self.assertEqual(
             self.fake_image_driver,
             c.properties.get(container.Container.IMAGE_DRIVER))
+        self.assertEqual(
+            self.fake_hints,
+            c.properties.get(container.Container.HINTS))
+        self.assertEqual(
+            self.fake_hostname,
+            c.properties.get(container.Container.HOSTNAME))
+        self.assertEqual(
+            self.fake_security_groups,
+            c.properties.get(container.Container.SECURITY_GROUPS))
 
         scheduler.TaskRunner(c.create)()
         self.assertEqual(self.resource_id, c.resource_id)
@@ -187,7 +208,10 @@ class ZunContainerTest(common.HeatTestCase):
             image_pull_policy=self.fake_image_policy,
             restart_policy=self.fake_restart_policy,
             interactive=self.fake_interactive,
-            image_driver=self.fake_image_driver
+            image_driver=self.fake_image_driver,
+            hints=self.fake_hints,
+            hostname=self.fake_hostname,
+            security_groups=self.fake_security_groups,
         )
 
     def test_container_create_failed(self):
