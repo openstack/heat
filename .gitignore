@@ -9,6 +9,7 @@ tags
 heat-test.db
 heat.sqlite
 .venv
+.stestr/*
 AUTHORS
 ChangeLog
 templates/cloudformation-examples
