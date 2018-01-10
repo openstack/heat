@@ -1,0 +1,7 @@
+---
+upgrade:
+    - |
+      The ceilometer client plugin is no longer provided,
+      due to the Ceilometer API no longer being available from
+      Queens and the python-ceilometerclient library being
+      unmaintained.

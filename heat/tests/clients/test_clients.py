@@ -12,7 +12,6 @@
 #    under the License.
 
 from aodhclient import exceptions as aodh_exc
-from ceilometerclient import exc as ceil_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
 from heatclient import client as heatclient
@@ -340,38 +339,6 @@ class TestClientPluginsInitialise(common.HeatTestCase):
 class TestIsNotFound(common.HeatTestCase):
 
     scenarios = [
-        ('ceilometer_not_found', dict(
-            is_not_found=True,
-            is_over_limit=False,
-            is_client_exception=True,
-            is_conflict=False,
-            plugin='ceilometer',
-            exception=lambda: ceil_exc.HTTPNotFound(details='gone'),
-        )),
-        ('ceilometer_exception', dict(
-            is_not_found=False,
-            is_over_limit=False,
-            is_client_exception=False,
-            is_conflict=False,
-            plugin='ceilometer',
-            exception=lambda: Exception()
-        )),
-        ('ceilometer_overlimit', dict(
-            is_not_found=False,
-            is_over_limit=True,
-            is_client_exception=True,
-            is_conflict=False,
-            plugin='ceilometer',
-            exception=lambda: ceil_exc.HTTPOverLimit(details='over'),
-        )),
-        ('ceilometer_conflict', dict(
-            is_not_found=False,
-            is_over_limit=False,
-            is_client_exception=True,
-            is_conflict=True,
-            plugin='ceilometer',
-            exception=lambda: ceil_exc.HTTPConflict(),
-        )),
         ('aodh_not_found', dict(
             is_not_found=True,
             is_over_limit=False,

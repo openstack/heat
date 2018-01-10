@@ -48,7 +48,6 @@ We have integration with
 * https://git.openstack.org/cgit/openstack/python-keystoneclient (auth)
 * https://git.openstack.org/cgit/openstack/python-swiftclient (object storage)
 * https://git.openstack.org/cgit/openstack/python-neutronclient (networking)
-* https://git.openstack.org/cgit/openstack/python-ceilometerclient (metering)
 * https://git.openstack.org/cgit/openstack/python-aodhclient (alarming service)
 * https://git.openstack.org/cgit/openstack/python-cinderclient (block storage)
 * https://git.openstack.org/cgit/openstack/python-glanceclient (image service)
