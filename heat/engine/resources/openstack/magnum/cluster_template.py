@@ -19,6 +19,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class ClusterTemplate(resource.Resource):
@@ -40,7 +41,7 @@ class ClusterTemplate(resource.Resource):
         DOCKER_VOLUME_SIZE, DOCKER_STORAGE_DRIVER, COE,
         NETWORK_DRIVER, VOLUME_DRIVER, HTTP_PROXY, HTTPS_PROXY,
         NO_PROXY, LABELS, TLS_DISABLED, PUBLIC, REGISTRY_ENABLED,
-        SERVER_TYPE, MASTER_LB_ENABLED,  FLOATING_IP_ENABLED
+        SERVER_TYPE, MASTER_LB_ENABLED, FLOATING_IP_ENABLED
     ) = (
         'name', 'image', 'flavor', 'master_flavor', 'keypair',
         'external_network', 'fixed_network', 'fixed_subnet', 'dns_nameserver',
@@ -93,7 +94,8 @@ class ClusterTemplate(resource.Resource):
         ),
         EXTERNAL_NETWORK: properties.Schema(
             properties.Schema.STRING,
-            _('The external neutron network to attach the Cluster.'),
+            _('The external neutron network name or UUID to attach the '
+              'Cluster.'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ],
@@ -101,14 +103,16 @@ class ClusterTemplate(resource.Resource):
         ),
         FIXED_NETWORK: properties.Schema(
             properties.Schema.STRING,
-            _('The fixed neutron network to attach the Cluster.'),
+            _('The fixed neutron network name or UUID to attach the '
+              'Cluster.'),
             constraints=[
                 constraints.CustomConstraint('neutron.network')
             ]
         ),
         FIXED_SUBNET: properties.Schema(
             properties.Schema.STRING,
-            _('The fixed neutron subnet to attach the Cluster.'),
+            _('The fixed neutron subnet name or UUID to attach the '
+              'Cluster.'),
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ]
@@ -213,6 +217,34 @@ class ClusterTemplate(resource.Resource):
             default=True
         ),
     }
+
+    def translation_rules(self, props):
+        return [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.EXTERNAL_NETWORK],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FIXED_NETWORK],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'
+            ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FIXED_SUBNET],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='subnet'
+            )
+        ]
 
     def validate(self):
         """Validate the provided params."""
