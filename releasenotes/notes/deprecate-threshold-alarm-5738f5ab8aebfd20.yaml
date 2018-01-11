@@ -1,0 +1,5 @@
+---
+deprecations:
+  - Threshold alarm which uses ceilometer API is deprecated in aodh since
+    Ocata. Please use ``OS::Aodh::GnocchiAggregationByResourcesAlarm`` in
+    place of ``OS::Aodh::Alarm``.
