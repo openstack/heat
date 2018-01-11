@@ -278,7 +278,7 @@ class Property(object):
             if isinstance(value, (bool, int)):
                 value = six.text_type(value)
             else:
-                raise ValueError(_('Value must be a string'))
+                raise ValueError(_('Value must be a string; got %r') % value)
         return value
 
     def _get_children(self, child_values, keys=None, validate=False,

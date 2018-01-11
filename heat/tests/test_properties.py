@@ -1687,15 +1687,15 @@ class PropertiesValidationTest(common.HeatTestCase):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'foo': ['foo', 'bar']})
         ex = self.assertRaises(exception.StackValidationFailed, props.validate)
-        self.assertEqual('Property error: foo: Value must be a string',
-                         six.text_type(ex))
+        self.assertIn('Property error: foo: Value must be a string',
+                      six.text_type(ex))
 
     def test_dict_instead_string(self):
         schema = {'foo': {'Type': 'String'}}
         props = properties.Properties(schema, {'foo': {'foo': 'bar'}})
         ex = self.assertRaises(exception.StackValidationFailed, props.validate)
-        self.assertEqual('Property error: foo: Value must be a string',
-                         six.text_type(ex))
+        self.assertIn('Property error: foo: Value must be a string',
+                      six.text_type(ex))
 
     def test_none_string(self):
         schema = {'foo': {'Type': 'String'}}
