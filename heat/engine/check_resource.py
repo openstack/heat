@@ -304,6 +304,9 @@ class CheckResource(object):
         if is_update:
             if (rsrc.replaced_by is not None and
                     rsrc.current_template_id != tmpl.id):
+                LOG.debug('Resource %s with id %s already replaced by %s; '
+                          'not checking',
+                          rsrc.name, resource_id, rsrc.replaced_by)
                 return
 
         try:
