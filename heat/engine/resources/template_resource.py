@@ -60,8 +60,6 @@ class TemplateResource(stack_resource.StackResource):
         self.stack = stack
         self.validation_exception = None
 
-        self._reference_id = None
-
         tri = self._get_resource_info(json_snippet)
 
         self.properties_schema = {}
@@ -308,14 +306,15 @@ class TemplateResource(stack_resource.StackResource):
         if self.resource_id is None:
             return six.text_type(self.name)
 
-        if self._reference_id is not None:
-            return self._reference_id
+        if STACK_ID_OUTPUT in self.attributes.cached_attrs:
+            return self.attributes.cached_attrs[STACK_ID_OUTPUT]
 
         stack_identity = self.nested_identifier()
+        reference_id = stack_identity.arn()
 
         try:
             if self._outputs is not None:
-                self._reference_id = self.get_output(STACK_ID_OUTPUT)
+                reference_id = self.get_output(STACK_ID_OUTPUT)
             elif STACK_ID_OUTPUT in self.attributes:
                 output = self.rpc_client().show_output(self.context,
                                                        dict(stack_identity),
@@ -325,15 +324,14 @@ class TemplateResource(stack_resource.StackResource):
                         resource=self.name,
                         attribute=STACK_ID_OUTPUT,
                         message=output[rpc_api.OUTPUT_ERROR])
-                self._reference_id = output[rpc_api.OUTPUT_VALUE]
+                reference_id = output[rpc_api.OUTPUT_VALUE]
         except exception.TemplateOutputError as err:
             LOG.info('%s', err)
         except exception.NotFound:
             pass
-        else:
-            return self._reference_id
 
-        return stack_identity.arn()
+        self.attributes.set_cached_attr(STACK_ID_OUTPUT, reference_id)
+        return reference_id
 
     def get_attribute(self, key, *path):
         if self.resource_id is None:
