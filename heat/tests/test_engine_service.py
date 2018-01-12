@@ -1328,7 +1328,7 @@ class StackServiceTest(common.HeatTestCase):
 
         self.eng.reset_stack_status()
 
-        mock_admin_context.assert_called_once_with()
+        mock_admin_context.assert_called()
         filters = {
             'status': parser.Stack.IN_PROGRESS,
             'convergence': False
