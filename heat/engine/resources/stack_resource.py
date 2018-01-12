@@ -222,6 +222,7 @@ class StackResource(resource.Resource):
 
         parsed_template = self._child_parsed_template(child_template,
                                                       child_env)
+        self._validate_nested_resources(parsed_template)
 
         # Note we disable rollback for nested stacks, since they
         # should be rolled back by the parent stack on failure
@@ -248,7 +249,6 @@ class StackResource(resource.Resource):
 
     def _child_parsed_template(self, child_template, child_env):
         parsed_template = self._parse_child_template(child_template, child_env)
-        self._validate_nested_resources(parsed_template)
 
         # Don't overwrite the attributes_schema for subclasses that
         # define their own attributes_schema.
@@ -260,12 +260,16 @@ class StackResource(resource.Resource):
     def _validate_nested_resources(self, templ):
         if cfg.CONF.max_resources_per_stack == -1:
             return
+
         total_resources = (len(templ[templ.RESOURCES]) +
                            self.stack.total_resources(self.root_stack_id))
 
-        if self.nested():
-            # It's an update and these resources will be deleted
-            total_resources -= len(self.nested().resources)
+        identity = self.nested_identifier()
+        if identity is not None:
+            existing = self.rpc_client().list_stack_resources(self.context,
+                                                              identity)
+            # Don't double-count existing resources during an update
+            total_resources -= len(existing)
 
         if (total_resources > cfg.CONF.max_resources_per_stack):
             message = exception.StackResourceLimitExceeded.msg_fmt

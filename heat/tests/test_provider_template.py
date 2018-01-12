@@ -311,7 +311,6 @@ class ProviderTemplateTest(common.HeatTestCase):
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition, stack)
         temp_res.resource_id = 'dummy_id'
-        self.assertIsNone(temp_res.validate())
         temp_res.nested_identifier = mock.Mock()
         temp_res.nested_identifier.return_value = {'foo': 'bar'}
 
@@ -319,6 +318,8 @@ class ProviderTemplateTest(common.HeatTestCase):
         output = {'outputs': [{'output_key': 'Foo', 'output_value': None,
                                'output_error': 'it is all bad'}]}
         temp_res._rpc_client.show_stack.return_value = [output]
+        temp_res._rpc_client.list_stack_resources.return_value = []
+        self.assertIsNone(temp_res.validate())
         self.assertRaises(exception.TemplateOutputError,
                           temp_res.FnGetAtt, 'Foo')
 
