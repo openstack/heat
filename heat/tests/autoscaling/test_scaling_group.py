@@ -357,6 +357,7 @@ class TestGroupAdjust(common.HeatTestCase):
         self.assertEqual(expected_notifies, notify.call_args_list)
         resize.assert_called_once_with(3)
         finished_scaling.assert_called_once_with(
+            None,
             'PercentChangeInCapacity : 33',
             size_changed=True)
 
@@ -388,6 +389,7 @@ class TestGroupAdjust(common.HeatTestCase):
         self.assertEqual(expected_notifies, notify.call_args_list)
         resize.assert_called_once_with(3)
         finished_scaling.assert_called_once_with(
+            None,
             'PercentChangeInCapacity : -33',
             size_changed=True)
 
@@ -416,7 +418,8 @@ class TestGroupAdjust(common.HeatTestCase):
 
         self.assertEqual(expected_notifies, notify.call_args_list)
         resize.assert_called_once_with(1)
-        finished_scaling.assert_called_once_with('ChangeInCapacity : 1',
+        finished_scaling.assert_called_once_with(None,
+                                                 'ChangeInCapacity : 1',
                                                  size_changed=True)
         grouputils.get_size.assert_called_once_with(self.group)
 
