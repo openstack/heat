@@ -231,7 +231,8 @@ class ZunContainerTest(common.HeatTestCase):
         scheduler.TaskRunner(c.create)()
         scheduler.TaskRunner(c.delete)()
         self.assertEqual((c.DELETE, c.COMPLETE), c.state)
-        self.assertEqual(1, self.client.containers.delete.call_count)
+        self.client.containers.delete.assert_called_once_with(
+            c.resource_id, stop=True)
 
     def test_container_delete_not_found(self):
         c = self._create_resource('container', self.rsrc_defn, self.stack)
@@ -240,7 +241,8 @@ class ZunContainerTest(common.HeatTestCase):
         self.client.containers.delete.side_effect = Exception('Not Found')
         scheduler.TaskRunner(c.delete)()
         self.assertEqual((c.DELETE, c.COMPLETE), c.state)
-        self.assertEqual(1, self.client.containers.delete.call_count)
+        self.client.containers.delete.assert_called_once_with(
+            c.resource_id, stop=True)
         mock_ignore_not_found = c.client_plugin.return_value.ignore_not_found
         self.assertEqual(1, mock_ignore_not_found.call_count)
 

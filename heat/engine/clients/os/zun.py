@@ -11,8 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from zunclient import client as zun_client
 from zunclient import exceptions as zc_exc
-from zunclient.v1 import client as zun_client
 
 from heat.engine.clients import client_plugin
 
@@ -23,7 +23,17 @@ class ZunClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [CONTAINER] = ['container']
 
-    def _create(self):
+    default_version = '1.12'
+
+    supported_versions = [
+        V1_12
+    ] = [
+        '1.12'
+    ]
+
+    def _create(self, version=None):
+        if not version:
+            version = self.default_version
         interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'interface': interface,
@@ -32,7 +42,7 @@ class ZunClientPlugin(client_plugin.ClientPlugin):
             'region_name': self._get_region_name()
         }
 
-        client = zun_client.Client(**args)
+        client = zun_client.Client(version, **args)
         return client
 
     def is_not_found(self, ex):
