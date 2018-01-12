@@ -332,9 +332,9 @@ class DockerContainer(resource.Resource):
         if DOCKER_INSTALLED:
             endpoint = self.properties.get(self.DOCKER_ENDPOINT)
             if endpoint:
-                client = docker.Client(endpoint)
+                client = docker.APIClient(endpoint)
             else:
-                client = docker.Client()
+                client = docker.APIClient()
         return client
 
     def _parse_networkinfo_ports(self, networkinfo):
