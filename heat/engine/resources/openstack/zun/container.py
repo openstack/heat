@@ -34,12 +34,18 @@ class Container(resource.Resource):
         NAME, IMAGE, COMMAND, CPU, MEMORY,
         ENVIRONMENT, WORKDIR, LABELS, IMAGE_PULL_POLICY,
         RESTART_POLICY, INTERACTIVE, IMAGE_DRIVER, HINTS,
-        HOSTNAME, SECURITY_GROUPS,
+        HOSTNAME, SECURITY_GROUPS, MOUNTS,
     ) = (
         'name', 'image', 'command', 'cpu', 'memory',
         'environment', 'workdir', 'labels', 'image_pull_policy',
         'restart_policy', 'interactive', 'image_driver', 'hints',
-        'hostname', 'security_groups',
+        'hostname', 'security_groups', 'mounts',
+    )
+
+    _MOUNT_KEYS = (
+        VOLUME_ID, MOUNT_PATH, VOLUME_SIZE
+    ) = (
+        'volume_id', 'mount_path', 'volume_size',
     )
 
     ATTRIBUTES = (
@@ -128,6 +134,32 @@ class Container(resource.Resource):
             support_status=support.SupportStatus(version='10.0.0'),
             default=[]
         ),
+        MOUNTS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of volumes mounted inside the container.'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    VOLUME_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The ID or name of the cinder volume mount to '
+                          'the container.'),
+                        constraints=[
+                            constraints.CustomConstraint('cinder.volume')
+                        ]
+                    ),
+                    VOLUME_SIZE: properties.Schema(
+                        properties.Schema.INTEGER,
+                        _('The size of the cinder volume to create.'),
+                    ),
+                    MOUNT_PATH: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The filesystem path inside the container.'),
+                        required=True,
+                    ),
+                },
+            )
+        ),
     }
 
     attributes_schema = {
@@ -160,12 +192,38 @@ class Container(resource.Resource):
                     '"unless-stopped".') % policy
             raise exception.StackValidationFailed(message=msg)
 
+        mounts = self.properties[self.MOUNTS] or []
+        for mount in mounts:
+            self._validate_mount(mount)
+
+    def _validate_mount(self, mount):
+        volume_id = mount.get(self.VOLUME_ID)
+        volume_size = mount.get(self.VOLUME_SIZE)
+
+        if volume_id is None and volume_size is None:
+            msg = _('One of the properties "%(id)s" or "%(size)s" '
+                    'should be set for the specified mount of '
+                    'container "%(container)s".'
+                    '') % dict(id=self.VOLUME_ID,
+                               size=self.VOLUME_SIZE,
+                               container=self.name)
+            raise exception.StackValidationFailed(message=msg)
+
+        # Don't allow specify volume_id and volume_size at the same time
+        if volume_id and volume_size:
+            raise exception.ResourcePropertyConflict(
+                "/".join([self.NETWORKS, self.VOLUME_ID]),
+                "/".join([self.NETWORKS, self.VOLUME_SIZE]))
+
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
         policy = args.pop(self.RESTART_POLICY, None)
         if policy:
             args[self.RESTART_POLICY] = self._parse_restart_policy(policy)
+        mounts = args.pop(self.MOUNTS, None)
+        if mounts:
+            args[self.MOUNTS] = self._build_mounts(mounts)
         container = self.client().containers.run(**args)
         self.resource_id_set(container.uuid)
         return container.uuid
@@ -182,6 +240,17 @@ class Container(resource.Resource):
                 restart_policy = {"Name": policy, "MaximumRetryCount": '0'}
 
         return restart_policy
+
+    def _build_mounts(self, mounts):
+        mnts = []
+        for mount in mounts:
+            mnt_info = {'destination': mount[self.MOUNT_PATH]}
+            if mount.get(self.VOLUME_ID):
+                mnt_info['source'] = mount[self.VOLUME_ID]
+            if mount.get(self.VOLUME_SIZE):
+                mnt_info['size'] = mount[self.VOLUME_SIZE]
+            mnts.append(mnt_info)
+        return mnts
 
     def check_create_complete(self, id):
         container = self.client().containers.get(id)
