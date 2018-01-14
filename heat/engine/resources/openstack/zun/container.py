@@ -16,13 +16,17 @@ import copy
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
+from heat.engine.clients import progress
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine.resources.openstack.nova import server_network_mixin
 from heat.engine import support
+from heat.engine import translation
 
 
-class Container(resource.Resource):
+class Container(resource.Resource,
+                server_network_mixin.ServerNetworkMixin):
     """A resource that creates a Zun Container.
 
     This resource creates a Zun container.
@@ -34,13 +38,26 @@ class Container(resource.Resource):
         NAME, IMAGE, COMMAND, CPU, MEMORY,
         ENVIRONMENT, WORKDIR, LABELS, IMAGE_PULL_POLICY,
         RESTART_POLICY, INTERACTIVE, IMAGE_DRIVER, HINTS,
-        HOSTNAME, SECURITY_GROUPS, MOUNTS,
+        HOSTNAME, SECURITY_GROUPS, MOUNTS, NETWORKS,
     ) = (
         'name', 'image', 'command', 'cpu', 'memory',
         'environment', 'workdir', 'labels', 'image_pull_policy',
         'restart_policy', 'interactive', 'image_driver', 'hints',
-        'hostname', 'security_groups', 'mounts',
+        'hostname', 'security_groups', 'mounts', 'networks',
     )
+
+    _NETWORK_KEYS = (
+        NETWORK_UUID, NETWORK_ID, NETWORK_FIXED_IP, NETWORK_PORT,
+        NETWORK_SUBNET, NETWORK_PORT_EXTRA, NETWORK_FLOATING_IP,
+        ALLOCATE_NETWORK, NIC_TAG,
+    ) = (
+        'uuid', 'network', 'fixed_ip', 'port',
+        'subnet', 'port_extra_properties', 'floating_ip',
+        'allocate_network', 'tag',
+    )
+
+    _IFACE_MANAGED_KEYS = (NETWORK_PORT, NETWORK_ID,
+                           NETWORK_FIXED_IP, NETWORK_SUBNET)
 
     _MOUNT_KEYS = (
         VOLUME_ID, MOUNT_PATH, VOLUME_SIZE
@@ -160,6 +177,41 @@ class Container(resource.Resource):
                 },
             )
         ),
+        NETWORKS: properties.Schema(
+            properties.Schema.LIST,
+            _('An ordered list of nics to be added to this server, with '
+              'information about connected networks, fixed ips, port etc.'),
+            support_status=support.SupportStatus(version='11.0.0'),
+            schema=properties.Schema(
+                properties.Schema.MAP,
+                schema={
+                    NETWORK_ID: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Name or ID of network to create a port on.'),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.network')
+                        ]
+                    ),
+                    NETWORK_FIXED_IP: properties.Schema(
+                        properties.Schema.STRING,
+                        _('Fixed IP address to specify for the port '
+                          'created on the requested network.'),
+                        constraints=[
+                            constraints.CustomConstraint('ip_addr')
+                        ]
+                    ),
+                    NETWORK_PORT: properties.Schema(
+                        properties.Schema.STRING,
+                        _('ID of an existing port to associate with this '
+                          'container.'),
+                        constraints=[
+                            constraints.CustomConstraint('neutron.port')
+                        ]
+                    ),
+                },
+            ),
+            update_allowed=True,
+        ),
     }
 
     attributes_schema = {
@@ -182,6 +234,24 @@ class Container(resource.Resource):
 
     entity = 'containers'
 
+    def translation_rules(self, props):
+        rules = [
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.NETWORKS, self.NETWORK_ID],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='network'),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                translation_path=[self.NETWORKS, self.NETWORK_PORT],
+                client_plugin=self.client_plugin('neutron'),
+                finder='find_resourceid_by_name_or_id',
+                entity='port')]
+        return rules
+
     def validate(self):
         super(Container, self).validate()
 
@@ -195,6 +265,10 @@ class Container(resource.Resource):
         mounts = self.properties[self.MOUNTS] or []
         for mount in mounts:
             self._validate_mount(mount)
+
+        networks = self.properties[self.NETWORKS] or []
+        for network in networks:
+            self._validate_network(network)
 
     def _validate_mount(self, mount):
         volume_id = mount.get(self.VOLUME_ID)
@@ -215,6 +289,21 @@ class Container(resource.Resource):
                 "/".join([self.NETWORKS, self.VOLUME_ID]),
                 "/".join([self.NETWORKS, self.VOLUME_SIZE]))
 
+    def _validate_network(self, network):
+        net_id = network.get(self.NETWORK_ID)
+        port = network.get(self.NETWORK_PORT)
+        fixed_ip = network.get(self.NETWORK_FIXED_IP)
+
+        if net_id is None and port is None:
+            raise exception.PropertyUnspecifiedError(
+                self.NETWORK_ID, self.NETWORK_PORT)
+
+        # Don't allow specify ip and port at the same time
+        if fixed_ip and port is not None:
+            raise exception.ResourcePropertyConflict(
+                ".".join([self.NETWORKS, self.NETWORK_FIXED_IP]),
+                ".".join([self.NETWORKS, self.NETWORK_PORT]))
+
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
@@ -224,6 +313,9 @@ class Container(resource.Resource):
         mounts = args.pop(self.MOUNTS, None)
         if mounts:
             args[self.MOUNTS] = self._build_mounts(mounts)
+        networks = args.pop(self.NETWORKS, None)
+        if networks:
+            args['nets'] = self._build_nets(networks)
         container = self.client().containers.run(**args)
         self.resource_id_set(container.uuid)
         return container.uuid
@@ -252,6 +344,18 @@ class Container(resource.Resource):
             mnts.append(mnt_info)
         return mnts
 
+    def _build_nets(self, networks):
+        nics = self._build_nics(networks)
+        for nic in nics:
+            net_id = nic.pop('net-id', None)
+            if net_id:
+                nic[self.NETWORK_ID] = net_id
+            port_id = nic.pop('port-id', None)
+            if port_id:
+                nic[self.NETWORK_PORT] = port_id
+
+        return nics
+
     def check_create_complete(self, id):
         container = self.client().containers.get(id)
         if container.status in ('Creating', 'Created'):
@@ -279,7 +383,64 @@ class Container(resource.Resource):
                                                   .status)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        updaters = []
+        container = None
+
+        after_props = json_snippet.properties(self.properties_schema,
+                                              self.context)
+        if self.NETWORKS in prop_diff:
+            prop_diff.pop(self.NETWORKS)
+            container = self.client().containers.get(self.resource_id)
+            updaters.extend(self._update_networks(container, after_props))
+
         self.client_plugin().update_container(self.resource_id, **prop_diff)
+
+        return updaters
+
+    def _update_networks(self, container, after_props):
+        updaters = []
+        new_networks = after_props[self.NETWORKS]
+        old_networks = self.properties[self.NETWORKS]
+        security_groups = after_props[self.SECURITY_GROUPS]
+
+        interfaces = self.client(version=self.client_plugin().V1_18).\
+            containers.network_list(self.resource_id)
+        remove_ports, add_nets = self.calculate_networks(
+            old_networks, new_networks, interfaces, security_groups)
+
+        for port in remove_ports:
+            updaters.append(
+                progress.ContainerUpdateProgress(
+                    self.resource_id, 'network_detach',
+                    handler_extra={'args': (port,)},
+                    checker_extra={'args': (port,)})
+            )
+
+        for args in add_nets:
+            updaters.append(
+                progress.ContainerUpdateProgress(
+                    self.resource_id, 'network_attach',
+                    handler_extra={'kwargs': args},
+                    checker_extra={'args': (args['port_id'],)})
+            )
+
+        return updaters
+
+    def check_update_complete(self, updaters):
+        """Push all updaters to completion in list order."""
+        for prg in updaters:
+            if not prg.called:
+                handler = getattr(self.client_plugin(), prg.handler)
+                prg.called = handler(*prg.handler_args,
+                                     **prg.handler_kwargs)
+                return False
+            if not prg.complete:
+                check_complete = getattr(self.client_plugin(), prg.checker)
+                prg.complete = check_complete(*prg.checker_args,
+                                              **prg.checker_kwargs)
+                break
+        status = all(prg.complete for prg in updaters)
+        return status
 
     def handle_delete(self):
         if not self.resource_id:

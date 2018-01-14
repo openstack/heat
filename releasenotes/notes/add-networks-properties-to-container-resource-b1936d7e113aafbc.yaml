@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Add a new property ``networks`` to resource OS::Zun::Container.
+    This property is an ordered list of nics to be added to this container,
+    with information about connected networks, fixed ips, and port.
+    This property can be updated without replacement.
