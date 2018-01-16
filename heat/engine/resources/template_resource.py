@@ -312,14 +312,11 @@ class TemplateResource(stack_resource.StackResource):
             return self._reference_id
 
         stack_identity = self.nested_identifier()
-        with self.frozen_properties():
-            nest_defn = self.child_definition(nested_identifier=stack_identity)
-        if STACK_ID_OUTPUT in nest_defn.enabled_output_names():
-            try:
-                if self._outputs is not None:
-                    self._reference_id = self.get_output(STACK_ID_OUTPUT)
-                    return self._reference_id
 
+        try:
+            if self._outputs is not None:
+                self._reference_id = self.get_output(STACK_ID_OUTPUT)
+            elif STACK_ID_OUTPUT in self.attributes:
                 output = self.rpc_client().show_output(self.context,
                                                        dict(stack_identity),
                                                        STACK_ID_OUTPUT)
@@ -328,13 +325,13 @@ class TemplateResource(stack_resource.StackResource):
                         resource=self.name,
                         attribute=STACK_ID_OUTPUT,
                         message=output[rpc_api.OUTPUT_ERROR])
-            except exception.TemplateOutputError as err:
-                LOG.info('%s', err)
-            except exception.NotFound:
-                pass
-            else:
                 self._reference_id = output[rpc_api.OUTPUT_VALUE]
-                return self._reference_id
+        except exception.TemplateOutputError as err:
+            LOG.info('%s', err)
+        except exception.NotFound:
+            pass
+        else:
+            return self._reference_id
 
         return stack_identity.arn()
 
