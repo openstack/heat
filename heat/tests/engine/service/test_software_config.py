@@ -677,6 +677,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
 
         with mock.patch.object(self.ctx.session, 'refresh'):
             f = self.engine.software_config._push_metadata_software_deployments
+            self.patchobject(f.retry, 'sleep')
             self.assertRaises(
                 exception.ConcurrentTransaction,
                 f,

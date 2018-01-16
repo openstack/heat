@@ -4839,6 +4839,8 @@ class ServerInternalPortTest(ServersTest):
         server._data = {"internal_ports": jsonutils.dumps(port_ids)}
         self.patchobject(nova.NovaClientPlugin, 'interface_detach')
         self.patchobject(nova.NovaClientPlugin, 'fetch_server')
+        self.patchobject(nova.NovaClientPlugin.check_interface_detach.retry,
+                         'sleep')
         nova.NovaClientPlugin.fetch_server.side_effect = [Fake()] * 10
 
         exc = self.assertRaises(exception.InterfaceDetachFailed,
@@ -4966,6 +4968,8 @@ class ServerInternalPortTest(ServersTest):
                          return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'interface_attach')
         self.patchobject(nova.NovaClientPlugin, 'fetch_server')
+        self.patchobject(nova.NovaClientPlugin.check_interface_attach.retry,
+                         'sleep')
         # need to mock 11 times: 1 for port 1122, 10 for port 3344
         nova.NovaClientPlugin.fetch_server.side_effect = [Fake()] * 11
 
