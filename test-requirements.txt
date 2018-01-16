@@ -14,7 +14,7 @@ PyMySQL>=0.7.6 # MIT License
 openstackdocstheme>=1.17.0 # Apache-2.0
 os-api-ref>=1.4.0 # Apache-2.0
 os-testr>=1.0.0 # Apache-2.0
-oslotest>=1.10.0 # Apache-2.0
+oslotest>=3.2.0 # Apache-2.0
 qpid-python>=0.26;python_version=='2.7' # Apache-2.0
 psycopg2>=2.6.2 # LGPL/ZPL
 sphinx>=1.6.2 # BSD
