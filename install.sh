@@ -77,7 +77,6 @@ basic_configuration() {
 
         BRIDGE_IP=127.0.0.1
         iniset $target DEFAULT heat_metadata_server_url "http://${BRIDGE_IP}:8000/"
-        iniset $target DEFAULT heat_watch_server_url "http://${BRIDGE_IP}:8003/"
 
         if detect_rabbit
         then
