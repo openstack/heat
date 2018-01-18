@@ -138,7 +138,11 @@ template_server = {
 class ResourceGroupTest(common.HeatTestCase):
 
     def setUp(self):
-        common.HeatTestCase.setUp(self)
+        super(ResourceGroupTest, self).setUp()
+
+        self.inspector = mock.Mock(spec=grouputils.GroupInspector)
+        self.patchobject(grouputils.GroupInspector, 'from_parent_resource',
+                         return_value=self.inspector)
 
     def test_assemble_nested(self):
         """Tests nested stack creation based on props.
@@ -259,7 +263,9 @@ class ResourceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(template)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
-        resg._nested = get_fake_nested_stack(['0', '1'])
+        nested = get_fake_nested_stack(['0', '1'])
+        self.inspector.template.return_value = nested.defn._template
+        self.inspector.member_names.return_value = ['0', '1']
         resg.build_resource_definition = mock.Mock(return_value=resource_def)
         self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
 
@@ -290,7 +296,9 @@ class ResourceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(template)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
-        resg._nested = get_fake_nested_stack(['0', '1'])
+        nested = get_fake_nested_stack(['0', '1'])
+        self.inspector.template.return_value = nested.defn._template
+        self.inspector.member_names.return_value = ['0', '1']
         resg.build_resource_definition = mock.Mock(return_value=resource_def)
         self.assertEqual(expect, resg._assemble_for_rolling_update(2, 0).t)
 
@@ -320,9 +328,9 @@ class ResourceGroupTest(common.HeatTestCase):
         stack = utils.parse_stack(template)
         snip = stack.t.resource_definitions(stack)['group1']
         resg = resource_group.ResourceGroup('test', snip, stack)
-        resg._nested = get_fake_nested_stack(['0', '1'])
-        res0 = resg._nested['0']
-        res0.status = res0.FAILED
+        nested = get_fake_nested_stack(['0', '1'])
+        self.inspector.template.return_value = nested.defn._template
+        self.inspector.member_names.return_value = ['1']
         resg.build_resource_definition = mock.Mock(return_value=resource_def)
         self.assertEqual(expect, resg._assemble_for_rolling_update(2, 1).t)
 
@@ -564,6 +572,7 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(1, resgrp.create_with_template.call_count)
 
     def test_handle_create_with_batching(self):
+        self.inspector.member_names.return_value = []
         stack = utils.parse_stack(tmpl_with_default_updt_policy())
         defn = stack.t.resource_definitions(stack)['group1']
         props = stack.t.t['resources']['group1']['properties'].copy()
@@ -576,6 +585,7 @@ class ResourceGroupTest(common.HeatTestCase):
         self.assertEqual(4, len(checkers))
 
     def test_handle_create_with_batching_zero_count(self):
+        self.inspector.member_names.return_value = []
         stack = utils.parse_stack(tmpl_with_default_updt_policy())
         defn = stack.t.resource_definitions(stack)['group1']
         props = stack.t.t['resources']['group1']['properties'].copy()
@@ -983,6 +993,11 @@ class ReplaceTest(common.HeatTestCase):
         self.group.update_with_template = mock.Mock()
         self.group.check_update_complete = mock.Mock()
 
+        inspector = mock.Mock(spec=grouputils.GroupInspector)
+        self.patchobject(grouputils.GroupInspector, 'from_parent_resource',
+                         return_value=inspector)
+        inspector.member_names.return_value = self.existing
+
     def test_rolling_updates(self):
         self.group._nested = get_fake_nested_stack(self.existing)
         self.group.get_size = mock.Mock(return_value=self.count)
@@ -990,8 +1005,7 @@ class ReplaceTest(common.HeatTestCase):
             return_value=set(self.black_listed))
         tasks = self.group._replace(self.min_in_service, self.batch_size,
                                     self.pause_sec)
-        self.assertEqual(self.tasks,
-                         len(tasks))
+        self.assertEqual(self.tasks, len(tasks))
 
 
 def tmpl_with_bad_updt_policy():
@@ -1201,10 +1215,14 @@ class TestUtils(common.HeatTestCase):
     ]
 
     def test_count_black_listed(self):
+        inspector = mock.Mock(spec=grouputils.GroupInspector)
+        self.patchobject(grouputils.GroupInspector, 'from_parent_resource',
+                         return_value=inspector)
+        inspector.member_names.return_value = self.existing
+
         stack = utils.parse_stack(template2)
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
-        resgrp._nested = get_fake_nested_stack(self.existing)
         resgrp._name_blacklist = mock.Mock(return_value=set(self.black_listed))
         rcount = resgrp._count_black_listed()
         self.assertEqual(self.count, rcount)
