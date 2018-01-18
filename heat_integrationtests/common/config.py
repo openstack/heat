@@ -14,15 +14,6 @@ from oslo_config import cfg
 
 CONF = None
 
-service_available_group = cfg.OptGroup(name="service_available",
-                                       title="Available OpenStack Services")
-
-ServiceAvailableGroup = [
-    cfg.BoolOpt("heat_plugin",
-                default=True,
-                help="Whether or not heat is expected to be available"),
-]
-
 heat_group = cfg.OptGroup(name="heat_plugin",
                           title="Heat Service Options")
 
@@ -169,4 +160,3 @@ HeatGroup = [
 
 def list_opts():
     yield heat_group.name, HeatGroup
-    yield service_available_group.name, ServiceAvailableGroup
