@@ -42,6 +42,13 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.assertRaises(exception.StackValidationFailed,
                           stack['my-group'].validate)
 
+    def test_validate_reference_attr_with_none_ref(self):
+        stack = utils.parse_stack(self.parsed)
+        group = stack['my-group']
+        self.patchobject(group, 'referenced_attrs',
+                         return_value=set([('something', None)]))
+        self.assertIsNone(group.validate())
+
 
 class TestScalingGroupTags(common.HeatTestCase):
     def setUp(self):
