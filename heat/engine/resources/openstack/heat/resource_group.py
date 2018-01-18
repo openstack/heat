@@ -488,7 +488,7 @@ class ResourceGroup(stack_resource.StackResource):
                 output_name = attr
             else:
                 key, path = attr[0], list(attr[1:])
-                output_name = ', '.join(attr)
+                output_name = ', '.join(six.text_type(a) for a in attr)
 
             if key.startswith("resource."):
                 keycomponents = key.split('.', 2)
