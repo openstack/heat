@@ -377,9 +377,8 @@ class ResourceGroup(stack_resource.StackResource):
                                                       candidates),
                                 size)
 
-    def _count_black_listed(self):
+    def _count_black_listed(self, existing_members):
         """Return the number of current resource names that are blacklisted."""
-        existing_members = grouputils.get_member_names(self)
         return len(self._name_blacklist() & set(existing_members))
 
     def handle_create(self):
@@ -679,11 +678,12 @@ class ResourceGroup(stack_resource.StackResource):
             while not duration.expired():
                 yield
 
-        # blacklist count existing
-        num_blacklist = self._count_black_listed()
-
         # current capacity not including existing blacklisted
-        curr_cap = len(self.nested()) - num_blacklist if self.nested() else 0
+        inspector = grouputils.GroupInspector.from_parent_resource(self)
+        num_blacklist = self._count_black_listed(
+            inspector.member_names(include_failed=False))
+        num_resources = inspector.size(include_failed=True)
+        curr_cap = num_resources - num_blacklist
 
         batches = list(self._get_batches(self.get_size(), curr_cap, batch_size,
                                          min_in_service))

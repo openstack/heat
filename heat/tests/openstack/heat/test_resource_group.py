@@ -573,6 +573,7 @@ class ResourceGroupTest(common.HeatTestCase):
 
     def test_handle_create_with_batching(self):
         self.inspector.member_names.return_value = []
+        self.inspector.size.return_value = 0
         stack = utils.parse_stack(tmpl_with_default_updt_policy())
         defn = stack.t.resource_definitions(stack)['group1']
         props = stack.t.t['resources']['group1']['properties'].copy()
@@ -586,6 +587,7 @@ class ResourceGroupTest(common.HeatTestCase):
 
     def test_handle_create_with_batching_zero_count(self):
         self.inspector.member_names.return_value = []
+        self.inspector.size.return_value = 0
         stack = utils.parse_stack(tmpl_with_default_updt_policy())
         defn = stack.t.resource_definitions(stack)['group1']
         props = stack.t.t['resources']['group1']['properties'].copy()
@@ -997,6 +999,7 @@ class ReplaceTest(common.HeatTestCase):
         self.patchobject(grouputils.GroupInspector, 'from_parent_resource',
                          return_value=inspector)
         inspector.member_names.return_value = self.existing
+        inspector.size.return_value = len(self.existing)
 
     def test_rolling_updates(self):
         self.group._nested = get_fake_nested_stack(self.existing)
@@ -1224,7 +1227,7 @@ class TestUtils(common.HeatTestCase):
         snip = stack.t.resource_definitions(stack)['group1']
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         resgrp._name_blacklist = mock.Mock(return_value=set(self.black_listed))
-        rcount = resgrp._count_black_listed()
+        rcount = resgrp._count_black_listed(self.existing)
         self.assertEqual(self.count, rcount)
 
 
