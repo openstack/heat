@@ -515,6 +515,14 @@ class ResourceGroupTest(common.HeatTestCase):
         resgrp = resource_group.ResourceGroup('test', snip, stack)
         self.assertIsNone(resgrp.validate())
 
+    def test_validate_reference_attr_with_none_ref(self):
+        stack = utils.parse_stack(template_attr)
+        snip = stack.t.resource_definitions(stack)['group1']
+        resgrp = resource_group.ResourceGroup('test', snip, stack)
+        self.patchobject(resgrp, 'referenced_attrs',
+                         return_value=set([('nested_dict', None)]))
+        self.assertIsNone(resgrp.validate())
+
     def test_invalid_removal_policies_nolist(self):
         """Test that error raised for malformed removal_policies."""
         tmp = copy.deepcopy(template)
