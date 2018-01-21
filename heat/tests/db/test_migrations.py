@@ -124,6 +124,7 @@ class HeatMigrationsCheckers(test_migrations.WalkVersionsMixin,
         # Reviewers: DO NOT ALLOW THINGS TO BE ADDED HERE
         exceptions = [
             64,  # drop constraint
+            86,  # drop watch_rule/watch_data tables
         ]
         # Reviewers: DO NOT ALLOW THINGS TO BE ADDED HERE
 

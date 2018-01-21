@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The database upgrade for Heat Queens release drops 'watch_rule'
+    and 'watch_data' tables from the heat database.
