@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random
+import random as random_module
 import string
 
 import six
@@ -24,6 +24,10 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 from heat.engine import translation
+
+# NOTE(pas-ha) Heat officially supports only POSIX::Linux platform
+# where os.urandom() and random.SystemRandom() are available
+random = random_module.SystemRandom()
 
 
 class RandomString(resource.Resource):
