@@ -23,7 +23,7 @@ Run with -h to see a list of available commands:
 ``heat-manage -h``
 
 Commands are ``db_version``, ``db_sync``, ``purge_deleted``,
-``migrate_covergence_1``, ``migrate_properties_data``, and
+``migrate_convergence_1``, ``migrate_properties_data``, and
 ``service``. Detailed descriptions are below.
 
 ``heat-manage db_version``
