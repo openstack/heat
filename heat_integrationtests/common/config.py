@@ -10,9 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
+import os
 
-CONF = None
+from oslo_config import cfg
+from oslo_log import log as logging
+
+import heat_integrationtests
+
+_CONF = None
 
 heat_group = cfg.OptGroup(name="heat_plugin",
                           title="Heat Service Options")
@@ -156,6 +161,29 @@ HeatGroup = [
                help="Path to the script heat-config-notify"),
 
 ]
+
+
+def init_conf(read_conf=True):
+    global _CONF
+    if _CONF is not None:
+        return _CONF
+
+    default_config_files = None
+    if read_conf:
+        confpath = os.path.join(
+            os.path.dirname(os.path.realpath(heat_integrationtests.__file__)),
+            'heat_integrationtests.conf')
+        if os.path.isfile(confpath):
+            default_config_files = [confpath]
+
+    _CONF = cfg.ConfigOpts()
+    logging.register_options(_CONF)
+    _CONF(args=[], project='heat_integrationtests',
+          default_config_files=default_config_files)
+
+    for group, opts in list_opts():
+        _CONF.register_opts(opts, group=group)
+    return _CONF
 
 
 def list_opts():

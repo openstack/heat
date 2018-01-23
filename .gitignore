@@ -25,6 +25,7 @@ etc/heat/heat.conf.sample
 .idea
 # integration tests requirements are auto-generated from stub file
 heat_integrationtests/requirements.txt
+heat_integrationtests/heat_integrationtests.conf.sample
 
 # generated policy file
 etc/heat/policy.yaml.sample
