@@ -62,7 +62,7 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.client = mock.Mock()
         self.patchobject(share_network.ManilaShareNetwork, 'client',
                          return_value=self.client)
-        self.client_plugin = mock.Mock()
+        self.client_plugin = mock.MagicMock()
 
         def resolve_neutron(resource_type, name):
             return name

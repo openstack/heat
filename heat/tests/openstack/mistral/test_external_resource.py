@@ -67,7 +67,6 @@ class TestMistralExternalResource(common.HeatTestCase):
         self.patchobject(external_resource.MistralExternalResource,
                          'client',
                          return_value=self.mistral)
-        self.patchobject(client, 'mistral_base')
         self.patchobject(client.MistralClientPlugin, '_create')
         self.client = client.MistralClientPlugin(self.ctx)
 
