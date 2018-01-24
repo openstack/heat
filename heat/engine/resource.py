@@ -1259,19 +1259,21 @@ class Resource(status.ResourceStatus):
                 else:
                     action = self.CREATE
             except exception.ResourceFailure as failure:
-                if isinstance(failure.exc, exception.StackValidationFailed):
+                exc = failure.exc
+                if isinstance(exc, exception.StackValidationFailed):
                     path = [self.t.name]
-                    path.extend(failure.exc.path)
+                    path.extend(exc.path)
                     raise exception.ResourceFailure(
                         exception_or_error=exception.StackValidationFailed(
-                            error=failure.exc.error,
+                            error=exc.error,
                             path=path,
-                            message=failure.exc.error_message
+                            message=exc.error_message
                         ),
                         resource=failure.resource,
                         action=failure.action
                     )
-                if not isinstance(failure.exc, exception.ResourceInError):
+                if not (isinstance(exc, exception.ResourceInError) or
+                        self._default_client_plugin().is_conflict(exc)):
                     raise failure
 
                 count[action] += 1
