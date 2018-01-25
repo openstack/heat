@@ -110,7 +110,6 @@
       topology: multinode
 
 - project:
-    name: openstack/heat
     check:
       jobs:
         - grenade-heat
