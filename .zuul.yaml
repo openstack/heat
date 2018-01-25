@@ -76,7 +76,6 @@
       use_identity_v3_only: 1
 
 - project:
-    name: openstack/heat
     check:
       jobs:
         - heat-functional-orig-mysql-lbaasv2
