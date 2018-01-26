@@ -129,6 +129,12 @@ class ResourceChainTest(common.HeatTestCase):
         chain = self._create_chain(TEMPLATE)
         chain.validate_nested_stack()
 
+    def test_validate_reference_attr_with_none_ref(self):
+        chain = self._create_chain(TEMPLATE)
+        self.patchobject(chain, 'referenced_attrs',
+                         return_value=set([('config', None)]))
+        self.assertIsNone(chain.validate())
+
     def test_validate_incompatible_properties(self):
         # Tests a resource in the chain that does not support the properties
         # specified to each resource.
