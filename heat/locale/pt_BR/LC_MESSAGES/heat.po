@@ -8,9 +8,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 10.0.0.dev107\n"
+"Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-10-06 21:39+0000\n"
+"POT-Creation-Date: 2018-01-25 05:19+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -643,9 +643,6 @@ msgstr "Recurso AccessPolicy %s fora da pilha"
 #, python-format
 msgid "Action %s not allowed for user"
 msgstr "Ação %s não permitida para o usuário"
-
-msgid "Action for the RBAC policy."
-msgstr "Ação para a política do RBAC."
 
 msgid "Action to be performed on the traffic matching the rule."
 msgstr "Ação a ser executada no tráfego correspondendo a regra."
@@ -2665,14 +2662,6 @@ msgid "Invalid UUID version (%d)"
 msgstr "Versão de UUID inválida (%d)"
 
 #, python-format
-msgid ""
-"Invalid action %(action)s for object type %(obj_type)s. Valid actions :"
-"%(value)s"
-msgstr ""
-"Ação inválida %(action)s para o tipo de objeto  %(obj_type)s. Ações válidas :"
-"%(value)s"
-
-#, python-format
 msgid "Invalid action %s"
 msgstr "Ação inválida %s"
 
@@ -2740,10 +2729,6 @@ msgstr ""
 "Combinação inválida de formatos de disco e contêiner. Ao configurar um "
 "formato de disco ou contêiner para um destes, 'aki', 'ari' ou 'ami', os "
 "formatos de contêiner e disco devem corresponder."
-
-#, python-format
-msgid "Invalid object_type: %(obj_type)s. Valid object_type :%(value)s"
-msgstr "Object_type inválido: %(obj_type)s. Object_type válido:%(value)s"
 
 #, python-format
 msgid "Invalid parameter constraints for parameter %s, expected a list"
@@ -7044,9 +7029,6 @@ msgstr "Valor '%s' não é um número inteiro"
 #, python-format
 msgid "Value must be a comma-delimited list string: %s"
 msgstr "Valor deve ser uma sequência de lista delimitada por vírgulas: %s"
-
-msgid "Value must be a string"
-msgstr "Valor deve ser uma sequência"
 
 #, python-format
 msgid "Value must be of type %s"

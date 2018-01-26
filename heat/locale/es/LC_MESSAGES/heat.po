@@ -8,9 +8,9 @@
 # Omar Rivera <gr113x@att.com>, 2017. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 10.0.0.dev107\n"
+"Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-10-06 21:39+0000\n"
+"POT-Creation-Date: 2018-01-25 05:19+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -644,9 +644,6 @@ msgstr "El recurso AccessPolicy %s no está en la pila"
 #, python-format
 msgid "Action %s not allowed for user"
 msgstr "Acción %s no esta permitida por el usuario"
-
-msgid "Action for the RBAC policy."
-msgstr "Acción para la política RBAC."
 
 msgid "Action to be performed on the traffic matching the rule."
 msgstr "Acción que se debe realizar en el tráfico que coincide con la regla."
@@ -2716,14 +2713,6 @@ msgid "Invalid UUID version (%d)"
 msgstr "Version UUID inválida (%d)"
 
 #, python-format
-msgid ""
-"Invalid action %(action)s for object type %(obj_type)s. Valid actions :"
-"%(value)s"
-msgstr ""
-"Acción no válida %(action)s para el tipo de objeto%(obj_type)s. Acciones "
-"válidas: %(value)s"
-
-#, python-format
 msgid "Invalid action %s"
 msgstr "Acción inválida %s"
 
@@ -2791,12 +2780,6 @@ msgstr ""
 "Mezcla no válida de formatos de disco y contenedor. Al definir un formato de "
 "disco o de contenedor como 'aki', 'ari' o 'ami', los formatos de contenedor "
 "y de disco deben coincidir."
-
-#, python-format
-msgid "Invalid object_type: %(obj_type)s. Valid object_type :%(value)s"
-msgstr ""
-"Tipo de objeto (object_type) no válido: %(obj_type)s. Tipos de objeto "
-"(object_type) válidos: %(value)s"
 
 #, python-format
 msgid "Invalid parameter constraints for parameter %s, expected a list"
@@ -7209,9 +7192,6 @@ msgstr "El valor '%s' no es un entero"
 #, python-format
 msgid "Value must be a comma-delimited list string: %s"
 msgstr "El valor debe ser una serie de lista delimitada por comas: %s"
-
-msgid "Value must be a string"
-msgstr "El valor debe ser una serie"
 
 #, python-format
 msgid "Value must be of type %s"
