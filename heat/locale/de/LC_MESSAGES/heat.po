@@ -9,9 +9,9 @@
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 10.0.0.0b3.dev16\n"
+"Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-12-13 15:39+0000\n"
+"POT-Creation-Date: 2018-01-25 05:19+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -665,9 +665,6 @@ msgstr "AccessPolicy-Ressource %s befindet sich nicht im Stack"
 #, python-format
 msgid "Action %s not allowed for user"
 msgstr "Aktion %s nicht erlaubt für Benutzer"
-
-msgid "Action for the RBAC policy."
-msgstr "Aktion für die RBAC-Richtlinie."
 
 msgid "Action to be performed on the traffic matching the rule."
 msgstr ""
@@ -2802,14 +2799,6 @@ msgid "Invalid UUID version (%d)"
 msgstr "Ungültige UUID-Version (%d)"
 
 #, python-format
-msgid ""
-"Invalid action %(action)s for object type %(obj_type)s. Valid actions :"
-"%(value)s"
-msgstr ""
-"Ungültige Aktion %(action)s für Objekttyp %(obj_type)s. Gültige Aktionen :"
-"%(value)s"
-
-#, python-format
 msgid "Invalid action %s"
 msgstr "Ungültige Aktion %s"
 
@@ -2894,11 +2883,6 @@ msgstr ""
 "Ungültige Kombination von Platten- und Containerformaten. Beim Festlegen "
 "eines Platten- oder Containerformats auf 'aki', 'ari' oder 'ami' müssen die "
 "Container- und Plattenformate übereinstimmen."
-
-#, python-format
-msgid "Invalid object_type: %(obj_type)s. Valid object_type :%(value)s"
-msgstr ""
-"Ungültiger 'object_type': %(obj_type)s. Gültiger 'object_type': %(value)s"
 
 #, python-format
 msgid "Invalid parameter constraints for parameter %s, expected a list"
@@ -7403,9 +7387,6 @@ msgstr "Wert '%s' ist keine Ganzzahl"
 #, python-format
 msgid "Value must be a comma-delimited list string: %s"
 msgstr "Der Wert muss eine durch Kommas begrenzte Zeichenfolge sein: %s"
-
-msgid "Value must be a string"
-msgstr "Wert muss eine Zeichenkette sein"
 
 #, python-format
 msgid "Value must be of type %s"

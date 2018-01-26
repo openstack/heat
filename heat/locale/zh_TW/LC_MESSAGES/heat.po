@@ -6,9 +6,9 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 msgid ""
 msgstr ""
-"Project-Id-Version: heat 10.0.0.dev107\n"
+"Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2017-10-06 21:39+0000\n"
+"POT-Creation-Date: 2018-01-25 05:19+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -567,9 +567,6 @@ msgstr "AccessPolicy 資源 %s 不在堆疊中"
 #, python-format
 msgid "Action %s not allowed for user"
 msgstr "不容許使用者執行動作 %s"
-
-msgid "Action for the RBAC policy."
-msgstr "RBAC 原則的動作。"
 
 msgid "Action to be performed on the traffic matching the rule."
 msgstr "要對與規則相符之資料流量執行的動作。"
@@ -2426,12 +2423,6 @@ msgid "Invalid UUID version (%d)"
 msgstr "無效的 UUID 版本 (%d)"
 
 #, python-format
-msgid ""
-"Invalid action %(action)s for object type %(obj_type)s. Valid actions :"
-"%(value)s"
-msgstr "物件類型 %(obj_type)s 的動作 %(action)s 無效。有效動作：%(value)s"
-
-#, python-format
 msgid "Invalid action %s"
 msgstr "無效的動作 %s"
 
@@ -2497,10 +2488,6 @@ msgid ""
 msgstr ""
 "磁碟格式與儲存器格式的混合無效。將磁碟或儲存器格式設為 'aki'、'ari' 或 'ami' "
 "中的一個時，儲存器與磁碟格式必須相符。"
-
-#, python-format
-msgid "Invalid object_type: %(obj_type)s. Valid object_type :%(value)s"
-msgstr "無效的 object_type：%(obj_type)s。有效的 object_type：%(value)s"
 
 #, python-format
 msgid "Invalid parameter constraints for parameter %s, expected a list"
@@ -6411,9 +6398,6 @@ msgstr "值 '%s' 不是整數"
 #, python-format
 msgid "Value must be a comma-delimited list string: %s"
 msgstr "值必須是以逗點定界的清單字串：%s"
-
-msgid "Value must be a string"
-msgstr "值必須是字串"
 
 #, python-format
 msgid "Value must be of type %s"
