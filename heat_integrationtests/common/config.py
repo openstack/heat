@@ -117,16 +117,6 @@ HeatGroup = [
                default=120,
                help="Timeout in seconds to wait for connectivity to "
                     "server."),
-    cfg.IntOpt('sighup_timeout',
-               default=120,
-               help="Timeout in seconds to wait for adding or removing child "
-                    "process after receiving of sighup signal"),
-    cfg.IntOpt('sighup_config_edit_retries',
-               default=10,
-               help='Count of retries to edit config file during sighup. If '
-                    'another worker already edit config file, file can be '
-                    'busy, so need to wait and try edit file again.'),
-
 ]
 
 
