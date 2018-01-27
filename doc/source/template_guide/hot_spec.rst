@@ -290,7 +290,7 @@ for the ``heat_template_version`` key:
       or
 
 2017-09-01 | pike
--------------------
+-----------------
     The key with value ``2017-09-01`` or ``pike`` indicates that the YAML
     document is a HOT template and it may contain features added and/or removed
     up until the Pike release. This version adds the ``make_url`` function for
@@ -1599,7 +1599,7 @@ rather than later when processing a template.
 
 
 str_replace_vstrict
-------------------
+-------------------
 ``str_replace_vstrict`` behaves identically to the
 ``str_replace_strict`` function, only an error is raised if any of the
 params are empty. This may help catch issues (i.e., prevent

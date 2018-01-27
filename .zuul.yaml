@@ -117,14 +117,8 @@
         - grenade-heat-multinode
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-amqp1
-        - heat-functional-convg-mysql-lbaasv2-non-apache
-        - heat-functional-convg-mysql-lbaasv2-py35
-        - heat-functional-convg-mysql-lbaasv2-identity-v3-only
     gate:
       jobs:
         - grenade-heat
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-non-apache
-        - heat-functional-convg-mysql-lbaasv2-py35
