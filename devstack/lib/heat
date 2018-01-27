@@ -45,7 +45,6 @@ HEAT_USE_APACHE=${HEAT_USE_APACHE:-${HEAT_USE_MOD_WSGI:-True}}
 HEAT_DIR=$DEST/heat
 HEAT_FILES_DIR=$HEAT_DIR/heat/httpd/files
 
-HEAT_AUTH_CACHE_DIR=${HEAT_AUTH_CACHE_DIR:-/var/cache/heat}
 HEAT_STANDALONE=$(trueorfalse False HEAT_STANDALONE)
 HEAT_ENABLE_ADOPT_ABANDON=$(trueorfalse False HEAT_ENABLE_ADOPT_ABANDON)
 HEAT_CONF_DIR=/etc/heat
@@ -100,7 +99,6 @@ function cleanup_heat {
     if [[ "$HEAT_USE_APACHE" == "True" ]]; then
         _cleanup_heat_apache_wsgi
     fi
-    sudo rm -rf $HEAT_AUTH_CACHE_DIR
     sudo rm -rf $HEAT_ENV_DIR
     sudo rm -rf $HEAT_TEMPLATES_DIR
     sudo rm -rf $HEAT_CONF_DIR
@@ -175,7 +173,7 @@ function configure_heat {
         iniset $HEAT_CONF paste_deploy flavor standalone
         iniset $HEAT_CONF clients_heat url "http://$HEAT_API_HOST:$HEAT_API_PORT/v1/%(tenant_id)s"
     else
-        configure_auth_token_middleware $HEAT_CONF heat $HEAT_AUTH_CACHE_DIR
+        configure_auth_token_middleware $HEAT_CONF heat
     fi
 
     # If HEAT_DEFERRED_AUTH is unset or explicitly set to trusts, configure
@@ -269,14 +267,8 @@ function init_heat {
         recreate_database heat
         $HEAT_BIN_DIR/heat-manage db_sync
     fi
-    create_heat_cache_dir
 }
 
-# create_heat_cache_dir() - Part of the init_heat() process
-function create_heat_cache_dir {
-    # Create cache dirs
-    sudo install -d -o $STACK_USER $HEAT_AUTH_CACHE_DIR
-}
 
 # install_heatclient() - Collect source and prepare
 function install_heatclient {
