@@ -22,3 +22,5 @@ class ZunClientPluginTest(common.HeatTestCase):
         client = plugin.client()
         self.assertEqual('http://server.test:5000/v3',
                          client.containers.api.session.auth.endpoint)
+        self.assertEqual('1.12',
+                         client.api_version.get_string())

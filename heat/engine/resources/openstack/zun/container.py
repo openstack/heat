@@ -202,7 +202,7 @@ class Container(resource.Resource):
         if not self.resource_id:
             return
         try:
-            self.client().containers.delete(self.resource_id, force=True)
+            self.client().containers.delete(self.resource_id, stop=True)
         except Exception as exc:
             self.client_plugin().ignore_not_found(exc)
 
