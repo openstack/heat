@@ -76,7 +76,7 @@ class TemplateFiles(collections.Mapping):
 
     def __iter__(self):
         self._refresh_if_needed()
-        if self.files_id is None:
+        if self.files is None:
             return iter(ReadOnlyDict({}))
         return iter(self.files)
 
