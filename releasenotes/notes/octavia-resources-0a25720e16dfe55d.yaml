@@ -1,0 +1,19 @@
+---
+features:
+  - Adds new resources for octavia lbaas service.
+  - New resource ``OS::Octavia::LoadBalancer`` is added to create and
+    manage Load Balancers which allow traffic to be directed between servers.
+  - New resource ``OS::Octavia::Listener`` is added to create and
+    manage Listeners which represent a listening endpoint for the Load
+    Balancer.
+  - New resource ``OS::Octavia::Pool`` is added to create and
+    manage Pools which represent a group of nodes. Pools define the subnet
+    where nodes reside, the balancing algorithm, and the nodes themselves.
+  - New resource ``OS::Octavia::PoolMember`` is added to create and
+    manage Pool members which represent a single backend node.
+  - New resource ``OS::Octavia::HealthMonitor`` is added to create and
+    manage Health Monitors which watch status of the Load Balanced servers.
+  - New resource ``OS::Octavia::L7Policy`` is added to create and
+    manage L7 Policies.
+  - New resource ``OS::Octavia::L7Rule`` is added to create and
+    manage L7 Rules.

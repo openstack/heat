@@ -73,6 +73,11 @@ class OctaviaClientPlugin(client_plugin.ClientPlugin):
                                 value=value, attr=DEFAULT_FIND_ATTR)
         return lb['id']
 
+    def get_l7policy(self, value):
+        policy = self.client().find(path=constants.BASE_L7POLICY_URL,
+                                    value=value, attr=DEFAULT_FIND_ATTR)
+        return policy['id']
+
 
 class OctaviaConstraint(constraints.BaseCustomConstraint):
 
@@ -96,3 +101,7 @@ class ListenerConstraint(OctaviaConstraint):
 
 class PoolConstraint(OctaviaConstraint):
     base_url = constants.BASE_POOL_URL
+
+
+class L7PolicyConstraint(OctaviaConstraint):
+    base_url = constants.BASE_L7POLICY_URL
