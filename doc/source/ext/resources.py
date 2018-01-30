@@ -203,7 +203,7 @@ resources:
         return (x_status > y_status) - (x_status < y_status)
 
     def contribute_property(self, parent, prop_key, prop, upd_para=None,
-                            id_pattern_prefix=None):
+                            id_pattern_prefix=None, sub_prop=False):
         if not id_pattern_prefix:
             id_pattern_prefix = '%s-prop'
         id_pattern = id_pattern_prefix + '-' + prop_key
@@ -217,6 +217,15 @@ resources:
             note = nodes.note('', para)
             definition.append(note)
             return
+
+        if sub_prop and prop.type != properties.Schema.LIST and prop.type\
+                != properties.Schema.MAP:
+            if prop.required:
+                para = nodes.paragraph('', _('Required.'))
+                definition.append(para)
+            else:
+                para = nodes.paragraph('', _('Optional.'))
+                definition.append(para)
 
         if prop.description:
             para = nodes.paragraph('', prop.description)
@@ -272,7 +281,8 @@ resources:
                     indent = nodes.block_quote()
                     definition.append(indent)
                     self.contribute_property(
-                        indent, _key, _prop, upd_para, id_pattern)
+                        indent, _key, _prop, upd_para, id_pattern,
+                        sub_prop=True)
 
     def contribute_properties(self, parent):
         if not self.props_schemata:
