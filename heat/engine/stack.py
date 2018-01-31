@@ -1987,44 +1987,6 @@ class Stack(collections.Mapping):
                                        action=self.RESTORE)
         updater()
 
-    def restart_resource(self, resource_name):
-        """Restart the resource specified by resource_name.
-
-        stop resource_name and all that depend on it
-        start resource_name and all that depend on it
-        """
-        warnings.warn("Stack.restart_resource() is horribly broken and will "
-                      "never be fixed. If you're using it in a resource type "
-                      "other than HARestarter, don't. And don't use "
-                      "HARestarter either.",
-                      DeprecationWarning)
-
-        deps = self.dependencies[self[resource_name]]
-        failed = False
-
-        for res in reversed(deps):
-            try:
-                scheduler.TaskRunner(res.destroy)()
-            except exception.ResourceFailure as ex:
-                failed = True
-                LOG.info('Resource %(name)s delete failed: %(ex)s',
-                         {'name': res.name, 'ex': ex})
-
-        for res in deps:
-            if not failed:
-                try:
-                    res.state_reset()
-                    scheduler.TaskRunner(res.create)()
-                except exception.ResourceFailure as ex:
-                    failed = True
-                    LOG.info('Resource %(name)s create failed: '
-                             '%(ex)s', {'name': res.name, 'ex': ex})
-            else:
-                res.state_set(res.CREATE, res.FAILED,
-                              'Resource restart aborted')
-        # TODO(asalkeld) if any of this fails we Should
-        # restart the whole stack
-
     def get_availability_zones(self):
         nova = self.clients.client('nova')
         if self._zones is None:

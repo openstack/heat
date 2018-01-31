@@ -1,0 +1,12 @@
+---
+upgrade:
+  - |
+    The ``OS::Heat::HARestarter`` resource type is no longer supported. This
+    resource type is now hidden from the documentation. HARestarter resources
+    in stacks, including pre-existing ones, are now only placeholders and will
+    no longer do anything. The recommended alternative is to mark a resource
+    unhealthy and then do a stack update to replace it. This still correctly
+    manages dependencies but, unlike HARestarter, also avoid replacing
+    dependent resources unnecessarily. An example of this technique can be
+    seen in the autohealing sample templates at
+    https://git.openstack.org/cgit/openstack/heat-templates/tree/hot/autohealing
