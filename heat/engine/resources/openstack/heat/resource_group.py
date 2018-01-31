@@ -492,9 +492,9 @@ class ResourceGroup(stack_resource.StackResource):
             if key.startswith("resource."):
                 keycomponents = key.split('.', 2)
                 res_name = keycomponents[1]
-                attr_name = keycomponents[2:]
-                if attr_name and (res_name in resource_names):
-                    value = get_attr_fn([res_name] + attr_name + path)
+                attr_path = keycomponents[2:] + path
+                if attr_path and (res_name in resource_names):
+                    value = get_attr_fn([res_name] + attr_path)
                     yield output.OutputDefinition(output_name, value)
 
             elif key == self.ATTR_ATTRIBUTES and path:
