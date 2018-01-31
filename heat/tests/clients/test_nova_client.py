@@ -363,8 +363,6 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
         """Tests the build_userdata function."""
         cfg.CONF.set_override('heat_metadata_server_url',
                               'http://server.test:123')
-        cfg.CONF.set_override('heat_watch_server_url',
-                              'http://server.test:345')
         cfg.CONF.set_override('instance_connection_is_secure', False)
         cfg.CONF.set_override(
             'instance_connection_https_validate_certificates', False)
@@ -374,7 +372,6 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
         self.assertIn("Content-Type: text/part-handler;", data)
         self.assertIn("Content-Type: text/x-cfninitdata;", data)
         self.assertIn("Content-Type: text/x-shellscript;", data)
-        self.assertIn("http://server.test:345", data)
         self.assertIn("http://server.test:123", data)
         self.assertIn("[Boto]", data)
 
@@ -382,8 +379,6 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
         """Don't add a custom instance user when not requested."""
         cfg.CONF.set_override('heat_metadata_server_url',
                               'http://server.test:123')
-        cfg.CONF.set_override('heat_watch_server_url',
-                              'http://server.test:345')
         data = self.nova_plugin.build_userdata({}, instance_user=None)
         self.assertNotIn('user: ', data)
         self.assertNotIn('useradd', data)
@@ -393,8 +388,6 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
         """Add a custom instance user."""
         cfg.CONF.set_override('heat_metadata_server_url',
                               'http://server.test:123')
-        cfg.CONF.set_override('heat_watch_server_url',
-                              'http://server.test:345')
         data = self.nova_plugin.build_userdata({}, instance_user='ec2-user')
         self.assertIn('user: ', data)
         self.assertIn('useradd', data)
