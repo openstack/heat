@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The AWS compatible CloudWatch API, deprecated since long has been
+    finally removed. OpenStack deployments, packagers, and deployment
+    projects which deploy/package CloudWatch should take appropriate
+    action to remove support.
