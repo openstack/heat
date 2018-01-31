@@ -792,9 +792,11 @@ outputs:
     value:
       not-important
 '''
+        template = yaml.safe_load(self.template)
+        del template['resources']['thisone']['properties']['two']
         try:
             self.stack_create(
-                template=self.template,
+                template=yaml.safe_dump(template),
                 environment=self.env,
                 files={'facade.yaml': self.templ_facade,
                        'concrete.yaml': templ_missing_parameter},
