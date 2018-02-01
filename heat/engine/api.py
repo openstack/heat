@@ -233,7 +233,8 @@ def format_stack(stack, preview=False, resolve_outputs=True):
         info.update(update_info)
 
     # allow users to view the outputs of stacks
-    if stack.action != stack.DELETE and resolve_outputs:
+    if (not (stack.action == stack.DELETE and stack.status == stack.COMPLETE)
+            and resolve_outputs):
         info[rpc_api.STACK_OUTPUTS] = format_stack_outputs(stack.outputs,
                                                            resolve_value=True)
 
