@@ -73,7 +73,7 @@
    * - **[heat_all]**
      -
    * - ``enabled_services`` = ``engine, api, api_cfn``
-     - (List) Specifies the heat services that are enabled when running heat-all. Valid options are all or any combination of api, engine, api_cfn, or api_cloudwatch.
+     - (List) Specifies the heat services that are enabled when running heat-all. Valid options are all or any combination of api, engine or api_cfn.
    * - **[profiler]**
      -
    * - ``connection_string`` = ``messaging://``
