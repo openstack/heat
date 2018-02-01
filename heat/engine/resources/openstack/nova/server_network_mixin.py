@@ -292,17 +292,27 @@ class ServerNetworkMixin(object):
                     best, matches = iface, num
             return best
 
-    def _exclude_not_updated_networks(self, old_nets, new_nets):
-        # make networks similar by adding None vlues for not used keys
+    def _exclude_not_updated_networks(self, old_nets, new_nets, interfaces):
+        not_updated_nets = []
+
+        # Update old_nets to match interfaces
+        self.update_networks_matching_iface_port(old_nets, interfaces)
+        # make networks similar by adding None values for not used keys
         for key in self._NETWORK_KEYS:
             # if _net.get(key) is '', convert to None
             for _net in itertools.chain(new_nets, old_nets):
                 _net[key] = _net.get(key) or None
-        # find matches and remove them from old and new networks
-        not_updated_nets = [net for net in old_nets if net in new_nets]
-        for net in not_updated_nets:
-            old_nets.remove(net)
-            new_nets.remove(net)
+
+        for new_net in list(new_nets):
+            new_net_reduced = {k: v for k, v in new_net.items()
+                               if k not in self._IFACE_MANAGED_KEYS or
+                               v is not None}
+            match = self._find_best_match(old_nets, new_net_reduced)
+            if match is not None:
+                not_updated_nets.append(match)
+                new_nets.remove(new_net)
+                old_nets.remove(match)
+
         return not_updated_nets
 
     def _get_network_id(self, net):
@@ -313,9 +323,7 @@ class ServerNetworkMixin(object):
                 'neutron').network_id_from_subnet_id(subnet)
         return net_id
 
-    def update_networks_matching_iface_port(self, nets, interfaces):
-        iface_managed_keys = (self.NETWORK_PORT, self.NETWORK_ID,
-                              self.NETWORK_FIXED_IP, self.NETWORK_SUBNET)
+    def update_networks_matching_iface_port(self, old_nets, interfaces):
 
         def get_iface_props(iface):
             ipaddr = None
@@ -329,15 +337,16 @@ class ServerNetworkMixin(object):
                     self.NETWORK_SUBNET: subnet}
 
         interfaces_net_props = [get_iface_props(iface) for iface in interfaces]
-        for net in nets:
-            if net[self.NETWORK_PORT] is None:
-                net[self.NETWORK_ID] = self._get_network_id(net)
-            net_reduced = {k: v for k, v in net.items()
-                           if k in iface_managed_keys and v is not None}
+        for old_net in old_nets:
+            if old_net[self.NETWORK_PORT] is None:
+                old_net[self.NETWORK_ID] = self._get_network_id(old_net)
+            old_net_reduced = {k: v for k, v in old_net.items()
+                               if k in self._IFACE_MANAGED_KEYS and
+                               v is not None}
             match = self._find_best_match(interfaces_net_props,
-                                          net_reduced)
+                                          old_net_reduced)
             if match is not None:
-                net.update(match)
+                old_net.update(match)
                 interfaces_net_props.remove(match)
 
     def _get_available_networks(self):
@@ -420,11 +429,7 @@ class ServerNetworkMixin(object):
                 # remove not updated networks from old and new networks lists,
                 # also get list these networks
                 not_updated_nets = self._exclude_not_updated_networks(
-                    old_nets,
-                    new_nets)
-
-                self.update_networks_matching_iface_port(
-                    old_nets + not_updated_nets, ifaces)
+                    old_nets, new_nets, ifaces)
 
                 # according to nova interface-detach command detached port
                 # will be deleted
