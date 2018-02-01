@@ -21,13 +21,11 @@ On Debian/Ubuntu systems it is::
 
     /etc/apache2/sites-available/heat-api.conf
     /etc/apache2/sites-available/heat-api-cfn.conf
-    /etc/apache2/sites-available/heat-api-cloudwatch.conf
 
 On Red Hat based systems it is::
 
     /etc/httpd/conf.d/uwsgi-heat-api.conf
     /etc/httpd/conf.d/uwsgi-heat-api-cfn.conf
-    /etc/httpd/conf.d/uwsgi-heat-api-cloudwatch.conf
 
 uwsgi
 -----
@@ -42,20 +40,18 @@ other services too) and just need to restart the local uwsgi daemons.
 
 The httpd/files directory contains sample files for configuring httpd to run
 Heat api services under uwsgi in this configuration. To use the sample configs
-simply copy `uwsgi-heat-api.conf`, `uwsgi-heat-api-cfn.conf` and
-`uwsgi-heat-api-cloudwatch.conf` to the appropriate location for your web server.
+simply copy `uwsgi-heat-api.conf` and `uwsgi-heat-api-cfn.conf` to the
+appropriate location for your web server.
 
 On Debian/Ubuntu systems it is::
 
     /etc/apache2/sites-available/uwsgi-heat-api.conf
     /etc/apache2/sites-available/uwsgi-heat-api-cfn.conf
-    /etc/apache2/sites-available/uwsgi-heat-api-cloudwatch.conf
 
 On Red Hat based systems it is::
 
     /etc/httpd/conf.d/uwsgi-heat-api.conf
     /etc/httpd/conf.d/uwsgi-heat-api-cfn.conf
-    /etc/httpd/conf.d/uwsgi-heat-api-cloudwatch.conf
 
 Enable mod_proxy by running ``sudo a2enmod proxy``
 
@@ -65,7 +61,6 @@ Red Hat based systems)::
 
     ln -s /etc/apache2/sites-available/uwsgi-heat-api.conf /etc/apache2/sites-enabled
     ln -s /etc/apache2/sites-available/uwsgi-heat-api-cfn.conf /etc/apache2/sites-enabled
-    ln -s /etc/apache2/sites-available/uwsgi-heat-api-cloudwatch.conf /etc/apache2/sites-enabled
 
 Start or restart httpd to pick up the new configuration.
 
@@ -74,7 +69,6 @@ files to `/etc/heat`::
 
         heat-api-uwsgi.ini
         heat-api-cfn-uwsgi.ini
-        heat-api-cloudwatch-uwsgi.ini
 
 Update the files to match your system configuration (for example, you'll
 want to set the number of processes and threads).
@@ -84,7 +78,6 @@ Install uwsgi and start the heat-api server using uwsgi::
     sudo pip install uwsgi
     uwsgi --ini /etc/heat/heat-api-uwsgi.ini
     uwsgi --ini /etc/heat/heat-api-cfn-uwsgi.ini
-    uwsgi --ini /etc/heat/heat-api-cloudwatch-uwsgi.ini
 
 .. NOTE::
 

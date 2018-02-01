@@ -29,9 +29,6 @@ The Orchestration service consists of the following components:
   An AWS Query API that is compatible with AWS CloudFormation. It
   processes API requests by sending them to the ``heat-engine`` over RPC.
 
-``heat-api-cloudwatch`` component
-  A CloudWatch-like API service to the heat project.
-
 ``heat-engine``
   Orchestrates the launching of templates and provides events back to
   the API consumer.

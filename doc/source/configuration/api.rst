@@ -7,7 +7,7 @@ Configuration options
 
 The following options allow configuration of the APIs that Orchestration
 supports. Currently this includes compatibility APIs for CloudFormation
-and CloudWatch and a native API.
+and a native API.
 
 .. include:: ./tables/heat-api.rst
 .. include:: ./tables/heat-cfn_api.rst

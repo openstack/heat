@@ -12,7 +12,6 @@ Heat services
    heat-engine
    heat-api
    heat-api-cfn
-   heat-api-cloudwatch
 
 --------------
 Heat utilities
