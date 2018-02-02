@@ -296,10 +296,10 @@ for the ``heat_template_version`` key:
     up until the Pike release. This version adds the ``make_url`` function for
     assembling URLs, the ``list_concat`` function for combining multiple
     lists, the ``list_concat_unique`` function for combining multiple
-    lists without repeating items, the``string_replace_vstrict`` which
-    raises errors for missing and empty params, and the ``contains`` which
-    checks whether specific value is in a sequence. The complete list of
-    supported functions is::
+    lists without repeating items, the ``string_replace_vstrict`` function
+    which raises errors for missing and empty params, and the ``contains``
+    function which checks whether specific value is in a sequence. The
+    complete list of supported functions is::
 
       digest
       filter
