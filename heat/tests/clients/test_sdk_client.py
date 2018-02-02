@@ -22,7 +22,8 @@ from heat.tests import utils
 
 class OpenStackSDKPluginTest(common.HeatTestCase):
 
-    def test_create(self):
+    @mock.patch('openstack.connection.Connection')
+    def test_create(self, mock_connection):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('openstack')
         client = plugin.client()

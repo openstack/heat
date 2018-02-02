@@ -69,7 +69,7 @@ class SenlinClientPlugin(client_plugin.ClientPlugin):
 
     def is_bad_request(self, ex):
         return (isinstance(ex, exc.sdkexc.HttpException) and
-                ex.http_status == 400)
+                ex.status_code == 400)
 
     def execute_actions(self, actions):
         all_executed = True

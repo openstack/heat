@@ -12,15 +12,16 @@
 #    under the License.
 
 import mock
+from senlinclient.common import exc
 
 from heat.engine.clients.os import senlin as senlin_plugin
 from heat.tests import common
 from heat.tests import utils
-from senlinclient.common import exc
 
 
 class SenlinClientPluginTest(common.HeatTestCase):
-    def setUp(self):
+    @mock.patch('openstack.connection.Connection')
+    def setUp(self, mock_connection):
         super(SenlinClientPluginTest, self).setUp()
         context = utils.dummy_context()
         self.plugin = context.clients.client_plugin('senlin')
@@ -71,7 +72,8 @@ class SenlinClientPluginTest(common.HeatTestCase):
 
 class ProfileConstraintTest(common.HeatTestCase):
 
-    def setUp(self):
+    @mock.patch('openstack.connection.Connection')
+    def setUp(self, mock_connection):
         super(ProfileConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
@@ -95,7 +97,8 @@ class ProfileConstraintTest(common.HeatTestCase):
 
 class ClusterConstraintTest(common.HeatTestCase):
 
-    def setUp(self):
+    @mock.patch('openstack.connection.Connection')
+    def setUp(self, mock_connection):
         super(ClusterConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
@@ -119,7 +122,8 @@ class ClusterConstraintTest(common.HeatTestCase):
 
 class PolicyConstraintTest(common.HeatTestCase):
 
-    def setUp(self):
+    @mock.patch('openstack.connection.Connection')
+    def setUp(self, mock_connection):
         super(PolicyConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
@@ -143,7 +147,8 @@ class PolicyConstraintTest(common.HeatTestCase):
 
 class ProfileTypeConstraintTest(common.HeatTestCase):
 
-    def setUp(self):
+    @mock.patch('openstack.connection.Connection')
+    def setUp(self, mock_connection):
         super(ProfileTypeConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
@@ -168,7 +173,8 @@ class ProfileTypeConstraintTest(common.HeatTestCase):
 
 class PolicyTypeConstraintTest(common.HeatTestCase):
 
-    def setUp(self):
+    @mock.patch('openstack.connection.Connection')
+    def setUp(self, mock_connection):
         super(PolicyTypeConstraintTest, self).setUp()
         self.senlin_client = mock.MagicMock()
         self.ctx = utils.dummy_context()
