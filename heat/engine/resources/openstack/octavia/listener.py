@@ -73,8 +73,7 @@ class Listener(octavia_base.OctaviaBase):
         ),
         DEFAULT_POOL: properties.Schema(
             properties.Schema.STRING,
-            _('ID or name of the default pool for the listener. Requires '
-              'shared_pools service extension.'),
+            _('ID or name of the default pool for the listener.'),
             update_allowed=True,
             constraints=[
                 constraints.CustomConstraint('octavia.pool')

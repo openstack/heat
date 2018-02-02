@@ -23,7 +23,7 @@ from heat.engine import translation
 class Pool(octavia_base.OctaviaBase):
     """A resource for managing Octavia Pools.
 
-    This resources manages octavia LBaaS v2 Pools, which represent a group
+    This resources manages octavia LBaaS Pools, which represent a group
     of nodes. Pools define the subnet where nodes reside, balancing algorithm,
     and the nodes themselves.
     """
@@ -111,8 +111,7 @@ class Pool(octavia_base.OctaviaBase):
         ),
         LOADBALANCER: properties.Schema(
             properties.Schema.STRING,
-            _('Loadbalancer name or ID to be associated with this pool. '
-              'Requires shared_pools service extension.'),
+            _('Loadbalancer name or ID to be associated with this pool.'),
             constraints=[
                 constraints.CustomConstraint('octavia.loadbalancer')
             ],
