@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-01-25 05:19+0000\n"
+"POT-Creation-Date: 2018-02-02 18:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -542,9 +542,6 @@ msgid ""
 msgstr ""
 "ワークフローのリソースで指定されたワークフローの処理を作成するための署名済み "
 "URL。"
-
-msgid "A signed url to handle the alarm (Heat extension)."
-msgstr "アラームを処理する署名済み URL (heat 拡張)。"
 
 msgid "A signed url to handle the alarm."
 msgstr "アラームを処理する署名済み URL。"
@@ -2568,9 +2565,6 @@ msgstr "EIP プロパティーで指定された EIP に関連付けるインス
 msgid "Instance ID to associate with EIP."
 msgstr "EIP に関連付けるインスタンス ID。"
 
-msgid "Instance ID to be restarted."
-msgstr "再始動するインスタンス ID。"
-
 msgid "Instance connection to CFN/CW API validate certs if SSL is used."
 msgstr "SSL が使用されている場合の CFN/CW API 証明書検証へのインスタンス接続。"
 
@@ -2738,10 +2732,6 @@ msgstr ""
 #, python-format
 msgid "Invalid stack name %s, must be a string"
 msgstr "無効なスタック名 %s は文字列である必要があります"
-
-#, python-format
-msgid "Invalid state %(state)s, expecting one of %(expect)s"
-msgstr "状態 %(state)s は無効です。%(expect)s のいずれかが必要です"
 
 #, python-format
 msgid "Invalid status %s"
@@ -3250,9 +3240,6 @@ msgstr "アラームによって監視されるメトリック名。"
 
 msgid "Metric statistic to evaluate."
 msgstr "評価するメトリック統計。"
-
-msgid "MetricData list"
-msgstr "MetricData リスト"
 
 msgid "Min size of the cluster."
 msgstr "クラスターの最小サイズ。"

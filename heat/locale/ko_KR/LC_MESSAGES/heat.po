@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-01-25 05:19+0000\n"
+"POT-Creation-Date: 2018-02-02 18:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -531,9 +531,6 @@ msgid ""
 "resource."
 msgstr ""
 "워크플로우 자원에 지정된 워크플로우의 실행을 작성하는 서명된 url입니다."
-
-msgid "A signed url to handle the alarm (Heat extension)."
-msgstr "알람을 처리할 서명된 URL입니다(히트 확장)."
 
 msgid "A signed url to handle the alarm."
 msgstr "알람을 처리할 서명된 URL입니다."
@@ -2465,9 +2462,6 @@ msgstr "EIP 특성으로 지정된 EIP와 연관시킬 인스턴스 ID입니다.
 msgid "Instance ID to associate with EIP."
 msgstr "EIP와 연관시킬 인스턴스 ID입니다."
 
-msgid "Instance ID to be restarted."
-msgstr "다시 시작할 인스턴스 ID입니다."
-
 msgid "Instance connection to CFN/CW API validate certs if SSL is used."
 msgstr ""
 "SSL을 사용하는 경우 CFN/CW API 유효성 검증 인증서에 대한 인스턴스 연결입니다."
@@ -2615,10 +2609,6 @@ msgstr ""
 #, python-format
 msgid "Invalid stack name %s, must be a string"
 msgstr "올바르지 않은 스택 이름 %s, 문자열이어야 함"
-
-#, python-format
-msgid "Invalid state %(state)s, expecting one of %(expect)s"
-msgstr "올바르지 않은 상태 %(state)s. %(expect)s 중 하나 예상"
 
 #, python-format
 msgid "Invalid status %s"

@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-01-25 05:19+0000\n"
+"POT-Creation-Date: 2018-02-02 18:07+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -591,9 +591,6 @@ msgid ""
 msgstr ""
 "Eine signierte URL zum Erstellen von Ausführungen für Arbeitsabläufe, die in "
 "der Arbeitsablaufressource angegeben sind."
-
-msgid "A signed url to handle the alarm (Heat extension)."
-msgstr "Eine signierte URL zum Verarbeiten des Alarms (Heat-Erweiterung)."
 
 msgid "A signed url to handle the alarm."
 msgstr "Eine signierte URL zum Verarbeiten des Alarms."
@@ -2739,9 +2736,6 @@ msgstr ""
 msgid "Instance ID to associate with EIP."
 msgstr "Instanz-ID, die dieser EIP zuzuordnen ist. "
 
-msgid "Instance ID to be restarted."
-msgstr "Erneut zu startende Instanz-ID. "
-
 msgid "Instance connection to CFN/CW API validate certs if SSL is used."
 msgstr ""
 "Instanzverbindung zu CFN/CW-API-Validierungszertifikaten, wenn SSL verwendet "
@@ -2913,10 +2907,6 @@ msgstr ""
 #, python-format
 msgid "Invalid stack name %s, must be a string"
 msgstr "Ungültiger Stackname %s. Muss eine Zeichenfolge sein."
-
-#, python-format
-msgid "Invalid state %(state)s, expecting one of %(expect)s"
-msgstr "Ungültiger Status %(state)s, erwartet wird einer der Status %(expect)s"
 
 #, python-format
 msgid "Invalid status %s"
