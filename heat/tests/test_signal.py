@@ -537,9 +537,6 @@ class SignalTest(common.HeatTestCase):
                          'previous': 'SUCCESS'}
         ceilo_expected = 'alarm state changed from SUCCESS to foo (apples)'
 
-        watch_details = {'state': 'go_for_it'}
-        watch_expected = 'alarm state changed to go_for_it'
-
         str_details = 'a string details'
         str_expected = str_details
 
@@ -547,13 +544,11 @@ class SignalTest(common.HeatTestCase):
         none_expected = 'No signal details provided'
 
         # Test
-        for test_d in (ceilo_details, watch_details, str_details,
-                       none_details):
+        for test_d in (ceilo_details, str_details, none_details):
             rsrc.signal(details=test_d)
 
         # Verify
         mock_add.assert_any_call('SIGNAL', 'COMPLETE', ceilo_expected)
-        mock_add.assert_any_call('SIGNAL', 'COMPLETE', watch_expected)
         mock_add.assert_any_call('SIGNAL', 'COMPLETE', str_expected)
         mock_add.assert_any_call('SIGNAL', 'COMPLETE', none_expected)
 

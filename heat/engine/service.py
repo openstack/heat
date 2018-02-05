@@ -15,7 +15,6 @@ import collections
 import datetime
 import functools
 import itertools
-import os
 import pydoc
 import socket
 
@@ -52,22 +51,18 @@ from heat.engine import parameter_groups
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import service_software_config
-from heat.engine import service_stack_watch
 from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import stk_defn
 from heat.engine import support
 from heat.engine import template as templatem
 from heat.engine import update
-from heat.engine import watchrule
 from heat.engine import worker
 from heat.objects import event as event_object
 from heat.objects import resource as resource_objects
 from heat.objects import service as service_objects
 from heat.objects import snapshot as snapshot_object
 from heat.objects import stack as stack_object
-from heat.objects import watch_data
-from heat.objects import watch_rule
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_api as rpc_worker_api
 
@@ -322,7 +317,6 @@ class EngineService(service.ServiceBase):
 
         # The following are initialized here, but assigned in start() which
         # happens after the fork when spawning multiple worker processes
-        self.stack_watch = None
         self.listener = None
         self.worker_service = None
         self.engine_id = None
@@ -340,35 +334,6 @@ class EngineService(service.ServiceBase):
                         'and heat will delegate all roles of trustor. '
                         'Please keep the same if you do not want to '
                         'delegate subset roles when upgrading.')
-
-    def create_periodic_tasks(self):
-        LOG.debug("Starting periodic watch tasks pid=%s", os.getpid())
-        # Note with multiple workers, the parent process hasn't called start()
-        # so we need to create a ThreadGroupManager here for the periodic tasks
-        if self.thread_group_mgr is None:
-            self.thread_group_mgr = ThreadGroupManager()
-        self.stack_watch = service_stack_watch.StackWatch(
-            self.thread_group_mgr)
-
-        def create_watch_tasks():
-            while True:
-                try:
-                    # Create a periodic_watcher_task per-stack
-                    admin_context = context.get_admin_context()
-                    stacks = stack_object.Stack.get_all(
-                        admin_context,
-                        show_hidden=True)
-                    for s in stacks:
-                        self.stack_watch.start_watch_task(s.id, admin_context)
-                    LOG.info("Watch tasks created")
-                    return
-                except Exception as e:
-                    LOG.error("Watch task creation attempt failed, %s", e)
-                    eventlet.sleep(5)
-
-        if self.manage_thread_grp is None:
-            self.manage_thread_grp = threadgroup.ThreadGroup()
-        self.manage_thread_grp.add_thread(create_watch_tasks)
 
     def start(self):
         self.engine_id = service_utils.generate_engine_id()
@@ -818,14 +783,6 @@ class EngineService(service.ServiceBase):
                 stack.adopt()
             elif stack.status != stack.FAILED:
                 stack.create(msg_queue=msg_queue)
-
-            if (stack.action in (stack.CREATE, stack.ADOPT)
-                    and stack.status == stack.COMPLETE):
-                if self.stack_watch:
-                    # Schedule a periodic watcher task for this stack
-                    self.stack_watch.start_watch_task(stack.id, cnxt)
-            else:
-                LOG.info("Stack create failed, status %s", stack.status)
 
         convergence = cfg.CONF.convergence_engine
 
@@ -2172,106 +2129,6 @@ class EngineService(service.ServiceBase):
         s = self._get_stack(cnxt, stack_identity)
         data = snapshot_object.Snapshot.get_all(cnxt, s.id)
         return [api.format_snapshot(snapshot) for snapshot in data]
-
-    @context.request_context
-    def create_watch_data(self, cnxt, watch_name, stats_data):
-        """Creates data for CloudWatch and WaitConditions.
-
-        This could be used by CloudWatch and WaitConditions
-        and treat HA service events like any other CloudWatch.
-        """
-        def get_matching_watches():
-            if watch_name:
-                yield watchrule.WatchRule.load(cnxt, watch_name)
-            else:
-                for wr in watch_rule.WatchRule.get_all(cnxt):
-                    if watchrule.rule_can_use_sample(wr, stats_data):
-                        yield watchrule.WatchRule.load(cnxt, watch=wr)
-
-        rule_run = False
-        for rule in get_matching_watches():
-            rule.create_watch_data(stats_data)
-            rule_run = True
-
-        if not rule_run:
-            if watch_name is None:
-                watch_name = 'Unknown'
-            raise exception.EntityNotFound(entity='Watch Rule',
-                                           name=watch_name)
-
-        return stats_data
-
-    @context.request_context
-    def show_watch(self, cnxt, watch_name):
-        """Return the attributes of one watch/alarm.
-
-        :param cnxt: RPC context.
-        :param watch_name: Name of the watch you want to see, or None to see
-            all.
-        """
-        if watch_name:
-            wrn = [watch_name]
-        else:
-            try:
-                wrn = [w.name for w in watch_rule.WatchRule.get_all(cnxt)]
-            except Exception as ex:
-                LOG.warning('show_watch (all) db error %s', ex)
-                return
-
-        wrs = [watchrule.WatchRule.load(cnxt, w) for w in wrn]
-        result = [api.format_watch(w) for w in wrs]
-        return result
-
-    @context.request_context
-    def show_watch_metric(self, cnxt, metric_namespace=None, metric_name=None):
-        """Return the datapoints for a metric.
-
-        :param cnxt: RPC context.
-        :param metric_namespace: Name of the namespace you want to see, or None
-            to see all.
-        :param metric_name: Name of the metric you want to see, or None to see
-            all.
-        """
-
-        # DB API and schema does not yet allow us to easily query by
-        # namespace/metric, but we will want this at some point
-        # for now, the API can query all metric data and filter locally
-        if metric_namespace is not None or metric_name is not None:
-            LOG.error("Filtering by namespace/metric not yet supported")
-            return
-
-        try:
-            wds = watch_data.WatchData.get_all(cnxt)
-            rule_names = {
-                r.id: r.name for r in watch_rule.WatchRule.get_all(cnxt)
-            }
-        except Exception as ex:
-            LOG.warning('show_metric (all) db error %s', ex)
-            return
-
-        result = [api.format_watch_data(w, rule_names) for w in wds]
-        return result
-
-    @context.request_context
-    def set_watch_state(self, cnxt, watch_name, state):
-        """Temporarily set the state of a given watch.
-
-        :param cnxt: RPC context.
-        :param watch_name: Name of the watch.
-        :param state: State (must be one defined in WatchRule class.
-        """
-        wr = watchrule.WatchRule.load(cnxt, watch_name)
-        if wr.state == rpc_api.WATCH_STATE_CEILOMETER_CONTROLLED:
-            return
-        actions = wr.set_watch_state(state)
-        for action in actions:
-            self.thread_group_mgr.start(wr.stack_id, action)
-
-        # Return the watch with the state overridden to indicate success
-        # We do not update the timestamps as we are not modifying the DB
-        result = api.format_watch(wr)
-        result[rpc_api.WATCH_STATE_VALUE] = state
-        return result
 
     @context.request_context
     def show_software_config(self, cnxt, config_id):

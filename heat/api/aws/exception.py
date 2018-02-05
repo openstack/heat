@@ -298,7 +298,6 @@ def map_remote_error(ex):
         'ResourceActionNotSupported',
         'ResourceNotFound',
         'ResourceNotAvailable',
-        'WatchRuleNotFound',
         'StackValidationFailed',
         'InvalidSchemaError',
         'InvalidTemplateReference',

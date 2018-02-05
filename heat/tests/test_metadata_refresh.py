@@ -219,7 +219,6 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
     def setUp(self):
         super(WaitConditionMetadataUpdateTest, self).setUp()
         self.man = service.EngineService('a-host', 'a-topic')
-        self.man.create_periodic_tasks()
 
     @mock.patch.object(nova.NovaClientPlugin, 'find_flavor_by_name_or_id')
     @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id')

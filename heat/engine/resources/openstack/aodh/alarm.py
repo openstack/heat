@@ -13,14 +13,12 @@
 
 import six
 
-from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources import alarm_base
 from heat.engine.resources.openstack.heat import none_resource
 from heat.engine import support
-from heat.engine import watchrule
 
 
 class AodhAlarm(alarm_base.BaseAlarm):
@@ -185,17 +183,6 @@ class AodhAlarm(alarm_base.BaseAlarm):
         alarm = self.client().alarm.create(props)
         self.resource_id_set(alarm['alarm_id'])
 
-        # the watchrule below is for backwards compatibility.
-        # 1) so we don't create watch tasks unnecessarily
-        # 2) to support CW stats post, we will redirect the request
-        #    to ceilometer.
-        wr = watchrule.WatchRule(context=self.context,
-                                 watch_name=self.physical_resource_name(),
-                                 rule=dict(self.properties),
-                                 stack_id=self.stack.id)
-        wr.state = wr.CEILOMETER_CONTROLLED
-        wr.store()
-
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             new_props = json_snippet.properties(self.properties_schema,
@@ -216,19 +203,7 @@ class AodhAlarm(alarm_base.BaseAlarm):
 
         return record_reality
 
-    def handle_delete(self):
-        try:
-            wr = watchrule.WatchRule.load(
-                self.context, watch_name=self.physical_resource_name())
-            wr.destroy()
-        except exception.EntityNotFound:
-            pass
-
-        return super(AodhAlarm, self).handle_delete()
-
     def handle_check(self):
-        watch_name = self.physical_resource_name()
-        watchrule.WatchRule.load(self.context, watch_name=watch_name)
         self.client().alarm.get(self.resource_id)
 
 
