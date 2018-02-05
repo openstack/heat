@@ -15,7 +15,7 @@ To run the tests against DevStack, do the following::
 
     # run the heat integration tests
     cd $DEST/heat
-    stestr --test-path=heat_integrationtests
+    stestr --test-path=heat_integrationtests run
 
 If the Heat Tempest Plugin is also installed, the tests from that will be run
 as well.
