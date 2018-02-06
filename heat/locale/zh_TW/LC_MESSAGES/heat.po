@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-02-02 18:07+0000\n"
+"POT-Creation-Date: 2018-02-05 10:35+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -357,16 +357,6 @@ msgstr "狀態轉移至正常時要呼叫的 URL（Web 連結鉤）清單。"
 msgid "A list of access rules that define access from IP to Share."
 msgstr "存取規則的清單，這些規則用來定義從 IP 到共用項目的存取。"
 
-msgid "A list of actions to execute when state transitions to alarm."
-msgstr "狀態轉移至警示時要執行的動作清單。"
-
-msgid ""
-"A list of actions to execute when state transitions to insufficient-data."
-msgstr "狀態轉移至資料不足時要執行的動作清單。"
-
-msgid "A list of actions to execute when state transitions to ok."
-msgstr "狀態轉移至正常時要執行的動作清單。"
-
 msgid "A list of all rules for the QoS policy."
 msgstr "服務品質原則的所有規則清單。"
 
@@ -388,10 +378,6 @@ msgstr "叢集實例 IP 清單。"
 
 msgid "A list of clusters to which this policy is attached."
 msgstr "要將此原則連接至的叢集清單。"
-
-msgid ""
-"A list of dimensions (arbitrary name/value pairs) associated with the metric."
-msgstr "與度量相關聯的維度（任意名稱/值配對）清單。"
 
 msgid "A list of host route dictionaries for the subnet."
 msgstr "子網路的主機路由字典清單。"
@@ -2547,10 +2533,6 @@ msgstr "無效的時區：%s"
 msgid "Invalid type (%s)"
 msgstr "無效的類型 (%s)"
 
-#, python-format
-msgid "Invalid watch state %s"
-msgstr "無效的監看狀態 %s"
-
 msgid "Ip allocation pools and their ranges."
 msgstr "IP 配置儲存區及其範圍。"
 
@@ -2970,9 +2952,6 @@ msgstr "階段作業持續性功能的實作方法。"
 msgid "Metric name watched by the alarm."
 msgstr "警示所監看的度量名稱。"
 
-msgid "Metric statistic to evaluate."
-msgstr "要評估的度量統計資料。"
-
 msgid "Min size of the cluster."
 msgstr "叢集大小下限。"
 
@@ -3356,9 +3335,6 @@ msgstr "磁區類型的名稱或 ID (OS::Cinder::VolumeType)。"
 msgid "Names of databases that those users can access on instance creation."
 msgstr "建立實例時那些使用者可以存取的資料庫名稱。"
 
-msgid "Namespace for the metric."
-msgstr "度量的名稱空間。"
-
 msgid ""
 "Namespace to group this software config by when delivered to a server. This "
 "may imply what configuration tool is going to perform the configuration."
@@ -3574,9 +3550,6 @@ msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "'%(name)s' 僅接受非零整數。"
 
 msgid "Operator used to compare specified statistic with threshold."
-msgstr "用來將所指定統計資料與臨界值相比較的運算子。"
-
-msgid "Operator used to compare the specified Statistic with Threshold."
 msgstr "用來將所指定統計資料與臨界值相比較的運算子。"
 
 msgid "Optional CA cert file to use in SSL connections."
@@ -4914,10 +4887,6 @@ msgstr "負載平衡器的 VIP 埠。"
 msgid "The VIP subnet of the LoadBalancer."
 msgstr "負載平衡器的 VIP 子網路。"
 
-#, python-format
-msgid "The Watch Rule (%(watch_name)s) could not be found."
-msgstr "找不到監看規則 (%(watch_name)s)。"
-
 msgid "The action or operation requested is invalid"
 msgstr "所要求的動作或作業無效"
 
@@ -6204,9 +6173,6 @@ msgstr "此防火牆規則所屬之防火牆原則的唯一 ID。"
 msgid "Unique identifier of the firewall policy used to create the firewall."
 msgstr "建立防火牆時所使用之防火牆原則的唯一 ID。"
 
-msgid "Unit for the metric."
-msgstr "度量的單位。"
-
 msgid "Unknown"
 msgstr "未知"
 
@@ -6247,10 +6213,6 @@ msgstr "更新機架 '%(name)s' 時的不明狀態 - %(reason)s"
 #, python-format
 msgid "Unknown status: %s"
 msgstr "不明狀態：%s"
-
-#, python-format
-msgid "Unknown watch state %s"
-msgstr "不明的監看狀態 %s"
 
 #, python-format
 msgid ""

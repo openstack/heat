@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-02-02 18:07+0000\n"
+"POT-Creation-Date: 2018-02-05 10:35+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -392,19 +392,6 @@ msgid "A list of access rules that define access from IP to Share."
 msgstr ""
 "Un elenco di regole di accesso che definisce l'accesso da IP a Condivisione."
 
-msgid "A list of actions to execute when state transitions to alarm."
-msgstr ""
-"Un elenco di azioni da eseguire quando lo stato cambia in segnalazione."
-
-msgid ""
-"A list of actions to execute when state transitions to insufficient-data."
-msgstr ""
-"Un elenco di azioni da eseguire quando lo stato cambia in dati non "
-"sufficienti."
-
-msgid "A list of actions to execute when state transitions to ok."
-msgstr "Un elenco di azioni da eseguire quando lo stato cambia in ok."
-
 msgid "A list of all rules for the QoS policy."
 msgstr "Un elenco di regole per la politica QoS."
 
@@ -430,12 +417,6 @@ msgstr "Un elenco di IP istanze del cluster."
 
 msgid "A list of clusters to which this policy is attached."
 msgstr "Un elenco di cluster a cui è collegata questa politica."
-
-msgid ""
-"A list of dimensions (arbitrary name/value pairs) associated with the metric."
-msgstr ""
-"Un elenco di dimensioni (nome arbitrario/coppie di valori) associate alla "
-"metrica."
 
 msgid "A list of host route dictionaries for the subnet."
 msgstr "Un elenco di dizionari di instradamenti host per la sottorete."
@@ -2821,10 +2802,6 @@ msgstr "Fuso orario non valido: %s"
 msgid "Invalid type (%s)"
 msgstr "Tipo non valido (%s)"
 
-#, python-format
-msgid "Invalid watch state %s"
-msgstr "Stato watch non valido %s"
-
 msgid "Ip allocation pools and their ranges."
 msgstr "Pool di allocazione Ip ed i relativi intervalli."
 
@@ -3306,9 +3283,6 @@ msgstr ""
 msgid "Metric name watched by the alarm."
 msgstr "Nome della metrica osservata dalla segnalazione."
 
-msgid "Metric statistic to evaluate."
-msgstr "Statistica delle metriche da valutare."
-
 msgid "Min size of the cluster."
 msgstr "Dimensione minima del cluster."
 
@@ -3734,9 +3708,6 @@ msgstr ""
 "I nomi dei database che quegli utenti possono accedere durante la creazione "
 "dell'istanza."
 
-msgid "Namespace for the metric."
-msgstr "Spazio dei nomi per la metrica."
-
 msgid ""
 "Namespace to group this software config by when delivered to a server. This "
 "may imply what configuration tool is going to perform the configuration."
@@ -3974,10 +3945,6 @@ msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "Solo un numero intero diverso da zero è accettabile da '%(name)s'."
 
 msgid "Operator used to compare specified statistic with threshold."
-msgstr ""
-"Operatore utilizzato per confrontare la statistica specificata con la soglia."
-
-msgid "Operator used to compare the specified Statistic with Threshold."
 msgstr ""
 "Operatore utilizzato per confrontare la statistica specificata con la soglia."
 
@@ -5447,10 +5414,6 @@ msgstr "La porta VIP del bilanciatore del carico."
 msgid "The VIP subnet of the LoadBalancer."
 msgstr "La sottorete VIP del bilanciatore del carico."
 
-#, python-format
-msgid "The Watch Rule (%(watch_name)s) could not be found."
-msgstr "Impossibile trovare la regola watch (%(watch_name)s)."
-
 msgid "The action or operation requested is invalid"
 msgstr "L'azione o l'operazione richiesta non è valida"
 
@@ -6907,9 +6870,6 @@ msgstr ""
 "Identificativo univoco della politica firewall utilizzato per creare il "
 "firewall."
 
-msgid "Unit for the metric."
-msgstr "Unità per la metrica."
-
 msgid "Unknown"
 msgstr "Sconosciuto"
 
@@ -6955,10 +6915,6 @@ msgstr ""
 #, python-format
 msgid "Unknown status: %s"
 msgstr "Stato sconosciuto: %s"
-
-#, python-format
-msgid "Unknown watch state %s"
-msgstr "Stato watch sconosciuto %s"
 
 #, python-format
 msgid ""
