@@ -1,1 +1,0 @@
-"""Contributed Rackspace-specific resources."""
