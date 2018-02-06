@@ -19,17 +19,14 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources import signal_responder
 from heat.engine import support
-from heat.scaling import cooldown
 from heat.scaling import scalingutil as sc_util
 
 LOG = logging.getLogger(__name__)
 
 
-class AutoScalingPolicy(cooldown.CooldownMixin,
-                        signal_responder.SignalResponder):
+class AutoScalingPolicy(signal_responder.SignalResponder):
     """A resource to manage scaling of `OS::Heat::AutoScalingGroup`.
 
     **Note** while it may incidentally support
@@ -172,35 +169,18 @@ class AutoScalingPolicy(cooldown.CooldownMixin,
                                        ) % {'alarm': self.name,
                                             'group': asgn_id})
 
-        self._check_scaling_allowed(self.properties[self.COOLDOWN])
-
         LOG.info('%(name)s alarm, adjusting group %(group)s with id '
                  '%(asgn_id)s by %(filter)s',
                  {'name': self.name, 'group': group.name,
                   'asgn_id': asgn_id,
                   'filter': self.properties[self.SCALING_ADJUSTMENT]})
 
-        size_changed = False
-        try:
-            with group.frozen_properties():
-                group.adjust(
-                    self.properties[self.SCALING_ADJUSTMENT],
-                    self.properties[self.ADJUSTMENT_TYPE],
-                    self.properties[self.MIN_ADJUSTMENT_STEP])
-            size_changed = True
-        except resource.NoActionRequired:
-            raise
-        except Exception:
-            LOG.error("Error in performing scaling adjustment with "
-                      "%(name)s alarm for group %(group)s.",
-                      {'name': self.name, 'group': group.name})
-            raise
-        finally:
-            self._finished_scaling(
-                self.properties[self.COOLDOWN],
-                "%s : %s" % (self.properties[self.ADJUSTMENT_TYPE],
-                             self.properties[self.SCALING_ADJUSTMENT]),
-                size_changed=size_changed)
+        with group.frozen_properties():
+            group.adjust(
+                self.properties[self.SCALING_ADJUSTMENT],
+                self.properties[self.ADJUSTMENT_TYPE],
+                self.properties[self.MIN_ADJUSTMENT_STEP],
+                self.properties[self.COOLDOWN])
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:

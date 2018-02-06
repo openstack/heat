@@ -26,7 +26,6 @@ LOG = logging.getLogger(__name__)
 class CooldownMixin(object):
     """Utility class to encapsulate Cooldown related logic.
 
-    This class is shared between AutoScalingGroup and ScalingPolicy.
     This logic includes both cooldown timestamp comparing and scaling in
     progress checking.
     """
