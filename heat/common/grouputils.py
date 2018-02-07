@@ -202,4 +202,5 @@ def get_member_definitions(group, include_failed=False):
         return []
     definitions = template.resource_definitions(None)
     return [(name, definitions[name])
-            for name in inspector.member_names(include_failed=include_failed)]
+            for name in inspector.member_names(include_failed=include_failed)
+            if name in definitions]
