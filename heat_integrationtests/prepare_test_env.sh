@@ -48,7 +48,7 @@ function _config_iniset {
     iniset $conf_file heat_plugin instance_type m1.heat_int
     iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 
-    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-26-1.5.x86_64
+    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-27-1.6.x86_64
     iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
 
     if [ "$DISABLE_CONVERGENCE" == "true" ]; then
