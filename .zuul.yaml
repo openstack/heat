@@ -127,3 +127,8 @@
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
+    experimental:
+      jobs:
+        - tripleo-ci-centos-7-scenario002-multinode-oooq
+        - tripleo-ci-centos-7-scenario002-multinode-oooq-container
+
