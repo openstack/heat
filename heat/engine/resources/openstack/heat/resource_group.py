@@ -576,6 +576,13 @@ class ResourceGroup(stack_resource.StackResource):
             return [recurse(v) for v in val]
         return val
 
+    def _add_output_defns_to_template(self, tmpl, resource_names):
+        att_func = 'get_attr'
+        get_attr = functools.partial(tmpl.functions[att_func], None, att_func)
+        for odefn in self._nested_output_defns(resource_names,
+                                               get_attr):
+            tmpl.add_output(odefn)
+
     def _assemble_nested(self, names, include_all=False,
                          template_version=('heat_template_version',
                                            '2015-04-30')):
@@ -585,13 +592,7 @@ class ResourceGroup(stack_resource.StackResource):
                        for k in names]
         tmpl = scl_template.make_template(definitions,
                                           version=template_version)
-
-        att_func = 'get_attr'
-        get_attr = functools.partial(tmpl.functions[att_func], None, att_func)
-        for odefn in self._nested_output_defns([k for k, d in definitions],
-                                               get_attr):
-            tmpl.add_output(odefn)
-
+        self._add_output_defns_to_template(tmpl, [k for k, d in definitions])
         return tmpl
 
     def _assemble_for_rolling_update(self, total_capacity, max_updates,
@@ -633,8 +634,10 @@ class ResourceGroup(stack_resource.StackResource):
             max_updates,
             lambda: next(new_names),
             self.build_resource_definition)
-        return scl_template.make_template(definitions,
+        tmpl = scl_template.make_template(definitions,
                                           version=template_version)
+        self._add_output_defns_to_template(tmpl, names)
+        return tmpl
 
     def _try_rolling_update(self):
         if self.update_policy[self.ROLLING_UPDATE]:
