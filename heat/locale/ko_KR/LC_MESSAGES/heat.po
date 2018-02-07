@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-02-02 18:07+0000\n"
+"POT-Creation-Date: 2018-02-05 10:35+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -379,16 +379,6 @@ msgstr "확인으로 상태 전이 시 호출할 URL의 목록(웹 후크)입니
 msgid "A list of access rules that define access from IP to Share."
 msgstr "IP에서 공유로의 액세스를 정의하는 액세스 규칙 목록입니다."
 
-msgid "A list of actions to execute when state transitions to alarm."
-msgstr "알람으로 상태 전이 시 실행할 조치 목록입니다."
-
-msgid ""
-"A list of actions to execute when state transitions to insufficient-data."
-msgstr "충분하지 않은 데이터로 상태 전이 시 실행할 조치 목록입니다."
-
-msgid "A list of actions to execute when state transitions to ok."
-msgstr "확인으로 상태 전이 시 실행할 조치 목록입니다."
-
 msgid "A list of all rules for the QoS policy."
 msgstr "QoS 정책의 모든 규칙 목록입니다."
 
@@ -410,10 +400,6 @@ msgstr "클러스터 인스턴스 IP 목록입니다."
 
 msgid "A list of clusters to which this policy is attached."
 msgstr "이 정책이 연결될 클러스터 목록입니다."
-
-msgid ""
-"A list of dimensions (arbitrary name/value pairs) associated with the metric."
-msgstr "메트릭과 연관된 차원 목록입니다(임의의 이름/값 쌍)입니다."
 
 msgid "A list of host route dictionaries for the subnet."
 msgstr "서브넷의 호스트 경로 사전 목록입니다."
@@ -2650,10 +2636,6 @@ msgstr "올바르지 않은 시간대: %s"
 msgid "Invalid type (%s)"
 msgstr "올바르지 않은 유형(%s)"
 
-#, python-format
-msgid "Invalid watch state %s"
-msgstr "올바르지 않은 감시 상태 %s"
-
 msgid "Ip allocation pools and their ranges."
 msgstr "Ip 할당 풀 및 해당 범위입니다."
 
@@ -3088,9 +3070,6 @@ msgstr "세션 지속성 기능의 구현 메소드입니다."
 msgid "Metric name watched by the alarm."
 msgstr "알람으로 감시하는 메트릭 이름입니다."
 
-msgid "Metric statistic to evaluate."
-msgstr "평가할 메트릭 통계입니다."
-
 msgid "Min size of the cluster."
 msgstr "클러스터의 최소 크기입니다."
 
@@ -3486,9 +3465,6 @@ msgstr "볼륨 타입의 이름 또는 id(OS::Cinder::VolumeType)."
 msgid "Names of databases that those users can access on instance creation."
 msgstr "사용자가 인스턴스 작성 시 액세스할 수 있는 데이터베이스의 이름입니다."
 
-msgid "Namespace for the metric."
-msgstr "메트릭의 네임스페이스입니다."
-
 msgid ""
 "Namespace to group this software config by when delivered to a server. This "
 "may imply what configuration tool is going to perform the configuration."
@@ -3713,9 +3689,6 @@ msgid "Only non-zero integer is acceptable by '%(name)s'."
 msgstr "'%(name)s'에서는 0이 아닌 정수만 허용됩니다. "
 
 msgid "Operator used to compare specified statistic with threshold."
-msgstr "지정된 통계를 임계값과 비교하는 데 사용된 연산자입니다."
-
-msgid "Operator used to compare the specified Statistic with Threshold."
 msgstr "지정된 통계를 임계값과 비교하는 데 사용된 연산자입니다."
 
 msgid "Optional CA cert file to use in SSL connections."
@@ -5115,10 +5088,6 @@ msgstr "LoadBalancer의 VIP 포트입니다."
 msgid "The VIP subnet of the LoadBalancer."
 msgstr "LoadBalancer의 VIP 서브넷입니다."
 
-#, python-format
-msgid "The Watch Rule (%(watch_name)s) could not be found."
-msgstr "감시 규칙(%(watch_name)s)을 찾을 수 없습니다. "
-
 msgid "The action or operation requested is invalid"
 msgstr "요청한 동작이나 작업이 잘못되었습니다"
 
@@ -6465,9 +6434,6 @@ msgstr "이 방화벽 규칙이 속하는 방화벽 정책의 고유 ID입니다
 msgid "Unique identifier of the firewall policy used to create the firewall."
 msgstr "방화벽을 작성하는 데 사용되는 방화벽 정책의 고유 ID입니다."
 
-msgid "Unit for the metric."
-msgstr "메트릭의 단위입니다."
-
 msgid "Unknown"
 msgstr "알 수 없음"
 
@@ -6508,10 +6474,6 @@ msgstr "알 수 없는 Bay '%(name)s' - %(reason)s 업데이트 상태"
 #, python-format
 msgid "Unknown status: %s"
 msgstr "알 수 없는 상태: %s"
-
-#, python-format
-msgid "Unknown watch state %s"
-msgstr "알 수 없는 감시 상태 %s"
 
 #, python-format
 msgid ""
