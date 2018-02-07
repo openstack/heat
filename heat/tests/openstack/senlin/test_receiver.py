@@ -14,7 +14,7 @@
 
 import mock
 
-from senlinclient.common import exc
+from openstack import exceptions
 
 from heat.common import template_format
 from heat.engine.clients.os import senlin
@@ -106,7 +106,7 @@ class SenlinReceiverTest(common.HeatTestCase):
 
     def test_recv_delete_not_found(self):
         self.senlin_mock.delete_receiver.side_effect = [
-            exc.sdkexc.ResourceNotFound(http_status=404)
+            exceptions.ResourceNotFound(http_status=404)
         ]
         recv = self._create_recv(self.t)
         scheduler.TaskRunner(recv.delete)()
