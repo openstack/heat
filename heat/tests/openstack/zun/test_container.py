@@ -16,6 +16,7 @@ import mock
 import six
 
 from oslo_config import cfg
+from zunclient import exceptions as zc_exc
 
 from heat.common import exception
 from heat.common import template_format
@@ -229,6 +230,8 @@ class ZunContainerTest(common.HeatTestCase):
     def test_container_delete(self):
         c = self._create_resource('container', self.rsrc_defn, self.stack)
         scheduler.TaskRunner(c.create)()
+        self.patchobject(self.client.containers, 'get',
+                         side_effect=[c, zc_exc.NotFound('Not Found')])
         scheduler.TaskRunner(c.delete)()
         self.assertEqual((c.DELETE, c.COMPLETE), c.state)
         self.client.containers.delete.assert_called_once_with(

@@ -203,8 +203,19 @@ class Container(resource.Resource):
             return
         try:
             self.client().containers.delete(self.resource_id, stop=True)
+            return self.resource_id
         except Exception as exc:
             self.client_plugin().ignore_not_found(exc)
+
+    def check_delete_complete(self, id):
+        if not id:
+            return True
+        try:
+            self.client().containers.get(id)
+        except Exception as exc:
+            self.client_plugin().ignore_not_found(exc)
+            return True
+        return False
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:
