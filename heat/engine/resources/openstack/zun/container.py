@@ -33,11 +33,13 @@ class Container(resource.Resource):
     PROPERTIES = (
         NAME, IMAGE, COMMAND, CPU, MEMORY,
         ENVIRONMENT, WORKDIR, LABELS, IMAGE_PULL_POLICY,
-        RESTART_POLICY, INTERACTIVE, IMAGE_DRIVER
+        RESTART_POLICY, INTERACTIVE, IMAGE_DRIVER, HINTS,
+        HOSTNAME, SECURITY_GROUPS,
     ) = (
         'name', 'image', 'command', 'cpu', 'memory',
         'environment', 'workdir', 'labels', 'image_pull_policy',
-        'restart_policy', 'interactive', 'image_driver'
+        'restart_policy', 'interactive', 'image_driver', 'hints',
+        'hostname', 'security_groups',
     )
 
     ATTRIBUTES = (
@@ -109,6 +111,22 @@ class Container(resource.Resource):
             constraints=[
                 constraints.AllowedValues(['docker', 'glance']),
             ]
+        ),
+        HINTS: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary key-value pairs for scheduler to select host.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+        ),
+        HOSTNAME: properties.Schema(
+            properties.Schema.STRING,
+            _('The hostname of the container.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+        ),
+        SECURITY_GROUPS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of security group names or IDs.'),
+            support_status=support.SupportStatus(version='10.0.0'),
+            default=[]
         ),
     }
 

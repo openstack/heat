@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add properties hostname, hints, security_groups to Zun's container
+    resource.
