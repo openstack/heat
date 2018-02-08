@@ -520,9 +520,10 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             return self.list_resources(nested_identifier)
         return self.client.resources.list(nested_identifier)
 
-    def list_resources(self, stack_identifier):
+    def list_resources(self, stack_identifier, filter_func=None):
         resources = self.client.resources.list(stack_identifier)
-        return dict((r.resource_name, r.resource_type) for r in resources)
+        return dict((r.resource_name, r.resource_type) for r in resources
+                    if (filter_func(r) if callable(filter_func) else True))
 
     def get_resource_stack_id(self, r):
         stack_link = [l for l in r.links if l.get('rel') == 'stack'][0]
