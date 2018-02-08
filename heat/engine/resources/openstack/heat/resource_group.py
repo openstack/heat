@@ -480,7 +480,7 @@ class ResourceGroup(stack_resource.StackResource):
         return [grouputils.get_rsrc_attr(self, key, False, n, *path)
                 for n in names]
 
-    def _nested_output_defns(self, resource_names, get_attr_fn):
+    def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
             if isinstance(attr, six.string_types):
                 key, path = attr, []
@@ -488,21 +488,28 @@ class ResourceGroup(stack_resource.StackResource):
             else:
                 key, path = attr[0], list(attr[1:])
                 output_name = ', '.join(six.text_type(a) for a in attr)
+            value = None
 
             if key.startswith("resource."):
                 keycomponents = key.split('.', 2)
                 res_name = keycomponents[1]
                 attr_path = keycomponents[2:] + path
-                if attr_path and (res_name in resource_names):
-                    value = get_attr_fn([res_name] + attr_path)
-                    yield output.OutputDefinition(output_name, value)
-
+                if attr_path:
+                    if res_name in resource_names:
+                        value = get_attr_fn([res_name] + attr_path)
+                else:
+                    output_name = key = self.REFS_MAP
             elif key == self.ATTR_ATTRIBUTES and path:
                 value = {r: get_attr_fn([r] + path) for r in resource_names}
-                yield output.OutputDefinition(output_name, value)
-
             elif key not in self.ATTRIBUTES:
                 value = [get_attr_fn([r, key] + path) for r in resource_names]
+
+            if key == self.REFS:
+                value = [get_res_fn(r) for r in resource_names]
+            elif key == self.REFS_MAP:
+                value = {r: get_res_fn(r) for r in resource_names}
+
+            if value is not None:
                 yield output.OutputDefinition(output_name, value)
 
     def build_resource_definition(self, res_name, res_defn):
@@ -579,8 +586,10 @@ class ResourceGroup(stack_resource.StackResource):
     def _add_output_defns_to_template(self, tmpl, resource_names):
         att_func = 'get_attr'
         get_attr = functools.partial(tmpl.functions[att_func], None, att_func)
+        res_func = 'get_resource'
+        get_res = functools.partial(tmpl.functions[res_func], None, res_func)
         for odefn in self._nested_output_defns(resource_names,
-                                               get_attr):
+                                               get_attr, get_res):
             tmpl.add_output(odefn)
 
     def _assemble_nested(self, names, include_all=False,

@@ -219,28 +219,34 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
         raise exception.InvalidTemplateAttribute(resource=self.name,
                                                  key=key)
 
-    def _nested_output_defns(self, resource_names, get_attr_fn):
+    def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
             if isinstance(attr, six.string_types):
                 key, path = attr, []
-                output_name = attr
             else:
                 key, path = attr[0], list(attr[1:])
-                output_name = ', '.join(six.text_type(a) for a in attr)
-
+            # Always use map types, as list order is not defined at
+            # template generation time.
+            if key == self.OUTPUTS_LIST:
+                key = self.OUTPUTS
+            if key == self.REFS:
+                key = self.REFS_MAP
             if key.startswith("resource."):
                 keycomponents = key.split('.', 2)
                 path = keycomponents[2:] + path
                 if path:
                     key = self.OUTPUTS
-                    output_name = ', '.join([self.OUTPUTS] + path)
+                else:
+                    key = self.REFS_MAP
+            output_name = ', '.join(six.text_type(a) for a in [key] + path)
+            value = None
 
-            if key == self.OUTPUTS and path:
+            if key == self.REFS_MAP:
+                value = {r: get_res_fn(r) for r in resource_names}
+            elif key == self.OUTPUTS and path:
                 value = {r: get_attr_fn([r] + path) for r in resource_names}
-                yield output.OutputDefinition(output_name, value)
 
-            elif key == self.OUTPUTS_LIST and path:
-                value = [get_attr_fn([r] + path) for r in resource_names]
+            if value is not None:
                 yield output.OutputDefinition(output_name, value)
 
 

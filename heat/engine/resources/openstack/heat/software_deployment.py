@@ -735,7 +735,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
         rg_attr = rg.get_attribute(rg.ATTR_ATTRIBUTES, n_attr)
         return attributes.select_from_attribute(rg_attr, path)
 
-    def _nested_output_defns(self, resource_names, get_attr_fn):
+    def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
             key = attr if isinstance(attr, six.string_types) else attr[0]
             n_attr = self._member_attribute_name(key)

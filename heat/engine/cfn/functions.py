@@ -99,7 +99,7 @@ def Ref(stack, fn_name, args):
 
         { "Ref" : "<resource_name>" }
     """
-    if args in stack:
+    if stack is None or args in stack:
         RefClass = hot_funcs.GetResource
     else:
         RefClass = ParamRef
