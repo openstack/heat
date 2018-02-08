@@ -1536,132 +1536,79 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
         self.assertEqual(templ, resg._assemble_nested(['server1',
                                                        'server2']).t)
 
-    def test_attributes(self):
-        stack = utils.parse_stack(self.template)
-        snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
-        nested = self.patchobject(resg, 'nested')
-        server1 = mock.MagicMock()
-        server2 = mock.MagicMock()
-        nested.return_value = {
-            'server1': server1,
-            'server2': server2
-        }
-
-        server1.FnGetAtt.return_value = 'Thing happened on server1'
-        server2.FnGetAtt.return_value = 'ouch'
-        self.assertEqual({
-            'server1': 'Thing happened on server1',
-            'server2': 'ouch'
-        }, resg.FnGetAtt('deploy_stdouts'))
-
-        server1.FnGetAtt.return_value = ''
-        server2.FnGetAtt.return_value = 'Its gone Pete Tong'
-        self.assertEqual({
-            'server1': '',
-            'server2': 'Its gone Pete Tong'
-        }, resg.FnGetAtt('deploy_stderrs'))
-
-        server1.FnGetAtt.return_value = 0
-        server2.FnGetAtt.return_value = 1
-        self.assertEqual({
-            'server1': 0,
-            'server2': 1
-        }, resg.FnGetAtt('deploy_status_codes'))
-
-        server1.FnGetAtt.assert_has_calls([
-            mock.call('deploy_stdout'),
-            mock.call('deploy_stderr'),
-            mock.call('deploy_status_code'),
-        ])
-
-        server2.FnGetAtt.assert_has_calls([
-            mock.call('deploy_stdout'),
-            mock.call('deploy_stderr'),
-            mock.call('deploy_status_code'),
-        ])
-
-    def test_attributes_path(self):
-        stack = utils.parse_stack(self.template)
-        snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
-        nested = self.patchobject(resg, 'nested')
-        server1 = mock.MagicMock()
-        server2 = mock.MagicMock()
-        nested.return_value = {
-            'server1': server1,
-            'server2': server2
-        }
-
-        server1.FnGetAtt.return_value = 'Thing happened on server1'
-        server2.FnGetAtt.return_value = 'ouch'
-        self.assertEqual('Thing happened on server1',
-                         resg.FnGetAtt('deploy_stdouts', 'server1'))
-        self.assertEqual('ouch',
-                         resg.FnGetAtt('deploy_stdouts', 'server2'))
-
-        server1.FnGetAtt.return_value = ''
-        server2.FnGetAtt.return_value = 'Its gone Pete Tong'
-        self.assertEqual('', resg.FnGetAtt('deploy_stderrs', 'server1'))
-        self.assertEqual('Its gone Pete Tong',
-                         resg.FnGetAtt('deploy_stderrs', 'server2'))
-
-        server1.FnGetAtt.return_value = 0
-        server2.FnGetAtt.return_value = 1
-        self.assertEqual(0, resg.FnGetAtt('deploy_status_codes', 'server1'))
-        self.assertEqual(1, resg.FnGetAtt('deploy_status_codes', 'server2'))
-
-        server1.FnGetAtt.assert_has_calls([
-            mock.call('deploy_stdout'),
-            mock.call('deploy_stdout'),
-            mock.call('deploy_stderr'),
-            mock.call('deploy_stderr'),
-            mock.call('deploy_status_code'),
-            mock.call('deploy_status_code'),
-        ])
-
-        server2.FnGetAtt.assert_has_calls([
-            mock.call('deploy_stdout'),
-            mock.call('deploy_stdout'),
-            mock.call('deploy_stderr'),
-            mock.call('deploy_stderr'),
-            mock.call('deploy_status_code'),
-            mock.call('deploy_status_code'),
-        ])
-
-    def test_attributes_passthrough_key(self):
-        '''Prove attributes not in the schema pass-through.'''
-        stack = utils.parse_stack(self.template)
-        snip = stack.t.resource_definitions(stack)['deploy_mysql']
-        resg = sd.SoftwareDeploymentGroup('test', snip, stack)
-        nested = self.patchobject(resg, 'nested')
-        server1 = mock.MagicMock()
-        server2 = mock.MagicMock()
-        nested.return_value = {
-            'server1': server1,
-            'server2': server2
-        }
-
-        server1.FnGetAtt.return_value = 'attr1'
-        server2.FnGetAtt.return_value = 'attr2'
-        self.assertEqual({
-            'server1': 'attr1',
-            'server2': 'attr2'
-        }, resg.FnGetAtt('some_attr'))
-
-        server1.FnGetAtt.assert_has_calls([
-            mock.call('some_attr'),
-        ])
-
-        server2.FnGetAtt.assert_has_calls([
-            mock.call('some_attr'),
-        ])
-
     def test_validate(self):
         stack = utils.parse_stack(self.template)
         snip = stack.t.resource_definitions(stack)['deploy_mysql']
         resg = sd.SoftwareDeploymentGroup('deploy_mysql', snip, stack)
         self.assertIsNone(resg.validate())
+
+
+class SoftwareDeploymentGroupAttrTest(common.HeatTestCase):
+    scenarios = [
+        ('stdouts', dict(group_attr='deploy_stdouts',
+                         nested_attr='deploy_stdout',
+                         values=['Thing happened on server1', 'ouch'])),
+        ('stderrs', dict(group_attr='deploy_stderrs',
+                         nested_attr='deploy_stderr',
+                         values=['', "It's gone Pete Tong"])),
+        ('status_codes', dict(group_attr='deploy_status_codes',
+                              nested_attr='deploy_status_code',
+                              values=[0, 1])),
+        ('passthrough', dict(group_attr='some_attr',
+                             nested_attr='some_attr',
+                             values=['attr1', 'attr2'])),
+    ]
+
+    template = {
+        'heat_template_version': '2013-05-23',
+        'resources': {
+            'deploy_mysql': {
+                'type': 'OS::Heat::SoftwareDeploymentGroup',
+                'properties': {
+                    'config': 'config_uuid',
+                    'servers': {'server1': 'uuid1', 'server2': 'uuid2'},
+                    'input_values': {'foo': 'bar'},
+                    'name': '10_config'
+                }
+            }
+        }
+    }
+
+    def setUp(self):
+        super(SoftwareDeploymentGroupAttrTest, self).setUp()
+        self.server_names = ['server1', 'server2']
+        self.servers = [mock.MagicMock() for s in self.server_names]
+        self.stack = utils.parse_stack(self.template)
+
+    def test_attributes(self):
+        resg = self.create_dummy_stack()
+        self.assertEqual(dict(zip(self.server_names, self.values)),
+                         resg.FnGetAtt(self.group_attr))
+        self.check_calls()
+
+    def test_attributes_path(self):
+        resg = self.create_dummy_stack()
+        for i, r in enumerate(self.server_names):
+            self.assertEqual(self.values[i],
+                             resg.FnGetAtt(self.group_attr, r))
+        self.check_calls(len(self.server_names))
+
+    def create_dummy_stack(self):
+        snip = self.stack.t.resource_definitions(self.stack)['deploy_mysql']
+        resg = sd.SoftwareDeploymentGroup('test', snip, self.stack)
+        nested = self.patchobject(resg, 'nested')
+        nested.return_value = dict(zip(self.server_names, self.servers))
+        self._stub_get_attr(resg)
+        return resg
+
+    def _stub_get_attr(self, resg):
+        for server, value in zip(self.servers, self.values):
+            server.FnGetAtt.return_value = value
+
+    def check_calls(self, count=1):
+        calls = [mock.call(c) for c in [self.nested_attr] * count]
+        for server in self.servers:
+            server.FnGetAtt.assert_has_calls(calls)
 
 
 class SDGReplaceTest(common.HeatTestCase):

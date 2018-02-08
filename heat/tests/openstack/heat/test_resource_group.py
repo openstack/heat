@@ -1015,23 +1015,30 @@ class ResourceGroupAttrTest(common.HeatTestCase):
                             expect_attrs=None):
         stack = utils.parse_stack(template_data)
         resg = stack['group1']
-        fake_res = {}
+        attrs = {}
+        refids = {}
         if expect_attrs is None:
             expect_attrs = {}
-        for resc in range(expect_count):
-            res = str(resc)
-            fake_res[res] = mock.Mock()
-            fake_res[res].stack = stack
-            fake_res[res].FnGetRefId.return_value = 'ID-%s' % res
-            if res in expect_attrs:
-                fake_res[res].FnGetAtt.return_value = expect_attrs[res]
-            else:
-                fake_res[res].FnGetAtt.return_value = res
-        resg.nested = mock.Mock(return_value=fake_res)
+        for index in range(expect_count):
+            res = str(index)
+            attrs[index] = expect_attrs.get(res, res)
+            refids[index] = 'ID-%s' % res
 
         names = [str(name) for name in range(expect_count)]
         resg._resource_names = mock.Mock(return_value=names)
+        self._stub_get_attr(resg, refids, attrs)
         return resg
+
+    def _stub_get_attr(self, resg, refids, attrs):
+        def make_fake_res(idx):
+            fr = mock.Mock()
+            fr.stack = resg.stack
+            fr.FnGetRefId.return_value = refids[idx]
+            fr.FnGetAtt.return_value = attrs[idx]
+            return fr
+
+        fake_res = {str(i): make_fake_res(i) for i in refids}
+        resg.nested = mock.Mock(return_value=fake_res)
 
 
 class ReplaceTest(common.HeatTestCase):
