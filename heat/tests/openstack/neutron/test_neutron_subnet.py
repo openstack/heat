@@ -749,7 +749,6 @@ class NeutronSubnetTest(common.HeatTestCase):
 
         reality = rsrc.get_live_state(rsrc.properties)
         expected = {
-            'name': 'subnet-subnet-la5usdgifhrd',
             'enable_dhcp': True,
             'dns_nameservers': [],
             'allocation_pools': [{'start': '10.0.0.2', 'end': '10.0.0.126'}],

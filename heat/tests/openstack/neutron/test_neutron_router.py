@@ -855,7 +855,6 @@ class NeutronRouterTest(common.HeatTestCase):
                 'network': '1ede231a-0b46-40fc-ab3b-8029446d0d1b',
                 'enable_snat': True
             },
-            'name': 'er-router-naqzmqnzk4ej',
             'admin_state_up': True,
             'value_specs': {
                 'test_value_spec': 'spec_value'

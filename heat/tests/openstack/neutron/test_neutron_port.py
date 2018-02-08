@@ -819,7 +819,6 @@ class NeutronPortTest(common.HeatTestCase):
 
         reality = port.get_live_state(port.properties)
         expected = {
-            'name': 'flip-port-xjbal77qope3',
             'allowed_address_pairs': [],
             'admin_state_up': True,
             'device_owner': '',
