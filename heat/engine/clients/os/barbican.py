@@ -10,17 +10,15 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from barbicanclient import client as barbican_client
+
 from barbicanclient import exceptions
+from barbicanclient.v1 import client as barbican_client
+from barbicanclient.v1 import containers
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
 
-try:
-    from barbicanclient.v1 import containers
-except ImportError:
-    from barbicanclient import containers
 
 CLIENT_NAME = 'barbican'
 
