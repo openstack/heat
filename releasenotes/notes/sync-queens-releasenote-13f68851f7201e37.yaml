@@ -1,0 +1,21 @@
+---
+prelude: |
+    Note that Heat is compatible with OpenStack Identity federation, even when
+    using Keystone trusts. It should work after you enable Federation and build
+    the `auto-provisioning map`_ with the heat service user in Keystone.
+    Auto-provisioning has been available in Keystone since the Ocata release.
+
+    .. _auto-provisioning map: https://docs.openstack.org/keystone/latest/advanced-topics/federation/federated_identity.html#auto-provisioning
+other:
+  - |
+    The Heat plugin in Horizon has been replaced with a new stand-alone
+    Horizon plugin, heat-dashboard. You can see more detail in the
+    heat-dashboard repository
+    (https://git.openstack.org/cgit/openstack/heat-dashboard).
+  - |
+    The old Heat Tempest plugin ``heat_tests`` has been removed and replaced
+    by a separate Tempest plugin named ``heat``, in the heat-tempest-plugin
+    repository (https://git.openstack.org/cgit/openstack/heat-tempest-plugin).
+    Functional tests that are appropriate for the Tempest environment have been
+    migrated to the new plugin. Other functional tests remain behind in the
+    heat repository.

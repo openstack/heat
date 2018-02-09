@@ -1,5 +1,5 @@
 ---
 features:
   - |
-    Add properties hostname, hints, security_groups to Zun's container
-    resource.
+    Added ``hostname``, ``hints``, ``security_groups``, and ``mounts``
+    properties to Zun Container resources.
