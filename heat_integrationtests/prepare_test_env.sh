@@ -87,5 +87,5 @@ function _config_tempest_plugin
 _config_functionaltests
 _config_tempest_plugin
 
-openstack flavor create m1.heat_int --ram 512
-openstack flavor create m1.heat_micro --ram 128
+openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512
+openstack flavor show m1.heat_micro || openstack flavor create m1.heat_micro --ram 128

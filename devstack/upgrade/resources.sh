@@ -36,11 +36,27 @@ function _heat_set_user {
     OS_PROJECT_DOMAIN_ID=$DEFAULT_DOMAIN
 }
 
-function _run_heat_api_tests {
+function _write_heat_integrationtests {
+    local upgrade_tests=$1
+    cat > $upgrade_tests <<EOF
+heat_tempest_plugin.tests.api
+heat_integrationtests.functional.test_autoscaling
+heat_integrationtests.functional.test_cancel_update
+heat_integrationtests.functional.test_create_update
+heat_integrationtests.functional.test_instance_group
+heat_integrationtests.functional.test_resource_group.ResourceGroupTest
+heat_integrationtests.functional.test_resource_group.ResourceGroupUpdatePolicyTest
+heat_integrationtests.functional.test_software_deployment_group
+heat_integrationtests.functional.test_validation
+heat_tempest_plugin.tests.functional.test_software_config.ParallelDeploymentsTest
+heat_tempest_plugin.tests.functional.test_nova_server_networks
+EOF
+}
+
+function _run_heat_integrationtests {
     local devstack_dir=$1
 
     pushd $devstack_dir/../tempest
-    sed -i -e '/group_regex/c\group_regex=heat_tempest_plugin\\.tests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .stestr.conf
     conf_file=etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     iniset $conf_file heat_plugin username $OS_USERNAME
@@ -53,14 +69,27 @@ function _run_heat_api_tests {
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
     iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
-    tox -evenv-tempest -- tempest run --regex heat_tempest_plugin.tests.api
+
+    export DEST=$(dirname $devstack_dir)
+    $DEST/heat/heat_integrationtests/prepare_test_env.sh
+    $DEST/heat/heat_integrationtests/prepare_test_network.sh
+
+    # Run set of specified functional tests
+    UPGRADE_TESTS=upgrade_tests.list
+    _write_heat_integrationtests $UPGRADE_TESTS
+
+    tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
+        --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
+        run --whitelist-file $UPGRADE_TESTS
+    _heat_set_user
     popd
 }
 
 function create {
-    # run heat api tests instead of tempest smoke before create
-    _run_heat_api_tests $BASE_DEVSTACK_DIR
+    # run heat integration tests instead of tempest smoke before create
+    _run_heat_integrationtests $BASE_DEVSTACK_DIR
 
+    source $TOP_DIR/openrc admin admin
     # creates a tenant for the server
     eval $(openstack project create -f shell -c id $HEAT_PROJECT)
     if [[ -z "$id" ]]; then
@@ -94,7 +123,7 @@ function verify {
     _heat_set_user
     local side="$1"
     if [[ "$side" = "post-upgrade" ]]; then
-        _run_heat_api_tests $TARGET_DEVSTACK_DIR
+        _run_heat_integrationtests $TARGET_DEVSTACK_DIR
     fi
     stack_name=$(resource_get heat stack_name)
     heat stack-show $stack_name
