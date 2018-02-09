@@ -85,7 +85,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - output: output
    - output_key: output_key
    - output_value: output_value

@@ -52,7 +52,7 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
    - location: location
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - stack: stack
    - id: stack_id
    - links: links
@@ -112,7 +112,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - capabilities: capabilities
    - creation_time: creation_time
    - deletion_time: deletion_time
@@ -805,7 +805,7 @@ Response Parameters
 .. rest_parameters:: parameters.yaml
 
    - location: location
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - stack: stack
    - id: stack_id
    - links: links
@@ -855,7 +855,7 @@ The body of the response contains a map of file names and file contents.
 
 .. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - action: action
    - environment: stack_environment
    - files: stack_files
@@ -910,7 +910,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - heat_template_version: heat_template_version
    - outputs: template_outputs
    - parameters: template_parameters
@@ -959,7 +959,7 @@ Response Parameters
 
 .. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
    - encrypted_param_names: encrypted_param_names
    - event_sinks: event_sinks
    - parameter_defaults: parameter_defaults
@@ -1010,7 +1010,7 @@ The body of the response contains a map of file names and file contents.
 
 .. rest_parameters:: parameters.yaml
 
-   - X-Openstack-Reqeuest-Id: request_id
+   - X-Openstack-Request-Id: request_id
 
 Response Example
 ----------------
