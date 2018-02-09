@@ -14,6 +14,8 @@
 import functools
 import six
 
+from oslo_log import log as logging
+
 from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
@@ -24,6 +26,8 @@ from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
 from heat.engine import support
 from heat.scaling import template as scl_template
+
+LOG = logging.getLogger(__name__)
 
 
 class ResourceChain(stack_resource.StackResource):
@@ -142,19 +146,41 @@ class ResourceChain(stack_resource.StackResource):
     def child_params(self):
         return {}
 
+    def _attribute_output_name(self, *attr_path):
+        return ', '.join(six.text_type(a) for a in attr_path)
+
     def get_attribute(self, key, *path):
+        if key == self.ATTR_ATTRIBUTES and not path:
+            raise exception.InvalidTemplateAttribute(resource=self.name,
+                                                     key=key)
+
+        try:
+            output = self.get_output(self._attribute_output_name(key, *path))
+        except (exception.NotFound,
+                exception.TemplateOutputError) as op_err:
+            resource_types = self.properties[self.RESOURCES]
+            names = self._resource_names(resource_types)
+            if key.startswith('resource.'):
+                target = key.split('.', 2)[1]
+                if target not in names:
+                    raise exception.NotFound(_("Member '%(mem)s' not "
+                                               "found in group resource "
+                                               "'%(grp)s'.") %
+                                             {'mem': target,
+                                              'grp': self.name})
+            LOG.debug('Falling back to grouputils due to %s', op_err)
+        else:
+            if key == self.REFS:
+                return attributes.select_from_attribute(output, path)
+            return output
+
         if key.startswith('resource.'):
             return grouputils.get_nested_attrs(self, key, False, *path)
 
-        resource_types = self.properties[self.RESOURCES]
-        names = self._resource_names(resource_types)
         if key == self.REFS:
             vals = [grouputils.get_rsrc_id(self, key, False, n) for n in names]
             return attributes.select_from_attribute(vals, path)
         if key == self.ATTR_ATTRIBUTES:
-            if not path:
-                raise exception.InvalidTemplateAttribute(
-                    resource=self.name, key=key)
             return dict((n, grouputils.get_rsrc_attr(
                 self, key, False, n, *path)) for n in names)
 
@@ -166,10 +192,9 @@ class ResourceChain(stack_resource.StackResource):
         for attr in self.referenced_attrs():
             if isinstance(attr, six.string_types):
                 key, path = attr, []
-                output_name = attr
             else:
                 key, path = attr[0], list(attr[1:])
-                output_name = ', '.join(six.text_type(a) for a in attr)
+            output_name = self._attribute_output_name(key, *path)
             value = None
 
             if key.startswith("resource."):
