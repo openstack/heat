@@ -68,6 +68,7 @@ class Listener(octavia_base.OctaviaBase):
             properties.Schema.STRING,
             _('ID or name of the load balancer with which listener '
               'is associated.'),
+            required=True,
             constraints=[
                 constraints.CustomConstraint('octavia.loadbalancer')
             ]
@@ -179,11 +180,6 @@ class Listener(octavia_base.OctaviaBase):
 
     def validate(self):
         super(Listener, self).validate()
-        if (self.properties[self.LOADBALANCER] is None
-                and self.properties[self.DEFAULT_POOL] is None):
-            raise exception.PropertyUnspecifiedError(self.LOADBALANCER,
-                                                     self.DEFAULT_POOL)
-
         if self.properties[self.PROTOCOL] == self.TERMINATED_HTTPS:
             if self.properties[self.DEFAULT_TLS_CONTAINER_REF] is None:
                 msg = (_('Property %(ref)s required when protocol is '
