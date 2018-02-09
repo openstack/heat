@@ -52,6 +52,11 @@ resources:
       hostname: myhost
       security_groups:
         - my_seg
+      mounts:
+        - volume_size: 1
+          mount_path: /data
+        - volume_id: 6ec29ba3-bf2c-4276-a88e-3670ea5abc80
+          mount_path: /data2
 '''
 
 
@@ -77,6 +82,14 @@ class ZunContainerTest(common.HeatTestCase):
         self.fake_hints = {'hintkey': 'hintval'}
         self.fake_hostname = 'myhost'
         self.fake_security_groups = ['my_seg']
+        self.fake_mounts = [
+            {'volume_id': None, 'volume_size': 1, 'mount_path': '/data'},
+            {'volume_id': '6ec29ba3-bf2c-4276-a88e-3670ea5abc80',
+             'volume_size': None, 'mount_path': '/data2'}]
+        self.fake_mounts_args = [
+            {'size': 1, 'destination': '/data'},
+            {'source': '6ec29ba3-bf2c-4276-a88e-3670ea5abc80',
+             'destination': '/data2'}]
 
         self.fake_network_id = '9c11d847-99ce-4a83-82da-9827362a68e8'
         self.fake_network_name = 'private'
@@ -111,6 +124,7 @@ class ZunContainerTest(common.HeatTestCase):
         self.neutron_client = mock.Mock()
         self.patchobject(container.Container, 'neutron',
                          return_value=self.neutron_client)
+        self.stub_VolumeConstraint_validate()
 
     def _mock_get_client(self):
         value = mock.MagicMock()
@@ -191,6 +205,9 @@ class ZunContainerTest(common.HeatTestCase):
         self.assertEqual(
             self.fake_security_groups,
             c.properties.get(container.Container.SECURITY_GROUPS))
+        self.assertEqual(
+            self.fake_mounts,
+            c.properties.get(container.Container.MOUNTS))
 
         scheduler.TaskRunner(c.create)()
         self.assertEqual(self.resource_id, c.resource_id)
@@ -212,6 +229,7 @@ class ZunContainerTest(common.HeatTestCase):
             hints=self.fake_hints,
             hostname=self.fake_hostname,
             security_groups=self.fake_security_groups,
+            mounts=self.fake_mounts_args,
         )
 
     def test_container_create_failed(self):
