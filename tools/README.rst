@@ -25,3 +25,18 @@ test-requires-deb
 
 test-requires-rpm
   list of RPM packages as of Fedora 20
+
+Review dashboards
+=================
+
+Generate gerrit review URL for heat. This can pop up some patches
+that might requires reviews. You can generate it with following
+command under `gerrit-dash-creator` repo
+( https://git.openstack.org/cgit/openstack/gerrit-dash-creator )
+
+    $ ./gerrit-dash-creator heat.dash
+
+The sample of heat.dash can be found under ./dashboards/
+
+Get the output URL and add it to your gerrit menu
+(at ``https://review.openstack.org/#/settings/preferences``).
