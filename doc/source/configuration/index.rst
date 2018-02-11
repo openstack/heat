@@ -9,4 +9,5 @@ Configuring Heat
    clients.rst
    config-options.rst
    logs.rst
+   sample_config.rst
    sample_policy.rst
