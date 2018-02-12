@@ -285,6 +285,24 @@ class DesignateClientPluginRecordTest(common.HeatTestCase):
 
     @mock.patch.object(client.DesignateClientPlugin, 'client')
     @mock.patch('designateclient.v1.records.Record')
+    def test_record_delete_domain_not_found(self, mock_record,
+                                            client_designate):
+        self._client.records.delete.return_value = None
+        self.client_plugin.get_domain_id.side_effect = (
+            heat_exception.EntityNotFound)
+        client_designate.return_value = self._client
+
+        record = dict(
+            id=self.sample_uuid,
+            domain=self.sample_domain_id
+        )
+
+        self.client_plugin.record_delete(**record)
+
+        self.assertFalse(self._client.records.delete.called)
+
+    @mock.patch.object(client.DesignateClientPlugin, 'client')
+    @mock.patch('designateclient.v1.records.Record')
     def test_record_show(self, mock_record, client_designate):
         self._client.records.get.return_value = None
         client_designate.return_value = self._client
