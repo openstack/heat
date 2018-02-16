@@ -701,6 +701,9 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     def res_def_changed(self, prop_diff):
         return True
 
+    def _update_name_blacklist(self, properties):
+        pass
+
     def _name_blacklist(self):
         return set()
 
