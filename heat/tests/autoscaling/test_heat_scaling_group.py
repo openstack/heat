@@ -400,6 +400,101 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute,
                           self.group.FnGetAtt, 'InstanceList')
 
+    def _stub_get_attr(self, refids, attrs):
+        def ref_id_fn(res_name):
+            return refids[res_name]
+
+        def attr_fn(args):
+            res_name = args[0]
+            return attrs[res_name]
+
+        inspector = self.group._group_data()
+        member_names = sorted(refids if refids else attrs)
+        self.patchobject(inspector, 'member_names', return_value=member_names)
+
+        def get_output(output_name):
+            outputs = self.group._nested_output_defns(member_names,
+                                                      attr_fn, ref_id_fn)
+            op_defns = {od.name: od for od in outputs}
+            self.assertIn(output_name, op_defns)
+            return op_defns[output_name].get_value()
+
+        orig_get_attr = self.group.FnGetAtt
+
+        def get_attr(attr_name, *path):
+            if not path:
+                attr = attr_name
+            else:
+                attr = (attr_name,) + path
+            # Mock referenced_attrs() so that _nested_output_definitions()
+            # will include the output required for this attribute
+            self.group.referenced_attrs = mock.Mock(return_value=[attr])
+
+            # Pass through to actual function under test
+            return orig_get_attr(attr_name, *path)
+
+        self.group.FnGetAtt = mock.Mock(side_effect=get_attr)
+        self.group.get_output = mock.Mock(side_effect=get_output)
+
+    def test_output_attribute_list(self):
+        values = {str(i): '2.1.3.%d' % i for i in range(1, 4)}
+        self._stub_get_attr({n: 'foo' for n in values}, values)
+
+        expected = [v for k, v in sorted(values.items())]
+        self.assertEqual(expected, self.group.FnGetAtt('outputs_list', 'Bar'))
+
+    def test_output_attribute_dict(self):
+        values = {str(i): '2.1.3.%d' % i for i in range(1, 4)}
+        self._stub_get_attr({n: 'foo' for n in values}, values)
+
+        self.assertEqual(values, self.group.FnGetAtt('outputs', 'Bar'))
+
+    def test_index_dotted_attribute(self):
+        values = {'ab'[i - 1]: '2.1.3.%d' % i for i in range(1, 3)}
+        self._stub_get_attr({'a': 'foo', 'b': 'bar'}, values)
+
+        self.assertEqual(values['a'], self.group.FnGetAtt('resource.0', 'Bar'))
+        self.assertEqual(values['b'], self.group.FnGetAtt('resource.1.Bar'))
+        self.assertRaises(exception.NotFound,
+                          self.group.FnGetAtt, 'resource.2')
+
+    def test_output_refs(self):
+        values = {'abc': 'resource-1', 'def': 'resource-2'}
+        self._stub_get_attr(values, {})
+
+        expected = [v for k, v in sorted(values.items())]
+        self.assertEqual(expected, self.group.FnGetAtt('refs'))
+
+    def test_output_refs_map(self):
+        values = {'abc': 'resource-1', 'def': 'resource-2'}
+        self._stub_get_attr(values, {})
+
+        self.assertEqual(values, self.group.FnGetAtt('refs_map'))
+
+    def test_attribute_current_size(self):
+        mock_instances = self.patchobject(grouputils, 'get_size')
+        mock_instances.return_value = 3
+        self.assertEqual(3, self.group.FnGetAtt('current_size'))
+
+    def test_attribute_current_size_with_path(self):
+        mock_instances = self.patchobject(grouputils, 'get_size')
+        mock_instances.return_value = 4
+        self.assertEqual(4, self.group.FnGetAtt('current_size', 'name'))
+
+
+class HeatScalingGroupAttrFallbackTest(common.HeatTestCase):
+    def setUp(self):
+        super(HeatScalingGroupAttrFallbackTest, self).setUp()
+
+        t = template_format.parse(inline_templates.as_heat_template)
+        self.stack = utils.parse_stack(t, params=inline_templates.as_params)
+        self.group = self.stack['my-group']
+        self.assertIsNone(self.group.validate())
+
+        # Raise NotFound when getting output, to force fallback to old-school
+        # grouputils functions
+        self.group.get_output = mock.Mock(side_effect=exception.NotFound)
+
     def test_output_attribute_list(self):
         mock_members = self.patchobject(grouputils, 'get_members')
         members = []
@@ -459,16 +554,6 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         self.assertEqual(output,
                          self.group.FnGetAtt('outputs', 'Bar'))
 
-    def test_attribute_current_size(self):
-        mock_instances = self.patchobject(grouputils, 'get_size')
-        mock_instances.return_value = 3
-        self.assertEqual(3, self.group.FnGetAtt('current_size'))
-
-    def test_attribute_current_size_with_path(self):
-        mock_instances = self.patchobject(grouputils, 'get_size')
-        mock_instances.return_value = 4
-        self.assertEqual(4, self.group.FnGetAtt('current_size', 'name'))
-
     def test_index_dotted_attribute(self):
         mock_members = self.patchobject(grouputils, 'get_members')
         self.group.nested = mock.Mock()
@@ -476,7 +561,7 @@ class HeatScalingGroupAttrTest(common.HeatTestCase):
         output = []
         for ip_ex in six.moves.range(0, 2):
             inst = mock.Mock()
-            inst.name = str(ip_ex)
+            inst.name = 'ab'[ip_ex]
             inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
             output.append('2.1.3.%d' % ip_ex)
             members.append(inst)

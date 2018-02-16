@@ -14,7 +14,10 @@
 import functools
 import six
 
+from oslo_log import log as logging
+
 from heat.common import environment_format
+from heat.common import exception
 from heat.common import grouputils
 from heat.common.i18n import _
 from heat.common import short_id
@@ -29,6 +32,8 @@ from heat.engine import scheduler
 from heat.scaling import lbutils
 from heat.scaling import rolling_update
 from heat.scaling import template
+
+LOG = logging.getLogger(__name__)
 
 
 (SCALED_RESOURCE_TYPE,) = ('OS::Heat::ScaledResource',)
@@ -391,6 +396,13 @@ class InstanceGroup(stack_resource.StackResource):
     def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()
 
+    def _group_data(self, refresh=False):
+        """Return a cached GroupInspector object for the nested stack."""
+        if refresh or getattr(self, '_group_inspector', None) is None:
+            inspector = grouputils.GroupInspector.from_parent_resource(self)
+            self._group_inspector = inspector
+        return self._group_inspector
+
     def _resolve_attribute(self, name):
         """Resolves the resource's attributes.
 
@@ -398,8 +410,24 @@ class InstanceGroup(stack_resource.StackResource):
         ip addresses.
         """
         if name == self.INSTANCE_LIST:
-            return u','.join(inst.FnGetAtt('PublicIp') or '0.0.0.0'
-                             for inst in grouputils.get_members(self)) or None
+            def listify(ips):
+                return u','.join(ips) or None
+
+            try:
+                output = self.get_output(name)
+            except (exception.NotFound,
+                    exception.TemplateOutputError) as op_err:
+                LOG.debug('Falling back to grouputils due to %s', op_err)
+            else:
+                if isinstance(output, dict):
+                    names = self._group_data().member_names(False)
+                    return listify(output[n] for n in names if n in output)
+                else:
+                    LOG.debug('Falling back to grouputils due to '
+                              'old (list-style) output format')
+
+            return listify(inst.FnGetAtt('PublicIp') or '0.0.0.0'
+                           for inst in grouputils.get_members(self))
 
     def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():

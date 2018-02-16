@@ -134,6 +134,33 @@ class TestInstanceGroup(common.HeatTestCase):
         self.instance_group.resize.assert_called_once_with(5)
 
     def test_attributes(self):
+        get_output = mock.Mock(return_value={'z': '2.1.3.1',
+                                             'x': '2.1.3.2',
+                                             'c': '2.1.3.3'})
+        self.instance_group.get_output = get_output
+        inspector = self.instance_group._group_data()
+        inspector.member_names = mock.Mock(return_value=['z', 'x', 'c'])
+        res = self.instance_group._resolve_attribute('InstanceList')
+        self.assertEqual('2.1.3.1,2.1.3.2,2.1.3.3', res)
+        get_output.assert_called_once_with('InstanceList')
+
+    def test_attributes_format_fallback(self):
+        self.instance_group.get_output = mock.Mock(return_value=['2.1.3.2',
+                                                                 '2.1.3.1',
+                                                                 '2.1.3.3'])
+        mock_members = self.patchobject(grouputils, 'get_members')
+        instances = []
+        for ip_ex in six.moves.range(1, 4):
+            inst = mock.Mock()
+            inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
+            instances.append(inst)
+        mock_members.return_value = instances
+        res = self.instance_group._resolve_attribute('InstanceList')
+        self.assertEqual('2.1.3.1,2.1.3.2,2.1.3.3', res)
+
+    def test_attributes_fallback(self):
+        self.instance_group.get_output = mock.Mock(
+            side_effect=exception.NotFound)
         mock_members = self.patchobject(grouputils, 'get_members')
         instances = []
         for ip_ex in six.moves.range(1, 4):
