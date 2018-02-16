@@ -16,7 +16,6 @@
 import uuid
 
 from oslo_db.sqlalchemy import models
-from oslo_utils import timeutils
 import sqlalchemy
 from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
@@ -305,39 +304,6 @@ class Resource(BASE, HeatBase, StateAware):
         'current_template_id',
         sqlalchemy.Integer,
         sqlalchemy.ForeignKey('raw_template.id'))
-
-
-class WatchRule(BASE, HeatBase):
-    """Represents a watch_rule created by the heat engine."""
-
-    __tablename__ = 'watch_rule'
-
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    name = sqlalchemy.Column('name', sqlalchemy.String(255))
-    rule = sqlalchemy.Column('rule', types.Json)
-    state = sqlalchemy.Column('state', sqlalchemy.String(255))
-    last_evaluated = sqlalchemy.Column(sqlalchemy.DateTime,
-                                       default=timeutils.utcnow)
-
-    stack_id = sqlalchemy.Column(sqlalchemy.String(36),
-                                 sqlalchemy.ForeignKey('stack.id'),
-                                 nullable=False)
-    stack = relationship(Stack, backref=backref('watch_rule'))
-
-
-class WatchData(BASE, HeatBase):
-    """Represents a watch_data created by the heat engine."""
-
-    __tablename__ = 'watch_data'
-
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    data = sqlalchemy.Column('data', types.Json)
-
-    watch_rule_id = sqlalchemy.Column(
-        sqlalchemy.Integer,
-        sqlalchemy.ForeignKey('watch_rule.id'),
-        nullable=False)
-    watch_rule = relationship(WatchRule, backref=backref('watch_data'))
 
 
 class SoftwareConfig(BASE, HeatBase):
