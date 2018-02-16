@@ -188,8 +188,8 @@ class MistralExternalResource(resource.Resource):
                 inputs = self.properties[self.INPUT]
             execution = self.client().executions.create(
                 action_data[self.WORKFLOW],
-                jsonutils.dumps(inputs),
-                self.properties[self.DESCRIPTION],
+                workflow_input=jsonutils.dumps(inputs),
+                description=self.properties[self.DESCRIPTION],
                 **action_data[self.PARAMS])
             LOG.debug('Mistral execution %(id)s params set to '
                       '%(params)s' % {'id': execution.id,
