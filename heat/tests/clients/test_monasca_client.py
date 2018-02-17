@@ -51,8 +51,8 @@ class MonascaClientPluginTest(common.HeatTestCase):
 
     @mock.patch.object(monascaclient.client, '_session')
     def test_client_uses_session(self, mock_session):
-        monasca_client = client_plugin.MonascaClientPlugin(
-            context=mock.MagicMock())
+        context = mock.MagicMock()
+        monasca_client = client_plugin.MonascaClientPlugin(context=context)
         self.assertIsNotNone(monasca_client._create())
 
 
