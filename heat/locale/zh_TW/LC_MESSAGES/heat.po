@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-02-05 10:35+0000\n"
+"POT-Creation-Date: 2018-02-17 05:29+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -799,20 +799,12 @@ msgid "Attempt to delete user creds with id %(id)s that does not exist"
 msgstr "嘗試刪除 ID 為 %(id)s 的使用者認證，但它不存在"
 
 #, python-format
-msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
-msgstr "嘗試刪除 ID 為 %(id)s 的 watch_rule：%(msg)s"
-
-#, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr "嘗試更新 ID 為 %(id)s 的堆疊：%(msg)s"
 
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(traversal)s %(msg)s"
 msgstr "嘗試更新 ID 為 %(id)s 的堆疊：%(traversal)s %(msg)s"
-
-#, python-format
-msgid "Attempt to update a watch with id: %(id)s %(msg)s"
-msgstr "嘗試更新 ID 為 %(id)s 的監看：%(msg)s"
 
 msgid "Attempt to use stored_context with no user_creds"
 msgstr "嘗試在不使用 user_creds 的情況下使用 stored_context"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-02-05 10:35+0000\n"
+"POT-Creation-Date: 2018-02-17 05:29+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -906,20 +906,12 @@ msgstr ""
 "Tentativo di eliminazione dei crediti utente con l'id %(id)s che non esiste"
 
 #, python-format
-msgid "Attempt to delete watch_rule: %(id)s %(msg)s"
-msgstr "Tentativo di eliminare una regola watch (watch_rule): %(id)s %(msg)s"
-
-#, python-format
 msgid "Attempt to update a stack with id: %(id)s %(msg)s"
 msgstr "Tentativo di aggiornare uno stack con id: %(id)s %(msg)s"
 
 #, python-format
 msgid "Attempt to update a stack with id: %(id)s %(traversal)s %(msg)s"
 msgstr "Tentativo di aggiornare uno stack con id: %(id)s %(traversal)s %(msg)s"
-
-#, python-format
-msgid "Attempt to update a watch with id: %(id)s %(msg)s"
-msgstr "Tentativo di aggiornare una regola watch con id: %(id)s %(msg)s"
 
 msgid "Attempt to use stored_context with no user_creds"
 msgstr "Tentativo di utilizzare stored_context senza nessun user_creds"
