@@ -687,11 +687,11 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.patchobject(exec_manager, '_create', return_value=execution)
         scheduler.TaskRunner(wf.signal, details)()
         call_args = self.mistral.executions.create.call_args
-        args, _ = call_args
+        args, kwargs = call_args
         expected_args = (
             '{"image": "31d8eeaf-686e-4e95-bb27-765014b9f20b", '
             '"name": "create_test_server", "flavor": "3"}')
-        self.validate_json_inputs(args[1], expected_args)
+        self.validate_json_inputs(kwargs['workflow_input'], expected_args)
         self.assertEqual({'executions': '12345'}, wf.data())
         # Updating the workflow changing "use_request_body_as_input" to
         # false and signaling again with the expected request body format.
@@ -712,11 +712,11 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.patchobject(exec_manager, '_create', return_value=execution)
         scheduler.TaskRunner(wf.signal, details)()
         call_args = self.mistral.executions.create.call_args
-        args, _ = call_args
+        args, kwargs = call_args
         expected_args = (
             '{"image": "31d8eeaf-686e-4e95-bb27-765014b9f20b", '
             '"name": "create_test_server", "flavor": "4"}')
-        self.validate_json_inputs(args[1], expected_args)
+        self.validate_json_inputs(kwargs['workflow_input'], expected_args)
         self.assertEqual({'executions': '54321,12345', 'name':
                          'test_stack-workflow-b5fiekdsa355'}, wf.data())
         scheduler.TaskRunner(wf.delete)()

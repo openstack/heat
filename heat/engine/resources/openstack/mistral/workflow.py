@@ -587,7 +587,7 @@ class Workflow(signal_responder.SignalResponder,
         try:
             execution = self.client().executions.create(
                 self._workflow_name(),
-                jsonutils.dumps(inputs_result),
+                workflow_input=jsonutils.dumps(inputs_result),
                 **params_result)
         except Exception as ex:
             raise exception.ResourceFailure(ex, self)
