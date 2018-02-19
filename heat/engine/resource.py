@@ -1466,16 +1466,34 @@ class Resource(status.ResourceStatus):
                             "error: %s", ex)
         return after_props, before_props
 
+    def _prepare_update_replace_handler(self, action):
+        """Return the handler method for preparing to replace a resource.
+
+        This may be either restore_prev_rsrc() (in the case of a legacy
+        rollback) or, more typically, prepare_for_replace().
+
+        If the plugin has not overridden the method, then None is returned in
+        place of the default method (which is empty anyway).
+        """
+        if (self.stack.action == 'ROLLBACK' and
+                self.stack.status == 'IN_PROGRESS' and
+                not self.stack.convergence):
+            # handle case, when it's rollback and we should restore
+            # old resource
+            if self.restore_prev_rsrc != Resource.restore_prev_rsrc:
+                return self.restore_prev_rsrc
+        else:
+            if self.prepare_for_replace != Resource.prepare_for_replace:
+                return self.prepare_for_replace
+        return None
+
     def _prepare_update_replace(self, action):
+        handler = self._prepare_update_replace_handler(action)
+        if handler is None:
+            return
+
         try:
-            if (self.stack.action == 'ROLLBACK' and
-                    self.stack.status == 'IN_PROGRESS' and
-                    not self.stack.convergence):
-                # handle case, when it's rollback and we should restore
-                # old resource
-                self.restore_prev_rsrc()
-            else:
-                self.prepare_for_replace()
+            handler()
         except Exception as e:
             # if any exception happen, we should set the resource to
             # FAILED, then raise ResourceFailure
@@ -1525,72 +1543,79 @@ class Resource(status.ResourceStatus):
             registry = self.stack.env.registry
             restr_actions = registry.get_rsrc_restricted_actions(self.name)
             if restr_actions:
-                if not self._check_restricted_actions(restr_actions,
-                                                      after, before,
-                                                      after_props,
-                                                      before_props,
-                                                      prev_resource):
-                    if update_templ_func is not None:
-                        update_templ_func(persist=True)
-                    return
+                needs_update = self._check_restricted_actions(restr_actions,
+                                                              after, before,
+                                                              after_props,
+                                                              before_props,
+                                                              prev_resource)
             else:
-                if not self._needs_update(after, before,
-                                          after_props, before_props,
-                                          prev_resource):
-                    if update_templ_func is not None:
-                        update_templ_func(persist=True)
-                    if self.status == self.FAILED:
-                        status_reason = _('Update status to COMPLETE for '
-                                          'FAILED resource neither update '
-                                          'nor replace.')
-                        lock = (self.LOCK_RESPECT if self.stack.convergence
-                                else self.LOCK_NONE)
-                        self.state_set(self.action, self.COMPLETE,
-                                       status_reason, lock=lock)
-                    return
+                needs_update = self._needs_update(after, before,
+                                                  after_props, before_props,
+                                                  prev_resource)
+        except UpdateReplace:
+            with excutils.save_and_reraise_exception():
+                if self._prepare_update_replace_handler(action) is not None:
+                    with self.lock(self._calling_engine_id):
+                        self._prepare_update_replace(action)
+        except exception.ResourceActionRestricted as ae:
+            failure = exception.ResourceFailure(ae, self, action)
+            self._add_event(action, self.FAILED, six.text_type(ae))
+            raise failure
 
-            if not self.stack.convergence:
-                if (self.action, self.status) in (
-                        (self.CREATE, self.IN_PROGRESS),
-                        (self.UPDATE, self.IN_PROGRESS),
-                        (self.ADOPT, self.IN_PROGRESS)):
-                    exc = Exception(_('Resource update already requested'))
-                    raise exception.ResourceFailure(exc, self, action)
+        if not needs_update:
+            if restr_actions:
+                if update_templ_func is not None:
+                    update_templ_func(persist=True)
+                return
+            else:
+                if update_templ_func is not None:
+                    update_templ_func(persist=True)
+                if self.status == self.FAILED:
+                    status_reason = _('Update status to COMPLETE for '
+                                      'FAILED resource neither update '
+                                      'nor replace.')
+                    lock = (self.LOCK_RESPECT if self.stack.convergence
+                            else self.LOCK_NONE)
+                    self.state_set(self.action, self.COMPLETE,
+                                   status_reason, lock=lock)
+                return
 
-            LOG.info('updating %s', self)
+        if not self.stack.convergence:
+            if (self.action, self.status) in (
+                    (self.CREATE, self.IN_PROGRESS),
+                    (self.UPDATE, self.IN_PROGRESS),
+                    (self.ADOPT, self.IN_PROGRESS)):
+                exc = Exception(_('Resource update already requested'))
+                raise exception.ResourceFailure(exc, self, action)
 
-            self.updated_time = datetime.utcnow()
+        LOG.info('updating %s', self)
 
-            with self._action_recorder(action, UpdateReplace):
-                after_props.validate()
+        self.updated_time = datetime.utcnow()
 
-                tmpl_diff = self.update_template_diff(after.freeze(), before)
+        with self._action_recorder(action, UpdateReplace):
+            after_props.validate()
+            self.properties = before_props
+            tmpl_diff = self.update_template_diff(after.freeze(), before)
+
+            try:
                 if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
                     raise UpdateReplace(self)
 
                 prop_diff = self.update_template_diff_properties(after_props,
                                                                  before_props)
-                self.properties = before_props
-
                 yield self.action_handler_task(action,
                                                args=[after, tmpl_diff,
                                                      prop_diff])
-                self.t = after
-                self.reparse()
-                self._update_stored_properties()
-                if update_templ_func is not None:
-                    # template/requires will be persisted by _action_recorder()
-                    update_templ_func(persist=False)
+            except UpdateReplace:
+                with excutils.save_and_reraise_exception():
+                    self._prepare_update_replace(action)
 
-        except exception.ResourceActionRestricted as ae:
-            # catch all ResourceActionRestricted exceptions
-            failure = exception.ResourceFailure(ae, self, action)
-            self._add_event(action, self.FAILED, six.text_type(ae))
-            raise failure
-        except UpdateReplace:
-            # catch all UpdateReplace exceptions
-            self._prepare_update_replace(action)
-            raise
+            self.t = after
+            self.reparse()
+            self._update_stored_properties()
+            if update_templ_func is not None:
+                # template/requires will be persisted by _action_recorder()
+                update_templ_func(persist=False)
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_POST_UPDATE)
@@ -2047,15 +2072,18 @@ class Resource(status.ResourceStatus):
     def lock(self, engine_id):
         self._calling_engine_id = engine_id
         try:
-            self._store_with_lock({}, self.LOCK_ACQUIRE)
+            if engine_id is not None:
+                self._store_with_lock({}, self.LOCK_ACQUIRE)
             yield
         except exception.UpdateInProgress:
             raise
         except BaseException:
             with excutils.save_and_reraise_exception():
-                self._store_with_lock({}, self.LOCK_RELEASE)
+                if engine_id is not None:
+                    self._store_with_lock({}, self.LOCK_RELEASE)
         else:
-            self._store_with_lock({}, self.LOCK_RELEASE)
+            if engine_id is not None:
+                self._store_with_lock({}, self.LOCK_RELEASE)
 
     def _resolve_all_attributes(self, attr):
         """Method for resolving all attributes.
