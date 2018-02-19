@@ -230,13 +230,12 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
 
             if key.startswith("resource."):
                 keycomponents = key.split('.', 2)
-                res_name = keycomponents[1]
-                attr_name = keycomponents[2:]
-                if attr_name and (res_name in resource_names):
-                    value = get_attr_fn([res_name] + attr_name + path)
-                    yield output.OutputDefinition(output_name, value)
+                path = keycomponents[2:] + path
+                if path:
+                    key = self.OUTPUTS
+                    output_name = ', '.join([self.OUTPUTS] + path)
 
-            elif key == self.OUTPUTS and path:
+            if key == self.OUTPUTS and path:
                 value = {r: get_attr_fn([r] + path) for r in resource_names}
                 yield output.OutputDefinition(output_name, value)
 
