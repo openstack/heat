@@ -12,17 +12,19 @@
 #    under the License.
 
 import copy
+import six
+from six import itertools
 import uuid
 
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import timeutils
-from six import itertools
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
+from heat.engine import output
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import resource_group
@@ -713,8 +715,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
                                             'OS::Heat::SoftwareDeployment',
                                             props, None)
 
-    def get_attribute(self, key, *path):
-        rg = super(SoftwareDeploymentGroup, self)
+    def _member_attribute_name(self, key):
         if key == self.STDOUTS:
             n_attr = SoftwareDeployment.STDOUT
         elif key == self.STDERRS:
@@ -725,9 +726,23 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
             # Allow any attribute valid for a single SoftwareDeployment
             # including arbitrary outputs, so we can't validate here
             n_attr = key
+        return n_attr
+
+    def get_attribute(self, key, *path):
+        rg = super(SoftwareDeploymentGroup, self)
+        n_attr = self._member_attribute_name(key)
 
         rg_attr = rg.get_attribute(rg.ATTR_ATTRIBUTES, n_attr)
         return attributes.select_from_attribute(rg_attr, path)
+
+    def _nested_output_defns(self, resource_names, get_attr_fn):
+        for attr in self.referenced_attrs():
+            key = attr if isinstance(attr, six.string_types) else attr[0]
+            n_attr = self._member_attribute_name(key)
+            output_name = '%s, %s' % (self.ATTR_ATTRIBUTES, n_attr)
+            value = {r: get_attr_fn([r, n_attr])
+                     for r in resource_names}
+            yield output.OutputDefinition(output_name, value)
 
     def _try_rolling_update(self):
         if self.update_policy[self.ROLLING_UPDATE]:
