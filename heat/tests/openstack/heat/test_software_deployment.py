@@ -1596,6 +1596,7 @@ class SoftwareDeploymentGroupAttrTest(common.HeatTestCase):
     def create_dummy_stack(self):
         snip = self.stack.t.resource_definitions(self.stack)['deploy_mysql']
         resg = sd.SoftwareDeploymentGroup('test', snip, self.stack)
+        resg.resource_id = 'test-test'
         nested = self.patchobject(resg, 'nested')
         nested.return_value = dict(zip(self.server_names, self.servers))
         self._stub_get_attr(resg)

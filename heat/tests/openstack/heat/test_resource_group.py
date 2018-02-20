@@ -781,9 +781,9 @@ class ResourceGroupTest(common.HeatTestCase):
         update_policy = {'batch_create': {'max_batch_size': 1}}
         snip = defn.freeze(properties=props, update_policy=update_policy)
         resgrp = resource_group.ResourceGroup('test', snip, stack)
-        self.patchobject(scheduler.TaskRunner, 'start')
-        checkers = resgrp.handle_create()
-        self.assertEqual(0, len(checkers))
+        resgrp.create_with_template = mock.Mock(return_value=None)
+        self.assertIsNone(resgrp.handle_create())
+        self.assertEqual(1, resgrp.create_with_template.call_count)
 
     def test_run_to_completion(self):
         stack = utils.parse_stack(template2)
@@ -1128,6 +1128,7 @@ class ResourceGroupAttrTest(common.HeatTestCase):
                             expect_attrs=None):
         stack = utils.parse_stack(template_data)
         resg = stack['group1']
+        resg.resource_id = 'test-test'
         attrs = {}
         refids = {}
         if expect_attrs is None:

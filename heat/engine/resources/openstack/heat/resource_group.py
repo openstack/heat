@@ -411,7 +411,7 @@ class ResourceGroup(stack_resource.StackResource):
 
     def handle_create(self):
         self._update_name_blacklist(self.properties)
-        if self.update_policy.get(self.BATCH_CREATE):
+        if self.update_policy.get(self.BATCH_CREATE) and self.get_size():
             batch_create = self.update_policy[self.BATCH_CREATE]
             max_batch_size = batch_create[self.MAX_BATCH_SIZE]
             pause_sec = batch_create[self.PAUSE_TIME]
@@ -503,25 +503,27 @@ class ResourceGroup(stack_resource.StackResource):
             output_name = self.REFS_MAP
         else:
             output_name = self._attribute_output_name(key, *path)
-        try:
-            output = self.get_output(output_name)
-        except (exception.NotFound,
-                exception.TemplateOutputError) as op_err:
-            LOG.debug('Falling back to grouputils due to %s', op_err)
-        else:
-            if is_resource_ref:
-                try:
-                    target = key.split('.', 2)[1]
-                    return output[target]
-                except KeyError:
-                    raise exception.NotFound(_("Member '%(mem)s' not "
-                                               "found in group resource "
-                                               "'%(grp)s'.") %
-                                             {'mem': target,
-                                              'grp': self.name})
-            if key == self.REFS:
-                return attributes.select_from_attribute(output, path)
-            return output
+
+        if self.resource_id is not None:
+            try:
+                output = self.get_output(output_name)
+            except (exception.NotFound,
+                    exception.TemplateOutputError) as op_err:
+                LOG.debug('Falling back to grouputils due to %s', op_err)
+            else:
+                if is_resource_ref:
+                    try:
+                        target = key.split('.', 2)[1]
+                        return output[target]
+                    except KeyError:
+                        raise exception.NotFound(_("Member '%(mem)s' not "
+                                                   "found in group resource "
+                                                   "'%(grp)s'.") %
+                                                 {'mem': target,
+                                                  'grp': self.name})
+                if key == self.REFS:
+                    return attributes.select_from_attribute(output, path)
+                return output
 
         if key.startswith("resource."):
             return grouputils.get_nested_attrs(self, key, False, *path)
