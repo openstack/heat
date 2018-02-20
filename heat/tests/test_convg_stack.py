@@ -65,7 +65,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         self.assertTrue(stack_db.convergence)
         self.assertEqual({'edges': [[[1, True], None]]}, stack_db.current_deps)
-        leaves = stack.convergence_dependencies.leaves()
+        leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
         for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
@@ -121,7 +121,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             self.assertIsNotNone(sync_point)
             self.assertEqual(stack_db.id, sync_point.stack_id)
 
-        leaves = stack.convergence_dependencies.leaves()
+        leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
         for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
@@ -261,7 +261,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             self.assertIsNotNone(sync_point)
             self.assertEqual(stack_db.id, sync_point.stack_id)
 
-        leaves = stack.convergence_dependencies.leaves()
+        leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
         for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
@@ -344,7 +344,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             self.assertIsNotNone(sync_point, 'entity %s' % entity_id)
             self.assertEqual(stack_db.id, sync_point.stack_id)
 
-        leaves = stack.convergence_dependencies.leaves()
+        leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
         for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
@@ -353,7 +353,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                     {'input_data': {}},
                     is_update, None, False))
 
-        leaves = curr_stack.convergence_dependencies.leaves()
+        leaves = set(curr_stack.convergence_dependencies.leaves())
         for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
