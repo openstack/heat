@@ -322,6 +322,37 @@ outputs:
         updated_rand = self._stack_output(stack1, 'random1')
         self.assertNotEqual(initial_rand, updated_rand)
 
+    def test_validation(self):
+        resource_group = '''
+heat_template_version: 2016-10-14
+
+parameters:
+  the_count:
+    type: number
+
+resources:
+
+  the_group:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: {get_param: the_count}
+      resource_def:
+        type: OS::Heat::RandomString
+'''
+        ret = self.client.stacks.validate(template=resource_group)
+        expected = {'Description': 'No description',
+                    'Environment': {'event_sinks': [],
+                                    'parameter_defaults': {},
+                                    'parameters': {},
+                                    'resource_registry': {u'resources': {}}},
+                    'Parameters': {
+                        'the_count': {'Description': '',
+                                      'Label': 'the_count',
+                                      'NoEcho': 'false',
+                                      'Type': 'Number'}}}
+
+        self.assertEqual(expected, ret)
+
 
 class ResourceGroupTestNullParams(functional_base.FunctionalTestsBase):
     template = '''

@@ -576,6 +576,13 @@ class Resource(status.ResourceStatus):
         """
         return False
 
+    def get_nested_parameters_stack(self):
+        """Return the nested stack for schema validation.
+
+        Regular resources don't have such a thing.
+        """
+        return
+
     def has_hook(self, hook):
         # Clear the cache to make sure the data is up to date:
         self._data = None

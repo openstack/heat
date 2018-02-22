@@ -2039,3 +2039,69 @@ parameter_groups:
                                 self.ctx, t, {})
         self.assertEqual(exception.InvalidSchemaError,
                          exc.exc_info[0])
+
+    def test_validate_empty_resource_group(self):
+        engine = service.EngineService('a', 't')
+        params = {
+            "resource_registry": {
+                "OS::Test::TestResource": "https://server.test/nested.template"
+            }
+        }
+        root_template_str = '''
+heat_template_version: 2015-10-15
+parameters:
+    test_root_param:
+        type: string
+resources:
+    Group:
+        type: OS::Heat::ResourceGroup
+        properties:
+            count: 0
+            resource_def:
+                type: OS::Test::TestResource
+'''
+        nested_template_str = '''
+heat_template_version: 2015-10-15
+parameters:
+    test_param:
+        type: string
+'''
+        root_template = template_format.parse(root_template_str)
+
+        self.patchobject(urlfetch, 'get')
+        urlfetch.get.return_value = nested_template_str
+
+        res = dict(engine.validate_template(self.ctx, root_template,
+                                            params, show_nested=True))
+        expected = {
+            'Description': 'No description',
+            'Environment': {
+                'event_sinks': [],
+                'parameter_defaults': {},
+                'parameters': {},
+                'resource_registry': {
+                    'OS::Test::TestResource':
+                        'https://server.test/nested.template',
+                    'resources': {}}},
+            'NestedParameters': {
+                'Group': {
+                    'Description': 'No description',
+                    'Parameters': {},
+                    'Type': 'OS::Heat::ResourceGroup',
+                    'NestedParameters': {
+                        '0': {
+                            'Description': 'No description',
+                            'Parameters': {
+                                'test_param': {
+                                    'Description': '',
+                                    'Label': 'test_param',
+                                    'NoEcho': 'false',
+                                    'Type': 'String'}},
+                            'Type': 'OS::Test::TestResource'}}}},
+            'Parameters': {
+                'test_root_param': {
+                    'Description': '',
+                    'Label': 'test_root_param',
+                    'NoEcho': 'false',
+                    'Type': 'String'}}}
+        self.assertEqual(expected, res)

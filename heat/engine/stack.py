@@ -32,6 +32,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import identifier
 from heat.common import lifecycle_plugin_utils
+from heat.engine import api
 from heat.engine import dependencies
 from heat.engine import environment
 from heat.engine import event
@@ -1050,6 +1051,36 @@ class Stack(collections.Mapping):
         """Preview the stack with all of the resources."""
         return [resource.preview()
                 for resource in six.itervalues(self.resources)]
+
+    def get_nested_parameters(self, filter_func):
+        """Return nested parameters schema, if any.
+
+        This introspects the resources to return the parameters of the nested
+        stacks. It uses the `get_nested_parameters_stack` API to build the
+        stack.
+        """
+        result = {}
+        for name, rsrc in six.iteritems(self.resources):
+            nested = rsrc.get_nested_parameters_stack()
+            if nested is None:
+                continue
+            nested_params = nested.parameters.map(
+                api.format_validate_parameter,
+                filter_func=filter_func)
+            params = {
+                'Type': rsrc.type(),
+                'Description': nested.t.get('Description', ''),
+                'Parameters': nested_params
+            }
+
+            # Add parameter_groups if it is present in nested stack
+            nested_pg = param_groups.ParameterGroups(nested.t)
+            if nested_pg.parameter_groups:
+                params.update({'ParameterGroups': nested_pg.parameter_groups})
+
+            params.update(nested.get_nested_parameters(filter_func))
+            result[name] = params
+        return {'NestedParameters': result} if result else {}
 
     def _store_resources(self):
         for r in reversed(self.dependencies):
