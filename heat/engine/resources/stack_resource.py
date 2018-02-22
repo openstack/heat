@@ -199,6 +199,24 @@ class StackResource(resource.Resource):
 
         return self.nested().preview_resources()
 
+    def get_nested_parameters_stack(self):
+        """Return a stack for schema validation.
+
+        This returns a stack to be introspected for building parameters schema.
+        It can be customized by subclass to return a restricted version of what
+        will be running.
+        """
+        try:
+            child_template = self.child_template()
+            params = self.child_params()
+        except NotImplementedError:
+            class_name = reflection.get_class_name(self, fully_qualified=False)
+            LOG.warning("Nested parameters of '%s' not yet "
+                        "implemented", class_name)
+            return
+        name = "%s-%s" % (self.stack.name, self.name)
+        return self._parse_nested_stack(name, child_template, params)
+
     def _parse_child_template(self, child_template, child_env):
         parsed_child_template = child_template
         if isinstance(parsed_child_template, template.Template):

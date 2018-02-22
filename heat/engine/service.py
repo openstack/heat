@@ -1238,36 +1238,7 @@ class EngineService(service.ServiceBase):
             result['ParameterGroups'] = param_groups.parameter_groups
 
         if show_nested:
-            # Note preview_resources is needed here to build the tree
-            # of nested resources/stacks in memory, otherwise the
-            # nested/has_nested() tests below won't work
-            stack.preview_resources()
-
-            def nested_params(stk):
-                n_result = {}
-                for r in stk:
-                    if stk[r].has_nested():
-                        n_params = stk[r].nested().parameters.map(
-                            api.format_validate_parameter,
-                            filter_func=filter_parameter)
-                        n_result[r] = {
-                            'Type': stk[r].type(),
-                            'Description': stk[r].nested().t.get(
-                                'Description', ''),
-                            'Parameters': n_params
-                        }
-
-                        # Add parameter_groups if it is present in nested stack
-                        nested_pg = parameter_groups.ParameterGroups(
-                            stk[r].nested().t)
-                        if nested_pg.parameter_groups:
-                            n_result[r].update({'ParameterGroups':
-                                               nested_pg.parameter_groups})
-
-                        n_result[r].update(nested_params(stk[r].nested()))
-                return {'NestedParameters': n_result} if n_result else {}
-
-            result.update(nested_params(stack))
+            result.update(stack.get_nested_parameters(filter_parameter))
 
         result['Environment'] = tmpl.env.user_env_as_dict()
         return result
