@@ -40,7 +40,7 @@ function _run_heat_api_tests {
     local devstack_dir=$1
 
     pushd $devstack_dir/../tempest
-    sed -i -e '/group_regex/c\group_regex=heat_tempest_plugin\\.tests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .testr.conf
+    sed -i -e '/group_regex/c\group_regex=heat_tempest_plugin\\.tests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .stestr.conf
     conf_file=etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     iniset $conf_file heat_plugin username $OS_USERNAME
