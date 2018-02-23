@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    A new OS::Heat::Delay resource type allows users to work around thundering
+    herd issues in large templates by adding a random delay (with configurable
+    jitter) into the workflow.
