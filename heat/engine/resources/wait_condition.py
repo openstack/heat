@@ -70,7 +70,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
                 raise ValueError(_("Metadata format invalid"))
 
             new_entry = signal_data.copy()
-            unique_id = new_entry.pop(self.UNIQUE_ID)
+            unique_id = six.text_type(new_entry.pop(self.UNIQUE_ID))
 
             new_rsrc_metadata = latest_rsrc_metadata.copy()
             if unique_id in new_rsrc_metadata:
