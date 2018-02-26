@@ -1568,8 +1568,7 @@ class Stack(collections.Mapping):
             finally:
                 self.reset_dependencies()
 
-            if action in (self.UPDATE, self.RESTORE, self.ROLLBACK):
-                self.status_reason = 'Stack %s completed successfully' % action
+            self.status_reason = 'Stack %s completed successfully' % action
             self.status = self.COMPLETE
 
         except scheduler.Timeout:
