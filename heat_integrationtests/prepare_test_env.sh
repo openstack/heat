@@ -63,8 +63,7 @@ function _config_functionaltests
     _config_iniset $conf_file
 
     # Skip NotificationTest till bug #1721202 is fixed
-    # Skip StackCancelTest till the python-heatclient is bumped
-    iniset $conf_file heat_plugin skip_functional_test_list 'NotificationTest, StackCancelTest'
+    iniset $conf_file heat_plugin skip_functional_test_list 'NotificationTest'
 
     cat $conf_file
 }
