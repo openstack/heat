@@ -697,3 +697,66 @@ class HOTemplate20180302(HOTemplate20170901):
     }
 
     param_schema_class = parameters.HOTParamSchema20180302
+
+
+class HOTemplate20180831(HOTemplate20180302):
+    functions = {
+        'get_attr': hot_funcs.GetAttAllAttributes,
+        'get_file': hot_funcs.GetFile,
+        'get_param': hot_funcs.GetParam,
+        'get_resource': hot_funcs.GetResource,
+        'list_join': hot_funcs.JoinMultiple,
+        'repeat': hot_funcs.RepeatWithNestedLoop,
+        'resource_facade': hot_funcs.ResourceFacade,
+        'str_replace': hot_funcs.ReplaceJson,
+
+        # functions added in 2015-04-30
+        'digest': hot_funcs.Digest,
+
+        # functions added in 2015-10-15
+        'str_split': hot_funcs.StrSplit,
+
+        # functions added in 2016-04-08
+        'map_merge': hot_funcs.MapMerge,
+
+        # functions added in 2016-10-14
+        'yaql': hot_funcs.Yaql,
+        'map_replace': hot_funcs.MapReplace,
+        'if': hot_funcs.If,
+
+        # functions added in 2017-02-24
+        'filter': hot_funcs.Filter,
+        'str_replace_strict': hot_funcs.ReplaceJsonStrict,
+
+        # functions added in 2017-09-01
+        'make_url': hot_funcs.MakeURL,
+        'list_concat': hot_funcs.ListConcat,
+        'str_replace_vstrict': hot_funcs.ReplaceJsonVeryStrict,
+        'list_concat_unique': hot_funcs.ListConcatUnique,
+        'contains': hot_funcs.Contains,
+
+        # functions removed from 2015-10-15
+        'Fn::Select': hot_funcs.Removed,
+
+        # functions removed from 2014-10-16
+        'Fn::GetAZs': hot_funcs.Removed,
+        'Fn::Join': hot_funcs.Removed,
+        'Fn::Split': hot_funcs.Removed,
+        'Fn::Replace': hot_funcs.Removed,
+        'Fn::Base64': hot_funcs.Removed,
+        'Fn::MemberListToMap': hot_funcs.Removed,
+        'Fn::ResourceFacade': hot_funcs.Removed,
+        'Ref': hot_funcs.Removed,
+    }
+
+    condition_functions = {
+        'get_param': hot_funcs.GetParam,
+        'equals': hot_funcs.Equals,
+        'not': hot_funcs.Not,
+        'and': hot_funcs.And,
+        'or': hot_funcs.Or,
+
+        # functions added in 2017-09-01
+        'yaql': hot_funcs.Yaql,
+        'contains': hot_funcs.Contains
+    }

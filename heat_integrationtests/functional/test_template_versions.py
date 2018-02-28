@@ -25,7 +25,8 @@ class TemplateVersionTest(functional_base.FunctionalTestsBase):
                                        "2016-04-08", "2016-10-14", "newton",
                                        "2017-02-24", "ocata",
                                        "2017-09-01", "pike",
-                                       "2018-03-02", "queens"]
+                                       "2018-03-02", "queens",
+                                       "2018-08-31", "rocky"]
         for template in template_versions:
             self.assertIn(template.version.split(".")[1],
                           supported_template_versions)
