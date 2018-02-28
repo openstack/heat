@@ -790,6 +790,14 @@ class ResourceGroup(stack_resource.StackResource):
                                              {},
                                              adopt_data=resource_data)
 
+    def get_nested_parameters_stack(self):
+        """Return a nested group of size 1 for validation."""
+        names = self._resource_names(1)
+        child_template = self._assemble_nested(names)
+        params = self.child_params()
+        name = "%s-%s" % (self.stack.name, self.name)
+        return self._parse_nested_stack(name, child_template, params)
+
 
 def resource_mapping():
     return {
