@@ -109,7 +109,6 @@ class NovaFloatingIp(resource.Resource):
     def handle_delete(self):
         with self.client_plugin('neutron').ignore_not_found:
             self.neutron().delete_floatingip(self.resource_id)
-            return True
 
     def _resolve_attribute(self, key):
         if self.resource_id is None:
@@ -167,49 +166,29 @@ class NovaFloatingIpAssociation(resource.Resource):
         return self.physical_resource_name_or_FnGetRefId()
 
     def handle_create(self):
-        server = self.client().servers.get(self.properties[self.SERVER])
-        fl_ip = self.neutron().show_floatingip(
-            self.properties[self.FLOATING_IP])
-
-        ip_address = fl_ip['floatingip']['floating_ip_address']
-        self.client().servers.add_floating_ip(server, ip_address)
+        self.client_plugin().associate_floatingip(
+            self.properties[self.SERVER], self.properties[self.FLOATING_IP])
         self.resource_id_set(self.id)
 
     def handle_delete(self):
         if self.resource_id is None:
             return
-
-        try:
-            server = self.client().servers.get(self.properties[self.SERVER])
-            if server:
-                fl_ip = self.neutron().show_floatingip(
-                    self.properties[self.FLOATING_IP])
-                ip_address = fl_ip['floatingip']['floating_ip_address']
-            self.client().servers.remove_floating_ip(server, ip_address)
-        except Exception as e:
-            if not (self.client_plugin().is_not_found(e)
-                    or self.client_plugin().is_conflict(e)
-                    or self.client_plugin('neutron').is_not_found(e)):
-                raise
+        with self.client_plugin().ignore_not_found:
+            self.client_plugin().dissociate_floatingip(
+                self.properties[self.FLOATING_IP])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             # If floating_ip in prop_diff, we need to remove the old floating
             # ip from the old server, and then to add the new floating ip
             # to the old/new(if the server_id is changed) server.
-            # If prop_diff only has the server_id, no need to remove the
-            # floating ip from the old server, nova does this automatically
-            # when calling add_floating_ip().
             if self.FLOATING_IP in prop_diff:
                 self.handle_delete()
             server_id = (prop_diff.get(self.SERVER) or
                          self.properties[self.SERVER])
             fl_ip_id = (prop_diff.get(self.FLOATING_IP) or
                         self.properties[self.FLOATING_IP])
-            server = self.client().servers.get(server_id)
-            fl_ip = self.neutron().show_floatingip(fl_ip_id)
-            ip_address = fl_ip['floatingip']['floating_ip_address']
-            self.client().servers.add_floating_ip(server, ip_address)
+            self.client_plugin().associate_floatingip(server_id, fl_ip_id)
             self.resource_id_set(self.id)
 
 

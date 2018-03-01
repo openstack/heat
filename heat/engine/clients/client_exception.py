@@ -25,3 +25,7 @@ class EntityMatchNotFound(exception.HeatException):
 
 class EntityUniqueMatchNotFound(EntityMatchNotFound):
     msg_fmt = _("No %(entity)s unique match found for %(args)s.")
+
+
+class InterfaceNotFound(exception.HeatException):
+    msg_fmt = _("No network interface found for server %(id)s.")
