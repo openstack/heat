@@ -599,8 +599,6 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.FAILED),
                          self.stack.state)
         mock_del.assert_called_once_with()
-        # Unset here so destroy() is not stubbed for stack.delete cleanup
-        self.m.UnsetStubs()
 
     def test_update_modify_replace_failed_create(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1203,9 +1201,6 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create.assert_called_once_with()
         self.assertEqual(2, mock_delete.call_count)
 
-        # Unset here so delete() is not stubbed for stack.delete cleanup
-        self.m.UnsetStubs()
-
     def test_update_rollback_replace(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {
@@ -1237,9 +1232,6 @@ class StackUpdateTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.ROLLBACK, stack.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual(3, mock_delete.call_count)
-
-        # Unset here so delete() is not stubbed for stack.delete cleanup
-        self.m.UnsetStubs()
 
     def test_update_replace_by_reference(self):
         """Test case for changes in dynamic attributes.
