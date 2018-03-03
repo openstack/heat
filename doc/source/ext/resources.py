@@ -17,8 +17,8 @@ import pydoc
 
 from docutils import core
 from docutils import nodes
+from docutils.parsers import rst
 import six
-from sphinx.util import compat
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -53,7 +53,7 @@ class contribresourcepages(nodes.General, nodes.Element):
     pass
 
 
-class ResourcePages(compat.Directive):
+class ResourcePages(rst.Directive):
     has_content = False
     required_arguments = 0
     optional_arguments = 1
