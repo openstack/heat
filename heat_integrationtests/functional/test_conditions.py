@@ -309,7 +309,8 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
     def res_assert_for_prod(self, resources, bj_prod=True, fj_zone=False,
                             shannxi_provice=False):
-        res_names = [res.resource_name for res in resources]
+        res_names = {res.resource_name for res in resources
+                     if res.resource_status != 'DELETE_COMPLETE'}
         if bj_prod:
             self.assertEqual(4, len(resources))
             self.assertIn('beijing_prod_res', res_names)
@@ -331,7 +332,8 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
 
     def res_assert_for_test(self, resources, fj_zone=False,
                             shannxi_provice=False):
-        res_names = [res.resource_name for res in resources]
+        res_names = {res.resource_name for res in resources
+                     if res.resource_status != 'DELETE_COMPLETE'}
 
         if fj_zone:
             self.assertEqual(4, len(resources))

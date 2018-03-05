@@ -705,7 +705,11 @@ resources:
                           expected_status='UPDATE_IN_PROGRESS')
 
         def check_resources():
-            resources = self.list_resources(stack_identifier)
+            def is_complete(r):
+                return r.resource_status in {'CREATE_COMPLETE',
+                                             'UPDATE_COMPLETE'}
+
+            resources = self.list_resources(stack_identifier, is_complete)
             if len(resources) < 2:
                 return False
             self.assertIn('test3', resources)
