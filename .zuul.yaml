@@ -105,7 +105,6 @@
     roles:
       - zuul: openstack-infra/zuul-jobs
     pre-run: playbooks/devstack/multinode-networking/pre.yaml
-    voting: false
     vars:
       topology: multinode
 
@@ -123,6 +122,7 @@
     gate:
       jobs:
         - grenade-heat
+        - grenade-heat-multinode
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-non-apache
