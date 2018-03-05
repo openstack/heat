@@ -43,7 +43,6 @@ class TestPolicyEnforcer(common.HeatTestCase):
         super(TestPolicyEnforcer, self).setUp(mock_resource_policy=False)
         self.fixture = self.useFixture(config_fixture.Config())
         self.fixture.conf(args=['--config-dir', policy_path])
-        self.addCleanup(self.m.VerifyAll)
 
     def get_policy_file(self, filename):
         return policy_path + filename
