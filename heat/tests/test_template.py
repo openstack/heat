@@ -1225,10 +1225,8 @@ class TemplateTest(common.HeatTestCase):
         snippet = {"Fn::GetAZs": ""}
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template))
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
         fc = fakes_nova.FakeClient()
-        nova.NovaClientPlugin._create().AndReturn(fc)
-        self.m.ReplayAll()
+        self.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stk))
 
     def test_replace_string_values(self):
