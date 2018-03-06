@@ -139,6 +139,20 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
             raise exception.EntityNotFound(entity='Plugin',
                                            name=plugin_name)
 
+    def get_job_type(self, job_type):
+        """Find the job type
+
+        :param job_type: the name of sahara job type to find
+        :returns: the name of :job_type:
+        :raises: exception.EntityNotFound
+        """
+        try:
+            filters = {'name': job_type}
+            return self.client().job_types.find_unique(**filters)
+        except sahara_base.APIException:
+            raise exception.EntityNotFound(entity='Job Type',
+                                           name=job_type)
+
 
 class SaharaBaseConstraint(constraints.BaseCustomConstraint):
     expected_exceptions = (exception.EntityNotFound,
@@ -155,6 +169,11 @@ class PluginConstraint(constraints.BaseCustomConstraint):
     # do not touch constraint for compatibility
     resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_plugin_id'
+
+
+class JobTypeConstraint(constraints.BaseCustomConstraint):
+    resource_client_name = CLIENT_NAME
+    resource_getter_name = 'get_job_type'
 
 
 class ImageConstraint(SaharaBaseConstraint):
@@ -175,7 +194,3 @@ class DataSourceConstraint(SaharaBaseConstraint):
 
 class ClusterTemplateConstraint(SaharaBaseConstraint):
     resource_name = 'cluster_templates'
-
-
-class JobTypeConstraint(SaharaBaseConstraint):
-    resource_name = 'job_types'

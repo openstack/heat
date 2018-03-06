@@ -70,7 +70,9 @@ class SaharaJobTest(common.HeatTestCase):
         value = mock.MagicMock(id='fake-resource-id')
         self.client.jobs.create.return_value = value
         mock_get_res = mock.Mock(return_value='some res id')
+        mock_get_type = mock.Mock(return_value='MapReduce')
         jb.client_plugin().find_resource_by_name_or_id = mock_get_res
+        jb.client_plugin().get_job_type = mock_get_type
         scheduler.TaskRunner(jb.create)()
         return jb
 
