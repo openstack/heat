@@ -492,24 +492,19 @@ class StackResourceTest(StackResourceBaseTest):
     def test_load_nested_ok(self):
         self.parent_resource._nested = None
         self.parent_resource.resource_id = 319
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id).AndReturn('s')
-        self.m.ReplayAll()
+        mock_load = self.patchobject(parser.Stack, 'load', return_value='s')
         self.parent_resource.nested()
-        self.m.VerifyAll()
+        mock_load.assert_called_once_with(self.parent_resource.context,
+                                          self.parent_resource.resource_id)
 
     def test_load_nested_non_exist(self):
         self.parent_resource._nested = None
         self.parent_resource.resource_id = '90-8'
-        self.m.StubOutWithMock(parser.Stack, 'load')
-        parser.Stack.load(self.parent_resource.context,
-                          self.parent_resource.resource_id).AndRaise(
-            exception.NotFound)
-        self.m.ReplayAll()
-
+        mock_load = self.patchobject(parser.Stack, 'load',
+                                     side_effect=[exception.NotFound])
         self.assertIsNone(self.parent_resource.nested())
-        self.m.VerifyAll()
+        mock_load.assert_called_once_with(self.parent_resource.context,
+                                          self.parent_resource.resource_id)
 
     def test_load_nested_cached(self):
         self.parent_resource._nested = 'gotthis'
@@ -743,34 +738,30 @@ class StackResourceAttrTest(StackResourceBaseTest):
     def test_validate_nested_stack(self):
         self.parent_resource.child_template = mock.Mock(return_value='foo')
         self.parent_resource.child_params = mock.Mock(return_value={})
-        nested = self.m.CreateMockAnything()
-        nested.validate().AndReturn(True)
-        self.m.StubOutWithMock(stack_resource.StackResource,
-                               '_parse_nested_stack')
+        nested = mock.Mock()
+        nested.validate.return_value = True
+        mock_parse_nested = self.patchobject(stack_resource.StackResource,
+                                             '_parse_nested_stack',
+                                             return_value=nested)
         name = '%s-%s' % (self.parent_stack.name, self.parent_resource.name)
-        stack_resource.StackResource._parse_nested_stack(
-            name, 'foo', {}).AndReturn(nested)
 
-        self.m.ReplayAll()
         self.parent_resource.validate_nested_stack()
         self.assertFalse(nested.strict_validate)
-        self.m.VerifyAll()
+        mock_parse_nested.assert_called_once_with(name, 'foo', {})
 
     def test_validate_assertion_exception_rethrow(self):
         expected_message = 'Expected Assertion Error'
         self.parent_resource.child_template = mock.Mock(return_value='foo')
         self.parent_resource.child_params = mock.Mock(return_value={})
-        self.m.StubOutWithMock(stack_resource.StackResource,
-                               '_parse_nested_stack')
+        mock_parse_nested = self.patchobject(
+            stack_resource.StackResource,
+            '_parse_nested_stack',
+            side_effect=AssertionError(expected_message))
         name = '%s-%s' % (self.parent_stack.name, self.parent_resource.name)
-        stack_resource.StackResource._parse_nested_stack(
-            name, 'foo', {}).AndRaise(AssertionError(expected_message))
-
-        self.m.ReplayAll()
         exc = self.assertRaises(AssertionError,
                                 self.parent_resource.validate_nested_stack)
         self.assertEqual(expected_message, six.text_type(exc))
-        self.m.VerifyAll()
+        mock_parse_nested.assert_called_once_with(name, 'foo', {})
 
 
 class StackResourceCheckCompleteTest(StackResourceBaseTest):
