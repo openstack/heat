@@ -50,6 +50,22 @@ function create {
     iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
+
+    # Old version of tempest is installed in grenade environment, so use
+    # .testr.conf instead of .stestr.conf
+    cat <<'EOF' >.testr.conf
+[DEFAULT]
+test_command=OS_STDOUT_CAPTURE=${OS_STDOUT_CAPTURE:-1} \
+             OS_STDERR_CAPTURE=${OS_STDERR_CAPTURE:-1} \
+             OS_TEST_TIMEOUT=${OS_TEST_TIMEOUT:-500} \
+             OS_TEST_LOCK_PATH=${OS_TEST_LOCK_PATH:-${TMPDIR:-'/tmp'}} \
+             ${PYTHON:-python} -m subunit.run discover -t ${OS_TOP_LEVEL:-./} \
+             ${OS_TEST_PATH:-./tempest/test_discover} $LISTOPT $IDOPTION
+test_id_option=--load-list $IDFILE
+test_list_option=--list
+group_regex=([^\.]*\.)*
+EOF
+
     tempest run --regex '(test_create_update.CreateStackTest|test_create_update.UpdateStackTest)'
     popd
 
