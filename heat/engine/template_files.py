@@ -16,6 +16,7 @@ import six
 import weakref
 
 from heat.common import context
+from heat.common import exception
 from heat.common.i18n import _
 from heat.db.sqlalchemy import api as db_api
 from heat.objects import raw_template_files
@@ -134,3 +135,21 @@ class TemplateFiles(collections.Mapping):
             new_files = files
         self.files_id = None  # not persisted yet
         self.files = ReadOnlyDict(new_files)
+
+
+def get_files_from_container(cnxt, files_container, files=None):
+
+    if files is None:
+        files = {}
+    else:
+        files = files.copy()
+
+    swift_plugin = cnxt.clients.client_plugin('swift')
+
+    if not swift_plugin:
+        raise exception.ClientNotAvailable(client_name='swift')
+
+    new_files = swift_plugin.get_files_from_container(files_container,
+                                                      list(files.keys()))
+    new_files.update(files)
+    return new_files

@@ -61,6 +61,7 @@ class EngineClient(object):
                and list_software_configs
         1.34 - Add migrate_convergence_1 call
         1.35 - Add with_condition to list_template_functions
+        1.36 - Add files_container to create/update/preview/validate
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -226,7 +227,7 @@ class EngineClient(object):
                          version='1.20')
 
     def preview_stack(self, ctxt, stack_name, template, params, files,
-                      args, environment_files=None):
+                      args, environment_files=None, files_container=None):
         """Simulates a new stack using the provided template.
 
         Note that at this stage the template has already been fetched from the
@@ -241,17 +242,19 @@ class EngineClient(object):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: name of swift container
         """
         return self.call(ctxt,
                          self.make_msg('preview_stack', stack_name=stack_name,
                                        template=template,
                                        params=params, files=files,
                                        environment_files=environment_files,
+                                       files_container=files_container,
                                        args=args),
-                         version='1.23')
+                         version='1.36')
 
     def create_stack(self, ctxt, stack_name, template, params, files,
-                     args, environment_files=None):
+                     args, environment_files=None, files_container=None):
         """Creates a new stack using the template provided.
 
         Note that at this stage the template has already been fetched from the
@@ -266,12 +269,14 @@ class EngineClient(object):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: name of swift container
         """
         return self._create_stack(ctxt, stack_name, template, params, files,
-                                  args, environment_files=environment_files)
+                                  args, environment_files=environment_files,
+                                  files_container=files_container)
 
     def _create_stack(self, ctxt, stack_name, template, params, files,
-                      args, environment_files=None,
+                      args, environment_files=None, files_container=None,
                       owner_id=None, nested_depth=0, user_creds_id=None,
                       stack_user_project_id=None, parent_resource_name=None,
                       template_id=None):
@@ -292,16 +297,18 @@ class EngineClient(object):
                                 template=template,
                                 params=params, files=files,
                                 environment_files=environment_files,
+                                files_container=files_container,
                                 args=args, owner_id=owner_id,
                                 nested_depth=nested_depth,
                                 user_creds_id=user_creds_id,
                                 stack_user_project_id=stack_user_project_id,
                                 parent_resource_name=parent_resource_name,
                                 template_id=template_id),
-            version='1.29')
+            version='1.36')
 
     def update_stack(self, ctxt, stack_identity, template, params,
-                     files, args, environment_files=None):
+                     files, args, environment_files=None,
+                     files_container=None):
         """Updates an existing stack based on the provided template and params.
 
         Note that at this stage the template has already been fetched from the
@@ -316,14 +323,16 @@ class EngineClient(object):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: name of swift container
         """
         return self._update_stack(ctxt, stack_identity, template, params,
                                   files, args,
-                                  environment_files=environment_files)
+                                  environment_files=environment_files,
+                                  files_container=files_container)
 
     def _update_stack(self, ctxt, stack_identity, template, params,
                       files, args, environment_files=None,
-                      template_id=None):
+                      files_container=None, template_id=None):
         """Internal interface for engine-to-engine communication via RPC.
 
         Allows an additional option which should not be exposed to users via
@@ -338,12 +347,14 @@ class EngineClient(object):
                                        params=params,
                                        files=files,
                                        environment_files=environment_files,
+                                       files_container=files_container,
                                        args=args,
                                        template_id=template_id),
-                         version='1.29')
+                         version='1.36')
 
     def preview_update_stack(self, ctxt, stack_identity, template, params,
-                             files, args, environment_files=None):
+                             files, args, environment_files=None,
+                             files_container=None):
         """Returns the resources that would be changed in an update.
 
         Based on the provided template and parameters.
@@ -359,6 +370,7 @@ class EngineClient(object):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: name of swift container
         """
         return self.call(ctxt,
                          self.make_msg('preview_update_stack',
@@ -367,13 +379,14 @@ class EngineClient(object):
                                        params=params,
                                        files=files,
                                        environment_files=environment_files,
+                                       files_container=files_container,
                                        args=args,
                                        ),
-                         version='1.23')
+                         version='1.36')
 
     def validate_template(self, ctxt, template, params=None, files=None,
-                          environment_files=None, show_nested=False,
-                          ignorable_errors=None):
+                          environment_files=None, files_container=None,
+                          show_nested=False, ignorable_errors=None):
         """Uses the stack parser to check the validity of a template.
 
         :param ctxt: RPC context.
@@ -382,6 +395,7 @@ class EngineClient(object):
         :param files: files referenced from the environment/template.
         :param environment_files: ordered list of environment file names
                                   included in the files dict
+        :param files_container: name of swift container
         :param show_nested: if True nested templates will be validated
         :param ignorable_errors: List of error_code to be ignored as part of
                                  validation
@@ -393,8 +407,9 @@ class EngineClient(object):
             files=files,
             show_nested=show_nested,
             environment_files=environment_files,
+            files_container=files_container,
             ignorable_errors=ignorable_errors),
-            version='1.24')
+            version='1.36')
 
     def authenticated_to_backend(self, ctxt):
         """Validate the credentials in the RPC context.

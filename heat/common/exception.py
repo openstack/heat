@@ -478,6 +478,10 @@ class RequestLimitExceeded(HeatException):
     msg_fmt = _('Request limit exceeded: %(message)s')
 
 
+class DownloadLimitExceeded(HeatException):
+    msg_fmt = _('Permissible download limit exceeded: %(message)s')
+
+
 class StackResourceLimitExceeded(HeatException):
     msg_fmt = _('Maximum resources per stack exceeded.')
 

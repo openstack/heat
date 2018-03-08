@@ -56,6 +56,7 @@ from heat.engine import stack_lock
 from heat.engine import stk_defn
 from heat.engine import support
 from heat.engine import template as templatem
+from heat.engine import template_files
 from heat.engine import update
 from heat.engine import worker
 from heat.objects import event as event_object
@@ -306,7 +307,7 @@ class EngineService(service.ServiceBase):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.35'
+    RPC_API_VERSION = '1.36'
 
     def __init__(self, host, topic):
         resources.initialise()
@@ -656,8 +657,9 @@ class EngineService(service.ServiceBase):
 
     def _parse_template_and_validate_stack(self, cnxt, stack_name, template,
                                            params, files, environment_files,
-                                           args, owner_id=None,
-                                           nested_depth=0, user_creds_id=None,
+                                           files_container, args,
+                                           owner_id=None, nested_depth=0,
+                                           user_creds_id=None,
                                            stack_user_project_id=None,
                                            convergence=False,
                                            parent_resource_name=None,
@@ -680,9 +682,12 @@ class EngineService(service.ServiceBase):
         if template_id is not None:
             tmpl = templatem.Template.load(cnxt, template_id)
         else:
+            if files_container:
+                files = template_files.get_files_from_container(
+                    cnxt, files_container, files)
             tmpl = templatem.Template(template, files=files)
-            env_util.merge_environments(environment_files, files, params,
-                                        tmpl.all_param_schemata(files))
+            env_util.merge_environments(environment_files, files,
+                                        params, tmpl.all_param_schemata(files))
             tmpl.env = environment.Environment(params)
         self._validate_new_stack(cnxt, stack_name, tmpl)
 
@@ -706,7 +711,7 @@ class EngineService(service.ServiceBase):
 
     @context.request_context
     def preview_stack(self, cnxt, stack_name, template, params, files,
-                      args, environment_files=None):
+                      args, environment_files=None, files_container=None):
         """Simulate a new stack using the provided template.
 
         Note that at this stage the template has already been fetched from the
@@ -721,6 +726,7 @@ class EngineService(service.ServiceBase):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: optional swift container name
         """
 
         LOG.info('previewing stack %s', stack_name)
@@ -732,6 +738,7 @@ class EngineService(service.ServiceBase):
                                                         params,
                                                         files,
                                                         environment_files,
+                                                        files_container,
                                                         args,
                                                         convergence=conv_eng)
 
@@ -740,7 +747,8 @@ class EngineService(service.ServiceBase):
     @context.request_context
     def create_stack(self, cnxt, stack_name, template, params, files,
                      args, environment_files=None,
-                     owner_id=None, nested_depth=0, user_creds_id=None,
+                     files_container=None, owner_id=None,
+                     nested_depth=0, user_creds_id=None,
                      stack_user_project_id=None, parent_resource_name=None,
                      template_id=None):
         """Create a new stack using the template provided.
@@ -757,6 +765,7 @@ class EngineService(service.ServiceBase):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: optional swift container name
         :param owner_id: parent stack ID for nested stacks, only expected when
                          called from another heat-engine (not a user option)
         :param nested_depth: the nested depth for nested stacks, only expected
@@ -788,9 +797,9 @@ class EngineService(service.ServiceBase):
 
         stack = self._parse_template_and_validate_stack(
             cnxt, stack_name, template, params, files, environment_files,
-            args, owner_id, nested_depth, user_creds_id,
-            stack_user_project_id, convergence, parent_resource_name,
-            template_id)
+            files_container, args, owner_id, nested_depth,
+            user_creds_id, stack_user_project_id, convergence,
+            parent_resource_name, template_id)
 
         stack_id = stack.store()
         if cfg.CONF.reauthentication_auth_method == 'trusts':
@@ -817,7 +826,8 @@ class EngineService(service.ServiceBase):
 
     def _prepare_stack_updates(self, cnxt, current_stack,
                                template, params, environment_files,
-                               files, args, template_id=None):
+                               files, files_container,
+                               args, template_id=None):
         """Return the current and updated stack for a given transition.
 
         Changes *will not* be persisted, this is a helper method for
@@ -866,10 +876,13 @@ class EngineService(service.ServiceBase):
                     raise exception.NotSupported(feature=msg)
 
             new_files = current_stack.t.files
+            if files_container:
+                files = template_files.get_files_from_container(
+                    cnxt, files_container, files)
             new_files.update(files or {})
             tmpl = templatem.Template(new_template, files=new_files)
-            env_util.merge_environments(environment_files, files, params,
-                                        tmpl.all_param_schemata(files))
+            env_util.merge_environments(environment_files, new_files,
+                                        params, tmpl.all_param_schemata(files))
             existing_env = current_stack.env.env_as_dict()
             existing_params = existing_env[env_fmt.PARAMETERS]
             clear_params = set(args.get(rpc_api.PARAM_CLEAR_PARAMETERS, []))
@@ -888,8 +901,12 @@ class EngineService(service.ServiceBase):
             if template_id is not None:
                 tmpl = templatem.Template.load(cnxt, template_id)
             else:
+                if files_container:
+                    files = template_files.get_files_from_container(
+                        cnxt, files_container, files)
                 tmpl = templatem.Template(template, files=files)
-                env_util.merge_environments(environment_files, files, params,
+                env_util.merge_environments(environment_files,
+                                            files, params,
                                             tmpl.all_param_schemata(files))
                 tmpl.env = environment.Environment(params)
 
@@ -932,7 +949,8 @@ class EngineService(service.ServiceBase):
 
     @context.request_context
     def update_stack(self, cnxt, stack_identity, template, params,
-                     files, args, environment_files=None, template_id=None):
+                     files, args, environment_files=None,
+                     files_container=None, template_id=None):
         """Update an existing stack based on the provided template and params.
 
         Note that at this stage the template has already been fetched from the
@@ -947,6 +965,7 @@ class EngineService(service.ServiceBase):
         :param environment_files: optional ordered list of environment file
                names included in the files dict
         :type  environment_files: list or None
+        :param files_container: optional swift container name
         :param template_id: the ID of a pre-stored template in the DB
         """
         # Get the database representation of the existing stack
@@ -970,7 +989,8 @@ class EngineService(service.ServiceBase):
 
         tmpl, current_stack, updated_stack = self._prepare_stack_updates(
             cnxt, current_stack, template, params,
-            environment_files, files, args, template_id)
+            environment_files, files, files_container,
+            args, template_id)
 
         if current_stack.convergence:
             current_stack.thread_group_mgr = self.thread_group_mgr
@@ -990,7 +1010,8 @@ class EngineService(service.ServiceBase):
 
     @context.request_context
     def preview_update_stack(self, cnxt, stack_identity, template, params,
-                             files, args, environment_files=None):
+                             files, args, environment_files=None,
+                             files_container=None):
         """Shows the resources that would be updated.
 
         The preview_update_stack method shows the resources that would be
@@ -1013,7 +1034,7 @@ class EngineService(service.ServiceBase):
 
         tmpl, current_stack, updated_stack = self._prepare_stack_updates(
             cnxt, current_stack, template, params,
-            environment_files, files, args)
+            environment_files, files, files_container, args)
 
         update_task = update.StackUpdate(current_stack, updated_stack, None)
 
@@ -1172,8 +1193,8 @@ class EngineService(service.ServiceBase):
 
     @context.request_context
     def validate_template(self, cnxt, template, params=None, files=None,
-                          environment_files=None, show_nested=False,
-                          ignorable_errors=None):
+                          environment_files=None, files_container=None,
+                          show_nested=False, ignorable_errors=None):
         """Check the validity of a template.
 
         Checks, so far as we can, that a template is valid, and returns
@@ -1187,6 +1208,7 @@ class EngineService(service.ServiceBase):
         :param environment_files: optional ordered list of environment file
                                   names included in the files dict
         :type  environment_files: list or None
+        :param files_container: optional swift container name
         :param show_nested: if True, any nested templates will be checked
         :param ignorable_errors: List of error_code to be ignored as part of
                                  validation
@@ -1203,10 +1225,12 @@ class EngineService(service.ServiceBase):
                 msg = (_("Invalid codes in ignore_errors : %s") %
                        list(invalid_codes))
                 return webob.exc.HTTPBadRequest(explanation=msg)
-
+        if files_container:
+            files = template_files.get_files_from_container(
+                cnxt, files_container, files)
         tmpl = templatem.Template(template, files=files)
-        env_util.merge_environments(environment_files, files, params,
-                                    tmpl.all_param_schemata(files))
+        env_util.merge_environments(environment_files, files,
+                                    params, tmpl.all_param_schemata(files))
         tmpl.env = environment.Environment(params)
         try:
             self._validate_template(cnxt, tmpl)

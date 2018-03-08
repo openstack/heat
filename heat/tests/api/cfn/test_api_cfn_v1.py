@@ -546,6 +546,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'params': engine_parms,
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
@@ -553,7 +554,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_rollback(self):
@@ -592,6 +593,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'params': engine_parms,
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
@@ -599,7 +601,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_onfailure_true(self):
@@ -638,6 +640,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'params': engine_parms,
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
@@ -645,7 +648,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_onfailure_false_delete(self):
@@ -674,6 +677,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'params': engine_parms,
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
@@ -681,7 +685,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
         expected = {
@@ -730,6 +734,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'params': engine_parms,
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': engine_args,
               'owner_id': None,
               'nested_depth': 0,
@@ -737,7 +742,7 @@ class CfnStackControllerTest(common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_onfailure_err(self):
@@ -913,9 +918,10 @@ class CfnStackControllerTest(common.HeatTestCase):
               'params': engine_parms,
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': engine_args,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )], self.m_call.call_args_list)
 
     def test_cancel_update(self):
@@ -1091,9 +1097,10 @@ class CfnStackControllerTest(common.HeatTestCase):
             dummy_req.context,
             ('validate_template', {'template': json_template, 'params': None,
                                    'files': None, 'environment_files': None,
+                                   'files_container': None,
                                    'show_nested': False,
                                    'ignorable_errors': None}),
-            version='1.24'
+            version='1.36'
         )
 
     def test_delete(self):

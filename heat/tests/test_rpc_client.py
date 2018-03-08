@@ -165,6 +165,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               params={u'InstanceType': u'm1.xlarge'},
                               files={u'a_file': u'the contents'},
                               environment_files=['foo.yaml'],
+                              files_container=None,
                               args={'timeout_mins': u'30'})
 
     def test_create_stack(self):
@@ -173,6 +174,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                       params={u'InstanceType': u'm1.xlarge'},
                       files={u'a_file': u'the contents'},
                       environment_files=['foo.yaml'],
+                      files_container=None,
                       args={'timeout_mins': u'30'})
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['owner_id'] = None
@@ -191,6 +193,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                       params={u'InstanceType': u'm1.xlarge'},
                       files={},
                       environment_files=['foo.yaml'],
+                      files_container=None,
                       args=mock.ANY)
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['template_id'] = None
@@ -206,6 +209,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               params={u'InstanceType': u'm1.xlarge'},
                               files={},
                               environment_files=['foo.yaml'],
+                              files_container=None,
                               args=mock.ANY)
 
     def test_get_template(self):
@@ -226,6 +230,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
                               params={u'Egg': u'spam'},
                               files=None,
                               environment_files=['foo.yaml'],
+                              files_container=None,
                               ignorable_errors=None,
                               show_nested=False,
                               version='1.24')
