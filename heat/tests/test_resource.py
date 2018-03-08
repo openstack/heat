@@ -4366,7 +4366,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         ev.assert_called_with(res.UPDATE, res.FAILED,
                               'update is restricted for resource.')
 
-    def test_replace_rstricted(self):
+    def test_replace_restricted(self):
         self.env_snippet = {u'resource_registry': {
             u'resources': {
                 'bar': {'restricted_actions': 'replace'}
@@ -4378,6 +4378,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         res = self.create_resource()
         ev = self.patchobject(res, '_add_event')
         props = self.tmpl['resources']['bar']['properties']
+        props['value'] = '4567'
         props['update_replace'] = True
         snippet = rsrc_defn.ResourceDefinition('bar',
                                                'TestResourceType',
@@ -4392,7 +4393,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         ev.assert_called_with(res.UPDATE, res.FAILED,
                               'replace is restricted for resource.')
 
-    def test_update_with_replace_rstricted(self):
+    def test_update_with_replace_restricted(self):
         self.env_snippet = {u'resource_registry': {
             u'resources': {
                 'bar': {'restricted_actions': 'replace'}
@@ -4413,7 +4414,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         ev.assert_called_with(res.UPDATE, res.COMPLETE,
                               'state changed')
 
-    def test_replace_with_update_rstricted(self):
+    def test_replace_with_update_restricted(self):
         self.env_snippet = {u'resource_registry': {
             u'resources': {
                 'bar': {'restricted_actions': 'update'}
@@ -4426,6 +4427,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         ev = self.patchobject(res, '_add_event')
         prep_replace = self.patchobject(res, 'prepare_for_replace')
         props = self.tmpl['resources']['bar']['properties']
+        props['value'] = '4567'
         props['update_replace'] = True
         snippet = rsrc_defn.ResourceDefinition('bar',
                                                'TestResourceType',

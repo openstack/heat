@@ -178,8 +178,8 @@ class TestResource(resource.Resource):
 
     def needs_replace_with_prop_diff(self, changed_properties_set,
                                      after_props, before_props):
-        if self.UPDATE_REPLACE in changed_properties_set:
-            return bool(after_props.get(self.UPDATE_REPLACE))
+        if self.VALUE in changed_properties_set:
+            return after_props[self.UPDATE_REPLACE]
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         self.properties = json_snippet.properties(self.properties_schema,
