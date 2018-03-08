@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -191,6 +192,22 @@ class VPNService(neutron.NeutronResource):
         vpnservice = self.client().create_vpnservice({'vpnservice': props})[
             'vpnservice']
         self.resource_id_set(vpnservice['id'])
+
+    def check_create_complete(self, data):
+        attributes = self._show_resource()
+        status = attributes['status']
+        if status == 'PENDING_CREATE':
+            return False
+        elif status == 'ACTIVE':
+            return True
+        elif status == 'ERROR':
+            raise exception.ResourceInError(
+                resource_status=status,
+                status_reason=_('Error in VPNService'))
+        else:
+            raise exception.ResourceUnknownStatus(
+                resource_status=status,
+                result=_('VPNService creation failed'))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
@@ -438,6 +455,23 @@ class IPsecSiteConnection(neutron.NeutronResource):
         ipsec_site_connection = self.client().create_ipsec_site_connection(
             {'ipsec_site_connection': props})['ipsec_site_connection']
         self.resource_id_set(ipsec_site_connection['id'])
+
+    def check_create_complete(self, data):
+        attributes = self._show_resource()
+        status = attributes['status']
+
+        if status == 'PENDING_CREATE':
+            return False
+        elif status == 'ACTIVE':
+            return True
+        elif status == 'ERROR':
+            raise exception.ResourceInError(
+                resource_status=status,
+                status_reason=_('Error in IPsecSiteConnection'))
+        else:
+            raise exception.ResourceUnknownStatus(
+                resource_status=status,
+                result=_('IPsecSiteConnection creation failed'))
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
