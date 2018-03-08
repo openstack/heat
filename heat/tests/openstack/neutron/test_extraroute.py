@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import template_format
@@ -54,8 +56,10 @@ neutron_template = '''
 class NeutronExtraRouteTest(common.HeatTestCase):
     def setUp(self):
         super(NeutronExtraRouteTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'show_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_router')
+        self.mockclient = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client',
+                         return_value=self.mockclient)
+
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
@@ -71,53 +75,25 @@ class NeutronExtraRouteTest(common.HeatTestCase):
         return rsrc
 
     def test_extraroute(self):
+        route1 = {"destination": "192.168.0.0/24",
+                  "nexthop": "1.1.1.1"}
+        route2 = {"destination": "192.168.255.0/24",
+                  "nexthop": "1.1.1.1"}
+
         self.stub_RouterConstraint_validate()
-        # add first route
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({'router': {'routes': []}})
-        neutronclient.Client.update_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {"router": {
-                "routes": [
-                    {"destination": "192.168.0.0/24", "nexthop": "1.1.1.1"},
-                ]
-            }}).AndReturn(None)
-        # add second route
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({'router': {'routes': [{"destination": "192.168.0.0/24",
-                                            "nexthop": "1.1.1.1"}]}})
-        neutronclient.Client.update_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {"router": {
-                "routes": [
-                    {"destination": "192.168.0.0/24", "nexthop": "1.1.1.1"},
-                    {"destination": "192.168.255.0/24", "nexthop": "1.1.1.1"}
-                ]
-            }}).AndReturn(None)
-        # first delete
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({'router':
-                     {'routes': [{"destination": "192.168.0.0/24",
-                                  "nexthop": "1.1.1.1"},
-                                 {"destination": "192.168.255.0/24",
-                                  "nexthop": "1.1.1.1"}]}})
-        neutronclient.Client.update_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8',
-            {"router": {
-                "routes": [
-                    {"destination": "192.168.255.0/24", "nexthop": "1.1.1.1"}
-                ]
-            }}).AndReturn(None)
-        # second delete
-        neutronclient.Client.show_router(
-            '3e46229d-8fce-4733-819a-b5fe630550f8'
-        ).AndReturn({'router':
-                     {'routes': [{"destination": "192.168.255.0/24",
-                                  "nexthop": "1.1.1.1"}]}})
-        self.m.ReplayAll()
+
+        self.mockclient.show_router.side_effect = [
+            # add first route
+            {'router': {'routes': []}},
+            # add second route
+            {'router': {'routes': [route1.copy()]}},
+            # first delete
+            {'router': {'routes': [route1.copy(), route2.copy()]}},
+            # second delete
+            {'router': {'routes': [route2.copy()]}},
+        ]
+        self.mockclient.update_router.return_value = None
+
         t = template_format.parse(neutron_template)
         stack = utils.parse_stack(t)
 
@@ -136,4 +112,18 @@ class NeutronExtraRouteTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc1.delete)()
         rsrc1.state_set(rsrc1.CREATE, rsrc1.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc1.delete)()
-        self.m.VerifyAll()
+
+        self.mockclient.show_router.assert_called_with(
+            '3e46229d-8fce-4733-819a-b5fe630550f8')
+        self.mockclient.update_router.assert_has_calls([
+            # add first route
+            mock.call('3e46229d-8fce-4733-819a-b5fe630550f8',
+                      {'router': {'routes': [route1.copy()]}}),
+            # add second route
+            mock.call('3e46229d-8fce-4733-819a-b5fe630550f8',
+                      {'router': {'routes': [route1.copy(),
+                                             route2.copy()]}}),
+            # first delete
+            mock.call('3e46229d-8fce-4733-819a-b5fe630550f8',
+                      {'router': {'routes': [route2.copy()]}}),
+        ])
