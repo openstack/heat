@@ -172,19 +172,18 @@ class EIPTest(common.HeatTestCase):
         # force Nova, will test Neutron below
         super(EIPTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
-        self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'list_floatingips')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'create_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'show_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'update_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'delete_floatingip')
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
+        self.mock_list_net = self.patchobject(neutronclient.Client,
+                                              'list_networks')
+        self.mock_create_fip = self.patchobject(neutronclient.Client,
+                                                'create_floatingip')
+        self.mock_show_fip = self.patchobject(neutronclient.Client,
+                                              'show_floatingip')
+        self.patchobject(neutronclient.Client, 'update_floatingip')
+        self.patchobject(neutronclient.Client, 'delete_floatingip')
+        self.mock_list_fips = self.patchobject(neutronclient.Client,
+                                               'list_floatingips')
 
     def mock_interface(self, port, ip):
         class MockIface(object):
@@ -195,37 +194,30 @@ class EIPTest(common.HeatTestCase):
         return MockIface(port, ip)
 
     def mock_list_floatingips(self):
-        neutronclient.Client.list_floatingips(
-            floating_ip_address='11.0.0.1').AndReturn({
-                'floatingips': [{'id':
-                                 "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}]})
+        self.mock_list_fips.return_value = {
+            'floatingips': [{'id':
+                             "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}]}
 
     def mock_create_floatingip(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        neutronclient.Client.list_networks(
-            **{'router:external': True}).AndReturn({'networks': [{
-                'status': 'ACTIVE',
-                'subnets': [],
-                'name': 'nova',
-                'router:external': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'admin_state_up': True,
-                'shared': True,
-                'id': 'eeee'
-            }]})
+        self.mock_list_net.return_value = {'networks': [{
+            'status': 'ACTIVE',
+            'subnets': [],
+            'name': 'nova',
+            'router:external': True,
+            'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+            'admin_state_up': True,
+            'shared': True,
+            'id': 'eeee'
+        }]}
 
-        neutronclient.Client.create_floatingip({
-            'floatingip': {'floating_network_id': u'eeee'}
-        }).AndReturn({'floatingip': {
+        self.mock_create_fip.return_value = {'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
             "floating_ip_address": "11.0.0.1"
-        }})
+        }}
 
-    def mock_show_floatingip(self, refid):
-        neutronclient.Client.show_floatingip(
-            refid,
-        ).AndReturn({'floatingip': {
+    def mock_show_floatingip(self):
+        self.mock_show_fip.return_value = {'floatingip': {
             'router_id': None,
             'tenant_id': 'e936e6cd3e0b48dcb9ff853a8f253257',
             'floating_network_id': 'eeee',
@@ -233,27 +225,7 @@ class EIPTest(common.HeatTestCase):
             'floating_ip_address': '11.0.0.1',
             'port_id': None,
             'id': 'ffff'
-        }})
-
-    def mock_update_floatingip(self,
-                               fip='fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                               delete_assc=False):
-        if delete_assc:
-            request_body = {
-                'floatingip': {
-                    'port_id': None,
-                    'fixed_ip_address': None}}
-        else:
-            request_body = {
-                'floatingip': {
-                    'port_id': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                    'fixed_ip_address': '1.2.3.4'}}
-        neutronclient.Client.update_floatingip(
-            fip, request_body).AndReturn(None)
-
-    def mock_delete_floatingip(self):
-        id = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        neutronclient.Client.delete_floatingip(id).AndReturn(None)
+        }}
 
     def create_eip(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -284,10 +256,6 @@ class EIPTest(common.HeatTestCase):
         self.patchobject(self.fc.servers, 'get',
                          return_value=mock_server)
         self.mock_create_floatingip()
-        self.mock_update_floatingip()
-        self.mock_update_floatingip(delete_assc=True)
-        self.mock_delete_floatingip()
-        self.m.ReplayAll()
         iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                     '1.2.3.4')
         self.patchobject(mock_server, 'interface_list', return_value=[iface])
@@ -311,22 +279,14 @@ class EIPTest(common.HeatTestCase):
         finally:
             scheduler.TaskRunner(rsrc.destroy)()
 
-        self.m.VerifyAll()
-
     def test_eip_update(self):
-        mock_server = self.fc.servers.list()[0]
+        server_old = self.fc.servers.list()[0]
         self.patchobject(self.fc.servers, 'get',
-                         return_value=mock_server)
-        self.mock_create_floatingip()
-        self.mock_update_floatingip()
-        self.mock_update_floatingip()
-        self.mock_update_floatingip(delete_assc=True)
-
+                         return_value=server_old)
         iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                     '1.2.3.4')
-        self.patchobject(mock_server, 'interface_list', return_value=[iface])
-
-        self.m.ReplayAll()
+        self.patchobject(server_old, 'interface_list', return_value=[iface])
+        self.mock_create_floatingip()
         t = template_format.parse(eip_template)
         stack = utils.parse_stack(t)
 
@@ -336,10 +296,7 @@ class EIPTest(common.HeatTestCase):
         server_update = self.fc.servers.list()[1]
         self.patchobject(self.fc.servers, 'get',
                          return_value=server_update)
-        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                    '1.2.3.4')
         self.patchobject(server_update, 'interface_list', return_value=[iface])
-
         props = copy.deepcopy(rsrc.properties.data)
         update_server_id = '5678'
         props['InstanceId'] = update_server_id
@@ -355,25 +312,17 @@ class EIPTest(common.HeatTestCase):
                                                       props)
         scheduler.TaskRunner(rsrc.update, update_snippet)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
 
     def test_association_eip(self):
         mock_server = self.fc.servers.list()[0]
         self.patchobject(self.fc.servers, 'get',
                          return_value=mock_server)
-        self.mock_create_floatingip()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_update_floatingip()
-        self.mock_list_floatingips()
-        self.mock_list_floatingips()
-        self.mock_update_floatingip(delete_assc=True)
-        self.mock_delete_floatingip()
         iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                     '1.2.3.4')
         self.patchobject(mock_server, 'interface_list', return_value=[iface])
-
-        self.m.ReplayAll()
-
+        self.mock_create_floatingip()
+        self.mock_show_floatingip()
+        self.mock_list_floatingips()
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
 
@@ -396,24 +345,19 @@ class EIPTest(common.HeatTestCase):
         self.assertEqual((association.DELETE, association.COMPLETE),
                          association.state)
 
-        self.m.VerifyAll()
-
     def test_eip_with_exception(self):
-        neutronclient.Client.list_networks(
-            **{'router:external': True}).AndReturn({'networks': [{
-                'status': 'ACTIVE',
-                'subnets': [],
-                'name': 'nova',
-                'router:external': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'admin_state_up': True,
-                'shared': True,
-                'id': 'eeee'
-            }]})
+        self.mock_list_net.return_value = {'networks': [{
+            'status': 'ACTIVE',
+            'subnets': [],
+            'name': 'nova',
+            'router:external': True,
+            'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+            'admin_state_up': True,
+            'shared': True,
+            'id': 'eeee'
+        }]}
         self.patchobject(neutronclient.Client, 'create_floatingip',
                          side_effect=neutronclient.exceptions.NotFound)
-        self.m.ReplayAll()
-
         t = template_format.parse(eip_template)
         stack = utils.parse_stack(t)
         resource_name = 'IPAddress'
@@ -424,7 +368,6 @@ class EIPTest(common.HeatTestCase):
 
         self.assertRaises(neutronclient.exceptions.NotFound,
                           rsrc.handle_create)
-        self.m.VerifyAll()
 
     @mock.patch.object(eip.ElasticIp, '_ipaddress')
     def test_FnGetRefId_resource_name(self, mock_ipaddr):
@@ -462,29 +405,28 @@ class AllocTest(common.HeatTestCase):
 
     def setUp(self):
         super(AllocTest, self).setUp()
-
         self.fc = fakes_nova.FakeClient()
-        self.m.StubOutWithMock(self.fc.servers, 'get')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(parser.Stack, 'resource_by_refid')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'create_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'show_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'update_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'list_floatingips')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'delete_floatingip')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'add_gateway_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_ports')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_routers')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'remove_gateway_router')
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
+        self.mock_list_net = self.patchobject(neutronclient.Client,
+                                              'list_networks')
+        self.mock_create_fip = self.patchobject(neutronclient.Client,
+                                                'create_floatingip')
+        self.mock_show_fip = self.patchobject(neutronclient.Client,
+                                              'show_floatingip')
+        self.patchobject(neutronclient.Client, 'update_floatingip')
+        self.patchobject(neutronclient.Client, 'delete_floatingip')
+        self.mock_list_fips = self.patchobject(neutronclient.Client,
+                                               'list_floatingips')
+        self.patchobject(neutronclient.Client, 'add_gateway_router')
+        self.mock_list_ports = self.patchobject(neutronclient.Client,
+                                                'list_ports')
+        self.mock_show_net = self.patchobject(neutronclient.Client,
+                                              'show_network')
+        self.mock_list_routers = self.patchobject(neutronclient.Client,
+                                                  'list_routers')
+        self.patchobject(neutronclient.Client,
+                         'remove_gateway_router')
 
     def mock_interface(self, port, ip):
         class MockIface(object):
@@ -516,9 +458,7 @@ class AllocTest(common.HeatTestCase):
 
     def mock_show_network(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')
-        neutronclient.Client.show_network(
-            '22c26451-cf27-4d48-9031-51f5e397b84e'
-        ).AndReturn({"network": {
+        self.mock_show_net.return_value = {"network": {
             "status": "BUILD",
             "subnets": [],
             "name": vpc_name,
@@ -526,20 +466,7 @@ class AllocTest(common.HeatTestCase):
             "shared": False,
             "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
             "id": "22c26451-cf27-4d48-9031-51f5e397b84e"
-        }})
-
-    def _mock_server(self, mock_interface=False, mock_server=None):
-        self.patchobject(nova.NovaClientPlugin, '_create',
-                         return_value=self.fc)
-        if not mock_server:
-            mock_server = self.fc.servers.list()[0]
-        self.patchobject(self.fc.servers, 'get',
-                         return_value=mock_server)
-        if mock_interface:
-            iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                                        '1.2.3.4')
-            self.patchobject(mock_server,
-                             'interface_list', return_value=[iface])
+        }}
 
     def create_eip(self, t, stack, resource_name):
         rsrc = eip.ElasticIp(resource_name,
@@ -564,58 +491,31 @@ class AllocTest(common.HeatTestCase):
                                       rsrc.node_data())
         return rsrc
 
-    def mock_create_gateway_attachment(self):
-        neutronclient.Client.add_gateway_router(
-            'bbbb', {'network_id': 'eeee'}).AndReturn(None)
-
     def mock_create_floatingip(self):
-        neutronclient.Client.list_networks(
-            **{'router:external': True}).AndReturn({'networks': [{
-                'status': 'ACTIVE',
-                'subnets': [],
-                'name': 'nova',
-                'router:external': True,
-                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                'admin_state_up': True,
-                'shared': True,
-                'id': 'eeee'
-            }]})
+        self.mock_list_net.return_value = {'networks': [{
+            'status': 'ACTIVE',
+            'subnets': [],
+            'name': 'nova',
+            'router:external': True,
+            'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+            'admin_state_up': True,
+            'shared': True,
+            'id': 'eeee'
+        }]}
 
-        neutronclient.Client.create_floatingip({
-            'floatingip': {'floating_network_id': u'eeee'}
-        }).AndReturn({'floatingip': {
+        self.mock_create_fip.return_value = {'floatingip': {
             "status": "ACTIVE",
             "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
             "floating_ip_address": "11.0.0.1"
-        }})
+        }}
 
-    def mock_update_floatingip(self,
-                               fip='fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                               port_id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                               ex=None,
-                               with_address=True,
-                               delete_assc=False):
-        if delete_assc:
-            request_body = {
-                'floatingip': {'port_id': None}}
-            if with_address:
-                request_body['floatingip']['fixed_ip_address'] = None
-        else:
-            request_body = {
-                'floatingip': {'port_id': port_id}}
-            if with_address:
-                request_body['floatingip']['fixed_ip_address'] = '1.2.3.4'
-        if ex:
-            neutronclient.Client.update_floatingip(
-                fip, request_body).AndRaise(ex)
-        else:
-            neutronclient.Client.update_floatingip(
-                fip, request_body).AndReturn(None)
+    def mock_list_floatingips(self):
+        self.mock_list_fips.return_value = {
+            'floatingips': [{'id':
+                             "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}]}
 
-    def mock_show_floatingip(self, refid):
-        neutronclient.Client.show_floatingip(
-            refid,
-        ).AndReturn({'floatingip': {
+    def mock_show_floatingip(self):
+        self.mock_show_fip.return_value = {'floatingip': {
             'router_id': None,
             'tenant_id': 'e936e6cd3e0b48dcb9ff853a8f253257',
             'floating_network_id': 'eeee',
@@ -623,61 +523,49 @@ class AllocTest(common.HeatTestCase):
             'floating_ip_address': '11.0.0.1',
             'port_id': None,
             'id': 'ffff'
-        }})
+        }}
 
-    def mock_list_floatingips(self, ip_addr='11.0.0.1'):
-        neutronclient.Client.list_floatingips(
-            floating_ip_address=ip_addr).AndReturn({
-                'floatingips': [{'id':
-                                 "fc68ea2c-b60b-4b4f-bd82-94ec81110766"}]})
+    def mock_list_ports(self):
+        self.mock_list_ports.return_value = {"ports": [{
+            "status": "DOWN",
+            "binding:host_id": "null",
+            "name": "wp-NIC-yu7fc7l4g5p6",
+            "admin_state_up": True,
+            "network_id": "22c26451-cf27-4d48-9031-51f5e397b84e",
+            "tenant_id": "ecf538ec1729478fa1f97f1bf4fdcf7b",
+            "binding:vif_type": "ovs",
+            "device_owner": "",
+            "binding:capabilities": {"port_filter": True},
+            "mac_address": "fa:16:3e:62:2d:4f",
+            "fixed_ips": [{"subnet_id": "mysubnetid-70ec",
+                           "ip_address": "192.168.9.2"}],
+            "id": "a000228d-b40b-4124-8394-a4082ae1b76b",
+            "security_groups": ["5c6f529d-3186-4c36-84c0-af28b8daac7b"],
+            "device_id": ""
+        }]}
 
-    def mock_delete_floatingip(self):
-        id = 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        neutronclient.Client.delete_floatingip(id).AndReturn(None)
-
-    def mock_list_ports(self, id='the_nic'):
-        neutronclient.Client.list_ports(id=id).AndReturn(
-            {"ports": [{
-                "status": "DOWN",
-                "binding:host_id": "null",
-                "name": "wp-NIC-yu7fc7l4g5p6",
-                "admin_state_up": True,
-                "network_id": "22c26451-cf27-4d48-9031-51f5e397b84e",
-                "tenant_id": "ecf538ec1729478fa1f97f1bf4fdcf7b",
-                "binding:vif_type": "ovs",
-                "device_owner": "",
-                "binding:capabilities": {"port_filter": True},
-                "mac_address": "fa:16:3e:62:2d:4f",
-                "fixed_ips": [{"subnet_id": "mysubnetid-70ec",
-                               "ip_address": "192.168.9.2"}],
-                "id": "a000228d-b40b-4124-8394-a4082ae1b76b",
-                "security_groups": ["5c6f529d-3186-4c36-84c0-af28b8daac7b"],
-                "device_id": ""
-            }]})
-
-    def mock_list_instance_ports(self, refid):
-        neutronclient.Client.list_ports(device_id=refid).AndReturn(
-            {"ports": [{
-                "status": "DOWN",
-                "binding:host_id": "null",
-                "name": "wp-NIC-yu7fc7l4g5p6",
-                "admin_state_up": True,
-                "network_id": "22c26451-cf27-4d48-9031-51f5e397b84e",
-                "tenant_id": "ecf538ec1729478fa1f97f1bf4fdcf7b",
-                "binding:vif_type": "ovs",
-                "device_owner": "",
-                "binding:capabilities": {"port_filter": True},
-                "mac_address": "fa:16:3e:62:2d:4f",
-                "fixed_ips": [{"subnet_id": "mysubnetid-70ec",
-                               "ip_address": "192.168.9.2"}],
-                "id": "a000228d-b40b-4124-8394-a4082ae1b76c",
-                "security_groups": ["5c6f529d-3186-4c36-84c0-af28b8daac7b"],
-                "device_id": refid
-            }]})
+    def mock_list_instance_ports(self):
+        self.mock_list_ports.return_value = {"ports": [{
+            "status": "DOWN",
+            "binding:host_id": "null",
+            "name": "wp-NIC-yu7fc7l4g5p6",
+            "admin_state_up": True,
+            "network_id": "22c26451-cf27-4d48-9031-51f5e397b84e",
+            "tenant_id": "ecf538ec1729478fa1f97f1bf4fdcf7b",
+            "binding:vif_type": "ovs",
+            "device_owner": "",
+            "binding:capabilities": {"port_filter": True},
+            "mac_address": "fa:16:3e:62:2d:4f",
+            "fixed_ips": [{"subnet_id": "mysubnetid-70ec",
+                           "ip_address": "192.168.9.2"}],
+            "id": "a000228d-b40b-4124-8394-a4082ae1b76c",
+            "security_groups": ["5c6f529d-3186-4c36-84c0-af28b8daac7b"],
+            "device_id": ""
+        }]}
 
     def mock_router_for_vpc(self):
         vpc_name = utils.PhysName('test_stack', 'the_vpc')
-        neutronclient.Client.list_routers(name=vpc_name).AndReturn({
+        self.mock_list_routers.return_value = {
             "routers": [{
                 "status": "ACTIVE",
                 "external_gateway_info": {
@@ -689,31 +577,19 @@ class AllocTest(common.HeatTestCase):
                 "routes": [],
                 "id": "bbbb"
             }]
-        })
+        }
 
     def mock_no_router_for_vpc(self):
-        vpc_name = utils.PhysName('test_stack', 'the_vpc')
-        neutronclient.Client.list_routers(name=vpc_name).AndReturn({
+        self.mock_list_routers.return_value = {
             "routers": []
-        })
+        }
 
     def test_association_allocationid(self):
-        self.mock_create_gateway_attachment()
-        self.mock_show_network()
-        self.mock_router_for_vpc()
-
         self.mock_create_floatingip()
+        self.mock_router_for_vpc()
+        self.mock_show_network()
         self.mock_list_ports()
-
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_update_floatingip(port_id='the_nic',
-                                    with_address=False)
-
-        self.mock_update_floatingip(delete_assc=True, with_address=False)
-        self.mock_delete_floatingip()
-
-        self.m.ReplayAll()
-
+        self.mock_show_floatingip()
         t = template_format.parse(eip_template_ipassoc2)
         stack = utils.parse_stack(t)
 
@@ -722,25 +598,19 @@ class AllocTest(common.HeatTestCase):
 
         scheduler.TaskRunner(association.delete)()
         scheduler.TaskRunner(rsrc.delete)()
-
-        self.m.VerifyAll()
+        self.assertEqual((association.DELETE, association.COMPLETE),
+                         association.state)
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
     def test_association_allocationid_with_instance(self):
-        self._mock_server()
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
         self.mock_show_network()
 
         self.mock_create_floatingip()
-        self.mock_list_instance_ports('1fafbe59-2332-4f5f-bfa4-517b4d6c1b65')
+        self.mock_list_instance_ports()
 
         self.mock_no_router_for_vpc()
-        self.mock_update_floatingip(
-            port_id='a000228d-b40b-4124-8394-a4082ae1b76c',
-            with_address=False)
-
-        self.mock_update_floatingip(delete_assc=True, with_address=False)
-        self.mock_delete_floatingip()
-
-        self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc3)
         stack = utils.parse_stack(t)
@@ -750,13 +620,13 @@ class AllocTest(common.HeatTestCase):
 
         scheduler.TaskRunner(association.delete)()
         scheduler.TaskRunner(rsrc.delete)()
-
-        self.m.VerifyAll()
+        self.assertEqual((association.DELETE, association.COMPLETE),
+                         association.state)
+        self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
     def test_validate_properties_EIP_and_AllocationId(self):
-        self._mock_server()
-        self.m.ReplayAll()
-
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
         template, stack = self._setup_test_stack_validate(
             stack_name='validate_EIP_AllocationId')
 
@@ -771,11 +641,9 @@ class AllocTest(common.HeatTestCase):
         properties.pop('EIP')
         self._validate_properties(stack, template, expected)
 
-        self.m.VerifyAll()
-
     def test_validate_EIP_and_InstanceId(self):
-        self._mock_server()
-        self.m.ReplayAll()
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
         template, stack = self._setup_test_stack_validate(
             stack_name='validate_EIP_InstanceId')
         properties = template.t['Resources']['IPAssoc']['Properties']
@@ -784,11 +652,9 @@ class AllocTest(common.HeatTestCase):
         expected = ("Must specify 'InstanceId' if you specify 'EIP'.")
         self._validate_properties(stack, template, expected)
 
-        self.m.VerifyAll()
-
     def test_validate_without_NetworkInterfaceId_and_InstanceId(self):
-        self._mock_server()
-        self.m.ReplayAll()
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
         template, stack = self._setup_test_stack_validate(
             stack_name='validate_EIP_InstanceId')
 
@@ -807,15 +673,14 @@ class AllocTest(common.HeatTestCase):
         self.assertIn('At least one of the following properties '
                       'must be specified: InstanceId, NetworkInterfaceId',
                       six.text_type(exc))
-        self.m.VerifyAll()
 
     def test_delete_association_successful_if_create_failed(self):
-        self._mock_server(mock_interface=True)
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
         self.mock_create_floatingip()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_list_floatingips()
-        self.mock_update_floatingip(ex=q_exceptions.NotFound('Not Found'))
-        self.m.ReplayAll()
+        self.mock_show_floatingip()
+        self.patchobject(server, 'interface_list',
+                         side_effect=[q_exceptions.NotFound('Not FOund')])
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
 
@@ -832,24 +697,23 @@ class AllocTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
 
-        self.m.VerifyAll()
-
     def test_update_association_with_InstanceId(self):
-        self._mock_server(mock_interface=True)
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(server, 'interface_list', return_value=[iface])
         self.mock_create_floatingip()
         self.mock_list_floatingips()
-        self.mock_update_floatingip()
-        self.mock_list_floatingips()
-        self.mock_update_floatingip()
-        self.m.ReplayAll()
-
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
         self.create_eip(t, stack, 'IPAddress')
         ass = self.create_association(t, stack, 'IPAssoc')
         self.assertEqual('11.0.0.1', ass.properties['EIP'])
+
         server_update = self.fc.servers.list()[1]
-        self._mock_server(mock_interface=True, mock_server=server_update)
+        self.patchobject(self.fc.servers, 'get', return_value=server_update)
+        self.patchobject(server_update, 'interface_list', return_value=[iface])
         # update with the new InstanceId
         props = copy.deepcopy(ass.properties.data)
         update_server_id = '5678'
@@ -860,19 +724,14 @@ class AllocTest(common.HeatTestCase):
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
 
-        self.m.VerifyAll()
-
     def test_update_association_with_EIP(self):
-        self._mock_server(mock_interface=True)
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(server, 'interface_list', return_value=[iface])
         self.mock_create_floatingip()
         self.mock_list_floatingips()
-        self.mock_update_floatingip()
-        self.mock_list_floatingips()
-        self.mock_update_floatingip(delete_assc=True)
-        self.mock_list_floatingips(ip_addr='11.0.0.2')
-        self.mock_update_floatingip()
-        self.m.ReplayAll()
-
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
         self.create_eip(t, stack, 'IPAddress')
@@ -888,26 +747,17 @@ class AllocTest(common.HeatTestCase):
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
 
-        self.m.VerifyAll()
-
     def test_update_association_with_AllocationId_or_EIP(self):
-        self._mock_server(mock_interface=True)
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(server, 'interface_list', return_value=[iface])
         self.mock_create_floatingip()
-        self.mock_list_instance_ports('WebServer')
+        self.mock_list_floatingips()
+        self.mock_list_instance_ports()
         self.mock_show_network()
         self.mock_no_router_for_vpc()
-        self.mock_list_floatingips()
-        self.mock_update_floatingip()
-
-        self.mock_list_floatingips()
-        self.mock_update_floatingip(delete_assc=True)
-        self.mock_update_floatingip(
-            port_id='a000228d-b40b-4124-8394-a4082ae1b76c',
-            with_address=False)
-        self.mock_list_floatingips(ip_addr='11.0.0.2')
-        self.mock_update_floatingip(delete_assc=True, with_address=False)
-        self.mock_update_floatingip()
-        self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
@@ -938,16 +788,14 @@ class AllocTest(common.HeatTestCase):
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
 
-        self.m.VerifyAll()
-
     def test_update_association_needs_update_InstanceId(self):
-        self._mock_server(mock_interface=True)
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(server, 'interface_list', return_value=[iface])
         self.mock_create_floatingip()
         self.mock_list_floatingips()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_update_floatingip()
-        self.m.ReplayAll()
-
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
         self.create_eip(t, stack, 'IPAddress')
@@ -956,8 +804,6 @@ class AllocTest(common.HeatTestCase):
         after_props = {'InstanceId': {'Ref': 'WebServer2'},
                        'EIP': '11.0.0.1'}
         before = self.create_association(t, stack, 'IPAssoc')
-        update_server = self.fc.servers.list()[1]
-        self._mock_server(mock_interface=False, mock_server=update_server)
         after = rsrc_defn.ResourceDefinition(before.name, before.type(),
                                              after_props)
         self.assertTrue(resource.UpdateReplace,
@@ -965,12 +811,13 @@ class AllocTest(common.HeatTestCase):
                                              before_props, None))
 
     def test_update_association_needs_update_InstanceId_EIP(self):
-        self._mock_server(mock_interface=True)
-        self.mock_create_floatingip()
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(server, 'interface_list', return_value=[iface])
         self.mock_list_floatingips()
-        self.mock_show_floatingip('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
-        self.mock_update_floatingip()
-        self.m.ReplayAll()
+        self.mock_create_floatingip()
 
         t = template_format.parse(eip_template_ipassoc)
         stack = utils.parse_stack(t)
@@ -978,38 +825,30 @@ class AllocTest(common.HeatTestCase):
         after_props = {'InstanceId': '5678',
                        'EIP': '11.0.0.2'}
         before = self.create_association(t, stack, 'IPAssoc')
-        update_server = self.fc.servers.list()[1]
-        self._mock_server(mock_interface=False, mock_server=update_server)
         after = rsrc_defn.ResourceDefinition(before.name, before.type(),
                                              after_props)
         updater = scheduler.TaskRunner(before.update, after)
         self.assertRaises(resource.UpdateReplace, updater)
 
     def test_update_association_with_NetworkInterfaceId_or_InstanceId(self):
+        server = self.fc.servers.list()[0]
+        self.patchobject(self.fc.servers, 'get', return_value=server)
+        iface = self.mock_interface('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                                    '1.2.3.4')
+        self.patchobject(server, 'interface_list', return_value=[iface])
         self.mock_create_floatingip()
         self.mock_list_ports()
         self.mock_show_network()
         self.mock_no_router_for_vpc()
-        self.mock_update_floatingip(port_id='the_nic', with_address=False)
-
-        self.mock_list_ports(id='a000228d-b40b-4124-8394-a4082ae1b76b')
-        self.mock_show_network()
-        self.mock_no_router_for_vpc()
-        self.mock_update_floatingip(
-            port_id='a000228d-b40b-4124-8394-a4082ae1b76b', with_address=False)
-
-        self.mock_list_instance_ports('5678')
-        self.mock_show_network()
-        self.mock_no_router_for_vpc()
-        self.mock_update_floatingip(
-            port_id='a000228d-b40b-4124-8394-a4082ae1b76c', with_address=False)
-
-        self.m.ReplayAll()
 
         t = template_format.parse(eip_template_ipassoc2)
         stack = utils.parse_stack(t)
         self.create_eip(t, stack, 'the_eip')
         ass = self.create_association(t, stack, 'IPAssoc')
+
+        upd_server = self.fc.servers.list()[1]
+        self.patchobject(self.fc.servers, 'get', return_value=upd_server)
+        self.mock_list_instance_ports()
 
         # update with the new NetworkInterfaceId
         props = copy.deepcopy(ass.properties.data)
@@ -1023,9 +862,6 @@ class AllocTest(common.HeatTestCase):
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
 
         # update with the InstanceId
-        update_server = self.fc.servers.list()[1]
-        self._mock_server(mock_server=update_server)
-
         props = copy.deepcopy(ass.properties.data)
         instance_id = '5678'
         props.pop('NetworkInterfaceId')
@@ -1036,8 +872,6 @@ class AllocTest(common.HeatTestCase):
                                                                     props))
         scheduler.TaskRunner(ass.update, update_snippet)()
         self.assertEqual((ass.UPDATE, ass.COMPLETE), ass.state)
-
-        self.m.VerifyAll()
 
     def test_eip_allocation_refid_resource_name(self):
         t = template_format.parse(eip_template_ipassoc)
