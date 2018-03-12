@@ -35,7 +35,7 @@ This guide, using a devstack installation of OpenStack, assumes that:
        <https://docs.openstack.org/devstack/latest/guides/single-machine.html>`_;
     2. You have set up heat on devstack, as defined at :doc:`heat and DevStack
        <../getting_started/on_devstack>`;
-    3. You have installed `HAProxy <http://haproxy.1wt.eu>`_ on the devstack
+    3. You have installed HAProxy_ on the devstack
        server.
 
 Architecture
@@ -63,7 +63,7 @@ As there is a need to use a load balancer mechanism between the multiple APIs
 and the CLI, a proxy has to be deployed.
 
 Because the heat CLI and APIs communicate by exchanging HTTP requests and
-responses, a `HAProxy <http://haproxy.1wt.eu>`_ HTTP load balancer server will
+responses, a HAProxy_ HTTP load balancer server will
 be deployed between them.
 
 This way, the proxy will take the CLIs requests to the APIs and act on their
@@ -352,3 +352,5 @@ On the machine A, kill the *heat-api* and *heat-api-cfn* processes by running
         option  httpchk
         server cfn-server-1 10.0.0.2:8000
         server cfn-server-2 10.0.0.3:8000
+
+.. _HAProxy: https://www.haproxy.org/

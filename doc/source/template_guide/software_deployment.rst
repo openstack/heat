@@ -53,9 +53,9 @@ to be passed to that server. This user-data is made available either from
 configured config-drive or from the `Metadata service`_.
 
 How this user-data is consumed depends on the image being booted, but the most
-commonly used tool for default cloud images is Cloud-init_.
+commonly used tool for default cloud images is cloud-init_.
 
-Whether the image is using Cloud-init_ or not, it should be possible to
+Whether the image is using cloud-init_ or not, it should be possible to
 specify a shell script in the ``user_data`` property and have it be executed by
 the server during boot:
 
@@ -141,7 +141,7 @@ cloud-init boot configuration data. While ``HEAT_CFNTOOLS`` is the default
 for ``user_data_format``, it is considered legacy and ``RAW`` or
 ``SOFTWARE_CONFIG`` will generally be more appropriate.
 
-For ``RAW`` the user_data is passed to Nova unmodified. For a Cloud-init_
+For ``RAW`` the user_data is passed to Nova unmodified. For a cloud-init_
 enabled image, the following are both valid ``RAW`` user-data:
 
 .. code-block:: yaml
@@ -357,7 +357,7 @@ represented by text scripts, for example:
           user_data_format: SOFTWARE_CONFIG
           user_data: {get_resource: boot_script}
 
-The resource :ref:`OS::Heat::CloudConfig` allows Cloud-init_ cloud-config to
+The resource :ref:`OS::Heat::CloudConfig` allows cloud-init_ cloud-config to
 be represented as template YAML rather than a block string. This allows
 intrinsic functions to be included when building the cloud-config. This also
 ensures that the cloud-config is valid YAML, although no further checks for
@@ -388,7 +388,7 @@ valid cloud-config are done.
 
 The resource :ref:`OS::Heat::MultipartMime` allows multiple
 :ref:`OS::Heat::SoftwareConfig` and :ref:`OS::Heat::CloudConfig`
-resources to be combined into a single Cloud-init_ multi-part message:
+resources to be combined into a single cloud-init_ multi-part message:
 
 .. code-block:: yaml
 
@@ -779,14 +779,14 @@ contents of the file ``example-puppet-manifest.pp``, containing:
 
 
 .. _`AWS::CloudFormation::Init`: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
-.. _diskimage-builder: https://git.openstack.org/cgit/openstack/diskimage-builder
-.. _imagefactory: http://imgfac.org/
+.. _diskimage-builder: https://docs.openstack.org/diskimage-builder/latest/
+.. _imagefactory: https://imgfac.org/
 .. _`Metadata service`: https://docs.openstack.org/nova/latest/admin/networking-nova.html#metadata-service
-.. _Cloud-init: http://cloudinit.readthedocs.org/en/latest/
-.. _curl: http://curl.haxx.se/
-.. _`Orchestration API`: http://developer.openstack.org/api-ref/orchestration/v1/
+.. _cloud-init: https://cloudinit.readthedocs.io/
+.. _curl: https://curl.haxx.se/
+.. _`Orchestration API`: https://developer.openstack.org/api-ref/orchestration/v1/
 .. _os-refresh-config: https://git.openstack.org/cgit/openstack/os-refresh-config
 .. _os-apply-config: https://git.openstack.org/cgit/openstack/os-apply-config
 .. _tripleo-heat-templates: https://git.openstack.org/cgit/openstack/tripleo-heat-templates
 .. _tripleo-image-elements: https://git.openstack.org/cgit/openstack/tripleo-image-elements
-.. _puppet: http://puppetlabs.com/
+.. _puppet: https://puppet.com/

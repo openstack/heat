@@ -99,10 +99,7 @@
    Provider resource
      A :term:`resource` implemented by a :term:`provider
      template`. The parent resource's properties become the
-     :term:`nested stack's <nested stack>` parameters. See `What are
-     "Providers"? (OpenStack Wiki)`_.
-
-     .. _`What are "Providers"? (OpenStack Wiki)`: https://wiki.openstack.org/wiki/Heat/Providers#What_are_.22Providers.22.3F
+     :term:`nested stack's <nested stack>` parameters.
 
    Provider template
      Allows user-definable :term:`resource providers <resource
@@ -130,7 +127,7 @@
      A :term:`resource property` that contains CFN-style template
      metadata. See `AWS::CloudFormation::Init (AWS CloudFormation User Guide)`_
 
-     .. _AWS::CloudFormation::Init (AWS CloudFormation User Guide): http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
+     .. _AWS::CloudFormation::Init (AWS CloudFormation User Guide): https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
 
    Resource plugin
      Python code that understands how to instantiate and manage a
@@ -169,7 +166,7 @@
      End User Guide)`_.
 
      .. _User data (OpenStack End User Guide): https://docs.openstack.org/nova/latest/user/user-data.html
-     .. _cloud-init: https://help.ubuntu.com/community/CloudInit
+     .. _cloud-init: https://cloudinit.readthedocs.io/
 
    Wait condition
      A :term:`resource provider` that provides a way to communicate

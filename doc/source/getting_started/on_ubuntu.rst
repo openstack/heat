@@ -16,8 +16,9 @@ Installing Heat on Ubuntu
 
 Heat is packaged for Debian, and Ubuntu (from 13.10)
 
-Go to the `OpenStack Documentation <http://docs.openstack.org/>`_ for
-the latest version of the Installation Guide for Ubuntu which includes a
-chapter on installing the Orchestration module (Heat).
+Go to the `OpenStack Documentation
+<https://docs.openstack.org/#install-guides>`_ for the latest version of the
+Installation Guide for Ubuntu which includes a chapter on installing the
+Orchestration module (Heat).
 
 There is a `Juju Charm for Heat <https://jujucharms.com/heat/>` available.

@@ -92,5 +92,5 @@ templates and provide events back to the API consumer.
 The templates integrate well with Puppet_ and Chef_.
 
 .. _Puppet: https://s3.amazonaws.com/cloudformation-examples/IntegratingAWSCloudFormationWithPuppet.pdf
-.. _Chef: http://www.full360.com/2011/02/27/integrating-aws-cloudformation-and-chef.html
-.. _`AWS CloudFormation`: http://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078
+.. _Chef: https://www.full360.com/2011/02/27/integrating-aws-cloudformation-and-chef.html
+.. _`AWS CloudFormation`: https://docs.aws.amazon.com/AWSCloudFormation/latest/APIReference/Welcome.html?r=7078

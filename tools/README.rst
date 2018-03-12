@@ -1,7 +1,7 @@
 Files in this directory are general developer tools or examples of how
 to do certain activities.
 
-If you're running on Fedora, see the instructions at http://docs.openstack.org/developer/heat/getting_started/on_fedora.html
+If you're running on Fedora, see the instructions at https://docs.openstack.org/heat/latest/getting_started/on_fedora.html
 
 Tools
 =====

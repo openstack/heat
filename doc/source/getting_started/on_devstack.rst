@@ -50,7 +50,7 @@ It would also be useful to automatically download and register
 a VM image that heat can launch. To do that add the following to
 `[[local|localrc]]` section of `local.conf`::
 
-    IMAGE_URL_SITE="http://download.fedoraproject.org"
+    IMAGE_URL_SITE="https://download.fedoraproject.org"
     IMAGE_URL_PATH="/pub/fedora/linux/releases/25/CloudImages/x86_64/images/"
     IMAGE_URL_FILE="Fedora-Cloud-Base-25-1.3.x86_64.qcow2"
     IMAGE_URLS+=","$IMAGE_URL_SITE$IMAGE_URL_PATH$IMAGE_URL_FILE

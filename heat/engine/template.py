@@ -301,7 +301,7 @@ class Template(collections.Mapping):
         # TODO(kanagaraj-manickam) currently t_digest is stored in self. which
         # is used to check whether already template is validated or not.
         # But it needs to be loaded from dogpile cache backend once its
-        # available in heat (http://specs.openstack.org/openstack/heat-specs/
+        # available in heat (https://specs.openstack.org/openstack/heat-specs/
         # specs/liberty/constraint-validation-cache.html). This is required
         # as multiple heat-engines may process the same template at least
         # in case of instance_group. And it fixes partially bug 1444316

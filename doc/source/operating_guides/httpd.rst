@@ -98,5 +98,5 @@ file.
 
 The dsvm jobs in heat upstream gate uses this deployment method.
 
-For more details on using mod_proxy_uwsgi see the official docs:
-http://uwsgi-docs.readthedocs.io/en/latest/Apache.html?highlight=mod_uwsgi_proxy#mod-proxy-uwsgi
+For more details on using mod_proxy_uwsgi see the `official docs
+<https://uwsgi-docs.readthedocs.io/en/latest/Apache.html?highlight=mod_uwsgi_proxy#mod-proxy-uwsgi>`_.
