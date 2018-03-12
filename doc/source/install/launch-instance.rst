@@ -10,10 +10,7 @@ Create a template
 -----------------
 
 The Orchestration service uses templates to describe stacks.
-To learn about the template language, see `the Template Guide
-<http://docs.openstack.org/developer/heat/template_guide/index.html>`__
-in the `Heat developer documentation
-<http://docs.openstack.org/developer/heat/index.html>`__.
+To learn about the template language, see the :ref:`template-guide`.
 
 * Create the ``demo-template.yml`` file with the following content:
 
