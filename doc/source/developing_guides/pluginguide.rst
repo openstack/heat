@@ -669,8 +669,8 @@ directories on the local file system where the engine will search for plug-ins.
 Simply place the file containing your resource in one of these directories and
 the engine will make them available next time the service starts.
 
-See one of the Installation Guides at http://docs.OpenStack.org/ for
-more information on configuring the orchestration service.
+See :doc:`<../configuration/index>` for more information on configuring the
+orchestration service.
 
 Testing
 -------

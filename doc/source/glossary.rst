@@ -60,7 +60,7 @@
      retrieve instance-specific data. See `Metadata
      service (OpenStack Administrator Guide)`_.
 
-     .. _Metadata service (OpenStack Administrator Guide): http://docs.openstack.org/admin-guide/compute-networking-nova.html#metadata-service
+     .. _Metadata service (OpenStack Administrator Guide): https://docs.openstack.org/nova/latest/admin/networking-nova.html#metadata-service
 
    Multi-region
      A feature of Heat that supports deployment to multiple regions.
@@ -76,9 +76,9 @@
 
    Nova Instance metadata
      User-provided *key:value* pairs associated with a Compute
-     Instance. See `Instance specific data (OpenStack Operations Guide)`_.
+     Instance. See `Instance-specific data (OpenStack Operations Guide)`_.
 
-     .. _Instance specific data (OpenStack Operations Guide): http://docs.openstack.org/openstack-ops/content/instances.html#instance_specific_data
+     .. _Instance-specific data (OpenStack Operations Guide): https://wiki.openstack.org/wiki/OpsGuide/User-Facing_Operations#using-instance-specific-data
 
    OpenStack
      Open source software for building private and public clouds.

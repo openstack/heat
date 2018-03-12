@@ -105,9 +105,8 @@ Note: The list operation will show no running stack.::
     $ openstack stack delete teststack
     $ openstack stack list
 
-You can explore other heat commands by referring to the
-`Heat chapter
-<http://docs.openstack.org/cli-reference/heat.html>`_
-of the `OpenStack Command-Line Interface Reference
-<http://docs.openstack.org/cli-reference/index.html>`_ then read
-the :ref:`template-guide` and start authoring your own templates.
+You can explore other heat commands by referring to the `Heat command reference
+<https://docs.openstack.org/python-heatclient/latest/cli/>`_ for the
+`OpenStack Command-Line Interface
+<https://docs.openstack.org/python-openstackclient/>`_; then read the
+:ref:`template-guide` and start authoring your own templates.
