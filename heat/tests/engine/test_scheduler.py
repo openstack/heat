@@ -15,6 +15,7 @@ import contextlib
 import itertools
 
 import eventlet
+import mock
 import six
 
 from heat.common.i18n import repr_wrapper
@@ -70,10 +71,55 @@ class ExceptionGroupTest(common.HeatTestCase):
         self.assertEqual("['ex 1', 'ex 2']", six.text_type(exception_group))
 
 
+class StepTracker(object):
+    def __init__(self):
+        self.expected_groups = []
+        self.side_effects = {}
+
+    def expect_call_group(self, step_num, targets):
+        self.expected_groups.append(set((step_num, t) for t in targets))
+
+    def expect_call(self, step_num, target):
+        self.expect_call_group(step_num, (target,))
+
+    def raise_on(self, step_num, target, exc):
+        self.side_effects[(step_num, target)] = exc
+
+    def sleep_on(self, step_num, target, sleep_time):
+        self.side_effects[(step_num, target)] = float(sleep_time)
+
+    def side_effect(self, step_num, target):
+        se = self.side_effects.get((step_num, target), None)
+        if isinstance(se, BaseException):
+            raise se
+        if isinstance(se, float):
+            eventlet.sleep(se)
+
+    def verify_calls(self, mock_step):
+        actual_calls = mock_step.mock_calls
+        CallList = type(actual_calls)
+        idx = 0
+
+        try:
+            for group in self.expected_groups:
+                group_len = len(group)
+                group_actual = CallList(actual_calls[idx:idx + group_len])
+                idx += group_len
+                mock_step.mock_calls = group_actual
+                mock_step.assert_has_calls(
+                    [mock.call(s, t) for s, t in group],
+                    any_order=True)
+        finally:
+            mock_step.actual_calls = actual_calls
+
+        if len(actual_calls) > idx:
+            raise AssertionError("Unexpected calls: %s" %
+                                 CallList(actual_calls[idx:]))
+
+
 class DependencyTaskGroupTest(common.HeatTestCase):
     def setUp(self):
         super(DependencyTaskGroupTest, self).setUp()
-        self.addCleanup(self.m.VerifyAll)
         self.aggregate_exceptions = False
         self.error_wait_time = None
         self.reverse_order = False
@@ -89,141 +135,127 @@ class DependencyTaskGroupTest(common.HeatTestCase):
             error_wait_time=self.error_wait_time,
             aggregate_exceptions=self.aggregate_exceptions)
 
-        self.m.StubOutWithMock(dummy, 'do_step')
+        tracker = StepTracker()
 
-        yield dummy
+        yield tracker
 
-        self.m.ReplayAll()
+        dummy.do_step = mock.Mock(side_effect=tracker.side_effect)
         scheduler.TaskRunner(tg)(wait_time=None)
 
-    def test_no_steps(self):
+        tracker.verify_calls(dummy.do_step)
+
+    def test_test(self):
+        def failing_test():
+            with self._dep_test(('only', None)) as track:
+                track.expect_call(1, 'only')
+                track.expect_call(3, 'only')
+
+        self.assertRaises(AssertionError, failing_test)
+
+    @mock.patch.object(scheduler.TaskRunner, '_sleep')
+    def test_no_steps(self, mock_sleep):
         self.steps = 0
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
         with self._dep_test(('second', 'first')):
             pass
 
     def test_single_node(self):
-        with self._dep_test(('only', None)) as dummy:
-            dummy.do_step(1, 'only').AndReturn(None)
-            dummy.do_step(2, 'only').AndReturn(None)
-            dummy.do_step(3, 'only').AndReturn(None)
+        with self._dep_test(('only', None)) as track:
+            track.expect_call(1, 'only')
+            track.expect_call(2, 'only')
+            track.expect_call(3, 'only')
 
     def test_disjoint(self):
-        with self._dep_test(('1', None), ('2', None)) as dummy:
-            dummy.do_step(1, '1').InAnyOrder('1')
-            dummy.do_step(1, '2').InAnyOrder('1')
-            dummy.do_step(2, '1').InAnyOrder('2')
-            dummy.do_step(2, '2').InAnyOrder('2')
-            dummy.do_step(3, '1').InAnyOrder('3')
-            dummy.do_step(3, '2').InAnyOrder('3')
+        with self._dep_test(('1', None), ('2', None)) as track:
+            track.expect_call_group(1, ('1', '2'))
+            track.expect_call_group(2, ('1', '2'))
+            track.expect_call_group(3, ('1', '2'))
 
     def test_single_fwd(self):
-        with self._dep_test(('second', 'first')) as dummy:
-            dummy.do_step(1, 'first').AndReturn(None)
-            dummy.do_step(2, 'first').AndReturn(None)
-            dummy.do_step(3, 'first').AndReturn(None)
-            dummy.do_step(1, 'second').AndReturn(None)
-            dummy.do_step(2, 'second').AndReturn(None)
-            dummy.do_step(3, 'second').AndReturn(None)
+        with self._dep_test(('second', 'first')) as track:
+            track.expect_call(1, 'first')
+            track.expect_call(2, 'first')
+            track.expect_call(3, 'first')
+            track.expect_call(1, 'second')
+            track.expect_call(2, 'second')
+            track.expect_call(3, 'second')
 
     def test_chain_fwd(self):
         with self._dep_test(('third', 'second'),
-                            ('second', 'first')) as dummy:
-            dummy.do_step(1, 'first').AndReturn(None)
-            dummy.do_step(2, 'first').AndReturn(None)
-            dummy.do_step(3, 'first').AndReturn(None)
-            dummy.do_step(1, 'second').AndReturn(None)
-            dummy.do_step(2, 'second').AndReturn(None)
-            dummy.do_step(3, 'second').AndReturn(None)
-            dummy.do_step(1, 'third').AndReturn(None)
-            dummy.do_step(2, 'third').AndReturn(None)
-            dummy.do_step(3, 'third').AndReturn(None)
+                            ('second', 'first')) as track:
+            track.expect_call(1, 'first')
+            track.expect_call(2, 'first')
+            track.expect_call(3, 'first')
+            track.expect_call(1, 'second')
+            track.expect_call(2, 'second')
+            track.expect_call(3, 'second')
+            track.expect_call(1, 'third')
+            track.expect_call(2, 'third')
+            track.expect_call(3, 'third')
 
     def test_diamond_fwd(self):
         with self._dep_test(('last', 'mid1'), ('last', 'mid2'),
-                            ('mid1', 'first'), ('mid2', 'first')) as dummy:
-            dummy.do_step(1, 'first').AndReturn(None)
-            dummy.do_step(2, 'first').AndReturn(None)
-            dummy.do_step(3, 'first').AndReturn(None)
-            dummy.do_step(1, 'mid1').InAnyOrder('1')
-            dummy.do_step(1, 'mid2').InAnyOrder('1')
-            dummy.do_step(2, 'mid1').InAnyOrder('2')
-            dummy.do_step(2, 'mid2').InAnyOrder('2')
-            dummy.do_step(3, 'mid1').InAnyOrder('3')
-            dummy.do_step(3, 'mid2').InAnyOrder('3')
-            dummy.do_step(1, 'last').AndReturn(None)
-            dummy.do_step(2, 'last').AndReturn(None)
-            dummy.do_step(3, 'last').AndReturn(None)
+                            ('mid1', 'first'), ('mid2', 'first')) as track:
+            track.expect_call(1, 'first')
+            track.expect_call(2, 'first')
+            track.expect_call(3, 'first')
+            track.expect_call_group(1, ('mid1', 'mid2'))
+            track.expect_call_group(2, ('mid1', 'mid2'))
+            track.expect_call_group(3, ('mid1', 'mid2'))
+            track.expect_call(1, 'last')
+            track.expect_call(2, 'last')
+            track.expect_call(3, 'last')
 
     def test_complex_fwd(self):
         with self._dep_test(('last', 'mid1'), ('last', 'mid2'),
                             ('mid1', 'mid3'), ('mid1', 'first'),
-                            ('mid3', 'first'), ('mid2', 'first')) as dummy:
-            dummy.do_step(1, 'first').AndReturn(None)
-            dummy.do_step(2, 'first').AndReturn(None)
-            dummy.do_step(3, 'first').AndReturn(None)
-            dummy.do_step(1, 'mid2').InAnyOrder('1')
-            dummy.do_step(1, 'mid3').InAnyOrder('1')
-            dummy.do_step(2, 'mid2').InAnyOrder('2')
-            dummy.do_step(2, 'mid3').InAnyOrder('2')
-            dummy.do_step(3, 'mid2').InAnyOrder('3')
-            dummy.do_step(3, 'mid3').InAnyOrder('3')
-            dummy.do_step(1, 'mid1').AndReturn(None)
-            dummy.do_step(2, 'mid1').AndReturn(None)
-            dummy.do_step(3, 'mid1').AndReturn(None)
-            dummy.do_step(1, 'last').AndReturn(None)
-            dummy.do_step(2, 'last').AndReturn(None)
-            dummy.do_step(3, 'last').AndReturn(None)
+                            ('mid3', 'first'), ('mid2', 'first')) as track:
+            track.expect_call(1, 'first')
+            track.expect_call(2, 'first')
+            track.expect_call(3, 'first')
+            track.expect_call_group(1, ('mid2', 'mid3'))
+            track.expect_call_group(2, ('mid2', 'mid3'))
+            track.expect_call_group(3, ('mid2', 'mid3'))
+            track.expect_call(1, 'mid1')
+            track.expect_call(2, 'mid1')
+            track.expect_call(3, 'mid1')
+            track.expect_call(1, 'last')
+            track.expect_call(2, 'last')
+            track.expect_call(3, 'last')
 
     def test_many_edges_fwd(self):
         with self._dep_test(('last', 'e1'), ('last', 'mid1'), ('last', 'mid2'),
                             ('mid1', 'e2'), ('mid1', 'mid3'),
                             ('mid2', 'mid3'),
-                            ('mid3', 'e3')) as dummy:
-            dummy.do_step(1, 'e1').InAnyOrder('1edges')
-            dummy.do_step(1, 'e2').InAnyOrder('1edges')
-            dummy.do_step(1, 'e3').InAnyOrder('1edges')
-            dummy.do_step(2, 'e1').InAnyOrder('2edges')
-            dummy.do_step(2, 'e2').InAnyOrder('2edges')
-            dummy.do_step(2, 'e3').InAnyOrder('2edges')
-            dummy.do_step(3, 'e1').InAnyOrder('3edges')
-            dummy.do_step(3, 'e2').InAnyOrder('3edges')
-            dummy.do_step(3, 'e3').InAnyOrder('3edges')
-            dummy.do_step(1, 'mid3').AndReturn(None)
-            dummy.do_step(2, 'mid3').AndReturn(None)
-            dummy.do_step(3, 'mid3').AndReturn(None)
-            dummy.do_step(1, 'mid2').InAnyOrder('1mid')
-            dummy.do_step(1, 'mid1').InAnyOrder('1mid')
-            dummy.do_step(2, 'mid2').InAnyOrder('2mid')
-            dummy.do_step(2, 'mid1').InAnyOrder('2mid')
-            dummy.do_step(3, 'mid2').InAnyOrder('3mid')
-            dummy.do_step(3, 'mid1').InAnyOrder('3mid')
-            dummy.do_step(1, 'last').AndReturn(None)
-            dummy.do_step(2, 'last').AndReturn(None)
-            dummy.do_step(3, 'last').AndReturn(None)
+                            ('mid3', 'e3')) as track:
+            track.expect_call_group(1, ('e1', 'e2', 'e3'))
+            track.expect_call_group(2, ('e1', 'e2', 'e3'))
+            track.expect_call_group(3, ('e1', 'e2', 'e3'))
+            track.expect_call(1, 'mid3')
+            track.expect_call(2, 'mid3')
+            track.expect_call(3, 'mid3')
+            track.expect_call_group(1, ('mid2', 'mid1'))
+            track.expect_call_group(2, ('mid2', 'mid1'))
+            track.expect_call_group(3, ('mid2', 'mid1'))
+            track.expect_call(1, 'last')
+            track.expect_call(2, 'last')
+            track.expect_call(3, 'last')
 
     def test_dbldiamond_fwd(self):
         with self._dep_test(('last', 'a1'), ('last', 'a2'),
                             ('a1', 'b1'), ('a2', 'b1'), ('a2', 'b2'),
-                            ('b1', 'first'), ('b2', 'first')) as dummy:
-            dummy.do_step(1, 'first').AndReturn(None)
-            dummy.do_step(2, 'first').AndReturn(None)
-            dummy.do_step(3, 'first').AndReturn(None)
-            dummy.do_step(1, 'b1').InAnyOrder('1b')
-            dummy.do_step(1, 'b2').InAnyOrder('1b')
-            dummy.do_step(2, 'b1').InAnyOrder('2b')
-            dummy.do_step(2, 'b2').InAnyOrder('2b')
-            dummy.do_step(3, 'b1').InAnyOrder('3b')
-            dummy.do_step(3, 'b2').InAnyOrder('3b')
-            dummy.do_step(1, 'a1').InAnyOrder('1a')
-            dummy.do_step(1, 'a2').InAnyOrder('1a')
-            dummy.do_step(2, 'a1').InAnyOrder('2a')
-            dummy.do_step(2, 'a2').InAnyOrder('2a')
-            dummy.do_step(3, 'a1').InAnyOrder('3a')
-            dummy.do_step(3, 'a2').InAnyOrder('3a')
-            dummy.do_step(1, 'last').AndReturn(None)
-            dummy.do_step(2, 'last').AndReturn(None)
-            dummy.do_step(3, 'last').AndReturn(None)
+                            ('b1', 'first'), ('b2', 'first')) as track:
+            track.expect_call(1, 'first')
+            track.expect_call(2, 'first')
+            track.expect_call(3, 'first')
+            track.expect_call_group(1, ('b1', 'b2'))
+            track.expect_call_group(2, ('b1', 'b2'))
+            track.expect_call_group(3, ('b1', 'b2'))
+            track.expect_call_group(1, ('a1', 'a2'))
+            track.expect_call_group(2, ('a1', 'a2'))
+            track.expect_call_group(3, ('a1', 'a2'))
+            track.expect_call(1, 'last')
+            track.expect_call(2, 'last')
+            track.expect_call(3, 'last')
 
     def test_circular_deps(self):
         d = dependencies.Dependencies([('first', 'second'),
@@ -236,15 +268,14 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         def run_tasks_with_exceptions(e1=None, e2=None):
             self.aggregate_exceptions = True
             tasks = (('A', None), ('B', None), ('C', None))
-            with self._dep_test(*tasks) as dummy:
-                dummy.do_step(1, 'A').InAnyOrder('1')
-                dummy.do_step(1, 'B').InAnyOrder('1')
-                dummy.do_step(1, 'C').InAnyOrder('1').AndRaise(e1)
+            with self._dep_test(*tasks) as track:
+                track.expect_call_group(1, ('A', 'B', 'C'))
+                track.raise_on(1, 'C', e1)
 
-                dummy.do_step(2, 'A').InAnyOrder('2')
-                dummy.do_step(2, 'B').InAnyOrder('2').AndRaise(e2)
+                track.expect_call_group(2, ('A', 'B'))
+                track.raise_on(2, 'B', e2)
 
-                dummy.do_step(3, 'A').InAnyOrder('3')
+                track.expect_call(3, 'A')
 
         e1 = Exception('e1')
         e2 = Exception('e2')
@@ -257,8 +288,9 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         def run_tasks_with_exceptions(e1=None, e2=None):
             self.aggregate_exceptions = True
             tasks = (('A', None), ('B', 'A'), ('C', 'B'))
-            with self._dep_test(*tasks) as dummy:
-                dummy.do_step(1, 'A').AndRaise(e1)
+            with self._dep_test(*tasks) as track:
+                track.expect_call(1, 'A')
+                track.raise_on(1, 'A', e1)
 
         e1 = Exception('e1')
 
@@ -271,8 +303,9 @@ class DependencyTaskGroupTest(common.HeatTestCase):
             self.reverse_order = True
             self.aggregate_exceptions = True
             tasks = (('A', None), ('B', 'A'), ('C', 'B'))
-            with self._dep_test(*tasks) as dummy:
-                dummy.do_step(1, 'C').AndRaise(e1)
+            with self._dep_test(*tasks) as track:
+                track.expect_call(1, 'C')
+                track.raise_on(1, 'C', e1)
 
         e1 = Exception('e1')
 
@@ -317,12 +350,11 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         def run_tasks_with_exceptions():
             self.error_wait_time = 5
             tasks = (('A', None), ('B', None), ('C', 'A'))
-            with self._dep_test(*tasks) as dummy:
-                dummy.do_step(1, 'A').InAnyOrder('1')
-                dummy.do_step(1, 'B').InAnyOrder('1')
-                dummy.do_step(2, 'A').InAnyOrder('2').AndRaise(e1)
-                dummy.do_step(2, 'B').InAnyOrder('2')
-                dummy.do_step(3, 'B')
+            with self._dep_test(*tasks) as track:
+                track.expect_call_group(1, ('A', 'B'))
+                track.expect_call_group(2, ('A', 'B'))
+                track.raise_on(2, 'B', e1)
+                track.expect_call(3, 'B')
 
         exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
         self.assertEqual(e1, exc)
@@ -338,13 +370,13 @@ class DependencyTaskGroupTest(common.HeatTestCase):
                 eventlet.sleep(self.error_wait_time)
 
             tasks = (('A', None), ('B', None), ('C', 'A'))
-            with self._dep_test(*tasks) as dummy:
-                dummy.do_step(1, 'A').InAnyOrder('1')
-                dummy.do_step(1, 'B').InAnyOrder('1')
-                dummy.do_step(2, 'A').InAnyOrder('2').AndRaise(e1)
-                dummy.do_step(2, 'B').InAnyOrder('2')
-                dummy.do_step(3, 'B')
-                dummy.do_step(4, 'B').WithSideEffects(sleep)
+            with self._dep_test(*tasks) as track:
+                track.expect_call_group(1, ('A', 'B'))
+                track.expect_call_group(2, ('A', 'B'))
+                track.raise_on(2, 'B', e1)
+                track.expect_call(3, 'B')
+                track.expect_call(4, 'B')
+                track.sleep_on(4, 'B', self.error_wait_time)
 
         exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
         self.assertEqual(e1, exc)
@@ -361,12 +393,11 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         def run_tasks_with_exceptions():
             self.error_wait_time = get_wait_time
             tasks = (('A', None), ('B', None), ('C', 'A'))
-            with self._dep_test(*tasks) as dummy:
-                dummy.do_step(1, 'A').InAnyOrder('1')
-                dummy.do_step(1, 'B').InAnyOrder('1')
-                dummy.do_step(2, 'A').InAnyOrder('2').AndRaise(e1)
-                dummy.do_step(2, 'B').InAnyOrder('2')
-                dummy.do_step(3, 'B')
+            with self._dep_test(*tasks) as track:
+                track.expect_call_group(1, ('A', 'B'))
+                track.expect_call_group(2, ('A', 'B'))
+                track.raise_on(2, 'A', e1)
+                track.expect_call(3, 'B')
 
         exc = self.assertRaises(type(e1), run_tasks_with_exceptions)
         self.assertEqual(e1, exc)
