@@ -1234,7 +1234,6 @@ class DescriptionTest(common.HeatTestCase):
 
     def setUp(self):
         super(DescriptionTest, self).setUp()
-        self.addCleanup(self.m.VerifyAll)
 
     def test_func(self):
         def f():
@@ -1299,7 +1298,6 @@ class WrapperTaskTest(common.HeatTestCase):
 
     def setUp(self):
         super(WrapperTaskTest, self).setUp()
-        self.addCleanup(self.m.VerifyAll)
 
     def test_wrap(self):
         child_tasks = [DummyTask() for i in range(3)]
@@ -1312,21 +1310,19 @@ class WrapperTaskTest(common.HeatTestCase):
             yield
 
         for child_task in child_tasks:
-            self.m.StubOutWithMock(child_task, 'do_step')
-        self.m.StubOutWithMock(scheduler.TaskRunner, '_sleep')
-
-        scheduler.TaskRunner._sleep(0).AndReturn(None)
-        for child_task in child_tasks:
-            child_task.do_step(1).AndReturn(None)
-            scheduler.TaskRunner._sleep(1).AndReturn(None)
-            child_task.do_step(2).AndReturn(None)
-            scheduler.TaskRunner._sleep(1).AndReturn(None)
-            child_task.do_step(3).AndReturn(None)
-            scheduler.TaskRunner._sleep(1).AndReturn(None)
-
-        self.m.ReplayAll()
+            child_task.do_step = mock.Mock(return_value=None)
+        self.patchobject(scheduler.TaskRunner, '_sleep', return_value=None)
 
         scheduler.TaskRunner(task)()
+
+        for child_task in child_tasks:
+            child_task.do_step.assert_has_calls([mock.call(1), mock.call(2),
+                                                 mock.call(3)])
+            self.assertEqual(3, child_task.do_step.call_count)
+        scheduler.TaskRunner._sleep.assert_any_call(0)
+        scheduler.TaskRunner._sleep.assert_called_with(1)
+        self.assertEqual(1 + len(child_tasks) * 3,
+                         scheduler.TaskRunner._sleep.call_count)
 
     def test_parent_yield_value(self):
         @scheduler.wrappertask
@@ -1450,14 +1446,15 @@ class WrapperTaskTest(common.HeatTestCase):
         task = parent_task()
         next(task)
 
-        self.m.StubOutWithMock(dummy, 'do_step')
-        for i in range(1, dummy.num_steps + 1):
-            dummy.do_step(i).AndReturn(None)
-        self.m.ReplayAll()
-
+        dummy.do_step = mock.Mock(return_value=None)
         for i in range(1, dummy.num_steps + 1):
             next(task)
         self.assertRaises(StopIteration, next, task)
+
+        dummy.do_step.assert_has_calls([mock.call(i)
+                                        for i in range(1,
+                                                       dummy.num_steps + 1)])
+        self.assertEqual(dummy.num_steps, dummy.do_step.call_count)
 
     def test_thrown_exception_swallow_next(self):
         class MyException(Exception):
@@ -1480,10 +1477,7 @@ class WrapperTaskTest(common.HeatTestCase):
 
         task = parent_task()
 
-        self.m.StubOutWithMock(dummy, 'do_step')
-        for i in range(1, dummy.num_steps + 1):
-            dummy.do_step(i).AndReturn(None)
-        self.m.ReplayAll()
+        dummy.do_step = mock.Mock(return_value=None)
 
         next(task)
         task.throw(MyException)
@@ -1491,6 +1485,11 @@ class WrapperTaskTest(common.HeatTestCase):
         for i in range(2, dummy.num_steps + 1):
             next(task)
         self.assertRaises(StopIteration, next, task)
+
+        dummy.do_step.assert_has_calls([mock.call(i)
+                                        for i in range(1,
+                                                       dummy.num_steps + 1)])
+        self.assertEqual(dummy.num_steps, dummy.do_step.call_count)
 
     def test_thrown_exception_raise(self):
         class MyException(Exception):
@@ -1516,10 +1515,7 @@ class WrapperTaskTest(common.HeatTestCase):
 
         task = parent_task()
 
-        self.m.StubOutWithMock(dummy, 'do_step')
-        for i in range(1, dummy.num_steps + 1):
-            dummy.do_step(i).AndReturn(None)
-        self.m.ReplayAll()
+        dummy.do_step = mock.Mock(return_value=None)
 
         next(task)
         task.throw(MyException)
@@ -1527,6 +1523,11 @@ class WrapperTaskTest(common.HeatTestCase):
         for i in range(2, dummy.num_steps + 1):
             next(task)
         self.assertRaises(StopIteration, next, task)
+
+        dummy.do_step.assert_has_calls([mock.call(i)
+                                        for i in range(1,
+                                                       dummy.num_steps + 1)])
+        self.assertEqual(dummy.num_steps, dummy.do_step.call_count)
 
     def test_thrown_exception_exit(self):
         class MyException(Exception):
@@ -1550,10 +1551,7 @@ class WrapperTaskTest(common.HeatTestCase):
 
         task = parent_task()
 
-        self.m.StubOutWithMock(dummy, 'do_step')
-        for i in range(1, dummy.num_steps + 1):
-            dummy.do_step(i).AndReturn(None)
-        self.m.ReplayAll()
+        dummy.do_step = mock.Mock(return_value=None)
 
         next(task)
         task.throw(MyException)
@@ -1561,6 +1559,11 @@ class WrapperTaskTest(common.HeatTestCase):
         for i in range(2, dummy.num_steps + 1):
             next(task)
         self.assertRaises(StopIteration, next, task)
+
+        dummy.do_step.assert_has_calls([mock.call(i)
+                                        for i in range(1,
+                                                       dummy.num_steps + 1)])
+        self.assertEqual(dummy.num_steps, dummy.do_step.call_count)
 
     def test_parent_exception(self):
         class MyException(Exception):
