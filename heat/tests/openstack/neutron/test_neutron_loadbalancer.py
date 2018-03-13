@@ -13,6 +13,7 @@
 
 import copy
 
+import mock
 import mox
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
@@ -174,20 +175,21 @@ class HealthMonitorTest(common.HeatTestCase):
 
     def setUp(self):
         super(HealthMonitorTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_health_monitor')
+        mockclient = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client', return_value=mockclient)
+        self.mock_create = mockclient.create_health_monitor
+        self.mock_delete = mockclient.delete_health_monitor
+        self.mock_show = mockclient.show_health_monitor
+        self.mock_update = mockclient.update_health_monitor
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
-
-    def create_health_monitor(self):
-        neutronclient.Client.create_health_monitor({
+        self.create_snippet = {
             'health_monitor': {
                 'delay': 3, 'max_retries': 5, 'type': u'HTTP',
                 'timeout': 10, 'admin_state_up': True}}
-        ).AndReturn({'health_monitor': {'id': '5678'}})
 
+    def create_health_monitor(self):
+        self.mock_create.return_value = {'health_monitor': {'id': '5678'}}
         snippet = template_format.parse(health_monitor_template)
         self.stack = utils.parse_stack(snippet)
         self.tmpl = snippet
@@ -197,19 +199,12 @@ class HealthMonitorTest(common.HeatTestCase):
 
     def test_create(self):
         rsrc = self.create_health_monitor()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
 
     def test_create_failed(self):
-        neutronclient.Client.create_health_monitor({
-            'health_monitor': {
-                'delay': 3, 'max_retries': 5, 'type': u'HTTP',
-                'timeout': 10, 'admin_state_up': True}}
-        ).AndRaise(exceptions.NeutronClientException())
-        self.m.ReplayAll()
-
+        self.mock_create.side_effect = exceptions.NeutronClientException()
         snippet = template_format.parse(health_monitor_template)
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
@@ -222,37 +217,33 @@ class HealthMonitorTest(common.HeatTestCase):
             'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
 
     def test_delete(self):
-        neutronclient.Client.delete_health_monitor('5678')
-        neutronclient.Client.show_health_monitor('5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
-
+        self.mock_delete.return_value = None
+        self.mock_show.side_effect = exceptions.NeutronClientException(
+            status_code=404)
         rsrc = self.create_health_monitor()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
+        self.mock_delete.assert_called_once_with('5678')
 
     def test_delete_already_gone(self):
-        neutronclient.Client.delete_health_monitor('5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
-
+        self.mock_delete.side_effect = exceptions.NeutronClientException(
+            status_code=404)
         rsrc = self.create_health_monitor()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
+        self.mock_delete.assert_called_once_with('5678')
 
     def test_delete_failed(self):
-        neutronclient.Client.delete_health_monitor('5678').AndRaise(
-            exceptions.NeutronClientException(status_code=400))
-
+        self.mock_delete.side_effect = exceptions.NeutronClientException(
+            status_code=400)
         rsrc = self.create_health_monitor()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
@@ -261,43 +252,39 @@ class HealthMonitorTest(common.HeatTestCase):
             'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
+        self.mock_delete.assert_called_once_with('5678')
 
     def test_attribute(self):
         rsrc = self.create_health_monitor()
-        neutronclient.Client.show_health_monitor('5678').MultipleTimes(
-        ).AndReturn(
-            {'health_monitor': {'admin_state_up': True, 'delay': 3}})
-        self.m.ReplayAll()
+        self.mock_show.return_value = {
+            'health_monitor': {'admin_state_up': True, 'delay': 3}}
         scheduler.TaskRunner(rsrc.create)()
         self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual(3, rsrc.FnGetAtt('delay'))
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
+        self.mock_show.assert_called_with('5678')
 
     def test_attribute_failed(self):
         rsrc = self.create_health_monitor()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (monitor subnet_id) is incorrect.',
             six.text_type(error))
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
 
     def test_update(self):
         rsrc = self.create_health_monitor()
-        neutronclient.Client.update_health_monitor(
-            '5678', {'health_monitor': {'delay': 10}})
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-
         props = self.tmpl['resources']['monitor']['properties'].copy()
         props['delay'] = 10
         update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
-
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(self.create_snippet)
+        self.mock_update.assert_called_once_with(
+            '5678', {'health_monitor': {'delay': 10}})
 
 
 class PoolTest(common.HeatTestCase):
