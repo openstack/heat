@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import copy
-
 import mock
 import mox
 from neutronclient.common import exceptions
@@ -291,18 +289,24 @@ class PoolTest(common.HeatTestCase):
 
     def setUp(self):
         super(PoolTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_pool')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_pool')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_pool')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_pool')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'associate_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'disassociate_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
-        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
+        mockclient = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client', return_value=mockclient)
+        self.mock_create = mockclient.create_pool
+        self.mock_delete = mockclient.delete_pool
+        self.mock_show = mockclient.show_pool
+        self.mock_update = mockclient.update_pool
+        self.mock_associate = mockclient.associate_health_monitor
+        self.mock_disassociate = mockclient.disassociate_health_monitor
+        self.mock_create_vip = mockclient.create_vip
+        self.mock_delete_vip = mockclient.delete_vip
+        self.mock_show_vip = mockclient.show_vip
+
+        def finder(client, resource_type, name, cmd_resource):
+            return name
+
+        self.mock_finder = self.patchobject(
+            neutronV20, 'find_resourceid_by_name_or_id',
+            side_effect=finder)
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
@@ -316,137 +320,104 @@ class PoolTest(common.HeatTestCase):
             snippet = template_format.parse(pool_template_deprecated)
         self.stack = utils.parse_stack(snippet)
         self.tmpl = snippet
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_show.return_value = {'pool': {'status': 'ACTIVE'}}
+        self.mock_show_vip.return_value = {'vip': {'status': 'ACTIVE'}}
+        self.pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
-        stvipvsn = {
+        self.vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
-                'admin_state_up': True, 'subnet_id': u'sub9999',
-                'pool_id': '5678', 'protocol_port': 80}
-        }
+                'admin_state_up': True, 'subnet_id': u'sub123',
+                'pool_id': '5678', 'protocol_port': 80}}
 
-        stvippsn = copy.deepcopy(stvipvsn)
-        stvippsn['vip']['subnet_id'] = 'sub123'
-        self.stub_SubnetConstraint_validate()
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-        if resolve_neutron and with_vip_subnet:
-            neutronV20.find_resourceid_by_name_or_id(
-                mox.IsA(neutronclient.Client),
-                'subnet',
-                'sub9999',
-                cmd_resource=None,
-            ).MultipleTimes().AndReturn('sub9999')
-            neutronclient.Client.create_vip(stvipvsn
-                                            ).AndReturn({'vip': {'id': 'xyz'}})
-        else:
-            neutronclient.Client.create_vip(stvippsn
-                                            ).AndReturn({'vip': {'id': 'xyz'}})
+        if with_vip_subnet:
+            self.stub_SubnetConstraint_validate()
+            self.vip_create_snippet['vip']['subnet_id'] = 'sub9999'
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
+
+    def _test_create(self, resolve_neutron=True,
+                     with_vip_subnet=False):
+        rsrc = self.create_pool(resolve_neutron,
+                                with_vip_subnet)
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.mock_create.assert_called_once_with(self.pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(self.vip_create_snippet)
 
     def test_create(self):
         self._test_create()
 
     def test_create_deprecated(self):
-        self._test_create(resolve_neutron=False, with_vip_subnet=False)
-
-    def _test_create(self, resolve_neutron=True, with_vip_subnet=False):
-        rsrc = self.create_pool(resolve_neutron, with_vip_subnet)
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self._test_create(resolve_neutron=False,
+                          with_vip_subnet=False)
 
     def test_create_with_vip_subnet(self):
-        self._test_create(with_vip_subnet=True)
+        self._test_create(resolve_neutron=True,
+                          with_vip_subnet=True)
 
     def test_create_pending(self):
         snippet = template_format.parse(pool_template)
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mock_show.side_effect = [
+            {'pool': {'status': 'PENDING_CREATE'}},
+            {'pool': {'status': 'ACTIVE'}}]
+        self.mock_show_vip.side_effect = [
+            {'vip': {'status': 'PENDING_CREATE'}},
+            {'vip': {'status': 'ACTIVE'}}]
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'PENDING_CREATE'}})
-        neutronclient.Client.show_pool('5678').MultipleTimes().AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'PENDING_CREATE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
 
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show.assert_called_with('5678')
+        self.mock_show_vip.assert_called_with('xyz')
 
     def test_create_failed_error_status(self):
         cfg.CONF.set_override('action_retry_limit', 0)
 
         snippet = template_format.parse(pool_template)
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-
-        neutronclient.Client.create_pool({
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'ERROR', 'name': '5678'}})
 
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mock_show.return_value = {
+            'pool': {'status': 'ERROR', 'name': '5678'}}
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
-        self.m.ReplayAll()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual(
@@ -454,39 +425,33 @@ class PoolTest(common.HeatTestCase):
             'Went to status ERROR due to "error in pool"',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show.assert_called_once_with('5678')
 
     def test_create_failed_unexpected_vip_status(self):
         snippet = template_format.parse(pool_template)
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mock_show.return_value = {
+            'pool': {'status': 'ACTIVE', 'name': '5678'}}
+        self.mock_show_vip.return_value = {
+            'vip': {'status': 'SOMETHING', 'name': 'xyz'}}
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').MultipleTimes().AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'SOMETHING', 'name': 'xyz'}})
 
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
-        self.m.ReplayAll()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.create))
         self.assertEqual('ResourceUnknownStatus: resources.pool: '
@@ -494,27 +459,21 @@ class PoolTest(common.HeatTestCase):
                          'vip - Unknown status SOMETHING due to "Unknown"',
                          six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show.assert_called_once_with('5678')
+        self.mock_show_vip.assert_called_once_with('xyz')
 
     def test_create_failed(self):
         snippet = template_format.parse(pool_template)
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-
-        neutronclient.Client.create_pool({
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndRaise(exceptions.NeutronClientException())
-        self.m.ReplayAll()
 
+        self.mock_create.side_effect = exceptions.NeutronClientException()
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
@@ -525,25 +484,23 @@ class PoolTest(common.HeatTestCase):
             'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(pool_create_snippet)
 
     def test_create_with_session_persistence(self):
         snippet = template_format.parse(pool_with_session_persistence_template)
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mock_show.return_value = {
+            'pool': {'status': 'ACTIVE', 'name': '5678'}}
+        self.mock_show_vip.return_value = {
+            'vip': {'status': 'ACTIVE', 'name': 'xyz'}}
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
@@ -551,57 +508,50 @@ class PoolTest(common.HeatTestCase):
                 'session_persistence': {
                     'type': 'APP_COOKIE',
                     'cookie_name': 'cookie'}}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
 
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show.assert_called_once_with('5678')
+        self.mock_show_vip.assert_called_once_with('xyz')
 
     def test_create_pool_with_provider(self):
         snippet = template_format.parse(pool_template_with_provider)
         self.stub_ProviderConstraint_validate()
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mock_show.return_value = {
+            'pool': {'status': 'ACTIVE', 'provider': 'test_prov'}}
+        self.mock_show_vip.return_value = {
+            'vip': {'status': 'ACTIVE', 'name': 'xyz'}}
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True,
                 'provider': 'test_prov'}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').MultipleTimes().AndReturn(
-            {'pool': {'status': 'ACTIVE', 'provider': 'test_prov'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
+
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool(
             'pool', resource_defns['pool'], self.stack)
-        self.m.ReplayAll()
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual("test_prov", rsrc.FnGetAtt("provider"))
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show_vip.assert_called_once_with('xyz')
+        self.mock_show.assert_called_with('5678')
 
     def test_failing_validation_with_session_persistence(self):
         msg = _('Property cookie_name is required, when '
@@ -631,9 +581,7 @@ class PoolTest(common.HeatTestCase):
         resource = loadbalancer.Pool('pool', resource_defns['pool'],
                                      self.stack)
         self.stub_SubnetConstraint_validate()
-        self.m.ReplayAll()
         self.assertIsNone(resource.validate())
-        self.m.VerifyAll()
 
     def test_properties_are_prepared_for_session_persistence(self):
         snippet = template_format.parse(pool_with_session_persistence_template)
@@ -646,30 +594,23 @@ class PoolTest(common.HeatTestCase):
 
         self.stack = utils.parse_stack(snippet)
 
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mock_show.return_value = {
+            'pool': {'status': 'ACTIVE', 'name': '5678'}}
+        self.mock_show_vip.return_value = {
+            'vip': {'status': 'ACTIVE', 'name': 'xyz'}}
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80,
                 'session_persistence': {'type': 'HTTP_COOKIE'}}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
 
         resource_defns = self.stack.t.resource_definitions(self.stack)
         resource = loadbalancer.Pool('pool', resource_defns['pool'],
@@ -680,44 +621,49 @@ class PoolTest(common.HeatTestCase):
         self.assertIn('cookie_name', persistence)
         self.assertIsNone(persistence['cookie_name'])
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE), resource.state)
-        self.m.VerifyAll()
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show.assert_called_once_with('5678')
+        self.mock_show_vip.assert_called_once_with('xyz')
 
     def test_delete(self):
         rsrc = self.create_pool()
-        neutronclient.Client.delete_vip('xyz')
-        neutronclient.Client.show_vip('xyz').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_pool('5678')
-        neutronclient.Client.show_pool('5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
+        self.mock_delete.return_value = None
+        self.mock_delete_vip.return_value = None
+        self.mock_show_vip.side_effect = exceptions.NeutronClientException(
+            status_code=404)
+        self.mock_show.side_effect = exceptions.NeutronClientException(
+            status_code=404)
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_delete.assert_called_once_with('5678')
+        self.mock_delete_vip.assert_called_once_with('xyz')
+        self.mock_show.assert_called_with('5678')
+        self.assertEqual(2, self.mock_show.call_count)
+        self.mock_show_vip.assert_called_with('xyz')
+        self.assertEqual(2, self.mock_show_vip.call_count)
 
     def test_delete_already_gone(self):
-        neutronclient.Client.delete_vip('xyz').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_pool('5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
+        self.mock_delete_vip.side_effect = exceptions.NeutronClientException(
+            status_code=404)
+        self.mock_delete.side_effect = exceptions.NeutronClientException(
+            status_code=404)
 
         rsrc = self.create_pool()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_delete.assert_called_once_with('5678')
+        self.mock_delete_vip.assert_called_once_with('xyz')
 
     def test_delete_vip_failed(self):
-        neutronclient.Client.delete_vip('xyz').AndRaise(
-            exceptions.NeutronClientException(status_code=400))
+        self.mock_delete_vip.side_effect = exceptions.NeutronClientException(
+            status_code=400)
 
         rsrc = self.create_pool()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
@@ -726,16 +672,16 @@ class PoolTest(common.HeatTestCase):
             'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_delete_vip.assert_called_once_with('xyz')
+        self.mock_delete.assert_not_called()
 
     def test_delete_failed(self):
-        neutronclient.Client.delete_vip('xyz').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_pool('5678').AndRaise(
-            exceptions.NeutronClientException(status_code=400))
+        self.mock_delete_vip.side_effect = exceptions.NeutronClientException(
+            status_code=404)
+        self.mock_delete.side_effect = exceptions.NeutronClientException(
+            status_code=400)
 
         rsrc = self.create_pool()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(rsrc.delete))
@@ -744,102 +690,88 @@ class PoolTest(common.HeatTestCase):
             'An unknown exception occurred.',
             six.text_type(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_delete.assert_called_once_with('5678')
+        self.mock_delete_vip.assert_called_once_with('xyz')
 
     def test_attribute(self):
         rsrc = self.create_pool()
-        neutronclient.Client.show_pool('5678').MultipleTimes(
-        ).AndReturn(
-            {'pool': {'admin_state_up': True, 'lb_method': 'ROUND_ROBIN'}})
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
+        self.mock_show.return_value = {
+            'pool': {'admin_state_up': True, 'lb_method': 'ROUND_ROBIN'}}
         self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual('ROUND_ROBIN', rsrc.FnGetAtt('lb_method'))
-        self.m.VerifyAll()
 
     def test_vip_attribute(self):
         rsrc = self.create_pool()
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'address': '10.0.0.3', 'name': 'xyz'}})
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
+        self.mock_show_vip.return_value = {
+            'vip': {'address': '10.0.0.3', 'name': 'xyz'}}
         self.assertEqual({'address': '10.0.0.3', 'name': 'xyz'},
                          rsrc.FnGetAtt('vip'))
-        self.m.VerifyAll()
 
     def test_attribute_failed(self):
         rsrc = self.create_pool()
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'net_id')
         self.assertEqual(
             'The Referenced Attribute (pool net_id) is incorrect.',
             six.text_type(error))
-        self.m.VerifyAll()
 
     def test_update(self):
         rsrc = self.create_pool()
-        neutronclient.Client.update_pool(
-            '5678', {'pool': {'admin_state_up': False}})
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
-
         props = self.tmpl['resources']['pool']['properties'].copy()
         props['admin_state_up'] = False
         update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
-
-        self.m.VerifyAll()
+        self.mock_update.assert_called_once_with(
+            '5678', {'pool': {'admin_state_up': False}})
 
     def test_update_monitors(self):
         snippet = template_format.parse(pool_template)
         self.stack = utils.parse_stack(snippet)
-
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
-            'subnet',
-            'sub123',
-            cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-        neutronclient.Client.create_pool({
+        self.mock_create.return_value = {'pool': {'id': '5678'}}
+        self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
+        pool_create_snippet = {
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
                 'name': utils.PhysName(self.stack.name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.associate_health_monitor(
-            '5678', {'health_monitor': {'id': 'mon123'}})
-        neutronclient.Client.associate_health_monitor(
-            '5678', {'health_monitor': {'id': 'mon456'}})
-        neutronclient.Client.create_vip({
+        vip_create_snippet = {
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
-        neutronclient.Client.disassociate_health_monitor(
-            '5678', 'mon456')
-        neutronclient.Client.associate_health_monitor(
-            '5678', {'health_monitor': {'id': 'mon789'}})
+
+        self.mock_show.return_value = {
+            'pool': {'status': 'ACTIVE', 'name': '5678'}}
+        self.mock_show_vip.return_value = {
+            'vip': {'status': 'ACTIVE', 'name': 'xyz'}}
 
         snippet['resources']['pool']['properties']['monitors'] = [
             'mon123', 'mon456']
         resource_defns = self.stack.t.resource_definitions(self.stack)
         rsrc = loadbalancer.Pool('pool', resource_defns['pool'], self.stack)
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
         props = snippet['resources']['pool']['properties'].copy()
         props['monitors'] = ['mon123', 'mon789']
         update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
-
-        self.m.VerifyAll()
+        associate_calls = [mock.call('5678',
+                                     {'health_monitor': {'id': 'mon123'}}),
+                           mock.call('5678',
+                                     {'health_monitor': {'id': 'mon456'}}),
+                           mock.call('5678',
+                                     {'health_monitor': {'id': 'mon789'}})]
+        self.mock_associate.assert_has_calls(associate_calls)
+        self.assertEqual(3, self.mock_associate.call_count)
+        self.mock_disassociate.assert_called_once_with('5678', 'mon456')
+        self.mock_create.assert_called_once_with(pool_create_snippet)
+        self.mock_create_vip.assert_called_once_with(vip_create_snippet)
+        self.mock_show.assert_called_once_with('5678')
+        self.mock_show_vip.assert_called_once_with('xyz')
 
 
 class PoolMemberTest(common.HeatTestCase):
