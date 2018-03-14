@@ -12,13 +12,11 @@
 #    under the License.
 
 import mock
-import mox
 
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import aodh
-from heat.engine.resources.openstack.aodh.gnocchi import (
-    alarm as gnocchi)
+from heat.engine.resources.openstack.aodh.gnocchi import alarm as gnocchi
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -92,40 +90,49 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
     def create_alarm(self):
         self.patchobject(aodh.AodhClientPlugin,
                          '_create').return_value = self.fc
-        self.m.StubOutWithMock(self.fc.alarm, 'create')
-        self.fc.alarm.create(
-            {
-                'alarm_actions': [],
-                'description': u'Do stuff with gnocchi',
-                'enabled': True,
-                'insufficient_data_actions': [],
-                'ok_actions': [],
-                'name': mox.IgnoreArg(),
-                'type': 'gnocchi_resources_threshold',
-                'repeat_actions': True,
-                'gnocchi_resources_threshold_rule': {
-                    "metric": "cpu_util",
-                    "aggregation_method": "mean",
-                    "granularity": 60,
-                    "evaluation_periods": 1,
-                    "threshold": 50,
-                    "resource_type": "instance",
-                    "resource_id": "5a517ceb-b068-4aca-9eb9-3e4eb9b90d9a",
-                    "comparison_operator": "gt",
-                },
-                'time_constraints': [],
-                'severity': 'low'
-            }).AndReturn(FakeAodhAlarm)
+        self.fc.alarm.create.return_value = FakeAodhAlarm
         self.tmpl = template_format.parse(gnocchi_resources_alarm_template)
         self.stack = utils.parse_stack(self.tmpl)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return gnocchi.AodhGnocchiResourcesAlarm(
             'GnoResAlarm', resource_defns['GnoResAlarm'], self.stack)
 
+    def _check_alarm_create(self):
+        expected = {
+            'alarm_actions': [],
+            'description': u'Do stuff with gnocchi',
+            'enabled': True,
+            'insufficient_data_actions': [],
+            'ok_actions': [],
+            'name': mock.ANY,
+            'type': 'gnocchi_resources_threshold',
+            'repeat_actions': True,
+            'gnocchi_resources_threshold_rule': {
+                "metric": "cpu_util",
+                "aggregation_method": "mean",
+                "granularity": 60,
+                "evaluation_periods": 1,
+                "threshold": 50,
+                "resource_type": "instance",
+                "resource_id": "5a517ceb-b068-4aca-9eb9-3e4eb9b90d9a",
+                "comparison_operator": "gt",
+            },
+            'time_constraints': [],
+            'severity': 'low'
+        }
+        self.fc.alarm.create.assert_called_once_with(expected)
+
     def test_update(self):
         rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarm, 'update')
-        self.fc.alarm.update(
+        scheduler.TaskRunner(rsrc.create)()
+        self._check_alarm_create()
+
+        props = self.tmpl['resources']['GnoResAlarm']['properties']
+        props['resource_id'] = 'd3d6c642-921e-4fc2-9c5f-15d9a5afb598'
+        update_template = rsrc.t.freeze(properties=props)
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.fc.alarm.update.assert_called_once_with(
             'foo',
             {
                 'alarm_actions': [],
@@ -149,17 +156,6 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
             }
         )
 
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-
-        props = self.tmpl['resources']['GnoResAlarm']['properties']
-        props['resource_id'] = 'd3d6c642-921e-4fc2-9c5f-15d9a5afb598'
-        update_template = rsrc.t.freeze(properties=props)
-        scheduler.TaskRunner(rsrc.update, update_template)()
-        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-
     def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(gnocchi_resources_alarm_template)
         self.stack = utils.parse_stack(snippet)
@@ -174,38 +170,29 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
     def test_create(self):
         rsrc = self.create_alarm()
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
+        self._check_alarm_create()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('foo', rsrc.resource_id)
-        self.m.VerifyAll()
 
     def test_suspend(self):
         rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarm, 'update')
-        self.fc.alarm.update('foo', {'enabled': False})
-
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
+        self._check_alarm_create()
 
         scheduler.TaskRunner(rsrc.suspend)()
         self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
+        self.fc.alarm.update.assert_called_once_with('foo', {'enabled': False})
 
     def test_resume(self):
         rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarm, 'update')
-        self.fc.alarm.update('foo', {'enabled': True})
-
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
+        self._check_alarm_create()
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
 
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
+        self.fc.alarm.update.assert_called_once_with('foo', {'enabled': True})
 
     def test_check(self):
         res = self._prepare_resource()
@@ -279,18 +266,15 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
 
 class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
 
-    def create_alarm(self):
-        self.patchobject(aodh.AodhClientPlugin,
-                         '_create').return_value = self.fc
-        self.m.StubOutWithMock(self.fc.alarm, 'create')
-        self.fc.alarm.create(
+    def _check_alarm_create(self):
+        self.fc.alarm.create.assert_called_once_with(
             {
                 'alarm_actions': [],
                 'description': u'Do stuff with gnocchi metrics',
                 'enabled': True,
                 'insufficient_data_actions': [],
                 'ok_actions': [],
-                'name': mox.IgnoreArg(),
+                'name': mock.ANY,
                 'type': 'gnocchi_aggregation_by_metrics_threshold',
                 'repeat_actions': True,
                 'gnocchi_aggregation_by_metrics_threshold_rule': {
@@ -304,7 +288,12 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
                 },
                 'time_constraints': [],
                 'severity': 'low'}
-        ).AndReturn(FakeAodhAlarm)
+        )
+
+    def create_alarm(self):
+        self.patchobject(aodh.AodhClientPlugin,
+                         '_create').return_value = self.fc
+        self.fc.alarm.create.return_value = FakeAodhAlarm
         self.tmpl = template_format.parse(
             gnocchi_aggregation_by_metrics_alarm_template)
         self.stack = utils.parse_stack(self.tmpl)
@@ -315,8 +304,17 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
 
     def test_update(self):
         rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarm, 'update')
-        self.fc.alarm.update(
+        scheduler.TaskRunner(rsrc.create)()
+        self._check_alarm_create()
+
+        snippet = self.tmpl['resources']['GnoAggregationByMetricsAlarm']
+        props = snippet['properties'].copy()
+        props['metrics'] = ['d3d6c642-921e-4fc2-9c5f-15d9a5afb598',
+                            'bc60f822-18a0-4a0c-94e7-94c554b00901']
+        update_template = rsrc.t.freeze(properties=props)
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.fc.alarm.update.assert_called_once_with(
             'foo',
             {
                 'alarm_actions': [],
@@ -338,19 +336,6 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
                 'severity': 'low'
             }
         )
-
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-
-        snippet = self.tmpl['resources']['GnoAggregationByMetricsAlarm']
-        props = snippet['properties'].copy()
-        props['metrics'] = ['d3d6c642-921e-4fc2-9c5f-15d9a5afb598',
-                            'bc60f822-18a0-4a0c-94e7-94c554b00901']
-        update_template = rsrc.t.freeze(properties=props)
-        scheduler.TaskRunner(rsrc.update, update_template)()
-        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
 
     def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(
@@ -421,19 +406,15 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
 
 class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
 
-    def create_alarm(self):
-        self.patchobject(aodh.AodhClientPlugin,
-                         '_create').return_value = self.fc
-
-        self.m.StubOutWithMock(self.fc.alarm, 'create')
-        self.fc.alarm.create(
+    def _check_alarm_create(self):
+        self.fc.alarm.create.assert_called_once_with(
             {
                 'alarm_actions': [],
                 'description': 'Do stuff with gnocchi aggregation by resource',
                 'enabled': True,
                 'insufficient_data_actions': [],
                 'ok_actions': [],
-                'name': mox.IgnoreArg(),
+                'name': mock.ANY,
                 'type': 'gnocchi_aggregation_by_resources_threshold',
                 'repeat_actions': True,
                 'gnocchi_aggregation_by_resources_threshold_rule': {
@@ -448,7 +429,13 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
                 },
                 'time_constraints': [],
                 'severity': 'low'}
-        ).AndReturn(FakeAodhAlarm)
+        )
+
+    def create_alarm(self):
+        self.patchobject(aodh.AodhClientPlugin,
+                         '_create').return_value = self.fc
+
+        self.fc.alarm.create.return_value = FakeAodhAlarm
         self.tmpl = template_format.parse(
             gnocchi_aggregation_by_resources_alarm_template)
         self.stack = utils.parse_stack(self.tmpl)
@@ -459,8 +446,16 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
 
     def test_update(self):
         rsrc = self.create_alarm()
-        self.m.StubOutWithMock(self.fc.alarm, 'update')
-        self.fc.alarm.update(
+        scheduler.TaskRunner(rsrc.create)()
+        self._check_alarm_create()
+
+        snippet = self.tmpl['resources']['GnoAggregationByResourcesAlarm']
+        props = snippet['properties'].copy()
+        props['query'] = '{"=": {"server_group": "my_new_group"}}'
+        update_template = rsrc.t.freeze(properties=props)
+        scheduler.TaskRunner(rsrc.update, update_template)()
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.fc.alarm.update.assert_called_once_with(
             'foo',
             {
                 'alarm_actions': [],
@@ -483,18 +478,6 @@ class GnocchiAggregationByResourcesAlarmTest(GnocchiResourcesAlarmTest):
                 'severity': 'low'
             }
         )
-
-        self.m.ReplayAll()
-        scheduler.TaskRunner(rsrc.create)()
-
-        snippet = self.tmpl['resources']['GnoAggregationByResourcesAlarm']
-        props = snippet['properties'].copy()
-        props['query'] = '{"=": {"server_group": "my_new_group"}}'
-        update_template = rsrc.t.freeze(properties=props)
-        scheduler.TaskRunner(rsrc.update, update_template)()
-        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
 
     def _prepare_resource(self, for_check=True):
         snippet = template_format.parse(
