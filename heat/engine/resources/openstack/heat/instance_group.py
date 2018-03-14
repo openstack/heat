@@ -426,6 +426,13 @@ class InstanceGroup(stack_resource.StackResource):
             },
         }
 
+    def get_nested_parameters_stack(self):
+        """Return a nested group of size 1 for validation."""
+        child_template = self._create_template(1)
+        params = self.child_params()
+        name = "%s-%s" % (self.stack.name, self.name)
+        return self._parse_nested_stack(name, child_template, params)
+
 
 def resource_mapping():
     return {
