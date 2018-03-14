@@ -34,99 +34,80 @@ class Response(object):
 
 
 class UrlFetchTest(common.HeatTestCase):
-    def setUp(self):
-        super(UrlFetchTest, self).setUp()
-        self.m.StubOutWithMock(requests, 'get')
 
     def test_file_scheme_default_behaviour(self):
-        self.m.ReplayAll()
         self.assertRaises(urlfetch.URLFetchError,
                           urlfetch.get, 'file:///etc/profile')
-        self.m.VerifyAll()
 
     def test_file_scheme_supported(self):
         data = '{ "foo": "bar" }'
         url = 'file:///etc/profile'
-
-        self.m.StubOutWithMock(six.moves.urllib.request, 'urlopen')
-        six.moves.urllib.request.urlopen(url).AndReturn(
-            six.moves.cStringIO(data))
-        self.m.ReplayAll()
-
+        mock_open = self.patchobject(six.moves.urllib.request, 'urlopen')
+        mock_open.return_value = six.moves.cStringIO(data)
         self.assertEqual(data, urlfetch.get(url, allowed_schemes=['file']))
-        self.m.VerifyAll()
+        mock_open.assert_called_once_with(url)
 
     def test_file_scheme_failure(self):
         url = 'file:///etc/profile'
-
-        self.m.StubOutWithMock(six.moves.urllib.request, 'urlopen')
-        six.moves.urllib.request.urlopen(url).AndRaise(
-            six.moves.urllib.error.URLError('oops'))
-        self.m.ReplayAll()
-
+        mock_open = self.patchobject(six.moves.urllib.request, 'urlopen')
+        mock_open.side_effect = six.moves.urllib.error.URLError('oops')
         self.assertRaises(urlfetch.URLFetchError,
                           urlfetch.get, url, allowed_schemes=['file'])
-        self.m.VerifyAll()
+        mock_open.assert_called_once_with(url)
 
     def test_http_scheme(self):
         url = 'http://example.com/template'
         data = b'{ "foo": "bar" }'
         response = Response(data)
-        requests.get(url, stream=True).AndReturn(response)
-        self.m.ReplayAll()
+        mock_get = self.patchobject(requests, 'get')
+        mock_get.return_value = response
         self.assertEqual(data, urlfetch.get(url))
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(url, stream=True)
 
     def test_https_scheme(self):
         url = 'https://example.com/template'
         data = b'{ "foo": "bar" }'
         response = Response(data)
-        requests.get(url, stream=True).AndReturn(response)
-        self.m.ReplayAll()
+        mock_get = self.patchobject(requests, 'get')
+        mock_get.return_value = response
         self.assertEqual(data, urlfetch.get(url))
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(url, stream=True)
 
     def test_http_error(self):
         url = 'http://example.com/template'
-
-        requests.get(url, stream=True).AndRaise(exceptions.HTTPError())
-        self.m.ReplayAll()
-
+        mock_get = self.patchobject(requests, 'get')
+        mock_get.side_effect = exceptions.HTTPError()
         self.assertRaises(urlfetch.URLFetchError, urlfetch.get, url)
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(url, stream=True)
 
     def test_non_exist_url(self):
         url = 'http://non-exist.com/template'
-
-        requests.get(url, stream=True).AndRaise(exceptions.Timeout())
-        self.m.ReplayAll()
-
+        mock_get = self.patchobject(requests, 'get')
+        mock_get.side_effect = exceptions.Timeout()
         self.assertRaises(urlfetch.URLFetchError, urlfetch.get, url)
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(url, stream=True)
 
     def test_garbage(self):
-        self.m.ReplayAll()
         self.assertRaises(urlfetch.URLFetchError, urlfetch.get, 'wibble')
-        self.m.VerifyAll()
 
     def test_max_fetch_size_okay(self):
         url = 'http://example.com/template'
         data = b'{ "foo": "bar" }'
         response = Response(data)
         cfg.CONF.set_override('max_template_size', 500)
-        requests.get(url, stream=True).AndReturn(response)
-        self.m.ReplayAll()
+        mock_get = self.patchobject(requests, 'get')
+        mock_get.return_value = response
         urlfetch.get(url)
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(url, stream=True)
 
     def test_max_fetch_size_error(self):
         url = 'http://example.com/template'
         data = b'{ "foo": "bar" }'
         response = Response(data)
         cfg.CONF.set_override('max_template_size', 5)
-        requests.get(url, stream=True).AndReturn(response)
-        self.m.ReplayAll()
+        mock_get = self.patchobject(requests, 'get')
+        mock_get.return_value = response
         exception = self.assertRaises(urlfetch.URLFetchError,
                                       urlfetch.get, url)
         self.assertIn("Template exceeds", six.text_type(exception))
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(url, stream=True)
