@@ -25,6 +25,7 @@ class NeutronQuota(neutron.NeutronResource):
 
     Neutron Quota is used to manage operational limits for projects. Currently,
     this resource can manage Neutron's quotas for:
+
         - subnet
         - network
         - floatingip

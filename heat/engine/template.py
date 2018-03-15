@@ -337,9 +337,9 @@ class Template(collections.Mapping):
         not provided, a new empty HOT template of version "2015-04-30"
         is returned.
 
-        :param version: A tuple containing version header of the
-        template: version key and value. E.g. ("heat_template_version",
-        "2015-04-30")
+        :param version: A tuple containing version header of the template
+                        version key and value,
+                        e.g. ``('heat_template_version', '2015-04-30')``
         :returns: A new empty template.
         """
         if from_template:

@@ -391,6 +391,9 @@ def _filter_resources(prefix=None, path=None, statuses=None):
 
 
 def _load_all_resources():
+    from oslo_log import log as logging
+    logging.getLogger('heat.engine.environment').logger.setLevel(logging.ERROR)
+
     manager = plugin_manager.PluginManager('heat.engine.resources')
     resource_mapping = plugin_manager.PluginMapping('resource')
     res_plugin_mappings = resource_mapping.load_all(manager)

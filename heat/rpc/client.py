@@ -217,7 +217,7 @@ class EngineClient(object):
 
         :param ctxt: RPC context.
         :param stack_identity: Name of the stack you want to show, or None to
-        show all
+                               show all
         :param resolve_outputs: If True, stack outputs will be resolved
         """
         return self.call(ctxt, self.make_msg('show_stack',
@@ -381,10 +381,10 @@ class EngineClient(object):
         :param params: Stack Input Params/Environment
         :param files: files referenced from the environment/template.
         :param environment_files: ordered list of environment file names
-               included in the files dict
+                                  included in the files dict
         :param show_nested: if True nested templates will be validated
         :param ignorable_errors: List of error_code to be ignored as part of
-        validation
+                                 validation
         """
         return self.call(ctxt, self.make_msg(
             'validate_template',
@@ -498,11 +498,11 @@ class EngineClient(object):
 
     def list_template_functions(self, ctxt, template_version,
                                 with_condition=False):
-        """Get a list of available functions in a given template.
+        """Get a list of available functions in a given template type.
 
         :param ctxt: RPC context
-        :param template_name : name of the template which function list you
-                               want to get
+        :param template_version: template format/version tuple for which you
+                                 want to get the list of functions.
         :param with_condition: return includes condition functions.
         """
         return self.call(ctxt,

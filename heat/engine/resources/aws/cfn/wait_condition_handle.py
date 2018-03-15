@@ -50,13 +50,14 @@ class WaitConditionHandle(wc_base.BaseWaitConditionHandle):
     def handle_signal(self, details=None):
         """Validate and update the resource metadata.
 
-        metadata must use the following format:
-        {
-            "Status" : "Status (must be SUCCESS or FAILURE)",
-            "UniqueId" : "Some ID, should be unique for Count>1",
-            "Data" : "Arbitrary Data",
-            "Reason" : "Reason String"
-        }
+        metadata must use the following format::
+
+            {
+                "Status" : "Status (must be SUCCESS or FAILURE)",
+                "UniqueId" : "Some ID, should be unique for Count>1",
+                "Data" : "Arbitrary Data",
+                "Reason" : "Reason String"
+            }
         """
         if details is None:
             return

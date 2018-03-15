@@ -616,6 +616,7 @@ class Stack(collections.Mapping):
         error if this option is lost.
 
         Note:
+
         - This doesn't return the args(name, template) but only the kwargs.
         - We often want to start 'fresh' so don't want to maintain the old
           status, action and status_reason.
@@ -1126,13 +1127,14 @@ class Stack(collections.Mapping):
 
         :param action: action that should be executed with stack resources
         :param reverse: define if action on the resources need to be executed
-         in reverse order (resources - first and then res dependencies )
+                        in reverse dependency order
         :param post_func: function that need to be executed after
-        action complete on the stack
+                          action complete on the stack
         :param aggregate_exceptions: define if exceptions should be aggregated
         :param pre_completion_func: function that need to be executed right
-        before action completion. Uses stack ,action, status and reason as
-        input parameters
+                                    before action completion; uses stack,
+                                    action, status and reason as input
+                                    parameters
         """
         try:
             lifecycle_plugin_utils.do_pre_ops(self.context, self,
@@ -2079,12 +2081,12 @@ class Stack(collections.Mapping):
 
         1. Delete the resources from DB.
         2. If the stack failed, update the current_traversal to empty string
-        so that the resource workers bail out.
+           so that the resource workers bail out.
         3. Delete previous raw template if stack completes successfully.
         4. Deletes all sync points. They are no longer needed after stack
            has completed/failed.
         5. Delete the stack if the action is DELETE.
-       """
+        """
         resource_objects.Resource.purge_deleted(self.context, self.id)
 
         exp_trvsl = self.current_traversal

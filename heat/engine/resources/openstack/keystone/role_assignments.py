@@ -22,30 +22,32 @@ from heat.engine import support
 class KeystoneRoleAssignmentMixin(object):
     """Implements role assignments between user/groups and project/domain.
 
-    heat_template_version: 2013-05-23
+    For example::
 
-    parameters:
-      ... Group or User parameters
-      group_role:
-        type: string
-        description: role
-      group_role_domain:
-        type: string
-        description: group role domain
-      group_role_project:
-        type: string
-        description: group role project
+        heat_template_version: 2013-05-23
 
-    resources:
-      admin_group:
-        type: OS::Keystone::Group OR OS::Keystone::User
-        properties:
-          ... Group or User properties
-          roles:
-            - role: {get_param: group_role}
-              domain: {get_param: group_role_domain}
-            - role: {get_param: group_role}
-              project: {get_param: group_role_project}
+        parameters:
+          ... Group or User parameters
+          group_role:
+            type: string
+            description: role
+          group_role_domain:
+            type: string
+            description: group role domain
+          group_role_project:
+            type: string
+            description: group role project
+
+        resources:
+          admin_group:
+            type: OS::Keystone::Group OR OS::Keystone::User
+            properties:
+              ... Group or User properties
+              roles:
+                - role: {get_param: group_role}
+                  domain: {get_param: group_role_domain}
+                - role: {get_param: group_role}
+                  project: {get_param: group_role_project}
     """
 
     PROPERTIES = (

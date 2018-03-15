@@ -125,8 +125,7 @@ The following steps are run during stack creation:
    in the stack domain are still assigned the ``heat_stack_user`` role, so
    the API surface they can access is limited through
    the :file:`policy.json` file.
-   For more  information, see :doc:`OpenStack Identity
-   documentation <identity-management>`.
+   For more  information, see `OpenStack Identity documentation`_.
 
 #. When API requests are processed, the Orchestration service performs
    an internal lookup, and allows stack details for a given stack to be
@@ -150,3 +149,5 @@ or::
 The stack owner uses the former (via ``openstack stack resource metadata
 STACK RESOURCE``), and any agents in the instance
 use the latter.
+
+.. _OpenStack Identity documentation: https://docs.openstack.org/keystone/latest/

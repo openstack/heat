@@ -669,7 +669,7 @@ directories on the local file system where the engine will search for plug-ins.
 Simply place the file containing your resource in one of these directories and
 the engine will make them available next time the service starts.
 
-See :doc:`<../configuration/index>` for more information on configuring the
+See :doc:`../configuration/index` for more information on configuring the
 orchestration service.
 
 Testing

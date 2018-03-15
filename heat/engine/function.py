@@ -331,7 +331,7 @@ def dep_attrs(snippet, resource_name):
     appropriate.
 
     :returns: an iterator over the attributes of the specified resource that
-    are referenced in the template snippet.
+              are referenced in the template snippet.
     """
 
     if isinstance(snippet, Function):
@@ -354,7 +354,7 @@ def all_dep_attrs(snippet):
     appropriate.
 
     :returns: an iterator over the resource name, attribute name tuples of all
-    attributes that are referenced in the template snippet.
+              attributes that are referenced in the template snippet.
     """
 
     if isinstance(snippet, Function):

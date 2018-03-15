@@ -11,17 +11,19 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+:orphan:
+
 Developing Guides
 =================
 
 .. toctree::
-       :maxdepth: 1
+    :maxdepth: 1
 
-    contributing/index
-    getting_started/on_devstack
-    developing_guides/architecture
-    developing_guides/pluginguide
-    developing_guides/schedulerhints
-    developing_guides/gmr
-    developing_guides/supportstatus
-    developing_guides/rally_on_gates
+    ../contributing/index
+    ../getting_started/on_devstack
+    architecture
+    pluginguide
+    schedulerhints
+    gmr
+    supportstatus
+    rally_on_gates
