@@ -12,6 +12,7 @@
 #    under the License.
 
 from keystoneauth1 import exceptions as kc_exceptions
+import mock
 import six
 
 from heat.common import exception
@@ -38,7 +39,7 @@ class StackUserTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackUserTest, self).setUp()
-        self.fc = fake_ks.FakeKeystoneClient()
+        self.fc = mock.Mock(spec=fake_ks.FakeKeystoneClient)
 
     def _user_create(self, stack_name, project_id, user_id,
                      resource_name='user', create_project=True,
@@ -46,201 +47,196 @@ class StackUserTest(common.HeatTestCase):
         t = template_format.parse(user_template)
         self.stack = utils.parse_stack(t, stack_name=stack_name)
         rsrc = self.stack[resource_name]
-
-        self.m.StubOutWithMock(stack_user.StackUser, 'keystone')
-        stack_user.StackUser.keystone().MultipleTimes().AndReturn(self.fc)
-
+        self.patchobject(stack_user.StackUser, 'keystone',
+                         return_value=self.fc)
         if create_project:
-            self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                                   'create_stack_domain_project')
-            fake_ks.FakeKeystoneClient.create_stack_domain_project(
-                self.stack.id).AndReturn(project_id)
+            self.fc.create_stack_domain_project.return_value = project_id
         else:
             self.stack.set_stack_user_project_id(project_id)
 
         rsrc.store()
-        self.m.StubOutWithMock(short_id, 'get_id')
-        short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')
+        mock_get_id = self.patchobject(short_id, 'get_id')
+        mock_get_id.return_value = 'aabbcc'
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'create_stack_domain_user')
-        expected_username = '%s-%s-%s' % (stack_name, resource_name, 'aabbcc')
-        fake_ks.FakeKeystoneClient.create_stack_domain_user(
-            username=expected_username, password=password,
-            project_id=project_id).AndReturn(user_id)
-
+        self.fc.create_stack_domain_user.return_value = user_id
         return rsrc
 
     def test_handle_create_no_stack_project(self):
-        rsrc = self._user_create(stack_name='stackuser_crnoprj',
-                                 project_id='aproject123',
-                                 user_id='auser123')
-        self.m.ReplayAll()
+        stack_name = 'stackuser_crnoprj'
+        resource_name = 'user'
+        project_id = 'aproject123'
+        user_id = 'auser123'
 
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual({'user_id': 'auser123'}, rs_data)
-        self.m.VerifyAll()
+        self.assertEqual({'user_id': user_id}, rs_data)
+        self.fc.create_stack_domain_project.assert_called_once_with(
+            self.stack.id)
+        expected_username = '%s-%s-%s' % (stack_name, resource_name, 'aabbcc')
+        self.fc.create_stack_domain_user.assert_called_once_with(
+            password=None, project_id=project_id, username=expected_username)
 
     def test_handle_create_existing_project(self):
-        rsrc = self._user_create(stack_name='stackuser_crexistprj',
-                                 project_id='aproject456',
-                                 user_id='auser456',
+        stack_name = 'stackuser_crexistprj'
+        resource_name = 'user'
+        project_id = 'aproject456'
+        user_id = 'auser456'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id,
                                  create_project=False)
-        self.m.ReplayAll()
-
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual({'user_id': 'auser456'}, rs_data)
-        self.m.VerifyAll()
+        self.assertEqual({'user_id': user_id}, rs_data)
+        self.fc.create_stack_domain_project.assert_not_called()
+        expected_username = '%s-%s-%s' % (stack_name, resource_name, 'aabbcc')
+        self.fc.create_stack_domain_user.assert_called_once_with(
+            password=None, project_id=project_id, username=expected_username)
 
     def test_handle_delete(self):
-        rsrc = self._user_create(stack_name='stackuser_testdel',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testdel'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'delete_stack_domain_user')
-        fake_ks.FakeKeystoneClient.delete_stack_domain_user(
-            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
-
-        self.m.ReplayAll()
+        self.fc.delete_stack_domain_user.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.delete_stack_domain_user.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
 
     def test_handle_delete_not_found(self):
-        rsrc = self._user_create(stack_name='stackuser_testdel_notfound',
-                                 project_id='aprojectdel2',
-                                 user_id='auserdel2')
+        stack_name = 'stackuser_testdel-notfound'
+        project_id = 'aprojectdel2'
+        user_id = 'auserdel2'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'delete_stack_domain_user')
-        fake_ks.FakeKeystoneClient.delete_stack_domain_user(
-            user_id='auserdel2', project_id='aprojectdel2').AndRaise(
-                kc_exceptions.NotFound)
-
-        self.m.ReplayAll()
+        self.fc.delete_stack_domain_user.side_effect = kc_exceptions.NotFound()
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.delete_stack_domain_user.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
 
     def test_handle_delete_noid(self):
-        rsrc = self._user_create(stack_name='stackuser_testdel_noid',
-                                 project_id='aprojectdel2',
-                                 user_id='auserdel2')
-
-        self.m.ReplayAll()
+        stack_name = 'stackuser_testdel-noid'
+        project_id = 'aprojectdel2'
+        user_id = 'auserdel2'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         resource_data_object.ResourceData.delete(rsrc, 'user_id')
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.delete_stack_domain_user.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
 
     def test_handle_suspend(self):
-        rsrc = self._user_create(stack_name='stackuser_testsusp',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testsusp'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'disable_stack_domain_user')
-        fake_ks.FakeKeystoneClient.disable_stack_domain_user(
-            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
-
-        self.m.ReplayAll()
+        self.fc.disable_stack_domain_user.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.suspend)()
         self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.disable_stack_domain_user.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
 
     def test_handle_suspend_legacy(self):
-        rsrc = self._user_create(stack_name='stackuser_testsusp_lgcy',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testsusp_lgcy'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'disable_stack_domain_user')
-        fake_ks.FakeKeystoneClient.disable_stack_domain_user(
-            user_id='auserdel', project_id='aprojectdel').AndRaise(ValueError)
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'disable_stack_user')
-        fake_ks.FakeKeystoneClient.disable_stack_user(
-            user_id='auserdel').AndReturn(None)
-
-        self.m.ReplayAll()
+        self.fc.disable_stack_domain_user.side_effect = ValueError()
+        self.fc.disable_stack_user.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         scheduler.TaskRunner(rsrc.suspend)()
         self.assertEqual((rsrc.SUSPEND, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.disable_stack_domain_user.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
+        self.fc.disable_stack_user.assert_called_once_with(user_id=user_id)
 
     def test_handle_resume(self):
-        rsrc = self._user_create(stack_name='stackuser_testresume',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testresume'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'enable_stack_domain_user')
-        fake_ks.FakeKeystoneClient.enable_stack_domain_user(
-            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
-
-        self.m.ReplayAll()
+        self.fc.enable_stack_domain_user.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.enable_stack_domain_user.assert_called_once_with(
+            project_id=project_id, user_id=user_id)
 
     def test_handle_resume_legacy(self):
-        rsrc = self._user_create(stack_name='stackuser_testresume_lgcy',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testresume_lgcy'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'enable_stack_domain_user')
-        fake_ks.FakeKeystoneClient.enable_stack_domain_user(
-            user_id='auserdel', project_id='aprojectdel').AndRaise(ValueError)
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'enable_stack_user')
-        fake_ks.FakeKeystoneClient.enable_stack_user(
-            user_id='auserdel').AndReturn(None)
-
-        self.m.ReplayAll()
+        self.fc.enable_stack_domain_user.side_effect = ValueError()
+        self.fc.enable_stack_user.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rsrc.state_set(rsrc.SUSPEND, rsrc.COMPLETE)
         scheduler.TaskRunner(rsrc.resume)()
         self.assertEqual((rsrc.RESUME, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.fc.enable_stack_domain_user.assert_called_once_with(
+            user_id=user_id, project_id=project_id)
+        self.fc.enable_stack_user.assert_called_once_with(user_id=user_id)
 
     def test_create_keypair(self):
-        rsrc = self._user_create(stack_name='stackuser_test_cr_keypair',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_test_cr_keypair'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
+        creds = fake_ks.FakeKeystoneClient().creds
+        self.fc.creds = creds
+        self.fc.credential_id = creds.id
+        self.fc.access = creds.access
+        self.fc.secret = creds.secret
 
         # create_stack_domain_user_keypair(self, user_id, project_id):
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'create_stack_domain_user_keypair')
-        fake_ks.FakeKeystoneClient.create_stack_domain_user_keypair(
-            user_id='auserdel', project_id='aprojectdel').AndReturn(
-                self.fc.creds)
-        self.m.ReplayAll()
+        self.fc.create_stack_domain_user_keypair.return_value = self.fc.creds
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -252,36 +248,35 @@ class StackUserTest(common.HeatTestCase):
         self.assertEqual(self.fc.credential_id, rs_data['credential_id'])
         self.assertEqual(self.fc.access, rs_data['access_key'])
         self.assertEqual(self.fc.secret, rs_data['secret_key'])
-        self.m.VerifyAll()
+        self.fc.create_stack_domain_user_keypair.assert_called_once_with(
+            project_id=project_id, user_id=user_id)
 
     def test_create_keypair_error(self):
-        rsrc = self._user_create(stack_name='stackuser_test_cr_keypair_err',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_test_cr_keypair-err'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
         # create_stack_domain_user_keypair(self, user_id, project_id):
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'create_stack_domain_user_keypair')
-        fake_ks.FakeKeystoneClient.create_stack_domain_user_keypair(
-            user_id='auserdel', project_id='aprojectdel').AndReturn(None)
-        self.m.ReplayAll()
+        self.fc.create_stack_domain_user_keypair.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertRaises(exception.Error, rsrc._create_keypair)
-        self.m.VerifyAll()
+        self.fc.create_stack_domain_user_keypair.assert_called_once_with(
+            project_id=project_id, user_id=user_id)
 
     def test_delete_keypair(self):
-        rsrc = self._user_create(stack_name='stackuser_testdel_keypair',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testdel_keypair'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'delete_stack_domain_user_keypair')
-        fake_ks.FakeKeystoneClient.delete_stack_domain_user_keypair(
-            user_id='auserdel', project_id='aprojectdel',
-            credential_id='acredential').AndReturn(None)
-        self.m.ReplayAll()
+        self.fc.delete_stack_domain_user_keypair.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -290,30 +285,32 @@ class StackUserTest(common.HeatTestCase):
         rsrc.data_set('secret_key', 'verysecret')
         rsrc._delete_keypair()
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual({'user_id': 'auserdel'}, rs_data)
-        self.m.VerifyAll()
+        self.assertEqual({'user_id': user_id}, rs_data)
+        self.fc.delete_stack_domain_user_keypair.assert_called_once_with(
+            credential_id='acredential', project_id=project_id,
+            user_id=user_id)
 
     def test_delete_keypair_no_credential_id(self):
-        rsrc = self._user_create(stack_name='stackuser_del_keypair_nocrdid',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testdel_keypair_nocrdid'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
+
         rsrc._delete_keypair()
+        self.fc.delete_stack_domain_user_keypair.assert_not_called()
 
     def test_delete_keypair_legacy(self):
-        rsrc = self._user_create(stack_name='stackuser_testdel_keypair_lgcy',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testdel_keypair_lgcy'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'delete_stack_domain_user_keypair')
-        fake_ks.FakeKeystoneClient.delete_stack_domain_user_keypair(
-            user_id='auserdel', project_id='aprojectdel',
-            credential_id='acredential').AndRaise(ValueError())
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'delete_ec2_keypair')
-        fake_ks.FakeKeystoneClient.delete_ec2_keypair(
-            user_id='auserdel', credential_id='acredential').AndReturn(None)
-        self.m.ReplayAll()
+        self.fc.delete_stack_domain_user_keypair.side_effect = ValueError()
+        self.fc.delete_ec2_keypair.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -322,60 +319,67 @@ class StackUserTest(common.HeatTestCase):
         rsrc.data_set('secret_key', 'verysecret')
         rsrc._delete_keypair()
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual({'user_id': 'auserdel'}, rs_data)
-        self.m.VerifyAll()
+        self.assertEqual({'user_id': user_id}, rs_data)
+        self.fc.delete_stack_domain_user_keypair.assert_called_once_with(
+            credential_id='acredential', project_id=project_id,
+            user_id=user_id)
+        self.fc.delete_ec2_keypair.assert_called_once_with(
+            credential_id='acredential', user_id=user_id)
 
     def test_delete_keypair_notfound(self):
-        rsrc = self._user_create(stack_name='stackuser_testdel_kpr_notfound',
-                                 project_id='aprojectdel',
-                                 user_id='auserdel')
+        stack_name = 'stackuser_testdel_kpr_notfound'
+        project_id = 'aprojectdel'
+        user_id = 'auserdel'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'delete_stack_domain_user_keypair')
-        fake_ks.FakeKeystoneClient.delete_stack_domain_user_keypair(
-            user_id='auserdel', project_id='aprojectdel',
-            credential_id='acredential').AndReturn(None)
-        self.m.ReplayAll()
+        self.fc.delete_stack_domain_user_keypair.return_value = None
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         rsrc.data_set('credential_id', 'acredential')
         rsrc._delete_keypair()
         rs_data = resource_data_object.ResourceData.get_all(rsrc)
-        self.assertEqual({'user_id': 'auserdel'}, rs_data)
-        self.m.VerifyAll()
+        self.assertEqual({'user_id': user_id}, rs_data)
+        self.fc.delete_stack_domain_user_keypair.assert_called_once_with(
+            credential_id='acredential', project_id=project_id,
+            user_id=user_id)
 
     def test_user_token(self):
-        rsrc = self._user_create(stack_name='stackuser_testtoken',
-                                 project_id='aproject123',
-                                 user_id='aabbcc',
-                                 password='apassword')
+        stack_name = 'stackuser_testtoken'
+        project_id = 'aproject123'
+        user_id = 'aaabbcc'
+        password = 'apassword'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id,
+                                 password=password)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'stack_domain_user_token')
-        fake_ks.FakeKeystoneClient.stack_domain_user_token(
-            user_id='aabbcc', project_id='aproject123',
-            password='apassword').AndReturn('atoken123')
-        self.m.ReplayAll()
+        self.fc.stack_domain_user_token.return_value = 'atoken123'
 
-        rsrc.password = 'apassword'
+        rsrc.password = password
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('atoken123', rsrc._user_token())
-        self.m.VerifyAll()
+        self.fc.stack_domain_user_token.assert_called_once_with(
+            password=password, project_id=project_id,
+            user_id=user_id)
 
     def test_user_token_err_nopassword(self):
-        rsrc = self._user_create(stack_name='stackuser_testtoken_err_nopwd',
-                                 project_id='aproject123',
-                                 user_id='auser123')
-        self.m.ReplayAll()
+        stack_name = 'stackuser_testtoken_err_nopwd'
+        project_id = 'aproject123'
+        user_id = 'auser123'
+        rsrc = self._user_create(stack_name=stack_name,
+                                 project_id=project_id,
+                                 user_id=user_id)
 
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         ex = self.assertRaises(ValueError, rsrc._user_token)
         expected = "Can't get user token without password"
         self.assertEqual(expected, six.text_type(ex))
-        self.m.VerifyAll()
+        self.fc.stack_domain_user_token.assert_not_called()
 
     def test_user_token_err_noproject(self):
         stack_name = 'user_token_err_noprohect_stack'
