@@ -1,13 +1,8 @@
-==========================================================
-Additional configuration options for Orchestration service
-==========================================================
+===================================================
+Configuration options for the Orchestration service
+===================================================
 
-These options can also be set in the ``heat.conf`` file.
+The following options can be set in the ``/etc/heat/heat.conf`` config file. A :doc:`sample configuration file <sample_config>` is also available.
 
-.. include:: ./tables/heat-common.rst
-.. include:: ./tables/heat-crypt.rst
-.. include:: ./tables/heat-loadbalancer.rst
-.. include:: ./tables/heat-quota.rst
-.. include:: ./tables/heat-redis.rst
-.. include:: ./tables/heat-testing.rst
-.. include:: ./tables/heat-trustee.rst
+.. show-options::
+   :config-file: config-generator.conf
