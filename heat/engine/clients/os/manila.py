@@ -60,7 +60,8 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
         :param resource_list: list of resources
         :param resource_type_name: name of resource type that will be used
                                    for exceptions
-        :raises EntityNotFound, NoUniqueMatch
+        :raises EntityNotFound: if cannot find resource by name
+        :raises NoUniqueMatch: if find more than one resource by ambiguous name
         :return: resource or generate an exception otherwise
         """
         search_result_by_id = [res for res in resource_list

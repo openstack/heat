@@ -474,7 +474,7 @@ def load_paste_app(app_name=None):
 
     :param app_name: name of the application to load
 
-    :raises RuntimeError when config file cannot be located or application
+    :raises RuntimeError: when config file cannot be located or application
             cannot be loaded from config file
     """
     if app_name is None:
