@@ -1607,6 +1607,8 @@ class Resource(status.ResourceStatus):
             raise exception.ResourceFailure(exc, self, action)
         elif after_external_id is not None:
             LOG.debug("Skip update on external resource.")
+            if update_templ_func is not None:
+                update_templ_func(persist=True)
             return
 
         after_props, before_props = self._prepare_update_props(after, before)
