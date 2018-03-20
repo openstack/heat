@@ -162,11 +162,9 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
                          self.policy.state)
 
     def test_alarm_attribute(self):
-        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_cfn_url')
-        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
-            'http://server.test:8000/v1')
-        self.m.ReplayAll()
+        heat_plugin = self.stack.clients.client_plugin('heat')
+        heat_plugin.get_heat_cfn_url = mock.Mock(
+            return_value='http://server.test:8000/v1')
         alarm_url = self.policy.FnGetAtt('alarm_url')
         base = alarm_url.split('?')[0].split('%3A')
         self.assertEqual('http://server.test:8000/v1/signal/arn', base[0])
@@ -186,30 +184,23 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         self.assertEqual('SignatureMethod', args[2].split('=')[0])
         self.assertEqual('SignatureVersion', args[3].split('=')[0])
         self.assertEqual('Timestamp', args[4].split('=')[0])
-        self.m.VerifyAll()
 
     def test_signal_attribute(self):
-        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_url')
-        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
-            'http://server.test:8000/v1/')
-        self.m.ReplayAll()
+        heat_plugin = self.stack.clients.client_plugin('heat')
+        heat_plugin.get_heat_url = mock.Mock(
+            return_value='http://server.test:8000/v1/')
         self.assertEqual(
             'http://server.test:8000/v1/test_tenant_id/stacks/'
             '%s/%s/resources/my-policy/signal' % (
                 self.stack.name, self.stack.id),
             self.policy.FnGetAtt('signal_url'))
-        self.m.VerifyAll()
 
     def test_signal_attribute_with_prefix(self):
-        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_url')
-        self.stack.clients.client_plugin('heat').get_heat_url().AndReturn(
-            'http://server.test/heat-api/v1/1234')
-        self.m.ReplayAll()
+        heat_plugin = self.stack.clients.client_plugin('heat')
+        heat_plugin.get_heat_url = mock.Mock(
+            return_value='http://server.test/heat-api/v1/1234')
         self.assertEqual(
             'http://server.test/heat-api/v1/test_tenant_id/stacks/'
             '%s/%s/resources/my-policy/signal' % (
                 self.stack.name, self.stack.id),
             self.policy.FnGetAtt('signal_url'))
-        self.m.VerifyAll()
