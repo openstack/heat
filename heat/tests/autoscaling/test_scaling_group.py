@@ -56,12 +56,9 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
         self.assertRaises(exception.NotSupported,
                           self.validate_scaling_group, t,
                           stack, 'WebServerGroup')
-
-        self.m.VerifyAll()
 
     def test_invalid_min_size(self):
         t = template_format.parse(as_template)
@@ -75,14 +72,12 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
-        self.m.ReplayAll()
         e = self.assertRaises(exception.StackValidationFailed,
                               self.validate_scaling_group, t,
                               stack, 'WebServerGroup')
 
         expected_msg = "The size of AutoScalingGroup can not be less than zero"
         self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
 
     def test_invalid_max_size(self):
         t = template_format.parse(as_template)
@@ -95,7 +90,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
 
         e = self.assertRaises(exception.StackValidationFailed,
                               self.validate_scaling_group, t,
@@ -103,7 +97,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
 
         expected_msg = "MinSize can not be greater than MaxSize"
         self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
 
     def test_invalid_desiredcapacity(self):
         t = template_format.parse(as_template)
@@ -116,14 +109,12 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.stub_SnapshotConstraint_validate()
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
         e = self.assertRaises(exception.StackValidationFailed,
                               self.validate_scaling_group, t,
                               stack, 'WebServerGroup')
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
         self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
 
     def test_invalid_desiredcapacity_zero(self):
         t = template_format.parse(as_template)
@@ -137,14 +128,12 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.stub_ImageConstraint_validate()
         self.stub_FlavorConstraint_validate()
 
-        self.m.ReplayAll()
         e = self.assertRaises(exception.StackValidationFailed,
                               self.validate_scaling_group, t,
                               stack, 'WebServerGroup')
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
         self.assertEqual(expected_msg, six.text_type(e))
-        self.m.VerifyAll()
 
     def test_validate_without_InstanceId_and_LaunchConfigurationName(self):
         t = template_format.parse(as_template)
@@ -195,7 +184,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         rsrc = stack['WebServerGroup']
 
         self._stub_nova_server_get()
-        self.m.ReplayAll()
 
         _config, ins_props = rsrc._get_conf_properties()
 
@@ -205,8 +193,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         self.assertEqual(['hth_test'], ins_props['SecurityGroups'])
         self.assertEqual('1', ins_props['InstanceType'])
 
-        self.m.VerifyAll()
-
     def test_scaling_group_create_with_instanceid_not_found(self):
         t = template_format.parse(as_template)
         agp = t['Resources']['WebServerGroup']['Properties']
@@ -215,7 +201,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         stack = utils.parse_stack(t, params=inline_templates.as_params)
         rsrc = stack['WebServerGroup']
         self._stub_nova_server_get(not_found=True)
-        self.m.ReplayAll()
         msg = ("Property error: "
                "Resources.WebServerGroup.Properties.InstanceId: "
                "Error validating value '5678': The Server (5678) could "
@@ -223,8 +208,6 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
         self.assertIn(msg, six.text_type(exc))
-
-        self.m.VerifyAll()
 
 
 class TestScalingGroupTags(common.HeatTestCase):
