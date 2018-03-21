@@ -11,23 +11,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import random as random_module
-import string
-
 import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import password_gen
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 from heat.engine import translation
-
-# NOTE(pas-ha) Heat officially supports only POSIX::Linux platform
-# where os.urandom() and random.SystemRandom() are available
-random = random_module.SystemRandom()
 
 
 class RandomString(resource.Resource):
@@ -83,10 +77,7 @@ class RandomString(resource.Resource):
             properties.Schema.STRING,
             _('Sequence of characters to build the random string from.'),
             constraints=[
-                constraints.AllowedValues(['lettersdigits', 'letters',
-                                           'lowercase', 'uppercase',
-                                           'digits', 'hexdigits',
-                                           'octdigits']),
+                constraints.AllowedValues(password_gen.CHARACTER_CLASSES),
             ],
             support_status=support.SupportStatus(
                 status=support.HIDDEN,
@@ -112,11 +103,9 @@ class RandomString(resource.Resource):
                          % {'min': CHARACTER_CLASSES_MIN}),
                         constraints=[
                             constraints.AllowedValues(
-                                ['lettersdigits', 'letters', 'lowercase',
-                                 'uppercase', 'digits', 'hexdigits',
-                                 'octdigits']),
+                                password_gen.CHARACTER_CLASSES),
                         ],
-                        default='lettersdigits'),
+                        default=password_gen.LETTERS_DIGITS),
                     CHARACTER_CLASSES_MIN: properties.Schema(
                         properties.Schema.INTEGER,
                         _('The minimum number of characters from this '
@@ -130,7 +119,7 @@ class RandomString(resource.Resource):
                 }
             ),
             # add defaults for backward compatibility
-            default=[{CHARACTER_CLASSES_CLASS: 'lettersdigits',
+            default=[{CHARACTER_CLASSES_CLASS: password_gen.LETTERS_DIGITS,
                       CHARACTER_CLASSES_MIN: 1}]
 
         ),
@@ -177,16 +166,6 @@ class RandomString(resource.Resource):
         ),
     }
 
-    _sequences = {
-        'lettersdigits': string.ascii_letters + string.digits,
-        'letters': string.ascii_letters,
-        'lowercase': string.ascii_lowercase,
-        'uppercase': string.ascii_uppercase,
-        'digits': string.digits,
-        'hexdigits': string.digits + 'ABCDEF',
-        'octdigits': string.octdigits
-    }
-
     def translation_rules(self, props):
         if props.get(self.SEQUENCE):
             return [
@@ -205,57 +184,19 @@ class RandomString(resource.Resource):
             ]
 
     def _generate_random_string(self, char_sequences, char_classes, length):
-        random_string = ""
+        seq_mins = [
+            password_gen.special_char_class(
+                char_seq[self.CHARACTER_SEQUENCES_SEQUENCE],
+                char_seq[self.CHARACTER_SEQUENCES_MIN])
+            for char_seq in char_sequences]
+        char_class_mins = [
+            password_gen.named_char_class(
+                char_class[self.CHARACTER_CLASSES_CLASS],
+                char_class[self.CHARACTER_CLASSES_MIN])
+            for char_class in char_classes]
 
-        # Add the minimum number of chars from each char sequence & char class
-        if char_sequences:
-            for char_seq in char_sequences:
-                seq = char_seq[self.CHARACTER_SEQUENCES_SEQUENCE]
-                seq_min = char_seq[self.CHARACTER_SEQUENCES_MIN]
-                for i in six.moves.xrange(seq_min):
-                    random_string += random.choice(seq)
-
-        if char_classes:
-            for char_class in char_classes:
-                cclass_class = char_class[self.CHARACTER_CLASSES_CLASS]
-                cclass_seq = self._sequences[cclass_class]
-                cclass_min = char_class[self.CHARACTER_CLASSES_MIN]
-                for i in six.moves.xrange(cclass_min):
-                    random_string += random.choice(cclass_seq)
-
-        def random_class_char():
-            cclass_dict = random.choice(char_classes)
-            cclass_class = cclass_dict[self.CHARACTER_CLASSES_CLASS]
-            cclass_seq = self._sequences[cclass_class]
-            return random.choice(cclass_seq)
-
-        def random_seq_char():
-            seq_dict = random.choice(char_sequences)
-            seq = seq_dict[self.CHARACTER_SEQUENCES_SEQUENCE]
-            return random.choice(seq)
-
-        # Fill up rest with random chars from provided sequences & classes
-        if char_sequences and char_classes:
-            weighted_choices = ([True] * len(char_classes) +
-                                [False] * len(char_sequences))
-            while len(random_string) < length:
-                if random.choice(weighted_choices):
-                    random_string += random_class_char()
-                else:
-                    random_string += random_seq_char()
-
-        elif char_sequences:
-            while len(random_string) < length:
-                random_string += random_seq_char()
-
-        else:
-            while len(random_string) < length:
-                random_string += random_class_char()
-
-        # Randomize string
-        random_string = ''.join(random.sample(random_string,
-                                              len(random_string)))
-        return random_string
+        return password_gen.generate_password(length,
+                                              seq_mins + char_class_mins)
 
     def validate(self):
         super(RandomString, self).validate()
@@ -276,8 +217,8 @@ class RandomString(resource.Resource):
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
-        char_sequences = self.properties[self.CHARACTER_SEQUENCES]
-        char_classes = self.properties[self.CHARACTER_CLASSES]
+        char_sequences = self.properties[self.CHARACTER_SEQUENCES] or []
+        char_classes = self.properties[self.CHARACTER_CLASSES] or []
         length = self.properties[self.LENGTH]
 
         random_string = self._generate_random_string(char_sequences,
