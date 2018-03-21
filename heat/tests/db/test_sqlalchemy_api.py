@@ -20,7 +20,6 @@ import time
 import uuid
 
 import mock
-import mox
 from oslo_config import cfg
 from oslo_db import exception as db_exception
 from oslo_utils import timeutils
@@ -38,7 +37,6 @@ from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine import resource as rsrc
-from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
 from heat.engine import template_files
@@ -82,10 +80,9 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin,
-                               'find_image_by_name_or_id')
-        glance.GlanceClientPlugin.find_image_by_name_or_id(
-            imageId_input).MultipleTimes().AndReturn(imageId)
+        self.patchobject(glance.GlanceClientPlugin,
+                         'find_image_by_name_or_id',
+                         return_value=imageId)
 
     def _setup_test_stack(self, stack_name, stack_id=None, owner_id=None,
                           stack_user_project_id=None, backup=False):
@@ -100,30 +97,17 @@ class SqlAlchemyTest(common.HeatTestCase):
             stack.store(backup=backup)
         return (template, stack)
 
-    def _mock_create(self, mocks):
-        fc = fakes_nova.FakeClient()
-        mocks.StubOutWithMock(instances.Instance, 'client')
-        instances.Instance.client().MultipleTimes().AndReturn(fc)
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+    def _mock_create(self):
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
-        mocks.StubOutWithMock(fc.servers, 'create')
-        fc.servers.create(image=744, flavor=3, key_name='test',
-                          name=mox.IgnoreArg(),
-                          security_groups=None,
-                          userdata=mox.IgnoreArg(), scheduler_hints=None,
-                          meta=None, nics=None,
-                          availability_zone=None,
-                          block_device_mapping=None
-                          ).MultipleTimes().AndReturn(fc.servers.list()[4])
-        return fc
+        self.fc.servers.create = mock.Mock(
+            return_value=self.fc.servers.list()[4])
+        return self.fc
 
-    def _mock_delete(self, mocks):
-        fc = fakes_nova.FakeClient()
-        mocks.StubOutWithMock(instances.Instance, 'client')
-        instances.Instance.client().MultipleTimes().AndReturn(fc)
-        self.patchobject(fc.servers, 'delete',
+    def _mock_delete(self):
+        self.patchobject(self.fc.servers, 'delete',
                          side_effect=fakes_nova.fake_exception())
 
     @mock.patch.object(db_api, '_paginate_query')
@@ -294,8 +278,8 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_encryption(self):
         stack_name = 'test_encryption'
         stack = self._setup_test_stack(stack_name)[1]
-        self._mock_create(self.m)
-        self.m.ReplayAll()
+        self._mock_create()
+
         stack.create()
         stack = parser.Stack.load(self.ctx, stack.id)
         cs = stack['WebServer']
@@ -315,10 +299,20 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual("fake secret", db_api.resource_data_get(
             self.ctx, cs.id, 'my_secret'))
 
+        self.fc.servers.create.assert_called_once_with(
+            image=744, flavor=3, key_name='test',
+            name=mock.ANY,
+            security_groups=None,
+            userdata=mock.ANY, scheduler_hints=None,
+            meta=None, nics=None,
+            availability_zone=None,
+            block_device_mapping=None
+        )
+
     def test_resource_data_delete(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
-        self._mock_create(self.m)
-        self.m.ReplayAll()
+        self._mock_create()
+
         stack.create()
         stack = parser.Stack.load(self.ctx, stack.id)
         resource = stack['WebServer']
@@ -329,6 +323,16 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound,
                           db_api.resource_data_get, self.ctx,
                           resource.id, 'test')
+
+        self.fc.servers.create.assert_called_once_with(
+            image=744, flavor=3, key_name='test',
+            name=mock.ANY,
+            security_groups=None,
+            userdata=mock.ANY, scheduler_hints=None,
+            meta=None, nics=None,
+            availability_zone=None,
+            block_device_mapping=None
+        )
 
     def test_stack_get_by_name(self):
         stack = self._setup_test_stack('stack', UUID1,
@@ -800,12 +804,10 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def test_event_get_all_by_stack(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
+        self._mock_create()
 
-        self._mock_create(self.m)
-        self.m.ReplayAll()
         stack.create()
         stack._persist_state()
-        self.m.UnsetStubs()
 
         events = db_api.event_get_all_by_stack(self.ctx, UUID1)
         self.assertEqual(4, len(events))
@@ -847,8 +849,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(1, len(events))
         self.assertEqual(expected, events[0].uuid)
 
-        self._mock_delete(self.m)
-        self.m.ReplayAll()
+        self._mock_delete()
         stack.delete()
 
         # test filter by resource_status
@@ -888,49 +889,68 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(events2_uuid, events[0].uuid)
         self.assertEqual(events3_uuid, events[1].uuid)
 
-        self.m.VerifyAll()
+        self.fc.servers.create.assert_called_once_with(
+            image=744, flavor=3, key_name='test',
+            name=mock.ANY,
+            security_groups=None,
+            userdata=mock.ANY, scheduler_hints=None,
+            meta=None, nics=None,
+            availability_zone=None,
+            block_device_mapping=None
+        )
 
     def test_event_count_all_by_stack(self):
         stack = self._setup_test_stack('stack', UUID1)[1]
+        self._mock_create()
 
-        self._mock_create(self.m)
-        self.m.ReplayAll()
         stack.create()
         stack._persist_state()
-        self.m.UnsetStubs()
 
         num_events = db_api.event_count_all_by_stack(self.ctx, UUID1)
         self.assertEqual(4, num_events)
 
-        self._mock_delete(self.m)
-        self.m.ReplayAll()
+        self._mock_delete()
         stack.delete()
 
         num_events = db_api.event_count_all_by_stack(self.ctx, UUID1)
         self.assertEqual(8, num_events)
 
-        self.m.VerifyAll()
+        self.fc.servers.create.assert_called_once_with(
+            image=744, flavor=3, key_name='test',
+            name=mock.ANY,
+            security_groups=None,
+            userdata=mock.ANY, scheduler_hints=None,
+            meta=None, nics=None,
+            availability_zone=None,
+            block_device_mapping=None
+        )
 
     def test_event_get_all_by_tenant(self):
         stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        self._mock_create()
 
-        self._mock_create(self.m)
-        self.m.ReplayAll()
         [s.create() for s in stacks]
         [s._persist_state() for s in stacks]
-        self.m.UnsetStubs()
 
         events = db_api.event_get_all_by_tenant(self.ctx)
         self.assertEqual(12, len(events))
 
-        self._mock_delete(self.m)
-        self.m.ReplayAll()
+        self._mock_delete()
         [s.delete() for s in stacks]
 
         events = db_api.event_get_all_by_tenant(self.ctx)
         self.assertEqual(0, len(events))
 
-        self.m.VerifyAll()
+        self.fc.servers.create.assert_called_with(
+            image=744, flavor=3, key_name='test',
+            name=mock.ANY,
+            security_groups=None,
+            userdata=mock.ANY, scheduler_hints=None,
+            meta=None, nics=None,
+            availability_zone=None,
+            block_device_mapping=None
+        )
+        self.assertEqual(len(stacks), self.fc.servers.create.call_count)
 
     def test_user_creds_password(self):
         self.ctx.password = 'password'
