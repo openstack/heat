@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -21,6 +19,7 @@ from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import password_gen
 from heat.engine.clients.os import swift
 from heat.engine.resources import stack_user
 
@@ -102,7 +101,7 @@ class SignalResponder(stack_user.StackUser):
         """
         if self._get_user_id() is None:
             if self.password is None:
-                self.password = uuid.uuid4().hex
+                self.password = password_gen.generate_openstack_password()
             self._create_user()
         return {'auth_url': self.keystone().v3_endpoint,
                 'username': self.physical_resource_name(),
@@ -283,7 +282,7 @@ class SignalResponder(stack_user.StackUser):
 
         if self._get_user_id() is None:
             if self.password is None:
-                self.password = uuid.uuid4().hex
+                self.password = password_gen.generate_openstack_password()
             self._create_user()
 
         queue_id = self.physical_resource_name()

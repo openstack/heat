@@ -12,6 +12,7 @@
 #    under the License.
 
 import json
+import mock
 import uuid
 
 from keystoneauth1 import access as ks_access
@@ -29,6 +30,7 @@ import six
 
 from heat.common import config
 from heat.common import exception
+from heat.common import password_gen
 from heat.engine.clients.os.keystone import heat_keystoneclient
 from heat.tests import common
 from heat.tests import utils
@@ -983,14 +985,13 @@ class KeystoneClientTest(common.HeatTestCase):
                           user_id='duser123', project_id='aproject',
                           credential_id='acredentialid')
 
-    def _stub_uuid(self, values=None):
+    def _stub_gen_creds(self, access, secret):
         # stub UUID.hex to return the values specified
-        values = values or []
-        self.m.StubOutWithMock(uuid, 'uuid4')
-        for v in values:
-            mock_uuid = self.m.CreateMockAnything()
-            mock_uuid.hex = v
-            uuid.uuid4().AndReturn(mock_uuid)
+        mock_access_uuid = mock.Mock()
+        mock_access_uuid.hex = access
+        self.patchobject(uuid, 'uuid4', return_value=mock_access_uuid)
+        self.patchobject(password_gen, 'generate_openstack_password',
+                         return_value=secret)
 
     def test_create_ec2_keypair(self):
 
@@ -1006,7 +1007,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ex_data_json = json.dumps(ex_data)
 
         # stub UUID.hex to match ex_data
-        self._stub_uuid(['dummy_access', 'dummy_secret'])
+        self._stub_gen_creds('dummy_access', 'dummy_secret')
 
         # mock keystone client credentials functions
         self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
@@ -1042,7 +1043,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ex_data_json = json.dumps(ex_data)
 
         # stub UUID.hex to match ex_data
-        self._stub_uuid(['dummy_access2', 'dummy_secret2'])
+        self._stub_gen_creds('dummy_access2', 'dummy_secret2')
 
         # mock keystone client credentials functions
         self.mock_admin_client.credentials = self.m.CreateMockAnything()
@@ -1079,7 +1080,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ex_data_json = json.dumps(ex_data)
 
         # stub UUID.hex to match ex_data
-        self._stub_uuid(['dummy_access2', 'dummy_secret2'])
+        self._stub_gen_creds('dummy_access2', 'dummy_secret2')
 
         # mock keystone client credentials functions
         self.mock_ks_v3_client.credentials = self.m.CreateMockAnything()
