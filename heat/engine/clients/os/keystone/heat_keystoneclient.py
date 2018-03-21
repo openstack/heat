@@ -31,6 +31,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common.i18n import _LE
 from heat.common.i18n import _LW
+from heat.common import password_gen
 
 LOG = logging.getLogger('heat.engine.clients.keystoneclient')
 
@@ -479,7 +480,7 @@ class KsClientWrapper(object):
         user_id = user_id or self.context.get_access(self.session).user_id
         project_id = self.context.tenant_id
         data_blob = {'access': uuid.uuid4().hex,
-                     'secret': uuid.uuid4().hex}
+                     'secret': password_gen.generate_openstack_password()}
         ec2_creds = self.client.credentials.create(
             user=user_id, type='ec2', blob=jsonutils.dumps(data_blob),
             project=project_id)
@@ -498,7 +499,7 @@ class KsClientWrapper(object):
             # files which lack domain configuration
             return self.create_ec2_keypair(user_id)
         data_blob = {'access': uuid.uuid4().hex,
-                     'secret': uuid.uuid4().hex}
+                     'secret': password_gen.generate_openstack_password()}
         creds = self.domain_admin_client.credentials.create(
             user=user_id, type='ec2', blob=jsonutils.dumps(data_blob),
             project=project_id)

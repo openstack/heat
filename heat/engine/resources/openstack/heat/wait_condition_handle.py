@@ -11,11 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import uuid
-
 from oslo_serialization import jsonutils
 
 from heat.common.i18n import _
+from heat.common import password_gen
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
@@ -135,7 +134,7 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
             self.SIGNAL_TRANSPORT) == self.TOKEN_SIGNAL
 
     def handle_create(self):
-        self.password = uuid.uuid4().hex
+        self.password = password_gen.generate_openstack_password()
         super(HeatWaitConditionHandle, self).handle_create()
         if self._signal_transport_token():
             # FIXME(shardy): The assumption here is that token expiry > timeout
