@@ -61,8 +61,6 @@ class EventCommon(common.HeatTestCase):
 
         self.ctx = utils.dummy_context()
 
-        self.m.ReplayAll()
-
         self.stack = stack.Stack(self.ctx, 'event_load_test_stack',
                                  template.Template(the_tmpl))
         self.stack.store()
