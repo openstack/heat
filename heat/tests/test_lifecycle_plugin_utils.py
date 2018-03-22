@@ -38,12 +38,9 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         lifecycle_plugin_utils.pp_class_instances = None
 
     def mock_lcp_class_map(self, lcp_mappings):
-        self.m.UnsetStubs()
-        self.m.StubOutWithMock(resources.global_env(),
-                               'get_stack_lifecycle_plugins')
-        resources.global_env().get_stack_lifecycle_plugins(
-        ).MultipleTimes().AndReturn(lcp_mappings)
-        self.m.ReplayAll()
+        self.mock_get_plugins = self.patchobject(
+            resources.global_env(), 'get_stack_lifecycle_plugins',
+            return_value=lcp_mappings)
         # reset cache
         lifecycle_plugin_utils.pp_class_instances = None
 
@@ -58,6 +55,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
                         "not iterable: %s" % pp_cinstances)
         self.assertEqual(1, len(pp_cinstances))
         self.assertEqual(TestLifecycleCallout1, pp_cinstances[0].__class__)
+        self.mock_get_plugins.assert_called_once_with()
 
     def test_do_pre_and_post_callouts(self):
         lcp_mappings = [('A::B::C1', TestLifecycleCallout1)]
@@ -71,14 +69,14 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         self.assertEqual(1, mc.pre_counter_for_unit_test)
         lifecycle_plugin_utils.do_post_ops(mc, ms, None, None)
         self.assertEqual(1, mc.post_counter_for_unit_test)
-
-        return
+        self.mock_get_plugins.assert_called_once_with()
 
     def test_class_instantiation_and_sorting(self):
         lcp_mappings = []
         self.mock_lcp_class_map(lcp_mappings)
         pp_cis = lifecycle_plugin_utils.get_plug_point_class_instances()
         self.assertEqual(0, len(pp_cis))
+        self.mock_get_plugins.assert_called_once_with()
 
         # order should change with sort
         lcp_mappings = [('A::B::C2', TestLifecycleCallout2),
@@ -90,6 +88,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         self.assertEqual(101, pp_cis[1].get_ordinal())
         self.assertEqual(TestLifecycleCallout1, pp_cis[0].__class__)
         self.assertEqual(TestLifecycleCallout2, pp_cis[1].__class__)
+        self.mock_get_plugins.assert_called_once_with()
 
         # order should NOT change with sort
         lcp_mappings = [('A::B::C1', TestLifecycleCallout1),
@@ -101,6 +100,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         self.assertEqual(101, pp_cis[1].get_ordinal())
         self.assertEqual(TestLifecycleCallout1, pp_cis[0].__class__)
         self.assertEqual(TestLifecycleCallout2, pp_cis[1].__class__)
+        self.mock_get_plugins.assert_called_once_with()
 
         # sort failure due to exception in thrown by ordinal
         lcp_mappings = [('A::B::C2', TestLifecycleCallout2),
@@ -115,8 +115,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         self.assertEqual(TestLifecycleCallout2, pp_cis[0].__class__)
         self.assertEqual(TestLifecycleCallout3, pp_cis[1].__class__)
         self.assertEqual(TestLifecycleCallout1, pp_cis[2].__class__)
-
-        return
+        self.mock_get_plugins.assert_called_once_with()
 
     def test_do_pre_op_failure(self):
         lcp_mappings = [('A::B::C5', TestLifecycleCallout1),
@@ -135,8 +134,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         self.assertTrue(failed)
         self.assertEqual(1, mc.pre_counter_for_unit_test)
         self.assertEqual(1, mc.post_counter_for_unit_test)
-
-        return
+        self.mock_get_plugins.assert_called_once_with()
 
     def test_do_post_op_failure(self):
         lcp_mappings = [('A::B::C1', TestLifecycleCallout1),
@@ -149,8 +147,7 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         ms.__setattr__("action", 'A')
         lifecycle_plugin_utils.do_post_ops(mc, ms, None, None)
         self.assertEqual(1, mc.post_counter_for_unit_test)
-
-        return
+        self.mock_get_plugins.assert_called_once_with()
 
     def test_exercise_base_lifecycle_plugin_class(self):
         lcp = lifecycle_plugin.LifecyclePlugin()
@@ -158,8 +155,6 @@ class LifecyclePluginUtilsTest(common.HeatTestCase):
         lcp.do_pre_op(None, None, None)
         lcp.do_post_op(None, None, None)
         self.assertEqual(100, ordinal)
-
-        return
 
     def is_iterable(self, obj):
         # special case string
