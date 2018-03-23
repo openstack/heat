@@ -10,11 +10,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+
+NOVA_MICROVERSIONS = (MICROVERSION_SOFT_POLICIES) = ('2.15')
 
 
 class ServerGroup(resource.Resource):
@@ -59,16 +62,21 @@ class ServerGroup(resource.Resource):
         ),
     }
 
+    def validate(self):
+        super(ServerGroup, self).validate()
+        policies = self.properties[self.POLICIES]
+        is_supported = self.client_plugin().is_version_supported(
+            MICROVERSION_SOFT_POLICIES)
+        if (('soft-affinity' in policies or
+             'soft-anti-affinity' in policies) and not is_supported):
+            msg = _('Required microversion for soft policies not supported.')
+            raise exception.StackValidationFailed(message=msg)
+
     def handle_create(self):
         name = self.physical_resource_name()
         policies = self.properties[self.POLICIES]
-        if 'soft-affinity' in policies or 'soft-anti-affinity' in policies:
-            client = self.client(
-                version=self.client_plugin().V2_15)
-        else:
-            client = self.client()
-        server_group = client.server_groups.create(name=name,
-                                                   policies=policies)
+        server_group = self.client().server_groups.create(name=name,
+                                                          policies=policies)
         self.resource_id_set(server_group.id)
 
     def physical_resource_name(self):

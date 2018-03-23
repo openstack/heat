@@ -38,6 +38,9 @@ cfg.CONF.import_opt('default_user_data_format', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 
+NOVA_MICROVERSIONS = (MICROVERSION_TAGS, MICROVERSION_STR_NETWORK,
+                      MICROVERSION_NIC_TAGS) = ('2.26', '2.37', '2.42')
+
 
 class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
              server_network_mixin.ServerNetworkMixin):
@@ -840,19 +843,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         server = None
         try:
-            api_version = None
-            # if 'auto' or 'none' is specified, we get the string type
-            # nics after self._build_nics(), and the string network
-            # is supported since nova microversion 2.37
-            if isinstance(nics, six.string_types):
-                api_version = self.client_plugin().V2_37
-
-            if self._is_nic_tagged(self.properties[self.NETWORKS]):
-                api_version = self.client_plugin().V2_42
-
-            nc = self.client(version=api_version)
-
-            server = nc.servers.create(
+            server = self.client().servers.create(
                 name=self._server_name(),
                 image=image,
                 flavor=flavor,
@@ -888,8 +879,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     def _update_server_tags(self, tags):
         server = self.client().servers.get(self.resource_id)
-        self.client(version=self.client_plugin().V2_26
-                    ).servers.set_tags(server, tags)
+        self.client().servers.set_tags(server, tags)
 
     def handle_check(self):
         server = self.client().servers.get(self.resource_id)
@@ -913,14 +903,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                                                name=self.name)
             raise
 
-        try:
-            tag_server = self.client(
-                version=self.client_plugin().V2_26
-            ).server.get(self.resource_id)
-        except Exception as ex:
-            LOG.warning('Cannot resolve tags for observe reality in case of '
-                        'unsupported minimal version tag support client')
-        else:
+        if self.client_plugin().is_version_supported(MICROVERSION_TAGS):
+            tag_server = self.client().servers.get(self.resource_id)
             server_data['tags'] = tag_server.tag_list()
         return server, server_data
 
@@ -1181,12 +1165,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         if name == self.CONSOLE_URLS:
             return self.client_plugin('nova').get_console_urls(server)
         if name == self.TAGS_ATTR:
-            try:
-                cv = self.client(
-                    version=self.client_plugin().V2_26)
-                return cv.servers.tag_list(server)
-            except exception.InvalidServiceVersion:
-                return None
+            if self.client_plugin().is_version_supported(MICROVERSION_TAGS):
+                return self.client().servers.tag_list(server)
+            return None
 
     def add_dependencies(self, deps):
         super(Server, self).add_dependencies(deps)
@@ -1528,15 +1509,11 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         'server.') % self.ALLOCATE_NETWORK
                 raise exception.StackValidationFailed(message=msg)
             # Check if str_network is allowed to use
-            try:
-                self.client(
-                    version=self.client_plugin().V2_37)
-            except exception.InvalidServiceVersion as ex:
-                msg = (_('Cannot use "%(prop)s" property - compute service '
+            if not self.client_plugin().is_version_supported(
+                    MICROVERSION_STR_NETWORK):
+                msg = (_('Cannot use "%s" property - compute service '
                          'does not support the required api '
-                         'microversion: %(ex)s')
-                       % {'prop': self.ALLOCATE_NETWORK,
-                          'ex': six.text_type(ex)})
+                         'microversion.') % self.ALLOCATE_NETWORK)
                 raise exception.StackValidationFailed(message=msg)
 
         # record if any networks include explicit ports
@@ -1550,25 +1527,19 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         # Check if nic tag is allowed to use
         if self._is_nic_tagged(networks=networks):
-            try:
-                self.client(
-                    version=self.client_plugin().V2_42)
-            except exception.InvalidServiceVersion as ex:
-                msg = (_('Cannot use "%(tag)s" property in networks - '
-                         'nova does not support it: %(error)s')) % {
-                    'tag': self.NIC_TAG,
-                    'error': six.text_type(ex)
-                }
+            if not self.client_plugin().is_version_supported(
+                    MICROVERSION_NIC_TAGS):
+                msg = (_('Cannot use "%s" property in networks - '
+                         'nova does not support required '
+                         'api microversion.'), self.NIC_TAG)
                 raise exception.StackValidationFailed(message=msg)
 
         # Check if tags is allowed to use
         if self.properties[self.TAGS]:
-            try:
-                self.client(
-                    version=self.client_plugin().V2_26)
-            except exception.InvalidServiceVersion as ex:
-                msg = _('Cannot use "tags" property - nova does not support '
-                        'it: %s') % six.text_type(ex)
+            if not self.client_plugin().is_version_supported(
+                    MICROVERSION_TAGS):
+                msg = (_('Cannot use "%s" property - nova does not support '
+                         'required api microversion.') % self.TAGS)
                 raise exception.StackValidationFailed(message=msg)
 
         # retrieve provider's absolute limits if it will be needed

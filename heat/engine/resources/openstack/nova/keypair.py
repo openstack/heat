@@ -22,6 +22,10 @@ from heat.engine import support
 from heat.engine import translation
 
 
+NOVA_MICROVERSIONS = (MICROVERSION_KEY_TYPE,
+                      MICROVERSION_USER) = ('2.2', '2.10')
+
+
 class KeyPair(resource.Resource):
     """A resource for creating Nova key pairs.
 
@@ -148,22 +152,17 @@ class KeyPair(resource.Resource):
         key_type = self.properties[self.KEY_TYPE]
         user = self.properties[self.USER]
 
-        nc_version = None
         validate_props = []
-        if key_type:
-            nc_version = self.client_plugin().V2_2
+        c_plugin = self.client_plugin()
+        if key_type and not c_plugin.is_version_supported(
+                MICROVERSION_KEY_TYPE):
             validate_props.append(self.KEY_TYPE)
-        if user:
-            nc_version = self.client_plugin().V2_10
+        if user and not c_plugin.is_version_supported(MICROVERSION_USER):
             validate_props.append(self.USER)
-        if nc_version:
-            try:
-                self.client(version=nc_version)
-            except exception.InvalidServiceVersion as ex:
-                msg = (_('Cannot use "%(prop)s" properties - nova does not '
-                         'support: %(error)s') %
-                       {'error': six.text_type(ex), 'prop': validate_props})
-                raise exception.StackValidationFailed(message=msg)
+        if validate_props:
+            msg = (_('Cannot use "%s" properties - nova does not '
+                     'support required api microversion.') % validate_props)
+            raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
         pub_key = self.properties[self.PUBLIC_KEY] or None
@@ -175,16 +174,12 @@ class KeyPair(resource.Resource):
             'public_key': pub_key
         }
 
-        nc_version = None
         if key_type:
-            nc_version = self.client_plugin().V2_2
             create_kwargs[self.KEY_TYPE] = key_type
         if user_id:
-            nc_version = self.client_plugin().V2_10
             create_kwargs['user_id'] = user_id
 
-        nc = self.client(version=nc_version)
-        new_keypair = nc.keypairs.create(**create_kwargs)
+        new_keypair = self.client().keypairs.create(**create_kwargs)
 
         if (self.properties[self.SAVE_PRIVATE_KEY] and
                 hasattr(new_keypair, 'private_key')):
