@@ -11,8 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_config import cfg
+import mock
 import six
+
+from oslo_config import cfg
 import swiftclient.client as sc
 
 from heat.common import exception
@@ -66,11 +68,9 @@ swift_template = '''
 class s3Test(common.HeatTestCase):
     def setUp(self):
         super(s3Test, self).setUp()
-        self.m.CreateMock(sc.Connection)
-        self.m.StubOutWithMock(sc.Connection, 'put_container')
-        self.m.StubOutWithMock(sc.Connection, 'get_container')
-        self.m.StubOutWithMock(sc.Connection, 'delete_container')
-        self.m.StubOutWithMock(sc.Connection, 'get_auth')
+        self.mock_con = mock.Mock(spec=sc.Connection)
+        self.patchobject(s3.S3Bucket, 'client',
+                         return_value=self.mock_con)
 
     def create_resource(self, t, stack, resource_name):
         resource_defns = stack.t.resource_definitions(stack)
@@ -86,16 +86,11 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant:test_username'}
-        ).AndReturn(None)
-        sc.Connection.get_auth().MultipleTimes().AndReturn(
-            ('http://server.test:8080/v_2', None))
-        sc.Connection.delete_container(container_name).AndReturn(None)
+        self.mock_con.put_container.return_value = None
+        self.mock_con.get_auth.return_value = (
+            'http://server.test:8080/v_2', None)
+        self.mock_con.delete_container.return_value = None
 
-        self.m.ReplayAll()
         rsrc = self.create_resource(t, stack, 'S3Bucket')
 
         ref_id = rsrc.FnGetRefId()
@@ -110,7 +105,14 @@ class s3Test(common.HeatTestCase):
                           rsrc.FnGetAtt, 'Foo')
 
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'}
+        )
+        self.mock_con.get_auth.assert_called_with()
+        self.assertEqual(2, self.mock_con.get_auth.call_count)
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_public_read(self):
         t = template_format.parse(swift_template)
@@ -119,38 +121,34 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            utils.PhysName(stack.name, 'test_resource'),
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': '.r:*'}).AndReturn(None)
-        sc.Connection.delete_container(
-            container_name).AndReturn(None)
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.return_value = None
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            utils.PhysName(stack.name, 'test_resource'),
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': '.r:*'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_tags(self):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.return_value = None
+
+        rsrc = self.create_resource(t, stack, 'S3Bucket_with_tags')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.mock_con.put_container.assert_called_once_with(
             utils.PhysName(stack.name, 'test_resource'),
             {'X-Container-Write': 'test_tenant:test_username',
              'X-Container-Read': 'test_tenant:test_username',
              'X-Container-Meta-S3-Tag-greeting': 'hello',
-             'X-Container-Meta-S3-Tag-location': 'here'}).AndReturn(None)
-        sc.Connection.delete_container(
-            container_name).AndReturn(None)
-
-        self.m.ReplayAll()
-
-        rsrc = self.create_resource(t, stack, 'S3Bucket_with_tags')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+             'X-Container-Meta-S3-Tag-location': 'here'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_public_read_write(self):
         t = template_format.parse(swift_template)
@@ -159,18 +157,16 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': '.r:*',
-             'X-Container-Read': '.r:*'}).AndReturn(None)
-        sc.Connection.delete_container(
-            container_name).AndReturn(None)
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.return_value = None
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': '.r:*',
+             'X-Container-Read': '.r:*'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_authenticated_read(self):
         t = template_format.parse(swift_template)
@@ -179,90 +175,80 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.return_value = None
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_website(self):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.return_value = None
+
+        rsrc = self.create_resource(t, stack, 'S3BucketWebsite')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.mock_con.put_container.assert_called_once_with(
             container_name,
             {'X-Container-Meta-Web-Error': 'error.html',
              'X-Container-Meta-Web-Index': 'index.html',
              'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': '.r:*'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndReturn(None)
-
-        self.m.ReplayAll()
-
-        rsrc = self.create_resource(t, stack, 'S3BucketWebsite')
-        scheduler.TaskRunner(rsrc.delete)()
-        self.m.VerifyAll()
+             'X-Container-Read': '.r:*'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_delete_exception(self):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Test delete failure'))
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.side_effect = sc.ClientException(
+            'Test Delete Failure')
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(rsrc.delete))
-
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_delete_not_found(self):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Its gone', http_status=404))
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.side_effect = sc.ClientException(
+            'Gone', http_status=404)
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
-
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
 
     def test_delete_conflict_not_empty(self):
         t = template_format.parse(swift_template)
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Not empty', http_status=409))
-        sc.Connection.get_container(container_name).AndReturn(
-            ({'name': container_name}, [{'name': 'test_object'}]))
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.side_effect = sc.ClientException(
+            'Not empty', http_status=409)
+        self.mock_con.get_container.return_value = (
+            {'name': container_name}, [{'name': 'test_object'}])
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         deleter = scheduler.TaskRunner(rsrc.delete)
@@ -270,8 +256,12 @@ class s3Test(common.HeatTestCase):
         self.assertIn("ResourceActionNotSupported: resources.test_resource: "
                       "The bucket you tried to delete is not empty",
                       six.text_type(ex))
-
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
+        self.mock_con.get_container.assert_called_once_with(container_name)
 
     def test_delete_conflict_empty(self):
         cfg.CONF.set_override('action_retry_limit', 0)
@@ -279,23 +269,22 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         container_name = utils.PhysName(stack.name, 'test_resource')
-        sc.Connection.put_container(
-            container_name,
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-        sc.Connection.delete_container(container_name).AndRaise(
-            sc.ClientException('Conflict', http_status=409))
-        sc.Connection.get_container(container_name).AndReturn(
-            ({'name': container_name}, []))
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
+        self.mock_con.delete_container.side_effect = sc.ClientException(
+            'Conflict', http_status=409)
+        self.mock_con.get_container.return_value = (
+            {'name': container_name}, [])
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         deleter = scheduler.TaskRunner(rsrc.delete)
         ex = self.assertRaises(exception.ResourceFailure, deleter)
         self.assertIn("Conflict", six.text_type(ex))
-
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            container_name,
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'})
+        self.mock_con.delete_container.assert_called_once_with(container_name)
+        self.mock_con.get_container.assert_called_once_with(container_name)
 
     def test_delete_retain(self):
         t = template_format.parse(swift_template)
@@ -304,15 +293,12 @@ class s3Test(common.HeatTestCase):
         stack = utils.parse_stack(t)
 
         # first run, with retain policy
-        sc.Connection.put_container(
-            utils.PhysName(stack.name, 'test_resource'),
-            {'X-Container-Write': 'test_tenant:test_username',
-             'X-Container-Read': 'test_tenant:test_username'}).AndReturn(None)
-
-        self.m.ReplayAll()
+        self.mock_con.put_container.return_value = None
 
         rsrc = self.create_resource(t, stack, 'S3Bucket')
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
+        self.mock_con.put_container.assert_called_once_with(
+            utils.PhysName(stack.name, 'test_resource'),
+            {'X-Container-Write': 'test_tenant:test_username',
+             'X-Container-Read': 'test_tenant:test_username'})
