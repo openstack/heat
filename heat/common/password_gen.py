@@ -107,3 +107,11 @@ def generate_password(length, char_classes):
     selected_chars = char_buffer.getvalue()
     char_buffer.close()
     return ''.join(random.sample(selected_chars, length))
+
+
+def generate_openstack_password():
+    """Generate a random password suitable for a Keystone User."""
+    return generate_password(32, [named_char_class(LOWERCASE, 1),
+                                  named_char_class(UPPERCASE, 1),
+                                  named_char_class(DIGITS, 1),
+                                  special_char_class('!@#%^&*', 1)])
