@@ -52,19 +52,19 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('stack_suspend', {'stack_identity': stack_identity})
-        ).AndReturn(None)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
 
         result = self.controller.action(req, tenant_id=self.tenant,
                                         stack_name=stack_identity.stack_name,
                                         stack_id=stack_identity.stack_id,
                                         body=body)
         self.assertIsNone(result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('stack_suspend', {'stack_identity': stack_identity})
+        )
 
     def test_action_resume(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -74,19 +74,19 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('stack_resume', {'stack_identity': stack_identity})
-        ).AndReturn(None)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
 
         result = self.controller.action(req, tenant_id=self.tenant,
                                         stack_name=stack_identity.stack_name,
                                         stack_id=stack_identity.stack_id,
                                         body=body)
         self.assertIsNone(result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('stack_resume', {'stack_identity': stack_identity})
+        )
 
     def _test_action_cancel_update(self, mock_enforce, with_rollback=True):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -126,14 +126,11 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.ReplayAll()
-
         self.assertRaises(webob.exc.HTTPBadRequest, self.controller.action,
                           req, tenant_id=self.tenant,
                           stack_name=stack_identity.stack_name,
                           stack_id=stack_identity.stack_id,
                           body=body)
-        self.m.VerifyAll()
 
     def test_action_badaction_empty(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -143,14 +140,11 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.ReplayAll()
-
         self.assertRaises(webob.exc.HTTPBadRequest, self.controller.action,
                           req, tenant_id=self.tenant,
                           stack_name=stack_identity.stack_name,
                           stack_id=stack_identity.stack_id,
                           body=body)
-        self.m.VerifyAll()
 
     def test_action_badaction_multiple(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -160,14 +154,11 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.ReplayAll()
-
         self.assertRaises(webob.exc.HTTPBadRequest, self.controller.action,
                           req, tenant_id=self.tenant,
                           stack_name=stack_identity.stack_name,
                           stack_id=stack_identity.stack_id,
                           body=body)
-        self.m.VerifyAll()
 
     def test_action_rmt_aterr(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', True)
@@ -177,12 +168,9 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('stack_suspend', {'stack_identity': stack_identity})
-        ).AndRaise(tools.to_remote_error(AttributeError()))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(
+            rpc_client.EngineClient, 'call',
+            side_effect=tools.to_remote_error(AttributeError()))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -194,7 +182,11 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(400, resp.json['code'])
         self.assertEqual('AttributeError', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('stack_suspend', {'stack_identity': stack_identity})
+        )
 
     def test_action_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'action', False)
@@ -222,8 +214,6 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._post(stack_identity._tenant_path() + '/actions',
                          data=json.dumps(body))
 
-        self.m.ReplayAll()
-
         self.controller.ACTIONS = (SUSPEND, NEW) = ('suspend', 'oops')
 
         self.assertRaises(webob.exc.HTTPInternalServerError,
@@ -232,4 +222,3 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
                           stack_name=stack_identity.stack_name,
                           stack_id=stack_identity.stack_id,
                           body=body)
-        self.m.VerifyAll()
