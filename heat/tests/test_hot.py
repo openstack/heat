@@ -2540,7 +2540,6 @@ class HotStackTest(common.HeatTestCase):
         self.assertEqual(self.stack.id, self.stack.parameters['OS::stack_id'])
         self.assertEqual(stack_identifier.stack_id,
                          self.stack.parameters['OS::stack_id'])
-        self.m.VerifyAll()
 
     def test_set_wrong_param(self):
         tmpl = template.Template(hot_tpl_empty)
@@ -2604,9 +2603,6 @@ class HotStackTest(common.HeatTestCase):
             }
         }
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
-                               'update_template_diff')
-
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(
                                       tmpl, env=environment.Environment(
@@ -2621,24 +2617,25 @@ class HotStackTest(common.HeatTestCase):
                                          tmpl, env=environment.Environment(
                                              {'foo': 'xyz'})))
 
-        def check_props(*args):
+        def check_props_and_raise(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+            raise resource.UpdateReplace()
 
-        generic_rsrc.ResourceWithProps.update_template_diff(
-            rsrc_defn.ResourceDefinition('AResource',
-                                         'ResourceWithPropsType',
-                                         properties={'Foo': 'xyz'}),
-            rsrc_defn.ResourceDefinition('AResource',
-                                         'ResourceWithPropsType',
-                                         properties={'Foo': 'abc'})
-            ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
-        self.m.ReplayAll()
+        mock_update = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'update_template_diff',
+                                       side_effect=check_props_and_raise)
 
         self.stack.update(updated_stack)
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
-        self.m.VerifyAll()
+        mock_update.assert_called_once_with(
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'xyz'}),
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'abc'}))
 
     def test_update_modify_files_ok_replace(self):
         tmpl = {
@@ -2652,9 +2649,6 @@ class HotStackTest(common.HeatTestCase):
             }
         }
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
-                               'update_template_diff')
-
         self.stack = parser.Stack(self.ctx, 'update_test_stack',
                                   template.Template(tmpl,
                                                     files={'foo': 'abc'}))
@@ -2667,24 +2661,25 @@ class HotStackTest(common.HeatTestCase):
                                      template.Template(tmpl,
                                                        files={'foo': 'xyz'}))
 
-        def check_props(*args):
+        def check_props_and_raise(*args):
             self.assertEqual('abc', self.stack['AResource'].properties['Foo'])
+            raise resource.UpdateReplace()
 
-        generic_rsrc.ResourceWithProps.update_template_diff(
-            rsrc_defn.ResourceDefinition('AResource',
-                                         'ResourceWithPropsType',
-                                         properties={'Foo': 'xyz'}),
-            rsrc_defn.ResourceDefinition('AResource',
-                                         'ResourceWithPropsType',
-                                         properties={'Foo': 'abc'})
-            ).WithSideEffects(check_props).AndRaise(resource.UpdateReplace)
-        self.m.ReplayAll()
+        mock_update = self.patchobject(generic_rsrc.ResourceWithProps,
+                                       'update_template_diff',
+                                       side_effect=check_props_and_raise)
 
         self.stack.update(updated_stack)
         self.assertEqual((parser.Stack.UPDATE, parser.Stack.COMPLETE),
                          self.stack.state)
         self.assertEqual('xyz', self.stack['AResource'].properties['Foo'])
-        self.m.VerifyAll()
+        mock_update.assert_called_once_with(
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'xyz'}),
+            rsrc_defn.ResourceDefinition('AResource',
+                                         'ResourceWithPropsType',
+                                         properties={'Foo': 'abc'}))
 
 
 class StackAttributesTest(common.HeatTestCase):
@@ -2694,8 +2689,6 @@ class StackAttributesTest(common.HeatTestCase):
         super(StackAttributesTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-
-        self.m.ReplayAll()
 
     scenarios = [
         # for hot template 2013-05-23, get_attr: hot_funcs.GetAttThenSelect
