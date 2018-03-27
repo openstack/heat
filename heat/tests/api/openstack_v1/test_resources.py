@@ -69,17 +69,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'resource_type': u'AWS::EC2::Instance',
             }
         ]
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('list_stack_resources', {'stack_identity': stack_identity,
-                                      'nested_depth': 0,
-                                      'with_detail': False,
-                                      'filters': {}
-                                      }),
-            version='1.25'
-        ).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
 
         result = self.controller.index(req, tenant_id=self.tenant,
                                        stack_name=stack_identity.stack_name,
@@ -98,9 +89,17 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                            u'physical_resource_id':
                            u'a3455d8c-9f88-404d-a85b-5315293e67de',
                            u'resource_type': u'AWS::EC2::Instance'}]}
-
         self.assertEqual(expected, result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 0,
+                                      'with_detail': False,
+                                      'filters': {}
+                                      }),
+            version='1.25'
+        )
 
     def test_index_nonexist(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -110,16 +109,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(stack_identity._tenant_path() + '/resources')
 
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('list_stack_resources', {'stack_identity': stack_identity,
-                                      'nested_depth': 0,
-                                      'with_detail': False,
-                                      'filters': {}}),
-            version='1.25'
-        ).AndRaise(tools.to_remote_error(error))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -130,7 +121,15 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('EntityNotFound', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 0,
+                                      'with_detail': False,
+                                      'filters': {}}),
+            version='1.25'
+        )
 
     def test_index_invalid_filters(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -160,23 +159,22 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(stack_identity._tenant_path() + '/resources',
                         {'nested_depth': '99'})
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('list_stack_resources', {'stack_identity': stack_identity,
-                                      'nested_depth': 99,
-                                      'with_detail': False,
-                                      'filters': {}}),
-            version='1.25'
-        ).AndReturn([])
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=[])
 
         result = self.controller.index(req, tenant_id=self.tenant,
                                        stack_name=stack_identity.stack_name,
                                        stack_id=stack_identity.stack_id)
 
         self.assertEqual([], result['resources'])
-        self.m.VerifyAll()
+        mock_call.assert_called_once_with(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 99,
+                                      'with_detail': False,
+                                      'filters': {}}),
+            version='1.25'
+        )
 
     def test_index_nested_depth_not_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
@@ -256,16 +254,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'stack_user_project_id': u'6f38bcfebbc4400b82d50c1a2ea3057d',
             }
         ]
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('list_stack_resources', {'stack_identity': stack_identity,
-                                      'nested_depth': 0,
-                                      'with_detail': True,
-                                      'filters': {}}),
-            version='1.25'
-        ).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
 
         result = self.controller.index(req, tenant_id=self.tenant,
                                        stack_name=stack_identity.stack_name,
@@ -288,9 +278,16 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                            u'description': u'Hello description',
                            u'stack_user_project_id':
                            u'6f38bcfebbc4400b82d50c1a2ea3057d'}]}
-
         self.assertEqual(expected, result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('list_stack_resources', {'stack_identity': stack_identity,
+                                      'nested_depth': 0,
+                                      'with_detail': True,
+                                      'filters': {}}),
+            version='1.25'
+        )
 
     def test_show(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -318,15 +315,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             u'attributes': {u'foo': 'bar'},
             u'metadata': {u'ensureRunning': u'true'}
         }
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
 
         result = self.controller.show(req, tenant_id=self.tenant,
                                       stack_name=stack_identity.stack_name,
@@ -351,9 +341,15 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'attributes': {u'foo': 'bar'},
             }
         }
-
         self.assertEqual(expected, result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
+        )
 
     def test_show_with_nested_stack(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -384,15 +380,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             u'metadata': {u'ensureRunning': u'true'},
             u'nested_stack_id': dict(nested_stack_identity)
         }
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
 
         result = self.controller.show(req, tenant_id=self.tenant,
                                       stack_name=stack_identity.stack_name,
@@ -403,10 +392,16 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                     {'href': self._url(stack_identity), 'rel': 'stack'},
                     {'href': self._url(nested_stack_identity), 'rel': 'nested'}
                     ]
-
         self.assertEqual(expected, result['resource']['links'])
         self.assertIsNone(result.get(rpc_api.RES_NESTED_STACK_ID))
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
+        )
 
     def test_show_nonexist(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -419,15 +414,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(res_identity._tenant_path())
 
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
-            version='1.2'
-        ).AndRaise(tools.to_remote_error(error))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -439,7 +427,14 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('EntityNotFound', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
+        )
 
     def test_show_with_single_attribute(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -493,15 +488,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(res_identity._tenant_path())
 
         error = heat_exc.ResourceNotFound(stack_name='a', resource_name='b')
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
-            version='1.2'
-        ).AndRaise(tools.to_remote_error(error))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -513,7 +501,14 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
+        )
 
     def test_show_uncreated_resource(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -526,15 +521,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(res_identity._tenant_path())
 
         error = heat_exc.ResourceNotAvailable(resource_name='')
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': None}),
-            version='1.2'
-        ).AndRaise(tools.to_remote_error(error))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -546,7 +534,14 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotAvailable', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': None}),
+            version='1.2'
+        )
 
     def test_show_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', False)
@@ -594,15 +589,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             u'resource_type': u'AWS::EC2::Instance',
             u'metadata': {u'ensureRunning': u'true'}
         }
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': False}),
-            version='1.2'
-        ).AndReturn(engine_resp)
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=engine_resp)
 
         result = self.controller.metadata(req, tenant_id=self.tenant,
                                           stack_name=stack_identity.stack_name,
@@ -610,9 +598,15 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                           resource_name=res_name)
 
         expected = {'metadata': {u'ensureRunning': u'true'}}
-
         self.assertEqual(expected, result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': False}),
+            version='1.2'
+        )
 
     def test_metadata_show_nonexist(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'metadata', True)
@@ -625,15 +619,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(res_identity._tenant_path() + '/metadata')
 
         error = heat_exc.EntityNotFound(entity='Stack', name='a')
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': False}),
-            version='1.2'
-        ).AndRaise(tools.to_remote_error(error))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -645,7 +632,14 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('EntityNotFound', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': False}),
+            version='1.2'
+        )
 
     def test_metadata_show_nonexist_resource(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'metadata', True)
@@ -658,15 +652,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(res_identity._tenant_path() + '/metadata')
 
         error = heat_exc.ResourceNotFound(stack_name='a', resource_name='b')
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('describe_stack_resource',
-             {'stack_identity': stack_identity, 'resource_name': res_name,
-              'with_attr': False}),
-            version='1.2'
-        ).AndRaise(tools.to_remote_error(error))
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
 
         resp = tools.request_with_middleware(
             fault.FaultWrapper,
@@ -678,7 +665,14 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         self.assertEqual(404, resp.json['code'])
         self.assertEqual('ResourceNotFound', resp.json['error']['type'])
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('describe_stack_resource',
+             {'stack_identity': stack_identity, 'resource_name': res_name,
+              'with_attr': False}),
+            version='1.2'
+        )
 
     def test_metadata_show_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'metadata', False)
@@ -709,15 +703,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            req.context,
-            ('resource_signal', {'stack_identity': stack_identity,
-                                 'resource_name': res_name,
-                                 'details': 'Signal content',
-                                 'sync_call': False}),
-            version='1.3')
-        self.m.ReplayAll()
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
 
         result = self.controller.signal(req, tenant_id=self.tenant,
                                         stack_name=stack_identity.stack_name,
@@ -726,7 +713,15 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                         body="Signal content")
 
         self.assertIsNone(result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('resource_signal', {'stack_identity': stack_identity,
+                                 'resource_name': res_name,
+                                 'details': 'Signal content',
+                                 'sync_call': False}),
+            version='1.3'
+        )
 
     def test_mark_unhealthy_valid_request(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'mark_unhealthy', True)
@@ -736,18 +731,13 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
         body = {'mark_unhealthy': True,
                 rpc_api.RES_STATUS_DATA: 'Anything'}
         params = {'stack_identity': stack_identity,
                   'resource_name': res_name}
         params.update(body)
-
-        rpc_client.EngineClient.call(
-            req.context,
-            ('resource_mark_unhealthy', params),
-            version='1.26')
-        self.m.ReplayAll()
 
         result = self.controller.mark_unhealthy(
             req, tenant_id=self.tenant,
@@ -757,7 +747,12 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             body=body)
 
         self.assertIsNone(result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('resource_mark_unhealthy', params),
+            version='1.26'
+        )
 
     def test_mark_unhealthy_without_reason(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'mark_unhealthy', True)
@@ -767,17 +762,12 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
         body = {'mark_unhealthy': True, rpc_api.RES_STATUS_DATA: ''}
         params = {'stack_identity': stack_identity,
                   'resource_name': res_name}
         params.update(body)
-
-        rpc_client.EngineClient.call(
-            req.context,
-            ('resource_mark_unhealthy', params),
-            version='1.26')
-        self.m.ReplayAll()
 
         del body[rpc_api.RES_STATUS_DATA]
 
@@ -789,7 +779,12 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
             body=body)
 
         self.assertIsNone(result)
-        self.m.VerifyAll()
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('resource_mark_unhealthy', params),
+            version='1.26'
+        )
 
     def test_mark_unhealthy_with_invalid_keys(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'mark_unhealthy', True)
@@ -799,7 +794,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
         body = {'mark_unhealthy': True,
                 rpc_api.RES_STATUS_DATA: 'Any',
                 'invalid_key1': 1, 'invalid_key2': 2}
@@ -815,6 +811,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertIn(expected, six.text_type(actual))
         self.assertIn('invalid_key1', six.text_type(actual))
         self.assertIn('invalid_key2', six.text_type(actual))
+        mock_call.assert_not_called()
 
     def test_mark_unhealthy_with_invalid_value(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'mark_unhealthy', True)
@@ -824,7 +821,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
         body = {'mark_unhealthy': 'XYZ',
                 rpc_api.RES_STATUS_DATA: 'Any'}
 
@@ -840,6 +838,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                    body=body)
 
         self.assertIn(expected, six.text_type(actual))
+        mock_call.assert_not_called()
 
     def test_mark_unhealthy_without_mark_unhealthy_key(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'mark_unhealthy', True)
@@ -849,7 +848,8 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         req = self._get(stack_identity._tenant_path())
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
         body = {rpc_api.RES_STATUS_DATA: 'Any'}
 
         expected = ("Missing mandatory (%s) key from "
@@ -864,3 +864,4 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                    body=body)
 
         self.assertIn(expected, six.text_type(actual))
+        mock_call.assert_not_called()
