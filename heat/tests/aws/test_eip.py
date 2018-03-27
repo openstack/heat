@@ -172,7 +172,7 @@ class EIPTest(common.HeatTestCase):
         # force Nova, will test Neutron below
         super(EIPTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self.mock_list_net = self.patchobject(neutronclient.Client,
                                               'list_networks')
@@ -406,7 +406,7 @@ class AllocTest(common.HeatTestCase):
     def setUp(self):
         super(AllocTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self.mock_list_net = self.patchobject(neutronclient.Client,
                                               'list_networks')

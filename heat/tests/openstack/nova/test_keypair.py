@@ -48,7 +48,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.fake_nova.keypairs = self.fake_keypairs
         self.patchobject(nova.NovaClientPlugin, 'has_extension',
                          return_value=True)
-        self.cp_mock = self.patchobject(nova.NovaClientPlugin, '_create',
+        self.cp_mock = self.patchobject(nova.NovaClientPlugin, 'client',
                                         return_value=self.fake_nova)
 
     def _mock_key(self, name, pub=None, priv=None):
@@ -187,7 +187,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         stack = utils.parse_stack(template)
         definition = stack.t.resource_definitions(stack)['kp']
         kp_res = keypair.KeyPair('kp', definition, stack)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          side_effect=exception.InvalidServiceVersion(
                              service='compute',
                              version=nc_version

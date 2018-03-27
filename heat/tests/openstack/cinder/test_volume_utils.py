@@ -34,7 +34,7 @@ class VolumeTestCase(common.HeatTestCase):
         self.cinder_fc.volume_api_version = 2
         self.patchobject(cinder.CinderClientPlugin, '_create',
                          return_value=self.cinder_fc)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self.cinder_fc.volumes = mock.Mock(spec=self.cinder_fc.volumes)
         self.fc.volumes = mock.Mock()
@@ -56,7 +56,7 @@ class VolumeTestCase(common.HeatTestCase):
                                           update=False,
                                           extra_create_server_volume_mocks=[]):
         if not update:
-            nova.NovaClientPlugin._create.return_value = self.fc
+            nova.NovaClientPlugin.client.return_value = self.fc
 
         result = [fva]
         for m in extra_create_server_volume_mocks:

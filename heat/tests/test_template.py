@@ -1227,7 +1227,7 @@ class TemplateTest(common.HeatTestCase):
         stk = stack.Stack(self.ctx, 'test_stack',
                           template.Template(empty_template))
         fc = fakes_nova.FakeClient()
-        self.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
+        self.patchobject(nova.NovaClientPlugin, 'client', return_value=fc)
         self.assertEqual(["nova1"], self.resolve(snippet, tmpl, stk))
 
     def test_replace_string_values(self):

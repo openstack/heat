@@ -77,7 +77,7 @@ class ServerTagsTest(common.HeatTestCase):
         instance = instances.Instance('WebServer',
                                       resource_defns['WebServer'], self.stack)
 
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions

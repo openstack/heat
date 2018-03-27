@@ -47,8 +47,9 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         context = utils.dummy_context()
         ext_mock = self.patchobject(nc, 'discover_extensions')
         plugin = context.clients.client_plugin('nova')
+        plugin.max_microversion = '2.53'
         client = plugin.client()
-        ext_mock.assert_called_once_with('2.1')
+        ext_mock.assert_called_once_with('2.53')
         self.assertIsNotNone(client.servers)
 
     def test_v2_26_create(self):
@@ -57,21 +58,21 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         self.patchobject(nc, 'Client', return_value=mock.Mock())
 
         plugin = ctxt.clients.client_plugin('nova')
-        plugin.client(version=plugin.V2_26)
+        plugin.max_microversion = '2.53'
+        plugin.client(version='2.26')
 
-        ext_mock.assert_called_once_with(plugin.V2_26)
+        ext_mock.assert_called_once_with('2.26')
 
     def test_v2_26_create_failed(self):
         ctxt = utils.dummy_context()
         self.patchobject(nc, 'discover_extensions')
         plugin = ctxt.clients.client_plugin('nova')
+        plugin.max_microversion = '2.23'
         client_stub = mock.Mock()
-        client_stub.versions.get_current.side_effect = [
-            nova_exceptions.NotAcceptable(406)]
         self.patchobject(nc, 'Client', return_value=client_stub)
 
-        self.assertRaises(exception.InvalidServiceVersion, plugin.client,
-                          plugin.V2_26)
+        self.assertRaises(exception.InvalidServiceVersion,
+                          plugin.client, '2.26')
 
     def test_get_ip(self):
         my_image = mock.MagicMock()
@@ -475,6 +476,8 @@ class FlavorConstraintTest(common.HeatTestCase):
     def test_validate(self):
         client = fakes_nova.FakeClient()
         self.stub_keystoneclient()
+        self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
+                         return_value='2.27')
         self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
         client.flavors = mock.MagicMock()
 
@@ -521,6 +524,8 @@ class KeypairConstraintTest(common.HeatTestCase):
 
     def test_validation(self):
         client = fakes_nova.FakeClient()
+        self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
+                         return_value='2.27')
         self.patchobject(nova.NovaClientPlugin, '_create', return_value=client)
         client.keypairs = mock.MagicMock()
 
@@ -534,7 +539,7 @@ class KeypairConstraintTest(common.HeatTestCase):
         self.assertFalse(constraint.validate("bar", ctx))
         self.assertTrue(constraint.validate("foo", ctx))
         self.assertTrue(constraint.validate("", ctx))
-        nova.NovaClientPlugin._create.assert_called_once_with()
+        nova.NovaClientPlugin._create.assert_called_once_with(version='2.27')
         calls = [mock.call('bar'),
                  mock.call(key.name)]
         client.keypairs.get.assert_has_calls(calls)

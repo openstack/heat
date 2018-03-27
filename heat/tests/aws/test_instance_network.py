@@ -210,7 +210,7 @@ class instancesTest(common.HeatTestCase):
                                       resource_defns['WebServer'], self.stack)
         metadata = instance.metadata_get()
 
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
 
         self._mock_get_image_id_success(image_id, 1)
@@ -244,7 +244,7 @@ class instancesTest(common.HeatTestCase):
             instance.properties['UserData'],
             'ec2-user')
         neutron.NeutronClientPlugin._create.assert_called_once_with()
-        nova.NovaClientPlugin._create.assert_called_once_with()
+        nova.NovaClientPlugin.client.assert_called_with()
         glance.GlanceClientPlugin.find_image_by_name_or_id.assert_called_with(
             image_id)
         return instance
@@ -278,7 +278,7 @@ class instancesTest(common.HeatTestCase):
         self.patchobject(neutron.NeutronClientPlugin, '_create',
                          return_value=FakeNeutron())
 
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
 
         # need to resolve the template functions
@@ -310,7 +310,7 @@ class instancesTest(common.HeatTestCase):
             instance.properties['UserData'],
             'ec2-user')
         neutron.NeutronClientPlugin._create.assert_called_once_with()
-        nova.NovaClientPlugin._create.assert_called_once_with()
+        nova.NovaClientPlugin.client.assert_called_with()
         glance.GlanceClientPlugin.find_image_by_name_or_id.assert_called_with(
             image_id)
         return instance

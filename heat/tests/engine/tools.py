@@ -217,7 +217,7 @@ def setup_mocks_with_mock(testcase, stack, mock_image_constraint=True,
                           mock_keystone=True):
     fc = fakes_nova.FakeClient()
     testcase.patchobject(instances.Instance, 'client', return_value=fc)
-    testcase.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
+    testcase.patchobject(nova.NovaClientPlugin, 'client', return_value=fc)
     instance = stack['WebServer']
     metadata = instance.metadata_get()
     if mock_image_constraint:

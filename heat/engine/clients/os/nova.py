@@ -20,6 +20,7 @@ import pkgutil
 import string
 
 from neutronclient.common import exceptions as q_exceptions
+from novaclient import api_versions
 from novaclient import client as nc
 from novaclient import exceptions
 from oslo_config import cfg
@@ -34,6 +35,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.clients import client_exception
 from heat.engine.clients import client_plugin
+from heat.engine.clients import microversion_mixin
 from heat.engine.clients import os as os_client
 from heat.engine import constraints
 
@@ -43,7 +45,8 @@ LOG = logging.getLogger(__name__)
 CLIENT_NAME = 'nova'
 
 
-class NovaClientPlugin(client_plugin.ClientPlugin):
+class NovaClientPlugin(microversion_mixin.MicroversionMixin,
+                       client_plugin.ClientPlugin):
 
     deferred_server_statuses = ['BUILD',
                                 'HARD_REBOOT',
@@ -60,13 +63,14 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
 
     NOVA_API_VERSION = '2.1'
 
+    # TODO(ramishra) Remove these constants
     validate_versions = [
         V2_2, V2_8, V2_10, V2_15, V2_26, V2_37, V2_42
     ] = [
         '2.2', '2.8', '2.10', '2.15', '2.26', '2.37', '2.42'
     ]
 
-    supported_versions = [NOVA_API_VERSION] + validate_versions
+    max_microversion = None
 
     service_types = [COMPUTE] = ['compute']
 
@@ -78,10 +82,16 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             # TODO(prazumovsky): remove all unexpected calls from tests and
             # add default_version after that.
             version = self.NOVA_API_VERSION
+        args = self._get_args(version)
+
+        client = nc.Client(version, **args)
+        return client
+
+    def _get_args(self, version):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         extensions = nc.discover_extensions(version)
 
-        args = {
+        return {
             'session': self.context.keystone_session,
             'extensions': extensions,
             'endpoint_type': endpoint_type,
@@ -89,18 +99,19 @@ class NovaClientPlugin(client_plugin.ClientPlugin):
             'region_name': self._get_region_name(),
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug')
-        }
+            }
 
-        client = nc.Client(version, **args)
-        # NOTE: check for microversion availability
-        if version in self.validate_versions:
-            try:
-                client.versions.get_current()
-            except exceptions.NotAcceptable:
-                raise exception.InvalidServiceVersion(service=self.COMPUTE,
-                                                      version=version)
+    def get_max_microversion(self):
+        if not self.max_microversion:
+            client = self._create()
+            self.max_microversion = client.versions.get_current().version
+        return self.max_microversion
 
-        return client
+    def is_version_supported(self, version):
+        api_ver = api_versions.get_api_version(version)
+        max_api_ver = api_versions.get_api_version(
+            self.get_max_microversion())
+        return max_api_ver >= api_ver
 
     def is_not_found(self, ex):
         return isinstance(ex, (exceptions.NotFound,

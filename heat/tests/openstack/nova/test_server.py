@@ -19,7 +19,6 @@ import mock
 from keystoneauth1 import exceptions as ks_exceptions
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
-from novaclient.v2 import client as novaclient
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import requests
@@ -353,7 +352,7 @@ class ServersTest(common.HeatTestCase):
                                 self.stack)
 
         self.patchobject(server, 'store_external_ports')
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
                          return_value=self.mock_image)
@@ -495,7 +494,7 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_create_metadata(self):
         stack_name = 'create_metadata_test_stack'
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -515,7 +514,7 @@ class ServersTest(common.HeatTestCase):
 
     def test_server_create_with_subnet_security_group(self):
         stack_name = 'server_with_subnet_security_group'
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         (tmpl, stack) = self._setup_test_stack(
@@ -559,7 +558,7 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'server_with_str_network'
         return_server = self.fc.servers.list()[1]
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        mock_nc = self.patchobject(nova.NovaClientPlugin, '_create',
+        mock_nc = self.patchobject(nova.NovaClientPlugin, 'client',
                                    return_value=self.fc)
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
                          return_value=self.mock_image)
@@ -577,7 +576,10 @@ class ServersTest(common.HeatTestCase):
         create_mock = self.patchobject(self.fc.servers, 'create',
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
-        mock_nc.assert_called_with(version='2.37')
+        mock_nc.assert_has_calls([mock.call(),
+                                  mock.call(version='2.37'),
+                                  mock.call()])
+        self.assertEqual(3, mock_nc.call_count)
         self.assertEqual('none', create_mock.call_args[1]['nics'])
 
     def test_server_create_with_image_id(self):
@@ -703,7 +705,7 @@ class ServersTest(common.HeatTestCase):
             six.text_type(e))
 
     def test_server_create_raw_userdata(self):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         stack_name = 'raw_userdata_s'
@@ -724,7 +726,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_raw_config_userdata(self):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         stack_name = 'raw_userdata_s'
@@ -752,7 +754,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_raw_config_userdata_None(self):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         stack_name = 'raw_userdata_s'
@@ -788,7 +790,7 @@ class ServersTest(common.HeatTestCase):
     def _server_create_software_config(self, md=None,
                                        stack_name='software_config_s',
                                        ret_tmpl=False):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -879,7 +881,7 @@ class ServersTest(common.HeatTestCase):
         }, server.metadata_get())
 
     def _server_create_software_config_poll_heat(self, md=None):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
@@ -946,7 +948,7 @@ class ServersTest(common.HeatTestCase):
         }, server.metadata_get())
 
     def _server_create_software_config_poll_temp_url(self, md=None):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
@@ -1028,7 +1030,7 @@ class ServersTest(common.HeatTestCase):
         }, server.metadata_get())
 
     def _prepare_for_server_create(self, md=None):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         stack_name = 'software_config_s'
@@ -1146,7 +1148,7 @@ class ServersTest(common.HeatTestCase):
                                 resource_defns['WebServer'], stack)
         self.patchobject(server, 'store_external_ports')
 
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         mock_create = self.patchobject(self.fc.servers, 'create',
                                        return_value=return_server)
@@ -1166,7 +1168,7 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('WebServer',
                                 resource_defns['WebServer'], stack)
         self.patchobject(server, 'store_external_ports')
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         mock_create = self.patchobject(self.fc.servers, 'create',
                                        return_value=return_server)
@@ -1176,7 +1178,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual({}, kwargs['meta'])
 
     def test_server_create_with_stack_scheduler_hints(self):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
@@ -1227,7 +1229,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image',
@@ -1241,7 +1243,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_with_bootable_vol(self):
         stack_name = 'srv_val_bootvol'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self.stub_VolumeConstraint_validate()
         # create a server with bootable volume
@@ -1303,7 +1305,7 @@ class ServersTest(common.HeatTestCase):
                          return_value=True)
         t = template_format.parse(nova_keypair_template)
         templ = template.Template(t)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         stack = parser.Stack(utils.dummy_context(), stack_name, templ,
                              stack_id=uuidutils.generate_uuid())
@@ -1319,7 +1321,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_with_invalid_ssh_key(self):
         stack_name = 'srv_val_test'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         web_server = tmpl['Resources']['WebServer']
         # Make the ssh key have an invalid name
@@ -1342,7 +1344,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_software_config_invalid_meta(self):
         stack_name = 'srv_val_test'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         web_server = tmpl['Resources']['WebServer']
         web_server['Properties']['user_data_format'] = 'SOFTWARE_CONFIG'
@@ -1386,7 +1388,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_with_network_empty_ref(self):
         stack_name = 'srv_net'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'network': ''}])
@@ -1408,7 +1410,7 @@ class ServersTest(common.HeatTestCase):
         # create a server with 'uuid' and 'network' properties
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'fixed_ip': '10.0.0.99'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_with_networks',
@@ -1434,7 +1436,7 @@ class ServersTest(common.HeatTestCase):
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'floating_ip': '172.24.4.14',
               'network': '6b1688bb-18a0-4754-ab05-19daaedc5871'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_net_floating_ip',
@@ -1459,7 +1461,7 @@ class ServersTest(common.HeatTestCase):
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'network': '6b1688bb-18a0-4754-ab05-19daaedc5871',
               'allocate_network': 'auto'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_net_list_str',
@@ -1517,7 +1519,7 @@ class ServersTest(common.HeatTestCase):
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'uuid': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
               'fixed_ip': '10.0.0.99'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_with_networks',
@@ -1536,7 +1538,7 @@ class ServersTest(common.HeatTestCase):
         tmpl['Resources']['WebServer']['Properties']['networks'] = (
             [{'network': 'public',
               'fixed_ip': '10.0.0.99'}])
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_with_networks',
@@ -1559,7 +1561,7 @@ class ServersTest(common.HeatTestCase):
             {'port': ''}]
         tmpl['Resources']['WebServer']['Properties'][
             'security_groups'] = ['my_security_group']
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_validate_net_security_groups',
@@ -2176,7 +2178,7 @@ class ServersTest(common.HeatTestCase):
         self.assertRaises(resource.UpdateReplace, updater)
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_server_update_server_userdata_replace(self, mock_create,
                                                    mock_replace):
         stack_name = 'update_udatrep'
@@ -2192,7 +2194,7 @@ class ServersTest(common.HeatTestCase):
         updater = scheduler.TaskRunner(server.update, update_template)
         self.assertRaises(resource.UpdateReplace, updater)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_update_failed_server_not_replace(self, mock_create):
         stack_name = 'update_failed_server_not_replace'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -2213,7 +2215,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_server_update_server_userdata_ignore(self, mock_create,
                                                   mock_replace):
         stack_name = 'update_udatignore'
@@ -2682,7 +2684,7 @@ class ServersTest(common.HeatTestCase):
             }
         ]))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_block_device_mapping_volume_size_valid_int(self,
                                                                  mock_create):
         stack_name = 'val_vsize_valid'
@@ -2702,7 +2704,7 @@ class ServersTest(common.HeatTestCase):
         self.stub_VolumeConstraint_validate()
         self.assertIsNone(server.validate())
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_block_device_mapping_volume_size_valid_str(self,
                                                                  mock_create):
         stack_name = 'val_vsize_valid'
@@ -2721,7 +2723,7 @@ class ServersTest(common.HeatTestCase):
                          return_value=self.mock_flavor)
         self.assertIsNone(server.validate())
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_bd_mapping_volume_size_invalid_str(self, mock_create):
         stack_name = 'val_vsize_invalid'
         tmpl, stack = self._setup_test_stack(stack_name)
@@ -2737,7 +2739,7 @@ class ServersTest(common.HeatTestCase):
                                 server.validate)
         self.assertIn("Value '10a' is not an integer", six.text_type(exc))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_conflict_block_device_mapping_props(self, mock_create):
         stack_name = 'val_blkdev1'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -2752,7 +2754,7 @@ class ServersTest(common.HeatTestCase):
         self.stub_SnapshotConstraint_validate()
         self.assertRaises(exception.ResourcePropertyConflict, server.validate)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_insufficient_block_device_mapping_props(self,
                                                               mock_create):
         stack_name = 'val_blkdev2'
@@ -2770,7 +2772,7 @@ class ServersTest(common.HeatTestCase):
                "for device mapping vdb")
         self.assertEqual(msg, six.text_type(ex))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_block_device_mapping_with_empty_ref(self, mock_create):
         stack_name = 'val_blkdev2'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -2789,7 +2791,7 @@ class ServersTest(common.HeatTestCase):
         self.stub_VolumeConstraint_validate()
         self.assertIsNone(server.validate())
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_without_image_or_bootable_volume(self, mock_create):
         stack_name = 'val_imgvol'
         (tmpl, stack) = self._setup_test_stack(stack_name)
@@ -2808,7 +2810,7 @@ class ServersTest(common.HeatTestCase):
                'for instance %s' % server.name)
         self.assertEqual(msg, six.text_type(ex))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_invalid_image_status(self, mock_create):
         stack_name = 'test_stack'
         tmpl, stack = self._setup_test_stack(stack_name)
@@ -2826,7 +2828,7 @@ class ServersTest(common.HeatTestCase):
             'Image status is required to be active not sdfsdf.',
             six.text_type(error))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_insufficient_ram_flavor(self, mock_create):
         stack_name = 'test_stack'
         tmpl, stack = self._setup_test_stack(stack_name)
@@ -2847,7 +2849,7 @@ class ServersTest(common.HeatTestCase):
             'has only 4.',
             six.text_type(error))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_image_flavor_not_found(self, mock_create):
         stack_name = 'test_stack'
         tmpl, stack = self._setup_test_stack(stack_name)
@@ -2864,7 +2866,7 @@ class ServersTest(common.HeatTestCase):
         self.assertIsNone(server.validate())
         self.assertIsNone(server.validate())
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_insufficient_disk_flavor(self, mock_create):
         stack_name = 'test_stack'
         tmpl, stack = self._setup_test_stack(stack_name)
@@ -2961,7 +2963,7 @@ class ServersTest(common.HeatTestCase):
                                 server.validate)
         self.assertIn(msg, six.text_type(exc))
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_with_both_blk_dev_map_and_blk_dev_map_v2(self,
                                                                mock_create):
         stack_name = 'invalid_stack'
@@ -3005,7 +3007,7 @@ class ServersTest(common.HeatTestCase):
         else:
             self.assertIsNone(server.validate())
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_conflict_block_device_mapping_v2_props(self,
                                                              mock_create):
         stack_name = 'val_blkdev2'
@@ -3018,7 +3020,7 @@ class ServersTest(common.HeatTestCase):
             raise_exc=exception.ResourcePropertyConflict,
             error_msg=error_msg)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_bdm_v2_with_empty_mapping(self, mock_create):
         stack_name = 'val_blkdev2'
         bdm_v2 = [{}]
@@ -3028,20 +3030,20 @@ class ServersTest(common.HeatTestCase):
                                    raise_exc=exception.StackValidationFailed,
                                    error_msg=msg)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_bdm_v2_properties_success(self, mock_create):
         stack_name = 'bdm_v2_success'
         bdm_v2 = [{'volume_id': '1', 'boot_index': -1}]
         self._test_validate_bdm_v2(stack_name, bdm_v2)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_bdm_v2_with_unresolved_volume(self, mock_create):
         stack_name = 'bdm_v2_with_unresolved_vol'
         # empty string indicates that volume is unresolved
         bdm_v2 = [{'volume_id': ''}]
         self._test_validate_bdm_v2(stack_name, bdm_v2, with_image=False)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_bdm_v2_multiple_bootable_source(self, mock_create):
         stack_name = 'v2_multiple_bootable'
         # with two bootable sources: volume_id and image
@@ -3051,7 +3053,7 @@ class ServersTest(common.HeatTestCase):
                                    raise_exc=exception.StackValidationFailed,
                                    error_msg=msg)
 
-    @mock.patch.object(nova.NovaClientPlugin, '_create')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_bdm_v2_properties_no_bootable_vol(self, mock_create):
         stack_name = 'bdm_v2_no_bootable'
         bdm_v2 = [{'swap_size': 10}]
@@ -3070,7 +3072,7 @@ class ServersTest(common.HeatTestCase):
                                                                       'b': 2,
                                                                       'c': 3,
                                                                       'd': 4}
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
@@ -3091,7 +3093,7 @@ class ServersTest(common.HeatTestCase):
         tmpl.t['Resources']['WebServer']['Properties']['metadata'] = {'a': 1,
                                                                       'b': 2,
                                                                       'c': 3}
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
@@ -3110,7 +3112,7 @@ class ServersTest(common.HeatTestCase):
         props['tags'] = ['a']
         # no need test with key_name
         props.pop('key_name')
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          side_effect=[
                              exception.InvalidServiceVersion(service='a',
                                                              version='2.26')])
@@ -3131,7 +3133,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_too_many_personality(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "fake contents1",
@@ -3155,7 +3157,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_personality_okay(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "fake contents1",
@@ -3175,7 +3177,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_personality_file_size_okay(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "a" * 10240}
@@ -3190,7 +3192,7 @@ class ServersTest(common.HeatTestCase):
     def test_server_validate_personality_file_size_too_big(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
 
         tmpl.t['Resources']['WebServer']['Properties'][
@@ -3212,7 +3214,7 @@ class ServersTest(common.HeatTestCase):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(
             stack_name, server_with_sw_config_personality)
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
@@ -3235,7 +3237,7 @@ class ServersTest(common.HeatTestCase):
     def test_resolve_attribute_console_url(self):
         server = self.fc.servers.list()[0]
         tmpl, stack = self._setup_test_stack('console_url_stack')
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         ws = servers.Server(
             'WebServer', tmpl.resource_definitions(stack)['WebServer'], stack)
@@ -4193,7 +4195,7 @@ class ServersTest(common.HeatTestCase):
                          return_value=self.mock_image)
         mock_limits = self.patchobject(nova.NovaClientPlugin,
                                        'absolute_limits')
-        self.patchobject(nova.NovaClientPlugin, '_create')
+        self.patchobject(nova.NovaClientPlugin, 'client')
 
         # Assert here checks that server resource validates, but actually
         # this call is Act stage of this test. We calling server.validate()
@@ -4209,7 +4211,7 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "a" * 10}
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
@@ -4226,7 +4228,7 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "a" * 10}
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
@@ -4244,7 +4246,7 @@ class ServersTest(common.HeatTestCase):
         tmpl = template.Template(t, files={'a_file': 'the content'})
         stack = parser.Stack(utils.dummy_context(), "server_restore", tmpl)
         stack.store()
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
                          return_value=self.mock_image)
@@ -4285,7 +4287,7 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(stack['WebServer'], 'store_external_ports')
 
-        mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, 'client')
         mock_plugin.return_value = self.fc
 
         return_server = self.fc.servers.list()[1]
@@ -4328,7 +4330,7 @@ class ServersTest(common.HeatTestCase):
 
         self.patchobject(stack['WebServer'], 'store_external_ports')
 
-        mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, 'client')
         mock_plugin.return_value = self.fc
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
                          return_value=self.mock_image)
@@ -4379,7 +4381,7 @@ class ServersTest(common.HeatTestCase):
             utils.dummy_context(), 'snapshot_policy', tmpl)
         stack.store()
         rsrc = stack['WebServer']
-        mock_plugin = self.patchobject(nova.NovaClientPlugin, '_create')
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, 'client')
         mock_plugin.return_value = self.fc
         delete_server = self.patchobject(self.fc.servers, 'delete')
         delete_server.side_effect = nova_exceptions.NotFound(404)
@@ -4453,10 +4455,6 @@ class ServerInternalPortTest(ServersTest):
                                             'delete_port')
         self.port_show = self.patchobject(neutronclient.Client,
                                           'show_port')
-
-        self.server_get = self.patchobject(novaclient.servers.ServerManager,
-                                           'get')
-        self.server_get.return_value = self.fc.servers.list()[1]
 
         def neutron_side_effect(*args):
             if args[0] == 'subnet':
@@ -4921,6 +4919,7 @@ class ServerInternalPortTest(ServersTest):
         port_ids = [{'id': 1122}]
 
         server._data = {"internal_ports": jsonutils.dumps(port_ids)}
+        self.patchobject(nova.NovaClientPlugin, 'client')
         self.patchobject(nova.NovaClientPlugin, 'interface_detach')
         self.patchobject(nova.NovaClientPlugin, 'fetch_server')
         self.patchobject(nova.NovaClientPlugin.check_interface_detach.retry,
@@ -4941,8 +4940,9 @@ class ServerInternalPortTest(ServersTest):
         external_port_ids = [{'id': '5566'}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
+
+        self.patchobject(nova.NovaClientPlugin, 'client')
         nova_server = self.fc.servers.list()[1]
-        server.client = mock.Mock()
         server.client().servers.get.return_value = nova_server
 
         self.patchobject(nova.NovaClientPlugin, 'interface_detach',
@@ -4966,13 +4966,16 @@ class ServerInternalPortTest(ServersTest):
         external_port_ids = [{'id': '5566'}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
+        self.patchobject(nova.NovaClientPlugin, 'client')
         self.patchobject(nova.NovaClientPlugin, 'fetch_server',
                          side_effect=nova_exceptions.NotFound(404))
         check_detach = self.patchobject(nova.NovaClientPlugin,
                                         'check_interface_detach')
+
+        self.patchobject(nova.NovaClientPlugin, 'client')
         nova_server = self.fc.servers.list()[1]
         nova_server.status = 'DELETED'
-        self.server_get.return_value = nova_server
+        server.client().servers.get.return_value = nova_server
 
         server.prepare_for_replace()
         check_detach.assert_not_called()
@@ -4987,9 +4990,10 @@ class ServerInternalPortTest(ServersTest):
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
 
+        self.patchobject(nova.NovaClientPlugin, 'client')
         nova_server = self.fc.servers.list()[1]
         nova_server.status = 'ERROR'
-        self.server_get.return_value = nova_server
+        server.client().servers.get.return_value = nova_server
 
         self.patchobject(nova.NovaClientPlugin, 'interface_detach',
                          return_value=True)

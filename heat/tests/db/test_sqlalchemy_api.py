@@ -98,7 +98,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         return (template, stack)
 
     def _mock_create(self):
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
         self._mock_get_image_id_success('F17-x86_64-gold', 744)
 
