@@ -12,7 +12,7 @@ foreach = (project:openstack/heat OR project:openstack/heat-agents OR
 query = project:openstack/heat-specs
 
 [section "Bug Fixes"]
-query = topic:^bug/.*
+query = intopic:^bug/.*
 
 [section "Blueprints"]
 query = message:"Blueprint"
