@@ -113,15 +113,13 @@ class UserTest(common.HeatTestCase):
         cfg.CONF.set_default('heat_stack_user_role', 'stack_user_role')
 
     def create_user(self, t, stack, resource_name,
-                    project_id='stackproject', user_id='dummy_user',
+                    project_id, user_id='dummy_user',
                     password=None):
-        self.m.StubOutWithMock(user.User, 'keystone')
-        user.User.keystone().MultipleTimes().AndReturn(self.fc)
+        self.patchobject(user.User, 'keystone', return_value=self.fc)
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'create_stack_domain_project')
-        fake_ks.FakeKeystoneClient.create_stack_domain_project(
-            stack.id).AndReturn(project_id)
+        self.mock_create_project = self.patchobject(
+            fake_ks.FakeKeystoneClient, 'create_stack_domain_project',
+            return_value=project_id)
 
         resource_defns = stack.t.resource_definitions(stack)
         rsrc = user.User(resource_name,
@@ -129,15 +127,12 @@ class UserTest(common.HeatTestCase):
                          stack)
         rsrc.store()
 
-        self.m.StubOutWithMock(short_id, 'get_id')
-        short_id.get_id(rsrc.uuid).MultipleTimes().AndReturn('aabbcc')
+        self.patchobject(short_id, 'get_id', return_value='aabbcc')
 
-        self.m.StubOutWithMock(fake_ks.FakeKeystoneClient,
-                               'create_stack_domain_user')
-        fake_ks.FakeKeystoneClient.create_stack_domain_user(
-            username=self.username, password=password,
-            project_id=project_id).AndReturn(user_id)
-        self.m.ReplayAll()
+        self.mock_create_user = self.patchobject(
+            fake_ks.FakeKeystoneClient, 'create_stack_domain_user',
+            return_value=user_id)
+
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -146,8 +141,9 @@ class UserTest(common.HeatTestCase):
     def test_user(self):
         t = template_format.parse(user_template)
         stack = utils.parse_stack(t, stack_name=self.stack_name)
+        project_id = 'stackproject'
 
-        rsrc = self.create_user(t, stack, 'CfnUser')
+        rsrc = self.create_user(t, stack, 'CfnUser', project_id)
         self.assertEqual('dummy_user', rsrc.resource_id)
         self.assertEqual(self.username, rsrc.FnGetRefId())
 
@@ -175,24 +171,34 @@ class UserTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create_project.assert_called_once_with(stack.id)
+        self.mock_create_user.assert_called_once_with(
+            password=None, project_id=project_id,
+            username=self.username)
 
     def test_user_password(self):
         t = template_format.parse(user_template_password)
         stack = utils.parse_stack(t, stack_name=self.stack_name)
-
-        rsrc = self.create_user(t, stack, 'CfnUser', password=u'myP@ssW0rd')
+        project_id = 'stackproject'
+        password = u'myP@ssW0rd'
+        rsrc = self.create_user(t, stack, 'CfnUser',
+                                project_id=project_id,
+                                password=password)
         self.assertEqual('dummy_user', rsrc.resource_id)
         self.assertEqual(self.username, rsrc.FnGetRefId())
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mock_create_project.assert_called_once_with(stack.id)
+        self.mock_create_user.assert_called_once_with(
+            password=password, project_id=project_id,
+            username=self.username)
 
     def test_user_validate_policies(self):
         t = template_format.parse(user_policy_template)
         stack = utils.parse_stack(t, stack_name=self.stack_name)
+        project_id = 'stackproject'
 
-        rsrc = self.create_user(t, stack, 'CfnUser')
+        rsrc = self.create_user(t, stack, 'CfnUser', project_id)
         self.assertEqual('dummy_user', rsrc.resource_id)
         self.assertEqual(self.username, rsrc.FnGetRefId())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
@@ -220,8 +226,10 @@ class UserTest(common.HeatTestCase):
 
         # However we should just ignore it to avoid breaking existing templates
         self.assertTrue(rsrc._validate_policies([dict_policy]))
-
-        self.m.VerifyAll()
+        self.mock_create_project.assert_called_once_with(stack.id)
+        self.mock_create_user.assert_called_once_with(
+            password=None, project_id=project_id,
+            username=self.username)
 
     def test_user_create_bad_policies(self):
         t = template_format.parse(user_policy_template)
@@ -236,44 +244,54 @@ class UserTest(common.HeatTestCase):
                           rsrc.handle_create)
 
     def test_user_access_allowed(self):
-        self.m.StubOutWithMock(ap.AccessPolicy, 'access_allowed')
-        ap.AccessPolicy.access_allowed('a_resource').AndReturn(True)
-        ap.AccessPolicy.access_allowed('b_resource').AndReturn(False)
 
-        self.m.ReplayAll()
+        def mock_access_allowed(resource):
+            return True if resource == 'a_resource' else False
+
+        self.patchobject(ap.AccessPolicy, 'access_allowed',
+                         side_effect=mock_access_allowed)
 
         t = template_format.parse(user_policy_template)
         stack = utils.parse_stack(t, stack_name=self.stack_name)
+        project_id = 'stackproject'
 
-        rsrc = self.create_user(t, stack, 'CfnUser')
+        rsrc = self.create_user(t, stack, 'CfnUser', project_id)
         self.assertEqual('dummy_user', rsrc.resource_id)
         self.assertEqual(self.username, rsrc.FnGetRefId())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         self.assertTrue(rsrc.access_allowed('a_resource'))
         self.assertFalse(rsrc.access_allowed('b_resource'))
-        self.m.VerifyAll()
+        self.mock_create_project.assert_called_once_with(stack.id)
+        self.mock_create_user.assert_called_once_with(
+            password=None, project_id=project_id,
+            username=self.username)
 
     def test_user_access_allowed_ignorepolicy(self):
-        self.m.StubOutWithMock(ap.AccessPolicy, 'access_allowed')
-        ap.AccessPolicy.access_allowed('a_resource').AndReturn(True)
-        ap.AccessPolicy.access_allowed('b_resource').AndReturn(False)
 
-        self.m.ReplayAll()
+        def mock_access_allowed(resource):
+            return True if resource == 'a_resource' else False
+
+        self.patchobject(ap.AccessPolicy, 'access_allowed',
+                         side_effect=mock_access_allowed)
 
         t = template_format.parse(user_policy_template)
         t['Resources']['CfnUser']['Properties']['Policies'] = [
             'WebServerAccessPolicy', {'an_ignored': 'policy'}]
         stack = utils.parse_stack(t, stack_name=self.stack_name)
+        project_id = 'stackproject'
 
-        rsrc = self.create_user(t, stack, 'CfnUser')
+        rsrc = self.create_user(t, stack, 'CfnUser', project_id)
         self.assertEqual('dummy_user', rsrc.resource_id)
         self.assertEqual(self.username, rsrc.FnGetRefId())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         self.assertTrue(rsrc.access_allowed('a_resource'))
         self.assertFalse(rsrc.access_allowed('b_resource'))
-        self.m.VerifyAll()
+        self.mock_create_project.assert_called_once_with(stack.id)
+        self.mock_create_user.assert_called_once_with(
+            password=None, project_id=project_id,
+            username=self.username)
 
     def test_user_refid_rsrc_id(self):
         t = template_format.parse(user_template)
@@ -309,10 +327,7 @@ class AccessKeyTest(common.HeatTestCase):
     def create_user(self, t, stack, resource_name,
                     project_id='stackproject', user_id='dummy_user',
                     password=None):
-        self.m.StubOutWithMock(user.User, 'keystone')
-        user.User.keystone().MultipleTimes().AndReturn(self.fc)
-
-        self.m.ReplayAll()
+        self.patchobject(user.User, 'keystone', return_value=self.fc)
         rsrc = stack[resource_name]
         self.assertIsNone(rsrc.validate())
         scheduler.TaskRunner(rsrc.create)()
@@ -334,8 +349,6 @@ class AccessKeyTest(common.HeatTestCase):
 
         self.create_user(t, stack, 'CfnUser')
         rsrc = self.create_access_key(t, stack, 'HostKeys')
-
-        self.m.VerifyAll()
         self.assertEqual(self.fc.access,
                          rsrc.resource_id)
 
@@ -359,14 +372,9 @@ class AccessKeyTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
 
     def test_access_key_get_from_keystone(self):
-        self.m.StubOutWithMock(user.AccessKey, 'keystone')
-        user.AccessKey.keystone().MultipleTimes().AndReturn(self.fc)
-
-        self.m.ReplayAll()
-
+        self.patchobject(user.AccessKey, 'keystone', return_value=self.fc)
         t = template_format.parse(user_accesskey_template)
 
         stack = utils.parse_stack(t)
@@ -390,11 +398,8 @@ class AccessKeyTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
 
     def test_access_key_no_user(self):
-        self.m.ReplayAll()
-
         t = template_format.parse(user_accesskey_template)
         # Set the resource properties UserName to an unknown user
         t['Resources']['HostKeys']['Properties']['UserName'] = 'NonExistent'
@@ -411,8 +416,6 @@ class AccessKeyTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
 
 
 class AccessPolicyTest(common.HeatTestCase):
