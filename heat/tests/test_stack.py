@@ -478,7 +478,7 @@ class StackTest(common.HeatTestCase):
             prev_raw_template_id=None,
             current_deps=None, cache_data=None,
             nested_depth=0,
-            deleted_time=None)
+            deleted_time=None, refresh_cred=False)
         template.Template.load.assert_called_once_with(
             self.ctx, stk.raw_template_id, stk.raw_template)
 
@@ -1629,6 +1629,31 @@ class StackTest(common.HeatTestCase):
 
         saved_stack = stack.Stack.load(self.ctx, stack_id=stack_ownee.id)
         self.assertEqual(self.stack.id, saved_stack.owner_id)
+
+    def _test_load_with_refresh_cred(self, refresh=True):
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+        self.patchobject(self.ctx.auth_plugin, 'get_user_id',
+                         return_value='old_trustor_user_id')
+        self.patchobject(self.ctx.auth_plugin, 'get_project_id',
+                         return_value='test_tenant_id')
+
+        old_context = utils.dummy_context()
+        old_context.trust_id = 'atrust123'
+        old_context.trustor_user_id = (
+            'trustor_user_id' if refresh else 'old_trustor_user_id')
+        m_sc = self.patchobject(context, 'StoredContext')
+        m_sc.from_dict.return_value = old_context
+        self.stack = stack.Stack(self.ctx, 'test_regenerate_trust', self.tmpl)
+        self.stack.store()
+        load_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id,
+                                      check_refresh_cred=True)
+        self.assertEqual(refresh, load_stack.refresh_cred)
+
+    def test_load_with_refresh_cred(self):
+        self._test_load_with_refresh_cred()
+
+    def test_load_with_no_refresh_cred(self):
+        self._test_load_with_refresh_cred(refresh=False)
 
     def test_requires_deferred_auth(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',

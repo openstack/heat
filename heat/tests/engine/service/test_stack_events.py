@@ -16,6 +16,7 @@ from unittest import mock
 from oslo_config import cfg
 from oslo_messaging import conffixture
 
+from heat.common import context
 from heat.engine import resource as res
 from heat.engine.resources.aws.ec2 import instance as instances
 from heat.engine import service
@@ -32,6 +33,7 @@ class StackEventTest(common.HeatTestCase):
 
     def setUp(self):
         super(StackEventTest, self).setUp()
+        self.patchobject(context, 'StoredContext')
 
         self.ctx = utils.dummy_context(tenant_id='stack_event_test_tenant')
         self.eng = service.EngineService('a-host', 'a-topic')

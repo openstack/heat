@@ -289,7 +289,7 @@ class StackConvergenceServiceCreateUpdateTest(common.HeatTestCase):
         self.assertIsInstance(result, dict)
         self.assertTrue(result['stack_id'])
         parser.Stack.load.assert_called_once_with(
-            self.ctx, stack=mock.ANY)
+            self.ctx, stack=mock.ANY, check_refresh_cred=True)
         templatem.Template.assert_called_once_with(template, files=None)
         environment.Environment.assert_called_once_with(params)
 
