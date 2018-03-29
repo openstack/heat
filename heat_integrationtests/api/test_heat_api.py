@@ -35,7 +35,7 @@ def load_tests(loader, tests, pattern):
         return
     manager = clients.ClientManager(conf)
     endpoint = manager.identity_client.get_endpoint_url(
-        'orchestration', conf.region)
+        'orchestration', region=conf.region, endpoint_type=conf.endpoint_type)
     host = urlparse.urlparse(endpoint).hostname
     os.environ['OS_TOKEN'] = manager.identity_client.auth_token
     os.environ['PREFIX'] = test.rand_name('api')

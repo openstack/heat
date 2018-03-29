@@ -67,6 +67,10 @@ HeatGroup = [
                     "is used"),
     cfg.StrOpt('region',
                help="The region name to use"),
+    cfg.StrOpt('endpoint_type',
+               default='public',
+               choices=['public', 'admin', 'internal'],
+               help="The endpoint type to use for the orchestration service."),
     cfg.StrOpt('instance_type',
                help="Instance type for tests. Needs to be big enough for a "
                     "full OS plus the test workload"),

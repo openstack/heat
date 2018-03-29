@@ -48,10 +48,12 @@ class KeystoneWrapperClient(object):
     def project_id(self):
         return self.auth_plugin.get_project_id(self.session)
 
-    def get_endpoint_url(self, service_type, region=None):
+    def get_endpoint_url(self, service_type, region=None,
+                         endpoint_type='public'):
         kwargs = {
             'service_type': service_type,
-            'region_name': region}
+            'region_name': region,
+            'interface': endpoint_type}
         return self.auth_ref.service_catalog.url_for(**kwargs)
 
 
@@ -113,7 +115,8 @@ class ClientManager(object):
         try:
             if endpoint is None:
                 endpoint = self.identity_client.get_endpoint_url(
-                    'orchestration', self.conf.region)
+                    'orchestration', region=self.conf.region,
+                    endpoint_type=self.conf.endpoint_type)
         except kc_exceptions.EndpointNotFound:
             return None
         else:
@@ -156,7 +159,7 @@ class ClientManager(object):
             self.NOVA_API_VERSION,
             session=self.identity_client.session,
             service_type='compute',
-            endpoint_type='publicURL',
+            endpoint_type=self.conf.endpoint_type,
             region_name=self.conf.region,
             os_cache=False,
             http_log_debug=True)
@@ -167,13 +170,13 @@ class ClientManager(object):
             session=self.identity_client.session,
             service_type='network',
             region_name=self.conf.region,
-            endpoint_type='publicURL')
+            endpoint_type=self.conf.endpoint_type)
 
     def _get_volume_client(self):
         return cinder_client.Client(
             self.CINDERCLIENT_VERSION,
             session=self.identity_client.session,
-            endpoint_type='publicURL',
+            endpoint_type=self.conf.endpoint_type,
             region_name=self.conf.region,
             http_log_debug=True)
 
@@ -181,7 +184,7 @@ class ClientManager(object):
         args = {
             'auth_version': self.auth_version,
             'session': self.identity_client.session,
-            'os_options': {'endpoint_type': 'publicURL',
+            'os_options': {'endpoint_type': self.conf.endpoint_type,
                            'region_name': self.conf.region,
                            'service_type': 'object-store'},
         }
@@ -197,7 +200,7 @@ class ClientManager(object):
             args = {
                 'session': self.identity_client.session,
                 'region_name': self.conf.region,
-                'endpoint_type': 'publicURL',
+                'endpoint_type': self.conf.endpoint_type,
                 'service_type': 'metering',
             }
             return ceilometer_client.Client(self.CEILOMETER_VERSION,
