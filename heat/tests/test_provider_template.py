@@ -667,11 +667,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
                                    'Parameters': {},
                                    'Resources': {}})
-        self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('file',)).AndReturn(minimal_temp)
-        self.m.ReplayAll()
-
+        mock_get = self.patchobject(urlfetch, "get", return_value=minimal_temp)
         env_str = {'resource_registry': {'resources': {'fred': {
             "OS::ResourceType": test_templ_name}}}}
         global_env = environment.Environment({}, user_env=False)
@@ -684,7 +680,8 @@ class ProviderTemplateTest(common.HeatTestCase):
         self.assertTrue(issubclass(cls, template_resource.TemplateResource))
         self.assertTrue(hasattr(cls, "properties_schema"))
         self.assertTrue(hasattr(cls, "attributes_schema"))
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(test_templ_name,
+                                         allowed_schemes=('file',))
 
     def test_template_as_resource(self):
         """Test that resulting resource has the right prop and attrib schema.
@@ -702,12 +699,8 @@ class ProviderTemplateTest(common.HeatTestCase):
         with open(path) as test_templ_file:
             test_templ = test_templ_file.read()
         self.assertTrue(test_templ, "Empty test template")
-        self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https')).AndReturn(test_templ)
+        mock_get = self.patchobject(urlfetch, "get", return_value=test_templ)
         parsed_test_templ = template_format.parse(test_templ)
-        self.m.ReplayAll()
-
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
                              template.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
@@ -725,7 +718,6 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                   properties)
         templ_resource = resource.Resource("test_templ_resource", definition,
                                            stack)
-        self.m.VerifyAll()
         self.assertIsInstance(templ_resource,
                               template_resource.TemplateResource)
         for prop in parsed_test_templ.get("Parameters", {}):
@@ -740,6 +732,8 @@ class ProviderTemplateTest(common.HeatTestCase):
             stack.env.user_env_as_dict()["resource_registry"])
         self.assertNotIn('WordPress_Single_Instance.yaml',
                          resources.global_env().registry._registry)
+        mock_get.assert_called_once_with(test_templ_name,
+                                         allowed_schemes=('http', 'https'))
 
     def test_persisted_unregistered_provider_templates(self):
         """Test that templates are registered correctly.
@@ -767,11 +761,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         minimal_temp = json.dumps({'HeatTemplateFormatVersion': '2012-12-12',
                                    'Parameters': {},
                                    'Resources': {}})
-        self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https',
-                                      'file')).AndReturn(minimal_temp)
-        self.m.ReplayAll()
+        mock_get = self.patchobject(urlfetch, "get", return_value=minimal_temp)
 
         definition = rsrc_defn.ResourceDefinition('test_t_res',
                                                   'Test::Frodo')
@@ -779,7 +769,9 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition,
                                                       stack)
         self.assertIsNone(temp_res.validate())
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(test_templ_name,
+                                         allowed_schemes=('http', 'https',
+                                                          'file',))
 
     def test_user_template_not_retrieved_by_file(self):
         # make sure that a TemplateResource defined in the user environment
@@ -814,13 +806,9 @@ class ProviderTemplateTest(common.HeatTestCase):
                              template.Template(empty_template),
                              stack_id=str(uuid.uuid4()))
 
-        self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https',
-                                      'file')
-                     ).AndRaise(urlfetch.URLFetchError(
-                         _('Failed to retrieve template')))
-        self.m.ReplayAll()
+        mock_get = self.patchobject(urlfetch, "get",
+                                    side_effect=urlfetch.URLFetchError(
+                                        _('Failed to retrieve template')))
 
         definition = rsrc_defn.ResourceDefinition('test_t_res',
                                                   'Test::Frodo')
@@ -828,7 +816,9 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition,
                                                       stack)
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(test_templ_name,
+                                         allowed_schemes=('http', 'https',
+                                                          'file',))
 
     def test_user_template_retrieve_fail(self):
         # make sure that a TemplateResource defined in the user environment
@@ -844,12 +834,9 @@ class ProviderTemplateTest(common.HeatTestCase):
                              template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
-        self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https')
-                     ).AndRaise(urlfetch.URLFetchError(
-                         _('Failed to retrieve template')))
-        self.m.ReplayAll()
+        mock_get = self.patchobject(urlfetch, "get",
+                                    side_effect=urlfetch.URLFetchError(
+                                        _('Failed to retrieve template')))
 
         definition = rsrc_defn.ResourceDefinition('test_t_res',
                                                   'Test::Flippy')
@@ -857,7 +844,8 @@ class ProviderTemplateTest(common.HeatTestCase):
                                                       definition,
                                                       stack)
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(test_templ_name,
+                                         allowed_schemes=('http', 'https',))
 
     def test_user_template_retrieve_fail_ext(self):
         # make sure that a TemplateResource defined in the user environment
@@ -873,15 +861,12 @@ class ProviderTemplateTest(common.HeatTestCase):
                              template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
-        self.m.ReplayAll()
-
         definition = rsrc_defn.ResourceDefinition('test_t_res',
                                                   'Test::Flippy')
         temp_res = template_resource.TemplateResource('test_t_res',
                                                       definition,
                                                       stack)
         self.assertRaises(exception.StackValidationFailed, temp_res.validate)
-        self.m.VerifyAll()
 
     def test_incorrect_template_provided_with_url(self):
         wrong_template = '''
@@ -896,11 +881,8 @@ class ProviderTemplateTest(common.HeatTestCase):
                              template.Template(empty_template, env=env),
                              stack_id=str(uuid.uuid4()))
 
-        self.m.StubOutWithMock(urlfetch, "get")
-        urlfetch.get(test_templ_name,
-                     allowed_schemes=('http', 'https')
-                     ).AndReturn(wrong_template)
-        self.m.ReplayAll()
+        mock_get = self.patchobject(urlfetch, "get",
+                                    return_value=wrong_template)
 
         definition = rsrc_defn.ResourceDefinition('test_t_res',
                                                   'Test::Tmpl')
@@ -911,8 +893,8 @@ class ProviderTemplateTest(common.HeatTestCase):
                                 temp_res.validate)
         self.assertIn('Error parsing template http://heatr/bad_tmpl.yaml',
                       six.text_type(err))
-
-        self.m.VerifyAll()
+        mock_get.assert_called_once_with(test_templ_name,
+                                         allowed_schemes=('http', 'https',))
 
 
 class TemplateDataTest(common.HeatTestCase):
