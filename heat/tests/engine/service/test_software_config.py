@@ -693,9 +693,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
     @mock.patch.object(db_api, 'resource_update')
     @mock.patch.object(db_api, 'resource_get_by_physical_resource_id')
     @mock.patch.object(service_software_config.requests, 'put')
-    @mock.patch.object(service_software_config.requests, 'head')
     def test_push_metadata_software_deployments_temp_url(
-            self, head, put, res_get, res_upd, md_sd):
+            self, put, res_get, res_upd, md_sd):
         rs = mock.Mock()
         rs.rsrc_metadata = {'original': 'metadata'}
         rs.id = '1234'
@@ -707,14 +706,6 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         res_get.return_value = rs
         res_upd.return_value = 1
 
-        head_response = mock.Mock()
-        head_response.headers = {'etag': '1234'}
-        head_response.status_code = 200
-        head.return_value = head_response
-
-        put_response = mock.Mock()
-        put_response.status_code = 201
-
         deployments = {'deploy': 'this'}
         md_sd.return_value = deployments
 
@@ -725,12 +716,15 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         with mock.patch.object(self.ctx.session, 'refresh'):
             self.engine.software_config._push_metadata_software_deployments(
                 self.ctx, '1234', None)
-        res_upd.assert_called_once_with(
-            self.ctx, '1234', {'rsrc_metadata': result_metadata}, 1)
+        res_upd.has_calls(
+            mock.call(self.ctx, '1234',
+                      {'rsrc_metadata': result_metadata}, 1),
+            mock.call(self.ctx, '1234',
+                      {'rsrc_metadata': result_metadata}, 2),
+        )
 
         put.assert_called_once_with(
-            'http://192.168.2.2/foo/bar', json.dumps(result_metadata),
-            headers={'if-match': '1234'})
+            'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')
