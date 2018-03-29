@@ -87,7 +87,7 @@ class ExtraRoute(neutron.NeutronResource):
         if new_route in routes:
             msg = _('Route duplicates an existing route.')
             raise exception.Error(msg)
-        routes.append(new_route)
+        routes.append(new_route.copy())
         self.client().update_router(router_id,
                                     {'router': {'routes': routes}})
         new_route['router_id'] = router_id
