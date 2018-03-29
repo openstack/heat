@@ -12,8 +12,8 @@
 #    under the License.
 
 import copy
-
 import mock
+
 from neutronclient.common import exceptions as qe
 from neutronclient.v2_0 import client as neutronclient
 
@@ -66,33 +66,14 @@ class NeutronProviderNetTest(common.HeatTestCase):
 
     def setUp(self):
         super(NeutronProviderNetTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_network')
+        self.mockclient = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client', return_value=self.mockclient)
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
     def create_provider_net(self):
         # Create script
-        neutronclient.Client.create_network({
-            'network': {
-                'name': u'the_provider_network',
-                'admin_state_up': True,
-                'provider:network_type': 'vlan',
-                'provider:physical_network': 'physnet_1',
-                'provider:segmentation_id': '101',
-                'router:external': False,
-                'shared': True}
-        }).AndReturn(stpnb)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(stpnb)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(stpna)
+        self.mockclient.create_network.return_value = stpnb
 
         t = template_format.parse(provider_network_template)
         self.stack = utils.parse_stack(t)
@@ -105,29 +86,17 @@ class NeutronProviderNetTest(common.HeatTestCase):
 
     def test_create_provider_net(self):
         rsrc = self.create_provider_net()
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        # Delete script
-        neutronclient.Client.delete_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(None)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndReturn(stpna)
-
-        neutronclient.Client.show_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        neutronclient.Client.delete_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
-        ).AndRaise(qe.NetworkNotFoundClient(status_code=404))
-
-        self.m.ReplayAll()
+        self.mockclient.show_network.side_effect = [
+            stpnb,
+            stpna,
+            qe.NetworkNotFoundClient(status_code=404),
+            stpna,
+            qe.NetworkNotFoundClient(status_code=404),
+        ]
+        self.mockclient.delete_network.side_effect = [
+            None,
+            qe.NetworkNotFoundClient(status_code=404),
+        ]
 
         rsrc.validate()
         scheduler.TaskRunner(rsrc.create)()
@@ -146,28 +115,29 @@ class NeutronProviderNetTest(common.HeatTestCase):
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+
+        self.mockclient.create_network.assert_called_once_with({
+            'network': {
+                'name': u'the_provider_network',
+                'admin_state_up': True,
+                'provider:network_type': 'vlan',
+                'provider:physical_network': 'physnet_1',
+                'provider:segmentation_id': '101',
+                'router:external': False,
+                'shared': True
+            }
+        })
+        self.mockclient.show_network.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        self.assertEqual(5, self.mockclient.show_network.call_count)
+        self.mockclient.delete_network.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        self.assertEqual(2, self.mockclient.delete_network.call_count)
 
     def test_update_provider_net(self):
         rsrc = self.create_provider_net()
-
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'provider:network_type': 'vlan',
-                'provider:physical_network': 'physnet_1',
-                'provider:segmentation_id': '102',
-                'port_security_enabled': False,
-                'router:external': True
-            }}).AndReturn(None)
-
-        neutronclient.Client.update_network(
-            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            {'network': {
-                'name': utils.PhysName(rsrc.stack.name, 'provider_net')
-            }}).AndReturn(None)
-
-        self.m.ReplayAll()
+        self.mockclient.show_network.side_effect = [stpnb, stpna]
+        self.mockclient.update_network.return_value = None
 
         rsrc.validate()
 
@@ -190,11 +160,44 @@ class NeutronProviderNetTest(common.HeatTestCase):
                                              {'name': None}))
         # no prop_diff
         self.assertIsNone(rsrc.handle_update(update_snippet, {}, {}))
-        self.m.VerifyAll()
+
+        self.mockclient.create_network.assert_called_once_with({
+            'network': {
+                'name': u'the_provider_network',
+                'admin_state_up': True,
+                'provider:network_type': 'vlan',
+                'provider:physical_network': 'physnet_1',
+                'provider:segmentation_id': '101',
+                'router:external': False,
+                'shared': True}
+        })
+        self.mockclient.show_network.assert_called_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        self.assertEqual(2, self.mockclient.show_network.call_count)
+        self.mockclient.update_network.assert_has_calls([
+            mock.call('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                      {
+                          'network': {
+                              'provider:network_type': 'vlan',
+                              'provider:physical_network': 'physnet_1',
+                              'provider:segmentation_id': '102',
+                              'port_security_enabled': False,
+                              'router:external': True
+                          }
+                      }),
+            mock.call('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+                      {
+                          'network': {
+                              'name': utils.PhysName(rsrc.stack.name,
+                                                     'provider_net'),
+                          }
+                      }),
+        ])
+        self.assertEqual(2, self.mockclient.update_network.call_count)
 
     def test_get_live_state(self):
         rsrc = self.create_provider_net()
-        rsrc.client().show_network = mock.Mock(return_value={
+        self.mockclient.show_network.return_value = {
             'network': {
                 'status': 'ACTIVE',
                 'subnets': [],
@@ -210,7 +213,9 @@ class NeutronProviderNetTest(common.HeatTestCase):
                 'shared': True,
                 'provider:network_type': 'flat',
                 'id': 'af216806-4462-4c68-bfa4-9580857e71c3',
-                'provider:segmentation_id': None}})
+                'provider:segmentation_id': None,
+            }
+        }
 
         reality = rsrc.get_live_state(rsrc.properties)
         expected = {
@@ -224,3 +229,5 @@ class NeutronProviderNetTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, reality)
+
+        self.mockclient.show_network.assert_called_once()
