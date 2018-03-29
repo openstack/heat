@@ -168,11 +168,24 @@ def get_stack(stack_name, ctx, template=None, with_params=True,
     return stack
 
 
+def setup_keystone_mocks_with_mock(mocks, stack):
+    fkc = fake_ks.FakeKeystoneClient()
+
+    mocks.patchobject(keystone.KeystoneClientPlugin, '_create')
+    keystone.KeystoneClientPlugin._create.return_value = fkc
+
+
 def setup_keystone_mocks(mocks, stack):
     fkc = fake_ks.FakeKeystoneClient()
 
     mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
     keystone.KeystoneClientPlugin._create().AndReturn(fkc)
+
+
+def setup_mock_for_image_constraint_with_mock(mocks, imageId_input,
+                                              imageId_output=744):
+    mocks.patchobject(glance.GlanceClientPlugin,
+                      'find_image_by_name_or_id', return_value=imageId_output)
 
 
 def setup_mock_for_image_constraint(mocks, imageId_input,
@@ -181,6 +194,64 @@ def setup_mock_for_image_constraint(mocks, imageId_input,
                           'find_image_by_name_or_id')
     glance.GlanceClientPlugin.find_image_by_name_or_id(
         imageId_input).MultipleTimes().AndReturn(imageId_output)
+
+
+def validate_setup_mocks_with_mock(stack, fc, mock_image_constraint=True,
+                                   validate_create=True):
+    instance = stack['WebServer']
+    metadata = instance.metadata_get()
+    if mock_image_constraint:
+        m_image = glance.GlanceClientPlugin.find_image_by_name_or_id
+        m_image.assert_called_with(
+            instance.properties['ImageId'])
+
+    user_data = instance.properties['UserData']
+    server_userdata = instance.client_plugin().build_userdata(
+        metadata, user_data, 'ec2-user')
+    nova.NovaClientPlugin.build_userdata.assert_called_with(
+        metadata, user_data, 'ec2-user')
+
+    if not validate_create:
+        return
+
+    fc.servers.create.assert_called_once_with(
+        image=744,
+        flavor=3,
+        key_name='test',
+        name=utils.PhysName(stack.name, 'WebServer'),
+        security_groups=None,
+        userdata=server_userdata,
+        scheduler_hints=None,
+        meta=None,
+        nics=None,
+        availability_zone=None,
+        block_device_mapping=None)
+
+
+def setup_mocks_with_mock(testcase, stack, mock_image_constraint=True,
+                          mock_keystone=True):
+    fc = fakes_nova.FakeClient()
+    testcase.patchobject(instances.Instance, 'client', return_value=fc)
+    testcase.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
+    instance = stack['WebServer']
+    metadata = instance.metadata_get()
+    if mock_image_constraint:
+        setup_mock_for_image_constraint_with_mock(
+            testcase, instance.properties['ImageId'])
+
+    if mock_keystone:
+        setup_keystone_mocks_with_mock(testcase, stack)
+
+    user_data = instance.properties['UserData']
+    server_userdata = instance.client_plugin().build_userdata(
+        metadata, user_data, 'ec2-user')
+    testcase.patchobject(nova.NovaClientPlugin, 'build_userdata',
+                         return_value=server_userdata)
+
+    testcase.patchobject(fc.servers, 'create')
+
+    fc.servers.create.return_value = fc.servers.list()[4]
+    return fc
 
 
 def setup_mocks(mocks, stack, mock_image_constraint=True,
