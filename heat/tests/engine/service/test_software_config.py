@@ -211,8 +211,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         t = template_format.parse(tools.wp_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        tools.setup_mocks(self.m, stack)
-        self.m.ReplayAll()
+        fc = tools.setup_mocks_with_mock(self, stack)
         stack.store()
         stack.create()
         server = stack['WebServer']
@@ -241,14 +240,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, server_id)
         self.assertEqual(deployment['config_id'],
                          rsrcs[0].rsrc_metadata.get('deployments')[0]['id'])
+        tools.validate_setup_mocks_with_mock(stack, fc)
 
     def test_metadata_software_deployments(self):
         stack_name = 'test_metadata_software_deployments'
         t = template_format.parse(tools.wp_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        tools.setup_mocks(self.m, stack)
-        self.m.ReplayAll()
+        fc = tools.setup_mocks_with_mock(self, stack)
         stack.store()
         stack.create()
         server = stack['WebServer']
@@ -314,6 +313,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         metadata = self.engine.metadata_software_deployments(
             self.ctx, server_id=server_id)
         self.assertEqual(2, len(metadata))
+        tools.validate_setup_mocks_with_mock(stack, fc)
 
     def test_show_software_deployment(self):
         deployment_id = str(uuid.uuid4())
