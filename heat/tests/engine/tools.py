@@ -12,7 +12,6 @@
 
 import sys
 
-import mox
 import six
 
 from heat.common import template_format
@@ -168,32 +167,18 @@ def get_stack(stack_name, ctx, template=None, with_params=True,
     return stack
 
 
-def setup_keystone_mocks_with_mock(mocks, stack):
+def setup_keystone_mocks_with_mock(test_case, stack):
     fkc = fake_ks.FakeKeystoneClient()
 
-    mocks.patchobject(keystone.KeystoneClientPlugin, '_create')
+    test_case.patchobject(keystone.KeystoneClientPlugin, '_create')
     keystone.KeystoneClientPlugin._create.return_value = fkc
 
 
-def setup_keystone_mocks(mocks, stack):
-    fkc = fake_ks.FakeKeystoneClient()
-
-    mocks.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-    keystone.KeystoneClientPlugin._create().AndReturn(fkc)
-
-
-def setup_mock_for_image_constraint_with_mock(mocks, imageId_input,
+def setup_mock_for_image_constraint_with_mock(test_case, imageId_input,
                                               imageId_output=744):
-    mocks.patchobject(glance.GlanceClientPlugin,
-                      'find_image_by_name_or_id', return_value=imageId_output)
-
-
-def setup_mock_for_image_constraint(mocks, imageId_input,
-                                    imageId_output=744):
-    mocks.StubOutWithMock(glance.GlanceClientPlugin,
-                          'find_image_by_name_or_id')
-    glance.GlanceClientPlugin.find_image_by_name_or_id(
-        imageId_input).MultipleTimes().AndReturn(imageId_output)
+    test_case.patchobject(glance.GlanceClientPlugin,
+                          'find_image_by_name_or_id',
+                          return_value=imageId_output)
 
 
 def validate_setup_mocks_with_mock(stack, fc, mock_image_constraint=True,
@@ -254,73 +239,25 @@ def setup_mocks_with_mock(testcase, stack, mock_image_constraint=True,
     return fc
 
 
-def setup_mocks(mocks, stack, mock_image_constraint=True,
-                mock_keystone=True):
-    fc = fakes_nova.FakeClient()
-    mocks.StubOutWithMock(instances.Instance, 'client')
-    instances.Instance.client().MultipleTimes().AndReturn(fc)
-    mocks.StubOutWithMock(nova.NovaClientPlugin, '_create')
-    nova.NovaClientPlugin._create().AndReturn(fc)
-    instance = stack['WebServer']
-    metadata = instance.metadata_get()
-    if mock_image_constraint:
-        setup_mock_for_image_constraint(mocks,
-                                        instance.properties['ImageId'])
-
-    if mock_keystone:
-        setup_keystone_mocks(mocks, stack)
-
-    user_data = instance.properties['UserData']
-    server_userdata = instance.client_plugin().build_userdata(
-        metadata, user_data, 'ec2-user')
-    mocks.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-    nova.NovaClientPlugin.build_userdata(
-        metadata,
-        user_data,
-        'ec2-user').AndReturn(server_userdata)
-
-    mocks.StubOutWithMock(fc.servers, 'create')
-    fc.servers.create(
-        image=744,
-        flavor=3,
-        key_name='test',
-        name=utils.PhysName(stack.name, 'WebServer'),
-        security_groups=None,
-        userdata=server_userdata,
-        scheduler_hints=None,
-        meta=None,
-        nics=None,
-        availability_zone=None,
-        block_device_mapping=None).AndReturn(fc.servers.list()[4])
-    return fc
-
-
-def setup_stack(stack_name, ctx, create_res=True, convergence=False):
+def setup_stack_with_mock(test_case, stack_name, ctx, create_res=True,
+                          convergence=False):
     stack = get_stack(stack_name, ctx, convergence=convergence)
     stack.store()
     if create_res:
-        m = mox.Mox()
-        setup_mocks(m, stack)
-        m.ReplayAll()
+        fc = setup_mocks_with_mock(test_case, stack)
         stack.create()
         stack._persist_state()
-        m.UnsetStubs()
+        validate_setup_mocks_with_mock(stack, fc)
     return stack
 
 
-def clean_up_stack(stack, delete_res=True):
+def clean_up_stack(test_case, stack, delete_res=True):
     if delete_res:
-        m = mox.Mox()
         fc = fakes_nova.FakeClient()
-        m.StubOutWithMock(instances.Instance, 'client')
-        instances.Instance.client().MultipleTimes().AndReturn(fc)
-        m.StubOutWithMock(fc.servers, 'delete')
-        fc.servers.delete(mox.IgnoreArg()).AndRaise(
-            fakes_nova.fake_exception())
-        m.ReplayAll()
+        test_case.patchobject(instances.Instance, 'client', return_value=fc)
+        test_case.patchobject(fc.servers, 'delete',
+                              side_effect=fakes_nova.fake_exception())
     stack.delete()
-    if delete_res:
-        m.UnsetStubs()
 
 
 def stack_context(stack_name, create_res=True, convergence=False):
@@ -336,14 +273,14 @@ def stack_context(stack_name, create_res=True, convergence=False):
             def create_stack():
                 ctx = getattr(test_case, 'ctx', None)
                 if ctx is not None:
-                    stack = setup_stack(stack_name, ctx,
-                                        create_res, convergence)
+                    stack = setup_stack_with_mock(test_case, stack_name, ctx,
+                                                  create_res, convergence)
                     setattr(test_case, 'stack', stack)
 
             def delete_stack():
                 stack = getattr(test_case, 'stack', None)
                 if stack is not None and stack.id is not None:
-                    clean_up_stack(stack, delete_res=create_res)
+                    clean_up_stack(test_case, stack, delete_res=create_res)
 
             create_stack()
             try:
