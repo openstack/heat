@@ -155,10 +155,9 @@ class instancesTest(common.HeatTestCase):
         self.fc = fakes_nova.FakeClient()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin,
-                               'find_image_by_name_or_id')
-        glance.GlanceClientPlugin.find_image_by_name_or_id(
-            imageId_input).MultipleTimes().AndReturn(imageId)
+        self.m_f_i = self.patchobject(glance.GlanceClientPlugin,
+                                      'find_image_by_name_or_id',
+                                      return_value=imageId)
 
     def _test_instance_create_delete(self, vm_status='ACTIVE',
                                      vm_delete_status='NotFound'):
@@ -179,22 +178,20 @@ class instancesTest(common.HeatTestCase):
         d1 = {'server': self.fc.client.get_servers_detail()[1]['servers'][0]}
         d1['server']['status'] = vm_status
 
-        self.m.StubOutWithMock(self.fc.client, 'get_servers_1234')
-        get = self.fc.client.get_servers_1234
-        get().AndReturn((200, d1))
+        m_gs_side_effects = [(200, d1)]
 
         d2 = copy.deepcopy(d1)
         if vm_delete_status == 'DELETED':
             d2['server']['status'] = vm_delete_status
-            get().AndReturn((200, d2))
+            m_gs_side_effects.append((200, d2))
         else:
-            get().AndRaise(fakes_nova.fake_exception())
+            m_gs_side_effects.append(fakes_nova.fake_exception)
 
-        self.m.ReplayAll()
-
+        self.patchobject(self.fc.client, 'get_servers_1234',
+                         side_effect=m_gs_side_effects)
         scheduler.TaskRunner(instance.delete)()
         self.assertEqual((instance.DELETE, instance.COMPLETE), instance.state)
-        self.m.VerifyAll()
+        self.assertEqual(2, self.fc.client.get_servers_1234.call_count)
 
     def _create_test_instance(self, return_server, name):
         stack_name = '%s_s' % name
@@ -213,42 +210,43 @@ class instancesTest(common.HeatTestCase):
                                       resource_defns['WebServer'], self.stack)
         metadata = instance.metadata_get()
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
 
         self._mock_get_image_id_success(image_id, 1)
         self.stub_SubnetConstraint_validate()
-        self.m.StubOutWithMock(instance, 'neutron')
-        instance.neutron().MultipleTimes().AndReturn(FakeNeutron())
+        self.patchobject(instance, 'neutron', return_value=FakeNeutron())
 
-        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(
-            FakeNeutron())
+        self.patchobject(neutron.NeutronClientPlugin, '_create',
+                         return_value=FakeNeutron())
 
         # need to resolve the template functions
         server_userdata = instance.client_plugin().build_userdata(
             metadata,
             instance.properties['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            instance.properties['UserData'],
-            'ec2-user').AndReturn(server_userdata)
+        self.patchobject(nova.NovaClientPlugin, 'build_userdata',
+                         return_value=server_userdata)
+        self.patchobject(self.fc.servers, 'create', return_value=return_server)
 
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
+        scheduler.TaskRunner(instance.create)()
+        self.m_f_i.assert_called_with(image_id)
+        self.fc.servers.create.assert_called_once_with(
             image=1, flavor=3, key_name='test',
             name=utils.PhysName(stack_name, instance.name),
             security_groups=None,
             userdata=server_userdata, scheduler_hints=None, meta=None,
             nics=[{'port-id': '64d913c1-bcb1-42d2-8f0a-9593dbcaf251'}],
             availability_zone=None,
-            block_device_mapping=None).AndReturn(
-                return_server)
-        self.m.ReplayAll()
-
-        scheduler.TaskRunner(instance.create)()
+            block_device_mapping=None)
+        nova.NovaClientPlugin.build_userdata.assert_called_once_with(
+            metadata,
+            instance.properties['UserData'],
+            'ec2-user')
+        neutron.NeutronClientPlugin._create.assert_called_once_with()
+        nova.NovaClientPlugin._create.assert_called_once_with()
+        glance.GlanceClientPlugin.find_image_by_name_or_id.assert_called_with(
+            image_id)
         return instance
 
     def _create_test_instance_with_nic(self, return_server, name):
@@ -275,44 +273,46 @@ class instancesTest(common.HeatTestCase):
 
         self._mock_get_image_id_success(image_id, 1)
         self.stub_SubnetConstraint_validate()
-        self.m.StubOutWithMock(nic, 'client')
-        nic.client().AndReturn(FakeNeutron())
+        self.patchobject(nic, 'client', return_value=FakeNeutron())
 
-        self.m.StubOutWithMock(neutron.NeutronClientPlugin, '_create')
-        neutron.NeutronClientPlugin._create().MultipleTimes().AndReturn(
-            FakeNeutron())
+        self.patchobject(neutron.NeutronClientPlugin, '_create',
+                         return_value=FakeNeutron())
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
 
         # need to resolve the template functions
         server_userdata = instance.client_plugin().build_userdata(
             metadata,
             instance.properties['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            instance.properties['UserData'],
-            'ec2-user').AndReturn(server_userdata)
-
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=3, key_name='test',
-            name=utils.PhysName(stack_name, instance.name),
-            security_groups=None,
-            userdata=server_userdata, scheduler_hints=None, meta=None,
-            nics=[{'port-id': '64d913c1-bcb1-42d2-8f0a-9593dbcaf251'}],
-            availability_zone=None,
-            block_device_mapping=None).AndReturn(
-                return_server)
-        self.m.ReplayAll()
+        self.patchobject(nova.NovaClientPlugin, 'build_userdata',
+                         return_value=server_userdata)
+        self.patchobject(self.fc.servers, 'create', return_value=return_server)
 
         # create network interface
         scheduler.TaskRunner(nic.create)()
         self.stack.resources["nic1"] = nic
 
         scheduler.TaskRunner(instance.create)()
+
+        self.fc.servers.create.assert_called_once_with(
+            image=1, flavor=3, key_name='test',
+            name=utils.PhysName(stack_name, instance.name),
+            security_groups=None,
+            userdata=server_userdata, scheduler_hints=None, meta=None,
+            nics=[{'port-id': '64d913c1-bcb1-42d2-8f0a-9593dbcaf251'}],
+            availability_zone=None,
+            block_device_mapping=None)
+        self.m_f_i.assert_called_with(image_id)
+        nova.NovaClientPlugin.build_userdata.assert_called_once_with(
+            metadata,
+            instance.properties['UserData'],
+            'ec2-user')
+        neutron.NeutronClientPlugin._create.assert_called_once_with()
+        nova.NovaClientPlugin._create.assert_called_once_with()
+        glance.GlanceClientPlugin.find_image_by_name_or_id.assert_called_with(
+            image_id)
         return instance
 
     def test_instance_create_delete_with_SubnetId(self):
@@ -331,5 +331,3 @@ class instancesTest(common.HeatTestCase):
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateIp'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PrivateDnsName'))
         self.assertEqual(expected_ip, instance.FnGetAtt('PublicDnsName'))
-
-        self.m.VerifyAll()
