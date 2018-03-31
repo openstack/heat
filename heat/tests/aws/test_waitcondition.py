@@ -100,25 +100,19 @@ class WaitConditionTest(common.HeatTestCase):
             stack.store()
 
         if stub:
-            id = identifier.ResourceIdentifier('test_tenant', stack.name,
-                                               stack.id, '', 'WaitHandle')
-            self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
-            aws_wch.WaitConditionHandle.identifier(
-            ).MultipleTimes().AndReturn(id)
-
+            res_id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                                   stack.id, '', 'WaitHandle')
+            self.m_id = self.patchobject(
+                aws_wch.WaitConditionHandle, 'identifier', return_value=res_id)
         if stub_status:
-            self.m.StubOutWithMock(aws_wch.WaitConditionHandle,
-                                   'get_status')
+            self.m_gs = self.patchobject(aws_wch.WaitConditionHandle,
+                                         'get_status')
 
         return stack
 
     def test_post_success_to_handle(self):
         self.stack = self.create_stack()
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-
-        self.m.ReplayAll()
+        self.m_gs.side_effect = [[], [], ['SUCCESS']]
 
         self.stack.create()
 
@@ -129,15 +123,13 @@ class WaitConditionTest(common.HeatTestCase):
         r = resource_objects.Resource.get_by_name_and_stack(
             self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
-        self.m.VerifyAll()
+        self.assertEqual(3, self.m_gs.call_count)
+
+        self.assertEqual(1, self.m_id.call_count)
 
     def test_post_failure_to_handle(self):
         self.stack = self.create_stack()
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['FAILURE'])
-
-        self.m.ReplayAll()
+        self.m_gs.side_effect = [[], [], ['FAILURE']]
 
         self.stack.create()
 
@@ -149,19 +141,17 @@ class WaitConditionTest(common.HeatTestCase):
         r = resource_objects.Resource.get_by_name_and_stack(
             self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
-        self.m.VerifyAll()
+        self.assertEqual(3, self.m_gs.call_count)
+        self.assertEqual(1, self.m_id.call_count)
 
     def test_post_success_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                            'SUCCESS'])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                            'SUCCESS',
-                                                            'SUCCESS'])
-
-        self.m.ReplayAll()
+        self.m_gs.side_effect = [
+            [],
+            ['SUCCESS'],
+            ['SUCCESS', 'SUCCESS'],
+            ['SUCCESS', 'SUCCESS', 'SUCCESS']
+        ]
 
         self.stack.create()
 
@@ -172,16 +162,12 @@ class WaitConditionTest(common.HeatTestCase):
         r = resource_objects.Resource.get_by_name_and_stack(
             self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
-        self.m.VerifyAll()
+        self.assertEqual(4, self.m_gs.call_count)
+        self.assertEqual(1, self.m_id.call_count)
 
     def test_post_failure_to_handle_count(self):
         self.stack = self.create_stack(template=test_template_wc_count)
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                            'FAILURE'])
-
-        self.m.ReplayAll()
+        self.m_gs.side_effect = [[], ['SUCCESS'], ['SUCCESS', 'FAILURE']]
 
         self.stack.create()
 
@@ -193,14 +179,15 @@ class WaitConditionTest(common.HeatTestCase):
         r = resource_objects.Resource.get_by_name_and_stack(
             self.stack.context, 'WaitHandle', self.stack.id)
         self.assertEqual('WaitHandle', r.name)
-        self.m.VerifyAll()
+        self.assertEqual(3, self.m_gs.call_count)
+        self.assertEqual(1, self.m_id.call_count)
 
     def test_timeout(self):
         self.stack = self.create_stack()
 
         # Avoid the stack create exercising the timeout code at the same time
-        self.m.StubOutWithMock(self.stack, 'timeout_secs')
-        self.stack.timeout_secs().MultipleTimes().AndReturn(None)
+        m_ts = self.patchobject(self.stack, 'timeout_secs', return_value=None)
+        self.m_gs.return_value = []
 
         now = timeutils.utcnow()
         periods = [0, 0.001, 0.1, 4.1, 5.1]
@@ -209,11 +196,6 @@ class WaitConditionTest(common.HeatTestCase):
         timeutils.set_time_override(fake_clock)
         self.addCleanup(timeutils.clear_time_override)
 
-        aws_wch.WaitConditionHandle.get_status(
-        ).MultipleTimes().AndReturn([])
-
-        self.m.ReplayAll()
-
         self.stack.create()
 
         rsrc = self.stack['WaitForTheHandle']
@@ -221,14 +203,14 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         reason = rsrc.status_reason
         self.assertTrue(reason.startswith('WaitConditionTimeout:'))
-
-        self.m.VerifyAll()
+        self.assertEqual(1, m_ts.call_count)
+        self.assertEqual(1, self.m_gs.call_count)
+        self.assertEqual(1, self.m_id.call_count)
 
     def test_FnGetAtt(self):
         self.stack = self.create_stack()
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
+        self.m_gs.return_value = ['SUCCESS']
 
-        self.m.ReplayAll()
         self.stack.create()
 
         rsrc = self.stack['WaitForTheHandle']
@@ -254,7 +236,8 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertIsInstance(wc_att, six.string_types)
         self.assertEqual({"123": "foo", "456": "dog"}, json.loads(wc_att))
         self.assertEqual('status:SUCCESS reason:cat', ret)
-        self.m.VerifyAll()
+        self.assertEqual(1, self.m_gs.call_count)
+        self.assertEqual(1, self.m_id.call_count)
 
     def test_FnGetRefId_resource_name(self):
         self.stack = self.create_stack()
@@ -286,8 +269,6 @@ class WaitConditionTest(common.HeatTestCase):
         self.assertEqual('http://convg_signed_url', rsrc.FnGetRefId())
 
     def test_validate_handle_url_bad_stackid(self):
-        self.m.ReplayAll()
-
         stack_id = 'STACK_HUBSID_1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://server.test:8000/v1/waitcondition/" +
@@ -298,16 +279,11 @@ class WaitConditionTest(common.HeatTestCase):
         t['Resources']['WaitForTheHandle']['Properties']['Handle'] = badhandle
         self.stack = self.create_stack(template=json.dumps(t), stub=False,
                                        stack_id=stack_id)
-        self.m.ReplayAll()
 
         rsrc = self.stack['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
 
-        self.m.VerifyAll()
-
     def test_validate_handle_url_bad_stackname(self):
-        self.m.ReplayAll()
-
         stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://server.test:8000/v1/waitcondition/" +
@@ -321,11 +297,7 @@ class WaitConditionTest(common.HeatTestCase):
         rsrc = self.stack['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
 
-        self.m.VerifyAll()
-
     def test_validate_handle_url_bad_tenant(self):
-        self.m.ReplayAll()
-
         stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://server.test:8000/v1/waitcondition/" +
@@ -339,11 +311,7 @@ class WaitConditionTest(common.HeatTestCase):
         rsrc = self.stack['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
 
-        self.m.VerifyAll()
-
     def test_validate_handle_url_bad_resource(self):
-        self.m.ReplayAll()
-
         stack_id = 'STACK_HUBR_1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://server.test:8000/v1/waitcondition/" +
@@ -357,10 +325,7 @@ class WaitConditionTest(common.HeatTestCase):
         rsrc = self.stack['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
 
-        self.m.VerifyAll()
-
     def test_validate_handle_url_bad_resource_type(self):
-        self.m.ReplayAll()
         stack_id = 'STACKABCD1234'
         t = json.loads(test_template_waitcondition)
         badhandle = ("http://server.test:8000/v1/waitcondition/" +
@@ -373,8 +338,6 @@ class WaitConditionTest(common.HeatTestCase):
 
         rsrc = self.stack['WaitForTheHandle']
         self.assertRaises(ValueError, rsrc.handle_create)
-
-        self.m.VerifyAll()
 
 
 class WaitConditionHandleTest(common.HeatTestCase):
@@ -395,15 +358,18 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack_id = stack.id
 
         # Stub waitcondition status so all goes CREATE_COMPLETE
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-
-        id = identifier.ResourceIdentifier('test_tenant', stack.name,
-                                           stack.id, '', 'WaitHandle')
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'identifier')
-        aws_wch.WaitConditionHandle.identifier().MultipleTimes().AndReturn(id)
-        self.m.ReplayAll()
-        stack.create()
+        with mock.patch.object(aws_wch.WaitConditionHandle,
+                               'get_status') as m_gs:
+            m_gs.return_value = ['SUCCESS']
+            res_id = identifier.ResourceIdentifier('test_tenant', stack.name,
+                                                   stack.id, '', 'WaitHandle')
+            with mock.patch.object(aws_wch.WaitConditionHandle,
+                                   'identifier') as m_id:
+                m_id.return_value = res_id
+                stack.create()
+        rsrc = stack['WaitHandle']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         return stack
 
     def test_handle(self):
@@ -413,11 +379,9 @@ class WaitConditionHandleTest(common.HeatTestCase):
         self.stack = self.create_stack(stack_id=stack_id,
                                        stack_name=stack_name)
 
-        self.m.StubOutWithMock(self.stack.clients.client_plugin('heat'),
-                               'get_heat_cfn_url')
-        self.stack.clients.client_plugin('heat').get_heat_cfn_url().AndReturn(
-            'http://server.test:8000/v1')
-        self.m.ReplayAll()
+        m_get_cfn_url = mock.Mock(return_value='http://server.test:8000/v1')
+        self.stack.clients.client_plugin(
+            'heat').get_heat_cfn_url = m_get_cfn_url
         rsrc = self.stack['WaitHandle']
         self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         # clear the url
@@ -445,14 +409,11 @@ class WaitConditionHandleTest(common.HeatTestCase):
         actual_params = parse.parse_qs(actual_url.split("?", 1)[1])
         self.assertEqual(expected_params, actual_params)
         self.assertTrue(connection_url.startswith(connection_url))
-
-        self.m.VerifyAll()
+        self.assertEqual(1, m_get_cfn_url.call_count)
 
     def test_handle_signal(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
         rsrc.handle_signal(test_metadata)
@@ -460,13 +421,10 @@ class WaitConditionHandleTest(common.HeatTestCase):
                                     u'Reason': u'bar',
                                     u'Status': u'SUCCESS'}}
         self.assertEqual(handle_metadata, rsrc.metadata_get())
-        self.m.VerifyAll()
 
     def test_handle_signal_invalid(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
         # handle_signal should raise a ValueError if the metadata
         # is missing any of the expected keys
         err_metadata = {'Data': 'foo', 'Status': 'SUCCESS', 'UniqueId': '123'}
@@ -503,17 +461,10 @@ class WaitConditionHandleTest(common.HeatTestCase):
                         'Status': 'FAIL', 'UniqueId': '123'}
         self.assertRaises(ValueError, rsrc.handle_signal,
                           err_metadata)
-        self.m.VerifyAll()
 
     def test_get_status(self):
         self.stack = self.create_stack()
         rsrc = self.stack['WaitHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.assertEqual(rsrc.resource_id, rsrc.data().get('user_id'))
-        # UnsetStubs, don't want get_status stubbed anymore..
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
-
         self.assertEqual([], rsrc.get_status())
 
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
@@ -551,7 +502,6 @@ class WaitConditionHandleTest(common.HeatTestCase):
         ret = rsrc.handle_signal(test_metadata)
         self.assertEqual(['hoo'], rsrc.get_status_reason('FAILURE'))
         self.assertEqual('status:FAILURE reason:hoo', ret)
-        self.m.VerifyAll()
 
 
 class WaitConditionUpdateTest(common.HeatTestCase):
@@ -569,14 +519,19 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         with utils.UUIDStub(self.stack_id):
             stack.store()
 
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
-        aws_wch.WaitConditionHandle.get_status().AndReturn([])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS'])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                            'SUCCESS'])
-        aws_wch.WaitConditionHandle.get_status().AndReturn(['SUCCESS',
-                                                            'SUCCESS',
-                                                            'SUCCESS'])
+        with mock.patch.object(aws_wch.WaitConditionHandle,
+                               'get_status') as m_gs:
+            m_gs.side_effect = [
+                [],
+                ['SUCCESS'],
+                ['SUCCESS', 'SUCCESS'],
+                ['SUCCESS', 'SUCCESS', 'SUCCESS']
+            ]
+            stack.create()
+            self.assertEqual(4, m_gs.call_count)
+
+        rsrc = stack['WaitForTheHandle']
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         return stack
 
@@ -588,14 +543,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
 
     def test_update(self):
         self.stack = self.create_stack()
-        self.m.ReplayAll()
-        self.stack.create()
-
         rsrc = self.stack['WaitForTheHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
 
         wait_condition_handle = self.stack['WaitHandle']
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
@@ -615,14 +563,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
 
     def test_update_restored_from_db(self):
         self.stack = self.create_stack()
-        self.m.ReplayAll()
-        self.stack.create()
-
         rsrc = self.stack['WaitForTheHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
 
         handle_stack = self.stack
         wait_condition_handle = handle_stack['WaitHandle']
@@ -659,14 +600,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
 
     def test_update_timeout(self):
         self.stack = self.create_stack()
-        self.m.ReplayAll()
-        self.stack.create()
-
         rsrc = self.stack['WaitForTheHandle']
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
 
         now = timeutils.utcnow()
         fake_clock = [now + datetime.timedelta(0, t)
@@ -674,10 +608,8 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         timeutils.set_time_override(fake_clock)
         self.addCleanup(timeutils.clear_time_override)
 
-        self.m.StubOutWithMock(aws_wch.WaitConditionHandle, 'get_status')
-        aws_wch.WaitConditionHandle.get_status().MultipleTimes().AndReturn([])
-
-        self.m.ReplayAll()
+        m_gs = self.patchobject(
+            aws_wch.WaitConditionHandle, 'get_status', return_value=[])
 
         uprops = copy.copy(rsrc.properties.data)
         uprops['Count'] = '5'
@@ -691,4 +623,4 @@ class WaitConditionUpdateTest(common.HeatTestCase):
         self.assertEqual("WaitConditionTimeout: resources.WaitForTheHandle: "
                          "0 of 5 received", six.text_type(ex))
         self.assertEqual(5, rsrc.properties['Count'])
-        self.m.VerifyAll()
+        self.assertEqual(2, m_gs.call_count)
