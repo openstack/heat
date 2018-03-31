@@ -40,13 +40,13 @@ class NetworkInterfaceTest(common.HeatTestCase):
     def setUp(self):
         super(NetworkInterfaceTest, self).setUp()
         self.ctx = utils.dummy_context()
-        self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_port')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_port')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_port')
+        self.m_ss = self.patchobject(neutronclient.Client, 'show_subnet')
+        self.m_cp = self.patchobject(neutronclient.Client, 'create_port')
+        self.m_dp = self.patchobject(neutronclient.Client, 'delete_port')
+        self.m_up = self.patchobject(neutronclient.Client, 'update_port')
 
     def mock_show_subnet(self):
-        neutronclient.Client.show_subnet('ssss').AndReturn({
+        self.m_ss.return_value = {
             'subnet': {
                 'name': 'my_subnet',
                 'network_id': 'nnnn',
@@ -58,18 +58,18 @@ class NetworkInterfaceTest(common.HeatTestCase):
                 'cidr': '10.0.0.0/24',
                 'id': 'ssss',
                 'enable_dhcp': False,
-            }})
+            }}
 
     def mock_create_network_interface(self, stack_name='my_stack',
                                       resource_name='my_nic',
                                       security_groups=None):
         self.nic_name = utils.PhysName(stack_name, resource_name)
-        port = {'network_id': 'nnnn',
-                'fixed_ips': [{
-                    'subnet_id': u'ssss'
-                }],
-                'name': self.nic_name,
-                'admin_state_up': True}
+        self.port = {'network_id': 'nnnn',
+                     'fixed_ips': [{
+                         'subnet_id': u'ssss'
+                     }],
+                     'name': self.nic_name,
+                     'admin_state_up': True}
 
         port_info = {
             'port': {
@@ -92,20 +92,12 @@ class NetworkInterfaceTest(common.HeatTestCase):
         }
 
         if security_groups is not None:
-            port['security_groups'] = security_groups
+            self.port['security_groups'] = security_groups
             port_info['security_groups'] = security_groups
         else:
             port_info['security_groups'] = ['default']
 
-        neutronclient.Client.create_port({'port': port}).AndReturn(port_info)
-
-    def mock_update_network_interface(self, update_props, port_id='pppp'):
-        neutronclient.Client.update_port(
-            port_id,
-            {'port': update_props}).AndReturn(None)
-
-    def mock_delete_network_interface(self, port_id='pppp'):
-        neutronclient.Client.delete_port(port_id).AndReturn(None)
+        self.m_cp.return_value = port_info
 
     def test_network_interface_create_update_delete(self):
         my_stack = utils.parse_stack(test_template,
@@ -120,10 +112,6 @@ class NetworkInterfaceTest(common.HeatTestCase):
         update_sg_ids = ['0389f747-7785-4757-b7bb-2ab07e4b09c3']
         update_props['security_groups'] = update_sg_ids
 
-        self.mock_update_network_interface(update_props)
-        self.mock_delete_network_interface()
-
-        self.m.ReplayAll()
         # create the nic without GroupSet
         self.assertIsNone(nic_rsrc.validate())
         scheduler.TaskRunner(nic_rsrc.create)()
@@ -143,4 +131,7 @@ class NetworkInterfaceTest(common.HeatTestCase):
         scheduler.TaskRunner(nic_rsrc.delete)()
         self.assertEqual((nic_rsrc.DELETE, nic_rsrc.COMPLETE), nic_rsrc.state)
 
-        self.m.VerifyAll()
+        self.m_ss.assert_called_once_with('ssss')
+        self.m_cp.assert_called_once_with({'port': self.port})
+        self.m_up.assert_called_once_with('pppp', {'port': update_props})
+        self.m_dp.assert_called_once_with('pppp')
