@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from cinderclient import exceptions as cinder_exp
 from cinderclient.v2 import client as cinderclient
 import mock
 import six
@@ -79,7 +78,7 @@ class VolumeTestCase(common.HeatTestCase):
         return vol
 
     def create_volume(self, t, stack, resource_name, az='nova',
-                      no_create=False):
+                      validate=True, no_create=False):
         rsrc = self.get_volume(t, stack, resource_name)
         if isinstance(rsrc, os_vol.CinderVolume):
             self.patchobject(rsrc, '_store_config_default_properties')
@@ -89,95 +88,16 @@ class VolumeTestCase(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         stk_defn.update_resource_data(stack.defn, resource_name,
                                       rsrc.node_data())
-        if no_create:
-            self.cinder_fc.volumes.create.assert_not_called()
-        else:
-            self.vol_name = utils.PhysName(self.stack_name, 'DataVolume')
-            self.cinder_fc.volumes.create.assert_called_once_with(
-                size=1, availability_zone=az,
-                description=self.vol_name,
-                name=self.vol_name,
-                metadata={u'Usage': u'Wiki Data Volume'})
-        return rsrc
-
-    def create_attachment(self, t, stack, resource_name):
-        if self.use_cinder:
-            Attachment = os_vol.CinderVolumeAttachment
-        else:
-            Attachment = aws_vol.VolumeAttachment
-        rsrc = Attachment(resource_name,
-                          stack.defn.resource_definition(resource_name),
-                          stack)
-        self.assertIsNone(rsrc.validate())
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        stk_defn.update_resource_data(stack.defn, resource_name,
-                                      rsrc.node_data())
-        return rsrc
-
-
-class BaseVolumeTest(common.HeatTestCase):
-    def setUp(self):
-        super(BaseVolumeTest, self).setUp()
-        self.fc = fakes_nova.FakeClient()
-        self.cinder_fc = cinderclient.Client('username', 'password')
-        self.cinder_fc.volume_api_version = 2
-        self.m.StubOutWithMock(cinder.CinderClientPlugin, '_create')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        self.m.StubOutWithMock(self.cinder_fc.volumes, 'create')
-        self.m.StubOutWithMock(self.cinder_fc.volumes, 'get')
-        self.m.StubOutWithMock(self.cinder_fc.volumes, 'delete')
-        self.m.StubOutWithMock(self.cinder_fc.volumes, 'extend')
-        self.m.StubOutWithMock(self.cinder_fc.volumes, 'update')
-        self.m.StubOutWithMock(self.cinder_fc.volumes, 'update_all_metadata')
-        self.m.StubOutWithMock(self.fc.volumes, 'create_server_volume')
-        self.m.StubOutWithMock(self.fc.volumes, 'delete_server_volume')
-        self.m.StubOutWithMock(self.fc.volumes, 'get_server_volume')
-        self.use_cinder = False
-
-    def _mock_delete_volume(self, fv):
-        self.cinder_fc.volumes.get(fv.id).AndReturn(
-            FakeVolume('available'))
-        self.cinder_fc.volumes.delete(fv.id).AndReturn(True)
-        self.cinder_fc.volumes.get(fv.id).AndRaise(
-            cinder_exp.NotFound('Not found'))
-
-    def _mock_create_server_volume_script(self, fva,
-                                          server=u'WikiDatabase',
-                                          volume='vol-123',
-                                          device=u'/dev/vdc',
-                                          final_status='in-use',
-                                          update=False):
-        if not update:
-            nova.NovaClientPlugin._create().MultipleTimes().AndReturn(self.fc)
-        self.fc.volumes.create_server_volume(
-            device=device, server_id=server, volume_id=volume).AndReturn(fva)
-        fv_ready = FakeVolume(final_status, id=fva.id)
-        self.cinder_fc.volumes.get(fva.id).AndReturn(fv_ready)
-        return fv_ready
-
-    def get_volume(self, t, stack, resource_name):
-        if self.use_cinder:
-            Volume = os_vol.CinderVolume
-        else:
-            data = t['Resources'][resource_name]
-            data['Properties']['AvailabilityZone'] = 'nova'
-            Volume = aws_vol.Volume
-        vol = Volume(resource_name,
-                     stack.defn.resource_definition(resource_name),
-                     stack)
-        return vol
-
-    def create_volume(self, t, stack, resource_name):
-        rsrc = self.get_volume(t, stack, resource_name)
-        if isinstance(rsrc, os_vol.CinderVolume):
-            self.patchobject(rsrc, '_store_config_default_properties')
-
-        self.assertIsNone(rsrc.validate())
-        scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        stk_defn.update_resource_data(stack.defn, resource_name,
-                                      rsrc.node_data())
+        if validate:
+            if no_create:
+                self.cinder_fc.volumes.create.assert_not_called()
+            else:
+                self.vol_name = utils.PhysName(self.stack_name, 'DataVolume')
+                self.cinder_fc.volumes.create.assert_called_once_with(
+                    size=1, availability_zone=az,
+                    description=self.vol_name,
+                    name=self.vol_name,
+                    metadata={u'Usage': u'Wiki Data Volume'})
         return rsrc
 
     def create_attachment(self, t, stack, resource_name):
