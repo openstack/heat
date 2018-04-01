@@ -32,7 +32,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
     def setUp(self):
         super(Ec2TokenTest, self).setUp()
-        self.m.StubOutWithMock(requests, 'post')
+        self.patchobject(requests, 'post')
 
     def _dummy_GET_request(self, params=None, environ=None):
         # Mangle the params dict into a query string
@@ -228,7 +228,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
     def _stub_http_connection(self, headers=None, params=None, response=None,
                               req_url='http://123:5000/v3/ec2tokens',
-                              verify=True, cert=None):
+                              verify=True, cert=None, direct_mock=True):
 
         headers = headers or {}
         params = params or {}
@@ -242,19 +242,28 @@ class Ec2TokenTest(common.HeatTestCase):
 
         body_hash = ('e3b0c44298fc1c149afbf4c8996fb9'
                      '2427ae41e4649b934ca495991b7852b855')
-        req_creds = json.dumps({"ec2Credentials":
-                                {"access": "foo",
-                                 "headers": headers,
-                                 "host": "heat:8000",
-                                 "verb": "GET",
-                                 "params": params,
-                                 "signature": "xyz",
-                                 "path": "/v1",
-                                 "body_hash": body_hash}})
+        req_creds = {
+            "ec2Credentials": {
+                "access": "foo",
+                "headers": headers,
+                "host": "heat:8000",
+                "verb": "GET",
+                "params": params,
+                "signature": "xyz",
+                "path": "/v1",
+                "body_hash": body_hash
+            }
+        }
         req_headers = {'Content-Type': 'application/json'}
-        requests.post(
-            req_url, data=utils.JsonEquals(req_creds), verify=verify,
-            cert=cert, headers=req_headers).AndReturn(DummyHTTPResponse())
+        self.verify_req_url = req_url
+        self.verify_data = utils.JsonRepr(req_creds)
+        self.verify_verify = verify
+        self.verify_cert = cert
+        self.verify_req_headers = req_headers
+        if direct_mock:
+            requests.post.return_value = DummyHTTPResponse()
+        else:
+            return DummyHTTPResponse()
 
     def test_call_ok(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -273,12 +282,14 @@ class Ec2TokenTest(common.HeatTestCase):
             'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
-        self.m.ReplayAll()
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.assertEqual('tenant', dummy_req.headers['X-Tenant-Name'])
         self.assertEqual('abcd1234', dummy_req.headers['X-Tenant-Id'])
-        self.m.VerifyAll()
+        requests.post.assert_called_once_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_ok_roles(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -301,11 +312,13 @@ class Ec2TokenTest(common.HeatTestCase):
         })
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=ok_resp)
-        self.m.ReplayAll()
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
         self.assertEqual('aa,bb,cc', dummy_req.headers['X-Roles'])
-        self.m.VerifyAll()
+        requests.post.assert_called_once_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_err_tokenid(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0/'}
@@ -324,11 +337,13 @@ class Ec2TokenTest(common.HeatTestCase):
         err_resp = json.dumps({'error': {'message': err_msg}})
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=err_resp)
-        self.m.ReplayAll()
         self.assertRaises(exception.HeatInvalidClientTokenIdError,
                           ec2.__call__, dummy_req)
 
-        self.m.VerifyAll()
+        requests.post.assert_called_once_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_err_signature(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -347,11 +362,13 @@ class Ec2TokenTest(common.HeatTestCase):
         err_resp = json.dumps({'error': {'message': err_msg}})
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=err_resp)
-        self.m.ReplayAll()
         self.assertRaises(exception.HeatSignatureError,
                           ec2.__call__, dummy_req)
 
-        self.m.VerifyAll()
+        requests.post.assert_called_once_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_err_denied(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -369,11 +386,13 @@ class Ec2TokenTest(common.HeatTestCase):
         err_resp = json.dumps({})
         self._stub_http_connection(headers={'Authorization': auth_str},
                                    response=err_resp)
-        self.m.ReplayAll()
         self.assertRaises(exception.HeatAccessDeniedError,
                           ec2.__call__, dummy_req)
 
-        self.m.VerifyAll()
+        requests.post.assert_called_once_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_ok_v2(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -388,10 +407,12 @@ class Ec2TokenTest(common.HeatTestCase):
             'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
-        self.m.ReplayAll()
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
-        self.m.VerifyAll()
+        requests.post.assert_called_once_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_ok_multicloud(self):
         dummy_conf = {
@@ -412,21 +433,26 @@ class Ec2TokenTest(common.HeatTestCase):
         err_resp = json.dumps({'error': {'message': err_msg}})
 
         # first request fails
-        self._stub_http_connection(
+        m_p = self._stub_http_connection(
             req_url='http://123:5000/v2.0/ec2tokens',
             response=err_resp,
-            params={'AWSAccessKeyId': 'foo'})
+            params={'AWSAccessKeyId': 'foo'}, direct_mock=False)
 
         # second request passes
-        self._stub_http_connection(
+        m_p2 = self._stub_http_connection(
             req_url='http://456:5000/v2.0/ec2tokens',
             response=ok_resp,
-            params={'AWSAccessKeyId': 'foo'})
+            params={'AWSAccessKeyId': 'foo'}, direct_mock=False)
 
-        self.m.ReplayAll()
+        requests.post.side_effect = [m_p, m_p2]
+
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
-        self.m.VerifyAll()
+        self.assertEqual(2, requests.post.call_count)
+        requests.post.assert_called_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_err_multicloud(self):
         dummy_conf = {
@@ -447,23 +473,27 @@ class Ec2TokenTest(common.HeatTestCase):
         err_resp2 = json.dumps({'error': {'message': err_msg2}})
 
         # first request fails with HeatAccessDeniedError
-        self._stub_http_connection(
+        m_p = self._stub_http_connection(
             req_url='http://123:5000/v2.0/ec2tokens',
             response=err_resp1,
-            params={'AWSAccessKeyId': 'foo'})
+            params={'AWSAccessKeyId': 'foo'}, direct_mock=False)
 
         # second request fails with HeatInvalidClientTokenIdError
-        self._stub_http_connection(
+        m_p2 = self._stub_http_connection(
             req_url='http://456:5000/v2.0/ec2tokens',
             response=err_resp2,
-            params={'AWSAccessKeyId': 'foo'})
+            params={'AWSAccessKeyId': 'foo'}, direct_mock=False)
 
-        self.m.ReplayAll()
+        requests.post.side_effect = [m_p, m_p2]
         # raised error matches last failure
         self.assertRaises(exception.HeatInvalidClientTokenIdError,
                           ec2.__call__, dummy_req)
 
-        self.m.VerifyAll()
+        self.assertEqual(2, requests.post.call_count)
+        requests.post.assert_called_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_err_multicloud_none_allowed(self):
         dummy_conf = {
@@ -477,11 +507,8 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        self.m.ReplayAll()
         self.assertRaises(exception.HeatAccessDeniedError,
                           ec2.__call__, dummy_req)
-
-        self.m.VerifyAll()
 
     def test_call_badconf_no_authuri(self):
         ec2 = ec2token.EC2Token(app='woot', conf={})
@@ -491,12 +518,9 @@ class Ec2TokenTest(common.HeatTestCase):
                    'PATH_INFO': '/v1'}
         dummy_req = self._dummy_GET_request(params, req_env)
 
-        self.m.ReplayAll()
         ex = self.assertRaises(exception.HeatInternalFailureError,
                                ec2.__call__, dummy_req)
         self.assertEqual('Service misconfigured', six.text_type(ex))
-
-        self.m.VerifyAll()
 
     def test_call_ok_auth_uri_ec2authtoken(self):
         dummy_url = 'http://123:5000/v2.0'
@@ -513,10 +537,12 @@ class Ec2TokenTest(common.HeatTestCase):
             'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
-        self.m.ReplayAll()
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
-        self.m.VerifyAll()
+        requests.post.assert_called_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_ok_auth_uri_ec2authtoken_long(self):
         # Prove we tolerate a url which already includes the /ec2tokens path
@@ -534,10 +560,12 @@ class Ec2TokenTest(common.HeatTestCase):
             'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
-        self.m.ReplayAll()
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
-        self.m.VerifyAll()
+        requests.post.assert_called_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_call_ok_auth_uri_ks_authtoken(self):
         # Import auth_token to have keystone_authtoken settings setup.
@@ -556,10 +584,12 @@ class Ec2TokenTest(common.HeatTestCase):
             'project': {'name': 'tenant', 'id': 'abcd1234'}}})
         self._stub_http_connection(response=ok_resp,
                                    params={'AWSAccessKeyId': 'foo'})
-        self.m.ReplayAll()
         self.assertEqual('woot', ec2.__call__(dummy_req))
 
-        self.m.VerifyAll()
+        requests.post.assert_called_with(
+            self.verify_req_url, data=self.verify_data,
+            verify=self.verify_verify,
+            cert=self.verify_cert, headers=self.verify_req_headers)
 
     def test_filter_factory(self):
         ec2_filter = ec2token.EC2Token_filter_factory(global_conf={})

@@ -16,7 +16,6 @@ import string
 import uuid
 
 import fixtures
-import mox
 from oslo_config import cfg
 from oslo_db import options
 from oslo_serialization import jsonutils
@@ -173,21 +172,25 @@ def recursive_sort(obj):
     return obj
 
 
-class JsonEquals(mox.Comparator):
-    """Comparison class used to check if two json strings equal.
+class JsonRepr(object):
+    """Comparison class used to check the deserialisation of a JSON string.
 
     If a dict is dumped to json, the order is undecided, so load the string
-    back to an object for comparison
+    back to an object for comparison.
     """
 
-    def __init__(self, other_json):
-        self.other_json = other_json
+    def __init__(self, data):
+        """Initialise with the unserialised data."""
+        self._data = data
 
-    def equals(self, rhs):
-        return jsonutils.loads(self.other_json) == jsonutils.loads(rhs)
+    def __eq__(self, json_data):
+        return self._data == jsonutils.loads(json_data)
+
+    def __ne__(self, json_data):
+        return not self.__eq__(json_data)
 
     def __repr__(self):
-        return "<equals to json '%s'>" % self.other_json
+        return jsonutils.dumps(self._data)
 
 
 class ForeignKeyConstraintFixture(fixtures.Fixture):
