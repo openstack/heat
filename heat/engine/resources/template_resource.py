@@ -205,8 +205,11 @@ class TemplateResource(stack_resource.StackResource):
                 reported_excp = err
 
         if t_data is None:
-            if self.resource_id is not None:
-                t_data = jsonutils.dumps(self.nested().t.t)
+            nested_identifier = self.nested_identifier()
+            if nested_identifier is not None:
+                nested_t = self.rpc_client().get_template(self.context,
+                                                          nested_identifier)
+                t_data = jsonutils.dumps(nested_t)
 
         if t_data is not None:
             if t_data != stored_t_data:

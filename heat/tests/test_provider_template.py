@@ -952,13 +952,12 @@ class TemplateDataTest(common.HeatTestCase):
 
     def test_template_data_in_create_without_template_file(self):
         self.res.action = self.res.CREATE
-        self.res.nested = mock.MagicMock()
-        self.res.resource_id = 'dummy_id'
+        self.res.resource_id = None
         self.res.get_template_file = mock.Mock(
             side_effect=exception.NotFound(
                 msg_fmt='Could not fetch remote template '
                         '"test_resource.template": file not found'))
-        self.assertEqual('{}', self.res.template_data())
+        self.assertRaises(exception.NotFound, self.res.template_data)
 
 
 class TemplateResourceCrudTest(common.HeatTestCase):
