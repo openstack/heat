@@ -75,6 +75,8 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
         'outputs', 'outputs_list', 'current_size', 'refs', 'refs_map',
     )
 
+    (OUTPUT_MEMBER_IDS,) = (REFS_MAP,)
+
     properties_schema = {
         RESOURCE: properties.Schema(
             properties.Schema.MAP,
@@ -280,25 +282,22 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
             # template generation time.
             if key == self.OUTPUTS_LIST:
                 key = self.OUTPUTS
-            if key == self.REFS:
-                key = self.REFS_MAP
             if key.startswith("resource."):
                 keycomponents = key.split('.', 2)
                 path = keycomponents[2:] + path
                 if path:
                     key = self.OUTPUTS
-                else:
-                    key = self.REFS_MAP
             output_name = self._attribute_output_name(key, *path)
-            value = None
 
-            if key == self.REFS_MAP:
-                value = {r: get_res_fn(r) for r in resource_names}
-            elif key == self.OUTPUTS and path:
+            if key == self.OUTPUTS and path:
                 value = {r: get_attr_fn([r] + path) for r in resource_names}
-
-            if value is not None:
                 yield output.OutputDefinition(output_name, value)
+
+        # Always define an output for the member IDs, which also doubles as the
+        # output used by the REFS and REFS_MAP attributes.
+        member_ids_value = {r: get_res_fn(r) for r in resource_names}
+        yield output.OutputDefinition(self.OUTPUT_MEMBER_IDS,
+                                      member_ids_value)
 
 
 def resource_mapping():

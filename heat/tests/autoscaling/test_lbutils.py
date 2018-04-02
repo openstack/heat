@@ -15,7 +15,6 @@ import mock
 import six
 
 from heat.common import exception
-from heat.common import grouputils
 from heat.common import template_format
 from heat.engine import properties
 from heat.engine import resource
@@ -78,23 +77,17 @@ class LBUtilsTest(common.HeatTestCase):
         self.stack = utils.parse_stack(t)
 
     def test_reload_aws_lb(self):
-        group = mock.Mock()
-        self.patchobject(grouputils, 'get_member_refids',
-                         return_value=['ID1', 'ID2', 'ID3'])
+        id_list = ['ID1', 'ID2', 'ID3']
 
         lb1 = self.stack['aws_lb_1']
         lb2 = self.stack['aws_lb_2']
-        lbs = {
-            'LB_1': lb1,
-            'LB_2': lb2
-        }
         lb1.action = mock.Mock(return_value=lb1.CREATE)
         lb2.action = mock.Mock(return_value=lb2.CREATE)
         lb1.handle_update = mock.Mock()
         lb2.handle_update = mock.Mock()
-        prop_diff = {'Instances': ['ID1', 'ID2', 'ID3']}
+        prop_diff = {'Instances': id_list}
 
-        lbutils.reload_loadbalancers(group, lbs)
+        lbutils.reconfigure_loadbalancers([lb1, lb2], id_list)
 
         # For verification's purpose, we just check the prop_diff
         lb1.handle_update.assert_called_with(mock.ANY, mock.ANY,
@@ -103,25 +96,19 @@ class LBUtilsTest(common.HeatTestCase):
                                              prop_diff)
 
     def test_reload_neutron_lb(self):
-        group = mock.Mock()
-        self.patchobject(grouputils, 'get_member_refids',
-                         return_value=['ID1', 'ID2', 'ID3'])
+        id_list = ['ID1', 'ID2', 'ID3']
 
         lb1 = self.stack['neutron_lb_1']
         lb2 = self.stack['neutron_lb_2']
         lb1.action = mock.Mock(return_value=lb1.CREATE)
         lb2.action = mock.Mock(return_value=lb2.CREATE)
-        lbs = {
-            'LB_1': lb1,
-            'LB_2': lb2
-        }
 
         lb1.handle_update = mock.Mock()
         lb2.handle_update = mock.Mock()
 
-        prop_diff = {'members': ['ID1', 'ID2', 'ID3']}
+        prop_diff = {'members': id_list}
 
-        lbutils.reload_loadbalancers(group, lbs)
+        lbutils.reconfigure_loadbalancers([lb1, lb2], id_list)
 
         # For verification's purpose, we just check the prop_diff
         lb1.handle_update.assert_called_with(mock.ANY, mock.ANY,
@@ -130,16 +117,11 @@ class LBUtilsTest(common.HeatTestCase):
                                              prop_diff)
 
     def test_reload_non_lb(self):
-        group = mock.Mock()
-        self.patchobject(grouputils, 'get_member_refids',
-                         return_value=['ID1', 'ID2', 'ID3'])
-
-        lbs = {
-            'LB_1': self.stack['non_lb'],
-        }
+        id_list = ['ID1', 'ID2', 'ID3']
+        non_lb = self.stack['non_lb']
 
         error = self.assertRaises(exception.Error,
-                                  lbutils.reload_loadbalancers,
-                                  group, lbs)
-        self.assertIn("Unsupported resource 'LB_1' in LoadBalancerNames",
+                                  lbutils.reconfigure_loadbalancers,
+                                  [non_lb], id_list)
+        self.assertIn("Unsupported resource 'non_lb' in LoadBalancerNames",
                       six.text_type(error))

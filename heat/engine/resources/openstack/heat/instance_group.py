@@ -75,6 +75,8 @@ class InstanceGroup(stack_resource.StackResource):
         'InstanceList',
     )
 
+    (OUTPUT_MEMBER_IDS,) = ('references',)
+
     properties_schema = {
         AVAILABILITY_ZONES: properties.Schema(
             properties.Schema.LIST,
@@ -312,13 +314,15 @@ class InstanceGroup(stack_resource.StackResource):
 
         Replace the instances in the group using updated launch configuration.
         """
-        def changing_instances(tmpl):
-            instances = grouputils.get_members(self)
-            current = set((i.name, i.t) for i in instances)
-            updated = set(tmpl.resource_definitions(None).items())
+        def changing_instances(old_tmpl, new_tmpl):
+            updated = set(new_tmpl.resource_definitions(None).items())
+            if old_tmpl is not None:
+                current = set(old_tmpl.resource_definitions(None).items())
+                changing = current ^ updated
+            else:
+                changing = updated
             # includes instances to be updated and deleted
-            affected = set(k for k, v in current ^ updated)
-            return set(i.FnGetRefId() for i in instances if i.name in affected)
+            return set(k for k, v in changing)
 
         def pause_between_batch():
             while True:
@@ -327,7 +331,10 @@ class InstanceGroup(stack_resource.StackResource):
                 except scheduler.Timeout:
                     return
 
-        capacity = len(self.nested()) if self.nested() else 0
+        group_data = self._group_data()
+        old_template = group_data.template()
+
+        capacity = group_data.size(include_failed=True)
         batches = list(self._get_batches(capacity, batch_size, min_in_service))
 
         update_timeout = self._update_timeout(len(batches), pause_sec)
@@ -335,16 +342,20 @@ class InstanceGroup(stack_resource.StackResource):
         try:
             for index, (total_capacity, efft_bat_sz) in enumerate(batches):
                 template = self._create_template(total_capacity, efft_bat_sz)
-                self._lb_reload(exclude=changing_instances(template))
+                self._lb_reload(exclude=changing_instances(old_template,
+                                                           template),
+                                refresh_data=False)
                 updater = self.update_with_template(template)
                 checker = scheduler.TaskRunner(self._check_for_completion,
                                                updater)
                 checker(timeout=update_timeout)
+                old_template = template
                 if index < (len(batches) - 1) and pause_sec > 0:
                     self._lb_reload()
                     waiter = scheduler.TaskRunner(pause_between_batch)
                     waiter(timeout=pause_sec)
         finally:
+            self._group_data(refresh=True)
             self._lb_reload()
 
     @staticmethod
@@ -387,11 +398,29 @@ class InstanceGroup(stack_resource.StackResource):
             # nodes.
             self._lb_reload()
 
-    def _lb_reload(self, exclude=None):
+    def _lb_reload(self, exclude=frozenset(), refresh_data=True):
         lb_names = self.properties.get(self.LOAD_BALANCER_NAMES) or []
         if lb_names:
-            lb_dict = dict((name, self.stack[name]) for name in lb_names)
-            lbutils.reload_loadbalancers(self, lb_dict, exclude)
+            if refresh_data:
+                self._outputs = None
+            try:
+                all_refids = self.get_output(self.OUTPUT_MEMBER_IDS)
+            except (exception.NotFound,
+                    exception.TemplateOutputError) as op_err:
+                LOG.debug('Falling back to grouputils due to %s', op_err)
+                if refresh_data:
+                    self._nested = None
+                instances = grouputils.get_members(self)
+                all_refids = {i.name: i.FnGetRefId() for i in instances}
+                names = [i.name for i in instances]
+            else:
+                group_data = self._group_data(refresh=refresh_data)
+                names = group_data.member_names(include_failed=False)
+
+            id_list = [all_refids[n] for n in names
+                       if n not in exclude and n in all_refids]
+            lbs = [self.stack[name] for name in lb_names]
+            lbutils.reconfigure_loadbalancers(lbs, id_list)
 
     def get_reference_id(self):
         return self.physical_resource_name_or_FnGetRefId()
@@ -440,6 +469,10 @@ class InstanceGroup(stack_resource.StackResource):
                 value = {r: get_attr_fn([r, 'PublicIp'])
                          for r in resource_names}
                 yield output.OutputDefinition(key, value)
+
+        member_ids_value = {r: get_res_fn(r) for r in resource_names}
+        yield output.OutputDefinition(self.OUTPUT_MEMBER_IDS,
+                                      member_ids_value)
 
     def child_template(self):
         num_instances = int(self.properties[self.SIZE])
