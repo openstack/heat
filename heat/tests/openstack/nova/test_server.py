@@ -233,7 +233,7 @@ class ServersTest(common.HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        self.limits = self.m.CreateMockAnything()
+        self.limits = mock.Mock()
         self.limits.absolute = self._limits_absolute()
         self.mock_flavor = mock.Mock(ram=4, disk=4)
         self.mock_image = mock.Mock(min_ram=1, min_disk=1, status='ACTIVE')
@@ -250,13 +250,13 @@ class ServersTest(common.HeatTestCase):
                          side_effect=image_side_effect)
 
     def _limits_absolute(self):
-        max_personality = self.m.CreateMockAnything()
+        max_personality = mock.Mock()
         max_personality.name = 'maxPersonality'
         max_personality.value = 5
-        max_personality_size = self.m.CreateMockAnything()
+        max_personality_size = mock.Mock()
         max_personality_size.name = 'maxPersonalitySize'
         max_personality_size.value = 10240
-        max_server_meta = self.m.CreateMockAnything()
+        max_server_meta = mock.Mock()
         max_server_meta.name = 'maxServerMeta'
         max_server_meta.value = 3
         yield max_personality
