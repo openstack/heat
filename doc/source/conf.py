@@ -77,6 +77,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.coverage',
               'sphinx.ext.viewcode',
               'sphinx.ext.doctest',
+              'sphinxcontrib.apidoc',
               'openstackdocstheme',
               'oslo_config.sphinxconfiggen',
               'oslo_policy.sphinxext',
@@ -153,6 +154,24 @@ modindex_common_prefix = ['heat.']
 
 primary_domain = 'py'
 nitpicky = False
+
+
+# -- Options for API documentation  -------------------------------------------
+
+apidoc_module_dir = '../../heat'
+apidoc_separate_modules = True
+apidoc_excluded_paths = [
+    'testing',
+    'cmd',
+    'common',
+    'cloudinit',
+    'cfn_client',
+    'doc',
+    'db',
+    'engine/resources',
+    'locale',
+    'tests',
+]
 
 
 # -- Options for HTML output --------------------------------------------------

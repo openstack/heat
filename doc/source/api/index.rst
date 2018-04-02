@@ -3,6 +3,6 @@
 ===================
 
 .. toctree::
-   :maxdepth: 1
+   :maxdepth: 6
 
-   autoindex
+   modules
