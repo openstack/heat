@@ -176,7 +176,7 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         self.nova_client.servers.get.assert_has_calls(calls)
 
     def test_get_status(self):
-        server = self.m.CreateMockAnything()
+        server = mock.Mock()
         server.status = 'ACTIVE'
 
         observed = self.nova_plugin.get_status(server)
@@ -187,13 +187,13 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         self.assertEqual('ACTIVE', observed)
 
     def _absolute_limits(self):
-        max_personality = self.m.CreateMockAnything()
+        max_personality = mock.Mock()
         max_personality.name = 'maxPersonality'
         max_personality.value = 5
-        max_personality_size = self.m.CreateMockAnything()
+        max_personality_size = mock.Mock()
         max_personality_size.name = 'maxPersonalitySize'
         max_personality_size.value = 10240
-        max_server_meta = self.m.CreateMockAnything()
+        max_server_meta = mock.Mock()
         max_server_meta.name = 'maxServerMeta'
         max_server_meta.value = 3
         yield max_personality
