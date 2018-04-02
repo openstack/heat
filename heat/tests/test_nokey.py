@@ -40,30 +40,16 @@ nokey_template = '''
 '''
 
 
-class nokeyTest(common.HeatTestCase):
-    def setUp(self):
-        super(nokeyTest, self).setUp()
-        self.fc = fakes_nova.FakeClient()
+class NoKeyTest(common.HeatTestCase):
 
     def test_nokey_create(self):
-
         stack_name = 's_nokey'
         t = template_format.parse(nokey_template)
         stack = utils.parse_stack(t, stack_name=stack_name)
 
-        t['Resources']['WebServer']['Properties']['ImageId'] = 'CentOS 5.2'
-        t['Resources']['WebServer']['Properties'][
-            'InstanceType'] = '256 MB Server'
         resource_defns = stack.t.resource_definitions(stack)
         instance = instances.Instance('create_instance_name',
                                       resource_defns['WebServer'], stack)
-
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        self.m.StubOutWithMock(glance.GlanceClientPlugin,
-                               'find_image_by_name_or_id')
-        glance.GlanceClientPlugin.find_image_by_name_or_id(
-            'CentOS 5.2').MultipleTimes().AndReturn(1)
 
         # need to resolve the template functions
         metadata = instance.metadata_get()
@@ -71,23 +57,23 @@ class nokeyTest(common.HeatTestCase):
             metadata,
             instance.properties['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            instance.properties['UserData'],
-            'ec2-user').AndReturn(server_userdata)
 
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=1, key_name=None,
-            name=utils.PhysName(stack_name, instance.name),
-            security_groups=None,
-            userdata=server_userdata, scheduler_hints=None,
-            meta=None, nics=None, availability_zone=None,
-            block_device_mapping=None).AndReturn(
-                self.fc.servers.list()[1])
-        self.m.ReplayAll()
+        fc = fakes_nova.FakeClient()
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=fc)
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         return_value=1234)
+        self.patchobject(nova.NovaClientPlugin, 'build_userdata',
+                         return_value=server_userdata)
+
+        self.patchobject(fc.servers, 'create',
+                         return_value=fc.servers.list()[1])
 
         scheduler.TaskRunner(instance.create)()
 
-        self.m.VerifyAll()
+        fc.servers.create.assert_called_once_with(
+            image=1234, flavor=3, key_name=None,
+            name=utils.PhysName(stack_name, instance.name),
+            security_groups=None, userdata=server_userdata,
+            scheduler_hints=None, meta=None, nics=None, availability_zone=None,
+            block_device_mapping=None)
