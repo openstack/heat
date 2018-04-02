@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import mox
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
@@ -881,43 +880,52 @@ class LoadBalancerTest(common.HeatTestCase):
     def setUp(self):
         super(LoadBalancerTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_member')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
+
+        self.mc = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client', return_value=self.mc)
+        self.patchobject(nova.NovaClientPlugin, '_create')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
-    def create_load_balancer(self):
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
-        neutronclient.Client.create_member({
-            'member': {
-                'pool_id': 'pool123', 'protocol_port': 8080,
-                'address': '1.2.3.4'}}
-        ).AndReturn({'member': {'id': 'member5678'}})
+    def create_load_balancer(self, extra_create_mocks=[]):
+        nova.NovaClientPlugin._create.return_value = self.fc
+        results = [{'member': {'id': 'member5678'}}]
+        for m in extra_create_mocks:
+            results.append(m)
+        self.mc.create_member.side_effect = results
         snippet = template_format.parse(lb_template)
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return loadbalancer.LoadBalancer(
             'lb', resource_defns['lb'], self.stack)
 
+    def validate_create_load_balancer(self, create_count=1):
+        if create_count > 1:
+            self.assertEqual(create_count, self.mc.create_member.call_count)
+            self.mc.create_member.assert_called_with({
+                'member': {
+                    'pool_id': 'pool123', 'protocol_port': 8080,
+                    'address': '4.5.6.7'}}
+            )
+        else:
+            self.mc.create_member.assert_called_once_with({
+                'member': {
+                    'pool_id': 'pool123', 'protocol_port': 8080,
+                    'address': '1.2.3.4'}}
+            )
+        nova.NovaClientPlugin._create.assert_called_once_with()
+
     def test_create(self):
         rsrc = self.create_load_balancer()
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.validate_create_load_balancer()
 
     def test_update(self):
-        rsrc = self.create_load_balancer()
-        neutronclient.Client.delete_member(u'member5678')
-        neutronclient.Client.create_member({
-            'member': {
-                'pool_id': 'pool123', 'protocol_port': 8080,
-                'address': '4.5.6.7'}}
-        ).AndReturn({'member': {'id': 'memberxyz'}})
+        rsrc = self.create_load_balancer(
+            extra_create_mocks=[{'member': {'id': 'memberxyz'}}])
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
         props = dict(rsrc.properties)
@@ -925,14 +933,14 @@ class LoadBalancerTest(common.HeatTestCase):
         update_template = rsrc.t.freeze(properties=props)
 
         scheduler.TaskRunner(rsrc.update, update_template)()
-        self.m.VerifyAll()
+        self.validate_create_load_balancer(create_count=2)
+        self.mc.delete_member.assert_called_once_with(u'member5678')
 
     def test_update_missing_member(self):
         rsrc = self.create_load_balancer()
-        neutronclient.Client.delete_member(u'member5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
+        self.mc.delete_member.side_effect = [
+            exceptions.NeutronClientException(status_code=404)]
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
         props = dict(rsrc.properties)
@@ -941,103 +949,90 @@ class LoadBalancerTest(common.HeatTestCase):
 
         scheduler.TaskRunner(rsrc.update, update_template)()
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mc.delete_member.assert_called_once_with(u'member5678')
+        self.validate_create_load_balancer()
 
     def test_delete(self):
         rsrc = self.create_load_balancer()
-        neutronclient.Client.delete_member(u'member5678')
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mc.delete_member.assert_called_once_with(u'member5678')
+        self.validate_create_load_balancer()
 
     def test_delete_missing_member(self):
         rsrc = self.create_load_balancer()
-        neutronclient.Client.delete_member(u'member5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
+        self.mc.delete_member.side_effect = [
+            exceptions.NeutronClientException(status_code=404)]
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mc.delete_member.assert_called_once_with(u'member5678')
+        self.validate_create_load_balancer()
 
 
 class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
 
     def setUp(self):
         super(PoolUpdateHealthMonitorsTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_pool')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_pool')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_pool')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_pool')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'associate_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client,
-                               'disassociate_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_health_monitor')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_vip')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_vip')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_vip')
-        self.m.StubOutWithMock(neutronV20, 'find_resourceid_by_name_or_id')
+        self.mc = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client', return_value=self.mc)
+        self.patchobject(neutronV20, 'find_resourceid_by_name_or_id')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
-    def _create_pool_with_health_monitors(self, stack_name):
-        neutronclient.Client.create_health_monitor({
+    def validate_create_pool_with_health_monitors(self):
+        self.mc.create_health_monitor.assert_called_with({
             'health_monitor': {
                 'delay': 3, 'max_retries': 5, 'type': u'HTTP',
                 'timeout': 10, 'admin_state_up': True}}
-        ).AndReturn({'health_monitor': {'id': '5555'}})
-
-        neutronclient.Client.create_health_monitor({
-            'health_monitor': {
-                'delay': 3, 'max_retries': 5, 'type': u'HTTP',
-                'timeout': 10, 'admin_state_up': True}}
-        ).AndReturn({'health_monitor': {'id': '6666'}})
-        self.stub_SubnetConstraint_validate()
-        neutronV20.find_resourceid_by_name_or_id(
-            mox.IsA(neutronclient.Client),
+        )
+        self.assertEqual(2, self.mc.create_health_monitor.call_count)
+        neutronV20.find_resourceid_by_name_or_id.assert_called_with(
+            mock.ANY,
             'subnet',
             'sub123',
             cmd_resource=None,
-        ).MultipleTimes().AndReturn('sub123')
-        neutronclient.Client.create_pool({
+        )
+        self.mc.create_pool.assert_called_once_with({
             'pool': {
                 'subnet_id': 'sub123', 'protocol': u'HTTP',
-                'name': utils.PhysName(stack_name, 'pool'),
+                'name': utils.PhysName(self.stack_name, 'pool'),
                 'lb_method': 'ROUND_ROBIN', 'admin_state_up': True}}
-        ).AndReturn({'pool': {'id': '5678'}})
-        neutronclient.Client.associate_health_monitor(
-            '5678', {'health_monitor': {'id': '5555'}}).InAnyOrder()
-        neutronclient.Client.associate_health_monitor(
-            '5678', {'health_monitor': {'id': '6666'}}).InAnyOrder()
-        neutronclient.Client.create_vip({
+        )
+        self.mc.associate_health_monitor.assert_has_calls([mock.call(
+            '5678', {'health_monitor': {'id': '5555'}}), mock.call(
+            '5678', {'health_monitor': {'id': '6666'}})],
+            any_order=True)
+        self.assertEqual(2, self.mc.associate_health_monitor.call_count)
+        self.mc.create_vip.assert_called_once_with({
             'vip': {
                 'protocol': u'HTTP', 'name': 'pool.vip',
                 'admin_state_up': True, 'subnet_id': u'sub123',
                 'pool_id': '5678', 'protocol_port': 80}}
-        ).AndReturn({'vip': {'id': 'xyz'}})
-        neutronclient.Client.show_pool('5678').AndReturn(
-            {'pool': {'status': 'ACTIVE'}})
-        neutronclient.Client.show_vip('xyz').AndReturn(
-            {'vip': {'status': 'ACTIVE'}})
+        )
+        self.mc.show_pool.assert_called_once_with('5678')
+        self.mc.show_vip.assert_called_once_with('xyz')
+
+    def _create_pool_with_health_monitors(self, stack_name):
+        self.stack_name = stack_name
+        self.mc.create_health_monitor.side_effect = [
+            {'health_monitor': {'id': '5555'}},
+            {'health_monitor': {'id': '6666'}}]
+
+        self.stub_SubnetConstraint_validate()
+        neutronV20.find_resourceid_by_name_or_id.return_value = 'sub123'
+        self.mc.create_pool.return_value = {'pool': {'id': '5678'}}
+        self.mc.create_vip.return_value = {'vip': {'id': 'xyz'}}
+        self.mc.show_pool.return_value = {'pool': {'status': 'ACTIVE'}}
+        self.mc.show_vip.return_value = {'vip': {'status': 'ACTIVE'}}
 
     def test_update_pool_with_references_to_health_monitors(self):
         snippet = template_format.parse(pool_with_health_monitors_template)
         self.stack = utils.parse_stack(snippet)
-
         self._create_pool_with_health_monitors(self.stack.name)
-
-        neutronclient.Client.disassociate_health_monitor(
-            '5678', mox.IsA(six.string_types))
-
-        self.m.ReplayAll()
         self.stack.create()
         self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
                          self.stack.state)
@@ -1048,19 +1043,15 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+        self.validate_create_pool_with_health_monitors()
+        self.mc.disassociate_health_monitor.assert_called_once_with(
+            '5678', mock.ANY)
 
     def test_update_pool_with_empty_list_of_health_monitors(self):
         snippet = template_format.parse(pool_with_health_monitors_template)
         self.stack = utils.parse_stack(snippet)
         self._create_pool_with_health_monitors(self.stack.name)
 
-        neutronclient.Client.disassociate_health_monitor(
-            '5678', '5555').InAnyOrder()
-        neutronclient.Client.disassociate_health_monitor(
-            '5678', '6666').InAnyOrder()
-
-        self.m.ReplayAll()
         self.stack.create()
         self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
                          self.stack.state)
@@ -1070,19 +1061,18 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+        self.mc.disassociate_health_monitor.assert_has_calls(
+            [mock.call('5678', '5555'), mock.call('5678', '6666')],
+            any_order=True)
+        self.assertEqual(2, self.mc.disassociate_health_monitor.call_count)
+
+        self.validate_create_pool_with_health_monitors()
 
     def test_update_pool_without_health_monitors(self):
         snippet = template_format.parse(pool_with_health_monitors_template)
         self.stack = utils.parse_stack(snippet)
         self._create_pool_with_health_monitors(self.stack.name)
 
-        neutronclient.Client.disassociate_health_monitor(
-            '5678', '5555').InAnyOrder()
-        neutronclient.Client.disassociate_health_monitor(
-            '5678', '6666').InAnyOrder()
-
-        self.m.ReplayAll()
         self.stack.create()
         self.assertEqual((self.stack.CREATE, self.stack.COMPLETE),
                          self.stack.state)
@@ -1092,4 +1082,8 @@ class PoolUpdateHealthMonitorsTest(common.HeatTestCase):
         self.stack.update(updated_stack)
         self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+        self.mc.disassociate_health_monitor.assert_has_calls(
+            [mock.call('5678', '5555'), mock.call('5678', '6666')],
+            any_order=True)
+        self.assertEqual(2, self.mc.disassociate_health_monitor.call_count)
+        self.validate_create_pool_with_health_monitors()
