@@ -779,42 +779,38 @@ class PoolMemberTest(common.HeatTestCase):
     def setUp(self):
         super(PoolMemberTest, self).setUp()
         self.fc = fakes_nova.FakeClient()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_member')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_member')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_member')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_member')
+        self.mc = mock.Mock(spec=neutronclient.Client)
+        self.patchobject(neutronclient, 'Client', return_value=self.mc)
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
     def create_member(self):
-        neutronclient.Client.create_member({
-            'member': {
-                'pool_id': 'pool123', 'protocol_port': 8080,
-                'address': '1.2.3.4', 'admin_state_up': True}}
-        ).AndReturn({'member': {'id': 'member5678'}})
+        self.mc.create_member.return_value = {'member': {'id': 'member5678'}}
         snippet = template_format.parse(member_template)
         self.stack = utils.parse_stack(snippet)
         self.tmpl = snippet
         resource_defns = self.stack.t.resource_definitions(self.stack)
-        return loadbalancer.PoolMember(
+        result = loadbalancer.PoolMember(
             'member', resource_defns['member'], self.stack)
+        return result
+
+    def validate_create_member(self):
+        self.mc.create_member.assert_called_once_with({
+            'member': {
+                'pool_id': 'pool123', 'protocol_port': 8080,
+                'address': '1.2.3.4', 'admin_state_up': True}}
+        )
 
     def test_create(self):
         rsrc = self.create_member()
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('member5678', rsrc.resource_id)
-        self.m.VerifyAll()
+        self.validate_create_member()
 
     def test_create_optional_parameters(self):
-        neutronclient.Client.create_member({
-            'member': {
-                'pool_id': 'pool123', 'protocol_port': 8080,
-                'weight': 100, 'admin_state_up': False,
-                'address': '1.2.3.4'}}
-        ).AndReturn({'member': {'id': 'member5678'}})
+        self.mc.create_member.return_value = {'member': {'id': 'member5678'}}
         snippet = template_format.parse(member_template)
         snippet['resources']['member']['properties']['admin_state_up'] = False
         snippet['resources']['member']['properties']['weight'] = 100
@@ -823,29 +819,28 @@ class PoolMemberTest(common.HeatTestCase):
         rsrc = loadbalancer.PoolMember(
             'member', resource_defns['member'], self.stack)
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual('member5678', rsrc.resource_id)
-        self.m.VerifyAll()
+        self.mc.create_member.assert_called_once_with({
+            'member': {
+                'pool_id': 'pool123', 'protocol_port': 8080,
+                'weight': 100, 'admin_state_up': False,
+                'address': '1.2.3.4'}}
+        )
 
     def test_attribute(self):
         rsrc = self.create_member()
-        neutronclient.Client.show_member('member5678').MultipleTimes(
-        ).AndReturn(
-            {'member': {'admin_state_up': True, 'weight': 5}})
-        self.m.ReplayAll()
+        self.mc.show_member.return_value = {
+            'member': {'admin_state_up': True, 'weight': 5}}
         scheduler.TaskRunner(rsrc.create)()
         self.assertIs(True, rsrc.FnGetAtt('admin_state_up'))
         self.assertEqual(5, rsrc.FnGetAtt('weight'))
-        self.m.VerifyAll()
+        self.mc.show_member.assert_called_with('member5678')
+        self.validate_create_member()
 
     def test_update(self):
         rsrc = self.create_member()
-        neutronclient.Client.update_member(
-            'member5678', {'member': {'pool_id': 'pool456'}})
-
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
 
         props = self.tmpl['resources']['member']['properties'].copy()
@@ -853,30 +848,32 @@ class PoolMemberTest(common.HeatTestCase):
         update_template = rsrc.t.freeze(properties=props)
 
         scheduler.TaskRunner(rsrc.update, update_template)()
-        self.m.VerifyAll()
+        self.mc.update_member.assert_called_once_with(
+            'member5678', {'member': {'pool_id': 'pool456'}})
+        self.validate_create_member()
 
     def test_delete(self):
         rsrc = self.create_member()
-        neutronclient.Client.delete_member(u'member5678')
-        neutronclient.Client.show_member(u'member5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
+        self.mc.show_member.side_effect = [exceptions.NeutronClientException(
+            status_code=404)]
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.mc.delete_member.assert_called_once_with(u'member5678')
+        self.mc.show_member.assert_called_once_with(u'member5678')
+        self.validate_create_member()
 
     def test_delete_missing_member(self):
         rsrc = self.create_member()
-        neutronclient.Client.delete_member(u'member5678').AndRaise(
-            exceptions.NeutronClientException(status_code=404))
+        self.mc.delete_member.side_effect = [exceptions.NeutronClientException(
+            status_code=404)]
 
-        self.m.ReplayAll()
         scheduler.TaskRunner(rsrc.create)()
         scheduler.TaskRunner(rsrc.delete)()
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+        self.validate_create_member()
+        self.mc.delete_member.assert_called_once_with(u'member5678')
 
 
 class LoadBalancerTest(common.HeatTestCase):
