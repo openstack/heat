@@ -11,18 +11,22 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+========================
 Hello World HOT Template
-------------------------
+========================
+
 https://git.openstack.org/cgit/openstack/heat-templates/tree/hot/hello_world.yaml
 
 Description
 -----------
+
 Hello world HOT template that just defines a single compute instance. Contains
 just base features to verify base HOT support.
 
 
 Parameters
 ----------
+
 *key_name* :mod:`(required)`
 	*type*
 		*string*

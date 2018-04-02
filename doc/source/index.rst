@@ -44,29 +44,19 @@ This documentation offers information aimed at end-users, operators and
 developers of Heat.
 
 
-Installing Heat
-===============
+Operating Heat
+==============
 
 .. toctree::
     :maxdepth: 1
 
     install/index
-
-Configuring Heat
-================
-
-.. toctree::
-    :maxdepth: 1
-
+    operating_guides/httpd
     configuration/index
-
-Administering Heat
-==================
-
-.. toctree::
-    :maxdepth: 1
-
     admin/index
+    operating_guides/scale_deployment
+    operating_guides/upgrades_guide
+    man/index
 
 Using Heat
 ==========
@@ -75,25 +65,29 @@ Using Heat
     :maxdepth: 1
 
     getting_started/create_a_stack
-    template_guide/index
-    templates/index
     glossary
 
-Operating Heat
-==============
+Working with Templates
+----------------------
 
 .. toctree::
     :maxdepth: 1
 
-    getting_started/on_fedora
-    getting_started/on_ubuntu
-    operating_guides/scale_deployment
-    operating_guides/httpd
-    operating_guides/upgrades_guide
-    man/index
+    template_guide/index
+    templates/index
+
+Using the Heat Service
+----------------------
+
+- `OpenStack Orchestration API v1 Reference`_
+- `Python and CLI client`_
+
+.. _`OpenStack Orchestration API v1 Reference`: https://developer.openstack.org/api-ref/orchestration/v1/
+.. _`Python and CLI client`: https://docs.openstack.org/python-heatclient/latest
 
 Developing Heat
 ===============
+
 .. toctree::
     :maxdepth: 1
 
@@ -105,20 +99,7 @@ Developing Heat
     developing_guides/gmr
     developing_guides/supportstatus
     developing_guides/rally_on_gates
-
-API Documentation
-========================
-
--  `Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`_
-
-   .. _`Heat REST API Reference (OpenStack API Complete Reference - Orchestration)`: http://developer.openstack.org/api-ref/orchestration/v1/
-
-Code Documentation
-==================
-.. toctree::
-   :maxdepth: 1
-
-   api/autoindex
+    api/index
 
 Indices and tables
 ==================

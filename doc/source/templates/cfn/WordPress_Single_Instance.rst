@@ -11,12 +11,15 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+======================================
 AWS Wordpress Single Instance Template
---------------------------------------
+======================================
+
 https://git.openstack.org/cgit/openstack/heat-templates/tree/cfn/F18/WordPress_Single_Instance.template
 
 Description
 -----------
+
 AWS CloudFormation Sample Template WordPress_Single_Instance: WordPress is web
 software you can use to create a beautiful website or blog. This template
 installs a single-instance WordPress deployment using a local MySQL database to
@@ -25,6 +28,7 @@ store the data.
 
 Parameters
 ----------
+
 *KeyName* :mod:`(required)`
 	*type*
 		*string*
