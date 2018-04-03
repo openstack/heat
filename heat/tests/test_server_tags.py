@@ -13,6 +13,8 @@
 
 import uuid
 
+import mock
+
 from heat.common import template_format
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
@@ -57,18 +59,17 @@ class ServerTagsTest(common.HeatTestCase):
         self.fc = fakes_nova.FakeClient()
 
     def _mock_get_image_id_success(self, imageId_input, imageId):
-        self.m.StubOutWithMock(glance.GlanceClientPlugin,
-                               'find_image_by_name_or_id')
-        glance.GlanceClientPlugin.find_image_by_name_or_id(
-            imageId_input).MultipleTimes().AndReturn(imageId)
+        self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
+                         return_value=imageId)
 
-    def _setup_test_instance(self, intags=None, nova_tags=None):
-        stack_name = 'tag_test'
+    def _setup_test_instance(self, intags=None):
+        self.stack_name = 'tag_test'
         t = template_format.parse(instance_template)
         template = tmpl.Template(t,
                                  env=environment.Environment(
                                      {'KeyName': 'test'}))
-        self.stack = parser.Stack(utils.dummy_context(), stack_name, template,
+        self.stack = parser.Stack(utils.dummy_context(), self.stack_name,
+                                  template,
                                   stack_id=str(uuid.uuid4()))
 
         t['Resources']['WebServer']['Properties']['Tags'] = intags
@@ -76,30 +77,21 @@ class ServerTagsTest(common.HeatTestCase):
         instance = instances.Instance('WebServer',
                                       resource_defns['WebServer'], self.stack)
 
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(self.fc)
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
         self._mock_get_image_id_success('CentOS 5.2', 1)
         # need to resolve the template functions
-        metadata = instance.metadata_get()
-        server_userdata = instance.client_plugin().build_userdata(
-            metadata,
+        self.metadata = instance.metadata_get()
+        self.server_userdata = instance.client_plugin().build_userdata(
+            self.metadata,
             instance.properties['UserData'],
             'ec2-user')
-        self.m.StubOutWithMock(nova.NovaClientPlugin, 'build_userdata')
-        nova.NovaClientPlugin.build_userdata(
-            metadata,
-            instance.properties['UserData'],
-            'ec2-user').AndReturn(server_userdata)
-
-        self.m.StubOutWithMock(self.fc.servers, 'create')
-        self.fc.servers.create(
-            image=1, flavor=1, key_name='test',
-            name=utils.PhysName(stack_name, instance.name),
-            security_groups=None,
-            userdata=server_userdata, scheduler_hints=None,
-            meta=nova_tags, nics=None, availability_zone=None,
-            block_device_mapping=None).AndReturn(
-                self.fc.servers.list()[1])
+        self.mock_build_userdata = self.patchobject(
+            nova.NovaClientPlugin,
+            'build_userdata',
+            return_value=self.server_userdata)
+        self.fc.servers.create = mock.Mock(
+            return_value=self.fc.servers.list()[1])
 
         return instance
 
@@ -107,40 +99,47 @@ class ServerTagsTest(common.HeatTestCase):
         tags = [{'Key': 'Food', 'Value': 'yum'}]
         metadata = dict((tm['Key'], tm['Value']) for tm in tags)
 
-        instance = self._setup_test_instance(intags=tags, nova_tags=metadata)
-        self.m.ReplayAll()
+        instance = self._setup_test_instance(intags=tags)
         scheduler.TaskRunner(instance.create)()
-        # we are just using mock to verify that the tags get through to the
-        # nova call.
-        self.m.VerifyAll()
+        self.mock_build_userdata.assert_called_once_with(
+            self.metadata,
+            instance.properties['UserData'],
+            'ec2-user')
+        self.fc.servers.create.assert_called_once_with(
+            image=1, flavor=1, key_name='test',
+            name=utils.PhysName(self.stack_name, instance.name),
+            security_groups=None,
+            userdata=self.server_userdata, scheduler_hints=None,
+            meta=metadata, nics=None, availability_zone=None,
+            block_device_mapping=None)
 
     def test_instance_tags_updated(self):
         tags = [{'Key': 'Food', 'Value': 'yum'}]
         metadata = dict((tm['Key'], tm['Value']) for tm in tags)
 
-        instance = self._setup_test_instance(intags=tags, nova_tags=metadata)
-        self.m.ReplayAll()
+        instance = self._setup_test_instance(intags=tags)
         scheduler.TaskRunner(instance.create)()
+        self.fc.servers.create.assert_called_once_with(
+            image=1, flavor=1, key_name='test',
+            name=utils.PhysName(self.stack_name, instance.name),
+            security_groups=None,
+            userdata=self.server_userdata, scheduler_hints=None,
+            meta=metadata, nics=None, availability_zone=None,
+            block_device_mapping=None)
         self.assertEqual((instance.CREATE, instance.COMPLETE), instance.state)
-        # we are just using mock to verify that the tags get through to the
-        # nova call.
-        self.m.VerifyAll()
-        self.m.UnsetStubs()
 
         new_tags = [{'Key': 'Food', 'Value': 'yuk'}]
         new_metadata = dict((tm['Key'], tm['Value']) for tm in new_tags)
-
-        self.m.StubOutWithMock(self.fc.servers, 'set_meta')
-        self.fc.servers.set_meta(self.fc.servers.list()[1],
-                                 new_metadata).AndReturn(None)
+        self.fc.servers.set_meta = mock.Mock(return_value=None)
         self.stub_ImageConstraint_validate()
         self.stub_KeypairConstraint_validate()
         self.stub_FlavorConstraint_validate()
-        self.m.ReplayAll()
         snippet = instance.stack.t.t['Resources'][instance.name]
         props = snippet['Properties'].copy()
         props['Tags'] = new_tags
         update_template = instance.t.freeze(properties=props)
         scheduler.TaskRunner(instance.update, update_template)()
         self.assertEqual((instance.UPDATE, instance.COMPLETE), instance.state)
-        self.m.VerifyAll()
+        self.fc.servers.set_meta.assert_called_once_with(
+            self.fc.servers.list()[1],
+            new_metadata)
