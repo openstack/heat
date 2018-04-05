@@ -156,8 +156,8 @@ class RequestContext(context.RequestContext):
         return self._clients
 
     def to_dict(self):
-        user_idt = '{user} {tenant}'.format(user=self.user_id or '-',
-                                            tenant=self.tenant_id or '-')
+        user_idt = u'{user} {tenant}'.format(user=self.user_id or '-',
+                                             tenant=self.tenant_id or '-')
 
         return {'auth_token': self.auth_token,
                 'username': self.username,
