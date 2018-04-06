@@ -21,6 +21,22 @@ sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_network.sh
 
 cd $DEST/tempest
+
+# Old version of tempest is installed in the test environment, so use
+# .testr.conf instead of .stestr.conf
+cat <<'EOF' >.testr.conf
+[DEFAULT]
+test_command=OS_STDOUT_CAPTURE=${OS_STDOUT_CAPTURE:-1} \
+             OS_STDERR_CAPTURE=${OS_STDERR_CAPTURE:-1} \
+             OS_TEST_TIMEOUT=${OS_TEST_TIMEOUT:-500} \
+             OS_TEST_LOCK_PATH=${OS_TEST_LOCK_PATH:-${TMPDIR:-'/tmp'}} \
+             ${PYTHON:-python} -m subunit.run discover -t ${OS_TOP_LEVEL:-./} \
+             ${OS_TEST_PATH:-./tempest/test_discover} $LISTOPT $IDOPTION
+test_id_option=--load-list $IDFILE
+test_list_option=--list
+group_regex=heat_integrationtests\.api\.test_heat_api(?:\.|_)([^_]+)
+EOF
+
 sudo tempest run --regex heat_integrationtests
 
 sudo -E $DEST/heat/heat_integrationtests/cleanup_test_env.sh
