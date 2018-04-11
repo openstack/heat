@@ -2345,6 +2345,7 @@ class Resource(status.ResourceStatus):
                 self.context, self.id, self._atomic_key,
                 self.attributes.cached_attrs, self._attr_data_id)
             if attr_data_id is not None:
+                self._incr_atomic_key(self._atomic_key)
                 self._attr_data_id = attr_data_id
         except Exception as ex:
             LOG.error('store_attributes rsrc %(name)s %(id)s DB error %(ex)s',
