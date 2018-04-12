@@ -32,6 +32,7 @@ Request Parameters
    - tenant_id: tenant_id
    - disable_rollback: disable_rollback
    - environment: environment
+   - environment_files: environment_files
    - files: files
    - parameters: parameters
    - stack_name: stack_name_request
