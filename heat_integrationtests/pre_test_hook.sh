@@ -51,9 +51,3 @@ fi
 
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
-# Use the lbaas v2 namespace driver for devstack integration testing since
-# octavia uses nested vms.
-if [[ $OVERRIDE_ENABLED_SERVICES =~ "q-lbaasv2" ]]
-then
-  echo "NEUTRON_LBAAS_SERVICE_PROVIDERV2=LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default" >> $localconf
-fi
