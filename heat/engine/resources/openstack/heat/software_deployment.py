@@ -72,6 +72,10 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     support_status = support.SupportStatus(version='2014.1')
 
+    default_client_name = 'heat'
+
+    entity = 'software_deployments'
+
     PROPERTIES = (
         CONFIG, SERVER, INPUT_VALUES,
         DEPLOY_ACTIONS, NAME, SIGNAL_TRANSPORT
