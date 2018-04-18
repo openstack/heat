@@ -1364,8 +1364,8 @@ class Stack(collections.Mapping):
                          'action': self.action})
             return
 
-        LOG.info('convergence_dependencies: %s',
-                 self.convergence_dependencies)
+        LOG.debug('Starting traversal %s with dependencies: %s',
+                  self.current_traversal, self.convergence_dependencies)
 
         # create sync_points for resources in DB
         for rsrc_id, is_update in self.convergence_dependencies:
