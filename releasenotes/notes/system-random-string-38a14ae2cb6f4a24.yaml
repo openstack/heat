@@ -1,0 +1,6 @@
+---
+security:
+  - |
+    Heat no longer uses standard Python RNG when generating values for
+    OS::Heat::RandomString resource, and instead relies on system's RNG
+    for that.
