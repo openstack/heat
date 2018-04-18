@@ -29,6 +29,11 @@ class SenlinClientPlugin(sdk_plugin.OpenStackSDKPlugin):
         client = super(SenlinClientPlugin, self)._create(version=version)
         return client.clustering
 
+    def _get_additional_create_args(self, version):
+        return {
+            'clustering_api_version': version or '1'
+        }
+
     def generate_spec(self, spec_type, spec_props):
         spec = {'properties': spec_props}
         spec['type'], spec['version'] = spec_type.split('-')

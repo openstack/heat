@@ -42,8 +42,12 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
             config=self._get_service_interfaces(),
             region_name=self._get_region_name(),
             app_name='heat',
-            app_version=heat.version.version_info.version_string())
+            app_version=heat.version.version_info.version_string(),
+            **self._get_additional_create_args(version))
         return connection.Connection(config=config)
+
+    def _get_additional_create_args(self, version):
+        return {}
 
     def _get_service_interfaces(self):
         interfaces = {}
