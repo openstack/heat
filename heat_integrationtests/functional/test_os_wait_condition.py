@@ -55,11 +55,11 @@ resources:
             wc_notify --data-binary ''{"status": "SUCCESS", "reason":
             "signal4", "data": "data4"}''
 
-            # check signals with the same number
+            # check signals with the same ID
 
-            wc_notify --data-binary ''{"status": "SUCCESS", "id": "5"}''
+            wc_notify --data-binary ''{"status": "SUCCESS", "id": "test5"}''
 
-            wc_notify --data-binary ''{"status": "SUCCESS", "id": "5"}''
+            wc_notify --data-binary ''{"status": "SUCCESS", "id": "test5"}''
 
             # loop for 20 signals without reasons and data
 
