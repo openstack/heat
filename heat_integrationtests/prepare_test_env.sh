@@ -50,6 +50,7 @@ function _config_iniset {
 
     iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-27-1.6.x86_64
     iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
+    iniset $conf_file heat_plugin hidden_stack_tag hidden
 
     if [ "$DISABLE_CONVERGENCE" == "true" ]; then
         iniset $conf_file heat_plugin convergence_engine_enabled false
