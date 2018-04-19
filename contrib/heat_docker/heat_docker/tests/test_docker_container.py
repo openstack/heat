@@ -21,7 +21,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import template_format
 from heat.engine import resource
-from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
@@ -114,6 +113,11 @@ class DockerContainerTest(common.HeatTestCase):
 
     @mock.patch.object(docker_container.DockerContainer, 'get_client')
     def test_create_failed(self, test_client):
+        t = template_format.parse(template)
+        self.stack = utils.parse_stack(t)
+        definition = self.stack.t.resource_definitions(self.stack)['Blog']
+        props = t['Resources']['Blog']['Properties'].copy()
+
         mock_client = mock.Mock()
         mock_client.inspect_container.return_value = {
             "State": {
@@ -122,12 +126,8 @@ class DockerContainerTest(common.HeatTestCase):
         }
         mock_client.logs.return_value = "Container startup failed"
         test_client.return_value = mock_client
-        mock_stack = mock.Mock()
-        mock_stack.has_cache_data.return_value = False
-        mock_stack.db_resource_get.return_value = None
-        res_def = mock.Mock(spec=rsrc_defn.ResourceDefinition)
-        docker_res = docker_container.DockerContainer("test", res_def,
-                                                      mock_stack)
+        docker_res = docker_container.DockerContainer(
+            'Blog', definition.freeze(properties=props), self.stack)
         exc = self.assertRaises(exception.ResourceInError,
                                 docker_res.check_create_complete,
                                 'foo')
