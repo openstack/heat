@@ -59,7 +59,6 @@ class DockerContainerTest(common.HeatTestCase):
         super(DockerContainerTest, self).setUp()
         for res_name, res_class in docker_container.resource_mapping().items():
             resource._register_class(res_name, res_class)
-        self.addCleanup(self.m.VerifyAll)
 
     def create_container(self, resource_name):
         t = template_format.parse(template)
@@ -68,11 +67,9 @@ class DockerContainerTest(common.HeatTestCase):
             resource_name,
             self.stack.t.resource_definitions(self.stack)[resource_name],
             self.stack)
-        self.m.StubOutWithMock(resource, 'get_client')
-        resource.get_client().MultipleTimes().AndReturn(
-            docker.Client())
+        self.patchobject(resource, 'get_client',
+                         return_value=docker.Client())
         self.assertIsNone(resource.validate())
-        self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
                          resource.state)
@@ -99,11 +96,9 @@ class DockerContainerTest(common.HeatTestCase):
         props['name'] = 'super-blog'
         resource = docker_container.DockerContainer(
             'Blog', definition.freeze(properties=props), self.stack)
-        self.m.StubOutWithMock(resource, 'get_client')
-        resource.get_client().MultipleTimes().AndReturn(
-            docker.Client())
+        self.patchobject(resource, 'get_client',
+                         return_value=docker.Client())
         self.assertIsNone(resource.validate())
-        self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
                          resource.state)
@@ -142,11 +137,9 @@ class DockerContainerTest(common.HeatTestCase):
         props['links'] = {'db': 'mysql'}
         resource = docker_container.DockerContainer(
             'Blog', definition.freeze(properties=props), self.stack)
-        self.m.StubOutWithMock(resource, 'get_client')
-        resource.get_client().MultipleTimes().AndReturn(
-            docker.Client())
+        self.patchobject(resource, 'get_client',
+                         return_value=docker.Client())
         self.assertIsNone(resource.validate())
-        self.m.ReplayAll()
         scheduler.TaskRunner(resource.create)()
         self.assertEqual((resource.CREATE, resource.COMPLETE),
                          resource.state)
@@ -188,7 +181,6 @@ class DockerContainerTest(common.HeatTestCase):
                 raise
 
         self.assertIs(False, exists)
-        self.m.VerifyAll()
 
     @testtools.skipIf(docker is None, 'docker-py not available')
     def test_resource_delete_exception(self):
@@ -197,18 +189,18 @@ class DockerContainerTest(common.HeatTestCase):
         response.content = 'some content'
 
         container = self.create_container('Blog')
-        self.m.StubOutWithMock(container.get_client(), 'kill')
-        container.get_client().kill(container.resource_id).AndRaise(
-            docker.errors.APIError('Not found', response))
+        self.patchobject(container.get_client(), 'kill',
+                         side_effect=[docker.errors.APIError(
+                             'Not found', response)])
 
-        self.m.StubOutWithMock(container, '_get_container_status')
-        container._get_container_status(container.resource_id).AndRaise(
-            docker.errors.APIError('Not found', response))
-
-        self.m.ReplayAll()
-
+        self.patchobject(container, '_get_container_status',
+                         side_effect=[docker.errors.APIError(
+                             'Not found', response)])
         scheduler.TaskRunner(container.delete)()
-        self.m.VerifyAll()
+        container.get_client().kill.assert_called_once_with(
+            container.resource_id)
+        container._get_container_status.assert_called_once_with(
+            container.resource_id)
 
     def test_resource_suspend_resume(self):
         container = self.create_container('Blog')
