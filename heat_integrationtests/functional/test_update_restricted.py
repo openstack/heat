@@ -96,6 +96,7 @@ class UpdateRestrictedStackTest(functional_base.FunctionalTestsBase):
 
         update_template = test_template.copy()
         props = update_template['resources']['bar']['properties']
+        props['value'] = '4567'
         props['update_replace'] = True
 
         # check replace fails - with 'both' restricted
