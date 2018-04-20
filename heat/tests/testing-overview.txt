@@ -23,7 +23,7 @@ test type.
 Implementing a test
 -------------------
 
-Testrepository - http://pypi.python.org/pypi/testrepository is used to
+Testrepository - https://pypi.org/project/testrepository is used to
 find and run tests, parallelize their runs, and record timing/results.
 
 If new dependencies are introduced upon the development of a test, the

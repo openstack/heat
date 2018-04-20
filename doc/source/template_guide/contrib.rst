@@ -27,7 +27,7 @@ DockerInc Resource
 .. rubric:: This resource is not enabled by default.
 
 This plugin enables the use of  Docker containers in a Heat template and
-requires the `docker-py <https://pypi.python.org/pypi/docker-py>`_
+requires the `docker-py <https://pypi.org/project/docker-py>`_
 package. You can find more information in the `DOCKER_README
 <https://git.openstack.org/cgit/openstack/heat/tree/contrib/heat_docker/README.md>`_.
 
