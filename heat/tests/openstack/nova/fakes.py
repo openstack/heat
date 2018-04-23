@@ -87,6 +87,9 @@ class FakeSessionClient(base_client.SessionClient):
     # Servers
     #
     def get_servers_detail(self, **kw):
+        if kw.get('marker') == '56789':
+            return (200, {"servers": []})
+
         return (
             200,
             {"servers": [{"id": "1234",
