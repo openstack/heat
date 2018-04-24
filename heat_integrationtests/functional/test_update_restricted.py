@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import time
 
 from heat_integrationtests.functional import functional_base
@@ -57,7 +58,7 @@ class UpdateRestrictedStackTest(functional_base.FunctionalTestsBase):
     def test_update(self):
         stack_identifier = self.stack_create(template=test_template)
 
-        update_template = test_template.copy()
+        update_template = copy.deepcopy(test_template)
         props = update_template['resources']['bar']['properties']
         props['value'] = '4567'
 
@@ -94,7 +95,7 @@ class UpdateRestrictedStackTest(functional_base.FunctionalTestsBase):
     def test_replace(self):
         stack_identifier = self.stack_create(template=test_template)
 
-        update_template = test_template.copy()
+        update_template = copy.deepcopy(test_template)
         props = update_template['resources']['bar']['properties']
         props['update_replace'] = True
 
@@ -131,7 +132,7 @@ class UpdateRestrictedStackTest(functional_base.FunctionalTestsBase):
     def test_update_type_changed(self):
         stack_identifier = self.stack_create(template=test_template)
 
-        update_template = test_template.copy()
+        update_template = copy.deepcopy(test_template)
         rsrc = update_template['resources']['bar']
         rsrc['type'] = 'OS::Heat::None'
 
