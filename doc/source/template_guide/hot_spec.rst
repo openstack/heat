@@ -115,262 +115,262 @@ for the ``heat_template_version`` key:
 
 2013-05-23
 ----------
-    The key with value ``2013-05-23`` indicates that the YAML document is a HOT
-    template and it may contain features implemented until the Icehouse
-    release. This version supports the following functions (some are back
-    ported to this version)::
+The key with value ``2013-05-23`` indicates that the YAML document is a HOT
+template and it may contain features implemented until the Icehouse
+release. This version supports the following functions (some are back
+ported to this version)::
 
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      resource_facade
-      str_replace
-      Fn::Base64
-      Fn::GetAZs
-      Fn::Join
-      Fn::MemberListToMap
-      Fn::Replace
-      Fn::ResourceFacade
-      Fn::Select
-      Fn::Split
-      Ref
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  resource_facade
+  str_replace
+  Fn::Base64
+  Fn::GetAZs
+  Fn::Join
+  Fn::MemberListToMap
+  Fn::Replace
+  Fn::ResourceFacade
+  Fn::Select
+  Fn::Split
+  Ref
 
 2014-10-16
 ----------
-    The key with value ``2014-10-16`` indicates that the YAML document is a HOT
-    template and it may contain features added and/or removed up until the Juno
-    release. This version removes most CFN functions that were supported in
-    the Icehouse release, i.e. the ``2013-05-23`` version. So the supported
-    functions now are::
+The key with value ``2014-10-16`` indicates that the YAML document is a HOT
+template and it may contain features added and/or removed up until the Juno
+release. This version removes most CFN functions that were supported in
+the Icehouse release, i.e. the ``2013-05-23`` version. So the supported
+functions now are::
 
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      resource_facade
-      str_replace
-      Fn::Select
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  resource_facade
+  str_replace
+  Fn::Select
 
 2015-04-30
 ----------
-    The key with value ``2015-04-30`` indicates that the YAML document is a HOT
-    template and it may contain features added and/or removed up until the Kilo
-    release. This version adds the ``repeat`` function. So the complete list of
-    supported functions is::
+The key with value ``2015-04-30`` indicates that the YAML document is a HOT
+template and it may contain features added and/or removed up until the Kilo
+release. This version adds the ``repeat`` function. So the complete list of
+supported functions is::
 
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      repeat
-      digest
-      resource_facade
-      str_replace
-      Fn::Select
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  repeat
+  digest
+  resource_facade
+  str_replace
+  Fn::Select
 
 2015-10-15
 ----------
-    The key with value ``2015-10-15`` indicates that the YAML document is a HOT
-    template and it may contain features added and/or removed up until the
-    Liberty release. This version removes the *Fn::Select* function, path based
-    ``get_attr``/``get_param`` references should be used instead. Moreover
-    ``get_attr`` since this version returns dict of all attributes for the
-    given resource excluding *show* attribute, if there's no <attribute name>
-    specified, e.g. :code:`{ get_attr: [<resource name>]}`. This version
-    also adds the str_split function and support for passing multiple lists to
-    the existing list_join function. The complete list of supported functions
-    is::
+The key with value ``2015-10-15`` indicates that the YAML document is a HOT
+template and it may contain features added and/or removed up until the
+Liberty release. This version removes the *Fn::Select* function, path based
+``get_attr``/``get_param`` references should be used instead. Moreover
+``get_attr`` since this version returns dict of all attributes for the
+given resource excluding *show* attribute, if there's no <attribute name>
+specified, e.g. :code:`{ get_attr: [<resource name>]}`. This version
+also adds the str_split function and support for passing multiple lists to
+the existing list_join function. The complete list of supported functions
+is::
 
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      repeat
-      digest
-      resource_facade
-      str_replace
-      str_split
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  repeat
+  digest
+  resource_facade
+  str_replace
+  str_split
 
 2016-04-08
 ----------
-    The key with value ``2016-04-08`` indicates that the YAML document is a HOT
-    template and it may contain features added and/or removed up until the
-    Mitaka release. This version also adds the ``map_merge`` function which
-    can be used to merge the contents of maps. The complete list of supported
-    functions is::
+The key with value ``2016-04-08`` indicates that the YAML document is a HOT
+template and it may contain features added and/or removed up until the
+Mitaka release. This version also adds the ``map_merge`` function which
+can be used to merge the contents of maps. The complete list of supported
+functions is::
 
-      digest
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      map_merge
-      repeat
-      resource_facade
-      str_replace
-      str_split
+  digest
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  map_merge
+  repeat
+  resource_facade
+  str_replace
+  str_split
 
 2016-10-14 | newton
 -------------------
-    The key with value ``2016-10-14`` or ``newton`` indicates that the YAML
-    document is a HOT template and it may contain features added and/or removed
-    up until the Newton release. This version adds the ``yaql`` function which
-    can be used for evaluation of complex expressions, the ``map_replace``
-    function that can do key/value replacements on a mapping, and the ``if``
-    function which can be used to return corresponding value based on condition
-    evaluation. The complete list of supported functions is::
+The key with value ``2016-10-14`` or ``newton`` indicates that the YAML
+document is a HOT template and it may contain features added and/or removed
+up until the Newton release. This version adds the ``yaql`` function which
+can be used for evaluation of complex expressions, the ``map_replace``
+function that can do key/value replacements on a mapping, and the ``if``
+function which can be used to return corresponding value based on condition
+evaluation. The complete list of supported functions is::
 
-      digest
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      map_merge
-      map_replace
-      repeat
-      resource_facade
-      str_replace
-      str_split
-      yaql
-      if
+  digest
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  map_merge
+  map_replace
+  repeat
+  resource_facade
+  str_replace
+  str_split
+  yaql
+  if
 
-    This version adds ``equals`` condition function which can be used
-    to compare whether two values are equal, the ``not`` condition function
-    which acts as a NOT operator, the ``and`` condition function which acts
-    as an AND operator to evaluate all the specified conditions, the ``or``
-    condition function which acts as an OR operator to evaluate all the
-    specified conditions. The complete list of supported condition
-    functions is::
+This version adds ``equals`` condition function which can be used
+to compare whether two values are equal, the ``not`` condition function
+which acts as a NOT operator, the ``and`` condition function which acts
+as an AND operator to evaluate all the specified conditions, the ``or``
+condition function which acts as an OR operator to evaluate all the
+specified conditions. The complete list of supported condition
+functions is::
 
-      equals
-      get_param
-      not
-      and
-      or
+  equals
+  get_param
+  not
+  and
+  or
 
 2017-02-24 | ocata
 -------------------
-    The key with value ``2017-02-24`` or ``ocata`` indicates that the YAML
-    document is a HOT template and it may contain features added and/or removed
-    up until the Ocata release. This version adds the ``str_replace_strict``
-    function which raises errors for missing params and the ``filter`` function
-    which filters out values from lists. The complete list of supported
-    functions is::
+The key with value ``2017-02-24`` or ``ocata`` indicates that the YAML
+document is a HOT template and it may contain features added and/or removed
+up until the Ocata release. This version adds the ``str_replace_strict``
+function which raises errors for missing params and the ``filter`` function
+which filters out values from lists. The complete list of supported
+functions is::
 
-      digest
-      filter
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      map_merge
-      map_replace
-      repeat
-      resource_facade
-      str_replace
-      str_replace_strict
-      str_split
-      yaql
-      if
+  digest
+  filter
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  map_merge
+  map_replace
+  repeat
+  resource_facade
+  str_replace
+  str_replace_strict
+  str_split
+  yaql
+  if
 
-    The complete list of supported condition functions is::
+The complete list of supported condition functions is::
 
-      equals
-      get_param
-      not
-      and
-      or
+  equals
+  get_param
+  not
+  and
+  or
 
 2017-09-01 | pike
 -----------------
-    The key with value ``2017-09-01`` or ``pike`` indicates that the YAML
-    document is a HOT template and it may contain features added and/or removed
-    up until the Pike release. This version adds the ``make_url`` function for
-    assembling URLs, the ``list_concat`` function for combining multiple
-    lists, the ``list_concat_unique`` function for combining multiple
-    lists without repeating items, the ``string_replace_vstrict`` function
-    which raises errors for missing and empty params, and the ``contains``
-    function which checks whether specific value is in a sequence. The
-    complete list of supported functions is::
+The key with value ``2017-09-01`` or ``pike`` indicates that the YAML
+document is a HOT template and it may contain features added and/or removed
+up until the Pike release. This version adds the ``make_url`` function for
+assembling URLs, the ``list_concat`` function for combining multiple
+lists, the ``list_concat_unique`` function for combining multiple
+lists without repeating items, the ``string_replace_vstrict`` function
+which raises errors for missing and empty params, and the ``contains``
+function which checks whether specific value is in a sequence. The
+complete list of supported functions is::
 
-      digest
-      filter
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      make_url
-      list_concat
-      list_concat_unique
-      contains
-      map_merge
-      map_replace
-      repeat
-      resource_facade
-      str_replace
-      str_replace_strict
-      str_replace_vstrict
-      str_split
-      yaql
-      if
+  digest
+  filter
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  make_url
+  list_concat
+  list_concat_unique
+  contains
+  map_merge
+  map_replace
+  repeat
+  resource_facade
+  str_replace
+  str_replace_strict
+  str_replace_vstrict
+  str_split
+  yaql
+  if
 
-    We support 'yaql' and 'contains' as condition functions in this version.
-    The complete list of supported condition functions is::
+We support 'yaql' and 'contains' as condition functions in this version.
+The complete list of supported condition functions is::
 
-      equals
-      get_param
-      not
-      and
-      or
-      yaql
-      contains
+  equals
+  get_param
+  not
+  and
+  or
+  yaql
+  contains
 
 2018-03-02 | queens
 -------------------
-    The key with value ``2018-03-02`` or ``queens`` indicates that the YAML
-    document is a HOT template and it may contain features added and/or removed
-    up until the Queens release. The complete list of supported functions is::
+The key with value ``2018-03-02`` or ``queens`` indicates that the YAML
+document is a HOT template and it may contain features added and/or removed
+up until the Queens release. The complete list of supported functions is::
 
-      digest
-      filter
-      get_attr
-      get_file
-      get_param
-      get_resource
-      list_join
-      make_url
-      list_concat
-      list_concat_unique
-      contains
-      map_merge
-      map_replace
-      repeat
-      resource_facade
-      str_replace
-      str_replace_strict
-      str_replace_vstrict
-      str_split
-      yaql
-      if
+  digest
+  filter
+  get_attr
+  get_file
+  get_param
+  get_resource
+  list_join
+  make_url
+  list_concat
+  list_concat_unique
+  contains
+  map_merge
+  map_replace
+  repeat
+  resource_facade
+  str_replace
+  str_replace_strict
+  str_replace_vstrict
+  str_split
+  yaql
+  if
 
-    The complete list of supported condition functions is::
+The complete list of supported condition functions is::
 
-      equals
-      get_param
-      not
-      and
-      or
-      yaql
-      contains
+  equals
+  get_param
+  not
+  and
+  or
+  yaql
+  contains
 
 .. _hot_spec_parameter_groups:
 
