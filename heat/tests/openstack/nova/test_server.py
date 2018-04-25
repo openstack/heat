@@ -19,6 +19,7 @@ import mock
 from keystoneauth1 import exceptions as ks_exceptions
 from neutronclient.v2_0 import client as neutronclient
 from novaclient import exceptions as nova_exceptions
+from novaclient.v2 import client as novaclient
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import requests
@@ -4426,6 +4427,10 @@ class ServerInternalPortTest(ServersTest):
         self.port_show = self.patchobject(neutronclient.Client,
                                           'show_port')
 
+        self.server_get = self.patchobject(novaclient.servers.ServerManager,
+                                           'get')
+        self.server_get.return_value = self.fc.servers.list()[1]
+
         def neutron_side_effect(*args):
             if args[0] == 'subnet':
                 return '1234'
@@ -4905,10 +4910,14 @@ class ServerInternalPortTest(ServersTest):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
             'test', tmpl_server_with_network_id)
         server.resource_id = 'test_server'
-        port_ids = [{'id': 1122}, {'id': 3344}]
-        external_port_ids = [{'id': 5566}]
+        port_ids = [{'id': '1122'}, {'id': '3344'}]
+        external_port_ids = [{'id': '5566'}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
+        nova_server = self.fc.servers.list()[1]
+        server.client = mock.Mock()
+        server.client().servers.get.return_value = nova_server
+
         self.patchobject(nova.NovaClientPlugin, 'interface_detach',
                          return_value=True)
         self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
@@ -4918,25 +4927,61 @@ class ServerInternalPortTest(ServersTest):
 
         # check, that the ports were detached from server
         nova.NovaClientPlugin.interface_detach.assert_has_calls([
-            mock.call('test_server', 1122),
-            mock.call('test_server', 3344),
-            mock.call('test_server', 5566)])
+            mock.call('test_server', '1122'),
+            mock.call('test_server', '3344'),
+            mock.call('test_server', '5566')])
 
     def test_prepare_ports_for_replace_not_found(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
             'test', tmpl_server_with_network_id)
         server.resource_id = 'test_server'
-        port_ids = [{'id': 1122}, {'id': 3344}]
-        external_port_ids = [{'id': 5566}]
+        port_ids = [{'id': '1122'}, {'id': '3344'}]
+        external_port_ids = [{'id': '5566'}]
         server._data = {"internal_ports": jsonutils.dumps(port_ids),
                         "external_ports": jsonutils.dumps(external_port_ids)}
         self.patchobject(nova.NovaClientPlugin, 'fetch_server',
                          side_effect=nova_exceptions.NotFound(404))
         check_detach = self.patchobject(nova.NovaClientPlugin,
                                         'check_interface_detach')
+        nova_server = self.fc.servers.list()[1]
+        nova_server.status = 'DELETED'
+        self.server_get.return_value = nova_server
 
         server.prepare_for_replace()
         check_detach.assert_not_called()
+        self.assertEqual(0, self.port_delete.call_count)
+
+    def test_prepare_ports_for_replace_error_state(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', tmpl_server_with_network_id)
+        server.resource_id = 'test_server'
+        port_ids = [{'id': '1122'}, {'id': '3344'}]
+        external_port_ids = [{'id': '5566'}]
+        server._data = {"internal_ports": jsonutils.dumps(port_ids),
+                        "external_ports": jsonutils.dumps(external_port_ids)}
+
+        nova_server = self.fc.servers.list()[1]
+        nova_server.status = 'ERROR'
+        self.server_get.return_value = nova_server
+
+        self.patchobject(nova.NovaClientPlugin, 'interface_detach',
+                         return_value=True)
+        self.patchobject(nova.NovaClientPlugin, 'check_interface_detach',
+                         return_value=True)
+        data_set = self.patchobject(server, 'data_set')
+        data_delete = self.patchobject(server, 'data_delete')
+
+        server.prepare_for_replace()
+
+        # check, that the internal ports were deleted
+        self.assertEqual(2, self.port_delete.call_count)
+        self.assertEqual(('1122',), self.port_delete.call_args_list[0][0])
+        self.assertEqual(('3344',), self.port_delete.call_args_list[1][0])
+        data_set.assert_has_calls((
+            mock.call('internal_ports',
+                      '[{"id": "3344"}]'),
+            mock.call('internal_ports', '[{"id": "1122"}]')))
+        data_delete.assert_called_once_with('internal_ports')
 
     def test_prepare_ports_for_replace_not_created(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
