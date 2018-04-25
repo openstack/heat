@@ -15,6 +15,7 @@
 
 import eventlet
 import mock
+import uuid
 
 from oslo_config import cfg
 
@@ -128,11 +129,11 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
 
-    @mock.patch.object(check_resource.CheckResource, '_try_steal_engine_lock')
+    @mock.patch.object(check_resource.CheckResource,
+                       '_stale_resource_needs_retry')
     @mock.patch.object(stack.Stack, 'time_remaining')
-    @mock.patch.object(resource.Resource, 'state_set')
     def test_is_update_traversal_raise_update_inprogress(
-            self, mock_ss, tr, mock_tsl, mock_cru, mock_crc, mock_pcr,
+            self, tr, mock_tsl, mock_cru, mock_crc, mock_pcr,
             mock_csc):
         mock_cru.side_effect = exception.UpdateInProgress
         self.worker.engine_id = 'some-thing-else'
@@ -145,43 +146,64 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                          self.resource.stack.t.id,
                                          {}, self.worker.engine_id,
                                          mock.ANY, mock.ANY)
-        mock_ss.assert_called_once_with(self.resource.action,
-                                        resource.Resource.FAILED,
-                                        mock.ANY)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
 
+    @mock.patch.object(resource.Resource, 'state_set')
+    def test_stale_resource_retry(
+            self, mock_ss, mock_cru, mock_crc, mock_pcr, mock_csc):
+        current_template_id = self.resource.current_template_id
+        res = self.cr._stale_resource_needs_retry(self.ctx,
+                                                  self.resource,
+                                                  current_template_id)
+        self.assertTrue(res)
+        mock_ss.assert_not_called()
+
+    @mock.patch.object(resource.Resource, 'state_set')
     def test_try_steal_lock_alive(
-            self, mock_cru, mock_crc, mock_pcr, mock_csc):
-        res = self.cr._try_steal_engine_lock(self.ctx,
-                                             self.resource.id)
+            self, mock_ss, mock_cru, mock_crc, mock_pcr, mock_csc):
+        res = self.cr._stale_resource_needs_retry(self.ctx,
+                                                  self.resource,
+                                                  str(uuid.uuid4()))
         self.assertFalse(res)
+        mock_ss.assert_not_called()
 
     @mock.patch.object(check_resource.listener_client, 'EngineListenerClient')
     @mock.patch.object(check_resource.resource_objects.Resource, 'get_obj')
+    @mock.patch.object(resource.Resource, 'state_set')
     def test_try_steal_lock_dead(
-            self, mock_get, mock_elc, mock_cru, mock_crc, mock_pcr,
+            self, mock_ss, mock_get, mock_elc, mock_cru, mock_crc, mock_pcr,
             mock_csc):
         fake_res = mock.Mock()
         fake_res.engine_id = 'some-thing-else'
         mock_get.return_value = fake_res
         mock_elc.return_value.is_alive.return_value = False
-        res = self.cr._try_steal_engine_lock(self.ctx,
-                                             self.resource.id)
+        current_template_id = self.resource.current_template_id
+        res = self.cr._stale_resource_needs_retry(self.ctx,
+                                                  self.resource,
+                                                  current_template_id)
         self.assertTrue(res)
+        mock_ss.assert_called_once_with(self.resource.action,
+                                        resource.Resource.FAILED,
+                                        mock.ANY)
 
     @mock.patch.object(check_resource.listener_client, 'EngineListenerClient')
     @mock.patch.object(check_resource.resource_objects.Resource, 'get_obj')
+    @mock.patch.object(resource.Resource, 'state_set')
     def test_try_steal_lock_not_dead(
-            self, mock_get, mock_elc, mock_cru, mock_crc, mock_pcr,
+            self, mock_ss, mock_get, mock_elc, mock_cru, mock_crc, mock_pcr,
             mock_csc):
         fake_res = mock.Mock()
         fake_res.engine_id = self.worker.engine_id
         mock_get.return_value = fake_res
         mock_elc.return_value.is_alive.return_value = True
-        res = self.cr._try_steal_engine_lock(self.ctx, self.resource.id)
+        current_template_id = self.resource.current_template_id
+        res = self.cr._stale_resource_needs_retry(self.ctx,
+                                                  self.resource,
+                                                  current_template_id)
         self.assertFalse(res)
+        mock_ss.assert_not_called()
 
     @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
     def test_resource_update_failure_sets_stack_state_as_failed(

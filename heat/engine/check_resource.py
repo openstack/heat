@@ -56,16 +56,40 @@ class CheckResource(object):
         self.msg_queue = msg_queue
         self.input_data = input_data
 
-    def _try_steal_engine_lock(self, cnxt, resource_id):
+    def _stale_resource_needs_retry(self, cnxt, rsrc, prev_template_id):
+        """Determine whether a resource needs retrying after failure to lock.
+
+        Return True if we need to retry the check operation because of a
+        failure to acquire the lock. This can be either because the engine
+        holding the lock is no longer working, or because no other engine had
+        locked the resource and the data was just out of date.
+
+        In the former case, the lock will be stolen and the resource status
+        changed to FAILED.
+        """
+        fields = {'current_template_id', 'engine_id'}
         rs_obj = resource_objects.Resource.get_obj(cnxt,
-                                                   resource_id,
-                                                   fields=('engine_id', ))
+                                                   rsrc.id,
+                                                   refresh=True,
+                                                   fields=fields)
         if rs_obj.engine_id not in (None, self.engine_id):
             if not listener_client.EngineListenerClient(
                     rs_obj.engine_id).is_alive(cnxt):
                 # steal the lock.
                 rs_obj.update_and_save({'engine_id': None})
+
+                # set the resource state as failed
+                status_reason = ('Worker went down '
+                                 'during resource %s' % rsrc.action)
+                rsrc.state_set(rsrc.action,
+                               rsrc.FAILED,
+                               six.text_type(status_reason))
                 return True
+        elif (rs_obj.engine_id is None and
+              rs_obj.current_template_id == prev_template_id):
+            LOG.debug('Resource id=%d stale; retrying check')
+            return True
+        LOG.debug('Resource id=%d modified by another traversal')
         return False
 
     def _trigger_rollback(self, stack):
@@ -135,6 +159,7 @@ class CheckResource(object):
 
     def _do_check_resource(self, cnxt, current_traversal, tmpl, resource_data,
                            is_update, rsrc, stack, adopt_stack_data):
+        prev_template_id = rsrc.current_template_id
         try:
             if is_update:
                 try:
@@ -155,14 +180,8 @@ class CheckResource(object):
 
             return True
         except exception.UpdateInProgress:
-            if self._try_steal_engine_lock(cnxt, rsrc.id):
+            if self._stale_resource_needs_retry(cnxt, rsrc, prev_template_id):
                 rpc_data = sync_point.serialize_input_data(self.input_data)
-                # set the resource state as failed
-                status_reason = ('Worker went down '
-                                 'during resource %s' % rsrc.action)
-                rsrc.state_set(rsrc.action,
-                               rsrc.FAILED,
-                               six.text_type(status_reason))
                 self._rpc_client.check_resource(cnxt,
                                                 rsrc.id,
                                                 current_traversal,
