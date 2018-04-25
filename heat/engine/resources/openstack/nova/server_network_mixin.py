@@ -579,7 +579,23 @@ class ServerNetworkMixin(object):
                     port=port['id'], server=prev_server_id)
 
     def prepare_ports_for_replace(self):
-        self.detach_ports(self)
+        # Check that the interface can be detached
+        server = None
+        # TODO(TheJulia): Once Story #2002001 is underway,
+        # we should be able to replace the query to nova and
+        # the check for the failed status with just a check
+        # to see if the resource has failed.
+        with self.client_plugin().ignore_not_found:
+            server = self.client().servers.get(self.resource_id)
+        if server and server.status != 'ERROR':
+            self.detach_ports(self)
+        else:
+            # If we are replacing an ERROR'ed node, we need to delete
+            # internal ports that we have created, otherwise we can
+            # encounter deployment issues with duplicate internal
+            # port data attempting to be created in instances being
+            # deployed.
+            self._delete_internal_ports()
 
     def restore_ports_after_rollback(self, convergence):
         # In case of convergence, during rollback, the previous rsrc is
