@@ -81,9 +81,6 @@
           if [ "{{ branch_override }}" != "default" ] ; then
               export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
           fi
-          if [ "{{ use_identity_v3_only }}" -eq 1 ] ; then
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"ENABLE_IDENTITY_V2=False"
-          fi
           if [ "{{ use_apache  }}" -eq 0 ] ; then
               export DEVSTACK_LOCAL_CONFIG+=$'\n'"HEAT_USE_MOD_WSGI=False"
           fi
