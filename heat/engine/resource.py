@@ -242,7 +242,6 @@ class Resource(status.ResourceStatus):
         self.created_time = stack.created_time
         self.updated_time = stack.updated_time
         self._rpc_client = None
-        self.needed_by = []
         self.requires = set()
         self.replaces = None
         self.replaced_by = None
@@ -291,7 +290,6 @@ class Resource(status.ResourceStatus):
         self._rsrc_prop_data_id = resource.rsrc_prop_data_id
         self.created_time = resource.created_at
         self.updated_time = resource.updated_at
-        self.needed_by = resource.needed_by
         self.requires = set(resource.requires)
         self.replaces = resource.replaces
         self.replaced_by = resource.replaced_by
@@ -392,7 +390,7 @@ class Resource(status.ResourceStatus):
         rs = {'stack_id': self.stack.id,
               'name': self.name,
               'rsrc_prop_data_id': None,
-              'needed_by': self.needed_by,
+              'needed_by': [],
               'requires': sorted(requires, reverse=True),
               'replaces': self.id,
               'action': self.INIT,
@@ -528,15 +526,6 @@ class Resource(status.ResourceStatus):
         while scaling.
         """
         pass
-
-    @classmethod
-    def set_needed_by(cls, db_rsrc, needed_by, expected_engine_id=None):
-        if db_rsrc:
-            db_rsrc.select_and_update(
-                {'needed_by': needed_by},
-                atomic_key=db_rsrc.atomic_key,
-                expected_engine_id=expected_engine_id
-            )
 
     @classmethod
     def set_requires(cls, db_rsrc, requires):
@@ -1887,8 +1876,8 @@ class Resource(status.ResourceStatus):
                 raise exception.StackValidationFailed(message=msg, path=path)
 
     def _update_replacement_data(self, template_id):
-        # Update the replacement resource's needed_by and replaces
-        # fields. Make sure that the replacement belongs to the given
+        # Update the replacement resource's replaces field.
+        # Make sure that the replacement belongs to the given
         # template and there is no engine working on it.
         if self.replaced_by is None:
             return
@@ -1899,19 +1888,16 @@ class Resource(status.ResourceStatus):
                 fields=('current_template_id', 'atomic_key'))
         except exception.NotFound:
             LOG.info("Could not find replacement of resource %(name)s "
-                     "with id %(id)s while updating needed_by.",
+                     "with id %(id)s while updating replaces.",
                      {'name': self.name, 'id': self.replaced_by})
             return
 
         if (db_res.current_template_id == template_id):
-                # Following update failure is ignorable; another
-                # update might have locked/updated the resource.
-                if db_res.select_and_update(
-                        {'needed_by': self.needed_by,
-                         'replaces': None},
-                        atomic_key=db_res.atomic_key,
-                        expected_engine_id=None):
-                    self._incr_atomic_key(self._atomic_key)
+            # Following update failure is ignorable; another
+            # update might have locked/updated the resource.
+            db_res.select_and_update({'replaces': None},
+                                     atomic_key=db_res.atomic_key,
+                                     expected_engine_id=None)
 
     def delete_convergence(self, template_id, engine_id, timeout,
                            progress_callback=None):
@@ -1923,10 +1909,9 @@ class Resource(status.ResourceStatus):
         Also, since this resource is visited as part of clean-up phase,
         the needed_by should be updated. If this resource was
         replaced by more recent resource, then delete this and update
-        the replacement resource's needed_by and replaces fields.
+        the replacement resource's replaces field.
         """
         self._calling_engine_id = engine_id
-        self.needed_by = []
 
         if self.current_template_id != template_id:
             # just delete the resources in INIT state
@@ -2073,7 +2058,7 @@ class Resource(status.ResourceStatus):
               'name': self.name,
               'rsrc_prop_data_id':
                   self._create_or_replace_rsrc_prop_data(),
-              'needed_by': self.needed_by,
+              'needed_by': [],
               'requires': sorted(self.requires, reverse=True),
               'replaces': self.replaces,
               'replaced_by': self.replaced_by,

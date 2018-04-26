@@ -99,20 +99,6 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                                  [[2, True], [3, True]]]),  # D, C
                          sorted(stack_db.current_deps['edges']))
 
-        # check if needed_by is stored properly
-        expected_needed_by = {'A': [3], 'B': [3],
-                              'C': [1, 2],
-                              'D': [], 'E': []}
-        rsrcs_db = resource_objects.Resource.get_all_by_stack(
-            stack_db._context, stack_db.id
-        )
-        self.assertEqual(5, len(rsrcs_db))
-        for rsrc_name, rsrc_obj in rsrcs_db.items():
-            self.assertEqual(sorted(expected_needed_by[rsrc_name]),
-                             sorted(rsrc_obj.needed_by))
-            self.assertEqual(stack_db.raw_template_id,
-                             rsrc_obj.current_template_id)
-
         # check if sync_points were stored
         for entity_id in [5, 4, 3, 2, 1, stack_db.id]:
             sync_point = sync_point_object.SyncPoint.get_by_key(
@@ -226,23 +212,6 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         Leaves are at the bottom
         '''
 
-        # check if needed_by are stored properly
-        # For A & B:
-        # needed_by=C, F
-
-        expected_needed_by = {'A': [3, 8], 'B': [3, 8],
-                              'C': [1, 2],
-                              'D': [], 'E': [],
-                              'F': [6, 7],
-                              'G': [], 'H': []}
-        rsrcs_db = resource_objects.Resource.get_all_by_stack(
-            stack_db._context, stack_db.id
-        )
-        self.assertEqual(8, len(rsrcs_db))
-        for rsrc_name, rsrc_obj in rsrcs_db.items():
-            self.assertEqual(sorted(expected_needed_by[rsrc_name]),
-                             sorted(rsrc_obj.needed_by))
-
         # check if sync_points are created for forward traversal
         # [F, H, G, A, B, Stack]
         for entity_id in [8, 7, 6, 5, 4, stack_db.id]:
@@ -320,17 +289,6 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                                  [[5, False], [3, False]],
                                  [[4, False], [3, False]]]),
                          sorted(stack_db.current_deps['edges']))
-
-        expected_needed_by = {'A': [3], 'B': [3],
-                              'C': [1, 2],
-                              'D': [], 'E': []}
-        rsrcs_db = resource_objects.Resource.get_all_by_stack(
-            stack_db._context, stack_db.id
-        )
-        self.assertEqual(5, len(rsrcs_db))
-        for rsrc_name, rsrc_obj in rsrcs_db.items():
-            self.assertEqual(sorted(expected_needed_by[rsrc_name]),
-                             sorted(rsrc_obj.needed_by))
 
         # check if sync_points are created for cleanup traversal
         # [A, B, C, D, E, Stack]

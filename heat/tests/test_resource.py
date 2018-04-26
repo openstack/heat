@@ -2461,26 +2461,11 @@ class ResourceTest(common.HeatTestCase):
                res.name)
         self.assertEqual(msg, six.text_type(ex))
 
-    def test_delete_convergence_updates_needed_by(self):
-        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
-        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res.current_template_id = 1
-        res.status = res.COMPLETE
-        res.action = res.CREATE
-        res.store()
-        res.destroy = mock.Mock()
-        self._assert_resource_lock(res.id, None, None)
-        scheduler.TaskRunner(res.delete_convergence, 1,
-                             'engine-007', self.dummy_timeout,
-                             self.dummy_event)()
-        self.assertItemsEqual([], res.needed_by)
-
     @mock.patch.object(resource_objects.Resource, 'get_obj')
     def test_update_replacement_data(self, mock_get_obj):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         r = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         r.replaced_by = 4
-        r.needed_by = [4, 5]
         r.store()
         db_res = mock.MagicMock()
         db_res.current_template_id = 'same_tmpl'
@@ -2489,7 +2474,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(mock_get_obj.called)
         self.assertTrue(db_res.select_and_update.called)
         args, kwargs = db_res.select_and_update.call_args
-        self.assertEqual({'replaces': None, 'needed_by': [4, 5]}, args[0])
+        self.assertEqual({'replaces': None}, args[0])
         self.assertIsNone(kwargs['expected_engine_id'])
 
     @mock.patch.object(resource_objects.Resource, 'get_obj')
