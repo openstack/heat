@@ -295,10 +295,11 @@ class StackResourcesServiceTest(common.HeatTestCase):
 
     @mock.patch.object(stack.Stack, 'load')
     def test_stack_resources_list_deleted_stack(self, mock_load):
-        stk = tools.setup_stack('resource_list_deleted_stack', self.ctx)
+        stk = tools.setup_stack_with_mock(self, 'resource_list_deleted_stack',
+                                          self.ctx)
         stack_id = stk.identifier()
         mock_load.return_value = stk
-        tools.clean_up_stack(stk)
+        tools.clean_up_stack(self, stk)
         resources = self.eng.list_stack_resources(self.ctx, stack_id)
         self.assertEqual(0, len(resources))
 
