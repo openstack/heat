@@ -340,6 +340,12 @@ class Resource(
             self._context,
             resource_db)
 
+    def convert_to_convergence(self, current_template_id, requires):
+        return self.update_and_save({
+            'current_template_id': current_template_id,
+            'requires': sorted(requires, reverse=True),
+        })
+
     @staticmethod
     def encrypt_properties_data(data):
         if cfg.CONF.encrypt_parameters_and_properties and data:

@@ -1498,14 +1498,6 @@ class Stack(collections.Mapping):
                 rsrcs[existing_rsrc_db.name] = existing_rsrc_db
         return rsrcs
 
-    def set_resource_deps(self):
-        curr_name_translated_dep = self.dependencies.translate(lambda res:
-                                                               res.id)
-        ext_rsrcs_db = self.db_active_resources_get()
-        for r in self.dependencies:
-            r.requires = list(curr_name_translated_dep.requires(r.id))
-            resource.Resource.set_requires(ext_rsrcs_db[r.id], r.requires)
-
     def _compute_convg_dependencies(self, existing_resources,
                                     current_template_deps, current_resources):
         def make_graph_key(rsrc):
@@ -2238,21 +2230,24 @@ class Stack(collections.Mapping):
         return False
 
     def migrate_to_convergence(self):
-        values = {'current_template_id': self.t.id}
         db_rsrcs = self.db_active_resources_get()
+        res_id_dep = self.dependencies.translate(lambda res: res.id)
+        current_template_id = self.t.id
         if db_rsrcs is not None:
-            for res in db_rsrcs.values():
-                # delete db resources not in current_template_id
-                try:
-                    self.defn.resource_definition(res.name)
-                except KeyError:
+            for db_res in db_rsrcs.values():
+                requires = set(res_id_dep.requires(db_res.id))
+                r = self.resources.get(db_res.name)
+                if r is None:
+                    # delete db resources not in current_template_id
                     LOG.warning("Resource %(res)s not found in template "
                                 "for stack %(st)s, deleting from db.",
-                                {'res': res.name, 'st': self.id})
-                    resource_objects.Resource.delete(self.context, res.id)
+                                {'res': db_res.name, 'st': self.id})
+                    resource_objects.Resource.delete(self.context, db_res.id)
                 else:
-                    res.update_and_save(values=values)
-        self.set_resource_deps()
+                    r.requires = requires
+                    db_res.convert_to_convergence(current_template_id,
+                                                  requires)
+
         self.current_traversal = uuidutils.generate_uuid()
         self.convergence = True
         prev_raw_template_id = self.prev_raw_template_id

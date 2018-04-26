@@ -531,13 +531,6 @@ class Resource(status.ResourceStatus):
         """
         pass
 
-    @classmethod
-    def set_requires(cls, db_rsrc, requires):
-        if db_rsrc:
-            db_rsrc.update_and_save(
-                {'requires': requires}
-            )
-
     def _break_if_required(self, action, hook):
         """Block the resource until the hook is cleared if there is one."""
         if self.stack.env.registry.matches_hook(self.name, hook):
