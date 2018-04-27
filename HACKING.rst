@@ -2,7 +2,7 @@ Heat style commandments
 =======================
 
 - Step 1: Read the OpenStack style commandments
-  http://docs.openstack.org/developer/hacking/
+  https://docs.openstack.org/hacking/
 - Step 2: Read on
 
 Heat specific commandments
