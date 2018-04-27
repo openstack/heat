@@ -1,3 +1,6 @@
 # The top-level docs project will redirect URLs from the old /developer docs
 # to their equivalent pages on the new docs.openstack.org only if this file
 # exists.
+
+redirectmatch 301 ^/heat/([^/]+)/(architecture|pluginguide|schedulerhints|gmr|supportstatus)\.html$ /heat/$1/developing_guides/$2.html
+redirectmatch 301 ^/heat/([^/]+)/(scale_deployment)\.html$ /heat/$1/operating_guides/$2.html

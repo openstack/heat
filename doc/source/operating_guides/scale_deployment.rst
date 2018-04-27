@@ -33,9 +33,8 @@ This guide, using a devstack installation of OpenStack, assumes that:
 
     1. You have configured devstack from `Single Machine Installation Guide
        <http://devstack.org/guides/single-machine.html>`_;
-    2. You have set up heat on devstack, as defined at `heat and DevStack
-       <http://docs.openstack.org/developer/heat/getting_started/
-       on_devstack.html>`_;
+    2. You have set up heat on devstack, as defined at :doc:`heat and DevStack
+       <../getting_started/on_devstack>`;
     3. You have installed `HAProxy <http://haproxy.1wt.eu>`_ on the devstack
        server.
 
@@ -48,11 +47,10 @@ used and the target scaled out architecture.
 Basic Architecture
 ------------------
 
-The heat architecture is as defined at `heat architecture
-<http://docs.openstack.org/developer/heat/architecture.html>`_ and shown in the
-diagram below, where we have a CLI that sends HTTP requests to the REST and CFN
-APIs, which in turn make calls using AMQP to the heat-engine.
-::
+The heat architecture is as defined at :doc:`heat architecture
+<../developing_guides/architecture>` and shown in the diagram below,
+where we have a CLI that sends HTTP requests to the REST and CFN APIs, which in
+turn make calls using AMQP to the heat-engine::
 
                    |- [REST API] -|
  [CLI] -- <HTTP> --                -- <AMQP> -- [ENGINE]
