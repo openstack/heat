@@ -15,8 +15,6 @@ Installing OpenStack on other distributions
 ===========================================
 
 - There is a `Debian packaging team for OpenStack`_.
-- There are instructions for `installing OpenStack on Ubuntu`_.
 - Various other distributions may have packaging teams or getting started guides available.
 
 .. _Debian packaging team for OpenStack: http://wiki.openstack.org/Packaging/Debian
-.. _installing OpenStack on Ubuntu: http://docs.openstack.org/bexar/openstack-compute/admin/content/ch03s02.html
