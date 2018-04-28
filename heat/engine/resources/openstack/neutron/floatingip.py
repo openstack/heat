@@ -203,7 +203,12 @@ class FloatingIP(neutron.NeutronResource):
             if not resource.has_interface('OS::Neutron::Port'):
                 return False
 
-            fixed_ips = resource.properties.get(port.Port.FIXED_IPS)
+            try:
+                fixed_ips = resource.properties.get(port.Port.FIXED_IPS)
+            except (ValueError, TypeError):
+                # Properties errors will be caught later in validation, where
+                # we can report them in their proper context.
+                return False
             if not fixed_ips:
                 # During create we have only unresolved value for
                 # functions, so can not use None value for building
@@ -214,15 +219,24 @@ class FloatingIP(neutron.NeutronResource):
                 if subnet is None:
                     return True
 
-                p_net = (resource.properties.get(port.Port.NETWORK) or
-                         resource.properties.get(port.Port.NETWORK_ID))
+                try:
+                    p_net = (resource.properties.get(port.Port.NETWORK) or
+                             resource.properties.get(port.Port.NETWORK_ID))
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    return False
                 if p_net:
                     network = self.client().show_network(p_net)['network']
                     return subnet in network['subnets']
             else:
-                for fixed_ip in resource.properties.get(
-                        port.Port.FIXED_IPS):
-
+                try:
+                    fixed_ips = resource.properties.get(port.Port.FIXED_IPS)
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    return False
+                for fixed_ip in fixed_ips:
                     port_subnet = (fixed_ip.get(port.Port.FIXED_IP_SUBNET) or
                                    fixed_ip.get(port.Port.FIXED_IP_SUBNET_ID))
                     if subnet == port_subnet:
@@ -244,10 +258,16 @@ class FloatingIP(neutron.NeutronResource):
             # depend on any RouterGateway in this template with the same
             # network_id as this floating_network_id
             if resource.has_interface('OS::Neutron::RouterGateway'):
-                gateway_network = resource.properties.get(
-                    router.RouterGateway.NETWORK) or resource.properties.get(
-                        router.RouterGateway.NETWORK_ID)
-                floating_network = self.properties[self.FLOATING_NETWORK]
+                try:
+                    gateway_network = (
+                        resource.properties.get(router.RouterGateway.NETWORK)
+                        or resource.properties.get(
+                            router.RouterGateway.NETWORK_ID))
+                    floating_network = self.properties[self.FLOATING_NETWORK]
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 if gateway_network == floating_network:
                     deps += (self, resource)
 
@@ -260,12 +280,17 @@ class FloatingIP(neutron.NeutronResource):
             # this template with the same network_id as this
             # floating_network_id
             elif resource.has_interface('OS::Neutron::Router'):
-                gateway = resource.properties.get(
-                    router.Router.EXTERNAL_GATEWAY)
+                try:
+                    gateway = resource.properties.get(
+                        router.Router.EXTERNAL_GATEWAY)
+                    floating_network = self.properties[self.FLOATING_NETWORK]
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 if gateway:
                     gateway_network = gateway.get(
                         router.Router.EXTERNAL_GATEWAY_NETWORK)
-                    floating_network = self.properties[self.FLOATING_NETWORK]
                     if gateway_network == floating_network:
                         deps += (self, resource)
 

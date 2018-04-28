@@ -1160,12 +1160,22 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         # It is not known which subnet a server might be assigned
         # to so all subnets in a network should be created before
         # the servers in that network.
-        nets = self.properties[self.NETWORKS]
+        try:
+            nets = self.properties[self.NETWORKS]
+        except (ValueError, TypeError):
+            # Properties errors will be caught later in validation,
+            # where we can report them in their proper context.
+            return
         if not nets:
             return
         for res in six.itervalues(self.stack):
             if res.has_interface('OS::Neutron::Subnet'):
-                subnet_net = res.properties.get(subnet.Subnet.NETWORK)
+                try:
+                    subnet_net = res.properties.get(subnet.Subnet.NETWORK)
+                except (ValueError, TypeError):
+                    # Properties errors will be caught later in validation,
+                    # where we can report them in their proper context.
+                    continue
                 # Be wary of the case where we do not know a subnet's
                 # network. If that's the case, be safe and add it as a
                 # dependency.
