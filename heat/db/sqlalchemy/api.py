@@ -1318,6 +1318,8 @@ def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
             break
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def _purge_stacks(stack_infos, engine, meta):
     """Purge some stacks and their releated events, raw_templates, etc.
 
