@@ -514,7 +514,11 @@ class Stack(collections.Mapping):
             try:
                 res.add_dependencies(deps)
             except Exception as exc:
-                if not ignore_errors:
+                # Always ignore ValueError/TypeError, as they're likely to
+                # have come from trying to read invalid property values that
+                # haven't been validated yet.
+                if not (ignore_errors or
+                        isinstance(exc, (ValueError, TypeError))):
                     raise
                 else:
                     LOG.warning('Ignoring error adding implicit '
