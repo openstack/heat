@@ -87,9 +87,9 @@ class CheckResource(object):
                 return True
         elif (rs_obj.engine_id is None and
               rs_obj.current_template_id == prev_template_id):
-            LOG.debug('Resource id=%d stale; retrying check')
+            LOG.debug('Resource id=%d stale; retrying check', rsrc.id)
             return True
-        LOG.debug('Resource id=%d modified by another traversal')
+        LOG.debug('Resource id=%d modified by another traversal', rsrc.id)
         return False
 
     def _trigger_rollback(self, stack):
