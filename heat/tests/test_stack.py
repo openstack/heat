@@ -21,7 +21,6 @@ import time
 import eventlet
 import fixtures
 import mock
-import mox
 from oslo_config import cfg
 import six
 
@@ -456,36 +455,33 @@ class StackTest(common.HeatTestCase):
         stk = stack_object.Stack.get_by_id(self.ctx, self.stack.id)
 
         t = template.Template.load(self.ctx, stk.raw_template_id)
-        self.m.StubOutWithMock(template.Template, 'load')
-        template.Template.load(
-            self.ctx, stk.raw_template_id, stk.raw_template
-        ).AndReturn(t)
+        self.patchobject(template.Template, 'load', return_value=t)
 
-        self.m.StubOutWithMock(stack.Stack, '__init__')
-        stack.Stack.__init__(self.ctx, stk.name, t, stack_id=stk.id,
-                             action=stk.action, status=stk.status,
-                             status_reason=stk.status_reason,
-                             timeout_mins=stk.timeout,
-                             disable_rollback=stk.disable_rollback,
-                             parent_resource='parent', owner_id=None,
-                             stack_user_project_id=None,
-                             created_time=mox.IgnoreArg(),
-                             updated_time=None,
-                             user_creds_id=stk.user_creds_id,
-                             tenant_id='test_tenant_id',
-                             use_stored_context=False,
-                             username=mox.IgnoreArg(),
-                             convergence=False,
-                             current_traversal=self.stack.current_traversal,
-                             prev_raw_template_id=None,
-                             current_deps=None, cache_data=None,
-                             nested_depth=0,
-                             deleted_time=None)
+        self.patchobject(stack.Stack, '__init__', return_value=None)
 
-        self.m.ReplayAll()
         stack.Stack.load(self.ctx, stack_id=self.stack.id)
-
-        self.m.VerifyAll()
+        stack.Stack.__init__.assert_called_once_with(
+            self.ctx, stk.name, t, stack_id=stk.id,
+            action=stk.action, status=stk.status,
+            status_reason=stk.status_reason,
+            timeout_mins=stk.timeout,
+            disable_rollback=stk.disable_rollback,
+            parent_resource='parent', owner_id=None,
+            stack_user_project_id=None,
+            created_time=mock.ANY,
+            updated_time=None,
+            user_creds_id=stk.user_creds_id,
+            tenant_id='test_tenant_id',
+            use_stored_context=False,
+            username=mock.ANY,
+            convergence=False,
+            current_traversal=self.stack.current_traversal,
+            prev_raw_template_id=None,
+            current_deps=None, cache_data=None,
+            nested_depth=0,
+            deleted_time=None)
+        template.Template.load.assert_called_once_with(
+            self.ctx, stk.raw_template_id, stk.raw_template)
 
     def test_identifier(self):
         self.stack = stack.Stack(self.ctx, 'identifier_test', self.tmpl)
@@ -539,7 +535,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.parameters['AWS::StackId'])
         self.assertEqual(self.stack.parameters['AWS::StackId'],
                          identifier.arn())
-        self.m.VerifyAll()
 
     def test_set_param_id_update(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -758,7 +753,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
     def test_suspend_resume(self):
-        self.m.ReplayAll()
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
         self.stack = stack.Stack(self.ctx, 'suspend_test',
@@ -782,8 +776,6 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
         self.assertNotEqual(stack_suspend_time, self.stack.updated_time)
 
-        self.m.VerifyAll()
-
     def test_suspend_stack_suspended_ok(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
@@ -799,13 +791,12 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
         # unexpected to call Resource.suspend
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'suspend')
-        self.m.ReplayAll()
+        self.patchobject(generic_rsrc.GenericResource, 'suspend')
 
         self.stack.suspend()
         self.assertEqual((self.stack.SUSPEND, self.stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+        generic_rsrc.GenericResource.suspend.assert_not_called()
 
     def test_resume_stack_resumeed_ok(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -826,21 +817,19 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
         # unexpected to call Resource.resume
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'resume')
-        self.m.ReplayAll()
+        self.patchobject(generic_rsrc.GenericResource, 'resume')
 
         self.stack.resume()
         self.assertEqual((self.stack.RESUME, self.stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
+        generic_rsrc.GenericResource.resume.assert_not_called()
 
     def test_suspend_fail(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
         exc = Exception('foo')
-        generic_rsrc.GenericResource.handle_suspend().AndRaise(exc)
-        self.m.ReplayAll()
+        self.patchobject(generic_rsrc.GenericResource, 'handle_suspend',
+                         side_effect=exc)
 
         self.stack = stack.Stack(self.ctx, 'suspend_test_fail',
                                  template.Template(tmpl))
@@ -857,14 +846,13 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('Resource SUSPEND failed: Exception: '
                          'resources.AResource: foo',
                          self.stack.status_reason)
-        self.m.VerifyAll()
+        generic_rsrc.GenericResource.handle_suspend.assert_called_once_with()
 
     def test_resume_fail(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
-        generic_rsrc.GenericResource.handle_resume().AndRaise(Exception('foo'))
-        self.m.ReplayAll()
+        self.patchobject(generic_rsrc.GenericResource, 'handle_resume',
+                         side_effect=Exception('foo'))
 
         self.stack = stack.Stack(self.ctx, 'resume_test_fail',
                                  template.Template(tmpl))
@@ -886,15 +874,13 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('Resource RESUME failed: Exception: '
                          'resources.AResource: foo',
                          self.stack.status_reason)
-        self.m.VerifyAll()
 
     def test_suspend_timeout(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_suspend')
         exc = scheduler.Timeout('foo', 0)
-        generic_rsrc.GenericResource.handle_suspend().AndRaise(exc)
-        self.m.ReplayAll()
+        self.patchobject(generic_rsrc.GenericResource, 'handle_suspend',
+                         side_effect=exc)
 
         self.stack = stack.Stack(self.ctx, 'suspend_test_fail_timeout',
                                  template.Template(tmpl))
@@ -909,15 +895,14 @@ class StackTest(common.HeatTestCase):
         self.assertEqual((self.stack.SUSPEND, self.stack.FAILED),
                          self.stack.state)
         self.assertEqual('Suspend timed out', self.stack.status_reason)
-        self.m.VerifyAll()
+        generic_rsrc.GenericResource.handle_suspend.assert_called_once_with()
 
     def test_resume_timeout(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'AResource': {'Type': 'GenericResourceType'}}}
-        self.m.StubOutWithMock(generic_rsrc.GenericResource, 'handle_resume')
         exc = scheduler.Timeout('foo', 0)
-        generic_rsrc.GenericResource.handle_resume().AndRaise(exc)
-        self.m.ReplayAll()
+        self.patchobject(generic_rsrc.GenericResource, 'handle_resume',
+                         side_effect=exc)
 
         self.stack = stack.Stack(self.ctx, 'resume_test_fail_timeout',
                                  template.Template(tmpl))
@@ -938,7 +923,7 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
 
         self.assertEqual('Resume timed out', self.stack.status_reason)
-        self.m.VerifyAll()
+        generic_rsrc.GenericResource.handle_resume.assert_called_once_with()
 
     def _get_stack_to_check(self, name):
         tpl = {"HeatTemplateFormatVersion": "2012-12-12",
@@ -1192,20 +1177,15 @@ class StackTest(common.HeatTestCase):
                                  template.Template(tmpl),
                                  disable_rollback=True)
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithFnGetRefIdType,
-                               'handle_create')
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithFnGetRefIdType,
-                               'handle_delete')
+        class FakeException(Exception):
+            # to avoid pep8 check
+            pass
 
-        # create
-        generic_rsrc.ResourceWithFnGetRefIdType.handle_create().AndRaise(
-            Exception)
-
-        # update
-        generic_rsrc.ResourceWithFnGetRefIdType.handle_delete()
-        generic_rsrc.ResourceWithFnGetRefIdType.handle_create()
-
-        self.m.ReplayAll()
+        mock_create = self.patchobject(generic_rsrc.ResourceWithFnGetRefIdType,
+                                       'handle_create',
+                                       side_effect=[FakeException, None])
+        mock_delete = self.patchobject(generic_rsrc.ResourceWithFnGetRefIdType,
+                                       'handle_delete', return_value=None)
 
         self.stack.store()
         self.stack.create()
@@ -1226,8 +1206,8 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(
             'ID-AResource',
             self.stack['BResource']._stored_properties_data['Foo'])
-
-        self.m.VerifyAll()
+        mock_delete.assert_called_once_with()
+        self.assertEqual(2, mock_create.call_count)
 
     def test_create_bad_attribute(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1241,14 +1221,10 @@ class StackTest(common.HeatTestCase):
                                  template.Template(tmpl),
                                  disable_rollback=True)
 
-        self.m.StubOutWithMock(generic_rsrc.ResourceWithProps,
-                               '_update_stored_properties')
-
-        generic_rsrc.ResourceWithProps._update_stored_properties().AndRaise(
-            exception.InvalidTemplateAttribute(resource='a', key='foo'))
-
-        self.m.ReplayAll()
-
+        self.patchobject(generic_rsrc.ResourceWithProps,
+                         '_update_stored_properties',
+                         side_effect=exception.InvalidTemplateAttribute(
+                             resource='a', key='foo'))
         self.stack.store()
         self.stack.create()
 
@@ -1256,32 +1232,26 @@ class StackTest(common.HeatTestCase):
                          self.stack.state)
         self.assertEqual('Resource CREATE failed: The Referenced Attribute '
                          '(a foo) is incorrect.', self.stack.status_reason)
-        self.m.VerifyAll()
 
     def test_stack_create_timeout(self):
-        self.m.StubOutWithMock(scheduler.DependencyTaskGroup, '__call__')
-        self.m.StubOutWithMock(timeutils, 'wallclock')
-
-        stk = stack.Stack(self.ctx, 's', self.tmpl)
-
         def dummy_task():
             while True:
                 yield
 
-        start_time = time.time()
-        timeutils.wallclock().AndReturn(start_time)
-        timeutils.wallclock().AndReturn(start_time + 1)
-        scheduler.DependencyTaskGroup.__call__().AndReturn(dummy_task())
-        timeutils.wallclock().AndReturn(start_time + stk.timeout_secs() + 1)
+        self.patchobject(scheduler.DependencyTaskGroup, '__call__',
+                         return_value=dummy_task())
 
-        self.m.ReplayAll()
+        stk = stack.Stack(self.ctx, 's', self.tmpl)
+        start_time = time.time()
+        self.patchobject(timeutils, 'wallclock',
+                         side_effect=[start_time, start_time + 1,
+                                      start_time + stk.timeout_secs() + 1])
 
         stk.create()
 
         self.assertEqual((stack.Stack.CREATE, stack.Stack.FAILED), stk.state)
         self.assertEqual('Create timed out', stk.status_reason)
-
-        self.m.VerifyAll()
+        self.assertEqual(3, timeutils.wallclock.call_count)
 
     def test_stack_name_valid(self):
         stk = stack.Stack(self.ctx, 's', self.tmpl)
@@ -1509,12 +1479,9 @@ class StackTest(common.HeatTestCase):
         """A user_creds entry is created on first stack store."""
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
 
-        self.m.StubOutWithMock(keystone.KeystoneClientPlugin, '_create')
-        keystone.KeystoneClientPlugin._create().AndReturn(
-            fake_ks.FakeKeystoneClient(user_id='auser123'))
-        keystone.KeystoneClientPlugin._create().AndReturn(
-            fake_ks.FakeKeystoneClient(user_id='auser123'))
-        self.m.ReplayAll()
+        self.patchobject(keystone.KeystoneClientPlugin, '_create',
+                         return_value=fake_ks.FakeKeystoneClient(
+                             user_id='auser123'))
 
         self.stack = stack.Stack(self.ctx, 'creds_stack', self.tmpl)
         self.stack.store()
@@ -1548,6 +1515,7 @@ class StackTest(common.HeatTestCase):
         # Store again, ID should not change
         self.stack.store()
         self.assertEqual(user_creds_id, db_stack.user_creds_id)
+        keystone.KeystoneClientPlugin._create.assert_called_with()
 
     def test_backup_copies_user_creds_id(self):
         ctx_init = utils.dummy_context(user='my_user',
@@ -1685,7 +1653,6 @@ class StackTest(common.HeatTestCase):
 
     def test_stack_user_project_id_constructor(self):
         self.stub_keystoneclient()
-        self.m.ReplayAll()
 
         self.stack = stack.Stack(self.ctx, 'user_project_init',
                                  self.tmpl,
@@ -1698,11 +1665,9 @@ class StackTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
 
     def test_stack_user_project_id_setter(self):
         self.stub_keystoneclient()
-        self.m.ReplayAll()
 
         self.stack = stack.Stack(self.ctx, 'user_project_init', self.tmpl)
         self.stack.store()
@@ -1715,11 +1680,9 @@ class StackTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
 
     def test_stack_user_project_id_create(self):
         self.stub_keystoneclient()
-        self.m.ReplayAll()
 
         self.stack = stack.Stack(self.ctx, 'user_project_init', self.tmpl)
         self.stack.store()
@@ -1733,7 +1696,6 @@ class StackTest(common.HeatTestCase):
         self.stack.delete()
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.m.VerifyAll()
 
     def test_preview_resources_returns_list_of_resource_previews(self):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
@@ -1827,16 +1789,13 @@ class StackTest(common.HeatTestCase):
         # Mock objects so the query for flavors in server.FlavorConstraint
         # works for stack creation
         fc = fakes.FakeClient()
-        self.m.StubOutWithMock(nova.NovaClientPlugin, '_create')
-        nova.NovaClientPlugin._create().AndReturn(fc)
+        self.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
 
-        fc.flavors = self.m.CreateMockAnything()
+        fc.flavors = mock.Mock()
         flavor = collections.namedtuple("Flavor", ["id", "name"])
         flavor.id = "1234"
         flavor.name = "dummy"
-        fc.flavors.get('1234').AndReturn(flavor)
-
-        self.m.ReplayAll()
+        fc.flavors.get.return_value = flavor
 
         test_env = environment.Environment({'flavor': '1234'})
         self.stack = stack.Stack(self.ctx, 'stack_with_custom_constraint',
@@ -1847,18 +1806,12 @@ class StackTest(common.HeatTestCase):
         self.stack.create()
         stack_id = self.stack.id
 
-        self.m.VerifyAll()
-
         self.assertEqual((stack.Stack.CREATE, stack.Stack.COMPLETE),
                          self.stack.state)
 
         loaded_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id)
         self.assertEqual(stack_id, loaded_stack.parameters['OS::stack_id'])
-
-        # verify that fc.flavors.list() has not been called, i.e. verify that
-        # parameter value validation did not happen and FlavorConstraint was
-        # not invoked
-        self.m.VerifyAll()
+        fc.flavors.get.assert_called_once_with('1234')
 
     def test_snapshot_delete(self):
         snapshots = []
@@ -2844,11 +2797,8 @@ class StackTest(common.HeatTestCase):
                                  tmpl,
                                  disable_rollback=disable_rollback)
         self.stack.store()
-        self.m.ReplayAll()
 
         rb = self.stack._update_exception_handler(exc=exc, action=action)
-
-        self.m.VerifyAll()
 
         return rb
 
