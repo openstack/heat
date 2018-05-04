@@ -2207,14 +2207,30 @@ class EngineService(service.ServiceBase):
         parent_stack = parser.Stack.load(ctxt,
                                          stack_id=stack_id,
                                          show_deleted=False)
+
+        if parent_stack.owner_id is not None:
+            msg = _("Migration of nested stack %s") % stack_id
+            raise exception.NotSupported(feature=msg)
+
+        if parent_stack.status != parent_stack.COMPLETE:
+            raise exception.ActionNotComplete(stack_name=parent_stack.name,
+                                              action=parent_stack.action)
+
         if parent_stack.convergence:
             LOG.info("Convergence was already enabled for stack %s",
                      stack_id)
             return
+
         db_stacks = stack_object.Stack.get_all_by_root_owner_id(
             ctxt, parent_stack.id)
         stacks = [parser.Stack.load(ctxt, stack_id=st.id,
                                     stack=st) for st in db_stacks]
+
+        # check if any of the nested stacks is in IN_PROGRESS/FAILED state
+        for stack in stacks:
+            if stack.status != stack.COMPLETE:
+                raise exception.ActionNotComplete(stack_name=stack.name,
+                                                  action=stack.action)
         stacks.append(parent_stack)
         locks = []
         try:

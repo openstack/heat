@@ -605,7 +605,8 @@ def stack_get_status(context, stack_id):
 
 def stack_get_all_by_owner_id(context, owner_id):
     results = soft_delete_aware_query(
-        context, models.Stack).filter_by(owner_id=owner_id).all()
+        context, models.Stack).filter_by(owner_id=owner_id,
+                                         backup=False).all()
     return results
 
 

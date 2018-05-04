@@ -1383,6 +1383,7 @@ def create_stack(ctx, template, user_creds, **kwargs):
         'parameters': {},
         'user_creds_id': user_creds['id'],
         'owner_id': None,
+        'backup': False,
         'timeout': '60',
         'disable_rollback': 0,
         'current_traversal': 'dummy-uuid',
