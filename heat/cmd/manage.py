@@ -122,10 +122,8 @@ def do_migrate():
     except exception.NotFound:
         raise Exception(_("Stack with id %s can not be found.")
                         % CONF.command.stack_id)
-    except exception.ActionInProgress:
-        raise Exception(_("The stack or some of its nested stacks are "
-                          "in progress. Note, that all the stacks should be "
-                          "in COMPLETE state in order to be migrated."))
+    except (exception.NotSupported, exception.ActionNotComplete) as ex:
+        raise Exception(ex.message)
 
 
 def purge_deleted():
