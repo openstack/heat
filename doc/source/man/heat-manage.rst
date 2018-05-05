@@ -73,5 +73,5 @@ connection and logging.
 BUGS
 ====
 
-* Heat issues are tracked in Launchpad so you can view or report bugs here
-  `OpenStack Heat Bugs <https://bugs.launchpad.net/heat>`__
+Heat bugs are managed through StoryBoard
+`OpenStack Heat Stories <https://storyboard.openstack.org/#!/project/989>`__

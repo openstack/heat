@@ -1,0 +1,10 @@
+---
+prelude: |
+    Heat current bug/blueprint reports have migrated from Launchpad to
+    `storyboard`_. If you would like to create a new story (a bug or a
+    blueprint), please file it under the `Heat project`_. This change
+    applies to `all heat projects/repos`_.
+
+    .. _storyboard: https://storyboard.openstack.org/#!/project_group/82
+    .. _Heat project: https://storyboard.openstack.org/#!/project/989
+    .. _all heat projects/repos: https://storyboard.openstack.org/#!/project_group/82
