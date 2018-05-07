@@ -24,9 +24,9 @@ LOG = logging.getLogger(__name__)
 class TestResource(resource.Resource):
 
     PROPERTIES = (
-        A, C, CA, rA, rB
+        A, B, C, CA, rA, rB
     ) = (
-        'a', 'c', 'ca', '!a', '!b'
+        'a', 'b', 'c', 'ca', '!a', '!b'
     )
 
     ATTRIBUTES = (
@@ -40,6 +40,12 @@ class TestResource(resource.Resource):
             properties.Schema.STRING,
             _('Fake property a.'),
             default='a',
+            update_allowed=True
+        ),
+        B: properties.Schema(
+            properties.Schema.STRING,
+            _('Fake property b.'),
+            default='b',
             update_allowed=True
         ),
         C: properties.Schema(
