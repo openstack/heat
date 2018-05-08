@@ -27,7 +27,7 @@ from heat.tests import utils
 
 
 neutron_template = '''
-heat_template_version: 2015-04-30
+heat_template_version: rocky
 description: Template to test network Neutron resource
 resources:
   network:
@@ -288,7 +288,7 @@ class NeutronNetTest(common.HeatTestCase):
 
     def test_net_get_live_state(self):
         tmpl = """
-        heat_template_version: 2015-10-15
+        heat_template_version: rocky
         resources:
           net:
             type: OS::Neutron::Net

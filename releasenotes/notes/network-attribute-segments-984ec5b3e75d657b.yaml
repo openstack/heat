@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Adds a new attribute ``segments`` to the ``OS::Neutron::Net`` resource.
+    The attribute resolves the network segments on the network.  The attribute
+    is useful when migrating from a non routed provider network to a routed
+    provider network. The example below show how to migrate an existing subnet
+    to one that is associated with the segment::
+
+      TestSubnet:
+        type: OS::Neutron::Subnet
+        name: the_subnet
+        properties:
+          segment: {get_attr: [the_network, segments, 0, id]}

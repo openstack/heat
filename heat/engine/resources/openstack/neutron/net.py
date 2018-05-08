@@ -42,10 +42,12 @@ class Net(neutron.NeutronResource):
 
     ATTRIBUTES = (
         STATUS, NAME_ATTR, SUBNETS, ADMIN_STATE_UP_ATTR, TENANT_ID_ATTR,
-        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR, QOS_POLICY_ATTR, L2_ADJACENCY
+        PORT_SECURITY_ENABLED_ATTR, MTU_ATTR, QOS_POLICY_ATTR, L2_ADJACENCY,
+        SEGMENTS,
     ) = (
         "status", "name", "subnets", "admin_state_up", "tenant_id",
-        "port_security_enabled", "mtu", 'qos_policy_id', 'l2_adjacency'
+        "port_security_enabled", "mtu", 'qos_policy_id', 'l2_adjacency',
+        'segments',
     )
 
     properties_schema = {
@@ -167,6 +169,11 @@ class Net(neutron.NeutronResource):
             type=attributes.Schema.BOOLEAN,
             support_status=support.SupportStatus(version='9.0.0'),
         ),
+        SEGMENTS: attributes.Schema(
+            _("The segments of this network."),
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='11.0.0'),
+        ),
     }
 
     def translation_rules(self, properties):
@@ -272,6 +279,15 @@ class Net(neutron.NeutronResource):
             # Just don't add dhcp_clients if we can't get values.
             pass
         return result
+
+    def _resolve_attribute(self, name):
+        if self.resource_id is None:
+            return
+        if name == self.SEGMENTS:
+            return [segment.to_dict() for segment in list(self.client(
+                'openstack').network.segments(network_id=self.resource_id))]
+        attributes = self._show_resource()
+        return attributes[name]
 
 
 def resource_mapping():
