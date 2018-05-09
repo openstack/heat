@@ -668,6 +668,14 @@ class ResourceGroup(stack_resource.StackResource):
         self._add_output_defns_to_template(tmpl, [k for k, d in definitions])
         return tmpl
 
+    def child_template_files(self, child_env):
+        is_rolling_update = (self.action == self.UPDATE
+                             and self.update_policy[self.ROLLING_UPDATE])
+        return grouputils.get_child_template_files(self.context,
+                                                   self.stack,
+                                                   is_rolling_update,
+                                                   self.old_template_id)
+
     def _assemble_for_rolling_update(self, total_capacity, max_updates,
                                      include_all=False,
                                      template_version=('heat_template_version',
