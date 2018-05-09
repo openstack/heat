@@ -27,6 +27,7 @@
       - ^heat/locale/.*$
       - ^heat/tests/.*$
       - ^releasenotes/.*$
+    pre-run: playbooks/get_amphora_tarball.yaml
     vars:
       disable_convergence: 'false'
       sql: mysql
