@@ -846,13 +846,17 @@ class Resource(object):
         # ContentType=JSON results in a JSON serialized response...
         content_type = request.params.get("ContentType")
 
+        LOG.info("Processing request: %(method)s %(path)s",
+                 {'method': request.method, 'path': request.path})
+
         try:
             deserialized_request = self.dispatch(self.deserializer,
                                                  action, request)
             action_args.update(deserialized_request)
 
-            LOG.debug(('Calling %(controller)s : %(action)s'),
-                      {'controller': self.controller, 'action': action})
+            LOG.debug(('Calling %(controller)s.%(action)s'),
+                      {'controller': type(self.controller).__name__,
+                       'action': action})
 
             action_result = self.dispatch(self.controller, action,
                                           request, **action_args)
