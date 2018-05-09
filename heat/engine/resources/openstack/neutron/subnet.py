@@ -242,7 +242,16 @@ class Subnet(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('neutron.segment')
             ],
-            support_status=support.SupportStatus(version='9.0.0')
+            update_allowed=True,
+            support_status=support.SupportStatus(
+                version='11.0.0',
+                status=support.SUPPORTED,
+                message=_('Update allowed since version 11.0.0.'),
+                previous_status=support.SupportStatus(
+                    version='9.0.0',
+                    status=support.SUPPORTED
+                )
+            )
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,
@@ -402,12 +411,28 @@ class Subnet(neutron.NeutronResource):
         else:
             return True
 
+    def _validate_segment_update_supported(self):
+        # TODO(hjensas): Validation to ensure the subnet-segmentid-writable
+        # extension is available.
+        # https://storyboard.openstack.org/#!/story/2002189
+        # Current segment id must be None
+        if self.properties[self.SEGMENT] is not None:
+            msg = _('Updating the subnet segment assciation only allowed '
+                    'when the current segment_id is None. The subnet is '
+                    'currently associated with segment. In this state update')
+            raise exception.ResourceActionNotSupported(action=msg)
+        else:
+            return True
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.prepare_update_properties(prop_diff)
             if (self.ALLOCATION_POOLS in prop_diff and
                     prop_diff[self.ALLOCATION_POOLS] is None):
                 prop_diff[self.ALLOCATION_POOLS] = []
+            if (self.SEGMENT in prop_diff and prop_diff[self.SEGMENT] and
+                    self._validate_segment_update_supported()):
+                prop_diff['segment_id'] = prop_diff.pop(self.SEGMENT)
 
             # If the new value is '', set to None
             self._null_gateway_ip(prop_diff)
