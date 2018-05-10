@@ -2516,6 +2516,19 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.resource_get,
                           self.ctx, resource.id)
 
+    @mock.patch.object(time, 'sleep')
+    def test_resource_purge_deleted_by_stack_retry_on_deadlock(self, m_sleep):
+        val = {'name': 'res1', 'action': rsrc.Resource.DELETE,
+               'status': rsrc.Resource.COMPLETE}
+        create_resource(self.ctx, self.stack, **val)
+
+        with mock.patch('sqlalchemy.orm.query.Query.delete',
+                        side_effect=db_exception.DBDeadlock) as mock_delete:
+            self.assertRaises(db_exception.DBDeadlock,
+                              db_api.resource_purge_deleted,
+                              self.ctx, self.stack.id)
+            self.assertEqual(4, mock_delete.call_count)
+
     def test_engine_get_all_locked_by_stack(self):
         values = [
             {'name': 'res1', 'action': rsrc.Resource.DELETE,
