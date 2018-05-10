@@ -33,7 +33,6 @@
       use_amqp1: 0
       use_apache: 1
       use_python3: 0
-      use_identity_v3_only: 0
       branch_override: default
 
 - job:
@@ -65,14 +64,6 @@
     parent: heat-functional-devstack-base
     vars:
       use_python3: 1
-
-- job:
-    name: heat-functional-convg-mysql-lbaasv2-identity-v3-only
-    parent: heat-functional-devstack-base
-    voting: false
-    branches: master
-    vars:
-      use_identity_v3_only: 1
 
 - job:
     name: grenade-heat
@@ -118,7 +109,6 @@
         - heat-functional-convg-mysql-lbaasv2-amqp1
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
-        - heat-functional-convg-mysql-lbaasv2-identity-v3-only
         - openstack-tox-lower-constraints
     gate:
       jobs:
