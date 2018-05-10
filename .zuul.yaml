@@ -57,6 +57,7 @@
 - job:
     name: heat-functional-convg-mysql-lbaasv2-non-apache
     parent: heat-functional-devstack-base
+    voting: false
     vars:
       use_apache: 0
 
@@ -126,7 +127,6 @@
         - grenade-heat-multinode
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
         - openstack-tox-lower-constraints
     experimental:
