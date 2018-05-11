@@ -234,6 +234,8 @@ def resource_get_all(context):
     return results
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def resource_purge_deleted(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
     query = context.session.query(models.Resource)
