@@ -243,7 +243,7 @@ class Resource(status.ResourceStatus):
         self.updated_time = stack.updated_time
         self._rpc_client = None
         self.needed_by = []
-        self.requires = []
+        self.requires = set()
         self.replaces = None
         self.replaced_by = None
         self.current_template_id = None
@@ -291,7 +291,7 @@ class Resource(status.ResourceStatus):
         self.created_time = resource.created_at
         self.updated_time = resource.updated_at
         self.needed_by = resource.needed_by
-        self.requires = resource.requires
+        self.requires = set(resource.requires)
         self.replaces = resource.replaces
         self.replaced_by = resource.replaced_by
         self.current_template_id = resource.current_template_id
@@ -392,7 +392,7 @@ class Resource(status.ResourceStatus):
               'name': self.name,
               'rsrc_prop_data_id': None,
               'needed_by': self.needed_by,
-              'requires': list(requires),
+              'requires': sorted(requires, reverse=True),
               'replaces': self.id,
               'action': self.INIT,
               'status': self.COMPLETE,
@@ -1158,7 +1158,7 @@ class Resource(status.ResourceStatus):
                            timeout, progress_callback=None):
         """Creates the resource by invoking the scheduler TaskRunner."""
         self._calling_engine_id = engine_id
-        self.requires = list(requires)
+        self.requires = requires
         self.current_template_id = template_id
         if self.stack.adopt_stack_data is None:
             runner = scheduler.TaskRunner(self.create)
@@ -1648,7 +1648,7 @@ class Resource(status.ResourceStatus):
         self.updated_time = datetime.utcnow()
 
         if new_requires is not None:
-            self.requires = list(set(self.requires) | new_requires)
+            self.requires = self.requires | new_requires
 
         with self._action_recorder(action, UpdateReplace):
             after_props.validate()
@@ -1678,7 +1678,7 @@ class Resource(status.ResourceStatus):
             self.reparse()
             self._update_stored_properties()
             if new_requires is not None:
-                self.requires = list(new_requires)
+                self.requires = new_requires
 
         yield self._break_if_required(
             self.UPDATE, environment.HOOK_POST_UPDATE)
@@ -2071,7 +2071,7 @@ class Resource(status.ResourceStatus):
               'rsrc_prop_data_id':
                   self._create_or_replace_rsrc_prop_data(),
               'needed_by': self.needed_by,
-              'requires': self.requires,
+              'requires': sorted(self.requires, reverse=True),
               'replaces': self.replaces,
               'replaced_by': self.replaced_by,
               'current_template_id': self.current_template_id,

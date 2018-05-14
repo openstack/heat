@@ -720,7 +720,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(res.id, new_res.replaces)
         self.assertIsNone(new_res.physical_resource_id)
         self.assertEqual(new_tmpl_id, new_res.current_template_id)
-        self.assertItemsEqual(list(new_requires), new_res.requires)
+        self.assertEqual([4, 2, 1], new_res.requires)
 
     def test_metadata_default(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
@@ -2131,7 +2131,7 @@ class ResourceTest(common.HeatTestCase):
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
-        res.requires = [2]
+        res.requires = {2}
         res.action = res.CREATE
         res.store()
         self._assert_resource_lock(res.id, None, None)
@@ -2231,7 +2231,7 @@ class ResourceTest(common.HeatTestCase):
     def test_update_in_progress_convergence(self, mock_cfcr, mock_nu):
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
-        res.requires = [1, 2]
+        res.requires = {1, 2}
         res.store()
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
         rs.update_and_save({'engine_id': 'not-this'})
@@ -2255,7 +2255,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(msg, six.text_type(ex))
         # ensure requirements are not updated for failed resource
         rs = resource_objects.Resource.get_obj(self.stack.context, res.id)
-        self.assertEqual([1, 2], rs.requires)
+        self.assertEqual([2, 1], rs.requires)
 
     @mock.patch.object(resource.Resource, 'update_template_diff_properties')
     @mock.patch.object(resource.Resource, '_needs_update')
@@ -2272,7 +2272,7 @@ class ResourceTest(common.HeatTestCase):
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
-        res.requires = [2]
+        res.requires = {2}
         res.store()
         self._assert_resource_lock(res.id, None, None)
 
@@ -2313,7 +2313,7 @@ class ResourceTest(common.HeatTestCase):
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
-        res.requires = [2]
+        res.requires = {2}
         res.store()
         self._assert_resource_lock(res.id, None, None)
 
