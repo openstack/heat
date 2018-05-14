@@ -712,13 +712,15 @@ class ResourceTest(common.HeatTestCase):
         res.store()
         new_tmpl_id = 2
         self.assertIsNotNone(res.id)
-        new_id = res.make_replacement(new_tmpl_id)
+        new_requires = {1, 2, 4}
+        new_id = res.make_replacement(new_tmpl_id, new_requires)
         new_res = resource_objects.Resource.get_obj(res.context, new_id)
 
         self.assertEqual(new_id, res.replaced_by)
         self.assertEqual(res.id, new_res.replaces)
         self.assertIsNone(new_res.physical_resource_id)
         self.assertEqual(new_tmpl_id, new_res.current_template_id)
+        self.assertItemsEqual(list(new_requires), new_res.requires)
 
     def test_metadata_default(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
