@@ -2429,7 +2429,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
         pcb = mock.Mock()
         with mock.patch.object(resource.Resource, 'delete') as mock_delete:
-            tr = scheduler.TaskRunner(res.delete_convergence, 2, {},
+            tr = scheduler.TaskRunner(res.delete_convergence, 2,
                                       'engine-007', 20, pcb)
             tr()
             self.assertTrue(mock_delete.called)
@@ -2442,7 +2442,7 @@ class ResourceTest(common.HeatTestCase):
         res.current_template_id = 'same-template'
         res.store()
         res.delete = mock.Mock()
-        tr = scheduler.TaskRunner(res.delete_convergence, 'same-template', {},
+        tr = scheduler.TaskRunner(res.delete_convergence, 'same-template',
                                   'engine-007', self.dummy_timeout,
                                   self.dummy_event)
         tr()
@@ -2459,7 +2459,7 @@ class ResourceTest(common.HeatTestCase):
         res.handle_delete = mock.Mock(side_effect=ValueError('test'))
         self._assert_resource_lock(res.id, None, None)
         res.stack.convergence = True
-        tr = scheduler.TaskRunner(res.delete_convergence, 2, {}, 'engine-007',
+        tr = scheduler.TaskRunner(res.delete_convergence, 2, 'engine-007',
                                   self.dummy_timeout, self.dummy_event)
         self.assertRaises(exception.ResourceFailure, tr)
         self.assertTrue(res.handle_delete.called)
@@ -2497,12 +2497,11 @@ class ResourceTest(common.HeatTestCase):
         res.action = res.CREATE
         res.store()
         res.destroy = mock.Mock()
-        input_data = {(1, False): 4, (2, False): 5}  # needed_by resource ids
         self._assert_resource_lock(res.id, None, None)
-        scheduler.TaskRunner(res.delete_convergence, 1, input_data,
+        scheduler.TaskRunner(res.delete_convergence, 1,
                              'engine-007', self.dummy_timeout,
                              self.dummy_event)()
-        self.assertItemsEqual([4, 5], res.needed_by)
+        self.assertItemsEqual([], res.needed_by)
 
     @mock.patch.object(resource_objects.Resource, 'get_obj')
     def test_update_replacement_data(self, mock_get_obj):
@@ -2648,7 +2647,7 @@ class ResourceTest(common.HeatTestCase):
         res.store()
         with mock.patch.object(resource_objects.Resource,
                                'delete') as resource_del:
-            tr = scheduler.TaskRunner(res.delete_convergence, 1, {},
+            tr = scheduler.TaskRunner(res.delete_convergence, 1,
                                       'engine-007', 1, self.dummy_event)
             tr()
             resource_del.assert_called_once_with(res.context, res.id)
@@ -2659,7 +2658,7 @@ class ResourceTest(common.HeatTestCase):
         res.action = res.CREATE
         res.store()
         timeout = -1  # to emulate timeout
-        tr = scheduler.TaskRunner(res.delete_convergence, 1, {}, 'engine-007',
+        tr = scheduler.TaskRunner(res.delete_convergence, 1, 'engine-007',
                                   timeout, self.dummy_event)
         self.assertRaises(scheduler.Timeout, tr)
 

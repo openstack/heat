@@ -585,7 +585,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         self.assertFalse(mock_cru.called)
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
-            {}, self.worker.engine_id,
+            self.worker.engine_id,
             tr(), mock.ANY)
 
     @mock.patch.object(stack.Stack, 'time_remaining')
@@ -598,7 +598,7 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
             self.is_update, None)
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id,
+                                         self.worker.engine_id,
                                          tr(), mock.ANY)
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
@@ -730,7 +730,7 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_check_resource_cleanup_delete(self, mock_delete):
         self.resource.current_template_id = 'new-template-id'
         check_resource.check_resource_cleanup(
-            self.resource, self.resource.stack.t.id, {}, 'engine-id',
+            self.resource, self.resource.stack.t.id, 'engine-id',
             self.stack.timeout_secs(), None)
         self.assertTrue(mock_delete.called)
 

@@ -1915,7 +1915,7 @@ class Resource(status.ResourceStatus):
                         expected_engine_id=None):
                     self._incr_atomic_key(self._atomic_key)
 
-    def delete_convergence(self, template_id, input_data, engine_id, timeout,
+    def delete_convergence(self, template_id, engine_id, timeout,
                            progress_callback=None):
         """Destroys the resource if it doesn't belong to given template.
 
@@ -1928,8 +1928,7 @@ class Resource(status.ResourceStatus):
         the replacement resource's needed_by and replaces fields.
         """
         self._calling_engine_id = engine_id
-        self.needed_by = list(set(v for v in input_data.values()
-                                  if v is not None))
+        self.needed_by = []
 
         if self.current_template_id != template_id:
             # just delete the resources in INIT state
