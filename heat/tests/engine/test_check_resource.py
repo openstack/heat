@@ -91,7 +91,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id,
+                                         set(), self.worker.engine_id,
                                          mock.ANY, mock.ANY)
         self.assertFalse(mock_crc.called)
 
@@ -122,7 +122,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id,
+                                         set(), self.worker.engine_id,
                                          mock.ANY, mock.ANY)
         self.assertTrue(mock_mr.called)
         self.assertFalse(mock_crc.called)
@@ -144,7 +144,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             self.is_update, None)
         mock_cru.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
-                                         {}, self.worker.engine_id,
+                                         set(), self.worker.engine_id,
                                          mock.ANY, mock.ANY)
         self.assertFalse(mock_crc.called)
         self.assertFalse(mock_pcr.called)
@@ -545,6 +545,20 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
 
+    @mock.patch.object(resource.Resource, 'load')
+    def test_requires(self, mock_load, mock_cru, mock_crc, mock_pcr, mock_csc):
+        mock_load.return_value = self.resource, self.stack, self.stack
+        res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
+                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        self.worker.check_resource(self.ctx, self.resource.id,
+                                   self.stack.current_traversal,
+                                   sync_point.serialize_input_data(res_data),
+                                   self.is_update, {})
+        mock_cru.assert_called_once_with(
+            self.resource, self.resource.stack.t.id,
+            {5, 3}, self.worker.engine_id,
+            self.stack, mock.ANY)
+
 
 @mock.patch.object(check_resource, 'check_stack_complete')
 @mock.patch.object(check_resource, 'propagate_check_resource')
@@ -699,7 +713,7 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_check_resource_update_init_action(self, mock_update, mock_create):
         self.resource.action = 'INIT'
         check_resource.check_resource_update(
-            self.resource, self.resource.stack.t.id, {}, 'engine-id',
+            self.resource, self.resource.stack.t.id, set(), 'engine-id',
             self.stack, None)
         self.assertTrue(mock_create.called)
         self.assertFalse(mock_update.called)
@@ -710,7 +724,7 @@ class MiscMethodsTest(common.HeatTestCase):
             self, mock_update, mock_create):
         self.resource.action = 'CREATE'
         check_resource.check_resource_update(
-            self.resource, self.resource.stack.t.id, {}, 'engine-id',
+            self.resource, self.resource.stack.t.id, set(), 'engine-id',
             self.stack, None)
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)
@@ -721,7 +735,7 @@ class MiscMethodsTest(common.HeatTestCase):
             self, mock_update, mock_create):
         self.resource.action = 'UPDATE'
         check_resource.check_resource_update(
-            self.resource, self.resource.stack.t.id, {}, 'engine-id',
+            self.resource, self.resource.stack.t.id, set(), 'engine-id',
             self.stack, None)
         self.assertFalse(mock_create.called)
         self.assertTrue(mock_update.called)

@@ -162,8 +162,10 @@ class CheckResource(object):
         prev_template_id = rsrc.current_template_id
         try:
             if is_update:
+                requires = set(d.primary_key for d in resource_data.values()
+                               if d is not None)
                 try:
-                    check_resource_update(rsrc, tmpl.id, resource_data,
+                    check_resource_update(rsrc, tmpl.id, requires,
                                           self.engine_id,
                                           stack, self.msg_queue)
                 except resource.UpdateReplace:
@@ -406,15 +408,15 @@ def _check_for_message(msg_queue):
     LOG.error('Unknown message "%s" received', message)
 
 
-def check_resource_update(rsrc, template_id, resource_data, engine_id,
+def check_resource_update(rsrc, template_id, requires, engine_id,
                           stack, msg_queue):
     """Create or update the Resource if appropriate."""
     check_message = functools.partial(_check_for_message, msg_queue)
     if rsrc.action == resource.Resource.INIT:
-        rsrc.create_convergence(template_id, resource_data, engine_id,
+        rsrc.create_convergence(template_id, requires, engine_id,
                                 stack.time_remaining(), check_message)
     else:
-        rsrc.update_convergence(template_id, resource_data, engine_id,
+        rsrc.update_convergence(template_id, requires, engine_id,
                                 stack.time_remaining(), stack,
                                 check_message)
 

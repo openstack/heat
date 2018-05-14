@@ -1154,14 +1154,11 @@ class Resource(status.ResourceStatus):
         """
         return self
 
-    def create_convergence(self, template_id, resource_data, engine_id,
+    def create_convergence(self, template_id, requires, engine_id,
                            timeout, progress_callback=None):
         """Creates the resource by invoking the scheduler TaskRunner."""
         self._calling_engine_id = engine_id
-        self.requires = list(
-            set(data.primary_key for data in resource_data.values()
-                if data is not None)
-        )
+        self.requires = list(requires)
         self.current_template_id = template_id
         if self.stack.adopt_stack_data is None:
             runner = scheduler.TaskRunner(self.create)
@@ -1412,7 +1409,7 @@ class Resource(status.ResourceStatus):
         else:
             raise UpdateReplace(self.name)
 
-    def update_convergence(self, template_id, resource_data, engine_id,
+    def update_convergence(self, template_id, new_requires, engine_id,
                            timeout, new_stack, progress_callback=None):
         """Update the resource synchronously.
 
@@ -1422,8 +1419,6 @@ class Resource(status.ResourceStatus):
         resource by invoking the scheduler TaskRunner.
         """
         self._calling_engine_id = engine_id
-        new_requires = set(data.primary_key for data in resource_data.values()
-                           if data is not None)
 
         # Check that the resource type matches. If the type has changed by a
         # legitimate substitution, the load()ed resource will already be of
