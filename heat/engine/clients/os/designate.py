@@ -97,7 +97,10 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
         return self.client().records.update(record.domain_id, record)
 
     def record_delete(self, **kwargs):
-        domain_id = self.get_domain_id(kwargs.pop('domain'))
+        try:
+            domain_id = self.get_domain_id(kwargs.pop('domain'))
+        except heat_exception.EntityNotFound:
+            return
         return self.client().records.delete(domain_id,
                                             kwargs.pop('id'))
 
