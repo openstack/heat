@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Adds ``subnets`` to the ``addresses`` attribute of
+    ``OS::Nova::Server`` resource. This enables resolving the subnet
+    properties for the server resource which brings parity with
+    ``OS::Neutron::Port``'s ``subnets`` attribute.
+
