@@ -299,6 +299,7 @@ class ServiceEngineTest(common.HeatTestCase):
         cfg.CONF.set_default('periodic_interval', 60)
         self.patchobject(self.eng, 'service_manage_cleanup')
         self.patchobject(self.eng, 'reset_stack_status')
+        self.patchobject(self.eng, 'service_manage_report')
 
         self.eng.start()
         # Add dummy thread group to test thread_group_mgr.stop() is executed?
