@@ -77,8 +77,8 @@ function _config_tempest_plugin
     iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
     iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 
+    # Skip SoftwareConfigIntegrationTest because it requires a custom image
     # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-    # Skip test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
     # Skip AutoscalingLoadBalancerTest and AutoscalingLoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
     iniset $conf_file heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, \
         SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
