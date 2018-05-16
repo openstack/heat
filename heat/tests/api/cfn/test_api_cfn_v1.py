@@ -56,7 +56,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.controller = stacks.StackController(options=cfgopts)
         self.controller.policy.enforcer.policy_path = (policy_path +
                                                        'deny_stack_user.json')
-        self.addCleanup(self.m.VerifyAll)
+        self.m_call = self.patchobject(rpc_client.EngineClient, 'call')
 
     def test_default(self):
         self.assertRaises(
@@ -80,8 +80,6 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     # The tests
     def test_stackid_addprefix(self):
-        self.m.ReplayAll()
-
         response = self.controller._id_format({
             'StackName': 'Foo',
             'StackId': {
@@ -103,7 +101,6 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.assertIsNone(response)
 
     def test_enforce_denied(self):
-        self.m.ReplayAll()
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'ListStacks', False)
@@ -121,8 +118,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.assertRaises(exception.HeatInternalFailureError,
                           self.controller._enforce, dummy_req, 'ListStacks')
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_list(self, mock_call):
+    def test_list(self):
         # Format a dummy GET request to pass into the WSGI handler
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
@@ -140,7 +136,7 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'stack_name': u'wordpress',
                         u'stack_action': u'CREATE',
                         u'stack_status': u'COMPLETE'}]
-        mock_call.return_value = engine_resp
+        self.m_call.return_value = engine_resp
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
@@ -160,39 +156,37 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'show_hidden': False, 'tags': None,
                         'tags_any': None, 'not_tags': None,
                         'not_tags_any': None}
-        mock_call.assert_called_once_with(
+        self.m_call.assert_called_once_with(
             dummy_req.context, ('list_stacks', default_args), version='1.33')
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_list_rmt_aterr(self, mock_call):
+    def test_list_rmt_aterr(self):
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'ListStacks')
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        mock_call.side_effect = AttributeError
+        self.m_call.side_effect = AttributeError
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
-        mock_call.assert_called_once_with(
+        self.m_call.assert_called_once_with(
             dummy_req.context, ('list_stacks', mock.ANY), version='1.33')
 
-    @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_list_rmt_interr(self, mock_call):
+    def test_list_rmt_interr(self):
         params = {'Action': 'ListStacks'}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'ListStacks')
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        mock_call.side_effect = Exception()
+        self.m_call.side_effect = Exception()
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         self.assertIsInstance(result, exception.HeatInternalFailureError)
-        mock_call.assert_called_once_with(
+        self.m_call.assert_called_once_with(
             dummy_req.context, ('list_stacks', mock.ANY), version='1.33')
 
     def test_describe_last_updated_time(self):
@@ -205,19 +199,16 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'stack_action': u'CREATE',
                         u'stack_status': u'COMPLETE'}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': None,
-                                               'resolve_outputs': True}),
-            version='1.20'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
-
+        self.m_call.return_value = engine_resp
         response = self.controller.describe(dummy_req)
         result = response['DescribeStacksResponse']['DescribeStacksResult']
         stack = result['Stacks'][0]
         self.assertEqual('1970-01-01', stack['LastUpdatedTime'])
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('show_stack', {'stack_identity': None,
+                                               'resolve_outputs': True}),
+            version='1.20'
+        )
 
     def test_describe_no_last_updated_time(self):
         params = {'Action': 'DescribeStacks'}
@@ -229,19 +220,17 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'stack_action': u'CREATE',
                         u'stack_status': u'COMPLETE'}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': None,
-                                               'resolve_outputs': True}),
-            version='1.20'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        self.m_call.return_value = engine_resp
 
         response = self.controller.describe(dummy_req)
         result = response['DescribeStacksResponse']['DescribeStacksResult']
         stack = result['Stacks'][0]
         self.assertNotIn('LastUpdatedTime', stack)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('show_stack', {'stack_identity': None,
+                                               'resolve_outputs': True}),
+            version='1.20'
+        )
 
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -281,19 +270,7 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'timeout_mins':60,
                         u'capabilities':[]}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('show_stack', {'stack_identity': identity,
-                            'resolve_outputs': True}),
-            version='1.20'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, engine_resp]
 
         # Call the list controller function and compare the response
         response = self.controller.describe(dummy_req)
@@ -336,6 +313,15 @@ class CfnStackControllerTest(common.HeatTestCase):
         response['DescribeStacksResponse']['DescribeStacksResult'] = (
             {'Stacks': stacks})
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('show_stack', {'stack_identity': identity,
+                            'resolve_outputs': True}),
+            version='1.20'
+        )], self.m_call.call_args_list)
 
     def test_describe_arn(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -376,15 +362,7 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'timeout_mins':60,
                         u'capabilities':[]}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('show_stack', {'stack_identity': identity,
-                            'resolve_outputs': True}),
-            version='1.20'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        self.m_call.return_value = engine_resp
 
         # Call the list controller function and compare the response
         response = self.controller.describe(dummy_req)
@@ -427,6 +405,12 @@ class CfnStackControllerTest(common.HeatTestCase):
         response['DescribeStacksResponse']['DescribeStacksResult'] = (
             {'Stacks': stacks})
         self.assertEqual(expected, response)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('show_stack', {'stack_identity': identity,
+                            'resolve_outputs': True}),
+            version='1.20'
+        )
 
     def test_describe_arn_invalidtenant(self):
         # Format a dummy GET request to pass into the WSGI handler
@@ -438,18 +422,17 @@ class CfnStackControllerTest(common.HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'DescribeStacks')
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('show_stack', {'stack_identity': identity,
-                                               'resolve_outputs': True},),
-            version='1.20'
-        ).AndRaise(heat_exception.InvalidTenant(target='test',
-                                                actual='test'))
+        exc = heat_exception.InvalidTenant(target='test', actual='test')
 
-        self.m.ReplayAll()
+        self.m_call.side_effect = exc
 
         result = self.controller.describe(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('show_stack', {'stack_identity': identity,
+                                               'resolve_outputs': True},),
+            version='1.20'
+        )
 
     def test_describe_aterr(self):
         stack_name = "wordpress"
@@ -460,20 +443,16 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
+        self.m_call.side_effect = [identity, AttributeError]
+        result = self.controller.describe(dummy_req)
+        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.assertEqual([mock.call(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
+        ), mock.call(
             dummy_req.context, ('show_stack', {'stack_identity': identity,
                                                'resolve_outputs': True}),
             version='1.20'
-        ).AndRaise(AttributeError())
-
-        self.m.ReplayAll()
-
-        result = self.controller.describe(dummy_req)
-        self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        )], self.m_call.call_args_list)
 
     def test_describe_bad_name(self):
         stack_name = "wibble"
@@ -483,15 +462,14 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = exc
 
         result = self.controller.describe(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_get_template_int_body(self):
         """Test the internal _get_template function."""
@@ -505,31 +483,18 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     def _stub_rpc_create_stack_call_failure(self, req_context, stack_name,
                                             engine_parms, engine_args,
-                                            failure, need_stub=True):
+                                            failure, need_stub=True,
+                                            direct_mock=True):
         if need_stub:
             mock_enforce = self.patchobject(policy.Enforcer, 'enforce')
-            self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
             mock_enforce.return_value = True
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        rpc_client.EngineClient.call(
-            req_context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'environment_files': None,
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'parent_resource_name': None,
-              'stack_user_project_id': None,
-              'template_id': None}),
-            version='1.29'
-        ).AndRaise(failure)
+        if direct_mock:
+            self.m_call.side_effect = [failure]
+        else:
+            return failure
 
     def _stub_rpc_create_stack_call_success(self, stack_name, engine_parms,
                                             engine_args, parameters):
@@ -542,26 +507,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                        u'stack_id': u'1',
                        u'path': u''}
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('create_stack',
-             {'stack_name': stack_name,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'environment_files': None,
-              'args': engine_args,
-              'owner_id': None,
-              'nested_depth': 0,
-              'user_creds_id': None,
-              'parent_resource_name': None,
-              'stack_user_project_id': None,
-              'template_id': None}),
-            version='1.29'
-        ).AndReturn(engine_resp)
+        self.m_call.return_value = engine_resp
 
-        self.m.ReplayAll()
         return dummy_req
 
     def test_create(self):
@@ -591,6 +538,23 @@ class CfnStackControllerTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, response)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'environment_files': None,
+              'args': engine_args,
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None,
+              'template_id': None}),
+            version='1.29'
+        )
 
     def test_create_rollback(self):
         # Format a dummy request
@@ -620,6 +584,23 @@ class CfnStackControllerTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, response)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'environment_files': None,
+              'args': engine_args,
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None,
+              'template_id': None}),
+            version='1.29'
+        )
 
     def test_create_onfailure_true(self):
         # Format a dummy request
@@ -649,6 +630,23 @@ class CfnStackControllerTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, response)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'environment_files': None,
+              'args': engine_args,
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None,
+              'template_id': None}),
+            version='1.29'
+        )
 
     def test_create_onfailure_false_delete(self):
         # Format a dummy request
@@ -668,6 +666,23 @@ class CfnStackControllerTest(common.HeatTestCase):
                                                              params)
 
         response = self.controller.create(dummy_req)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'environment_files': None,
+              'args': engine_args,
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None,
+              'template_id': None}),
+            version='1.29'
+        )
 
         expected = {
             'CreateStackResponse': {
@@ -707,6 +722,23 @@ class CfnStackControllerTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, response)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'environment_files': None,
+              'args': engine_args,
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None,
+              'template_id': None}),
+            version='1.29'
+        )
 
     def test_create_onfailure_err(self):
         # Format a dummy request
@@ -759,26 +791,32 @@ class CfnStackControllerTest(common.HeatTestCase):
         engine_parms = {u'InstanceType': u'm1.xlarge'}
         engine_args = {'timeout_mins': u'30'}
         dummy_req = self._dummy_GET_request(params)
-        self._stub_rpc_create_stack_call_failure(dummy_req.context,
-                                                 stack_name,
-                                                 engine_parms,
-                                                 engine_args,
-                                                 AttributeError())
+        m_f = self._stub_rpc_create_stack_call_failure(
+            dummy_req.context,
+            stack_name,
+            engine_parms,
+            engine_args,
+            AttributeError(),
+            direct_mock=False)
         failure = heat_exception.UnknownUserParameter(key='test')
-        self._stub_rpc_create_stack_call_failure(dummy_req.context,
-                                                 stack_name,
-                                                 engine_parms,
-                                                 engine_args,
-                                                 failure,
-                                                 False)
+        m_f2 = self._stub_rpc_create_stack_call_failure(
+            dummy_req.context,
+            stack_name,
+            engine_parms,
+            engine_args,
+            failure,
+            False,
+            direct_mock=False)
         failure = heat_exception.UserParameterMissing(key='test')
-        self._stub_rpc_create_stack_call_failure(dummy_req.context,
-                                                 stack_name,
-                                                 engine_parms,
-                                                 engine_args,
-                                                 failure,
-                                                 False)
-        self.m.ReplayAll()
+        m_f3 = self._stub_rpc_create_stack_call_failure(
+            dummy_req.context,
+            stack_name,
+            engine_parms,
+            engine_args,
+            failure,
+            False,
+            direct_mock=False)
+        self.m_call.side_effect = [m_f, m_f2, m_f3]
 
         result = self.controller.create(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
@@ -808,7 +846,6 @@ class CfnStackControllerTest(common.HeatTestCase):
                                                  engine_args,
                                                  failure)
 
-        self.m.ReplayAll()
         result = self.controller.create(dummy_req)
 
         self.assertIsInstance(result, exception.AlreadyExistsError)
@@ -832,7 +869,6 @@ class CfnStackControllerTest(common.HeatTestCase):
                                                  engine_parms,
                                                  engine_args,
                                                  failure)
-        self.m.ReplayAll()
         result = self.controller.create(dummy_req)
 
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
@@ -853,26 +889,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         identity = dict(identifier.HeatIdentifier('t', stack_name, '1'))
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('update_stack',
-             {'stack_identity': identity,
-              'template': self.template,
-              'params': engine_parms,
-              'files': {},
-              'environment_files': None,
-              'args': engine_args,
-              'template_id': None}),
-            version='1.29'
-        ).AndReturn(identity)
-
-        self.m.ReplayAll()
+        self.m_call.return_value = identity
 
         response = self.controller.update(dummy_req)
 
@@ -885,6 +902,21 @@ class CfnStackControllerTest(common.HeatTestCase):
         }
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('update_stack',
+             {'stack_identity': identity,
+              'template': self.template,
+              'params': engine_parms,
+              'files': {},
+              'environment_files': None,
+              'args': engine_args,
+              'template_id': None}),
+            version='1.29'
+        )], self.m_call.call_args_list)
 
     def test_cancel_update(self):
         # Format a dummy request
@@ -896,21 +928,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         identity = dict(identifier.HeatIdentifier('t', stack_name, '1'))
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('stack_cancel_update',
-             {'stack_identity': identity,
-              'cancel_with_rollback': True}),
-            version='1.14'
-        ).AndReturn(identity)
-
-        self.m.ReplayAll()
+        self.m_call.return_value = identity
 
         response = self.controller.cancel_update(dummy_req)
 
@@ -921,6 +939,16 @@ class CfnStackControllerTest(common.HeatTestCase):
         }
 
         self.assertEqual(response, expected)
+        self.assertEqual([mock.call(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('stack_cancel_update',
+             {'stack_identity': identity,
+              'cancel_with_rollback': True}),
+            version='1.14'
+        )], self.m_call.call_args_list)
 
     def test_update_bad_name(self):
         stack_name = "wibble"
@@ -934,16 +962,15 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = exc
 
         result = self.controller.update(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_create_or_update_err(self):
         result = self.controller.create_or_update(req={}, action="dsdgfdf")
@@ -960,17 +987,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         engine_resp = self.template
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('get_template', {'stack_identity': identity})
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, engine_resp]
 
         response = self.controller.get_template(dummy_req)
 
@@ -979,6 +996,13 @@ class CfnStackControllerTest(common.HeatTestCase):
                      {'TemplateBody': self.template}}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('get_template', {'stack_identity': identity})
+        )], self.m_call.call_args_list)
 
     def test_get_template_err_rpcerr(self):
         stack_name = "wordpress"
@@ -989,19 +1013,16 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('get_template', {'stack_identity': identity})
-        ).AndRaise(AttributeError())
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, AttributeError]
 
         result = self.controller.get_template(dummy_req)
 
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context, ('get_template', {'stack_identity': identity})
+        )], self.m_call.call_args_list)
 
     def test_get_template_bad_name(self):
         stack_name = "wibble"
@@ -1011,16 +1032,15 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = [exc]
 
         result = self.controller.get_template(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_validate_err_no_template(self):
         # Format a dummy request with a missing template field
@@ -1058,16 +1078,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'ValidateTemplate')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('validate_template', {'template': json_template, 'params': None,
-                                   'files': None, 'environment_files': None,
-                                   'show_nested': False,
-                                   'ignorable_errors': None}),
-            version='1.24'
-        ).AndReturn(response)
-        self.m.ReplayAll()
+        self.m_call.return_value = response
 
         response = self.controller.validate_template(dummy_req)
 
@@ -1076,6 +1087,14 @@ class CfnStackControllerTest(common.HeatTestCase):
                      'Resources must contain Resource. '
                      'Found a [string] instead'}}
         self.assertEqual(expected, response)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('validate_template', {'template': json_template, 'params': None,
+                                   'files': None, 'environment_files': None,
+                                   'show_nested': False,
+                                   'ignorable_errors': None}),
+            version='1.24'
+        )
 
     def test_delete(self):
         # Format a dummy request
@@ -1086,23 +1105,20 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DeleteStack')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
         # Engine returns None when delete successful
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('delete_stack', {'stack_identity': identity})
-        ).AndReturn(None)
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, None]
 
         response = self.controller.delete(dummy_req)
 
         expected = {'DeleteStackResponse': {'DeleteStackResult': ''}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('delete_stack', {'stack_identity': identity})
+        )], self.m_call.call_args_list)
 
     def test_delete_err_rpcerr(self):
         stack_name = "wordpress"
@@ -1112,22 +1128,18 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DeleteStack')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('delete_stack', {'stack_identity': identity})
-        ).AndRaise(AttributeError())
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, AttributeError]
 
         result = self.controller.delete(dummy_req)
 
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context, ('delete_stack', {'stack_identity': identity})
+        )], self.m_call.call_args_list)
 
     def test_delete_bad_name(self):
         stack_name = "wibble"
@@ -1137,15 +1149,14 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = [exc]
 
         result = self.controller.delete(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_events_list_event_id_integer(self):
         self._test_events_list('42')
@@ -1185,17 +1196,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         kwargs = {'stack_identity': identity, 'nested_depth': None,
                   'limit': None, 'sort_keys': None, 'marker': None,
                   'sort_dir': None, 'filters': None}
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('list_events', kwargs),
-            version='1.31'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, engine_resp]
 
         response = self.controller.events_list(dummy_req)
 
@@ -1215,6 +1216,13 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('list_events', kwargs),
+            version='1.31'
+        )], self.m_call.call_args_list)
 
     def test_events_list_err_rpcerr(self):
         stack_name = "wordpress"
@@ -1225,21 +1233,20 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('list_events', {'stack_identity': identity}),
-            version='1.31'
-        ).AndRaise(Exception())
-
-        self.m.ReplayAll()
+        class FakeExc(Exception):
+            pass
+        self.m_call.side_effect = [identity, FakeExc]
 
         result = self.controller.events_list(dummy_req)
 
         self.assertIsInstance(result, exception.HeatInternalFailureError)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            (mock.ANY),
+            version='1.31')
+        ], self.m_call.call_args_list)
 
     def test_events_list_bad_name(self):
         stack_name = "wibble"
@@ -1249,15 +1256,14 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = [exc]
 
         result = self.controller.events_list(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_describe_stack_resource(self):
         # Format a dummy request
@@ -1292,20 +1298,12 @@ class CfnStackControllerTest(common.HeatTestCase):
                        u'resource_type': u'AWS::EC2::Instance',
                        u'metadata': {u'wordpress': []}}
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
+        self.m_call.side_effect = [identity, engine_resp]
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
             'with_attr': False,
         }
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('describe_stack_resource', args), version='1.2'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
 
         response = self.controller.describe_stack_resource(dummy_req)
 
@@ -1325,6 +1323,11 @@ class CfnStackControllerTest(common.HeatTestCase):
                        'LogicalResourceId': u'WikiDatabase'}}}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context, ('describe_stack_resource', args), version='1.2'
+        )], self.m_call.call_args_list)
 
     def test_describe_stack_resource_nonexistent_stack(self):
         # Format a dummy request
@@ -1336,15 +1339,15 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackResource')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
 
-        self.m.ReplayAll()
+        self.m_call.side_effect = [exc]
 
         result = self.controller.describe_stack_resource(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_describe_stack_resource_nonexistent(self):
         # Format a dummy request
@@ -1357,24 +1360,22 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackResource')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
+        exc = heat_exception.ResourceNotFound(
+            resource_name='test', stack_name='test')
+        self.m_call.side_effect = [identity, exc]
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
             'with_attr': False,
         }
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('describe_stack_resource', args), version='1.2'
-        ).AndRaise(heat_exception.ResourceNotFound(
-            resource_name='test', stack_name='test'))
-
-        self.m.ReplayAll()
 
         result = self.controller.describe_stack_resource(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context, ('describe_stack_resource', args), version='1.2'
+        )], self.m_call.call_args_list)
 
     def test_describe_stack_resources(self):
         # Format a dummy request
@@ -1409,19 +1410,11 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'resource_type': u'AWS::EC2::Instance',
                         u'metadata': {u'ensureRunning': u'true''true'}}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
+        self.m_call.side_effect = [identity, engine_resp]
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('describe_stack_resources', args)
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
 
         response = self.controller.describe_stack_resources(dummy_req)
 
@@ -1440,6 +1433,11 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context, ('describe_stack_resources', args)
+        )], self.m_call.call_args_list)
 
     def test_describe_stack_resources_bad_name(self):
         stack_name = "wibble"
@@ -1451,15 +1449,14 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = exc
 
         result = self.controller.describe_stack_resources(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        )
 
     def test_describe_stack_resources_physical(self):
         # Format a dummy request
@@ -1494,21 +1491,11 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'resource_type': u'AWS::EC2::Instance',
                         u'metadata': {u'ensureRunning': u'true''true'}}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('find_physical_resource',
-             {'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de'})
-        ).AndReturn(identity)
+        self.m_call.side_effect = [identity, engine_resp]
         args = {
             'stack_identity': identity,
             'resource_name': dummy_req.params.get('LogicalResourceId'),
         }
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('describe_stack_resources', args)
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
 
         response = self.controller.describe_stack_resources(dummy_req)
 
@@ -1527,6 +1514,13 @@ class CfnStackControllerTest(common.HeatTestCase):
                         'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context,
+            ('find_physical_resource',
+             {'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de'})
+        ), mock.call(
+            dummy_req.context, ('describe_stack_resources', args)
+        )], self.m_call.call_args_list)
 
     def test_describe_stack_resources_physical_not_found(self):
         # Format a dummy request
@@ -1537,19 +1531,18 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackResources')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('find_physical_resource',
-             {'physical_resource_id': 'aaaaaaaa-9f88-404d-cccc-ffffffffffff'})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Resource', name='1'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Resource', name='1')
+        self.m_call.side_effect = [exc]
 
         response = self.controller.describe_stack_resources(dummy_req)
 
         self.assertIsInstance(response,
                               exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context,
+            ('find_physical_resource',
+             {'physical_resource_id': 'aaaaaaaa-9f88-404d-cccc-ffffffffffff'})
+        )
 
     def test_describe_stack_resources_err_inval(self):
         # Format a dummy request containing both StackName and
@@ -1594,20 +1587,7 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'a3455d8c-9f88-404d-a85b-5315293e67de',
                         u'resource_type': u'AWS::EC2::Instance'}]
 
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndReturn(identity)
-        rpc_client.EngineClient.call(
-            dummy_req.context,
-            ('list_stack_resources', {'stack_identity': identity,
-                                      'nested_depth': 0,
-                                      'with_detail': False,
-                                      'filters': None}),
-            version='1.25'
-        ).AndReturn(engine_resp)
-
-        self.m.ReplayAll()
+        self.m_call.side_effect = [identity, engine_resp]
 
         response = self.controller.list_stack_resources(dummy_req)
 
@@ -1622,6 +1602,16 @@ class CfnStackControllerTest(common.HeatTestCase):
                        'LogicalResourceId': u'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
+        self.assertEqual([mock.call(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        ), mock.call(
+            dummy_req.context,
+            ('list_stack_resources', {'stack_identity': identity,
+                                      'nested_depth': 0,
+                                      'with_detail': False,
+                                      'filters': None}),
+            version='1.25'
+        )], self.m_call.call_args_list)
 
     def test_list_stack_resources_bad_name(self):
         stack_name = "wibble"
@@ -1632,12 +1622,11 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         # Insert an engine RPC error and ensure we map correctly to the
         # heat exception type
-        self.m.StubOutWithMock(rpc_client.EngineClient, 'call')
-        rpc_client.EngineClient.call(
-            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
-        ).AndRaise(heat_exception.EntityNotFound(entity='Stack', name='test'))
-
-        self.m.ReplayAll()
+        exc = heat_exception.EntityNotFound(entity='Stack', name='test')
+        self.m_call.side_effect = exc
 
         result = self.controller.list_stack_resources(dummy_req)
         self.assertIsInstance(result, exception.HeatInvalidParameterValueError)
+        self.m_call.assert_called_once_with(
+            dummy_req.context, ('identify_stack', {'stack_name': stack_name})
+        )
