@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Adds ``network`` to the ``addresses`` attribute of
+    ``OS::Nova::Server`` resource. This enables resolving the network
+    properties for the server resource.
+
