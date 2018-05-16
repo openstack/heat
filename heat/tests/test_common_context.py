@@ -76,7 +76,9 @@ class TestRequestContext(common.HeatTestCase):
             user_domain_id=self.ctx.get('user_domain'),
             project_domain_id=self.ctx.get('project_domain'))
         ctx_dict = ctx.to_dict()
-        del(ctx_dict['request_id'])
+        del ctx_dict['request_id']
+        del ctx_dict['project_id']
+        del ctx_dict['project_name']
         self.assertEqual(self.ctx, ctx_dict)
 
     def test_request_context_to_dict_unicode(self):
@@ -93,8 +95,10 @@ class TestRequestContext(common.HeatTestCase):
                       'show_deleted': False,
                       'roles': ['arole', 'notadmin'],
                       'tenant_id': '456tenant',
+                      'project_id': '456tenant',
                       'user_id': u'Gāo',
                       'tenant': u'\u5218\u80dc',
+                      'project_name': u'\u5218\u80dc',
                       'auth_url': 'http://xyz',
                       'aws_creds': 'blah',
                       'region_name': 'RegionOne',
@@ -127,7 +131,9 @@ class TestRequestContext(common.HeatTestCase):
     def test_request_context_from_dict(self):
         ctx = context.RequestContext.from_dict(self.ctx)
         ctx_dict = ctx.to_dict()
-        del(ctx_dict['request_id'])
+        del ctx_dict['request_id']
+        del ctx_dict['project_id']
+        del ctx_dict['project_name']
         self.assertEqual(self.ctx, ctx_dict)
 
     def test_request_context_update(self):
