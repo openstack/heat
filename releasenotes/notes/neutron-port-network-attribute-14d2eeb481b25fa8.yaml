@@ -1,0 +1,13 @@
+---
+features:
+  - |
+    Added ``network`` attribute to OS::Neutron::Port resource. The new
+    attribute returns the neutron network that owns the port. The following
+    examples demonstrate some (not all) possible expressions. (Obtains the
+    network, the MTU (Maximum transmission unit), the network tags and finally
+    the l2_adjacency property)::
+
+      {get_attr: [<port>, network]}
+      {get_attr: [<port>, network, mtu]}
+      {get_attr: [<port>, network, tags]}
+      {get_attr: [<port>, network, l2_adjacency]}
