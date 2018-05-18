@@ -487,6 +487,11 @@ class ActionInProgress(HeatException):
                 "in progress.")
 
 
+class ActionNotComplete(HeatException):
+    msg_fmt = _("Stack %(stack_name)s has an action (%(action)s) "
+                "in progress or failed state.")
+
+
 class StopActionFailed(HeatException):
     msg_fmt = _("Failed to stop stack (%(stack_name)s) on other engine "
                 "(%(engine_id)s)")
