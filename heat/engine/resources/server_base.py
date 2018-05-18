@@ -19,6 +19,7 @@ from oslo_serialization import jsonutils
 
 from heat.common import exception
 from heat.common.i18n import _LE
+from heat.common import password_gen
 from heat.engine.clients import progress
 from heat.engine.resources import stack_user
 
@@ -138,7 +139,7 @@ class BaseServer(stack_user.StackUser):
         elif (self.transport_poll_server_heat(props) or
               self.transport_zaqar_message(props)):
             if self.password is None:
-                self.password = uuid.uuid4().hex
+                self.password = password_gen.generate_openstack_password()
             self._create_user()
 
         self._register_access_key()
