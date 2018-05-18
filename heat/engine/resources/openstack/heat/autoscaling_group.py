@@ -186,6 +186,12 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
                                                           resource_def))
         return rsrc_defn.ResourceDefinition(None, **defn_data)
 
+    def child_template_files(self, child_env):
+        is_update = self.action == self.UPDATE
+        return grouputils.get_child_template_files(self.context, self.stack,
+                                                   is_update,
+                                                   self.old_template_id)
+
     def _try_rolling_update(self, prop_diff):
         if self.RESOURCE in prop_diff:
             policy = self.properties[self.ROLLING_UPDATES]

@@ -247,6 +247,7 @@ class Resource(status.ResourceStatus):
         self.replaces = None
         self.replaced_by = None
         self.current_template_id = None
+        self.old_template_id = None
         self.root_stack_id = None
         self._calling_engine_id = None
         self._atomic_key = None
@@ -1655,7 +1656,7 @@ class Resource(status.ResourceStatus):
             after_props.validate()
             self.properties = before_props
             tmpl_diff = self.update_template_diff(after.freeze(), before)
-            old_template_id = self.current_template_id
+            self.old_template_id = self.current_template_id
 
             try:
                 if tmpl_diff and self.needs_replace_with_tmpl_diff(tmpl_diff):
@@ -1672,7 +1673,8 @@ class Resource(status.ResourceStatus):
                                                      prop_diff])
             except UpdateReplace:
                 with excutils.save_and_reraise_exception():
-                    self.current_template_id = old_template_id
+                    self.current_template_id = self.old_template_id
+                    self.old_template_id = None
                     self._prepare_update_replace(action)
 
             self.t = after

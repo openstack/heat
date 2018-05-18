@@ -222,7 +222,12 @@ class StackResource(resource.Resource):
         if isinstance(parsed_child_template, template.Template):
             parsed_child_template = parsed_child_template.t
         return template.Template(parsed_child_template,
-                                 files=self.stack.t.files, env=child_env)
+                                 files=self.child_template_files(child_env),
+                                 env=child_env)
+
+    def child_template_files(self, child_env):
+        """Default implementation to get the files map for child template."""
+        return self.stack.t.files
 
     def _parse_nested_stack(self, stack_name, child_template,
                             child_params, timeout_mins=None,

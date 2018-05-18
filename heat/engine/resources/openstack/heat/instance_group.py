@@ -478,6 +478,13 @@ class InstanceGroup(stack_resource.StackResource):
         num_instances = int(self.properties[self.SIZE])
         return self._create_template(num_instances)
 
+    def child_template_files(self, child_env):
+        is_rolling_update = (self.action == self.UPDATE and
+                             self.update_policy[self.ROLLING_UPDATE])
+        return grouputils.get_child_template_files(self.context, self.stack,
+                                                   is_rolling_update,
+                                                   self.old_template_id)
+
     def child_params(self):
         """Return the environment for the nested stack."""
         return {
