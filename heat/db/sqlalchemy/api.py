@@ -153,7 +153,12 @@ def raw_template_delete(context, template_id):
         # delete that too
         if session.query(models.RawTemplate).filter_by(
                 files_id=raw_tmpl_files_id).first() is None:
-            raw_tmpl_files = raw_template_files_get(context, raw_tmpl_files_id)
+            try:
+                raw_tmpl_files = raw_template_files_get(
+                    context, raw_tmpl_files_id)
+            except exception.NotFound:
+                # Ignore not found
+                return
             session.delete(raw_tmpl_files)
 
 
