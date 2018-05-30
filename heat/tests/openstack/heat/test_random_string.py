@@ -348,7 +348,7 @@ Resources:
 '''
 
         results = self.run_test(template_rs, 20)
-        self.check_stats(self.char_counts(results, '0'), 10.3, 2.5)
+        self.check_stats(self.char_counts(results, '0'), 10.3, 3)
 
     def test_overlapping_sequences(self):
         template_rs = '''
