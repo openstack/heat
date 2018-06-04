@@ -14,6 +14,7 @@
 import collections
 import copy
 
+import mock
 from neutronclient.common import exceptions as neutron_exc
 from neutronclient.v2_0 import client as neutronclient
 
@@ -66,16 +67,21 @@ Resources:
 
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'create_security_group')
-        self.m.StubOutWithMock(
+        self.m_csg = self.patchobject(neutronclient.Client,
+                                      'create_security_group')
+        self.m_csgr = self.patchobject(
             neutronclient.Client, 'create_security_group_rule')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_security_group')
-        self.m.StubOutWithMock(
+        self.m_ssg = self.patchobject(neutronclient.Client,
+                                      'show_security_group')
+        self.m_dsgr = self.patchobject(
             neutronclient.Client, 'delete_security_group_rule')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_security_group')
-        self.m.StubOutWithMock(neutronclient.Client, 'update_security_group')
+        self.m_dsg = self.patchobject(
+            neutronclient.Client, 'delete_security_group')
+        self.m_usg = self.patchobject(
+            neutronclient.Client, 'update_security_group')
         self.patchobject(resource.Resource, 'is_using_neutron',
                          return_value=True)
+        self.sg_name = utils.PhysName('test_stack', 'the_sg')
 
     def mock_no_neutron(self):
         self.patchobject(resource.Resource, 'is_using_neutron',
@@ -100,17 +106,73 @@ Resources:
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata_get()))
 
-    def stubout_neutron_create_security_group(self):
-        sg_name = utils.PhysName('test_stack', 'the_sg')
-        neutronclient.Client.create_security_group({
+    def validate_create_security_group_rule_calls(self):
+        expected = [
+            mock.call(
+                {'security_group_rule': {
+                    'security_group_id': 'aaaa', 'protocol': 'tcp',
+                    'port_range_max': 22, 'direction': 'ingress',
+                    'remote_group_id': None, 'ethertype': 'IPv4',
+                    'remote_ip_prefix': '0.0.0.0/0', 'port_range_min': 22}}
+            ),
+            mock.call(
+                {'security_group_rule': {
+                    'security_group_id': 'aaaa', 'protocol': 'tcp',
+                    'port_range_max': 80, 'direction': 'ingress',
+                    'remote_group_id': None, 'ethertype': 'IPv4',
+                    'remote_ip_prefix': '0.0.0.0/0', 'port_range_min': 80}}
+            ),
+            mock.call(
+                {'security_group_rule': {
+                    'security_group_id': 'aaaa', 'protocol': 'tcp',
+                    'port_range_max': None, 'direction': 'ingress',
+                    'remote_group_id': 'wwww', 'ethertype': 'IPv4',
+                    'remote_ip_prefix': None, 'port_range_min': None}}
+            ),
+            mock.call(
+                {'security_group_rule': {
+                    'security_group_id': 'aaaa', 'protocol': 'tcp',
+                    'port_range_max': 22, 'direction': 'egress',
+                    'remote_group_id': None, 'ethertype': 'IPv4',
+                    'remote_ip_prefix': '10.0.1.0/24', 'port_range_min': 22}}
+            ),
+            mock.call(
+                {'security_group_rule': {
+                    'security_group_id': 'aaaa', 'protocol': None,
+                    'port_range_max': None, 'direction': 'egress',
+                    'remote_group_id': 'xxxx', 'ethertype': 'IPv4',
+                    'remote_ip_prefix': None, 'port_range_min': None}})
+        ]
+
+        self.assertEqual(expected, self.m_csgr.call_args_list)
+
+    def validate_delete_security_group_rule(self):
+        self.assertEqual(
+            [mock.call('aaaa-1'),
+             mock.call('aaaa-2'),
+             mock.call('bbbb'),
+             mock.call('cccc'),
+             mock.call('dddd'),
+             mock.call('eeee'),
+             mock.call('ffff'),
+             ],
+            self.m_dsgr.call_args_list)
+
+    def validate_stubout_neutron_create_security_group(self):
+        self.m_csg.assert_called_once_with({
             'security_group': {
-                'name': sg_name,
+                'name': self.sg_name,
                 'description': 'HTTP and SSH access'
             }
-        }).AndReturn({
+        })
+        self.validate_delete_security_group_rule()
+        self.validate_create_security_group_rule_calls()
+
+    def stubout_neutron_create_security_group(self, mock_csgr=True):
+        self.m_csg.return_value = {
             'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                'name': sg_name,
+                'name': self.sg_name,
                 'description': 'HTTP and SSH access',
                 'security_group_rules': [{
                     "direction": "egress",
@@ -137,136 +199,77 @@ Resources:
                 }],
                 'id': 'aaaa'
             }
-        })
-
-        neutronclient.Client.delete_security_group_rule('aaaa-1').AndReturn(
-            None)
-        neutronclient.Client.delete_security_group_rule('aaaa-2').AndReturn(
-            None)
-
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndReturn({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'bbbb'
-            }
-        })
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 80,
-                'ethertype': 'IPv4',
-                'port_range_max': 80,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndReturn({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 80,
-                'ethertype': 'IPv4',
-                'port_range_max': 80,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'cccc'
-            }
-        })
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': 'wwww',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndReturn({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': 'wwww',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'dddd'
-            }
-        })
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndReturn({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'eeee'
-            }
-        })
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': 'xxxx',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': None,
-                'security_group_id': 'aaaa'
-            }
-        }).AndReturn({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': 'xxxx',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': None,
-                'security_group_id': 'aaaa',
-                'id': 'ffff'
-            }
-        })
+        }
+        if mock_csgr:
+            self.m_csgr.side_effect = [
+                {
+                    'security_group_rule': {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': 22,
+                        'ethertype': 'IPv4',
+                        'port_range_max': 22,
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa',
+                        'id': 'bbbb'
+                    }},
+                {
+                    'security_group_rule': {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': 80,
+                        'ethertype': 'IPv4',
+                        'port_range_max': 80,
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa',
+                        'id': 'cccc'
+                    }
+                },
+                {
+                    'security_group_rule': {
+                        'direction': 'ingress',
+                        'remote_group_id': 'wwww',
+                        'remote_ip_prefix': None,
+                        'port_range_min': None,
+                        'ethertype': 'IPv4',
+                        'port_range_max': None,
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa',
+                        'id': 'dddd'
+                    }
+                },
+                {
+                    'security_group_rule': {
+                        'direction': 'egress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '10.0.1.0/24',
+                        'port_range_min': 22,
+                        'ethertype': 'IPv4',
+                        'port_range_max': 22,
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa',
+                        'id': 'eeee'
+                    }
+                },
+                {
+                    'security_group_rule': {
+                        'direction': 'egress',
+                        'remote_group_id': 'xxxx',
+                        'remote_ip_prefix': None,
+                        'port_range_min': None,
+                        'ethertype': 'IPv4',
+                        'port_range_max': None,
+                        'protocol': None,
+                        'security_group_id': 'aaaa',
+                        'id': 'ffff'
+                    }
+                }
+            ]
 
     def stubout_neutron_get_security_group(self):
-        neutronclient.Client.show_security_group('aaaa').AndReturn({
+        self.m_ssg.return_value = {
             'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                 'name': 'sc1',
@@ -327,25 +330,14 @@ Resources:
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': None
                 }],
-                'id': 'aaaa'}})
-
-    def stubout_neutron_delete_security_group_rules(self):
-        self.stubout_neutron_get_security_group()
-        neutronclient.Client.delete_security_group_rule('bbbb').AndReturn(None)
-        neutronclient.Client.delete_security_group_rule('cccc').AndReturn(None)
-        neutronclient.Client.delete_security_group_rule('dddd').AndReturn(None)
-        neutronclient.Client.delete_security_group_rule('eeee').AndReturn(None)
-        neutronclient.Client.delete_security_group_rule('ffff').AndReturn(None)
+                'id': 'aaaa'}}
 
     def test_security_group_neutron(self):
         # create script
         self.stubout_neutron_create_security_group()
 
-        # delete script
-        self.stubout_neutron_delete_security_group_rules()
-        neutronclient.Client.delete_security_group('aaaa').AndReturn(None)
+        self.stubout_neutron_get_security_group()
 
-        self.m.ReplayAll()
         stack = self.create_stack(self.test_template_neutron)
 
         sg = stack['the_sg']
@@ -353,95 +345,28 @@ Resources:
         self.assertResourceState(sg, 'aaaa')
 
         stack.delete()
-        self.m.VerifyAll()
+        self.validate_stubout_neutron_create_security_group()
+        self.m_ssg.assert_called_once_with('aaaa')
+        self.m_dsg.assert_called_once_with('aaaa')
 
     def test_security_group_neutron_exception(self):
         # create script
-        sg_name = utils.PhysName('test_stack', 'the_sg')
-        neutronclient.Client.create_security_group({
-            'security_group': {
-                'name': sg_name,
-                'description': 'HTTP and SSH access'
-            }
-        }).AndReturn({
+        self.m_csg.return_value = {
             'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                'name': sg_name,
+                'name': self.sg_name,
                 'description': 'HTTP and SSH access',
                 'security_group_rules': [],
                 'id': 'aaaa'
             }
-        })
-
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndRaise(
-            neutron_exc.Conflict())
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 80,
-                'ethertype': 'IPv4',
-                'port_range_max': 80,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndRaise(
-            neutron_exc.Conflict())
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': 'wwww',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndRaise(
-            neutron_exc.Conflict())
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '10.0.1.0/24',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).AndRaise(
-            neutron_exc.Conflict())
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': 'xxxx',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': None,
-                'security_group_id': 'aaaa'
-            }
-        }).AndRaise(
-            neutron_exc.Conflict())
+        }
+        self.m_csgr.side_effect = neutron_exc.Conflict
 
         # delete script
-        neutronclient.Client.show_security_group('aaaa').AndReturn({
-            'security_group': {
+        self.m_dsgr.side_effect = neutron_exc.NeutronClientException(
+            status_code=404)
+        self.m_ssg.side_effect = [
+            {'security_group': {
                 'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                 'name': 'sc1',
                 'description': '',
@@ -501,24 +426,9 @@ Resources:
                     'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                     'port_range_min': None
                 }],
-                'id': 'aaaa'}})
-        neutronclient.Client.delete_security_group_rule('bbbb').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_security_group_rule('cccc').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_security_group_rule('dddd').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_security_group_rule('eeee').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_security_group_rule('ffff').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_security_group('aaaa').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
+                'id': 'aaaa'}},
+            neutron_exc.NeutronClientException(status_code=404)]
 
-        neutronclient.Client.show_security_group('aaaa').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
-
-        self.m.ReplayAll()
         stack = self.create_stack(self.test_template_neutron)
 
         sg = stack['the_sg']
@@ -531,99 +441,66 @@ Resources:
         sg.resource_id = 'aaaa'
         stack.delete()
 
-        self.m.VerifyAll()
+        self.m_csg.assert_called_once_with({
+            'security_group': {
+                'name': self.sg_name,
+                'description': 'HTTP and SSH access'
+            }
+        })
+        self.validate_create_security_group_rule_calls()
+        self.assertEqual(
+            [mock.call('aaaa'), mock.call('aaaa')],
+            self.m_ssg.call_args_list)
+        self.assertEqual(
+            [mock.call('bbbb'), mock.call('cccc'), mock.call('dddd'),
+             mock.call('eeee'), mock.call('ffff')], self.m_dsgr.call_args_list)
 
     def test_security_group_neutron_update(self):
         # create script
-        self.stubout_neutron_create_security_group()
+        self.stubout_neutron_create_security_group(mock_csgr=False)
 
         # update script
         # delete old not needed rules
         self.stubout_neutron_get_security_group()
-        neutronclient.Client.delete_security_group_rule(
-            'bbbb').InAnyOrder().AndReturn(None)
-        neutronclient.Client.delete_security_group_rule(
-            'dddd').InAnyOrder().AndReturn(None)
-        neutronclient.Client.delete_security_group_rule(
-            'eeee').InAnyOrder().AndReturn(None)
 
         # create missing rules
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 443,
-                'ethertype': 'IPv4',
-                'port_range_max': 443,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
+        self.m_csgr.side_effect = [
+            {
+                'security_group_rule': {
+                    'direction': 'ingress',
+                    'remote_group_id': None,
+                    'remote_ip_prefix': '0.0.0.0/0',
+                    'port_range_min': 443,
+                    'ethertype': 'IPv4',
+                    'port_range_max': 443,
+                    'protocol': 'tcp',
+                    'security_group_id': 'aaaa',
+                    'id': 'bbbb'}
+            }, {
+                'security_group_rule': {
+                    'direction': 'ingress',
+                    'remote_group_id': 'zzzz',
+                    'remote_ip_prefix': None,
+                    'port_range_min': None,
+                    'ethertype': 'IPv4',
+                    'port_range_max': None,
+                    'protocol': 'tcp',
+                    'security_group_id': 'aaaa',
+                    'id': 'dddd'}
+            }, {
+                'security_group_rule': {
+                    'direction': 'egress',
+                    'remote_group_id': None,
+                    'remote_ip_prefix': '0.0.0.0/0',
+                    'port_range_min': 22,
+                    'ethertype': 'IPv4',
+                    'port_range_max': 22,
+                    'protocol': 'tcp',
+                    'security_group_id': 'aaaa',
+                    'id': 'eeee'
+                }
             }
-        }).InAnyOrder().AndReturn({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 443,
-                'ethertype': 'IPv4',
-                'port_range_max': 443,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'bbbb'
-            }
-        })
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': 'zzzz',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).InAnyOrder().AndReturn({
-            'security_group_rule': {
-                'direction': 'ingress',
-                'remote_group_id': 'zzzz',
-                'remote_ip_prefix': None,
-                'port_range_min': None,
-                'ethertype': 'IPv4',
-                'port_range_max': None,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'dddd'
-            }
-        })
-
-        neutronclient.Client.create_security_group_rule({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa'
-            }
-        }).InAnyOrder().AndReturn({
-            'security_group_rule': {
-                'direction': 'egress',
-                'remote_group_id': None,
-                'remote_ip_prefix': '0.0.0.0/0',
-                'port_range_min': 22,
-                'ethertype': 'IPv4',
-                'port_range_max': 22,
-                'protocol': 'tcp',
-                'security_group_id': 'aaaa',
-                'id': 'eeee'
-            }
-        })
-
-        self.m.ReplayAll()
-
+        ]
         stack = self.create_stack(self.test_template_neutron)
         sg = stack['the_sg']
         self.assertResourceState(sg, 'aaaa')
@@ -653,8 +530,11 @@ Resources:
         scheduler.TaskRunner(sg.update, after)()
 
         self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
-
-        self.m.VerifyAll()
+        self.m_dsgr.assert_has_calls(
+            [mock.call('aaaa-1'), mock.call('aaaa-2'), mock.call('eeee'),
+             mock.call('dddd'), mock.call('bbbb')],
+            any_order=True)
+        self.m_ssg.assert_called_once_with('aaaa')
 
     def test_security_group_neutron_update_with_empty_rules(self):
         # create script
@@ -663,12 +543,6 @@ Resources:
         # update script
         # delete old not needed rules
         self.stubout_neutron_get_security_group()
-        neutronclient.Client.delete_security_group_rule(
-            'eeee').InAnyOrder().AndReturn(None)
-        neutronclient.Client.delete_security_group_rule(
-            'ffff').InAnyOrder().AndReturn(None)
-
-        self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template_neutron)
         sg = stack['the_sg']
@@ -681,5 +555,8 @@ Resources:
         scheduler.TaskRunner(sg.update, after)()
 
         self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
-
-        self.m.VerifyAll()
+        self.m_ssg.assert_called_once_with('aaaa')
+        self.m_dsgr.assert_has_calls(
+            [mock.call('aaaa-1'), mock.call('aaaa-2'), mock.call('eeee'),
+             mock.call('ffff')],
+            any_order=True)
