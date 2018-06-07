@@ -32,7 +32,7 @@
           services+=,placement-api,placement-client
           services+=,g-api,g-reg
           services+=,c-sch,c-api,c-vol,c-bak
-          services+=,q-svc,q-dhcp,q-meta,q-agt,q-l3,q-trunk
+          services+=,neutron-api,neutron-dhcp,neutron-metadata-agent,neutron-agent,neutron-l3,neutron-trunk
 
           if [ "{{ use_python3 }}" -eq 1 ] ; then
              export DEVSTACK_GATE_USE_PYTHON3=True
