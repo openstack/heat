@@ -34,22 +34,38 @@ class VPCTestBase(common.HeatTestCase):
 
     def setUp(self):
         super(VPCTestBase, self).setUp()
-        self.m.StubOutWithMock(neutronclient.Client, 'add_interface_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'add_gateway_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_network')
+        self.m_add_interface_router = self.patchobject(
+            neutronclient.Client, 'add_interface_router',
+            return_value=None)
+        self.m_add_gateway_router = self.patchobject(
+            neutronclient.Client, 'add_gateway_router')
+        self.m_create_network = self.patchobject(neutronclient.Client,
+                                                 'create_network')
         self.m.StubOutWithMock(neutronclient.Client, 'create_port')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'create_subnet')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_network')
+        self.m_create_router = self.patchobject(neutronclient.Client,
+                                                'create_router')
+        self.m_create_subnet = self.patchobject(neutronclient.Client,
+                                                'create_subnet')
+        self.m_delete_network = self.patchobject(neutronclient.Client,
+                                                 'delete_network',
+                                                 return_value=None)
         self.m.StubOutWithMock(neutronclient.Client, 'delete_port')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'delete_subnet')
+        self.m_delete_router = self.patchobject(neutronclient.Client,
+                                                'delete_router',
+                                                return_value=None)
+        self.m_delete_subnet = self.patchobject(neutronclient.Client,
+                                                'delete_subnet',
+                                                return_value=None)
         self.m.StubOutWithMock(neutronclient.Client, 'list_networks')
-        self.m.StubOutWithMock(neutronclient.Client, 'list_routers')
+        self.m_list_routers = self.patchobject(neutronclient.Client,
+                                               'list_routers')
         self.m.StubOutWithMock(neutronclient.Client, 'remove_gateway_router')
-        self.m.StubOutWithMock(neutronclient.Client, 'remove_interface_router')
+        self.m_remove_interface_router = self.patchobject(
+            neutronclient.Client, 'remove_interface_router',
+            return_value=None)
         self.m.StubOutWithMock(neutronclient.Client, 'show_subnet')
-        self.m.StubOutWithMock(neutronclient.Client, 'show_network')
+        self.m_show_network = self.patchobject(neutronclient.Client,
+                                               'show_network')
         self.m.StubOutWithMock(neutronclient.Client, 'show_port')
         self.m.StubOutWithMock(neutronclient.Client, 'show_router')
         self.m.StubOutWithMock(neutronclient.Client, 'create_security_group')
@@ -75,12 +91,16 @@ class VPCTestBase(common.HeatTestCase):
         stack.store()
         return stack
 
+    def validate_mock_create_network(self):
+        self.m_show_network.assert_called_with('aaaa')
+        self.m_create_network.assert_called_once_with({
+            'network': {'name': self.vpc_name}})
+        self.m_create_router.assert_called_once()
+
     def mock_create_network(self):
         self.vpc_name = utils.PhysName('test_stack', 'the_vpc')
-        neutronclient.Client.create_network(
-            {
-                'network': {'name': self.vpc_name}
-            }).AndReturn({'network': {
+        self.m_create_network.return_value = {
+            'network': {
                 'status': 'BUILD',
                 'subnets': [],
                 'name': 'name',
@@ -88,70 +108,51 @@ class VPCTestBase(common.HeatTestCase):
                 'shared': False,
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'id': 'aaaa'
-            }})
-        neutronclient.Client.show_network(
-            'aaaa'
-        ).AndReturn({"network": {
-            "status": "BUILD",
-            "subnets": [],
-            "name": self.vpc_name,
-            "admin_state_up": False,
-            "shared": False,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "aaaa"
-        }})
-
-        neutronclient.Client.show_network(
-            'aaaa'
-        ).MultipleTimes().AndReturn({"network": {
-            "status": "ACTIVE",
-            "subnets": [],
-            "name": self.vpc_name,
-            "admin_state_up": False,
-            "shared": False,
-            "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-            "id": "aaaa"
-        }})
-        neutronclient.Client.create_router(
-            {'router': {'name': self.vpc_name}}).AndReturn({
-                'router': {
-                    'status': 'BUILD',
-                    'name': self.vpc_name,
-                    'admin_state_up': True,
-                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                    'id': 'bbbb'
-                }})
-        neutronclient.Client.list_routers(name=self.vpc_name).AndReturn({
-            "routers": [{
+            }}
+        show_network_returns = [
+            {"network": {
                 "status": "BUILD",
-                "external_gateway_info": None,
+                "subnets": [],
                 "name": self.vpc_name,
-                "admin_state_up": True,
-                "tenant_id": "3e21026f2dc94372b105808c0e721661",
-                "routes": [],
-                "id": "bbbb"
-            }]
-        })
+                "admin_state_up": False,
+                "shared": False,
+                "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                "id": "aaaa"
+            }}]
+        for i in range(3):
+            show_network_returns.append(
+                {"network": {
+                    "status": "ACTIVE",
+                    "subnets": [],
+                    "name": self.vpc_name,
+                    "admin_state_up": False,
+                    "shared": False,
+                    "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
+                    "id": "aaaa"
+                }})
+        self.m_show_network.side_effect = show_network_returns
+
+        self.m_create_router.return_value = {
+            'router': {
+                'status': 'BUILD',
+                'name': self.vpc_name,
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'id': 'bbbb'
+            }}
         self.mock_router_for_vpc()
 
     def mock_create_subnet(self):
         self.subnet_name = utils.PhysName('test_stack', 'the_subnet')
-        neutronclient.Client.create_subnet(
-            {'subnet': {
-                'network_id': u'aaaa',
-                'cidr': u'10.0.0.0/24',
-                'ip_version': 4,
-                'name': self.subnet_name}}).AndReturn({
-                    'subnet': {
-                        'status': 'ACTIVE',
-                        'name': self.subnet_name,
-                        'admin_state_up': True,
-                        'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                        'id': 'cccc'}})
+        self.m_create_subnet.return_value = {
+            'subnet': {
+                'status': 'ACTIVE',
+                'name': self.subnet_name,
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'id': 'cccc'}}
+
         self.mock_router_for_vpc()
-        neutronclient.Client.add_interface_router(
-            u'bbbb',
-            {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_show_subnet(self):
         neutronclient.Client.show_subnet('cccc').AndReturn({
@@ -249,7 +250,7 @@ class VPCTestBase(common.HeatTestCase):
             '0389f747-7785-4757-b7bb-2ab07e4b09c3').AndReturn(None)
 
     def mock_router_for_vpc(self):
-        neutronclient.Client.list_routers(name=self.vpc_name).AndReturn({
+        self.m_list_routers.return_value = {
             "routers": [{
                 "status": "ACTIVE",
                 "external_gateway_info": {
@@ -261,32 +262,23 @@ class VPCTestBase(common.HeatTestCase):
                 "routes": [],
                 "id": "bbbb"
             }]
-        })
-
-    def mock_delete_network(self):
-        self.mock_router_for_vpc()
-        neutronclient.Client.delete_router('bbbb').AndReturn(None)
-        neutronclient.Client.delete_network('aaaa').AndReturn(None)
+        }
 
     def mock_delete_subnet(self):
+        # TODO(ricolin) remove this func once we all move to mock
         self.mock_router_for_vpc()
-        neutronclient.Client.remove_interface_router(
-            u'bbbb',
-            {'subnet_id': 'cccc'}).AndReturn(None)
-        neutronclient.Client.delete_subnet('cccc').AndReturn(None)
 
     def mock_create_route_table(self):
         self.rt_name = utils.PhysName('test_stack', 'the_route_table')
-        neutronclient.Client.create_router({
-            'router': {'name': self.rt_name}}).AndReturn({
-                'router': {
-                    'status': 'BUILD',
-                    'name': self.rt_name,
-                    'admin_state_up': True,
-                    'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                    'id': 'ffff'
-                }
-            })
+        self.m_create_router.return_value = {
+            'router': {
+                'status': 'BUILD',
+                'name': self.rt_name,
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'id': 'ffff'
+            }
+        }
         neutronclient.Client.show_router('ffff').AndReturn({
             'router': {
                 'status': 'BUILD',
@@ -306,31 +298,18 @@ class VPCTestBase(common.HeatTestCase):
             }
         })
         self.mock_router_for_vpc()
-        neutronclient.Client.add_gateway_router(
-            'ffff', {'network_id': 'zzzz'}).AndReturn(None)
 
     def mock_create_association(self):
+        # TODO(ricolin) merge mock_create_association and
+        # mock_delete_association func once we all move to mock
         self.mock_show_subnet()
         self.mock_router_for_vpc()
-        neutronclient.Client.remove_interface_router(
-            'bbbb',
-            {'subnet_id': u'cccc'}).AndReturn(None)
-        neutronclient.Client.add_interface_router(
-            u'ffff',
-            {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_delete_association(self):
         self.mock_show_subnet()
         self.mock_router_for_vpc()
-        neutronclient.Client.remove_interface_router(
-            'ffff',
-            {'subnet_id': u'cccc'}).AndReturn(None)
-        neutronclient.Client.add_interface_router(
-            u'bbbb',
-            {'subnet_id': 'cccc'}).AndReturn(None)
 
     def mock_delete_route_table(self):
-        neutronclient.Client.delete_router('ffff').AndReturn(None)
         neutronclient.Client.remove_gateway_router('ffff').AndReturn(None)
 
     def assertResourceState(self, resource, ref_id):
@@ -351,34 +330,37 @@ Resources:
 
     def mock_create_network_failed(self):
         self.vpc_name = utils.PhysName('test_stack', 'the_vpc')
-        neutronclient.Client.create_network(
-            {
-                'network': {'name': self.vpc_name}
-            }).AndRaise(neutron_exc.NeutronClientException())
+        self.m_create_network.side_effect = neutron_exc.NeutronClientException
 
     def test_vpc(self):
         self.mock_create_network()
-        self.mock_delete_network()
-        self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
         vpc = stack['the_vpc']
         self.assertResourceState(vpc, 'aaaa')
+        self.validate_mock_create_network()
+        self.assertEqual(3, self.m_show_network.call_count)
 
         scheduler.TaskRunner(vpc.delete)()
-        self.m.VerifyAll()
+
+        self.m_show_network.assert_called_with('aaaa')
+        self.assertEqual(4, self.m_show_network.call_count)
+        self.assertEqual(2, self.m_list_routers.call_count)
+        self.m_list_routers.assert_called_with(name=self.vpc_name)
+        self.m_delete_router.assert_called_once_with('bbbb')
+        self.m_delete_network.assert_called_once_with('aaaa')
 
     def test_vpc_delete_successful_if_created_failed(self):
         self.mock_create_network_failed()
-        self.m.ReplayAll()
 
         t = template_format.parse(self.test_template)
         stack = self.parse_stack(t)
         scheduler.TaskRunner(stack.create)()
         self.assertEqual((stack.CREATE, stack.FAILED), stack.state)
+        self.m_create_network.assert_called_once_with(
+            {'network': {'name': self.vpc_name}})
         scheduler.TaskRunner(stack.delete)()
-
-        self.m.VerifyAll()
+        self.m_delete_network.assert_not_called()
 
 
 class SubnetTest(VPCTestBase):
@@ -401,59 +383,65 @@ Resources:
         self.mock_create_network()
         self.mock_create_subnet()
         self.mock_delete_subnet()
-        self.mock_delete_network()
 
         # mock delete subnet which is already deleted
         self.mock_router_for_vpc()
-        neutronclient.Client.remove_interface_router(
-            u'bbbb',
-            {'subnet_id': 'cccc'}).AndRaise(
-                neutron_exc.NeutronClientException(status_code=404))
-        neutronclient.Client.delete_subnet('cccc').AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
+        exc = neutron_exc.NeutronClientException(status_code=404)
+        self.m_remove_interface_router.side_effect = exc
+        self.m_delete_subnet.side_effect = neutron_exc.NeutronClientException(
+            status_code=404)
 
-        self.m.ReplayAll()
         stack = self.create_stack(self.test_template)
 
         subnet = stack['the_subnet']
-        self.assertResourceState(subnet, 'cccc')
 
+        self.assertResourceState(subnet, 'cccc')
+        self.m_list_routers.assert_called_with(name=self.vpc_name)
+
+        self.validate_mock_create_network()
+
+        self.m_add_interface_router.assert_called_once_with(
+            u'bbbb', {'subnet_id': 'cccc'})
+        self.m_create_subnet.assert_called_once_with(
+            {'subnet': {
+                'network_id': u'aaaa',
+                'cidr': u'10.0.0.0/24',
+                'ip_version': 4,
+                'name': self.subnet_name}})
+        self.assertEqual(4, self.m_show_network.call_count)
         self.assertRaises(
             exception.InvalidTemplateAttribute,
             subnet.FnGetAtt,
             'Foo')
-
         self.assertEqual('moon', subnet.FnGetAtt('AvailabilityZone'))
 
         scheduler.TaskRunner(subnet.delete)()
         subnet.state_set(subnet.CREATE, subnet.COMPLETE, 'to delete again')
         scheduler.TaskRunner(subnet.delete)()
         scheduler.TaskRunner(stack['the_vpc'].delete)()
-        self.m.VerifyAll()
+
+        self.m_show_network.assert_called_with('aaaa')
+        self.m_list_routers.assert_called_with(name=self.vpc_name)
+        self.assertEqual(2, self.m_list_routers.call_count)
+
+        self.assertEqual(7, self.m_show_network.call_count)
 
     def _mock_create_subnet_failed(self, stack_name):
         self.subnet_name = utils.PhysName(stack_name, 'the_subnet')
-        neutronclient.Client.create_subnet(
-            {'subnet': {
-                'network_id': u'aaaa',
-                'cidr': u'10.0.0.0/24',
-                'ip_version': 4,
-                'name': self.subnet_name}}).AndReturn({
-                    'subnet': {
-                        'status': 'ACTIVE',
-                        'name': self.subnet_name,
-                        'admin_state_up': True,
-                        'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
-                        'id': 'cccc'}})
+        self.m_create_subnet.return_value = {
+            'subnet': {
+                'status': 'ACTIVE',
+                'name': self.subnet_name,
+                'admin_state_up': True,
+                'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                'id': 'cccc'}}
 
-        neutronclient.Client.show_network('aaaa').MultipleTimes().AndRaise(
-            neutron_exc.NeutronClientException(status_code=404))
+        self.m_show_network.side_effect = neutron_exc.NeutronClientException(
+            status_code=404)
 
     def test_create_failed_delete_success(self):
         stack_name = 'test_subnet_'
         self._mock_create_subnet_failed(stack_name)
-        neutronclient.Client.delete_subnet('cccc').AndReturn(None)
-        self.m.ReplayAll()
 
         t = template_format.parse(self.test_template)
         tmpl = template.Template(t)
@@ -470,9 +458,20 @@ Resources:
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         ref_id = rsrc.FnGetRefId()
         self.assertEqual(u'cccc', ref_id)
+
+        self.m_create_subnet.assert_called_once_with(
+            {'subnet': {
+                'network_id': u'aaaa',
+                'cidr': u'10.0.0.0/24',
+                'ip_version': 4,
+                'name': self.subnet_name}})
+        self.assertEqual(1, self.m_show_network.call_count)
+
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
-        self.m.VerifyAll()
+
+        self.assertEqual(2, self.m_show_network.call_count)
+        self.m_delete_subnet.assert_called_once_with('cccc')
 
 
 class NetworkInterfaceTest(VPCTestBase):
@@ -651,7 +650,6 @@ Resources:
         self.mock_show_network_interface()
         self.mock_delete_network_interface()
         self.mock_delete_subnet()
-        self.mock_delete_network()
         self.mock_delete_security_group()
 
         self.m.ReplayAll()
@@ -678,7 +676,6 @@ Resources:
         self.mock_create_network_interface()
         self.mock_delete_network_interface()
         self.mock_delete_subnet()
-        self.mock_delete_network()
         self.mock_delete_security_group()
 
         self.m.ReplayAll()
@@ -701,7 +698,6 @@ Resources:
         self.mock_create_network_interface(security_groups=None)
         self.mock_delete_network_interface()
         self.mock_delete_subnet()
-        self.mock_delete_network()
 
         self.m.ReplayAll()
 
@@ -763,11 +759,6 @@ Resources:
                 'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'
             }]})
 
-    def mock_create_gateway_attachment(self):
-        neutronclient.Client.add_gateway_router(
-            'ffff', {'network_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'}
-        ).AndReturn(None)
-
     def mock_delete_gateway_attachment(self):
         neutronclient.Client.remove_gateway_router('ffff').AndReturn(None)
 
@@ -778,19 +769,23 @@ Resources:
         self.mock_create_route_table()
         self.stub_SubnetConstraint_validate()
         self.mock_create_association()
-        self.mock_create_gateway_attachment()
         self.mock_delete_gateway_attachment()
         self.mock_delete_association()
         self.mock_delete_route_table()
         self.mock_delete_subnet()
-        self.mock_delete_network()
 
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
+        self.m_create_router.assert_called_with(
+            {'router': {'name': self.rt_name}})
+        self.m_add_interface_router.assert_called_once_with(
+            u'bbbb', {'subnet_id': 'cccc'})
 
         gateway = stack['the_gateway']
         self.assertResourceState(gateway, gateway.physical_resource_name())
+        self.m_add_gateway_router.assert_called_once_with(
+            'ffff', {'network_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'})
 
         attachment = stack['the_attachment']
         self.assertResourceState(attachment, 'the_attachment')
@@ -799,6 +794,10 @@ Resources:
         self.assertEqual([route_table], list(attachment._vpc_route_tables()))
 
         stack.delete()
+        self.m_remove_interface_router.assert_called_with(
+            'ffff',
+            {'subnet_id': u'cccc'})
+        self.m_delete_router.assert_called_once_with('ffff')
         self.m.VerifyAll()
 
 
@@ -837,11 +836,14 @@ Resources:
         self.mock_delete_association()
         self.mock_delete_route_table()
         self.mock_delete_subnet()
-        self.mock_delete_network()
 
         self.m.ReplayAll()
 
         stack = self.create_stack(self.test_template)
+        self.m_create_router.assert_called_with(
+            {'router': {'name': self.rt_name}})
+        self.m_add_interface_router.assert_called_once_with(
+            u'bbbb', {'subnet_id': 'cccc'})
 
         route_table = stack['the_route_table']
         self.assertResourceState(route_table, 'ffff')
@@ -853,4 +855,8 @@ Resources:
         scheduler.TaskRunner(route_table.delete)()
 
         stack.delete()
+        self.m_remove_interface_router.assert_called_with(
+            'ffff',
+            {'subnet_id': u'cccc'})
+        self.m_delete_router.assert_called_once_with('ffff')
         self.m.VerifyAll()
