@@ -79,8 +79,12 @@ function _config_tempest_plugin
 
     # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
     # Skip test_server_signal_userdata_format_software_config is skipped untill bug #1651768 is resolved
-    iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
-    iniset $conf_file heat_plugin skip_functional_test_list ''
+    # Skip AutoscalingLoadBalancerTest and AutoscalingLoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
+    iniset $conf_file heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, \
+        SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+
+    # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
+    iniset $conf_file heat_plugin skip_functional_test_list 'LoadBalancerv2Test'
 
     cat $conf_file
 }

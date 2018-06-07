@@ -14,7 +14,7 @@
       - openstack/heat
       - openstack/heat-tempest-plugin
       - openstack/neutron
-      - openstack/neutron-lbaas
+      - openstack/octavia
       - openstack/oslo.messaging
       - openstack/python-barbicanclient
       - openstack/python-heatclient

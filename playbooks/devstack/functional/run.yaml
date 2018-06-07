@@ -61,15 +61,13 @@
 
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat git://git.openstack.org/openstack/heat"
 
-          # Enable LBaaS V2 plugin
-          export PROJECTS="openstack/neutron-lbaas $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas"
+          # Enable octavia plugin and services
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin octavia https://git.openstack.org/openstack/octavia"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_FILE=/tmp/test-only-amphora-x64-haproxy-ubuntu-xenial.qcow2"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_SIZE=3"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_NAME=test-only-amphora-x64-haproxy-ubuntu-xenial"
-          # enabling lbaas plugin does not enable the lbaasv2 service, explicitly enable it
-          services+=,q-lbaasv2,octavia,o-cw,o-hk,o-hm,o-api
+          services+=,octavia,o-cw,o-hk,o-hm,o-api
+          export PROJECTS="openstack/octavia $PROJECTS"
           export PROJECTS="openstack/barbican $PROJECTS"
           export PROJECTS="openstack/python-barbicanclient $PROJECTS"
           export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
