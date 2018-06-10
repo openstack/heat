@@ -10,11 +10,23 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
+
+from zunclient import exceptions as zc_exc
+
 from heat.tests import common
 from heat.tests import utils
 
 
 class ZunClientPluginTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(ZunClientPluginTest, self).setUp()
+        self.client = mock.Mock()
+        context = utils.dummy_context()
+        self.plugin = context.clients.client_plugin('zun')
+        self.plugin.client = lambda **kw: self.client
+        self.resource_id = '123456'
 
     def test_create(self):
         context = utils.dummy_context()
@@ -24,3 +36,21 @@ class ZunClientPluginTest(common.HeatTestCase):
                          client.containers.api.session.auth.endpoint)
         self.assertEqual('1.12',
                          client.api_version.get_string())
+
+    def test_container_update(self):
+        prop_diff = {'cpu': 10, 'memory': 10, 'name': 'fake-container'}
+        self.plugin.update_container(self.resource_id, **prop_diff)
+        self.client.containers.update.assert_called_once_with(
+            self.resource_id, cpu=10, memory=10, name='fake-container')
+
+    def test_container_update_not_acceptable(self):
+        self.client.containers.update.side_effect = [
+            zc_exc.NotAcceptable(), None]
+        prop_diff = {'cpu': 10, 'memory': 10, 'name': 'fake-container'}
+        self.plugin.update_container(self.resource_id, **prop_diff)
+        self.client.containers.update.assert_has_calls([
+            mock.call(self.resource_id, cpu=10, memory=10,
+                      name='fake-container'),
+            mock.call(self.resource_id, cpu=10, memory=10)])
+        self.client.containers.rename.assert_called_once_with(
+            self.resource_id, name='fake-container')

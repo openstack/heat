@@ -20,6 +20,7 @@ from zunclient import exceptions as zc_exc
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import zun
 from heat.engine.resources.openstack.zun import container
 from heat.engine import scheduler
 from heat.engine import template
@@ -125,6 +126,8 @@ class ZunContainerTest(common.HeatTestCase):
         self.patchobject(container.Container, 'neutron',
                          return_value=self.neutron_client)
         self.stub_VolumeConstraint_validate()
+        self.mock_update = self.patchobject(zun.ZunClientPlugin,
+                                            'update_container')
 
     def _mock_get_client(self):
         value = mock.MagicMock()
@@ -263,10 +266,9 @@ class ZunContainerTest(common.HeatTestCase):
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_c = rsrc_defns[self.fake_name]
         scheduler.TaskRunner(c.update, new_c)()
-        self.client.containers.update.assert_called_once_with(
-            self.resource_id, cpu=10, memory=10)
-        self.client.containers.rename.assert_called_once_with(
-            self.resource_id, name='fake-container')
+        self.mock_update.assert_called_once_with(
+            self.resource_id,
+            cpu=10, memory=10, name='fake-container')
         self.assertEqual((c.UPDATE, c.COMPLETE), c.state)
 
     def test_container_delete(self):
