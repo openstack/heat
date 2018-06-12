@@ -49,4 +49,4 @@ class Controller(object):
         return response
 
     def get_href(self, req):
-        return "%s/v1/" % req.host_url
+        return "%s/v1/" % req.application_url
