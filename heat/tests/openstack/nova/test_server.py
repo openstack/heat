@@ -250,6 +250,11 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
                          side_effect=image_side_effect)
 
+        self.port_show = self.patchobject(neutronclient.Client,
+                                          'show_port')
+        self.subnet_show = self.patchobject(neutronclient.Client,
+                                            'show_subnet')
+
     def _limits_absolute(self):
         max_personality = mock.Mock()
         max_personality.name = 'maxPersonality'
@@ -431,6 +436,26 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(return_server, 'interface_list',
                          return_value=interfaces)
         self.patchobject(self.fc.servers, 'tag_list', return_value=['test'])
+
+        self.port_show.return_value = {
+            'port': {'id': '1234',
+                     'fixed_ips': [{
+                         'ip_address': '4.5.6.7',
+                         'subnet_id': 'the_subnet'}]
+                     }
+        }
+        subnet_dict = {
+            'subnet': {
+                'name': 'subnet_name',
+                'cidr': '10.0.0.0/24',
+                'allocation_pools': [{'start': '10.0.0.2',
+                                      'end': u'10.0.0.254'}],
+                'gateway_ip': '10.0.0.1',
+                'id': 'the_subnet'
+            }
+        }
+        self.subnet_show.return_value = subnet_dict
+
         public_ip = return_server.networks['public'][0]
         self.assertEqual('1234',
                          server.FnGetAtt('addresses')['public'][0]['port'])
@@ -446,6 +471,8 @@ class ServersTest(common.HeatTestCase):
                          server.FnGetAtt('addresses')['private'][0]['port'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('addresses')['private'][0]['addr'])
+        self.assertEqual([subnet_dict['subnet']],
+                         server.FnGetAtt('addresses')['private'][0]['subnets'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('networks')['private'][0])
 

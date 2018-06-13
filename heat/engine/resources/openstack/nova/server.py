@@ -629,13 +629,23 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             type=attributes.Schema.STRING
         ),
         ADDRESSES: attributes.Schema(
-            _('A dict of all network addresses with corresponding port_id. '
-              'Each network will have two keys in dict, they are network '
-              'name and network id. '
-              'The port ID may be obtained through the following expression: '
-              '"{get_attr: [<server>, addresses, <network name_or_id>, 0, '
-              'port]}".'),
-            type=attributes.Schema.MAP
+            _('A dict of all network addresses with corresponding port_id and '
+              'subnets. Each network will have two keys in dict, they are '
+              'network name and network id. The port ID may be obtained '
+              'through the following expression: ``{get_attr: [<server>, '
+              'addresses, <network name_or_id>, 0, port]}``. The subnets may '
+              'be obtained trough the following expression: ``{get_attr: '
+              '[<server>, addresses, <network name_or_id>, 0, subnets]}``.'),
+            type=attributes.Schema.MAP,
+            support_status=support.SupportStatus(
+                version='11.0.0',
+                status=support.SUPPORTED,
+                message=_('The attribute was extended to include subnets with '
+                          'version 11.0.0.'),
+                previous_status=support.SupportStatus(
+                    status=support.SUPPORTED
+                )
+            )
         ),
         NETWORKS_ATTR: attributes.Schema(
             _('A dict of assigned network addresses of the form: '
@@ -929,8 +939,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         return result
 
     def _get_live_networks(self, server, props):
-        reality_nets = self._add_port_for_address(server,
-                                                  extend_networks=False)
+        reality_nets = self._add_attrs_for_address(server,
+                                                   extend_networks=False)
         reality_net_ids = {}
         client_plugin = self.client_plugin('neutron')
         for net_key in reality_nets:
@@ -1078,10 +1088,28 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         return bdm_v2_list
 
-    def _add_port_for_address(self, server, extend_networks=True):
-        """Method adds port id to list of addresses.
+    def _get_port_subnets_attr(self, port_id):
+        subnets = []
+        try:
+            fixed_ips = self.client('neutron').show_port(
+                port_id)['port']['fixed_ips']
+            for fixed_ip in fixed_ips:
+                if fixed_ip.get('subnet_id'):
+                    subnets.append(self.client('neutron').show_subnet(
+                        fixed_ip['subnet_id'])['subnet'])
+        except Exception as ex:
+            LOG.warning("Failed to fetch resource attributes: %s", ex)
+            return
+        return subnets
+
+    def _add_attrs_for_address(self, server, extend_networks=True):
+        """Method adds port id and subnets attributes to list of addresses.
 
         This method is used only for resolving attributes.
+        :param server: The server resource
+        :param extend_networks: When False the network is not extended, i.e
+                                the net is returned without replacing name on
+                                id.
         """
         nets = copy.deepcopy(server.addresses) or {}
         ifaces = server.interface_list()
@@ -1092,6 +1120,13 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             for addr in nets[net_name]:
                 addr['port'] = ip_mac_mapping_on_port_id.get(
                     (addr['addr'], addr['OS-EXT-IPS-MAC:mac_addr']))
+                # _get_live_networks() uses this method to get reality_nets.
+                # We don't need to get subnets and network in that case. Only
+                # do the external calls if extend_networks is true, i.e called
+                # from _resolve_attribute()
+                if extend_networks:
+                    addr['subnets'] = self._get_port_subnets_attr(addr['port'])
+
         if extend_networks:
             return self._extend_networks(nets)
         else:
@@ -1134,7 +1169,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             self.client_plugin().ignore_not_found(e)
             return ''
         if name == self.ADDRESSES:
-            return self._add_port_for_address(server)
+            return self._add_attrs_for_address(server)
         if name == self.NETWORKS_ATTR:
             return self._extend_networks(server.networks)
         if name == self.INSTANCE_NAME:
