@@ -180,3 +180,23 @@ class CinderQuotaTest(common.HeatTestCase):
         self.assertEqual(
             self.err_msg % {'property': 'snapshots', 'value': 2, 'total': 4},
             six.text_type(err))
+
+    def _test_quota_with_unlimited_value(self, prop_name):
+        my_quota = self.stack['my_quota']
+        props = self.stack.t.t['resources']['my_quota']['properties'].copy()
+        props[prop_name] = -1
+        my_quota.t = my_quota.t.freeze(properties=props)
+        my_quota.reparse()
+        my_quota.handle_create()
+        kwargs = {'gigabytes': 5, 'snapshots': 2, 'volumes': 3}
+        kwargs[prop_name] = -1
+        self.quotas.update.assert_called_once_with('some_project_id', **kwargs)
+
+    def test_quota_with_unlimited_gigabytes(self):
+        self._test_quota_with_unlimited_value('gigabytes')
+
+    def test_quota_with_unlimited_snapshots(self):
+        self._test_quota_with_unlimited_value('snapshots')
+
+    def test_quota_with_unlimited_volumes(self):
+        self._test_quota_with_unlimited_value('volumes')
