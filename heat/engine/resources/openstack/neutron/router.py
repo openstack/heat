@@ -297,7 +297,7 @@ class Router(neutron.NeutronResource):
     def _resolve_subnet(self, gateway):
         external_gw_fixed_ips = gateway[self.EXTERNAL_GATEWAY_FIXED_IPS]
         for fixed_ip in external_gw_fixed_ips:
-            for key, value in six.iteritems(fixed_ip):
+            for key, value in fixed_ip.copy().items():
                 if value is None:
                     fixed_ip.pop(key)
             if self.SUBNET in fixed_ip:
