@@ -68,7 +68,7 @@ class SecurityGroupRuleTest(common.HeatTestCase):
                          return_value=(True, None))
 
         tmpl = inline_templates.SECURITY_GROUP_RULE_TEMPLATE
-        tmpl += '      remote_ip_prefix: "123"'
+        tmpl += '      remote_ip_prefix: "10.0.0.0/8"'
         self._create_stack(tmpl=tmpl)
 
         self.assertRaises(exception.ResourcePropertyConflict,

@@ -17,7 +17,7 @@ import netaddr
 import pytz
 import six
 
-from oslo_utils import netutils
+from neutron_lib.api import validators
 from oslo_utils import timeutils
 
 from heat.common.i18n import _
@@ -35,7 +35,12 @@ class IPConstraint(constraints.BaseCustomConstraint):
 
     def validate(self, value, context, template=None):
         self._error_message = 'Invalid IP address'
-        return netutils.is_valid_ip(value)
+        if not isinstance(value, six.string_types):
+            return False
+        msg = validators.validate_ip_address(value)
+        if msg is not None:
+            return False
+        return True
 
 
 class MACConstraint(constraints.BaseCustomConstraint):
@@ -100,17 +105,14 @@ class DNSDomainConstraint(DNSNameConstraint):
 
 class CIDRConstraint(constraints.BaseCustomConstraint):
 
-    def _validate_whitespace(self, data):
-        self._error_message = ("Invalid net cidr '%s' contains "
-                               "whitespace" % data)
-        if len(data.split()) > 1:
-            return False
-        return True
-
     def validate(self, value, context, template=None):
         try:
-            netaddr.IPNetwork(value)
-            return self._validate_whitespace(value)
+            netaddr.IPNetwork(value, implicit_prefix=True)
+            msg = validators.validate_subnet(value)
+            if msg is not None:
+                self._error_message = msg
+                return False
+            return True
         except Exception as ex:
             self._error_message = 'Invalid net cidr %s ' % six.text_type(ex)
             return False

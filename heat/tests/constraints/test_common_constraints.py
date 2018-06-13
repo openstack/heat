@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import mock
 import six
 
 from heat.engine.constraint import common_constraints as cc
@@ -35,6 +36,11 @@ class TestIPConstraint(common.HeatTestCase):
 
     def test_invalidate_ipv4_format(self):
         invalidate_format = [
+            None,
+            123,
+            '1.1',
+            '1.1.',
+            '1.1.1',
             '1.1.1.',
             '1.1.1.256',
             'invalidate format',
@@ -100,7 +106,6 @@ class TestCIDRConstraint(common.HeatTestCase):
         validate_format = [
             '10.0.0.0/24',
             '6000::/64',
-            '8.8.8.8'
         ]
         for cidr in validate_format:
             self.assertTrue(self.constraint.validate(cidr, None))
@@ -111,10 +116,29 @@ class TestCIDRConstraint(common.HeatTestCase):
             'Invalid cidr',
             '300.0.0.0/24',
             '10.0.0.0/33',
-            '8.8.8.0/ 24'
+            '10.0.0/24',
+            '10.0/24',
+            '10.0.a.10/24',
+            '8.8.8.0/ 24',
+            '8.8.8.8'
         ]
         for cidr in invalidate_format:
             self.assertFalse(self.constraint.validate(cidr, None))
+
+    @mock.patch('neutron_lib.api.validators.validate_subnet')
+    def test_validate(self, mock_validate_subnet):
+        test_formats = [
+            '10.0.0/24',
+            '10.0/24',
+        ]
+        self.assertFalse(self.constraint.validate('10.0.0.0/33', None))
+
+        for cidr in test_formats:
+            self.assertFalse(self.constraint.validate(cidr, None))
+
+        mock_validate_subnet.assert_any_call('10.0.0/24')
+        mock_validate_subnet.assert_called_with('10.0/24')
+        self.assertEqual(mock_validate_subnet.call_count, 2)
 
 
 class TestISO8601Constraint(common.HeatTestCase):
