@@ -161,16 +161,16 @@ nitpicky = False
 apidoc_module_dir = '../../heat'
 apidoc_separate_modules = True
 apidoc_excluded_paths = [
-    'testing',
     'cmd',
-    'common',
     'cloudinit',
-    'cfn_client',
-    'doc',
-    'db',
-    'engine/resources',
+    'db/sqlalchemy/migrate_repo/versions',
+    'engine/resources/aws',
+    'engine/resources/openstack',
+    'hacking',
+    'httpd',
     'locale',
     'tests',
+    'version.py',
 ]
 
 
