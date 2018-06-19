@@ -1787,10 +1787,12 @@ class Stack(collections.Mapping):
                             self.clients.client('keystone').delete_trust(
                                 trust_id)
                     except Exception as ex:
+                        # We want the admin to be able to delete the stack
+                        # Do not FAIL a delete when we cannot delete a trust.
+                        # We already carry through and delete the credentials
+                        # Without this, they would need to issue
+                        # an additional stack-delete
                         LOG.exception("Error deleting trust")
-                        stack_status = self.FAILED
-                        reason = ("Error deleting trust: %s" %
-                                  six.text_type(ex))
 
             # Delete the stored credentials
             try:

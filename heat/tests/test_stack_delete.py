@@ -354,10 +354,9 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(2, mock_kcp.call_count)
 
         db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
-        self.assertIsNotNone(db_s)
-        self.assertEqual((stack.Stack.DELETE, stack.Stack.FAILED),
+        self.assertIsNone(db_s)
+        self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertIn('Error deleting trust', self.stack.status_reason)
 
     def test_delete_deletes_project(self):
         fkc = fake_ks.FakeKeystoneClient()
