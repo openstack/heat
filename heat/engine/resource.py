@@ -761,8 +761,8 @@ class Resource(status.ResourceStatus):
             reqd_by = self.stack.dependencies.required_by(self)
         except KeyError:
             if self.stack.convergence:
-                # for convergence, fall back to building from needed_by
-                needed_by_ids = self.needed_by or set()
+                # for convergence, fall back to building from node graph
+                needed_by_ids = self.stack.dependent_resource_ids(self.id)
                 reqd_by = [r for r in self.stack.resources.values()
                            if r.id in needed_by_ids]
             else:

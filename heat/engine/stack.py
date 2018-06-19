@@ -1516,6 +1516,22 @@ class Stack(collections.Mapping):
 
         return self._convg_deps
 
+    def dependent_resource_ids(self, resource_id):
+        """Return a set of resource IDs that are dependent on another.
+
+        Given a resource ID, return a set of all other resource IDs that are
+        dependent on that one - that is to say, those that must be cleaned up
+        before the given resource is cleaned up.
+        """
+        assert self.convergence, 'Invalid call for non-convergence stack'
+        clean_node = ConvergenceNode(resource_id, False)
+        deps = self.convergence_dependencies
+        if clean_node not in deps:
+            return set()
+        # Looking for the cleanup node, so use requires instead of required_by
+        dep_nodes = deps.requires(clean_node)
+        return set(n.rsrc_id for n in dep_nodes if not n.is_update)
+
     def reset_stack_and_resources_in_progress(self, reason):
         for name, rsrc in six.iteritems(self.resources):
             if rsrc.status == rsrc.IN_PROGRESS:
