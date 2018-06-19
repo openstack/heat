@@ -1444,31 +1444,15 @@ class Stack(collections.Mapping):
     def _update_or_store_resources(self):
         self.ext_rsrcs_db = self.db_active_resources_get()
 
-        curr_name_translated_dep = self.dependencies.translate(lambda res:
-                                                               res.name)
         rsrcs = {}
-
-        def update_needed_by(res):
-            new_requirers = set(
-                rsrcs[rsrc_name].id for rsrc_name in
-                curr_name_translated_dep.required_by(res.name)
-            )
-            old_requirers = set(res.needed_by) if res.needed_by else set()
-            needed_by = old_requirers | new_requirers
-            res.needed_by = list(needed_by)
 
         for rsrc in reversed(self.dependencies):
             existing_rsrc_db = self._get_best_existing_rsrc_db(rsrc.name)
             if existing_rsrc_db is None:
-                update_needed_by(rsrc)
                 rsrc.current_template_id = self.t.id
                 rsrc.store()
                 rsrcs[rsrc.name] = rsrc
             else:
-                update_needed_by(existing_rsrc_db)
-                resource.Resource.set_needed_by(
-                    existing_rsrc_db, existing_rsrc_db.needed_by
-                )
                 rsrcs[existing_rsrc_db.name] = existing_rsrc_db
         return rsrcs
 
@@ -1477,9 +1461,7 @@ class Stack(collections.Mapping):
                                                                res.id)
         ext_rsrcs_db = self.db_active_resources_get()
         for r in self.dependencies:
-            r.needed_by = list(curr_name_translated_dep.required_by(r.id))
             r.requires = list(curr_name_translated_dep.requires(r.id))
-            resource.Resource.set_needed_by(ext_rsrcs_db[r.id], r.needed_by)
             resource.Resource.set_requires(ext_rsrcs_db[r.id], r.requires)
 
     def _compute_convg_dependencies(self, existing_resources,
