@@ -212,22 +212,28 @@ class KsClientWrapper(object):
         trustor_user_id = self.context.auth_plugin.get_user_id(self.session)
         trustor_proj_id = self.context.auth_plugin.get_project_id(self.session)
 
+        role_kw = {}
         # inherit the roles of the trustor, unless set trusts_delegated_roles
         if cfg.CONF.trusts_delegated_roles:
-            roles = cfg.CONF.trusts_delegated_roles
+            role_kw['role_names'] = cfg.CONF.trusts_delegated_roles
         else:
-            roles = self.context.roles
+            token_info = self.context.auth_token_info
+            if token_info and token_info.get('token', {}).get('roles'):
+                role_kw['role_ids'] = [r['id'] for r in
+                                       token_info['token']['roles']]
+            else:
+                role_kw['role_names'] = self.context.roles
         try:
             trust = self.client.trusts.create(trustor_user=trustor_user_id,
                                               trustee_user=trustee_user_id,
                                               project=trustor_proj_id,
                                               impersonation=True,
-                                              role_names=roles)
+                                              **role_kw)
         except ks_exception.NotFound:
             LOG.debug("Failed to find roles %s for user %s"
-                      % (roles, trustor_user_id))
+                      % (role_kw, trustor_user_id))
             raise exception.MissingCredentialError(
-                required=_("roles %s") % roles)
+                required=_("roles %s") % role_kw)
 
         context_data = self.context.to_dict()
         context_data['overwrite'] = False

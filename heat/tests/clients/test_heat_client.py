@@ -577,6 +577,33 @@ class KeystoneClientTest(common.HeatTestCase):
             impersonation=True,
             role_names=trustee_roles)
 
+    def test_create_trust_context_trust_create_delegate_all_roleids(self):
+        """Test create_trust_context when creating a trust using role IDs."""
+
+        class MockTrust(object):
+            id = 'atrust123'
+
+        self._stubs_auth(user_id='5678', project_id='42',
+                         stub_trust_context=True,
+                         stub_admin_auth=True)
+
+        cfg.CONF.set_override('deferred_auth_method', 'trusts')
+
+        self.mock_ks_v3_client.trusts.create.return_value = MockTrust()
+
+        trustor_roles = [{'name': 'spam', 'id': 'ham'}]
+        ctx = utils.dummy_context(roles=trustor_roles)
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        # doing that late monkeypatching to not mock extra keystone stuff
+        ctx.auth_token_info = {'token': {'roles': trustor_roles}}
+        trust_context = heat_ks_client.create_trust_context()
+        self.assertEqual('atrust123', trust_context.trust_id)
+        self.assertEqual('5678', trust_context.trustor_user_id)
+
+        args, kwargs = self.mock_ks_v3_client.trusts.create.call_args
+        self.assertEqual(["ham"], kwargs["role_ids"])
+
     def test_create_trust_context_trust_create_norole(self):
 
         """Test create_trust_context when creating a trust."""
@@ -597,7 +624,8 @@ class KeystoneClientTest(common.HeatTestCase):
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         exc = self.assertRaises(exception.MissingCredentialError,
                                 heat_ks_client.create_trust_context)
-        expected = "Missing required credential: roles ['heat_stack_owner']"
+        expected = "Missing required credential: roles "
+        "{'role_names': ['heat_stack_owner']}"
         self.assertIn(expected, six.text_type(exc))
         self.m_load_auth.assert_called_with(
             cfg.CONF, 'trustee', trust_id=None)
