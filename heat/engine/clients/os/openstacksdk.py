@@ -67,7 +67,7 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
         return interfaces
 
     def is_not_found(self, ex):
-        return isinstance(ex, exceptions.ResourceNotFound)
+        return isinstance(ex, exceptions.NotFoundException)
 
     def find_network_segment(self, value):
         return self.client().network.find_segment(value).id
