@@ -115,8 +115,8 @@ class CinderQuota(resource.Resource):
         search_opts = {'all_tenants': True, 'project_id': project}
         volume_list = None
         snapshot_list = None
-        for key in kwargs:
-            if kwargs[key] == -1:
+        for key, value in kwargs.copy().items():
+            if value == -1:
                 del kwargs[key]
 
         if self.GIGABYTES in kwargs:
