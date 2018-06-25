@@ -39,12 +39,12 @@ def get(url, allowed_schemes=('http', 'https')):
     the allowed_schemes argument.
     Raise an IOError if getting the data fails.
     """
-    LOG.info('Fetching data from %s', url)
-
     components = urllib.parse.urlparse(url)
 
     if components.scheme not in allowed_schemes:
         raise URLFetchError(_('Invalid URL scheme %s') % components.scheme)
+
+    LOG.info('Fetching data from %s', url)
 
     if components.scheme == 'file':
         try:

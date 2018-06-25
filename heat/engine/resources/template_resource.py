@@ -195,6 +195,10 @@ class TemplateResource(stack_resource.StackResource):
         reported_excp = None
         t_data = self.stack.t.files.get(self.template_url)
         stored_t_data = t_data
+
+        if t_data is None:
+            LOG.debug('TemplateResource data file "%s" not found in files.',
+                      self.template_url)
         if not t_data and self.template_url.endswith((".yaml", ".template")):
             try:
                 t_data = self.get_template_file(self.template_url,
@@ -260,9 +264,8 @@ class TemplateResource(stack_resource.StackResource):
                 raise exception.StackValidationFailed(message=msg)
 
     def validate(self):
-        if self.validation_exception is not None:
-            msg = six.text_type(self.validation_exception)
-            raise exception.StackValidationFailed(message=msg)
+        # Calls validate_template()
+        result = super(TemplateResource, self).validate()
 
         try:
             self.template_data()
@@ -283,7 +286,14 @@ class TemplateResource(stack_resource.StackResource):
             facade_cls = fri.get_class(files=self.stack.t.files)
             self._validate_against_facade(facade_cls)
 
-        return super(TemplateResource, self).validate()
+        return result
+
+    def validate_template(self):
+        if self.validation_exception is not None:
+            msg = six.text_type(self.validation_exception)
+            raise exception.StackValidationFailed(message=msg)
+
+        return super(TemplateResource, self).validate_template()
 
     def handle_adopt(self, resource_data=None):
         return self.create_with_template(self.child_template(),
