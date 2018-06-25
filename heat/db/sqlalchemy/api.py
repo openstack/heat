@@ -987,33 +987,31 @@ def _delete_event_rows(context, stack_id, limit):
     # So we must manually supply the IN() values.
     # pgsql SHOULD work with the pure DELETE/JOIN below but that must be
     # confirmed via integration tests.
-    query = _query_all_by_stack(context, stack_id)
     session = context.session
-    id_pairs = [(e.id, e.rsrc_prop_data_id) for e in query.order_by(
-        models.Event.id).limit(limit).all()]
-    if id_pairs is None:
-        return 0
-    (ids, rsrc_prop_ids) = zip(*id_pairs)
-    max_id = ids[-1]
-    # delete the events
-    retval = session.query(models.Event.id).filter(
-        models.Event.id <= max_id).filter(
-            models.Event.stack_id == stack_id).delete()
+    with session.begin():
+        query = _query_all_by_stack(context, stack_id)
+        query = query.order_by(models.Event.id).limit(limit)
+        id_pairs = [(e.id, e.rsrc_prop_data_id) for e in query.all()]
+        if not id_pairs:
+            return 0
+        (ids, rsrc_prop_ids) = zip(*id_pairs)
+        max_id = ids[-1]
+        # delete the events
+        retval = session.query(models.Event.id).filter(
+            models.Event.id <= max_id).filter(
+                models.Event.stack_id == stack_id).delete()
 
-    # delete unreferenced resource_properties_data
-    rsrc_prop_ids = set(rsrc_prop_ids)
-    if rsrc_prop_ids:
-        still_ref_ids_from_events = [e.rsrc_prop_data_id for e
-                                     in _query_all_by_stack(
-                                         context, stack_id).all()]
-        still_ref_ids_from_rsrcs = [r.rsrc_prop_data_id for r
-                                    in context.session.query(models.Resource).
-                                    filter_by(stack_id=stack_id).all()]
-        rsrc_prop_ids = rsrc_prop_ids - set(still_ref_ids_from_events) \
-            - set(still_ref_ids_from_rsrcs)
-        q_rpd = session.query(models.ResourcePropertiesData.id).filter(
-            models.ResourcePropertiesData.id.in_(rsrc_prop_ids))
-        q_rpd.delete(synchronize_session=False)
+        # delete unreferenced resource_properties_data
+        if rsrc_prop_ids:
+            ev_ref_ids = set(e.rsrc_prop_data_id for e
+                             in _query_all_by_stack(context, stack_id).all())
+            rsrc_ref_ids = set(r.rsrc_prop_data_id for r
+                               in session.query(models.Resource).filter_by(
+                                   stack_id=stack_id).all())
+            clr_prop_ids = set(rsrc_prop_ids) - ev_ref_ids - rsrc_ref_ids
+            q_rpd = session.query(models.ResourcePropertiesData.id).filter(
+                models.ResourcePropertiesData.id.in_(clr_prop_ids))
+            q_rpd.delete(synchronize_session=False)
     return retval
 
 
@@ -1026,8 +1024,11 @@ def event_create(context, values):
             (event_count_all_by_stack(context, values['stack_id']) >=
              cfg.CONF.max_events_per_stack)):
             # prune
-            _delete_event_rows(
-                context, values['stack_id'], cfg.CONF.event_purge_batch_size)
+            try:
+                _delete_event_rows(context, values['stack_id'],
+                                   cfg.CONF.event_purge_batch_size)
+            except db_exception.DBError as exc:
+                LOG.error('Failed to purge events: %s', six.text_type(exc))
     event_ref = models.Event()
     event_ref.update(values)
     event_ref.save(context.session)
