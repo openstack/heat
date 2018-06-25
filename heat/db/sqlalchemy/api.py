@@ -959,14 +959,13 @@ def event_get_all_by_tenant(context, limit=None, marker=None,
                                          sort_keys, sort_dir, filters).all()
 
 
-def _query_all_by_stack(context, stack_id):
-    query = context.session.query(models.Event).filter_by(stack_id=stack_id)
-    return query
+def _query_all_events_by_stack(context, stack_id):
+    return context.session.query(models.Event).filter_by(stack_id=stack_id)
 
 
 def event_get_all_by_stack(context, stack_id, limit=None, marker=None,
                            sort_keys=None, sort_dir=None, filters=None):
-    query = _query_all_by_stack(context, stack_id)
+    query = _query_all_events_by_stack(context, stack_id)
     if filters and 'uuid' in filters:
         # retrieving a single event, so eager load its rsrc_prop_data detail
         query = query.options(orm.joinedload("rsrc_prop_data"))
@@ -1026,7 +1025,7 @@ def event_count_all_by_stack(context, stack_id):
 
 def _find_rpd_references(context, stack_id):
     ev_ref_ids = set(e.rsrc_prop_data_id for e
-                     in _query_all_by_stack(context, stack_id).all())
+                     in _query_all_events_by_stack(context, stack_id).all())
     rsrc_ref_ids = set(r.rsrc_prop_data_id for r
                        in context.session.query(models.Resource).filter_by(
                            stack_id=stack_id).all())
@@ -1079,7 +1078,7 @@ def _delete_event_rows(context, stack_id, limit):
     # confirmed via integration tests.
     session = context.session
     with session.begin():
-        query = _query_all_by_stack(context, stack_id)
+        query = _query_all_events_by_stack(context, stack_id)
         query = query.order_by(models.Event.id).limit(limit)
         id_pairs = [(e.id, e.rsrc_prop_data_id) for e in query.all()]
         if not id_pairs:
