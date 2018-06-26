@@ -1,0 +1,13 @@
+---
+prelude: >
+    There was a mismatch between the way heat create role behaved with the
+    templates or with the openstack CLI on what relates to the default domain
+    if the domain is not specified on both cases the CLI will not assign on
+    to the created new role but the heat templates will assign the "default"
+    domain
+critical:
+  - |
+    Templates that creates roles but does not specify the domain will not get
+    a "default" domain from now on. To have a domain added to your new role
+    it needs to be assigned in the template.
+
