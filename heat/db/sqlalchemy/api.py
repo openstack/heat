@@ -1024,6 +1024,53 @@ def event_count_all_by_stack(context, stack_id):
     return query.filter_by(stack_id=stack_id).scalar()
 
 
+def _find_rpd_references(context, stack_id):
+    ev_ref_ids = set(e.rsrc_prop_data_id for e
+                     in _query_all_by_stack(context, stack_id).all())
+    rsrc_ref_ids = set(r.rsrc_prop_data_id for r
+                       in context.session.query(models.Resource).filter_by(
+                           stack_id=stack_id).all())
+    return ev_ref_ids | rsrc_ref_ids
+
+
+def _all_backup_stack_ids(context, stack_id):
+    """Iterate over all the IDs of all stacks related as stack/backup pairs.
+
+    All backup stacks of a main stack, past and present (i.e. including those
+    that are soft deleted), are included. The main stack itself is also
+    included if the initial ID passed in is for a backup stack. The initial ID
+    passed in is never included in the output.
+    """
+    query = context.session.query(models.Stack)
+    stack = query.get(stack_id)
+    if stack is None:
+        LOG.error('Stack %s not found', stack_id)
+        return
+    if stack.convergence:
+        LOG.debug('Not searching for backup of convergence-enabled stack')
+        return
+    is_backup = stack.name.endswith('*')
+
+    if is_backup:
+        main = query.get(stack.owner_id)
+        if main is None:
+            LOG.error('Main stack for backup "%s" %s not found',
+                      stack.name, stack_id)
+            return
+        yield main.id
+        for backup_id in _all_backup_stack_ids(context, main.id):
+            if backup_id != stack_id:
+                yield backup_id
+    else:
+        q_backup = query.filter(sqlalchemy.or_(
+            models.Stack.tenant == context.tenant_id,
+            models.Stack.stack_user_project_id == context.tenant_id))
+        q_backup = q_backup.filter_by(name=stack.name + '*')
+        q_backup = q_backup.filter_by(owner_id=stack_id)
+        for backup in q_backup.all():
+            yield backup.id
+
+
 def _delete_event_rows(context, stack_id, limit):
     # MySQL does not support LIMIT in subqueries,
     # sqlite does not support JOIN in DELETE.
@@ -1045,16 +1092,32 @@ def _delete_event_rows(context, stack_id, limit):
                 models.Event.stack_id == stack_id).delete()
 
         # delete unreferenced resource_properties_data
-        if rsrc_prop_ids:
-            ev_ref_ids = set(e.rsrc_prop_data_id for e
-                             in _query_all_by_stack(context, stack_id).all())
-            rsrc_ref_ids = set(r.rsrc_prop_data_id for r
-                               in session.query(models.Resource).filter_by(
-                                   stack_id=stack_id).all())
-            clr_prop_ids = set(rsrc_prop_ids) - ev_ref_ids - rsrc_ref_ids
-            q_rpd = session.query(models.ResourcePropertiesData.id).filter(
-                models.ResourcePropertiesData.id.in_(clr_prop_ids))
+        def del_rpd(rpd_ids):
+            if not rpd_ids:
+                return
+            q_rpd = session.query(models.ResourcePropertiesData)
+            q_rpd = q_rpd.filter(models.ResourcePropertiesData.id.in_(rpd_ids))
             q_rpd.delete(synchronize_session=False)
+
+        if rsrc_prop_ids:
+            clr_prop_ids = set(rsrc_prop_ids) - _find_rpd_references(context,
+                                                                     stack_id)
+            clr_prop_ids.discard(None)
+            try:
+                del_rpd(clr_prop_ids)
+            except db_exception.DBReferenceError:
+                LOG.debug('Checking backup/stack pairs for RPD references')
+                found = False
+                for partner_stack_id in _all_backup_stack_ids(context,
+                                                              stack_id):
+                    found = True
+                    clr_prop_ids -= _find_rpd_references(context,
+                                                         partner_stack_id)
+                if not found:
+                    LOG.debug('No backup/stack pairs found for %s', stack_id)
+                    raise
+                del_rpd(clr_prop_ids)
+
     return retval
 
 
