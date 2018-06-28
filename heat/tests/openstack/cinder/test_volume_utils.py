@@ -13,6 +13,7 @@
 
 from cinderclient import exceptions as cinder_exp
 from cinderclient.v2 import client as cinderclient
+import mock
 import six
 
 from heat.engine.clients.os import cinder
@@ -23,6 +24,96 @@ from heat.engine import scheduler
 from heat.engine import stk_defn
 from heat.tests import common
 from heat.tests.openstack.nova import fakes as fakes_nova
+from heat.tests import utils
+
+
+class VolumeTestCase(common.HeatTestCase):
+    def setUp(self):
+        super(VolumeTestCase, self).setUp()
+        self.fc = fakes_nova.FakeClient()
+        self.cinder_fc = cinderclient.Client('username', 'password')
+        self.cinder_fc.volume_api_version = 2
+        self.patchobject(cinder.CinderClientPlugin, '_create',
+                         return_value=self.cinder_fc)
+        self.patchobject(nova.NovaClientPlugin, '_create',
+                         return_value=self.fc)
+        self.cinder_fc.volumes = mock.Mock(spec=self.cinder_fc.volumes)
+        self.fc.volumes = mock.Mock()
+        self.use_cinder = False
+        self.m_backups = mock.Mock(spec=self.cinder_fc.backups)
+        self.m_restore = mock.Mock(spec=self.cinder_fc.restores.restore)
+        self.cinder_fc.backups = self.m_backups
+        self.cinder_fc.restores.restore = self.m_restore
+
+    def _mock_delete_volume(self, fv):
+        self.cinder_fc.volumes.delete.return_value = True
+
+    def validate_mock_create_server_volume_script(self):
+        self.fc.volumes.create_server_volume.assert_called_once_with(
+            device=u'/dev/vdc', server_id=u'WikiDatabase', volume_id='vol-123')
+
+    def _mock_create_server_volume_script(self, fva,
+                                          final_status='in-use',
+                                          update=False,
+                                          extra_create_server_volume_mocks=[]):
+        if not update:
+            nova.NovaClientPlugin._create.return_value = self.fc
+
+        result = [fva]
+        for m in extra_create_server_volume_mocks:
+            result.append(m)
+        self.fc.volumes.create_server_volume.side_effect = result
+        fv_ready = FakeVolume(final_status, id=fva.id)
+        return fv_ready
+
+    def get_volume(self, t, stack, resource_name):
+        if self.use_cinder:
+            Volume = os_vol.CinderVolume
+        else:
+            data = t['Resources'][resource_name]
+            data['Properties']['AvailabilityZone'] = 'nova'
+            Volume = aws_vol.Volume
+        vol = Volume(resource_name,
+                     stack.defn.resource_definition(resource_name),
+                     stack)
+        return vol
+
+    def create_volume(self, t, stack, resource_name, az='nova',
+                      no_create=False):
+        rsrc = self.get_volume(t, stack, resource_name)
+        if isinstance(rsrc, os_vol.CinderVolume):
+            self.patchobject(rsrc, '_store_config_default_properties')
+
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
+        if no_create:
+            self.cinder_fc.volumes.create.assert_not_called()
+        else:
+            self.vol_name = utils.PhysName(self.stack_name, 'DataVolume')
+            self.cinder_fc.volumes.create.assert_called_once_with(
+                size=1, availability_zone=az,
+                description=self.vol_name,
+                name=self.vol_name,
+                metadata={u'Usage': u'Wiki Data Volume'})
+        return rsrc
+
+    def create_attachment(self, t, stack, resource_name):
+        if self.use_cinder:
+            Attachment = os_vol.CinderVolumeAttachment
+        else:
+            Attachment = aws_vol.VolumeAttachment
+        rsrc = Attachment(resource_name,
+                          stack.defn.resource_definition(resource_name),
+                          stack)
+        self.assertIsNone(rsrc.validate())
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        stk_defn.update_resource_data(stack.defn, resource_name,
+                                      rsrc.node_data())
+        return rsrc
 
 
 class BaseVolumeTest(common.HeatTestCase):
