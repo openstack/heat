@@ -456,7 +456,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual(expected_state, wf.state)
         self.assertEqual('create_vm', wf.resource_id)
         for task in wf.properties['tasks']:
-            if task['name'] is 'wait_instance':
+            if task['name'] == 'wait_instance':
                 self.assertEqual(5, task['retry']['delay'])
                 self.assertEqual(15, task['retry']['count'])
                 break

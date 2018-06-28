@@ -643,7 +643,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             vt_base.FakeVolume('available')
         ]
         extra_get_mocks = [fv1, fv2, fvd, vt_base.FakeVolume('available')]
-        if update_type is 'resize':
+        if update_type == 'resize':
             extra_get_mocks += resize_m_get
         extra_get_mocks.append(fv3_ready)
         self._mock_create_volume(vt_base.FakeVolume('creating'), stack_name,
@@ -653,7 +653,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.fc.volumes.get_server_volume.side_effect = [
             fvd, fvd, fakes_nova.fake_exception()]
 
-        if update_type is 'access_mode':
+        if update_type == 'access_mode':
             # update access mode script
             update_readonly_mock = self.patchobject(self.cinder_fc.volumes,
                                                     'update_readonly_flag',
@@ -665,9 +665,9 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.create_attachment(self.t, stack, 'attachment')
 
         props = copy.deepcopy(rsrc.properties.data)
-        if update_type is 'access_mode':
+        if update_type == 'access_mode':
             props['read_only'] = True
-        if update_type is 'resize':
+        if update_type == 'resize':
             props['size'] = 2
         after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
 
@@ -676,10 +676,10 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
 
-        if update_type is 'access_mode':
+        if update_type == 'access_mode':
             update_readonly_mock.assert_called_once_with(fvd.id, True)
 
-        if update_type is 'resize':
+        if update_type == 'resize':
             self.cinder_fc.volumes.extend.assert_called_once_with(fvd.id, 2)
         self.fc.volumes.get_server_volume.assert_called_with(
             u'WikiDatabase', 'vol-123')

@@ -644,7 +644,7 @@ class PropertySchemaTest(common.HeatTestCase):
                                          {'res': resource_type,
                                           'prop': prop_key,
                                           'nested_prop': sub_prop_key})
-                    if sub_prop_key is '*':
+                    if sub_prop_key == '*':
                         check_update_policy(resource_type, prop_key,
                                             sub_prop, update)
                     else:
