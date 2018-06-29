@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Adds support to update the ``segment_id`` of ``OS::Neutron::Subnet``
+    resource. This enables migration from non routed network to a routed
+    network.
