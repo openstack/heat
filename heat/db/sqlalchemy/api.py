@@ -1045,9 +1045,6 @@ def _all_backup_stack_ids(context, stack_id):
     if stack is None:
         LOG.error('Stack %s not found', stack_id)
         return
-    if stack.convergence:
-        LOG.debug('Not searching for backup of convergence-enabled stack')
-        return
     is_backup = stack.name.endswith('*')
 
     if is_backup:
