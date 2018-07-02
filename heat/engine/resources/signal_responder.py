@@ -108,7 +108,9 @@ class SignalResponder(stack_user.StackUser):
                 'user_id': self._get_user_id(),
                 'password': self.password,
                 'project_id': self.stack.stack_user_project_id,
-                'domain_id': self.keystone().stack_domain_id}
+                'domain_id': self.keystone().stack_domain_id,
+                'region_name': (self.context.region_name or
+                                cfg.CONF.region_name_for_services)}
 
     def _get_ec2_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
