@@ -98,6 +98,14 @@ class CommonTemplate(template.Template):
                                              name, data, no_parse)
         if isinstance(depends, six.string_types):
             depends = [depends]
+        elif depends:
+            for dep in depends:
+                if not isinstance(dep, six.string_types):
+                    msg = _('Resource %(name)s %(key)s '
+                            'must be a list of strings') % {
+                                'name': name, 'key': self.RES_DEPENDS_ON}
+                    raise exception.StackValidationFailed(message=msg)
+
         yield 'depends', depends
 
         del_policy = self._parse_resource_field(self.RES_DELETION_POLICY,

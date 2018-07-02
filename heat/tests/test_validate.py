@@ -2105,3 +2105,21 @@ parameters:
                     'NoEcho': 'false',
                     'Type': 'String'}}}
         self.assertEqual(expected, res)
+
+    def test_validate_bad_depends(self):
+        test_template = '''
+        heat_template_version: 2013-05-23
+
+        resources:
+          random_str:
+            type: OS::Heat::RandomString
+            depends_on: [{foo: bar}]
+        '''
+
+        t = template_format.parse(test_template)
+
+        res = dict(self.engine.validate_template(self.ctx, t, {}))
+        self.assertEqual(
+            {'Error': 'Resource random_str depends_on must be '
+                      'a list of strings'},
+            res)
