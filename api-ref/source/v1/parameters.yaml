@@ -787,6 +787,12 @@ files:
   in: body
   required: false
   type: object
+files_container:
+  description: |
+    Name of the container in swift that has child templates and environment files.
+  in: body
+  required: false
+  type: string
 function_description:
   description: |
     The textual description about the usage of the template function.

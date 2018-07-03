@@ -34,6 +34,7 @@ Request Parameters
    - environment: environment
    - environment_files: environment_files
    - files: files
+   - files_container: files_container
    - parameters: parameters
    - stack_name: stack_name_request
    - tags: tags
@@ -94,6 +95,8 @@ Request Parameters
    - tenant_id: tenant_id
    - disable_rollback: disable_rollback
    - environment: environment
+   - environment_files: environment_files
+   - files_container: files_container
    - files: files
    - parameters: parameters
    - stack_name: stack_name_request
@@ -368,6 +371,7 @@ Request Parameters
    - disable_rollback: disable_rollback
    - environment: environment
    - environment_files: environment_files
+   - files_container: files_container
    - existing: existing
    - files: files
    - parameters: parameters
@@ -435,6 +439,7 @@ Request Parameters
    - disable_rollback: disable_rollback
    - environment: environment
    - environment_files: environment_files
+   - files_container: files_container
    - existing: existing_patch
    - files: files
    - parameters: parameters
@@ -500,6 +505,7 @@ Request Parameters
    - disable_rollback: disable_rollback
    - environment: environment
    - environment_files: environment_files
+   - files_container: files_container
    - existing: existing
    - files: files
    - parameters: parameters
@@ -571,6 +577,7 @@ Request Parameters
    - disable_rollback: disable_rollback
    - environment: environment
    - environment_files: environment_files
+   - files_container: files_container
    - existing: existing_patch
    - files: files
    - parameters: parameters
