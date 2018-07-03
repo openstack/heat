@@ -734,6 +734,7 @@ class Stack(collections.Mapping):
 
     def add_resource(self, resource):
         """Insert the given resource into the stack."""
+        resource._rsrc_prop_data_id = None
         template = resource.stack.t
         resource.stack = self
         definition = resource.t.reparse(self.defn, template)
