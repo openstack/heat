@@ -549,7 +549,8 @@ def resource_prop_data_get(context, resource_prop_data_id):
         resource_prop_data_id)
     if result is None:
         raise exception.NotFound(
-            _('ResourcePropertiesData with id %s not found') % id)
+            _('ResourcePropertiesData with id %s not found') %
+            resource_prop_data_id)
     return result
 
 
