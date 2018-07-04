@@ -15,6 +15,7 @@
 
 """Stack object."""
 
+from oslo_log import log as logging
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 import six
@@ -27,6 +28,8 @@ from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 from heat.objects import raw_template
 from heat.objects import stack_tag
+
+LOG = logging.getLogger(__name__)
 
 
 class Stack(
@@ -53,7 +56,7 @@ class Stack(
         'action': fields.StringField(nullable=True),
         'status': fields.StringField(nullable=True),
         'status_reason': fields.StringField(nullable=True),
-        'raw_template': fields.ObjectField('RawTemplate'),
+        'raw_template_obj': fields.ObjectField('RawTemplate'),
         'convergence': fields.BooleanField(),
         'current_traversal': fields.StringField(),
         'current_deps': heat_fields.JsonField(),
@@ -65,7 +68,7 @@ class Stack(
     @staticmethod
     def _from_db_object(context, stack, db_stack):
         for field in stack.fields:
-            if field == 'raw_template':
+            if field == 'raw_template_obj':
                 raw_template_obj = db_stack.__dict__.get('raw_template')
                 if raw_template_obj is not None:
                     # Object is already lazy loaded
@@ -74,12 +77,29 @@ class Stack(
                             context,
                             raw_template.RawTemplate(),
                             raw_template_obj))
-                stack['raw_template'] = raw_template_obj
+                    stack._raw_template = raw_template_obj
             else:
                 stack[field] = db_stack.__dict__.get(field)
         stack._context = context
         stack.obj_reset_changes()
         return stack
+
+    @property
+    def raw_template(self):
+        if hasattr(self, '_raw_template'):
+            return self._raw_template
+
+        LOG.warning('Loading a raw_template that should have been '
+                    'eagerly loaded for stack id %s' % self.id)
+        self._raw_template = raw_template.RawTemplate.get_by_id(
+            self._context,
+            self['raw_template_id'])
+        return self._raw_template
+
+    @raw_template.setter
+    def raw_template(self, value):
+        self['raw_template_obj'] = value
+        self._raw_template = value
 
     @classmethod
     def get_root_id(cls, context, stack_id):
