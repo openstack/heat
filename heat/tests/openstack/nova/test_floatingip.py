@@ -64,7 +64,7 @@ class NovaFloatingIPTest(common.HeatTestCase):
     def setUp(self):
         super(NovaFloatingIPTest, self).setUp()
         self.novaclient = fakes_nova.FakeClient()
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.novaclient)
         self.mock_create_fip = self.patchobject(neutronclient.Client,
                                                 'create_floatingip')

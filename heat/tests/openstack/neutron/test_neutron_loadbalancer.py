@@ -883,12 +883,12 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.mc = mock.Mock(spec=neutronclient.Client)
         self.patchobject(neutronclient, 'Client', return_value=self.mc)
-        self.patchobject(nova.NovaClientPlugin, '_create')
+        self.patchobject(nova.NovaClientPlugin, 'client')
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
 
     def create_load_balancer(self, extra_create_mocks=[]):
-        nova.NovaClientPlugin._create.return_value = self.fc
+        nova.NovaClientPlugin.client.return_value = self.fc
         results = [{'member': {'id': 'member5678'}}]
         for m in extra_create_mocks:
             results.append(m)
@@ -907,13 +907,16 @@ class LoadBalancerTest(common.HeatTestCase):
                     'pool_id': 'pool123', 'protocol_port': 8080,
                     'address': '4.5.6.7'}}
             )
+            nova.NovaClientPlugin.client.assert_called_with()
+            self.assertEqual(create_count,
+                             nova.NovaClientPlugin.client.call_count)
         else:
             self.mc.create_member.assert_called_once_with({
                 'member': {
                     'pool_id': 'pool123', 'protocol_port': 8080,
                     'address': '1.2.3.4'}}
             )
-        nova.NovaClientPlugin._create.assert_called_once_with()
+            nova.NovaClientPlugin.client.assert_called_once_with()
 
     def test_create(self):
         rsrc = self.create_load_balancer()

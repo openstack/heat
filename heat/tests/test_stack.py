@@ -1811,7 +1811,7 @@ class StackTest(common.HeatTestCase):
         # Mock objects so the query for flavors in server.FlavorConstraint
         # works for stack creation
         fc = fakes.FakeClient()
-        self.patchobject(nova.NovaClientPlugin, '_create', return_value=fc)
+        self.patchobject(nova.NovaClientPlugin, 'client', return_value=fc)
 
         fc.flavors = mock.Mock()
         flavor = collections.namedtuple("Flavor", ["id", "name"])

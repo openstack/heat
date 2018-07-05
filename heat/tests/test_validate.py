@@ -1555,7 +1555,7 @@ class ValidateTest(common.HeatTestCase):
         self.assertRaises(exception.StackValidationFailed,
                           resource.validate)
 
-    @mock.patch('heat.engine.clients.os.nova.NovaClientPlugin._create')
+    @mock.patch('heat.engine.clients.os.nova.NovaClientPlugin.client')
     def test_invalid_security_groups_with_nics(self, mock_create):
         t = template_format.parse(test_template_invalid_secgroups)
         template = tmpl.Template(t,
@@ -1571,7 +1571,7 @@ class ValidateTest(common.HeatTestCase):
         self.assertRaises(exception.ResourcePropertyConflict,
                           resource.validate)
 
-    @mock.patch('heat.engine.clients.os.nova.NovaClientPlugin._create')
+    @mock.patch('heat.engine.clients.os.nova.NovaClientPlugin.client')
     def test_invalid_security_group_ids_with_nics(self, mock_create):
         t = template_format.parse(test_template_invalid_secgroupids)
         template = tmpl.Template(

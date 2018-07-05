@@ -50,7 +50,6 @@ class NoKeyTest(common.HeatTestCase):
         resource_defns = stack.t.resource_definitions(stack)
         instance = instances.Instance('create_instance_name',
                                       resource_defns['WebServer'], stack)
-
         # need to resolve the template functions
         metadata = instance.metadata_get()
         server_userdata = instance.client_plugin().build_userdata(
@@ -59,7 +58,7 @@ class NoKeyTest(common.HeatTestCase):
             'ec2-user')
 
         fc = fakes_nova.FakeClient()
-        self.patchobject(nova.NovaClientPlugin, '_create',
+        self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=fc)
         self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
                          return_value=1234)
