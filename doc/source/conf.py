@@ -97,8 +97,8 @@ sample_config_basename = '_static/heat'
 
 # openstackdocstheme options
 repository_name = 'openstack/heat'
-bug_project = 'heat'
-bug_tag = ''
+bug_project = '989'
+bug_tag = 'docs'
 
 todo_include_todos = True
 
