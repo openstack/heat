@@ -33,6 +33,7 @@ from heat.common import timeutils
 from heat.engine import attributes
 from heat.engine.cfn import template as cfn_tmpl
 from heat.engine import clients
+from heat.engine.clients import default_client_plugin
 from heat.engine import environment
 from heat.engine import event
 from heat.engine import function
@@ -770,6 +771,21 @@ class Resource(status.ResourceStatus):
         assert client_name, "Must specify client name"
         return self.stack.clients.client_plugin(client_name)
 
+    def _default_client_plugin(self):
+        """Always return a client plugin.
+
+        This will be the client_plugin if the resource has defined a
+        default_client_name, or a no-op plugin if it does not. Thus, the
+        result of this call always has e.g. is_not_found() and is_conflict()
+        methods.
+        """
+        cp = None
+        if self.default_client_name:
+            cp = self.client_plugin()
+        if cp is None:
+            cp = default_client_plugin.DefaultClientPlugin(self.context)
+        return cp
+
     @classmethod
     def is_service_available(cls, context):
         # NOTE(kanagaraj-manickam): return True to satisfy the cases like
@@ -1164,7 +1180,7 @@ class Resource(status.ResourceStatus):
                 self.resource_id = self.external_id
                 self._show_resource()
             except Exception as ex:
-                if self.client_plugin().is_not_found(ex):
+                if self._default_client_plugin().is_not_found(ex):
                     error_message = (_("Invalid external resource: Resource "
                                        "%(external_id)s (%(type)s) can not "
                                        "be found.") %
@@ -1929,15 +1945,11 @@ class Resource(status.ResourceStatus):
     def handle_delete(self):
         """Default implementation; should be overridden by resources."""
         if self.entity and self.resource_id is not None:
-            try:
+            with self._default_client_plugin().ignore_not_found:
                 obj = getattr(self.client(), self.entity)
                 obj.delete(self.resource_id)
-            except Exception as ex:
-                if self.default_client_name is not None:
-                    self.client_plugin().ignore_not_found(ex)
-                    return None
-                raise
-            return self.resource_id
+                return self.resource_id
+        return None
 
     @scheduler.wrappertask
     def delete(self):
@@ -1950,10 +1962,8 @@ class Resource(status.ResourceStatus):
         def should_retry(exc):
             if count >= retry_limit:
                 return False
-            if self.default_client_name:
-                return (self.client_plugin().is_conflict(exc) or
-                        isinstance(exc, exception.PhysicalResourceExists))
-            return isinstance(exc, exception.PhysicalResourceExists)
+            return (self._default_client_plugin().is_conflict(exc) or
+                    isinstance(exc, exception.PhysicalResourceExists))
 
         action = self.DELETE
 
@@ -2156,30 +2166,20 @@ class Resource(status.ResourceStatus):
         if attr in self.base_attributes_schema:
             # check resource_id, because usually it is required for getting
             # information about resource
-            if not self.resource_id:
-                return None
-            try:
-                return getattr(self, '_{0}_resource'.format(attr))()
-            except Exception as ex:
-                if self.default_client_name is not None:
-                    self.client_plugin().ignore_not_found(ex)
-                    return None
-                raise
+            if self.resource_id is not None:
+                with self._default_client_plugin().ignore_not_found:
+                    return getattr(self, '_{0}_resource'.format(attr))()
         else:
-            try:
+            with self._default_client_plugin().ignore_not_found:
                 return self._resolve_attribute(attr)
-            except Exception as ex:
-                if self.default_client_name is not None:
-                    self.client_plugin().ignore_not_found(ex)
-                    return None
-                raise
+        return None
 
     def _show_resource(self):
         """Default implementation; should be overridden by resources.
 
         :returns: the map of resource information or None
         """
-        if self.entity:
+        if self.entity and self.default_client_name is not None:
             try:
                 obj = getattr(self.client(), self.entity)
                 resource = obj.get(self.resource_id)
@@ -2200,8 +2200,7 @@ class Resource(status.ResourceStatus):
         try:
             resource_data = self._show_resource()
         except Exception as ex:
-            if (self.default_client_name is not None and
-                    self.client_plugin().is_not_found(ex)):
+            if self._default_client_plugin().is_not_found(ex):
                 raise exception.EntityNotFound(
                     entity='Resource', name=self.name)
             raise

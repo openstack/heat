@@ -372,8 +372,8 @@ class ResourceTest(common.HeatTestCase):
             'test_resource', 'GenericResourceType',
             external_id=external_id)
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
-        res.client_plugin = mock.Mock()
-        self.patchobject(res.client_plugin, 'is_not_found',
+        res._default_client_plugin = mock.Mock()
+        self.patchobject(res._default_client_plugin(), 'is_not_found',
                          return_value=True)
         self.patchobject(res, '_show_resource', side_effect=Exception())
         e = self.assertRaises(exception.StackValidationFailed,
@@ -2508,6 +2508,9 @@ class ResourceTest(common.HeatTestCase):
         stack = self.create_resource_for_attributes_tests()
         res = stack['res']
 
+        class MyException(Exception):
+            pass
+
         with mock.patch.object(res, '_show_resource') as show_attr:
             # return None, if resource_id is None
             self.assertIsNone(res.FnGetAtt('show'))
@@ -2522,12 +2525,10 @@ class ResourceTest(common.HeatTestCase):
 
             # clean resolved_values
             res.attributes.reset_resolved_values()
-            with mock.patch.object(res, 'client_plugin') as client_plugin:
-                # generate error during calling _show_resource
-                show_attr.side_effect = [Exception]
-                self.assertIsNone(res.FnGetAtt('show'))
-                self.assertEqual(2, show_attr.call_count)
-                self.assertEqual(1, client_plugin.call_count)
+            # generate error during calling _show_resource
+            show_attr.side_effect = [MyException]
+            self.assertRaises(MyException, res.FnGetAtt, 'show')
+            self.assertEqual(2, show_attr.call_count)
 
     def test_resolve_attributes_stuff_custom_attribute(self):
         # check path with resolve_attribute
@@ -2535,16 +2536,17 @@ class ResourceTest(common.HeatTestCase):
         res = stack['res']
         res.default_client_name = 'foo'
 
+        class MyException(Exception):
+            pass
+
         with mock.patch.object(res, '_resolve_attribute') as res_attr:
-            res_attr.side_effect = ['Works', Exception]
+            res_attr.side_effect = ['Works', MyException]
             self.assertEqual('Works', res.FnGetAtt('Foo'))
             res_attr.assert_called_once_with('Foo')
 
             # clean resolved_values
             res.attributes.reset_resolved_values()
-            with mock.patch.object(res, 'client_plugin') as client_plugin:
-                self.assertIsNone(res.FnGetAtt('Foo'))
-                self.assertEqual(1, client_plugin.call_count)
+            self.assertRaises(MyException, res.FnGetAtt, 'Foo')
 
     def test_resolve_attributes_no_default_client_name(self):
         class MyException(Exception):
@@ -2571,6 +2573,7 @@ class ResourceTest(common.HeatTestCase):
         # set entity and recheck
         res.resource_id = 'test_resource_id'
         res.entity = 'test'
+        res.default_client_name = 'whatever'
 
         # mock getting resource info
         res.client = mock.Mock()
@@ -3906,6 +3909,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         delete = mock.Mock()
         res.client().entity.delete = delete
         res.entity = 'entity'
+        res.default_client_name = 'something'
         res.resource_id = '12345'
 
         self.assertEqual('12345', res.handle_delete())
@@ -3918,26 +3922,26 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'OS::Heat::None')
         res = resource.Resource('aresource', snippet, self.stack)
+        res.entity = 'entity'
+        res.default_client_name = 'foo'
+        res.resource_id = '12345'
 
         FakeClient = collections.namedtuple('Client', ['entity'])
         client = FakeClient(collections.namedtuple('entity', ['delete']))
+        client_plugin = res._default_client_plugin()
 
-        class FakeClientPlugin(object):
-            def ignore_not_found(self, ex):
-                if not isinstance(ex, exception.NotFound):
-                    raise ex
+        def is_not_found(ex):
+            return isinstance(ex, exception.NotFound)
 
+        client_plugin.is_not_found = mock.Mock(side_effect=is_not_found)
         self.patchobject(resource.Resource, 'client', return_value=client)
-        self.patchobject(resource.Resource, 'client_plugin',
-                         return_value=FakeClientPlugin())
         delete = mock.Mock()
         delete.side_effect = [exception.NotFound()]
         res.client().entity.delete = delete
-        res.entity = 'entity'
-        res.resource_id = '12345'
-        res.default_client_name = 'foo'
 
-        self.assertIsNone(res.handle_delete())
+        with mock.patch.object(res, '_default_client_plugin',
+                               return_value=client_plugin):
+            self.assertIsNone(res.handle_delete())
         delete.assert_called_once_with('12345')
 
     def test_handle_delete_raise_error(self):
@@ -3947,25 +3951,26 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         snippet = rsrc_defn.ResourceDefinition('aresource',
                                                'OS::Heat::None')
         res = resource.Resource('aresource', snippet, self.stack)
+        res.entity = 'entity'
+        res.default_client_name = 'something'
+        res.resource_id = '12345'
 
         FakeClient = collections.namedtuple('Client', ['entity'])
         client = FakeClient(collections.namedtuple('entity', ['delete']))
+        client_plugin = res._default_client_plugin()
 
-        class FakeClientPlugin(object):
-            def ignore_not_found(self, ex):
-                if not isinstance(ex, exception.NotFound):
-                    raise ex
+        def is_not_found(ex):
+            return isinstance(ex, exception.NotFound)
 
+        client_plugin.is_not_found = mock.Mock(side_effect=is_not_found)
         self.patchobject(resource.Resource, 'client', return_value=client)
-        self.patchobject(resource.Resource, 'client_plugin',
-                         return_value=FakeClientPlugin())
         delete = mock.Mock()
         delete.side_effect = [exception.Error('boom!')]
         res.client().entity.delete = delete
-        res.entity = 'entity'
-        res.resource_id = '12345'
 
-        ex = self.assertRaises(exception.Error, res.handle_delete)
+        with mock.patch.object(res, '_default_client_plugin',
+                               return_value=client_plugin):
+            ex = self.assertRaises(exception.Error, res.handle_delete)
         self.assertEqual('boom!', six.text_type(ex))
         delete.assert_called_once_with('12345')
 
@@ -4003,6 +4008,7 @@ class ResourceAvailabilityTest(common.HeatTestCase):
         delete = mock.Mock()
         res.client().entity.delete = delete
         res.entity = 'entity'
+        res.default_client_name = 'something'
         res.resource_id = None
 
         self.assertIsNone(res.handle_delete())

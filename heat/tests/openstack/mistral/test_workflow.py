@@ -388,8 +388,6 @@ class TestMistralWorkflow(common.HeatTestCase):
                                               '_create_user'))
         self.patches.append(mock.patch.object(signal_responder.SignalResponder,
                                               '_create_keypair'))
-        self.patches.append(mock.patch.object(client,
-                                              'mistral_base'))
         self.patches.append(mock.patch.object(client.MistralClientPlugin,
                                               '_create'))
         for patch in self.patches:
