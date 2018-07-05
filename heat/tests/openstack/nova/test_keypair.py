@@ -117,7 +117,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.fake_keypairs.create.assert_called_once_with(
             name=key_name, public_key=None, type='ssh')
-        self.cp_mock.assert_called_once_with(version='2.2')
+        self.cp_mock.assert_called_once_with()
 
     def test_create_key_with_user_id(self):
         key_name = "create_with_user_id"
@@ -130,7 +130,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.fake_keypairs.create.assert_called_once_with(
             name=key_name, public_key=None, user_id='userA_ID')
-        self.cp_mock.assert_called_once_with(version='2.10')
+        self.cp_mock.assert_called_once_with()
 
     def test_create_key_with_user_and_type(self):
         key_name = "create_with_user_id_and_type"
@@ -145,7 +145,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.fake_keypairs.create.assert_called_once_with(
             name=key_name, public_key=None, user_id='userA_ID',
             type='x509')
-        self.cp_mock.assert_called_once_with(version='2.10')
+        self.cp_mock.assert_called_once_with()
 
     def test_create_key_empty_name(self):
         """Test creation of a keypair whose name is of length zero."""
@@ -175,7 +175,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertIn("kp.properties.name: length (256) is out of "
                       "range (min: 1, max: 255)", six.text_type(error))
 
-    def _test_validate(self, key_type=None, user=None, nc_version=None):
+    def _test_validate(self, key_type=None, user=None):
         template = copy.deepcopy(self.kp_template)
         validate_props = []
         if key_type:
@@ -187,26 +187,23 @@ class NovaKeyPairTest(common.HeatTestCase):
         stack = utils.parse_stack(template)
         definition = stack.t.resource_definitions(stack)['kp']
         kp_res = keypair.KeyPair('kp', definition, stack)
-        self.patchobject(nova.NovaClientPlugin, 'client',
-                         side_effect=exception.InvalidServiceVersion(
-                             service='compute',
-                             version=nc_version
-                         ))
-
         error = self.assertRaises(exception.StackValidationFailed,
                                   kp_res.validate)
-        msg = (('Cannot use "%(prop)s" properties - nova does not support: '
-                'Invalid service compute version %(ver)s') %
-               {'prop': validate_props, 'ver': nc_version})
+        msg = (('Cannot use "%s" properties - nova does not support '
+                'required api microversion.') % validate_props)
         self.assertIn(msg, six.text_type(error))
 
     def test_validate_key_type(self):
-        self._test_validate(key_type='x509', nc_version='2.2')
+        self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
+                         return_value='2.1')
+        self._test_validate(key_type='x509')
 
     def test_validate_user(self):
         self.patchobject(keystone.KeystoneClientPlugin, 'get_user_id',
                          return_value='user_A')
-        self._test_validate(user='user_A', nc_version='2.10')
+        self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
+                         return_value='2.1')
+        self._test_validate(user='user_A')
 
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)

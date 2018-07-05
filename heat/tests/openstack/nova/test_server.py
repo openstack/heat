@@ -417,6 +417,8 @@ class ServersTest(common.HeatTestCase):
         server_name = 'test_server_create'
         stack_name = '%s_s' % server_name
         server = self._create_test_server(return_server, server_name)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=True)
 
         # this makes sure the auto increment worked on server creation
         self.assertGreater(server.id, 0)
@@ -484,9 +486,8 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(expected_name, server.FnGetAtt('name'))
         self.assertEqual(['test'], server.FnGetAtt('tags'))
         # test with unsupported version
-        server.client = mock.Mock(side_effect=[
-            self.fc,
-            exception.InvalidServiceVersion(service='a', version='0')])
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         if server.attributes._resolved_values.get('tags'):
             del server.attributes._resolved_values['tags']
         self.assertIsNone(server.FnGetAtt('tags'))
@@ -576,9 +577,7 @@ class ServersTest(common.HeatTestCase):
         create_mock = self.patchobject(self.fc.servers, 'create',
                                        return_value=return_server)
         scheduler.TaskRunner(server.create)()
-        mock_nc.assert_has_calls([mock.call(),
-                                  mock.call(version='2.37'),
-                                  mock.call()])
+        mock_nc.assert_called_with()
         self.assertEqual(3, mock_nc.call_count)
         self.assertEqual('none', create_mock.call_args[1]['nics'])
 
@@ -1982,7 +1981,8 @@ class ServersTest(common.HeatTestCase):
     def test_server_get_live_state(self):
         return_server = self.fc.servers.list()[1]
         return_server.id = '5678'
-
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         server = self._create_test_server(return_server,
                                           'get_live_state_stack')
 
@@ -3112,10 +3112,8 @@ class ServersTest(common.HeatTestCase):
         props['tags'] = ['a']
         # no need test with key_name
         props.pop('key_name')
-        self.patchobject(nova.NovaClientPlugin, 'client',
-                         side_effect=[
-                             exception.InvalidServiceVersion(service='a',
-                                                             version='2.26')])
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
@@ -3127,7 +3125,7 @@ class ServersTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
         self.assertEqual('Cannot use "tags" property - nova does not support '
-                         'it: Invalid service a version 2.26',
+                         'required api microversion.',
                          six.text_type(exc))
 
     def test_server_validate_too_many_personality(self):

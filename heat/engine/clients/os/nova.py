@@ -63,13 +63,6 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
     NOVA_API_VERSION = '2.1'
 
-    # TODO(ramishra) Remove these constants
-    validate_versions = [
-        V2_2, V2_8, V2_10, V2_15, V2_26, V2_37, V2_42
-    ] = [
-        '2.2', '2.8', '2.10', '2.15', '2.26', '2.37', '2.42'
-    ]
-
     max_microversion = None
 
     service_types = [COMPUTE] = ['compute']
@@ -602,7 +595,6 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         The actual console url is lazily resolved on access.
         """
         nc = self.client
-        mks_version = self.V2_8
 
         class ConsoleUrls(collections.Mapping):
             def __init__(self, server):
@@ -616,7 +608,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                     if key not in self.support_console_types:
                         raise exceptions.UnsupportedConsoleType(key)
                     if key == 'webmks':
-                        data = nc(mks_version).servers.get_console_url(
+                        data = nc().servers.get_console_url(
                             server, key)
                     else:
                         data = self.console_method(key)
