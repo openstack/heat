@@ -44,6 +44,24 @@ class BarbicanClientPluginTest(common.HeatTestCase):
         self.assertEqual(secret,
                          self.barbican_plugin.get_secret_by_ref("secret"))
 
+    def test_get_secret_payload_by_ref(self):
+        payload_content = 'payload content'
+        secret = collections.namedtuple(
+            'Secret', ['name', 'payload'])('foo', payload_content)
+        self.barbican_client.secrets.get.return_value = secret
+        expect = payload_content
+        self.assertEqual(expect,
+                         self.barbican_plugin.get_secret_payload_by_ref(
+                             "secret"))
+
+    def test_get_secret_payload_by_ref_not_found(self):
+        exc = exceptions.HTTPClientError(message="Not Found", status_code=404)
+        self.barbican_client.secrets.get.side_effect = exc
+        self.assertRaises(
+            exception.EntityNotFound,
+            self.barbican_plugin.get_secret_payload_by_ref,
+            "secret")
+
     def test_get_secret_by_ref_not_found(self):
         exc = exceptions.HTTPClientError(message="Not Found", status_code=404)
         self.barbican_client.secrets.get.side_effect = exc
