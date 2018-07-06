@@ -14,6 +14,7 @@
 from oslo_serialization import jsonutils
 import six
 
+from heat.common import auth_plugin
 from heat.common import context
 from heat.common import exception
 from heat.common.i18n import _
@@ -22,6 +23,7 @@ from heat.engine import attributes
 from heat.engine import environment
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 from heat.engine import template
 
 
@@ -48,21 +50,31 @@ class RemoteStack(resource.Resource):
     )
 
     _CONTEXT_KEYS = (
-        REGION_NAME
+        REGION_NAME, CREDENTIAL_SECRET_ID
     ) = (
-        'region_name'
+        'region_name', 'credential_secret_id'
     )
 
     properties_schema = {
         CONTEXT: properties.Schema(
             properties.Schema.MAP,
             _('Context for this stack.'),
+            update_allowed=True,
             schema={
                 REGION_NAME: properties.Schema(
                     properties.Schema.STRING,
                     _('Region name in which this stack will be created.'),
-                    required=True,
-                )
+                    required=False,
+                ),
+                CREDENTIAL_SECRET_ID: properties.Schema(
+                    properties.Schema.STRING,
+                    _('A Barbican secret ID. The Barbican secret should '
+                      'contain an OpenStack credential that can be used to '
+                      'access a remote cloud.'),
+                    required=False,
+                    update_allowed=True,
+                    support_status=support.SupportStatus(version='12.0.0'),
+                ),
             }
         ),
         TEMPLATE: properties.Schema(
@@ -107,9 +119,44 @@ class RemoteStack(resource.Resource):
 
         ctx_props = self.properties.get(self.CONTEXT)
         if ctx_props:
-            self._region_name = ctx_props[self.REGION_NAME]
+            self._credential = ctx_props[self.CREDENTIAL_SECRET_ID]
+            self._region_name = ctx_props[self.REGION_NAME] if ctx_props[
+                self.REGION_NAME] else self.context.region_name
         else:
+            self._credential = None
             self._region_name = self.context.region_name
+
+        if ctx_props and self._credential:
+            return self._prepare_cloud_context()
+        else:
+            return self._prepare_region_context()
+
+    def _fetch_barbican_credential(self):
+        """Fetch credential information and return context dict."""
+
+        auth = super(RemoteStack, self).client_plugin(
+            'barbican').get_secret_payload_by_ref(
+            secret_ref='secrets/%s' % (self._credential))
+        return auth
+
+    def _prepare_cloud_context(self):
+        """Prepare context for remote cloud."""
+
+        auth = self._fetch_barbican_credential()
+        dict_ctxt = self.context.to_dict()
+        dict_ctxt.update({
+            'request_id': dict_ctxt['request_id'],
+            'global_request_id': dict_ctxt['global_request_id'],
+            'show_deleted': dict_ctxt['show_deleted']
+        })
+        self._local_context = context.RequestContext.from_dict(dict_ctxt)
+        self._local_context._auth_plugin = (
+            auth_plugin.get_keystone_plugin_loader(
+                auth, self._local_context.keystone_session))
+
+        return self._local_context
+
+    def _prepare_region_context(self):
 
         # Build RequestContext from existing one
         dict_ctxt = self.context.to_dict()
@@ -132,9 +179,13 @@ class RemoteStack(resource.Resource):
         try:
             self.heat()
         except Exception as ex:
-            exc_info = dict(region=self._region_name, exc=six.text_type(ex))
-            msg = _('Cannot establish connection to Heat endpoint at region '
-                    '"%(region)s" due to "%(exc)s"') % exc_info
+            if self._credential:
+                location = "remote cloud"
+            else:
+                location = 'region "%s"' % self._region_name
+            exc_info = dict(location=location, exc=six.text_type(ex))
+            msg = _('Cannot establish connection to Heat endpoint at '
+                    '%(location)s due to "%(exc)s"') % exc_info
             raise exception.StackValidationFailed(message=msg)
 
         try:
@@ -148,9 +199,13 @@ class RemoteStack(resource.Resource):
             }
             self.heat().stacks.validate(**args)
         except Exception as ex:
-            exc_info = dict(region=self._region_name, exc=six.text_type(ex))
+            if self._credential:
+                location = "remote cloud"
+            else:
+                location = 'region "%s"' % self._region_name
+            exc_info = dict(location=location, exc=six.text_type(ex))
             msg = _('Failed validating stack template using Heat endpoint at '
-                    'region "%(region)s" due to "%(exc)s"') % exc_info
+                    '%(location)s due to "%(exc)s"') % exc_info
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):
@@ -303,6 +358,19 @@ class RemoteStack(resource.Resource):
 
     def get_reference_id(self):
         return self.resource_id
+
+    def needs_replace_with_prop_diff(self, changed_properties_set,
+                                     after_props, before_props):
+        """Needs replace based on prop_diff."""
+
+        # If region_name changed, trigger UpdateReplace.
+        # `context` now set update_allowed=True, but `region_name` is not.
+        if self.CONTEXT in changed_properties_set and (
+            after_props.get(self.CONTEXT).get(
+                'region_name') != before_props.get(self.CONTEXT).get(
+                    'region_name')):
+                return True
+        return False
 
 
 def resource_mapping():

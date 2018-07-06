@@ -12,16 +12,20 @@
 #    under the License.
 
 import collections
+import json
 
 from heatclient import exc
 from heatclient.v1 import stacks
+from keystoneauth1 import loading as ks_loading
 import mock
 from oslo_config import cfg
 import six
 
 from heat.common import exception
 from heat.common.i18n import _
+from heat.common import policy
 from heat.common import template_format
+from heat.engine.clients.os import barbican as barbican_client
 from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
 from heat.engine import node_data
@@ -144,14 +148,18 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         self.addCleanup(unset_clients_property)
 
-    def initialize(self):
-        parent, rsrc = self.create_parent_stack(remote_region='RegionTwo')
+    def initialize(self, stack_template=None):
+        parent, rsrc = self.create_parent_stack(remote_region='RegionTwo',
+                                                stack_template=stack_template)
         self.parent = parent
         self.heat = rsrc._context().clients.client("heat")
         self.client_plugin = rsrc._context().clients.client_plugin('heat')
 
-    def create_parent_stack(self, remote_region=None, custom_template=None):
-        snippet = template_format.parse(parent_stack_template)
+    def create_parent_stack(self, remote_region=None, custom_template=None,
+                            stack_template=None):
+        if not stack_template:
+            stack_template = parent_stack_template
+        snippet = template_format.parse(stack_template)
         self.files = {
             'remote_template.yaml': custom_template or remote_template
         }
@@ -196,13 +204,13 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         return parent, rsrc
 
-    def create_remote_stack(self):
+    def create_remote_stack(self, stack_template=None):
         # This method default creates a stack on RegionTwo (self.other_region)
         defaults = [get_stack(stack_status='CREATE_IN_PROGRESS'),
                     get_stack(stack_status='CREATE_COMPLETE')]
 
         if self.parent is None:
-            self.initialize()
+            self.initialize(stack_template=stack_template)
 
         # prepare clients to return status
         self.heat.stacks.create.return_value = {'stack': get_stack().to_dict()}
@@ -296,6 +304,58 @@ class RemoteStackTest(tests_common.HeatTestCase):
         }
         self.heat.stacks.create.assert_called_with(**args)
         self.assertEqual(2, len(self.heat.stacks.get.call_args_list))
+
+    def _create_with_remote_credential(self, credential_secret_id=None):
+        self.auth = (
+            '{"auth_type": "v3applicationcredential", '
+            '"auth": {"auth_url": "http://192.168.1.101/identity/v3", '
+            '"application_credential_id": "9dfa187e5a354484bf9c49a2b674333a", '
+            '"application_credential_secret": "sec"} }')
+
+        t = template_format.parse(parent_stack_template)
+        properties = t['resources']['remote_stack']['properties']
+        if credential_secret_id:
+            properties['context']['credential_secret_id'] = (
+                credential_secret_id)
+        t = json.dumps(t)
+        self.patchobject(policy.Enforcer, 'check_is_admin')
+        self.m_gsbr = self.patchobject(
+            barbican_client.BarbicanClientPlugin, 'get_secret_payload_by_ref')
+        self.m_gsbr.return_value = self.auth
+
+        rsrc = self.create_remote_stack(stack_template=t)
+        env = environment.get_child_environment(rsrc.stack.env,
+                                                {'name': 'foo'})
+        args = {
+            'stack_name': rsrc.physical_resource_name(),
+            'template': template_format.parse(remote_template),
+            'timeout_mins': 60,
+            'disable_rollback': True,
+            'parameters': {'name': 'foo'},
+            'files': self.files,
+            'environment': env.user_env_as_dict(),
+        }
+        self.heat.stacks.create.assert_called_with(**args)
+        self.assertEqual(2, len(self.heat.stacks.get.call_args_list))
+        rsrc.validate()
+        return rsrc
+
+    def test_create_with_credential_secret_id(self):
+        self.m_plugin = mock.Mock()
+        self.m_loader = self.patchobject(
+            ks_loading, 'get_plugin_loader', return_value=self.m_plugin)
+        self._create_with_remote_credential('cred_2')
+        self.assertEqual(
+            [mock.call(secret_ref='secrets/cred_2')]*2,
+            self.m_gsbr.call_args_list)
+        expected_load_options = [
+            mock.call(
+                application_credential_id='9dfa187e5a354484bf9c49a2b674333a',
+                application_credential_secret='sec',
+                auth_url='http://192.168.1.101/identity/v3')]*2
+
+        self.assertEqual(expected_load_options,
+                         self.m_plugin.load_from_options.call_args_list)
 
     def test_create_failed(self):
         returns = [get_stack(stack_status='CREATE_IN_PROGRESS'),
