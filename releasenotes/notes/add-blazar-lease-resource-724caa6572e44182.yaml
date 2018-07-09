@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A new ``OS::Blazar::Lease`` resource is added to manage reservations for
+    specific type/amount of cloud resources in OpenStack.
