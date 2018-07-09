@@ -14,6 +14,7 @@
 """Controller that returns information on the heat API versions."""
 
 from oslo_serialization import jsonutils
+import six
 from six.moves import http_client
 import webob.dec
 
@@ -44,7 +45,9 @@ class Controller(object):
         response = webob.Response(request=req,
                                   status=http_client.MULTIPLE_CHOICES,
                                   content_type='application/json')
-        response.body = body
+        # NOTE(pas-ha) in WebOb, Response.body accepts only bytes,
+        # and Response.text accepts only unicode.
+        response.text = six.text_type(body)
 
         return response
 
