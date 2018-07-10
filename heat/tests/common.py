@@ -15,7 +15,6 @@ import os
 import sys
 
 import fixtures
-import mox
 from oslo_config import cfg
 from oslo_log import log as logging
 import testscenarios
@@ -84,8 +83,6 @@ class HeatTestCase(testscenarios.WithScenarios,
     def setUp(self, mock_keystone=True, mock_resource_policy=True,
               quieten_logging=True):
         super(HeatTestCase, self).setUp()
-        self.m = mox.Mox()
-        self.addCleanup(self.m.UnsetStubs)
         self.setup_logging(quieten=quieten_logging)
         self.warnings = self.useFixture(fixtures.WarningsCapture())
         scheduler.ENABLE_SLEEP = False
