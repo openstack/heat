@@ -203,3 +203,16 @@ class ForeignKeyConstraintFixture(fixtures.Fixture):
 
         self.useFixture(fixtures.MockPatchObject(db_api, '_facade', None))
         self.addCleanup(db_api.db_context.patch_factory(new_context._factory))
+
+
+class AnyInstance(object):
+    """Comparator for validating allowed instance type."""
+
+    def __init__(self, allowed_type):
+        self._allowed_type = allowed_type
+
+    def __eq__(self, other):
+        return isinstance(other, self._allowed_type)
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
