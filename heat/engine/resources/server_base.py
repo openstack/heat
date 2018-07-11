@@ -67,6 +67,8 @@ class BaseServer(stack_user.StackUser):
         occ = meta['os-collect-config']
         collectors = list(self.default_collectors)
         occ['collectors'] = collectors
+        region_name = (self.context.region_name or
+                       cfg.CONF.region_name_for_services)
 
         # set existing values to None to override any boot-time config
         occ_keys = ('heat', 'zaqar', 'cfn', 'request')
@@ -85,7 +87,8 @@ class BaseServer(stack_user.StackUser):
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
                 'stack_id': self.stack.identifier().stack_path(),
-                'resource_name': self.name}})
+                'resource_name': self.name,
+                'region_name': region_name}})
             collectors.append('heat')
 
         elif self.transport_zaqar_message(props):
@@ -95,7 +98,8 @@ class BaseServer(stack_user.StackUser):
                 'password': self.password,
                 'auth_url': self.context.auth_url,
                 'project_id': self.stack.stack_user_project_id,
-                'queue_id': queue_id}})
+                'queue_id': queue_id,
+                'region_name': region_name}})
             collectors.append('zaqar')
 
         elif self.transport_poll_server_cfn(props):
