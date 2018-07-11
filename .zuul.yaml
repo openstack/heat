@@ -61,7 +61,7 @@
       use_apache: 0
 
 - job:
-    name: heat-functional-convg-mysql-lbaasv2-py35
+    name: heat-functional-convg-mysql-lbaasv2-py3
     parent: heat-functional-devstack-base
     vars:
       use_python3: 1
@@ -118,7 +118,7 @@
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-amqp1
         - heat-functional-convg-mysql-lbaasv2-non-apache
-        - heat-functional-convg-mysql-lbaasv2-py35
+        - heat-functional-convg-mysql-lbaasv2-py3
     gate:
       queue: heat
       jobs:
@@ -126,7 +126,7 @@
         - grenade-heat-multinode
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-py35
+        - heat-functional-convg-mysql-lbaasv2-py3
     experimental:
       jobs:
         - tripleo-ci-centos-7-scenario002-multinode-oooq
