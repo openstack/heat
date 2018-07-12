@@ -327,7 +327,7 @@ Install and configure components
 
    * In the ``[database]`` section, configure database access:
 
-     .. code-block:: none
+     .. code-block:: ini
 
         [database]
         ...
@@ -339,7 +339,7 @@ Install and configure components
    * In the ``[DEFAULT]`` section,
      configure ``RabbitMQ`` message queue access:
 
-     .. code-block:: none
+     .. code-block:: ini
 
         [DEFAULT]
         ...
@@ -352,7 +352,7 @@ Install and configure components
      and ``[clients_keystone]`` sections,
      configure Identity service access:
 
-     .. code-block:: none
+     .. code-block:: ini
 
         [keystone_authtoken]
         ...
@@ -384,7 +384,7 @@ Install and configure components
    * In the ``[DEFAULT]`` section, configure the metadata and
      wait condition URLs:
 
-     .. code-block:: none
+     .. code-block:: ini
 
         [DEFAULT]
         ...
@@ -394,7 +394,7 @@ Install and configure components
    * In the ``[DEFAULT]`` section, configure the stack domain and
      administrative credentials:
 
-     .. code-block:: none
+     .. code-block:: ini
 
         [DEFAULT]
         ...

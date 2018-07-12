@@ -28,27 +28,27 @@ Parameters
 ----------
 
 *key_name* :mod:`(required)`
-	*type*
-		*string*
-	*description*
-		Name of an existing key pair to use for the instance
+    *type*
+        *string*
+    *description*
+        Name of an existing key pair to use for the instance
 *flavor* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		Flavor for the instance to be created
+    *type*
+        *string*
+    *description*
+        Flavor for the instance to be created
 *image* :mod:`(required)`
-	*type*
-		*string*
-	*description*
-		Image *ID* or image name to use for the instance
+    *type*
+        *string*
+    *description*
+        Image *ID* or image name to use for the instance
 *admin_pass* :mod:`(required)`
-	*type*
-		*string*
-	*description*
-		The admin password for the instance
+    *type*
+        *string*
+    *description*
+        The admin password for the instance
 *db_port* :mod:`(optional)`
-	*type*
-		*number*
-	*description*
-		The database port number
+    *type*
+        *number*
+    *description*
+        The database port number

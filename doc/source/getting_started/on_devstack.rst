@@ -33,7 +33,7 @@ Newer versions of OpenStack require enabling heat services in devstack
   #Enable heat services
   enable_service h-eng h-api h-api-cfn h-api-cw
 
-Since Newton release, heat is available as a devstack plugin. To enable the 
+Since Newton release, heat is available as a devstack plugin. To enable the
 plugin add the following to the `[[local|localrc]]` section of `local.conf`::
 
   [[local|localrc]]
