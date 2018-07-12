@@ -69,14 +69,12 @@ class HealthMonitor(octavia_base.OctaviaBase):
               'values: a single value, such as 200. a list, such as 200, 202. '
               'a range, such as 200-204.'),
             update_allowed=True,
-            default='200'
         ),
         HTTP_METHOD: properties.Schema(
             properties.Schema.STRING,
             _('The HTTP method used for requests by the monitor of type '
               'HTTP.'),
             update_allowed=True,
-            default=GET,
             constraints=[constraints.AllowedValues(HTTP_METHODS)]
         ),
         MAX_RETRIES: properties.Schema(
@@ -117,7 +115,6 @@ class HealthMonitor(octavia_base.OctaviaBase):
               'test a member health. A valid value is a string the begins '
               'with a forward slash (/).'),
             update_allowed=True,
-            default='/'
         ),
         TENANT_ID: properties.Schema(
             properties.Schema.STRING,
