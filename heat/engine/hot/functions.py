@@ -509,7 +509,7 @@ class ReplaceJson(Replace):
 
 
 class ReplaceJsonStrict(ReplaceJson):
-    """A function for performing string substituions.
+    """A function for performing string substitutions.
 
     str_replace_strict is identical to the str_replace function, only
     a ValueError is raised if any of the params are not present in
@@ -519,7 +519,7 @@ class ReplaceJsonStrict(ReplaceJson):
 
 
 class ReplaceJsonVeryStrict(ReplaceJsonStrict):
-    """A function for performing string substituions.
+    """A function for performing string substitutions.
 
     str_replace_vstrict is identical to the str_replace_strict
     function, only a ValueError is raised if any of the params are
