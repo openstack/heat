@@ -13,7 +13,6 @@
 
 
 from heat.common.i18n import _
-from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources import alarm_base
 from heat.engine import support
@@ -26,7 +25,6 @@ COMMON_GNOCCHI_PROPERTIES = (
     'comparison_operator', 'evaluation_periods', 'granularity',
     'aggregation_method', 'threshold',
 )
-
 
 common_gnocchi_properties_schema = {
     COMPARISON_OPERATOR: properties.Schema(
@@ -43,10 +41,6 @@ common_gnocchi_properties_schema = {
     AGGREGATION_METHOD: properties.Schema(
         properties.Schema.STRING,
         _('The aggregation method to compare to the threshold.'),
-        constraints=[
-            constraints.AllowedValues(['mean', 'sum', 'last', 'max', 'min',
-                                       'std', 'median', 'first', 'count']),
-        ],
         update_allowed=True
     ),
     GRANULARITY: properties.Schema(
