@@ -75,8 +75,9 @@ class ServerGroup(resource.Resource):
     def handle_create(self):
         name = self.physical_resource_name()
         policies = self.properties[self.POLICIES]
-        server_group = self.client().server_groups.create(name=name,
-                                                          policies=policies)
+        client = self.client(version=MICROVERSION_SOFT_POLICIES)
+        server_group = client.server_groups.create(name=name,
+                                                   policies=policies)
         self.resource_id_set(server_group.id)
 
     def physical_resource_name(self):
