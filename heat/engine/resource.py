@@ -1739,6 +1739,10 @@ class Resource(status.ResourceStatus):
             with self.frozen_properties():
                 return self._do_action(action)
         else:
+            if self.state == (self.INIT, self.COMPLETE):
+                # No need to store status; better to leave the resource in
+                # INIT_COMPLETE than imply that we've checked and it exists.
+                return
             reason = '%s not supported for %s' % (action, self.type())
             self.state_set(action, self.COMPLETE, reason)
 
