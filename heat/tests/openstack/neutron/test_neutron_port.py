@@ -605,6 +605,25 @@ class NeutronPortTest(common.HeatTestCase):
         self.assertFalse(port.data_set.called)
         self.assertFalse(n_client.update_port.called)
 
+    def test_prepare_for_replace_port_not_found(self):
+        t = template_format.parse(neutron_port_template)
+        stack = utils.parse_stack(t)
+        port = stack['port']
+        port.resource_id = 'test_res_id'
+        port._show_resource = mock.Mock(side_effect=qe.NotFound)
+        port.data_set = mock.Mock()
+        n_client = mock.Mock()
+        port.client = mock.Mock(return_value=n_client)
+
+        # execute prepare_for_replace
+        port.prepare_for_replace()
+
+        # check, if the port is not found, do nothing in
+        # prepare_for_replace()
+        self.assertTrue(port._show_resource.called)
+        self.assertFalse(port.data_set.called)
+        self.assertFalse(n_client.update_port.called)
+
     def test_prepare_for_replace_port(self):
         t = template_format.parse(neutron_port_template)
         stack = utils.parse_stack(t)
