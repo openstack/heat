@@ -11,6 +11,8 @@
       License for the specific language governing permissions and limitations
       under the License.
 
+:tocdepth: 2
+
 CloudFormation Compatible Resource Types
 ----------------------------------------
 .. integratedrespages:: AWS::
