@@ -78,11 +78,12 @@ class Port(neutron.NeutronResource):
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
         STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SUBNETS_ATTR,
         PORT_SECURITY_ENABLED_ATTR, QOS_POLICY_ATTR, DNS_ASSIGNMENT,
+        NETWORK_ATTR,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
         'status', 'tenant_id', 'allowed_address_pairs', 'subnets',
-        'port_security_enabled', 'qos_policy_id', 'dns_assignment',
+        'port_security_enabled', 'qos_policy_id', 'dns_assignment', 'network',
     )
 
     properties_schema = {
@@ -379,6 +380,22 @@ class Port(neutron.NeutronResource):
             type=attributes.Schema.MAP,
             support_status=support.SupportStatus(version='7.0.0'),
         ),
+        NETWORK_ATTR: attributes.Schema(
+            _("The attributes of the network owning the port. (The full list "
+              "of response parameters can be found in the `Openstack "
+              "Networking service API reference "
+              "<https://developer.openstack.org/api-ref/network/>`_.) The "
+              "following examples demonstrate some (not all) possible "
+              "expressions. (Obtains the network, the MTU (Maximum "
+              "transmission unit), the network tags and the l2_adjacency "
+              "property): "
+              "``{get_attr: [<port>, network]}``, "
+              "``{get_attr: [<port>, network, mtu]}``, "
+              "``{get_attr: [<port>, network, tags]}?``, "
+              "``{get_attr: [<port>, network, l2_adjacency]}``."),
+            type=attributes.Schema.MAP,
+            support_status=support.SupportStatus(version='11.0.0'),
+        ),
     }
 
     def translation_rules(self, props):
@@ -551,6 +568,13 @@ class Port(neutron.NeutronResource):
                 LOG.warning("Failed to fetch resource attributes: %s", ex)
                 return
             return subnets
+        if name == self.NETWORK_ATTR:
+            try:
+                return self.client().show_network(
+                    self._show_resource().get('network_id'))['network']
+            except Exception as ex:
+                LOG.warning("Failed to fetch resource attributes: %s", ex)
+                return
         return super(Port, self)._resolve_attribute(name)
 
     def needs_replace(self, after_props):

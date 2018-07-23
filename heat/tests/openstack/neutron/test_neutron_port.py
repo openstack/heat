@@ -80,6 +80,8 @@ class NeutronPortTest(common.HeatTestCase):
             neutronclient.Client, 'update_port')
         self.subnet_show_mock = self.patchobject(
             neutronclient.Client, 'show_subnet')
+        self.network_show_mock = self.patchobject(
+            neutronclient.Client, 'show_network')
         self.find_mock = self.patchobject(
             neutronV20, 'find_resourceid_by_name_or_id')
 
@@ -568,13 +570,26 @@ class NeutronPortTest(common.HeatTestCase):
                                              'end': u'10.0.0.254'}],
                        'gateway_ip': '10.0.0.1', 'ipv6_address_mode': None,
                        'ip_version': 4, 'host_routes': [],
-                       'id': '6dd609ad-d52a-4587-b1a0-b335f76062a5'}
+                       'id': 'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e'}
+        network_dict = {'name': 'test-network', 'status': 'ACTIVE',
+                        'router:external': False,
+                        'availability_zone_hints': [],
+                        'availability_zones': ['nova'],
+                        'ipv4_address_scope': None, 'description': '',
+                        'subnets': [subnet_dict['id']],
+                        'port_security_enabled': True,
+                        'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
+                        'tags': [], 'ipv6_address_scope': None,
+                        'project_id': '58a61fc3992944ce971404a2ece6ff98',
+                        'revision_number': 4, 'admin_state_up': True,
+                        'shared': False, 'mtu': 1450, 'id': 'net1234'}
         self.find_mock.return_value = 'net1234'
         self.create_mock.return_value = {'port': {
             'status': 'BUILD',
             'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
         }}
         self.subnet_show_mock.return_value = {'subnet': subnet_dict}
+        self.network_show_mock.return_value = {'network': network_dict}
         self.port_show_mock.return_value = {'port': {
             'status': 'DOWN',
             'name': utils.PhysName(stack.name, 'port'),
@@ -616,6 +631,7 @@ class NeutronPortTest(common.HeatTestCase):
                            'ip_address': '10.0.0.2'}],
                          port.FnGetAtt('fixed_ips'))
         self.assertEqual([subnet_dict], port.FnGetAtt('subnets'))
+        self.assertEqual(network_dict, port.FnGetAtt('network'))
         self.assertRaises(exception.InvalidTemplateAttribute,
                           port.FnGetAtt, 'Foo')
 
@@ -649,6 +665,48 @@ class NeutronPortTest(common.HeatTestCase):
         port = stack['port']
         scheduler.TaskRunner(port.create)()
         self.assertIsNone(port.FnGetAtt('subnets'))
+        log_msg = ('Failed to fetch resource attributes: ConnectionFailed: '
+                   'Connection to neutron failed: Maximum attempts reached')
+        self.assertIn(log_msg, self.LOG.output)
+        self.create_mock.assert_called_once_with({'port': {
+            'network_id': u'net1234',
+            'name': utils.PhysName(stack.name, 'port'),
+            'admin_state_up': True,
+            'device_owner': u'network:dhcp',
+            'binding:vnic_type': 'normal',
+            'device_id': ''}}
+        )
+
+    def test_network_attribute_exception(self):
+        t = template_format.parse(neutron_port_template)
+        t['resources']['port']['properties'].pop('fixed_ips')
+        stack = utils.parse_stack(t)
+
+        self.find_mock.return_value = 'net1234'
+        self.create_mock.return_value = {'port': {
+            'status': 'BUILD',
+            'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+        }}
+        self.port_show_mock.return_value = {'port': {
+            'status': 'DOWN',
+            'name': utils.PhysName(stack.name, 'port'),
+            'allowed_address_pairs': [],
+            'admin_state_up': True,
+            'network_id': 'net1234',
+            'device_id': 'dc68eg2c-b60g-4b3f-bd82-67ec87650532',
+            'mac_address': 'fa:16:3e:75:67:60',
+            'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
+            'security_groups': ['5b15d80c-6b70-4a1c-89c9-253538c5ade6'],
+            'fixed_ips': [{'subnet_id': 'd0e971a6-a6b4-4f4c-8c88-b75e9c120b7e',
+                           'ip_address': '10.0.0.2'}]
+        }}
+        self.network_show_mock.side_effect = (qe.NeutronClientException(
+            'ConnectionFailed: Connection to neutron failed: Maximum '
+            'attempts reached'))
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.assertIsNone(port.FnGetAtt('network'))
         log_msg = ('Failed to fetch resource attributes: ConnectionFailed: '
                    'Connection to neutron failed: Maximum attempts reached')
         self.assertIn(log_msg, self.LOG.output)
