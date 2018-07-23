@@ -52,16 +52,14 @@ It also can contain some other sections:
     Merge strategies for merging parameters and parameter defaults from the
     environment file.
 
-Use the :option:`-e` option of the :command:`openstack stack create` command to
-create a stack using the environment defined in such a file.
+Use the `-e` option of the :command:`openstack stack create` command to create
+a stack using the environment defined in such a file.
 
 You can also provide environment parameters as a list of key/value pairs using
-the :option:`--parameter` option of the :command:`openstack stack create`
-command.
+the `--parameter` option of the :command:`openstack stack create` command.
 
 In the following example the environment is read from the :file:`my_env.yaml`
-file and an extra parameter is provided using the :option:`--parameter`
-option::
+file and an extra parameter is provided using the `--parameter` option::
 
    $ openstack stack create my_stack -e my_env.yaml --parameter "param1=val1;param2=val2" -t my_tmpl.yaml
 

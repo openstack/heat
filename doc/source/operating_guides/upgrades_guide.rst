@@ -37,7 +37,7 @@ Plan to upgrade
 Cold Upgrades
 =============
 
-Heat already supports "cold-upgrades" [1]_, where the heat services have to be
+Heat already supports "`cold-upgrades`_", where the heat services have to be
 down during the upgrade. For time-consuming upgrades, it may be unacceptable
 for the services to be unavailable for a long period of time. This type of
 upgrade is quite simple, follow the bellow steps:
@@ -66,7 +66,7 @@ A rolling upgrade would provide a better experience for the users and
 operators of the cloud. A rolling upgrade would allow individual heat-api and
 heat-engine services to be upgraded one at a time, with the rest of the
 services still available. This upgrade would have minimal downtime. Please
-check specs about rolling upgrades [2]_.
+check `spec about rolling upgrades`_.
 
 Prerequisites
 -------------
@@ -108,8 +108,8 @@ These following steps are the process to upgrade Heat with minimal downtime:
    for all upgrade services.
 
 5. Stop heat-engine gracefully, Heat has supported graceful shutdown features
-   [2]_. Then start new heat-engine with new code (and corresponding
-   configuration).
+   (see the `spec about rolling upgrades`_). Then start new heat-engine with
+   new code (and corresponding configuration).
 
    .. note::
 
@@ -143,16 +143,16 @@ These following steps are the process to upgrade Heat with minimal downtime:
       unprocessed and any IN_PROGRESS stacks would get stuck without any
       forward progress. The operator must be careful when shutting down the
       last engine, make sure queues have no unprocessed messages before
-      doing it. The operator can check the queues directly with RabbitMQ's
-      management plugin [3].
+      doing it. The operator can check the queues directly with `RabbitMQ`_'s
+      management plugin.
 
 8. Once all services are upgraded, double check the DB and services
 
 References
 ==========
 
-.. [1] https://governance.openstack.org/tc/reference/tags/assert_supports-upgrade.html
+.. _cold-upgrades: https://governance.openstack.org/tc/reference/tags/assert_supports-upgrade.html
 
-.. [2] https://review.openstack.org/#/c/407989/
+.. _spec about rolling upgrades: https://review.openstack.org/#/c/407989/
 
-.. [3] http://www.rabbitmq.com/management.html
+.. _RabbitMQ: http://www.rabbitmq.com/management.html

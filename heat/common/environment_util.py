@@ -152,7 +152,7 @@ def merge_environments(environment_files, files,
     :param files: mapping of stack filenames to contents
     :type  files: dict
     :param params: parameters describing the stack
-    :type  dict:
+    :type  params: dict
     :param param_schemata: parameter schema dict
     :type  param_schemata: dict
     """

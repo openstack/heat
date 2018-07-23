@@ -25,6 +25,7 @@ class NovaQuota(resource.Resource):
 
     Nova Quota is used to manage operational limits for projects. Currently,
     this resource can manage Nova's quotas for:
+
         - cores
         - fixed_ips
         - floating_ips

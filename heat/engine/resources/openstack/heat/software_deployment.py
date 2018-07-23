@@ -51,7 +51,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     Whenever this resource goes to an IN_PROGRESS state, it creates an
     ephemeral config that includes the inputs values plus a number of extra
-    inputs which have names prefixed with deploy_. The extra inputs relate
+    inputs which have names prefixed with ``deploy_``. The extra inputs relate
     to the current state of the stack, along with the information and
     credentials required to signal back the deployment results.
 

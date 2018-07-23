@@ -33,6 +33,7 @@ https://github.com/openstack/heat/blob/master/rally-scenarios/heat-fakevirt.yaml
 
 Obviously performance analysis make sense, when it can be compared with some
 another performance data. So two different approaches can be used for it:
+
  - Comparison of one part of code with some custom changes
    (see :ref:`check_performance_or_detect_regression`)
  - Comparison of two different code parts
@@ -116,6 +117,7 @@ that caching works correct.
 
 Also this approach may be used for detecting regressions. In this case workflow
 may be presented as follow list of steps:
+
  - add to task list (``heat-fakevirt.yaml``) existing or new tasks.
  - wait a result of this execution.
  - upload patchset with changes (new feature) and launch the same test again.

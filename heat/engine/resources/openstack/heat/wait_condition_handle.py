@@ -195,12 +195,14 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
         """Validate and update the resource metadata.
 
         Metadata is not mandatory, but if passed it must use the following
-        format:
-        {
-            "status" : "Status (must be SUCCESS or FAILURE)",
-            "data" : "Arbitrary data",
-            "reason" : "Reason string"
-        }
+        format::
+
+            {
+                "status" : "Status (must be SUCCESS or FAILURE)",
+                "data" : "Arbitrary data",
+                "reason" : "Reason string"
+            }
+
         Optionally "id" may also be specified, but if missing the index
         of the signal received will be used.
         """

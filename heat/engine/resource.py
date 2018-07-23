@@ -1380,7 +1380,7 @@ class Resource(status.ResourceStatus):
         return False
 
     def needs_replace_failed(self):
-        """Needs replace if resource is in *_FAILED."""
+        """Needs replace if resource is in ``*_FAILED``."""
         return True
 
     def _needs_update(self, after, before, after_props, before_props,

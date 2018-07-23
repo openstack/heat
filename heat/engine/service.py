@@ -1185,11 +1185,11 @@ class EngineService(service.ServiceBase):
         :param params: Stack Input Params
         :param files: Files referenced from the template
         :param environment_files: optional ordered list of environment file
-               names included in the files dict
+                                  names included in the files dict
         :type  environment_files: list or None
         :param show_nested: if True, any nested templates will be checked
         :param ignorable_errors: List of error_code to be ignored as part of
-        validation
+                                 validation
         """
         LOG.info('validate_template')
         if template is None:

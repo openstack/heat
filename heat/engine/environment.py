@@ -382,7 +382,7 @@ class ResourceRegistry(object):
 
         For a given resource we get the set of restricted actions.
 
-        Actions are set in this format via `resources`:
+        Actions are set in this format via `resources`::
 
             {
                 "restricted_actions": [update, replace]
@@ -410,7 +410,7 @@ class ResourceRegistry(object):
         For a given resource and a hook type, we check to see if the passed
         group of resources has the right hook associated with the name.
 
-        Hooks are set in this format via `resources`:
+        Hooks are set in this format via `resources`::
 
             {
                 "res_name": {
