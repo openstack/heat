@@ -227,6 +227,8 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.engine.service.EngineListener',
                 return_value=mock.Mock())
+    @mock.patch('heat.engine.worker.WorkerService',
+                return_value=mock.Mock())
     @mock.patch('oslo_service.threadgroup.ThreadGroup',
                 return_value=mock.Mock())
     @mock.patch.object(service.EngineService, '_configure_db_conn_pool_size')
@@ -234,16 +236,17 @@ class ServiceEngineTest(common.HeatTestCase):
             self,
             configure_db_conn_pool_size,
             thread_group_class,
+            worker_service_class,
             engine_listener_class,
             thread_group_manager_class,
             sample_uuid_method,
             rpc_client_class,
             target_class,
             rpc_server_method):
-        cfg.CONF.set_default('convergence_engine', False)
+        cfg.CONF.set_override('convergence_engine', False)
         self._test_engine_service_start(
             thread_group_class,
-            None,
+            worker_service_class,
             engine_listener_class,
             thread_group_manager_class,
             sample_uuid_method,
@@ -280,7 +283,7 @@ class ServiceEngineTest(common.HeatTestCase):
             rpc_client_class,
             target_class,
             rpc_server_method):
-        cfg.CONF.set_default('convergence_engine', True)
+        cfg.CONF.set_override('convergence_engine', True)
         self._test_engine_service_start(
             thread_group_class,
             worker_service_class,

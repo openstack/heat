@@ -345,14 +345,13 @@ class EngineService(service.ServiceBase):
         LOG.debug("Starting listener for engine %s", self.engine_id)
         self.listener.start()
 
-        if cfg.CONF.convergence_engine:
-            self.worker_service = worker.WorkerService(
-                host=self.host,
-                topic=rpc_worker_api.TOPIC,
-                engine_id=self.engine_id,
-                thread_group_mgr=self.thread_group_mgr
-            )
-            self.worker_service.start()
+        self.worker_service = worker.WorkerService(
+            host=self.host,
+            topic=rpc_worker_api.TOPIC,
+            engine_id=self.engine_id,
+            thread_group_mgr=self.thread_group_mgr
+        )
+        self.worker_service.start()
 
         target = messaging.Target(
             version=self.RPC_API_VERSION, server=self.host,
@@ -401,8 +400,7 @@ class EngineService(service.ServiceBase):
         if self.listener:
             self.listener.stop()
 
-        if cfg.CONF.convergence_engine and self.worker_service:
-            # Stop the WorkerService
+        if self.worker_service:
             self.worker_service.stop()
 
         # Wait for all active threads to be finished
@@ -1373,7 +1371,7 @@ class EngineService(service.ServiceBase):
         stack = parser.Stack.load(cnxt, stack=st)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
 
-        if stack.convergence and cfg.CONF.convergence_engine:
+        if stack.convergence:
             stack.thread_group_mgr = self.thread_group_mgr
             template = templatem.Template.create_empty_template(
                 from_template=stack.t)
