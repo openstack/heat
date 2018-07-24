@@ -154,22 +154,23 @@ class Listener(neutron.NeutronResource):
         self._lb_id = None
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.LOADBALANCER],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='loadbalancer'
+                entity=client_plugin.RES_TYPE_LOADBALANCER
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.DEFAULT_POOL],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='pool'
+                entity=client_plugin.RES_TYPE_LB_POOL
             ),
         ]
 

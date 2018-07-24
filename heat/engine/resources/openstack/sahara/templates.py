@@ -253,6 +253,7 @@ class SaharaNodeGroupTemplate(resource.Resource):
     entity = 'node_group_templates'
 
     def translation_rules(self, props):
+        neutron_client_plugin = self.client_plugin('neutron')
         return [
             translation.TranslationRule(
                 props,
@@ -264,9 +265,9 @@ class SaharaNodeGroupTemplate(resource.Resource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.FLOATING_IP_POOL],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network')
+                entity=neutron_client_plugin.RES_TYPE_NETWORK)
             ]
 
     def _ngt_name(self, name):
@@ -303,13 +304,14 @@ class SaharaNodeGroupTemplate(resource.Resource):
         pool = self.properties[self.FLOATING_IP_POOL]
         if pool:
             if self.is_using_neutron():
+                neutron_client_plugin = self.client_plugin('neutron')
                 try:
-                    self.client_plugin(
-                        'neutron').find_resourceid_by_name_or_id('network',
-                                                                 pool)
+                    neutron_client_plugin.find_resourceid_by_name_or_id(
+                        neutron_client_plugin.RES_TYPE_NETWORK,
+                        pool)
                 except Exception as ex:
-                    if (self.client_plugin('neutron').is_not_found(ex)
-                            or self.client_plugin('neutron').is_no_unique(ex)):
+                    if (neutron_client_plugin.is_not_found(ex)
+                            or neutron_client_plugin.is_no_unique(ex)):
                         err_msg = encodeutils.exception_to_unicode(ex)
                         raise exception.StackValidationFailed(message=err_msg)
                     raise
@@ -537,14 +539,16 @@ class SaharaClusterTemplate(resource.Resource):
     entity = 'cluster_templates'
 
     def translation_rules(self, props):
+        neutron_client_plugin = self.client_plugin('neutron')
         return [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.MANAGEMENT_NETWORK],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network')]
+                entity=neutron_client_plugin.RES_TYPE_NETWORK)
+        ]
 
     def _cluster_template_name(self, name):
         if name:

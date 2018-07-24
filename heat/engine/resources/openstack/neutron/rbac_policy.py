@@ -105,15 +105,18 @@ class RBACPolicy(neutron.NeutronResource):
                 [self.OBJECT_ID],
                 client_plugin=self.client_plugin(),
                 finder='find_resourceid_by_name_or_id',
-                entity=self._get_resource_name(props[self.OBJECT_TYPE])
+                entity=self._get_client_res_type(props[self.OBJECT_TYPE])
             )
         ]
 
-    def _get_resource_name(self, object_type):
-        resource_name = object_type
-        if object_type == self.OBJECT_QOS_POLICY:
-            resource_name = 'policy'
-        return resource_name
+    def _get_client_res_type(self, object_type):
+        client_plugin = self.client_plugin()
+        if object_type == self.OBJECT_NETWORK:
+            return client_plugin.RES_TYPE_NETWORK
+        elif object_type == self.OBJECT_QOS_POLICY:
+            return client_plugin.RES_TYPE_QOS_POLICY
+        else:
+            return object_type
 
     def handle_create(self):
         props = self.prepare_properties(

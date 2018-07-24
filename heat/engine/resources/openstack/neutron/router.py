@@ -206,23 +206,26 @@ class Router(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         rules = [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.EXTERNAL_GATEWAY, self.EXTERNAL_GATEWAY_NETWORK],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network'),
+                entity=client_plugin.RES_TYPE_NETWORK
+            ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.EXTERNAL_GATEWAY, self.EXTERNAL_GATEWAY_FIXED_IPS,
                  self.SUBNET],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='subnet')
-            ]
+                entity=client_plugin.RES_TYPE_SUBNET
+            ),
+        ]
         if props.get(self.L3_AGENT_ID):
             rules.extend([
                 translation.TranslationRule(
@@ -472,6 +475,7 @@ class RouterInterface(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
@@ -495,25 +499,25 @@ class RouterInterface(neutron.NeutronResource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.PORT],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='port'
+                entity=client_plugin.RES_TYPE_PORT
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.ROUTER],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='router'
+                entity=client_plugin.RES_TYPE_ROUTER
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.SUBNET],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='subnet'
+                entity=client_plugin.RES_TYPE_SUBNET
             )
 
 
@@ -614,6 +618,7 @@ class RouterGateway(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
@@ -625,9 +630,9 @@ class RouterGateway(neutron.NeutronResource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.NETWORK],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network'
+                entity=client_plugin.RES_TYPE_NETWORK
             )
 
         ]

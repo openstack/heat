@@ -181,9 +181,11 @@ class SubnetPool(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
         if self.ADDRESS_SCOPE in props and props[self.ADDRESS_SCOPE]:
-            props['address_scope_id'] = self.client_plugin(
-                ).find_resourceid_by_name_or_id(
-                'address_scope', props.pop(self.ADDRESS_SCOPE))
+            client_plugin = self.client_plugin()
+            scope_id = client_plugin.find_resourceid_by_name_or_id(
+                client_plugin.RES_TYPE_ADDRESS_SCOPE,
+                props.pop(self.ADDRESS_SCOPE))
+            props['address_scope_id'] = scope_id
         tags = props.pop(self.TAGS, [])
         subnetpool = self.client().create_subnetpool(
             {'subnetpool': props})['subnetpool']
@@ -203,14 +205,14 @@ class SubnetPool(neutron.NeutronResource):
             self._validate_prefixes_for_update(prop_diff)
         if self.ADDRESS_SCOPE in prop_diff:
             if prop_diff[self.ADDRESS_SCOPE]:
-                prop_diff[
-                    'address_scope_id'] = self.client_plugin(
-                    ).find_resourceid_by_name_or_id(
-                    self.client(), 'address_scope',
+                client_plugin = self.client_plugin()
+                scope_id = client_plugin.find_resourceid_by_name_or_id(
+                    self.client(),
+                    client_plugin.RES_TYPE_ADDRESS_SCOPE,
                     prop_diff.pop(self.ADDRESS_SCOPE))
             else:
-                prop_diff[
-                    'address_scope_id'] = prop_diff.pop(self.ADDRESS_SCOPE)
+                scope_id = prop_diff.pop(self.ADDRESS_SCOPE)
+            prop_diff['address_scope_id'] = scope_id
         if self.TAGS in prop_diff:
             tags = prop_diff.pop(self.TAGS)
             self.set_tags(tags)

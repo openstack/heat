@@ -176,22 +176,23 @@ class Trunk(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.PARENT_PORT],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='port',
+                entity=client_plugin.RES_TYPE_PORT
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 translation_path=[self.SUB_PORTS, self.PORT],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='port',
+                entity=client_plugin.RES_TYPE_PORT
             ),
         ]
 

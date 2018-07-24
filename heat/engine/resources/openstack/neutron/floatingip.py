@@ -173,6 +173,7 @@ class FloatingIP(neutron.NeutronResource):
     }
 
     def translation_rules(self, props):
+        client_plugin = self.client_plugin()
         return [
             translation.TranslationRule(
                 props,
@@ -184,17 +185,17 @@ class FloatingIP(neutron.NeutronResource):
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.FLOATING_NETWORK],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network'
+                entity=client_plugin.RES_TYPE_NETWORK
             ),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 [self.FLOATING_SUBNET],
-                client_plugin=self.client_plugin(),
+                client_plugin=client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='subnet',
+                entity=client_plugin.RES_TYPE_SUBNET
             )
         ]
 

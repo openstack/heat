@@ -107,9 +107,10 @@ class L7Rule(neutron.NeutronResource):
 
     @property
     def l7policy_id(self):
+        client_plugin = self.client_plugin()
         if self._l7p_id is None:
-            self._l7p_id = self.client_plugin().find_resourceid_by_name_or_id(
-                self.L7POLICY,
+            self._l7p_id = client_plugin.find_resourceid_by_name_or_id(
+                client_plugin.RES_TYPE_LB_L7POLICY,
                 self.properties[self.L7POLICY])
         return self._l7p_id
 

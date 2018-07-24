@@ -88,8 +88,10 @@ class NovaFloatingIp(resource.Resource):
 
     def get_external_network_id(self, pool=None):
         if pool:
-            return self.client_plugin(
-                'neutron').find_resourceid_by_name_or_id('network', pool)
+            neutron_plugin = self.client_plugin('neutron')
+            return neutron_plugin.find_resourceid_by_name_or_id(
+                neutron_plugin.RES_TYPE_NETWORK,
+                pool)
         ext_filter = {'router:external': True}
         ext_nets = self.neutron().list_networks(**ext_filter)['networks']
         if len(ext_nets) != 1:

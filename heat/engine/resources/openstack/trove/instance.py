@@ -348,16 +348,19 @@ class Instance(resource.Resource):
         for nic in self.properties[self.NICS]:
             nic_dict = {}
             net = nic.get(self.NET)
-            if net:
-                net_id = self.client_plugin(
-                    'neutron').find_resourceid_by_name_or_id('network',
-                                                             net)
-                nic_dict['net-id'] = net_id
             port = nic.get(self.PORT)
-            if port:
+            if net or port:
                 neutron = self.client_plugin('neutron')
-                nic_dict['port-id'] = neutron.find_resourceid_by_name_or_id(
-                    'port', port)
+            if net:
+                net_id = neutron.find_resourceid_by_name_or_id(
+                    neutron.RES_TYPE_NETWORK,
+                    net)
+                nic_dict['net-id'] = net_id
+            if port:
+                port_id = neutron.find_resourceid_by_name_or_id(
+                    neutron.RES_TYPE_PORT,
+                    port)
+                nic_dict['port-id'] = port_id
             ip = nic.get(self.V4_FIXED_IP)
             if ip:
                 nic_dict['v4-fixed-ip'] = ip

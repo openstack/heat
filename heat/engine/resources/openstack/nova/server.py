@@ -718,6 +718,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
     default_client_name = 'nova'
 
     def translation_rules(self, props):
+        neutron_client_plugin = self.client_plugin('neutron')
+        glance_client_plugin = self.client_plugin('glance')
         rules = [
             translation.TranslationRule(
                 props,
@@ -734,7 +736,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                 props,
                 translation.TranslationRule.RESOLVE,
                 translation_path=[self.IMAGE],
-                client_plugin=self.client_plugin('glance'),
+                client_plugin=glance_client_plugin,
                 finder='find_image_by_name_or_id'),
             translation.TranslationRule(
                 props,
@@ -747,29 +749,30 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                 translation.TranslationRule.RESOLVE,
                 translation_path=[self.BLOCK_DEVICE_MAPPING_V2,
                                   self.BLOCK_DEVICE_MAPPING_IMAGE],
-                client_plugin=self.client_plugin('glance'),
+                client_plugin=glance_client_plugin,
                 finder='find_image_by_name_or_id'),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 translation_path=[self.NETWORKS, self.NETWORK_ID],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='network'),
+                entity=neutron_client_plugin.RES_TYPE_NETWORK),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 translation_path=[self.NETWORKS, self.NETWORK_SUBNET],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='subnet'),
+                entity=neutron_client_plugin.RES_TYPE_SUBNET),
             translation.TranslationRule(
                 props,
                 translation.TranslationRule.RESOLVE,
                 translation_path=[self.NETWORKS, self.NETWORK_PORT],
-                client_plugin=self.client_plugin('neutron'),
+                client_plugin=neutron_client_plugin,
                 finder='find_resourceid_by_name_or_id',
-                entity='port')]
+                entity=neutron_client_plugin.RES_TYPE_PORT)
+        ]
         return rules
 
     def __init__(self, name, json_snippet, stack):
@@ -929,8 +932,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         client_plugin = self.client_plugin('neutron')
         for net_key in reality_nets:
             try:
-                net_id = client_plugin.find_resourceid_by_name_or_id('network',
-                                                                     net_key)
+                net_id = client_plugin.find_resourceid_by_name_or_id(
+                    client_plugin.RES_TYPE_NETWORK,
+                    net_key)
             except Exception as ex:
                 if (client_plugin.is_not_found(ex) or
                         client_plugin.is_no_unique(ex)):
@@ -1125,8 +1129,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         client_plugin = self.client_plugin('neutron')
         for key in list(nets.keys()):
             try:
-                net_id = client_plugin.find_resourceid_by_name_or_id('network',
-                                                                     key)
+                net_id = client_plugin.find_resourceid_by_name_or_id(
+                    client_plugin.RES_TYPE_NETWORK,
+                    key)
             except Exception as ex:
                 if (client_plugin.is_not_found(ex) or
                         client_plugin.is_no_unique(ex)):
