@@ -92,27 +92,9 @@ class CheckResource(object):
         LOG.debug('Resource id=%d modified by another traversal', rsrc.id)
         return False
 
-    def _trigger_rollback(self, stack):
-        LOG.info("Triggering rollback of %(stack_name)s %(action)s ",
-                 {'action': stack.action, 'stack_name': stack.name})
-        stack.rollback()
-
-    def _handle_failure(self, cnxt, stack, failure_reason):
-        updated = stack.state_set(stack.action, stack.FAILED, failure_reason)
-        if not updated:
-            return False
-
-        if (not stack.disable_rollback and
-                stack.action in (stack.CREATE, stack.ADOPT, stack.UPDATE,
-                                 stack.RESTORE)):
-            self._trigger_rollback(stack)
-        else:
-            stack.purge_db()
-        return True
-
     def _handle_resource_failure(self, cnxt, is_update, rsrc_id,
                                  stack, failure_reason):
-        failure_handled = self._handle_failure(cnxt, stack, failure_reason)
+        failure_handled = stack.mark_failed(failure_reason)
         if not failure_handled:
             # Another concurrent update has taken over. But there is a
             # possibility for that update to be waiting for this rsrc to
@@ -131,7 +113,7 @@ class CheckResource(object):
 
     def _handle_stack_timeout(self, cnxt, stack):
         failure_reason = u'Timed out'
-        self._handle_failure(cnxt, stack, failure_reason)
+        stack.mark_failed(failure_reason)
 
     def _handle_resource_replacement(self, cnxt,
                                      current_traversal, new_tmpl_id, requires,

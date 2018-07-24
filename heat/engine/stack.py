@@ -90,10 +90,10 @@ def reset_state_on_error(func):
                 LOG.info('Stopped due to %(msg)s in %(func)s',
                          {'func': func.__name__, 'msg': errmsg})
         finally:
-            if stack.status == stack.IN_PROGRESS:
+            if ((not stack.convergence or errmsg is not None) and
+                    stack.status == stack.IN_PROGRESS):
                 rtnmsg = _("Unexpected exit while IN_PROGRESS.")
-                stack.state_set(stack.action, stack.FAILED,
-                                errmsg if errmsg is not None else rtnmsg)
+                stack.mark_failed(errmsg if errmsg is not None else rtnmsg)
                 assert errmsg is not None, "Returned while IN_PROGRESS."
 
     return handle_exceptions
@@ -1300,6 +1300,7 @@ class Stack(collections.Mapping):
         updater()
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
+    @reset_state_on_error
     def converge_stack(self, template, action=UPDATE, new_stack=None,
                        pre_converge=None):
         """Update the stack template and trigger convergence for resources."""
@@ -1358,6 +1359,7 @@ class Stack(collections.Mapping):
         self.thread_group_mgr.start(self.id, self._converge_create_or_update,
                                     pre_converge=pre_converge)
 
+    @reset_state_on_error
     def _converge_create_or_update(self, pre_converge=None):
         current_resources = self._update_or_store_resources()
         self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies,
@@ -2081,13 +2083,31 @@ class Stack(collections.Mapping):
             'tags': self.tags,
         }
 
-    def mark_complete(self):
-        """Mark the update as complete.
+    def mark_failed(self, failure_reason):
+        """Mark the convergence update as failed."""
+        updated = self.state_set(self.action, self.FAILED, failure_reason)
+        if not updated:
+            return False
 
-        This currently occurs when all resources have been updated; there may
-        still be resources being cleaned up, but the Stack should now be in
-        service.
-        """
+        if not self.convergence:
+            # This function is not generally used in the legacy path, but to
+            # allow it to be used by any kind of stack in the
+            # reset_state_on_error decorator, bail out before the
+            # convergence-specific part in legacy stacks.
+            return
+
+        if (not self.disable_rollback and
+                self.action in (self.CREATE, self.ADOPT, self.UPDATE,
+                                self.RESTORE)):
+            LOG.info("Triggering rollback of %(stack_name)s %(action)s ",
+                     {'action': self.action, 'stack_name': self.name})
+            self.rollback()
+        else:
+            self.purge_db()
+        return True
+
+    def mark_complete(self):
+        """Mark the convergence update as complete."""
 
         LOG.info('[%(name)s(%(id)s)] update traversal %(tid)s complete',
                  {'name': self.name, 'id': self.id,

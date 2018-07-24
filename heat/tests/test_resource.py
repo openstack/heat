@@ -2043,6 +2043,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual(atomic_key, rs.atomic_key)
 
     def test_create_convergence(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
@@ -2059,6 +2060,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
 
     def test_create_convergence_throws_timeout(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.CREATE
@@ -2074,6 +2076,7 @@ class ResourceTest(common.HeatTestCase):
         Ensure that requires are computed correctly even if resource
         create fails.
         """
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.store()
@@ -2089,6 +2092,7 @@ class ResourceTest(common.HeatTestCase):
 
     @mock.patch.object(resource.Resource, 'adopt')
     def test_adopt_convergence_ok(self, mock_adopt):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.ADOPT
@@ -2106,6 +2110,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
 
     def test_adopt_convergence_bad_data(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.action = res.ADOPT
@@ -2127,7 +2132,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType'}
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             tmpl)
+                             tmpl, convergence=True)
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
@@ -2144,8 +2149,8 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         new_temp.store(stack.context)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
-        res.stack.convergence = True
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
 
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
                                   {4, 3}, 'engine-007', 120, new_stack)
@@ -2163,7 +2168,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType'}
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             tmpl)
+                             tmpl, convergence=True)
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
@@ -2177,7 +2182,8 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         new_temp.store(stack.context)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
 
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
                                   set(), 'engine-007', -1, new_stack,
@@ -2185,6 +2191,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(scheduler.Timeout, tr)
 
     def test_update_convergence_with_substitute_class(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res',
                                             'GenericResourceType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
@@ -2198,13 +2205,15 @@ class ResourceTest(common.HeatTestCase):
             }}, env=self.env)
         new_temp.store(self.stack.context)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
 
         self.assertRaises(resource.UpdateReplace, res.update_convergence,
                           new_temp.id, set(), 'engine-007',
                           -1, new_stack)
 
     def test_update_convergence_checks_resource_class(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res',
                                             'GenericResourceType')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
@@ -2219,7 +2228,8 @@ class ResourceTest(common.HeatTestCase):
         ctx = utils.dummy_context()
         new_temp.store(ctx)
         new_stack = parser.Stack(ctx, 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
 
         tr = scheduler.TaskRunner(res.update_convergence, new_temp.id,
                                   set(), 'engine-007', -1, new_stack,
@@ -2245,7 +2255,8 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType'}
             }}, env=self.env)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 tmpl, stack_id=self.stack.id)
+                                 tmpl, stack_id=self.stack.id,
+                                 convergence=True)
         tr = scheduler.TaskRunner(res.update_convergence, 'template_key',
                                   {4, 3}, 'engine-007', self.dummy_timeout,
                                   new_stack)
@@ -2268,7 +2279,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType'}
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             tmpl)
+                             tmpl, convergence=True)
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
@@ -2285,7 +2296,8 @@ class ResourceTest(common.HeatTestCase):
         new_temp.store(stack.context)
 
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
 
         res.stack.convergence = True
         res._calling_engine_id = 'engine-9'
@@ -2309,7 +2321,7 @@ class ResourceTest(common.HeatTestCase):
                 'test_res': {'Type': 'ResourceWithPropsType'}
             }}, env=self.env)
         stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                             tmpl)
+                             tmpl, convergence=True)
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(stack.t, action=stack.CREATE)
         res = stack.resources['test_res']
@@ -2341,6 +2353,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, 2)
 
     def test_convergence_update_replace_rollback(self):
+        self.stack.convergence = True
         rsrc_def = rsrc_defn.ResourceDefinition('test_res',
                                                 'ResourceWithPropsType')
         res = generic_rsrc.ResourceWithProps('test_res', rsrc_def, self.stack)
@@ -2354,7 +2367,8 @@ class ResourceTest(common.HeatTestCase):
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
         self.stack.state_set(self.stack.ROLLBACK, self.stack.IN_PROGRESS,
                              'Simulate rollback')
         res.restore_prev_rsrc = mock.Mock()
@@ -2365,6 +2379,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertTrue(res.restore_prev_rsrc.called)
 
     def test_convergence_update_replace_rollback_restore_prev_rsrc_error(self):
+        self.stack.convergence = True
         rsrc_def = rsrc_defn.ResourceDefinition('test_res',
                                                 'ResourceWithPropsType')
         res = generic_rsrc.ResourceWithProps('test_res', rsrc_def, self.stack)
@@ -2378,7 +2393,8 @@ class ResourceTest(common.HeatTestCase):
                              'Properties': {'Foo': 'abc'}}
             }}, env=self.env)
         new_stack = parser.Stack(utils.dummy_context(), 'test_stack',
-                                 new_temp, stack_id=self.stack.id)
+                                 new_temp, stack_id=self.stack.id,
+                                 convergence=True)
         self.stack.state_set(self.stack.ROLLBACK, self.stack.IN_PROGRESS,
                              'Simulate rollback')
         res.restore_prev_rsrc = mock.Mock(side_effect=Exception)
@@ -2390,6 +2406,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.UPDATE, res.FAILED), res.state)
 
     def test_delete_convergence_ok(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 1
@@ -2409,6 +2426,7 @@ class ResourceTest(common.HeatTestCase):
         self._assert_resource_lock(res.id, None, None)
 
     def test_delete_convergence_does_not_delete_same_template_resource(self):
+        self.stack.convergence = True
         tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
         res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
         res.current_template_id = 'same-template'
