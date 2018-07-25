@@ -1353,7 +1353,6 @@ class EngineService(service.ServiceBase):
             def convergence_delete():
                 stack.thread_group_mgr = self.thread_group_mgr
                 self.worker_service.stop_all_workers(stack)
-                stack.delete_all_snapshots()
                 template = templatem.Template.create_empty_template(
                     from_template=stack.t)
                 stack.converge_stack(template=template, action=stack.DELETE)
