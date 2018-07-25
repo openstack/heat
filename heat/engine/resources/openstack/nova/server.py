@@ -638,13 +638,16 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
               'through the following expression: ``{get_attr: [<server>, '
               'addresses, <network name_or_id>, 0, port]}``. The subnets may '
               'be obtained trough the following expression: ``{get_attr: '
-              '[<server>, addresses, <network name_or_id>, 0, subnets]}``.'),
+              '[<server>, addresses, <network name_or_id>, 0, subnets]}``. '
+              'The network may be obtained through the following expression: '
+              '``{get_attr: [<server>, addresses, <network name_or_id>, 0, '
+              'network]}``.'),
             type=attributes.Schema.MAP,
             support_status=support.SupportStatus(
                 version='11.0.0',
                 status=support.SUPPORTED,
-                message=_('The attribute was extended to include subnets with '
-                          'version 11.0.0.'),
+                message=_('The attribute was extended to include subnets and '
+                          'network with version 11.0.0.'),
                 previous_status=support.SupportStatus(
                     status=support.SUPPORTED
                 )
@@ -1076,11 +1079,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         return bdm_v2_list
 
-    def _get_port_subnets_attr(self, port_id):
+    def _get_subnets_attr(self, fixed_ips):
         subnets = []
         try:
-            fixed_ips = self.client('neutron').show_port(
-                port_id)['port']['fixed_ips']
             for fixed_ip in fixed_ips:
                 if fixed_ip.get('subnet_id'):
                     subnets.append(self.client('neutron').show_subnet(
@@ -1090,8 +1091,15 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             return
         return subnets
 
+    def _get_network_attr(self, network_id):
+        try:
+            return self.client('neutron').show_network(network_id)['network']
+        except Exception as ex:
+            LOG.warning("Failed to fetch resource attributes: %s", ex)
+            return
+
     def _add_attrs_for_address(self, server, extend_networks=True):
-        """Method adds port id and subnets attributes to list of addresses.
+        """Adds port id, subnets and network attributes to addresses list.
 
         This method is used only for resolving attributes.
         :param server: The server resource
@@ -1112,8 +1120,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                 # We don't need to get subnets and network in that case. Only
                 # do the external calls if extend_networks is true, i.e called
                 # from _resolve_attribute()
-                if extend_networks:
-                    addr['subnets'] = self._get_port_subnets_attr(addr['port'])
+                if not extend_networks:
+                    continue
+                try:
+                    port = self.client('neutron').show_port(
+                        addr['port'])['port']
+                except Exception as ex:
+                    addr['subnets'], addr['network'] = None, None
+                    LOG.warning("Failed to fetch resource attributes: %s", ex)
+                    continue
+                addr['subnets'] = self._get_subnets_attr(port['fixed_ips'])
+                addr['network'] = self._get_network_attr(port['network_id'])
 
         if extend_networks:
             return self._extend_networks(nets)

@@ -253,6 +253,8 @@ class ServersTest(common.HeatTestCase):
                                           'show_port')
         self.subnet_show = self.patchobject(neutronclient.Client,
                                             'show_subnet')
+        self.network_show = self.patchobject(neutronclient.Client,
+                                             'show_network')
 
     def _limits_absolute(self):
         max_personality = mock.Mock()
@@ -441,6 +443,7 @@ class ServersTest(common.HeatTestCase):
 
         self.port_show.return_value = {
             'port': {'id': '1234',
+                     'network_id': 'the_network',
                      'fixed_ips': [{
                          'ip_address': '4.5.6.7',
                          'subnet_id': 'the_subnet'}]
@@ -453,10 +456,20 @@ class ServersTest(common.HeatTestCase):
                 'allocation_pools': [{'start': '10.0.0.2',
                                       'end': u'10.0.0.254'}],
                 'gateway_ip': '10.0.0.1',
-                'id': 'the_subnet'
+                'id': 'the_subnet',
+                'network_id': 'the_network'
+            }
+        }
+        network_dict = {
+            'network': {
+                'name': 'network_name',
+                'mtu': 1500,
+                'subnets': [subnet_dict['subnet']['id']],
+                'id': 'the_network'
             }
         }
         self.subnet_show.return_value = subnet_dict
+        self.network_show.return_value = network_dict
 
         public_ip = return_server.networks['public'][0]
         self.assertEqual('1234',
@@ -475,6 +488,8 @@ class ServersTest(common.HeatTestCase):
                          server.FnGetAtt('addresses')['private'][0]['addr'])
         self.assertEqual([subnet_dict['subnet']],
                          server.FnGetAtt('addresses')['private'][0]['subnets'])
+        self.assertEqual(network_dict['network'],
+                         server.FnGetAtt('addresses')['private'][0]['network'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('networks')['private'][0])
 
@@ -493,6 +508,21 @@ class ServersTest(common.HeatTestCase):
             del server.attributes._resolved_values['tags']
         self.assertIsNone(server.FnGetAtt('tags'))
         self.assertEqual({}, server.FnGetAtt('os_collect_config'))
+
+    def test_server_network_subnet_address_attr_port_not_found(self):
+        return_server = self.fc.servers.list()[1]
+        server_name = 'network-subnet-attr-server'
+        server = self._create_test_server(return_server, server_name)
+        interfaces = [create_fake_iface(port='1234',
+                                        mac='fa:16:3e:8c:22:aa',
+                                        ip='4.5.6.7')]
+        self.patchobject(return_server, 'interface_list',
+                         return_value=interfaces)
+        self.port_show.side_effect = neutron.exceptions.NotFound()
+        self.assertEqual(None,
+                         server.FnGetAtt('addresses')['private'][0]['subnets'])
+        self.assertEqual(None,
+                         server.FnGetAtt('addresses')['private'][0]['network'])
 
     def test_server_create_metadata(self):
         stack_name = 'create_metadata_test_stack'
