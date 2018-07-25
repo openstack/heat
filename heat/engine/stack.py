@@ -297,16 +297,18 @@ class Stack(collections.Mapping):
         return {n: self.defn.output_definition(n)
                 for n in self.defn.enabled_output_names()}
 
+    def _resources_for_defn(self, stack_defn):
+        return {
+            name: resource.Resource(name,
+                                    stack_defn.resource_definition(name),
+                                    self)
+            for name in stack_defn.enabled_rsrc_names()
+        }
+
     @property
     def resources(self):
         if self._resources is None:
-            self._resources = {
-                name: resource.Resource(name,
-                                        self.defn.resource_definition(name),
-                                        self)
-                for name in self.defn.enabled_rsrc_names()
-            }
-
+            self._resources = self._resources_for_defn(self.defn)
         return self._resources
 
     def _update_all_resource_data(self, for_resources, for_outputs):
@@ -1324,6 +1326,14 @@ class Stack(collections.Mapping):
                          'action': self.action})
             return
 
+        if self.action == self.DELETE:
+            try:
+                self.delete_all_snapshots()
+            except Exception as exc:
+                self.state_set(self.action, self.FAILED, six.text_type(exc))
+                self.purge_db()
+                return
+
         LOG.info('convergence_dependencies: %s',
                  self.convergence_dependencies)
 
@@ -1928,21 +1938,28 @@ class Stack(collections.Mapping):
             self.delete_snapshot(snapshot)
             snapshot_object.Snapshot.delete(self.context, snapshot.id)
 
+    @staticmethod
+    def _template_from_snapshot_data(snapshot_data):
+        env = environment.Environment(snapshot_data['environment'])
+        files = snapshot_data['files']
+        return tmpl.Template(snapshot_data['template'], env=env, files=files)
+
     @profiler.trace('Stack.delete_snapshot', hide_args=False)
     def delete_snapshot(self, snapshot):
         """Remove a snapshot from the backends."""
-        for name, rsrc in six.iteritems(self.resources):
-            snapshot_data = snapshot.data
-            if snapshot_data:
+        snapshot_data = snapshot.data
+        if snapshot_data:
+            template = self._template_from_snapshot_data(snapshot_data)
+            ss_defn = self.defn.clone_with_new_template(template,
+                                                        self.identifier())
+            resources = self._resources_for_defn(ss_defn)
+            for name, rsrc in six.iteritems(resources):
                 data = snapshot.data['resources'].get(name)
                 if data:
                     scheduler.TaskRunner(rsrc.delete_snapshot, data)()
 
     def restore_data(self, snapshot):
-        env = environment.Environment(snapshot.data['environment'])
-        files = snapshot.data['files']
-        template = tmpl.Template(snapshot.data['template'],
-                                 env=env, files=files)
+        template = self._template_from_snapshot_data(snapshot.data)
         newstack = self.__class__(self.context, self.name, template,
                                   timeout_mins=self.timeout_mins,
                                   disable_rollback=self.disable_rollback)
