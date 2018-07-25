@@ -177,10 +177,8 @@ class GlanceImageTest(common.HeatTestCase):
         props['disk_format'] = 'incorrect_format'
         image.t = image.t.freeze(properties=props)
         image.reparse()
-        error_msg = ('Property error: '
-                     'resources.image.properties.disk_format: '
-                     '"incorrect_format" is not an allowed value '
-                     '[ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, iso]')
+        error_msg = ('resources.image.properties.disk_format: '
+                     '"incorrect_format" is not an allowed value')
         self._test_validate(image, error_msg)
 
     def test_miss_container_format(self):
@@ -210,10 +208,8 @@ class GlanceImageTest(common.HeatTestCase):
         props['container_format'] = 'incorrect_format'
         image.t = image.t.freeze(properties=props)
         image.reparse()
-        error_msg = ('Property error: '
-                     'resources.image.properties.container_format: '
-                     '"incorrect_format" is not an allowed value '
-                     '[ami, ari, aki, bare, ova, ovf]')
+        error_msg = ('resources.image.properties.container_format: '
+                     '"incorrect_format" is not an allowed value')
         self._test_validate(image, error_msg)
 
     def test_miss_location(self):
@@ -549,8 +545,7 @@ class GlanceWebImageTest(common.HeatTestCase):
         image.reparse()
         error_msg = ('Property error: '
                      'resources.image.properties.disk_format: '
-                     '"incorrect_format" is not an allowed value '
-                     '[ami, ari, aki, vhd, vmdk, raw, qcow2, vdi, iso]')
+                     '"incorrect_format" is not an allowed value')
         self._test_validate(image, error_msg)
 
     def test_miss_container_format(self):
@@ -582,8 +577,7 @@ class GlanceWebImageTest(common.HeatTestCase):
         image.reparse()
         error_msg = ('Property error: '
                      'resources.image.properties.container_format: '
-                     '"incorrect_format" is not an allowed value '
-                     '[ami, ari, aki, bare, ova, ovf]')
+                     '"incorrect_format" is not an allowed value')
         self._test_validate(image, error_msg)
 
     def test_miss_location(self):

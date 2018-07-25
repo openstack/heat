@@ -134,7 +134,7 @@ class CompositeAlarmTest(common.HeatTestCase):
         props = test_stack.t['resources']['cps_alarm']['Properties']
         props['composite_rule']['operator'] = 'invalid'
         res = test_stack['cps_alarm']
-        error_msg = '"invalid" is not an allowed value [or, and]'
+        error_msg = '"invalid" is not an allowed value'
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 res.validate)

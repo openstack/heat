@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import json
 import numbers
 import re
 
@@ -196,7 +197,8 @@ class Schema(collections.Mapping):
             elif self.type == self.STRING:
                 return six.text_type(value)
             elif self.type == self.BOOLEAN:
-                return strutils.bool_from_string(str(value), strict=True)
+                return strutils.bool_from_string(six.text_type(value),
+                                                 strict=True)
         except ValueError:
             raise ValueError(_('Value "%(val)s" is invalid for data type '
                                '"%(type)s".')
@@ -264,7 +266,7 @@ class AnyIndexDict(collections.Mapping):
 
     def __getitem__(self, key):
         if key != self.ANYTHING and not isinstance(key, six.integer_types):
-            raise KeyError(_('Invalid key %s') % str(key))
+            raise KeyError(_('Invalid key %s') % key)
 
         return self.value
 
@@ -275,6 +277,7 @@ class AnyIndexDict(collections.Mapping):
         return 1
 
 
+@six.python_2_unicode_compatible
 class Constraint(collections.Mapping):
     """Parent class for constraints on allowable values for a Property.
 
@@ -293,7 +296,7 @@ class Constraint(collections.Mapping):
                 yield self.description
             yield self._str()
 
-        return '\n'.join(desc())
+        return u'\n'.join(desc())
 
     def validate(self, value, schema=None, context=None):
         if not self._is_valid(value, schema, context):
@@ -369,9 +372,10 @@ class Range(Constraint):
         return fmt % self._constraint()
 
     def _err_msg(self, value):
-        return '%s is out of range (min: %s, max: %s)' % (value,
-                                                          self.min,
-                                                          self.max)
+        return _('%(value)s is out of range '
+                 '(min: %(min)s, max: %(max)s)') % {'value': value,
+                                                    'min': self.min,
+                                                    'max': self.max}
 
     def _is_valid(self, value, schema, context):
         value = Schema.str_to_num(value)
@@ -432,9 +436,10 @@ class Length(Range):
         return fmt % self._constraint()
 
     def _err_msg(self, value):
-        return 'length (%d) is out of range (min: %s, max: %s)' % (len(value),
-                                                                   self.min,
-                                                                   self.max)
+        return _('length (%(length)d) is out of range '
+                 '(min: %(min)s, max: %(max)s)') % {'length': len(value),
+                                                    'min': self.min,
+                                                    'max': self.max}
 
     def _is_valid(self, value, schema, context):
         return super(Length, self)._is_valid(len(value), schema, context)
@@ -498,8 +503,10 @@ class Modulo(Constraint):
         return fmt % self._constraint()
 
     def _err_msg(self, value):
-        return '%s is not a multiple of %s with an offset of %s)' % (
-            value, self.step, self.offset)
+        return _('%(value)s is not a multiple of %(step)s '
+                 'with an offset of %(offset)s') % {'value': value,
+                                                    'step': self.step,
+                                                    'offset': self.offset}
 
     def _is_valid(self, value, schema, context):
         value = Schema.str_to_num(value)
@@ -542,12 +549,14 @@ class AllowedValues(Constraint):
         self.allowed = tuple(allowed)
 
     def _str(self):
-        allowed = ', '.join(str(a) for a in self.allowed)
+        allowed = ', '.join(json.dumps(a) for a in self.allowed)
         return _('Allowed values: %s') % allowed
 
     def _err_msg(self, value):
-        allowed = '[%s]' % ', '.join(str(a) for a in self.allowed)
-        return '"%s" is not an allowed value %s' % (value, allowed)
+        allowed = '[%s]' % ', '.join(json.dumps(a) for a in self.allowed)
+        return _('%(value)s is not an allowed value '
+                 '%(allowed)s') % {'value': json.dumps(value),
+                                   'allowed': allowed}
 
     def _is_valid(self, value, schema, context):
         # For list values, check if all elements of the list are contained
@@ -590,7 +599,8 @@ class AllowedPattern(Constraint):
         return _('Value must match pattern: %s') % self.pattern
 
     def _err_msg(self, value):
-        return '"%s" does not match pattern "%s"' % (value, self.pattern)
+        return _('"%(value)s" does not match pattern '
+                 '"%(pattern)s"') % {'value': value, 'pattern': self.pattern}
 
     def _is_valid(self, value, schema, context):
         match = self.match(value)
@@ -691,7 +701,7 @@ class BaseCustomConstraint(object):
             try:
                 self.validate_with_client(context.clients, value_to_validate)
             except self.expected_exceptions as e:
-                self._error_message = str(e)
+                self._error_message = six.text_type(e)
                 return False
             else:
                 return True

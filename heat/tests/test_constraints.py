@@ -366,7 +366,7 @@ class SchemaTest(common.HeatTestCase):
         self.assertIsNone(schema.validate_constraints(1))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3)
-        self.assertEqual('"3" is not an allowed value [1, 2, 4]',
+        self.assertEqual('3 is not an allowed value [1, 2, 4]',
                          six.text_type(err))
         self.assertIsNone(schema.validate_constraints('1'))
         err = self.assertRaises(exception.StackValidationFailed,
@@ -383,12 +383,12 @@ class SchemaTest(common.HeatTestCase):
         self.assertIsNone(schema.validate_constraints(1))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3)
-        self.assertEqual('"3" is not an allowed value [1, 2, 4]',
+        self.assertEqual('3 is not an allowed value ["1", "2", "4"]',
                          six.text_type(err))
         self.assertIsNone(schema.validate_constraints('1'))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, '3')
-        self.assertEqual('"3" is not an allowed value [1, 2, 4]',
+        self.assertEqual('"3" is not an allowed value ["1", "2", "4"]',
                          six.text_type(err))
 
     def test_allowed_values_numeric_float(self):
@@ -408,7 +408,7 @@ class SchemaTest(common.HeatTestCase):
         self.assertIsNone(schema.validate_constraints(1.1))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3.3)
-        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+        self.assertEqual('3.3 is not an allowed value [1.1, 2.2, 4.4]',
                          six.text_type(err))
         self.assertIsNone(schema.validate_constraints('1.1'))
         err = self.assertRaises(exception.StackValidationFailed,
@@ -425,12 +425,12 @@ class SchemaTest(common.HeatTestCase):
         self.assertIsNone(schema.validate_constraints(1.1))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3.3)
-        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+        self.assertEqual('3.3 is not an allowed value ["1.1", "2.2", "4.4"]',
                          six.text_type(err))
         self.assertIsNone(schema.validate_constraints('1.1'))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, '3.3')
-        self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
+        self.assertEqual('"3.3" is not an allowed value ["1.1", "2.2", "4.4"]',
                          six.text_type(err))
 
     def test_to_schema_type_int(self):
