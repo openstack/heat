@@ -28,13 +28,18 @@ class BayModel(cluster_template.ClusterTemplate):
 
     deprecate_msg = _('Please use OS::Magnum::ClusterTemplate instead.')
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
+        status=support.HIDDEN,
         message=deprecate_msg,
-        version='9.0.0',
+        version='11.0.0',
         previous_status=support.SupportStatus(
-            status=support.SUPPORTED,
-            version='5.0.0'),
-        substitute_class=cluster_template.ClusterTemplate
+            status=support.DEPRECATED,
+            message=deprecate_msg,
+            version='9.0.0',
+            previous_status=support.SupportStatus(
+                status=support.SUPPORTED,
+                version='5.0.0'),
+            substitute_class=cluster_template.ClusterTemplate
+        )
     )
 
     def translation_rules(self, props):

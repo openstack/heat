@@ -29,12 +29,17 @@ class Bay(resource.Resource):
 
     deprecation_msg = _('Please use OS::Magnum::Cluster instead.')
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
+        status=support.HIDDEN,
         message=deprecation_msg,
-        version='9.0.0',
+        version='11.0.0',
         previous_status=support.SupportStatus(
-            status=support.SUPPORTED,
-            version='6.0.0')
+            status=support.DEPRECATED,
+            message=deprecation_msg,
+            version='9.0.0',
+            previous_status=support.SupportStatus(
+                status=support.SUPPORTED,
+                version='6.0.0')
+        )
     )
 
     PROPERTIES = (
