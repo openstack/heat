@@ -1,0 +1,6 @@
+---
+features:
+  - Added stack API support to provide a swift container
+    that contains the child templates and environment files.
+    All files would be fetched and used (if required), unless
+    they are superceded by files in files map.
