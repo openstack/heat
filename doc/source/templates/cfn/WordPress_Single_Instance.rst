@@ -30,37 +30,37 @@ Parameters
 ----------
 
 *KeyName* :mod:`(required)`
-	*type*
-		*string*
-	*description*
-		Name of an existing EC2 KeyPair to enable SSH access to the instance
+    *type*
+        *string*
+    *description*
+        Name of an existing EC2 KeyPair to enable SSH access to the instance
 *InstanceType* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		The EC2 instance type
+    *type*
+        *string*
+    *description*
+        The EC2 instance type
 *DBName* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		The WordPress database name
+    *type*
+        *string*
+    *description*
+        The WordPress database name
 *DBUsernameName* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		The WordPress database admin account username
+    *type*
+        *string*
+    *description*
+        The WordPress database admin account username
 *DBPassword* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		The WordPress database admin account password
+    *type*
+        *string*
+    *description*
+        The WordPress database admin account password
 *DBRootPassword* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		Root password for MySQL
+    *type*
+        *string*
+    *description*
+        Root password for MySQL
 *LinuxDistribution* :mod:`(optional)`
-	*type*
-		*string*
-	*description*
-		Linux distribution of choice
+    *type*
+        *string*
+    *description*
+        Linux distribution of choice

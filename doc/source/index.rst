@@ -24,8 +24,8 @@ Heat's purpose and vision
   application by executing appropriate :term:`OpenStack` API calls to generate
   running cloud applications.
 * A Heat template describes the infrastructure for a cloud application in text
-  files which are readable and writable by humans, and can be managed by version
-  control tools.
+  files which are readable and writable by humans, and can be managed by
+  version control tools.
 * Templates specify the relationships between resources (e.g. this
   volume is connected to this server). This enables Heat to call out to the
   OpenStack APIs to create all of your infrastructure in the correct order to
@@ -36,8 +36,8 @@ Heat's purpose and vision
   functionality such as instance high availability, instance autoscaling, and
   nested stacks.
 * Heat primarily manages infrastructure, but the templates
-  integrate well with software configuration management tools such as Puppet and
-  Ansible.
+  integrate well with software configuration management tools such as Puppet
+  and Ansible.
 * Operators can customise the capabilities of Heat by installing plugins.
 
 This documentation offers information aimed at end-users, operators and
