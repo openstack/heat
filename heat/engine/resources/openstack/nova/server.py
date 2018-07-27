@@ -637,7 +637,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
               'network name and network id. The port ID may be obtained '
               'through the following expression: ``{get_attr: [<server>, '
               'addresses, <network name_or_id>, 0, port]}``. The subnets may '
-              'be obtained trough the following expression: ``{get_attr: '
+              'be obtained through the following expression: ``{get_attr: '
               '[<server>, addresses, <network name_or_id>, 0, subnets]}``. '
               'The network may be obtained through the following expression: '
               '``{get_attr: [<server>, addresses, <network name_or_id>, 0, '
