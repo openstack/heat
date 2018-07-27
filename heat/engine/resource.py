@@ -1341,7 +1341,7 @@ class Resource(status.ResourceStatus):
         return []
 
     def translate_properties(self, properties,
-                             client_resolve=True):
+                             client_resolve=True, ignore_resolve_error=False):
         """Set resource specific rules for properties translation.
 
         The properties parameter is a properties object and the
@@ -1349,7 +1349,9 @@ class Resource(status.ResourceStatus):
         do 'RESOLVE' translation with client lookup.
         """
         rules = self.translation_rules(properties) or []
-        properties.update_translation(rules, client_resolve=client_resolve)
+        properties.update_translation(
+            rules, client_resolve=client_resolve,
+            ignore_resolve_error=ignore_resolve_error)
 
     def cancel_grace_period(self):
         canceller = getattr(self,
@@ -1511,7 +1513,7 @@ class Resource(status.ResourceStatus):
         after_props = after.properties(self.properties_schema,
                                        self.context)
         self.translate_properties(after_props)
-        self.translate_properties(before_props)
+        self.translate_properties(before_props, ignore_resolve_error=True)
 
         if (cfg.CONF.observe_on_update or self.converge) and before_props:
             if not self.resource_id:
