@@ -17,7 +17,6 @@ from neutronclient.neutron import v2_0 as neutronV20
 from osc_lib import exceptions
 
 from heat.common import template_format
-from heat.engine import properties
 from heat.engine.resources.openstack.octavia import pool_member
 from heat.tests import common
 from heat.tests.openstack.octavia import inline_templates
@@ -156,47 +155,19 @@ class PoolMemberTest(common.HeatTestCase):
                                                              '1234')
         self.assertFalse(self.member._delete_called)
 
-    def _prepare_delete_with_value_error(self):
+    def test_delete_with_pool_not_found(self):
         self._create_stack()
         self.member.resource_id_set('1234')
-        self.m_gpv = self.patchobject(properties.Properties,
-                                      '_get_property_value',
-                                      side_effect=ValueError)
-
-    def test_delete_value_error_with_not_found(self):
-        self._prepare_delete_with_value_error()
         m_get_pool = mock.Mock(side_effect=exceptions.NotFound(404))
         self.member.client_plugin().get_pool = m_get_pool
-
+        self.octavia_client.member_delete.side_effect = [
+            exceptions.NotFound(404)]
+        self.member.translate_properties(self.member.properties,
+                                         ignore_resolve_error=True)
         self.member.handle_delete()
-
         self.assertTrue(self.member.check_delete_complete(None))
-        m_get_pool.assert_called_once_with(123)
-        self.assertFalse(self.member._delete_called)
-        self.assertEqual(0, self.octavia_client.member_delete.call_count)
-        self.m_gpv.assert_called_once_with('pool')
-
-    def test_delete_value_error_with_pool_found(self):
-        self._prepare_delete_with_value_error()
-        self.member.client_plugin().get_pool = mock.Mock(return_value='123')
-
-        self.member.handle_delete()
-
-        self.assertRaises(ValueError, self.member.check_delete_complete, None)
-        self.assertFalse(self.member._delete_called)
-        self.assertEqual(0, self.octavia_client.member_delete.call_count)
-        self.m_gpv.assert_called_once_with('pool')
-
-    def test_delete_value_error_with_pool_error(self):
-        self._prepare_delete_with_value_error()
-        self.member.client_plugin().get_pool = mock.Mock(side_effect=KeyError)
-
-        self.member.handle_delete()
-
-        self.assertRaises(KeyError, self.member.check_delete_complete, None)
-        self.assertFalse(self.member._delete_called)
-        self.assertEqual(0, self.octavia_client.member_delete.call_count)
-        self.m_gpv.assert_called_once_with('pool')
+        self.octavia_client.member_delete.assert_called_with('123',
+                                                             '1234')
 
     def test_delete_failed(self):
         self._create_stack()
@@ -208,32 +179,3 @@ class PoolMemberTest(common.HeatTestCase):
 
         self.assertRaises(exceptions.Unauthorized,
                           self.member.check_delete_complete, None)
-
-    def _prepare_get_pool_prop(self):
-        self._create_stack()
-        self.member.resource_id_set('1234')
-        self.m_prop = self.patchobject(
-            properties.Properties, '_get_property_value')
-
-    def test_get_pool_prop(self):
-        self._prepare_get_pool_prop()
-        self.member._get_pool_prop()
-        self.m_prop.assert_called_once_with('pool')
-
-    def _get_pool_prop_with_value_error(self, side_effect=[]):
-        self._prepare_get_pool_prop()
-        self.m_prop.side_effect = ValueError
-        self.member.client_plugin().get_pool = mock.Mock(
-            side_effect=side_effect)
-
-    def test_get_pool_prop_value_error_and_raise_exception(self):
-        self._get_pool_prop_with_value_error(
-            side_effect=exceptions.NotFound(404))
-
-        self.assertRaises(
-            exceptions.NotFound, self.member._get_pool_prop)
-
-    def test_get_pool_prop_value_error_and_raise(self):
-        self._get_pool_prop_with_value_error(side_effect=['foo'])
-
-        self.assertRaises(ValueError, self.member._get_pool_prop)
