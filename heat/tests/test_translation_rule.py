@@ -547,10 +547,13 @@ class TestTranslationRule(common.HeatTestCase):
         self.assertIsNone(tran.translate('far'))
         self.assertIsNone(tran.resolved_translations['far'])
 
-    def _test_resolve_rule(self, is_list=False):
+    def _test_resolve_rule(self, is_list=False,
+                           check_error=False):
         class FakeClientPlugin(object):
             def find_name_id(self, entity=None,
                              src_value='far'):
+                if check_error:
+                    raise exception.NotFound()
                 if entity == 'rose':
                     return 'pink'
                 return 'yellow'
@@ -680,6 +683,24 @@ class TestTranslationRule(common.HeatTestCase):
         result = tran.translate('far', data['far'])
         self.assertEqual(['yellow', 'pink'], result)
         self.assertEqual(['yellow', 'pink'], tran.resolved_translations['far'])
+
+    def test_resolve_rule_ignore_error(self):
+        client_plugin, schema = self._test_resolve_rule(check_error=True)
+        data = {'far': 'one'}
+        props = properties.Properties(schema, data)
+        rule = translation.TranslationRule(
+            props,
+            translation.TranslationRule.RESOLVE,
+            ['far'],
+            client_plugin=client_plugin,
+            finder='find_name_id')
+
+        tran = translation.Translation(props)
+        tran.set_rules([rule], ignore_resolve_error=True)
+        self.assertTrue(tran.has_translation('far'))
+        result = tran.translate('far', data['far'])
+        self.assertEqual('one', result)
+        self.assertEqual('one', tran.resolved_translations['far'])
 
     def test_resolve_rule_other(self):
         client_plugin, schema = self._test_resolve_rule()

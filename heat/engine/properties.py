@@ -390,8 +390,10 @@ class Properties(collections.Mapping):
         self.translation = (trans.Translation(properties=self)
                             if translation is None else translation)
 
-    def update_translation(self, rules, client_resolve=True):
-        self.translation.set_rules(rules, client_resolve=client_resolve)
+    def update_translation(self, rules, client_resolve=True,
+                           ignore_resolve_error=False):
+        self.translation.set_rules(rules, client_resolve=client_resolve,
+                                   ignore_resolve_error=ignore_resolve_error)
 
     @staticmethod
     def schema_from_params(params_snippet):

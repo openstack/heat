@@ -13,9 +13,14 @@
 
 import functools
 
+from oslo_log import log as logging
+import six
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import function
+
+LOG = logging.getLogger(__name__)
 
 
 @functools.total_ordering
@@ -159,15 +164,18 @@ class Translation(object):
         self.resolved_translations = {}
         self.is_active = True
         self.store_translated_values = True
+        self._ignore_resolve_error = False
         self._deleted_props = []
         self._replaced_props = []
 
-    def set_rules(self, rules, client_resolve=True):
+    def set_rules(self, rules, client_resolve=True,
+                  ignore_resolve_error=False):
         if not rules:
             return
 
         self._rules = {}
         self.store_translated_values = client_resolve
+        self._ignore_resolve_error = ignore_resolve_error
         for rule in rules:
             if not client_resolve and rule.rule == TranslationRule.RESOLVE:
                 continue
@@ -223,7 +231,8 @@ class Translation(object):
                 resolved_value = resolve_and_find(result,
                                                   rule.client_plugin,
                                                   rule.finder,
-                                                  rule.entity)
+                                                  rule.entity,
+                                                  self._ignore_resolve_error)
                 if self.store_translated_values:
                     self.resolved_translations[key] = resolved_value
                 result = resolved_value
@@ -326,7 +335,8 @@ def get_value(path, props, validate=False, template=None):
         return get_value(path[1:], prop)
 
 
-def resolve_and_find(value, cplugin, finder, entity=None):
+def resolve_and_find(value, cplugin, finder, entity=None,
+                     ignore_resolve_error=False):
     if isinstance(value, function.Function):
         value = function.resolve(value)
     if value:
@@ -336,10 +346,18 @@ def resolve_and_find(value, cplugin, finder, entity=None):
                 resolved_value.append(resolve_and_find(item,
                                                        cplugin,
                                                        finder,
-                                                       entity))
+                                                       entity,
+                                                       ignore_resolve_error))
             return resolved_value
         finder = getattr(cplugin, finder)
-        if entity:
-            return finder(entity, value)
-        else:
-            return finder(value)
+        try:
+            if entity:
+                return finder(entity, value)
+            else:
+                return finder(value)
+        except Exception as ex:
+            if ignore_resolve_error:
+                LOG.info("Ignoring error in RESOLVE translation: %s",
+                         six.text_type(ex))
+                return value
+            raise
