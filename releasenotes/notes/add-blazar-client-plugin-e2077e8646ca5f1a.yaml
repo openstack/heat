@@ -1,0 +1,4 @@
+---
+other:
+  - |
+    Introduce a Blazar client plugin module that will be used by Blazar resources.

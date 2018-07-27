@@ -101,6 +101,7 @@ pyOpenSSL==17.5.0
 pyparsing==2.2.0
 pyperclip==1.6.0
 python-barbicanclient==4.5.2
+python-blazarclient===1.0.0
 python-ceilometerclient==2.5.0
 python-cinderclient==3.3.0
 python-dateutil==2.7.0
