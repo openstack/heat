@@ -82,6 +82,7 @@ class FaultWrapper(wsgi.Middleware):
         'MissingCredentialError': webob.exc.HTTPBadRequest,
         'UserParameterMissing': webob.exc.HTTPBadRequest,
         'RequestLimitExceeded': webob.exc.HTTPBadRequest,
+        'DownloadLimitExceeded': webob.exc.HTTPBadRequest,
         'Invalid': webob.exc.HTTPBadRequest,
         'ResourcePropertyConflict': webob.exc.HTTPBadRequest,
         'PropertyUnspecifiedError': webob.exc.HTTPBadRequest,

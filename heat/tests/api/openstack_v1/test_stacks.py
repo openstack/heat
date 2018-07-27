@@ -756,6 +756,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': ['foo.yaml'],
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'owner_id': None,
               'nested_depth': 0,
@@ -763,7 +764,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_with_tags(self, mock_enforce):
@@ -803,6 +804,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']},
               'owner_id': None,
               'nested_depth': 0,
@@ -810,7 +812,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_adopt(self, mock_enforce):
@@ -868,6 +870,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30,
                        'adopt_stack_data': str(adopt_data)},
               'owner_id': None,
@@ -876,7 +879,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_adopt_timeout_not_int(self, mock_enforce):
@@ -957,6 +960,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {'my.yaml': 'This is the file contents.'},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'owner_id': None,
               'nested_depth': 0,
@@ -964,7 +968,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_err_rpcerr(self, mock_enforce):
@@ -1025,6 +1029,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'owner_id': None,
               'nested_depth': 0,
@@ -1032,7 +1037,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
         self.assertEqual(3, mock_call.call_count)
 
@@ -1072,6 +1077,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'owner_id': None,
               'nested_depth': 0,
@@ -1079,7 +1085,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_timeout_not_int(self, mock_enforce):
@@ -1158,6 +1164,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'owner_id': None,
               'nested_depth': 0,
@@ -1165,7 +1172,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'parent_resource_name': None,
               'stack_user_project_id': None,
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_create_err_stack_bad_reqest(self, mock_enforce):
@@ -1235,8 +1242,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']}}),
-            version='1.23'
+            version='1.36'
         )
 
         self.assertEqual({'stack': 'formatted_stack_preview'}, response)
@@ -1280,8 +1288,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30}}),
-            version='1.23'
+            version='1.36'
         )
 
     def test_preview_update_stack_patch(self, mock_enforce):
@@ -1321,9 +1330,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'timeout_mins': 30}}),
-            version='1.23'
+            version='1.36'
         )
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -1369,9 +1379,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          u'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_lookup(self, mock_enforce):
@@ -1829,9 +1840,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_with_tags(self, mock_enforce):
@@ -1870,9 +1882,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30, 'tags': ['tag1', 'tag2']},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_bad_name(self, mock_enforce):
@@ -1914,9 +1927,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          u'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_timeout_not_int(self, mock_enforce):
@@ -1999,10 +2013,11 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_with_existing_parameters(self, mock_enforce):
@@ -2039,10 +2054,11 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_with_existing_parameters_with_tags(self, mock_enforce):
@@ -2080,11 +2096,12 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'timeout_mins': 30,
                        'tags': ['tag1', 'tag2']},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_with_patched_existing_parameters(self, mock_enforce):
@@ -2122,10 +2139,11 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_with_patch_timeout_not_int(self, mock_enforce):
@@ -2189,11 +2207,12 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'clear_parameters': clear_params,
                        'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_update_with_patched_and_default_parameters(
@@ -2234,11 +2253,12 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'args': {rpc_api.PARAM_EXISTING: True,
                        'clear_parameters': clear_params,
                        'timeout_mins': 30},
               'template_id': None}),
-            version='1.29'
+            version='1.36'
         )
 
     def test_delete(self, mock_enforce):
@@ -2398,9 +2418,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'show_nested': False,
               'ignorable_errors': None}),
-            version='1.24'
+            version='1.36'
         )
 
     def test_validate_template_error(self, mock_enforce):
@@ -2428,9 +2449,10 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                          'resource_registry': {}},
               'files': {},
               'environment_files': None,
+              'files_container': None,
               'show_nested': False,
               'ignorable_errors': None}),
-            version='1.24'
+            version='1.36'
         )
 
     def test_validate_err_denied_policy(self, mock_enforce):

@@ -50,6 +50,7 @@ class InstantiationData(object):
         PARAM_ENVIRONMENT,
         PARAM_FILES,
         PARAM_ENVIRONMENT_FILES,
+        PARAM_FILES_CONTAINER
     ) = (
         'stack_name',
         'template',
@@ -58,6 +59,7 @@ class InstantiationData(object):
         'environment',
         'files',
         'environment_files',
+        'files_container'
     )
 
     def __init__(self, data, patch=False):
@@ -156,6 +158,9 @@ class InstantiationData(object):
 
     def environment_files(self):
         return self.data.get(self.PARAM_ENVIRONMENT_FILES, None)
+
+    def files_container(self):
+        return self.data.get(self.PARAM_FILES_CONTAINER, None)
 
     def args(self):
         """Get any additional arguments supplied by the user."""
@@ -369,8 +374,8 @@ class StackController(object):
             data.environment(),
             data.files(),
             args,
-            environment_files=data.environment_files()
-        )
+            environment_files=data.environment_files(),
+            files_container=data.files_container())
 
         formatted_stack = stacks_view.format_stack(req, result)
         return {'stack': formatted_stack}
@@ -403,7 +408,8 @@ class StackController(object):
             data.environment(),
             data.files(),
             args,
-            environment_files=data.environment_files())
+            environment_files=data.environment_files(),
+            files_container=data.files_container())
 
         formatted_stack = stacks_view.format_stack(
             req,
@@ -486,7 +492,8 @@ class StackController(object):
             data.environment(),
             data.files(),
             args,
-            environment_files=data.environment_files())
+            environment_files=data.environment_files(),
+            files_container=data.files_container())
 
         raise exc.HTTPAccepted()
 
@@ -507,7 +514,8 @@ class StackController(object):
             data.environment(),
             data.files(),
             args,
-            environment_files=data.environment_files())
+            environment_files=data.environment_files(),
+            files_container=data.files_container())
 
         raise exc.HTTPAccepted()
 
@@ -535,7 +543,8 @@ class StackController(object):
             data.environment(),
             data.files(),
             args,
-            environment_files=data.environment_files())
+            environment_files=data.environment_files(),
+            files_container=data.files_container())
 
         return {'resource_changes': changes}
 
@@ -555,7 +564,8 @@ class StackController(object):
             data.environment(),
             data.files(),
             args,
-            environment_files=data.environment_files())
+            environment_files=data.environment_files(),
+            files_container=data.files_container())
 
         return {'resource_changes': changes}
 
@@ -616,6 +626,7 @@ class StackController(object):
             data.environment(),
             files=data.files(),
             environment_files=data.environment_files(),
+            files_container=data.files_container(),
             show_nested=show_nested,
             ignorable_errors=ignorable_errors)
 

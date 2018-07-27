@@ -26,6 +26,7 @@ from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
+from heat.engine.clients.os import swift
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine import service
@@ -103,9 +104,9 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_validate.assert_called_once_with()
 
-    def test_stack_update_with_environment_files(self):
+    def _test_stack_update_with_environment_files(self, stack_name,
+                                                  files_container=None):
         # Setup
-        stack_name = 'service_update_env_files_stack'
         params = {}
         template = '{ "Template": "data" }'
         old_stack = tools.get_stack(stack_name, self.ctx)
@@ -126,16 +127,41 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
         mock_merge = self.patchobject(env_util, 'merge_environments')
 
+        files = None
+        if files_container:
+            files = {'/env/test.yaml': "{'resource_registry': {}}"}
+
         # Test
         environment_files = ['env_1']
         self.man.update_stack(self.ctx, old_stack.identifier(),
                               template, params, None,
                               {rpc_api.PARAM_CONVERGE: False},
-                              environment_files=environment_files)
-
+                              environment_files=environment_files,
+                              files_container=files_container)
         # Verify
-        mock_merge.assert_called_once_with(environment_files, None,
+        mock_merge.assert_called_once_with(environment_files, files,
                                            params, mock.ANY)
+
+    def test_stack_update_with_environment_files(self):
+        stack_name = 'service_update_env_files_stack'
+        self._test_stack_update_with_environment_files(stack_name)
+
+    def test_stack_update_with_files_container(self):
+        stack_name = 'env_files_test_stack'
+        files_container = 'test_container'
+        fake_get_object = (None, "{'resource_registry': {}}")
+        fake_get_container = ({'x-container-bytes-used': 100},
+                              [{'name': '/env/test.yaml'}])
+        mock_client = mock.Mock()
+        mock_client.get_object.return_value = fake_get_object
+        mock_client.get_container.return_value = fake_get_container
+        self.patchobject(swift.SwiftClientPlugin, '_create',
+                         return_value=mock_client)
+        self._test_stack_update_with_environment_files(
+            stack_name, files_container=files_container)
+        mock_client.get_container.assert_called_with(files_container)
+        mock_client.get_object.assert_called_with(files_container,
+                                                  '/env/test.yaml')
 
     def test_stack_update_nested(self):
         stack_name = 'service_update_nested_test_stack'
@@ -348,20 +374,20 @@ resources:
 
         # update keep old tags
         _, _, updated_stack = self.man._prepare_stack_updates(
-            self.ctx, stk, t, {}, None, None, api_args, None)
+            self.ctx, stk, t, {}, None, None, None, api_args, None)
         self.assertEqual(['tag1'], updated_stack.tags)
 
         # with new tags
         api_args[rpc_api.STACK_TAGS] = ['tag2']
         _, _, updated_stack = self.man._prepare_stack_updates(
-            self.ctx, stk, t, {}, None, None, api_args, None)
+            self.ctx, stk, t, {}, None, None, None, api_args, None)
         self.assertEqual(['tag2'], updated_stack.tags)
 
         # with no PARAM_EXISTING flag and no tags
         del api_args[rpc_api.PARAM_EXISTING]
         del api_args[rpc_api.STACK_TAGS]
         _, _, updated_stack = self.man._prepare_stack_updates(
-            self.ctx, stk, t, {}, None, None, api_args, None)
+            self.ctx, stk, t, {}, None, None, None, api_args, None)
         self.assertIsNone(updated_stack.tags)
 
     def test_stack_update_existing_registry(self):

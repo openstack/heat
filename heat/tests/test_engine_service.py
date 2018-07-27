@@ -1324,13 +1324,15 @@ class StackServiceTest(common.HeatTestCase):
         # get parameters from adopt stack data which doesn't have it.
         args = {"adopt_stack_data": '''{}'''}
         self.eng._parse_template_and_validate_stack(
-            self.ctx, 'stack_name', template, {}, {}, None, args)
+            self.ctx, 'stack_name', template, {}, {},
+            None, None, args)
 
         args = {"adopt_stack_data": '''{
             "environment": {}
         }'''}
         self.eng._parse_template_and_validate_stack(
-            self.ctx, 'stack_name', template, {}, {}, None, args)
+            self.ctx, 'stack_name', template, {}, {},
+            None, None, args)
 
     def test_parse_adopt_stack_data_with_parameters(self):
         cfg.CONF.set_override('enable_stack_adopt', True)
@@ -1355,7 +1357,8 @@ class StackServiceTest(common.HeatTestCase):
                 }
             }}'''}
         stack = self.eng._parse_template_and_validate_stack(
-            self.ctx, 'stack_name', template, {}, {}, None, args)
+            self.ctx, 'stack_name', template, {}, {},
+            None, None, args)
         self.assertEqual(1, stack.parameters['volsize'])
 
     @mock.patch('heat.engine.service.ThreadGroupManager',
