@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
+from oslo_log import log as logging
 from oslo_utils import encodeutils
+import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -21,6 +21,8 @@ from heat.engine.cfn import functions as cfn_funcs
 from heat.engine import function
 from heat.engine.hot import functions as hot_funcs
 from heat.engine import properties
+
+LOG = logging.getLogger(__name__)
 
 
 class TranslationRule(object):
@@ -112,7 +114,7 @@ class TranslationRule(object):
             raise ValueError(_('client_plugin and finder should be specified '
                                'for Resolve rule'))
 
-    def execute_rule(self, client_resolve=True):
+    def execute_rule(self, client_resolve=True, ignore_resolve_error=False):
         try:
             self._prepare_data(self.properties.data, self.translation_path,
                                self.properties.props)
@@ -137,7 +139,8 @@ class TranslationRule(object):
         self.translate_property(self.translation_path, self.properties.data,
                                 value=value, value_data=value_data,
                                 value_key=value_key,
-                                client_resolve=client_resolve)
+                                client_resolve=client_resolve,
+                                ignore_resolve_error=ignore_resolve_error)
 
     def _prepare_data(self, data, path, props):
         def get_props(props, key):
@@ -177,13 +180,14 @@ class TranslationRule(object):
                                get_props(props, current_key))
 
     def _exec_action(self, key, data, value=None, value_key=None,
-                     value_data=None, client_resolve=True):
+                     value_data=None, client_resolve=True,
+                     ignore_resolve_error=False):
         if self.rule == TranslationRule.ADD:
             self._exec_add(key, data, value)
         elif self.rule == TranslationRule.REPLACE:
             self._exec_replace(key, data, value_key, value_data, value)
         elif self.rule == TranslationRule.RESOLVE and client_resolve:
-            self._exec_resolve(key, data)
+            self._exec_resolve(key, data, ignore_resolve_error)
         elif self.rule == TranslationRule.DELETE:
             self._exec_delete(key, data)
 
@@ -229,7 +233,7 @@ class TranslationRule(object):
 
     def translate_property(self, path, data, return_value=False, value=None,
                            value_data=None, value_key=None,
-                           client_resolve=True):
+                           client_resolve=True, ignore_resolve_error=False):
         if isinstance(data, function.Function):
             if return_value:
                 raise AttributeError('No chance to translate value due to '
@@ -243,7 +247,8 @@ class TranslationRule(object):
                 self._exec_action(current_key, data,
                                   value=value, value_data=value_data,
                                   value_key=value_key,
-                                  client_resolve=client_resolve)
+                                  client_resolve=client_resolve,
+                                  ignore_resolve_error=ignore_resolve_error)
             return
         if data.get(current_key) is None:
             return
@@ -257,17 +262,19 @@ class TranslationRule(object):
                             'list-type properties')
                     raise ValueError(msg)
                 else:
-                    self.translate_property(path[1:], item,
-                                            return_value=return_value,
-                                            value=value, value_data=value_data,
-                                            value_key=value_key,
-                                            client_resolve=client_resolve)
+                    self.translate_property(
+                        path[1:], item, return_value=return_value,
+                        value=value, value_data=value_data,
+                        value_key=value_key,
+                        client_resolve=client_resolve,
+                        ignore_resolve_error=ignore_resolve_error)
         else:
-            return self.translate_property(path[1:], data[current_key],
-                                           return_value=return_value,
-                                           value=value, value_data=value_data,
-                                           value_key=value_key,
-                                           client_resolve=client_resolve)
+            return self.translate_property(
+                path[1:], data[current_key], return_value=return_value,
+                value=value, value_data=value_data,
+                value_key=value_key,
+                client_resolve=client_resolve,
+                ignore_resolve_error=ignore_resolve_error)
 
     def _exec_add(self, translation_key, translation_data, value):
         if not isinstance(translation_data[translation_key], list):
@@ -323,32 +330,43 @@ class TranslationRule(object):
         if value_data and value_data.get(value_key):
             del value_data[value_key]
 
-    def _exec_resolve(self, translation_key, translation_data):
+    def _exec_resolve(self, translation_key, translation_data,
+                      ignore_resolve_error=False):
 
-        def resolve_and_find(translation_value):
+        def resolve_and_find(translation_value, ignore_resolve_error):
             if isinstance(translation_value, function.Function):
                 translation_value = function.resolve(translation_value)
             if translation_value:
                 if isinstance(translation_value, list):
                     resolved_value = []
                     for item in translation_value:
-                        resolved_value.append(resolve_and_find(item))
+                        resolved_value.append(
+                            resolve_and_find(item,
+                                             ignore_resolve_error))
                     return resolved_value
                 finder = getattr(self.client_plugin, self.finder)
-                if self.entity:
-                    return finder(self.entity, translation_value)
-                else:
-                    return finder(translation_value)
-
+                try:
+                    if self.entity:
+                        return finder(self.entity, translation_value)
+                    else:
+                        return finder(translation_value)
+                except Exception as ex:
+                    if ignore_resolve_error:
+                        LOG.info("Ignoring error in RESOLVE translation: %s",
+                                 six.text_type(ex))
+                        return translation_value
+                    raise
         if isinstance(translation_data, list):
             for item in translation_data:
                 translation_value = item.get(translation_key)
-                resolved_value = resolve_and_find(translation_value)
+                resolved_value = resolve_and_find(translation_value,
+                                                  ignore_resolve_error)
                 if resolved_value is not None:
                     item[translation_key] = resolved_value
         else:
             translation_value = translation_data.get(translation_key)
-            resolved_value = resolve_and_find(translation_value)
+            resolved_value = resolve_and_find(translation_value,
+                                              ignore_resolve_error)
             if resolved_value is not None:
                 translation_data[translation_key] = resolved_value
 
