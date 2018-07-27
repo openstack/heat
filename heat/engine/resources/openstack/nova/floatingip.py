@@ -38,10 +38,15 @@ class NovaFloatingIp(resource.Resource):
 
     deprecation_msg = _('Please use OS::Neutron::FloatingIP instead.')
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
+        status=support.HIDDEN,
         message=deprecation_msg,
-        version='9.0.0',
-        previous_status=support.SupportStatus(version='2014.1')
+        version='11.0.0',
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            message=deprecation_msg,
+            version='9.0.0',
+            previous_status=support.SupportStatus(version='2014.1')
+        )
     )
 
     required_service_extension = 'os-floating-ips'
@@ -132,10 +137,15 @@ class NovaFloatingIpAssociation(resource.Resource):
     deprecation_msg = _(
         'Please use OS::Neutron::FloatingIPAssociation instead.')
     support_status = support.SupportStatus(
-        status=support.DEPRECATED,
+        status=support.HIDDEN,
         message=deprecation_msg,
-        version='9.0.0',
-        previous_status=support.SupportStatus(version='2014.1')
+        version='11.0.0',
+        previous_status=support.SupportStatus(
+            status=support.DEPRECATED,
+            message=deprecation_msg,
+            version='9.0.0',
+            previous_status=support.SupportStatus(version='2014.1')
+        )
     )
 
     PROPERTIES = (

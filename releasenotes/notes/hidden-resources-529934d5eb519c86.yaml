@@ -1,0 +1,10 @@
+---
+upgrade:
+  - Resource type ``OS::Magnum::Bay`` is now hidden, please use
+    ``OS::Magnum::Cluster`` instead.
+  - Resource type ``OS::Magnum::BayModele`` is now hidden, please use
+    ``OS::Magnum::ClusterTemplate`` instead.
+  - Resource type ``OS::Nova::FloatingIP`` is now hidden, please use
+    ``OS::Neutron::FloatingIP`` instead.
+  - Resource type ``OS::Nova::FloatingIPAssociation`` is now hidden, please use
+    ``OS::Neutron::FloatingIPAssociation`` instead.
