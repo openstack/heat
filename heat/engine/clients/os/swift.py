@@ -156,7 +156,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
 
         try:
             headers, objects = client.get_container(files_container)
-            bytes_used = headers.get('x-container-bytes-used', 0)
+            bytes_used = int(headers.get('x-container-bytes-used', 0))
             if bytes_used > cfg.CONF.max_json_body_size:
                 msg = _("Total size of files to download (%(size)s bytes) "
                         "exceeds maximum allowed (%(limit)s bytes).") % {
