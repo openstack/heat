@@ -51,7 +51,7 @@ resources:
     properties:
       network: abcd1234
       allowed_address_pairs:
-        - ip_address: 10.0.3.21
+        - ip_address: 10.0.3.21/8
           mac_address: 00-B0-D0-86-BB-F7
 '''
 
@@ -200,7 +200,7 @@ class NeutronPortTest(common.HeatTestCase):
         self.create_mock.assert_called_once_with({'port': {
             'network_id': u'abcd1234',
             'allowed_address_pairs': [{
-                'ip_address': u'10.0.3.21',
+                'ip_address': u'10.0.3.21/8',
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName(stack.name, 'port'),
@@ -260,7 +260,7 @@ class NeutronPortTest(common.HeatTestCase):
         self.create_mock.assert_called_once_with({'port': {
             'network_id': u'abcd1234',
             'allowed_address_pairs': [{
-                'ip_address': u'10.0.3.21',
+                'ip_address': u'10.0.3.21/8',
             }],
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
