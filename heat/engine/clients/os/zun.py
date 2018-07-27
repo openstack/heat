@@ -26,14 +26,15 @@ class ZunClientPlugin(client_plugin.ClientPlugin):
     default_version = '1.12'
 
     supported_versions = [
-        V1_12
+        V1_12, V1_18
     ] = [
-        '1.12'
+        '1.12', '1.18'
     ]
 
     def _create(self, version=None):
         if not version:
             version = self.default_version
+
         interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'interface': interface,
@@ -44,6 +45,18 @@ class ZunClientPlugin(client_plugin.ClientPlugin):
 
         client = zun_client.Client(version, **args)
         return client
+
+    def update_container(self, container_id, **prop_diff):
+        try:
+            if prop_diff:
+                self.client(version=self.V1_18).containers.update(
+                    container_id, **prop_diff)
+        except zc_exc.NotAcceptable:
+            if 'name' in prop_diff:
+                name = prop_diff.pop('name')
+                self.client().containers.rename(container_id, name=name)
+            if prop_diff:
+                self.client().containers.update(container_id, **prop_diff)
 
     def is_not_found(self, ex):
         return isinstance(ex, zc_exc.NotFound)

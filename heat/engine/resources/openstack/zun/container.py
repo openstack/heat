@@ -279,11 +279,7 @@ class Container(resource.Resource):
                                                   .status)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if self.NAME in prop_diff:
-            name = prop_diff.pop(self.NAME)
-            self.client().containers.rename(self.resource_id, name=name)
-        if prop_diff:
-            self.client().containers.update(self.resource_id, **prop_diff)
+        self.client_plugin().update_container(self.resource_id, **prop_diff)
 
     def handle_delete(self):
         if not self.resource_id:
