@@ -20,6 +20,7 @@ from zunclient import exceptions as zc_exc
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os import neutron
 from heat.engine.clients.os import zun
 from heat.engine.resources.openstack.zun import container
 from heat.engine import scheduler
@@ -58,7 +59,35 @@ resources:
           mount_path: /data
         - volume_id: 6ec29ba3-bf2c-4276-a88e-3670ea5abc80
           mount_path: /data2
+      networks:
+        - network: mynet
+          fixed_ip: 10.0.0.4
+        - network: mynet2
+          fixed_ip: fe80::3
+        - port: myport
 '''
+
+zun_template_minimum = '''
+heat_template_version: 2017-09-01
+
+resources:
+  test_container:
+    type: OS::Zun::Container
+    properties:
+      name: test_container
+      image: "cirros:latest"
+'''
+
+
+def create_fake_iface(port=None, net=None, mac=None, ip=None, subnet=None):
+    class fake_interface(object):
+        def __init__(self, port_id, net_id, mac_addr, fixed_ip, subnet_id):
+            self.port_id = port_id
+            self.net_id = net_id
+            self.mac_addr = mac_addr
+            self.fixed_ips = [{'ip_address': fixed_ip, 'subnet_id': subnet_id}]
+
+    return fake_interface(port, net, mac, ip, subnet)
 
 
 class ZunContainerTest(common.HeatTestCase):
@@ -91,10 +120,18 @@ class ZunContainerTest(common.HeatTestCase):
             {'size': 1, 'destination': '/data'},
             {'source': '6ec29ba3-bf2c-4276-a88e-3670ea5abc80',
              'destination': '/data2'}]
+        self.fake_networks = [
+            {'network': 'mynet', 'port': None, 'fixed_ip': '10.0.0.4'},
+            {'network': 'mynet2', 'port': None, 'fixed_ip': 'fe80::3'},
+            {'network': None, 'port': 'myport', 'fixed_ip': None}]
+        self.fake_networks_args = [
+            {'network': 'mynet', 'v4-fixed-ip': '10.0.0.4'},
+            {'network': 'mynet2', 'v6-fixed-ip': 'fe80::3'},
+            {'port': 'myport'}]
 
         self.fake_network_id = '9c11d847-99ce-4a83-82da-9827362a68e8'
         self.fake_network_name = 'private'
-        self.fake_networks = {
+        self.fake_networks_attr = {
             'networks': [
                 {
                     'id': self.fake_network_id,
@@ -128,6 +165,21 @@ class ZunContainerTest(common.HeatTestCase):
         self.stub_VolumeConstraint_validate()
         self.mock_update = self.patchobject(zun.ZunClientPlugin,
                                             'update_container')
+        self.stub_PortConstraint_validate()
+        self.mock_find = self.patchobject(
+            neutron.NeutronClientPlugin,
+            'find_resourceid_by_name_or_id',
+            side_effect=lambda x, y: y)
+        self.mock_attach = self.patchobject(zun.ZunClientPlugin,
+                                            'network_attach')
+        self.mock_detach = self.patchobject(zun.ZunClientPlugin,
+                                            'network_detach')
+        self.mock_attach_check = self.patchobject(zun.ZunClientPlugin,
+                                                  'check_network_attach',
+                                                  return_value=True)
+        self.mock_detach_check = self.patchobject(zun.ZunClientPlugin,
+                                                  'check_network_detach',
+                                                  return_value=True)
 
     def _mock_get_client(self):
         value = mock.MagicMock()
@@ -211,6 +263,9 @@ class ZunContainerTest(common.HeatTestCase):
         self.assertEqual(
             self.fake_mounts,
             c.properties.get(container.Container.MOUNTS))
+        self.assertEqual(
+            self.fake_networks,
+            c.properties.get(container.Container.NETWORKS))
 
         scheduler.TaskRunner(c.create)()
         self.assertEqual(self.resource_id, c.resource_id)
@@ -233,6 +288,7 @@ class ZunContainerTest(common.HeatTestCase):
             hostname=self.fake_hostname,
             security_groups=self.fake_security_groups,
             mounts=self.fake_mounts_args,
+            nets=self.fake_networks_args,
         )
 
     def test_container_create_failed(self):
@@ -271,6 +327,130 @@ class ZunContainerTest(common.HeatTestCase):
             cpu=10, memory=10, name='fake-container')
         self.assertEqual((c.UPDATE, c.COMPLETE), c.state)
 
+    def _test_container_update_None_networks(self, new_networks):
+        t = template_format.parse(zun_template_minimum)
+        stack = utils.parse_stack(t)
+        resource_defns = stack.t.resource_definitions(stack)
+        rsrc_defn = resource_defns[self.fake_name]
+        c = self._create_resource('container', rsrc_defn, stack)
+        scheduler.TaskRunner(c.create)()
+
+        new_t = copy.deepcopy(t)
+        new_t['resources'][self.fake_name]['properties']['networks'] = \
+            new_networks
+        rsrc_defns = template.Template(new_t).resource_definitions(stack)
+        new_c = rsrc_defns[self.fake_name]
+        iface = create_fake_iface(
+            port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            net='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+            ip='1.2.3.4')
+        self.client.containers.network_list.return_value = [iface]
+        scheduler.TaskRunner(c.update, new_c)()
+        self.assertEqual((c.UPDATE, c.COMPLETE), c.state)
+        self.client.containers.network_list.assert_called_once_with(
+            self.resource_id)
+
+    def test_container_update_None_networks_with_port(self):
+        new_networks = [{'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+        self._test_container_update_None_networks(new_networks)
+        self.assertEqual(1, self.mock_attach.call_count)
+        self.assertEqual(1, self.mock_detach.call_count)
+        self.assertEqual(1, self.mock_attach_check.call_count)
+        self.assertEqual(1, self.mock_detach_check.call_count)
+
+    def test_container_update_None_networks_with_network_id(self):
+        new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                         'fixed_ip': '1.2.3.4'}]
+        self._test_container_update_None_networks(new_networks)
+        self.assertEqual(1, self.mock_attach.call_count)
+        self.assertEqual(1, self.mock_detach.call_count)
+        self.assertEqual(1, self.mock_attach_check.call_count)
+        self.assertEqual(1, self.mock_detach_check.call_count)
+
+    def test_container_update_None_networks_with_complex_parameters(self):
+        new_networks = [{'network': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                         'fixed_ip': '1.2.3.4',
+                         'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+        self._test_container_update_None_networks(new_networks)
+        self.assertEqual(1, self.mock_attach.call_count)
+        self.assertEqual(1, self.mock_detach.call_count)
+        self.assertEqual(1, self.mock_attach_check.call_count)
+        self.assertEqual(1, self.mock_detach_check.call_count)
+
+    def test_server_update_empty_networks_to_None(self):
+        new_networks = None
+        self._test_container_update_None_networks(new_networks)
+        self.assertEqual(0, self.mock_attach.call_count)
+        self.assertEqual(0, self.mock_detach.call_count)
+        self.assertEqual(0, self.mock_attach_check.call_count)
+        self.assertEqual(0, self.mock_detach_check.call_count)
+
+    def _test_container_update_networks(self, new_networks):
+        c = self._create_resource('container', self.rsrc_defn, self.stack)
+        scheduler.TaskRunner(c.create)()
+        t = template_format.parse(zun_template)
+        new_t = copy.deepcopy(t)
+        new_t['resources'][self.fake_name]['properties']['networks'] = \
+            new_networks
+        rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
+        new_c = rsrc_defns[self.fake_name]
+        sec_uuids = ['86c0f8ae-23a8-464f-8603-c54113ef5467']
+        self.patchobject(neutron.NeutronClientPlugin,
+                         'get_secgroup_uuids', return_value=sec_uuids)
+        ifaces = [
+            create_fake_iface(port='95e25541-d26a-478d-8f36-ae1c8f6b74dc',
+                              net='mynet',
+                              ip='10.0.0.4'),
+            create_fake_iface(port='450abbc9-9b6d-4d6f-8c3a-c47ac34100ef',
+                              net='mynet2',
+                              ip='fe80::3'),
+            create_fake_iface(port='myport',
+                              net='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                              ip='21.22.23.24')]
+        self.client.containers.network_list.return_value = ifaces
+        scheduler.TaskRunner(c.update, new_c)()
+        self.assertEqual((c.UPDATE, c.COMPLETE), c.state)
+        self.client.containers.network_list.assert_called_once_with(
+            self.resource_id)
+
+    def test_container_update_networks_with_complex_parameters(self):
+        new_networks = [
+            {'network': 'mynet',
+             'fixed_ip': '10.0.0.4'},
+            {'port': '2a60cbaa-3d33-4af6-a9ce-83594ac546fc'}]
+        self._test_container_update_networks(new_networks)
+        self.assertEqual(2, self.mock_detach.call_count)
+        self.assertEqual(1, self.mock_attach.call_count)
+        self.assertEqual(2, self.mock_detach_check.call_count)
+        self.assertEqual(1, self.mock_attach_check.call_count)
+
+    def test_container_update_networks_with_None(self):
+        new_networks = None
+        self._test_container_update_networks(new_networks)
+        self.assertEqual(3, self.mock_detach.call_count)
+        self.assertEqual(1, self.mock_attach.call_count)
+        self.assertEqual(3, self.mock_detach_check.call_count)
+        self.assertEqual(1, self.mock_attach_check.call_count)
+
+    def test_container_update_old_networks_to_empty_list(self):
+        new_networks = []
+        self._test_container_update_networks(new_networks)
+        self.assertEqual(3, self.mock_detach.call_count)
+        self.assertEqual(1, self.mock_attach.call_count)
+        self.assertEqual(3, self.mock_detach_check.call_count)
+        self.assertEqual(1, self.mock_attach_check.call_count)
+
+    def test_container_update_remove_network_non_empty(self):
+        new_networks = [
+            {'network': 'mynet',
+             'fixed_ip': '10.0.0.4'},
+            {'port': 'myport'}]
+        self._test_container_update_networks(new_networks)
+        self.assertEqual(1, self.mock_detach.call_count)
+        self.assertEqual(0, self.mock_attach.call_count)
+        self.assertEqual(1, self.mock_detach_check.call_count)
+        self.assertEqual(0, self.mock_attach_check.call_count)
+
     def test_container_delete(self):
         c = self._create_resource('container', self.rsrc_defn, self.stack)
         scheduler.TaskRunner(c.create)()
@@ -306,7 +486,8 @@ class ZunContainerTest(common.HeatTestCase):
             }, reality)
 
     def test_resolve_attributes(self):
-        self.neutron_client.list_networks.return_value = self.fake_networks
+        self.neutron_client.list_networks.return_value = \
+            self.fake_networks_attr
         c = self._create_resource('container', self.rsrc_defn, self.stack)
         scheduler.TaskRunner(c.create)()
         self._mock_get_client()

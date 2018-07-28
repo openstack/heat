@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
+import tenacity
 from zunclient import client as zun_client
 from zunclient import exceptions as zc_exc
 
@@ -57,6 +59,56 @@ class ZunClientPlugin(client_plugin.ClientPlugin):
                 self.client().containers.rename(container_id, name=name)
             if prop_diff:
                 self.client().containers.update(container_id, **prop_diff)
+
+    def network_detach(self, container_id, port_id):
+        with self.ignore_not_found:
+            self.client(version=self.V1_18).containers.network_detach(
+                container_id, port=port_id)
+            return True
+
+    def network_attach(self, container_id, port_id=None, net_id=None, fip=None,
+                       security_groups=None):
+        with self.ignore_not_found:
+            kwargs = {}
+            if port_id:
+                kwargs['port'] = port_id
+            if net_id:
+                kwargs['network'] = net_id
+            if fip:
+                kwargs['fixed_ip'] = fip
+            self.client(version=self.V1_18).containers.network_attach(
+                container_id, **kwargs)
+            return True
+
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(
+            cfg.CONF.max_interface_check_attempts),
+        wait=tenacity.wait_exponential(multiplier=0.5, max=12.0),
+        retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
+    def check_network_detach(self, container_id, port_id):
+        with self.ignore_not_found:
+            interfaces = self.client(
+                version=self.V1_18).containers.network_list(container_id)
+            for iface in interfaces:
+                if iface.port_id == port_id:
+                    return False
+        return True
+
+    @tenacity.retry(
+        stop=tenacity.stop_after_attempt(
+            cfg.CONF.max_interface_check_attempts),
+        wait=tenacity.wait_exponential(multiplier=0.5, max=12.0),
+        retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
+    def check_network_attach(self, container_id, port_id):
+        if not port_id:
+            return True
+
+        interfaces = self.client(version=self.V1_18).containers.network_list(
+            container_id)
+        for iface in interfaces:
+            if iface.port_id == port_id:
+                return True
+        return False
 
     def is_not_found(self, ex):
         return isinstance(ex, zc_exc.NotFound)

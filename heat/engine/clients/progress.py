@@ -27,18 +27,18 @@ class ServerCreateProgress(object):
         self.server_id = server_id
 
 
-class ServerUpdateProgress(ServerCreateProgress):
+class UpdateProgressBase(object):
     """Keeps track on particular server update task.
 
     ``handler`` is a method of client plugin performing
     required update operation.
-    Its first positional argument must be ``server_id``
+    Its first positional argument must be ``resource_id``
     and this method must be resilent to intermittent failures,
     returning ``True`` if API was successfully called, ``False`` otherwise.
 
     If result of API call is asynchronous, client plugin must have
     corresponding ``check_<handler>`` method.
-    Its first positional argument must be ``server_id``
+    Its first positional argument must be ``resource_id``
     and it must return ``True`` or ``False`` indicating completeness
     of the update operation.
 
@@ -52,26 +52,44 @@ class ServerUpdateProgress(ServerCreateProgress):
 
     structure and contain parameters with which corresponding ``handler`` and
     ``check_<handler>`` methods of client plugin must be called.
-    ``args`` is automatically prepended with ``server_id``.
+    ``args`` is automatically prepended with ``resource_id``.
     Missing ``args`` or ``kwargs`` are interpreted
     as empty tuple/dict respectively.
     Defaults are interpreted as both ``args`` and ``kwargs`` being empty.
     """
-    def __init__(self, server_id, handler, complete=False, called=False,
+    def __init__(self, resource_id, handler, complete=False, called=False,
                  handler_extra=None, checker_extra=None):
-        super(ServerUpdateProgress, self).__init__(server_id, complete)
+        self.complete = complete
         self.called = called
         self.handler = handler
         self.checker = 'check_%s' % handler
 
         # set call arguments basing on incomplete values and defaults
         hargs = handler_extra or {}
-        self.handler_args = (server_id,) + (hargs.get('args') or ())
+        self.handler_args = (resource_id,) + (hargs.get('args') or ())
         self.handler_kwargs = hargs.get('kwargs') or {}
 
         cargs = checker_extra or {}
-        self.checker_args = (server_id,) + (cargs.get('args') or ())
+        self.checker_args = (resource_id,) + (cargs.get('args') or ())
         self.checker_kwargs = cargs.get('kwargs') or {}
+
+
+class ServerUpdateProgress(UpdateProgressBase):
+    def __init__(self, server_id, handler, complete=False, called=False,
+                 handler_extra=None, checker_extra=None):
+        super(ServerUpdateProgress, self).__init__(
+            server_id, handler, complete=complete, called=called,
+            handler_extra=handler_extra, checker_extra=checker_extra)
+        self.server_id = server_id
+
+
+class ContainerUpdateProgress(UpdateProgressBase):
+    def __init__(self, container_id, handler, complete=False, called=False,
+                 handler_extra=None, checker_extra=None):
+        super(ContainerUpdateProgress, self).__init__(
+            container_id, handler, complete=complete, called=called,
+            handler_extra=handler_extra, checker_extra=checker_extra)
+        self.container_id = container_id
 
 
 class ServerDeleteProgress(object):
