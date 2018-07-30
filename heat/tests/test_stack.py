@@ -3090,8 +3090,7 @@ class StackStateSetTest(common.HeatTestCase):
             self.assertRaises(ValueError, self.stack.state_set,
                               self.action, self.status, 'test')
         else:
-            self.assertIsNone(self.stack.state_set(self.action,
-                                                   self.status, 'test'))
+            self.stack.state_set(self.action, self.status, 'test')
             self.assertEqual((self.action, self.status), self.stack.state)
             self.assertEqual('test', self.stack.status_reason)
         self.assertEqual(self.persist_count, persist_state.call_count)

@@ -180,10 +180,7 @@ class ThreadGroupManager(object):
             Persist the stack state to COMPLETE and FAILED close to
             releasing the lock to avoid race conditions.
             """
-            if (stack is not None and stack.status != stack.IN_PROGRESS
-                and stack.action not in (stack.DELETE,
-                                         stack.ROLLBACK,
-                                         stack.UPDATE)):
+            if stack is not None and stack.defer_state_persist():
                 stack.persist_state_and_release_lock(lock.engine_id)
 
                 notify = kwargs.get('notify')

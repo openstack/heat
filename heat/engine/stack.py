@@ -957,6 +957,29 @@ class Stack(collections.Mapping):
                                         self.env.get_event_sinks(),
                                         ev.as_dict())
 
+    def defer_state_persist(self):
+        """Return whether to defer persisting the state.
+
+        If persistence is deferred, the new state will not be written to the
+        database until the stack lock is released (by calling
+        persist_state_and_release_lock()). This prevents races in the legacy
+        path where an observer sees the stack COMPLETE but an engine still
+        holds the lock.
+        """
+        if self.status == self.IN_PROGRESS:
+            # Always persist IN_PROGRESS immediately
+            return False
+
+        if (self.convergence and
+            self.action in {self.UPDATE, self.DELETE, self.CREATE,
+                            self.ADOPT, self.ROLLBACK, self.RESTORE}):
+            # These operations do not use the stack lock in convergence, so
+            # never defer.
+            return False
+
+        return self.action not in {self.UPDATE, self.DELETE, self.ROLLBACK,
+                                   self.RESTORE}
+
     @profiler.trace('Stack.state_set', hide_args=False)
     def state_set(self, action, status, reason):
         """Update the stack state."""
@@ -971,26 +994,15 @@ class Stack(collections.Mapping):
         self.status_reason = reason
         self._log_status()
 
-        if self.convergence and action in (
-                self.UPDATE, self.DELETE, self.CREATE,
-                self.ADOPT, self.ROLLBACK, self.RESTORE):
-            # if convergence and stack operation is create/update/rollback/
-            # delete, stack lock is not used, hence persist state
+        if not self.defer_state_persist():
             updated = self._persist_state()
-            if not updated:
+            if self.convergence and not updated:
                 LOG.info("Stack %(name)s traversal %(trvsl_id)s no longer "
                          "active; not setting state to %(action)s_%(status)s",
                          {'name': self.name,
                           'trvsl_id': self.current_traversal,
                           'action': action, 'status': status})
             return updated
-
-        # Persist state to db only if status == IN_PROGRESS
-        # or action == UPDATE/DELETE/ROLLBACK. Else, it would
-        # be done before releasing the stack lock.
-        if status == self.IN_PROGRESS or action in (
-                self.UPDATE, self.DELETE, self.ROLLBACK, self.RESTORE):
-            self._persist_state()
 
     def _log_status(self):
         LOG.info('Stack %(action)s %(status)s (%(name)s): %(reason)s',
@@ -1148,8 +1160,10 @@ class Stack(collections.Mapping):
                            'Failed stack pre-ops: %s' % six.text_type(e))
             if callable(post_func):
                 post_func()
-            # No need to call notify.signal(), because persistence of the
-            # state is always deferred here.
+            if notify is not None:
+                # No need to call notify.signal(), because persistence of the
+                # state is always deferred here.
+                assert self.defer_state_persist()
             return
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
