@@ -209,7 +209,7 @@ class WorkerServiceTest(common.HeatTestCase):
         stack.id = 'stack_id'
         stack.rollback = mock.MagicMock()
         _worker.stop_all_workers(stack)
-        mock_st.assert_called_once_with(stack)
+        mock_st.assert_not_called()
         mock_cw.assert_called_once_with(stack, mock_tgm, 'engine-001',
                                         _worker._rpc_client)
         self.assertFalse(stack.rollback.called)

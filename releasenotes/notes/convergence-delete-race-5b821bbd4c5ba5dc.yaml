@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Previously, when deleting a convergence stack, the API call would return
+    immediately, so that it was possible for a client immediately querying the
+    status of the stack to see the state of the previous operation in progress
+    or having failed, and confuse that with a current status. (This included
+    Heat itself when acting as a client for a nested stack.) Convergence stacks
+    are now guaranteed to have moved to the ``DELETE_IN_PROGRESS`` state before
+    the delete API call returns, so any subsequent polling will reflect
+    up-to-date information.
