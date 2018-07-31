@@ -1300,7 +1300,8 @@ class Stack(collections.Mapping):
         updater()
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
-    def converge_stack(self, template, action=UPDATE, new_stack=None):
+    def converge_stack(self, template, action=UPDATE, new_stack=None,
+                       pre_converge=None):
         """Update the stack template and trigger convergence for resources."""
         if action not in [self.CREATE, self.ADOPT]:
             # no back-up template for create action
@@ -1354,9 +1355,10 @@ class Stack(collections.Mapping):
 
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
 
-        self.thread_group_mgr.start(self.id, self._converge_create_or_update)
+        self.thread_group_mgr.start(self.id, self._converge_create_or_update,
+                                    pre_converge=pre_converge)
 
-    def _converge_create_or_update(self):
+    def _converge_create_or_update(self, pre_converge=None):
         current_resources = self._update_or_store_resources()
         self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies,
                                          current_resources)
@@ -1373,6 +1375,8 @@ class Stack(collections.Mapping):
                          'action': self.action})
             return
 
+        if callable(pre_converge):
+            pre_converge()
         if self.action == self.DELETE:
             try:
                 self.delete_all_snapshots()

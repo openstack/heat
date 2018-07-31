@@ -1374,14 +1374,19 @@ class EngineService(service.ServiceBase):
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
 
         if stack.convergence and cfg.CONF.convergence_engine:
-            def convergence_delete():
-                stack.thread_group_mgr = self.thread_group_mgr
-                self.worker_service.stop_all_workers(stack)
-                template = templatem.Template.create_empty_template(
-                    from_template=stack.t)
-                stack.converge_stack(template=template, action=stack.DELETE)
+            stack.thread_group_mgr = self.thread_group_mgr
+            template = templatem.Template.create_empty_template(
+                from_template=stack.t)
 
-            self.thread_group_mgr.start(stack.id, convergence_delete)
+            # stop existing traversal; mark stack as FAILED
+            if stack.status == stack.IN_PROGRESS:
+                self.worker_service.stop_traversal(stack)
+
+            def stop_workers():
+                self.worker_service.stop_all_workers(stack)
+
+            stack.converge_stack(template=template, action=stack.DELETE,
+                                 pre_converge=stop_workers)
             return
 
         lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
