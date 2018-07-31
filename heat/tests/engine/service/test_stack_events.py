@@ -12,6 +12,8 @@
 #    under the License.
 
 import mock
+from oslo_config import cfg
+from oslo_messaging import conffixture
 
 from heat.engine import resource as res
 from heat.engine.resources.aws.ec2 import instance as instances
@@ -94,6 +96,7 @@ class StackEventTest(common.HeatTestCase):
     @tools.stack_context('service_event_list_deleted_resource')
     @mock.patch.object(instances.Instance, 'handle_delete')
     def test_event_list_deleted_resource(self, mock_delete):
+        self.useFixture(conffixture.ConfFixture(cfg.CONF))
         mock_delete.return_value = None
 
         res._register_class('GenericResourceType',
@@ -103,7 +106,7 @@ class StackEventTest(common.HeatTestCase):
         thread.link = mock.Mock(return_value=None)
 
         def run(stack_id, func, *args, **kwargs):
-            func(*args)
+            func(*args, **kwargs)
             return thread
         self.eng.thread_group_mgr.start = run
 

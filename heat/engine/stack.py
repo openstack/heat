@@ -1116,7 +1116,8 @@ class Stack(collections.Mapping):
 
     @scheduler.wrappertask
     def stack_task(self, action, reverse=False, post_func=None,
-                   aggregate_exceptions=False, pre_completion_func=None):
+                   aggregate_exceptions=False, pre_completion_func=None,
+                   notify=None):
         """A task to perform an action on the stack.
 
         All of the resources are traversed in forward or reverse dependency
@@ -1140,9 +1141,13 @@ class Stack(collections.Mapping):
                            'Failed stack pre-ops: %s' % six.text_type(e))
             if callable(post_func):
                 post_func()
+            # No need to call notify.signal(), because persistence of the
+            # state is always deferred here.
             return
         self.state_set(action, self.IN_PROGRESS,
                        'Stack %s started' % action)
+        if notify is not None:
+            notify.signal()
 
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action
@@ -1201,12 +1206,13 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.check', hide_args=False)
     @reset_state_on_error
-    def check(self):
+    def check(self, notify=None):
         self.updated_time = oslo_timeutils.utcnow()
         checker = scheduler.TaskRunner(
             self.stack_task, self.CHECK,
             post_func=self.supports_check_action,
-            aggregate_exceptions=True)
+            aggregate_exceptions=True,
+            notify=notify)
         checker()
 
     def supports_check_action(self):
@@ -1274,7 +1280,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.update', hide_args=False)
     @reset_state_on_error
-    def update(self, newstack, msg_queue=None):
+    def update(self, newstack, msg_queue=None, notify=None):
         """Update the stack.
 
         Compare the current stack with newstack,
@@ -1289,7 +1295,7 @@ class Stack(collections.Mapping):
         """
         self.updated_time = oslo_timeutils.utcnow()
         updater = scheduler.TaskRunner(self.update_task, newstack,
-                                       msg_queue=msg_queue)
+                                       msg_queue=msg_queue, notify=notify)
         updater()
 
     @profiler.trace('Stack.converge_stack', hide_args=False)
@@ -1535,11 +1541,14 @@ class Stack(collections.Mapping):
         self.state_set(self.action, self.FAILED, six.text_type(reason))
 
     @scheduler.wrappertask
-    def update_task(self, newstack, action=UPDATE, msg_queue=None):
+    def update_task(self, newstack, action=UPDATE,
+                    msg_queue=None, notify=None):
         if action not in (self.UPDATE, self.ROLLBACK, self.RESTORE):
             LOG.error("Unexpected action %s passed to update!", action)
             self.state_set(self.UPDATE, self.FAILED,
                            "Invalid action %s" % action)
+            if notify is not None:
+                notify.signal()
             return
 
         try:
@@ -1548,6 +1557,8 @@ class Stack(collections.Mapping):
         except Exception as e:
             self.state_set(action, self.FAILED, e.args[0] if e.args else
                            'Failed stack pre-ops: %s' % six.text_type(e))
+            if notify is not None:
+                notify.signal()
             return
         if self.status == self.IN_PROGRESS:
             if action == self.ROLLBACK:
@@ -1556,6 +1567,8 @@ class Stack(collections.Mapping):
                 reason = _('Attempted to %s an IN_PROGRESS '
                            'stack') % action
                 self.reset_stack_and_resources_in_progress(reason)
+                if notify is not None:
+                    notify.signal()
                 return
 
         # Save a copy of the new template.  To avoid two DB writes
@@ -1569,6 +1582,10 @@ class Stack(collections.Mapping):
         self.status_reason = 'Stack %s started' % action
         self._send_notification_and_add_event()
         self.store()
+        # Notify the caller that the state is stored
+        if notify is not None:
+            notify.signal()
+
         if prev_tmpl_id is not None:
             raw_template_object.RawTemplate.delete(self.context, prev_tmpl_id)
 
@@ -1836,7 +1853,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.delete', hide_args=False)
     @reset_state_on_error
-    def delete(self, action=DELETE, backup=False, abandon=False):
+    def delete(self, action=DELETE, backup=False, abandon=False, notify=None):
         """Delete all of the resources, and then the stack itself.
 
         The action parameter is used to differentiate between a user
@@ -1852,12 +1869,16 @@ class Stack(collections.Mapping):
             LOG.error("Unexpected action %s passed to delete!", action)
             self.state_set(self.DELETE, self.FAILED,
                            "Invalid action %s" % action)
+            if notify is not None:
+                notify.signal()
             return
 
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action
         self.state_set(action, self.IN_PROGRESS, 'Stack %s started' %
                        action)
+        if notify is not None:
+            notify.signal()
 
         backup_stack = self._backup_stack(False)
         if backup_stack:
@@ -1921,7 +1942,7 @@ class Stack(collections.Mapping):
 
     @profiler.trace('Stack.suspend', hide_args=False)
     @reset_state_on_error
-    def suspend(self):
+    def suspend(self, notify=None):
         """Suspend the stack.
 
         Invokes handle_suspend for all stack resources.
@@ -1932,6 +1953,7 @@ class Stack(collections.Mapping):
         other than move to SUSPEND_COMPLETE, so the resources must implement
         handle_suspend for this to have any effect.
         """
+        LOG.debug("Suspending stack %s", self)
         # No need to suspend if the stack has been suspended
         if self.state == (self.SUSPEND, self.COMPLETE):
             LOG.info('%s is already suspended', self)
@@ -1941,12 +1963,13 @@ class Stack(collections.Mapping):
         sus_task = scheduler.TaskRunner(
             self.stack_task,
             action=self.SUSPEND,
-            reverse=True)
+            reverse=True,
+            notify=notify)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.resume', hide_args=False)
     @reset_state_on_error
-    def resume(self):
+    def resume(self, notify=None):
         """Resume the stack.
 
         Invokes handle_resume for all stack resources.
@@ -1957,6 +1980,7 @@ class Stack(collections.Mapping):
         other than move to RESUME_COMPLETE, so the resources must implement
         handle_resume for this to have any effect.
         """
+        LOG.debug("Resuming stack %s", self)
         # No need to resume if the stack has been resumed
         if self.state == (self.RESUME, self.COMPLETE):
             LOG.info('%s is already resumed', self)
@@ -1966,7 +1990,8 @@ class Stack(collections.Mapping):
         sus_task = scheduler.TaskRunner(
             self.stack_task,
             action=self.RESUME,
-            reverse=False)
+            reverse=False,
+            notify=notify)
         sus_task(timeout=self.timeout_secs())
 
     @profiler.trace('Stack.snapshot', hide_args=False)
@@ -2028,16 +2053,17 @@ class Stack(collections.Mapping):
         return newstack, template
 
     @reset_state_on_error
-    def restore(self, snapshot):
+    def restore(self, snapshot, notify=None):
         """Restore the given snapshot.
 
         Invokes handle_restore on all resources.
         """
+        LOG.debug("Restoring stack %s", self)
         self.updated_time = oslo_timeutils.utcnow()
         newstack = self.restore_data(snapshot)[0]
 
         updater = scheduler.TaskRunner(self.update_task, newstack,
-                                       action=self.RESTORE)
+                                       action=self.RESTORE, notify=notify)
         updater()
 
     def get_availability_zones(self):

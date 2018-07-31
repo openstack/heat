@@ -1,0 +1,12 @@
+---
+fixes:
+  - |
+    Previously, the suspend, resume, and check API calls for all stacks, and
+    the update, restore, and delete API calls for non-convergence stacks,
+    returned immediately after starting the stack operation. This meant that
+    for a client reading the state immediately when performing the same
+    operation twice in a row, it could have misinterpreted a previous state as
+    the latest unless careful reference were made to the updated_at timestamp.
+    Stacks are now guaranteed to have moved to the ``IN_PROGRESS`` state before
+    any of these APIs return (except in the case of deleting a non-convergence
+    stack where another operation was already in progress).
