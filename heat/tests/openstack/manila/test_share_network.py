@@ -152,11 +152,16 @@ class ManilaShareNetworkTest(common.HeatTestCase):
         self.assertEqual('share_networks', net.entity)
 
     def test_create_fail(self):
-        self.client.share_networks.add_security_service.side_effect = (
-            Exception())
+        self.client_plugin.is_conflict.return_value = False
+        self.client.share_networks.add_security_service.side_effect = Exception
         self.assertRaises(
             exception.ResourceFailure,
             self._create_network, 'share_network', self.rsrc_defn, self.stack)
+        csn = self.client.share_networks
+        csn.create.assert_called_with(
+            name='1', description='2', neutron_net_id='3',
+            neutron_subnet_id='4', nova_net_id=None)
+        csn.add_security_service.assert_called_once_with('42', '6')
 
     def test_validate_conflicting_net_subnet(self):
         t = template_format.parse(stack_template)
