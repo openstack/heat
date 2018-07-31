@@ -44,12 +44,14 @@ class StackServiceActionsTest(common.HeatTestCase):
         thread = mock.MagicMock()
         mock_link = self.patchobject(thread, 'link')
         mock_start.return_value = thread
+        self.patchobject(service, 'NotifyEvent')
 
         result = self.man.stack_suspend(self.ctx, stk.identifier())
         self.assertIsNone(result)
         mock_load.assert_called_once_with(self.ctx, stack=s)
         mock_link.assert_called_once_with(mock.ANY)
-        mock_start.assert_called_once_with(stk.id, mock.ANY, stk)
+        mock_start.assert_called_once_with(stk.id, stk.suspend,
+                                           notify=mock.ANY)
 
         stk.delete()
 
@@ -64,13 +66,14 @@ class StackServiceActionsTest(common.HeatTestCase):
         thread = mock.MagicMock()
         mock_link = self.patchobject(thread, 'link')
         mock_start.return_value = thread
+        self.patchobject(service, 'NotifyEvent')
 
         result = self.man.stack_resume(self.ctx, stk.identifier())
         self.assertIsNone(result)
 
         mock_load.assert_called_once_with(self.ctx, stack=mock.ANY)
         mock_link.assert_called_once_with(mock.ANY)
-        mock_start.assert_called_once_with(stk.id, mock.ANY, stk)
+        mock_start.assert_called_once_with(stk.id, stk.resume, notify=mock.ANY)
 
         stk.delete()
 
@@ -108,6 +111,7 @@ class StackServiceActionsTest(common.HeatTestCase):
         stk = utils.parse_stack(t, stack_name=stack_name)
 
         stk.check = mock.Mock()
+        self.patchobject(service, 'NotifyEvent')
         mock_load.return_value = stk
         mock_start.side_effect = self._mock_thread_start
 
