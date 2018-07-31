@@ -94,7 +94,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                              'No password configured')
         self.setup_clients(self.conf)
         self.useFixture(fixtures.FakeLogger(format=_LOG_FORMAT))
-        self.updated_time = {}
         if self.conf.disable_ssl_certificate_validation:
             self.verify_cert = False
         else:
@@ -272,17 +271,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def _verify_status(self, stack, stack_identifier, status,
                        fail_regexp, is_action_cancelled=False):
         if stack.stack_status == status:
-            # Handle UPDATE_COMPLETE/FAILED case: Make sure we don't
-            # wait for a stale UPDATE_COMPLETE/FAILED status.
-            if status in ('UPDATE_FAILED', 'UPDATE_COMPLETE'):
-                if is_action_cancelled:
-                    return True
-
-                if self.updated_time.get(
-                        stack_identifier) != stack.updated_time:
-                    self.updated_time[stack_identifier] = stack.updated_time
-                    return True
-            elif status == 'DELETE_COMPLETE' and stack.deletion_time is None:
+            if status == 'DELETE_COMPLETE' and stack.deletion_time is None:
                 # Wait for deleted_time to be filled, so that we have more
                 # confidence the operation is finished.
                 return False
@@ -292,20 +281,12 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         wait_for_action = status.split('_')[0]
         if (stack.action == wait_for_action and
                 fail_regexp.search(stack.stack_status)):
-            # Handle UPDATE_COMPLETE/UPDATE_FAILED case.
-            if status in ('UPDATE_FAILED', 'UPDATE_COMPLETE'):
-                if self.updated_time.get(
-                        stack_identifier) != stack.updated_time:
-                    self.updated_time[stack_identifier] = stack.updated_time
-                    raise exceptions.StackBuildErrorException(
-                        stack_identifier=stack_identifier,
-                        stack_status=stack.stack_status,
-                        stack_status_reason=stack.stack_status_reason)
-            else:
-                raise exceptions.StackBuildErrorException(
-                    stack_identifier=stack_identifier,
-                    stack_status=stack.stack_status,
-                    stack_status_reason=stack.stack_status_reason)
+            raise exceptions.StackBuildErrorException(
+                stack_identifier=stack_identifier,
+                stack_status=stack.stack_status,
+                stack_status_reason=stack.stack_status_reason)
+
+        return False
 
     def _wait_for_stack_status(self, stack_identifier, status,
                                failure_pattern=None,
@@ -395,9 +376,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         env_files = files or {}
         parameters = parameters or {}
 
-        self.updated_time[stack_identifier] = self.client.stacks.get(
-            stack_identifier, resolve_outputs=False).updated_time
-
         self._handle_in_progress(
             self.client.stacks.update,
             stack_id=stack_identifier,
@@ -422,9 +400,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                             expected_status='ROLLBACK_COMPLETE'):
 
         stack_name = stack_identifier.split('/')[0]
-
-        self.updated_time[stack_identifier] = self.client.stacks.get(
-            stack_identifier, resolve_outputs=False).updated_time
 
         if rollback:
             self.client.actions.cancel_update(stack_name)
