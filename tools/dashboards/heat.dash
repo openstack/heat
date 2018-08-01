@@ -11,11 +11,8 @@ foreach = (project:openstack/heat OR project:openstack/heat-agents OR
 [section "Heat Specs"]
 query = project:openstack/heat-specs
 
-[section "Bug Fixes"]
-query = intopic:^bug/.*
-
-[section "Blueprints"]
-query = message:"Blueprint"
+[section "Stories & Bug Fixes"]
+query = (intopic: ^story/.* OR intopic: ^bug/.* OR intopic: ^bp/.*)
 
 [section "Needs Feedback (Changes older than 5 days that have not been reviewed by anyone)"]
 query = NOT label:Code-Review>=1 NOT label:Code-Review<=-1 age:5d

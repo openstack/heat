@@ -30,5 +30,6 @@ EXAMPLES
 
 BUGS
 ====
-Heat bugs are managed through Launchpad
-`OpenStack Heat Bugs <https://bugs.launchpad.net/heat>`__
+
+Heat bugs are managed through StoryBoard
+`OpenStack Heat Stories <https://storyboard.openstack.org/#!/project/989>`__

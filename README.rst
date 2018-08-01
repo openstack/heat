@@ -35,6 +35,16 @@ Python client
 * Documentation: https://docs.openstack.org/python-heatclient/latest
 * Source: https://git.openstack.org/cgit/openstack/python-heatclient
 
+Report a Story (a bug/blueprint)
+--------------------------------
+
+If you'd like to report a Story (we used to call a bug/blueprint), you can
+report it under Report a story in
+`Heat's StoryBoard <https://storyboard.openstack.org/#!/project/989>`_.
+If you must report the story under other sub-project of heat, you can find
+them all in `Heat StoryBoard Group <https://storyboard.openstack.org/#!/project_group/82>`_.
+if you encounter any issue.
+
 References
 ----------
 * https://docs.amazonwebservices.com/AWSCloudFormation/latest/APIReference/API_CreateStack.html
