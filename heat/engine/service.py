@@ -185,6 +185,11 @@ class ThreadGroupManager(object):
                                          stack.ROLLBACK,
                                          stack.UPDATE)):
                 stack.persist_state_and_release_lock(lock.engine_id)
+
+                notify = kwargs.get('notify')
+                if notify is not None:
+                    assert not notify.signalled()
+                    notify.signal()
             else:
                 lock.release()
 
@@ -242,6 +247,38 @@ class ThreadGroupManager(object):
     def send(self, stack_id, message):
         for msg_queue in self.msg_queues.get(stack_id, []):
             msg_queue.put_nowait(message)
+
+
+class NotifyEvent(object):
+    def __init__(self):
+        self._queue = eventlet.queue.LightQueue(1)
+        self._signalled = False
+
+    def signalled(self):
+        return self._signalled
+
+    def signal(self):
+        """Signal the event."""
+        if self._signalled:
+            return
+        self._signalled = True
+
+        self._queue.put(None)
+        # Yield control so that the waiting greenthread will get the message
+        # as soon as possible, so that the API handler can respond to the user.
+        # Another option would be to set the queue length to 0 (which would
+        # cause put() to block until the event has been seen, but many unit
+        # tests run in a single greenthread and would thus deadlock.
+        eventlet.sleep(0)
+
+    def wait(self):
+        """Wait for the event."""
+        try:
+            # There's no timeout argument to eventlet.event.Event available
+            # until eventlet 0.22.1, so use a queue.
+            self._queue.get(timeout=cfg.CONF.rpc_response_timeout)
+        except eventlet.queue.Empty:
+            LOG.warning('Timed out waiting for operation to start')
 
 
 @profiler.trace_cls("rpc")
@@ -996,14 +1033,17 @@ class EngineService(service.ServiceBase):
                                          new_stack=updated_stack)
         else:
             msg_queue = eventlet.queue.LightQueue()
+            stored_event = NotifyEvent()
             th = self.thread_group_mgr.start_with_lock(cnxt, current_stack,
                                                        self.engine_id,
                                                        current_stack.update,
                                                        updated_stack,
-                                                       msg_queue=msg_queue)
+                                                       msg_queue=msg_queue,
+                                                       notify=stored_event)
             th.link(self.thread_group_mgr.remove_msg_queue,
                     current_stack.id, msg_queue)
             self.thread_group_mgr.add_msg_queue(current_stack.id, msg_queue)
+            stored_event.wait()
         return dict(current_stack.identifier())
 
     @context.request_context
@@ -1393,8 +1433,11 @@ class EngineService(service.ServiceBase):
             # Successfully acquired lock
             if acquire_result is None:
                 self.thread_group_mgr.stop_timers(stack.id)
+                stored = NotifyEvent()
                 self.thread_group_mgr.start_with_acquired_lock(stack, lock,
-                                                               stack.delete)
+                                                               stack.delete,
+                                                               notify=stored)
+                stored.wait()
                 return
 
         # Current engine has the lock
@@ -1999,30 +2042,28 @@ class EngineService(service.ServiceBase):
     @context.request_context
     def stack_suspend(self, cnxt, stack_identity):
         """Handle request to perform suspend action on a stack."""
-        def _stack_suspend(stack):
-            LOG.debug("suspending stack %s", stack.name)
-            stack.suspend()
-
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
+        stored_event = NotifyEvent()
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              _stack_suspend, stack)
+                                              stack.suspend,
+                                              notify=stored_event)
+        stored_event.wait()
 
     @context.request_context
     def stack_resume(self, cnxt, stack_identity):
         """Handle request to perform a resume action on a stack."""
-        def _stack_resume(stack):
-            LOG.debug("resuming stack %s", stack.name)
-            stack.resume()
-
         s = self._get_stack(cnxt, stack_identity)
 
         stack = parser.Stack.load(cnxt, stack=s)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
+        stored_event = NotifyEvent()
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              _stack_resume, stack)
+                                              stack.resume,
+                                              notify=stored_event)
+        stored_event.wait()
 
     @context.request_context
     def stack_snapshot(self, cnxt, stack_identity, name):
@@ -2094,15 +2135,13 @@ class EngineService(service.ServiceBase):
         stack = parser.Stack.load(cnxt, stack=s)
         LOG.info("Checking stack %s", stack.name)
 
+        stored_event = NotifyEvent()
         self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              stack.check)
+                                              stack.check, notify=stored_event)
+        stored_event.wait()
 
     @context.request_context
     def stack_restore(self, cnxt, stack_identity, snapshot_id):
-        def _stack_restore(stack, snapshot):
-            LOG.debug("restoring stack %s", stack.name)
-            stack.restore(snapshot)
-
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
@@ -2118,8 +2157,11 @@ class EngineService(service.ServiceBase):
                                  action=stack.RESTORE,
                                  new_stack=new_stack)
         else:
+            stored_event = NotifyEvent()
             self.thread_group_mgr.start_with_lock(
-                cnxt, stack, self.engine_id, _stack_restore, stack, snapshot)
+                cnxt, stack, self.engine_id, stack.restore, snapshot,
+                notify=stored_event)
+            stored_event.wait()
 
     @context.request_context
     def stack_list_snapshots(self, cnxt, stack_identity):

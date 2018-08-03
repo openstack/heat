@@ -15,6 +15,7 @@ import uuid
 import eventlet.queue
 import mock
 from oslo_config import cfg
+from oslo_messaging import conffixture
 from oslo_messaging.rpc import dispatcher
 import six
 
@@ -44,6 +45,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
     def setUp(self):
         super(ServiceStackUpdateTest, self).setUp()
+        self.useFixture(conffixture.ConfFixture(cfg.CONF))
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.thread_group_mgr = tools.DummyThreadGroupManager()
@@ -69,7 +71,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
         msgq_mock = mock.Mock()
-        self.patchobject(eventlet.queue, 'LightQueue', return_value=msgq_mock)
+        self.patchobject(eventlet.queue, 'LightQueue',
+                         side_effect=[msgq_mock, eventlet.queue.LightQueue()])
 
         # do update
         api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: True}
@@ -123,7 +126,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(environment, 'Environment', return_value=stk.env)
         self.patchobject(stk, 'validate', return_value=None)
         self.patchobject(eventlet.queue, 'LightQueue',
-                         return_value=mock.Mock())
+                         side_effect=[mock.Mock(),
+                                      eventlet.queue.LightQueue()])
 
         mock_merge = self.patchobject(env_util, 'merge_environments')
 
@@ -186,7 +190,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
         msgq_mock = mock.Mock()
-        self.patchobject(eventlet.queue, 'LightQueue', return_value=msgq_mock)
+        self.patchobject(eventlet.queue, 'LightQueue',
+                         side_effect=[msgq_mock, eventlet.queue.LightQueue()])
 
         # do update
         api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}
@@ -245,6 +250,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         t['parameters']['newparam'] = {'type': 'number'}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
+            self.patchobject(service, 'NotifyEvent')
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -301,7 +307,8 @@ resources:
                     rpc_api.PARAM_CONVERGE: False}
 
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
-            stk.update = mock.Mock()
+            loaded_stack.update = mock.Mock()
+            self.patchobject(service, 'NotifyEvent')
             mock_stack.load.return_value = loaded_stack
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -344,6 +351,7 @@ resources:
         t['parameters']['newparam'] = {'type': 'number'}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
+            self.patchobject(service, 'NotifyEvent')
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -444,6 +452,7 @@ resources:
                           'myother.yaml': 'myother'}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
+            self.patchobject(service, 'NotifyEvent')
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -490,6 +499,7 @@ resources:
                         'resource_registry': {'resources': {}}}
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
             stk.update = mock.Mock()
+            self.patchobject(service, 'NotifyEvent')
             mock_stack.load.return_value = stk
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stk.identifier(),
@@ -890,6 +900,7 @@ resources:
         stack.status = stack.COMPLETE
 
         with mock.patch('heat.engine.stack.Stack') as mock_stack:
+            self.patchobject(service, 'NotifyEvent')
             mock_stack.load.return_value = stack
             mock_stack.validate.return_value = None
             result = self.man.update_stack(self.ctx, stack.identifier(),
