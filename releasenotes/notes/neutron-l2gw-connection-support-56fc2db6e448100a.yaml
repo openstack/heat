@@ -1,0 +1,6 @@
+---
+features:
+  - New resource ``OS::Neutron::L2GatewayConnection`` to allow management of
+    Neutron Layer2 Gateway Connection.  This resource provides capability to
+    connect a Neutron network to a Layer2 Gateway.
+    The resource depends on the Neutron ``l2-gateway`` extension.
