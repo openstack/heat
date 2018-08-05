@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Add ``group`` property to ``OS::Heat::MultipartMime``. This allow you to
+    set group for entire multipart cofig resource like ``group`` property in
+    ``OS::Heat::SoftwareConfig``. Aware that, you must make sure all configs
+    in MultipartMime works with ``group``. Default value is
+    ``Heat::Ungrouped``.
