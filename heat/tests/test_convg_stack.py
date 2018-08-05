@@ -489,7 +489,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def test_sync_point_delete_stack_create(self, mock_syncpoint_del,
                                             mock_ccu, mock_cr):
         stack = parser.Stack(utils.dummy_context(), 'convg_updated_time_test',
-                             templatem.Template.create_empty_template())
+                             templatem.Template.create_empty_template(),
+                             convergence=True)
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertFalse(mock_syncpoint_del.called)
@@ -503,7 +504,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'R1': {'Type': 'GenericResourceType'}}}
         stack = parser.Stack(utils.dummy_context(), 'updated_time_test',
-                             templatem.Template(tmpl))
+                             templatem.Template(tmpl), convergence=True)
         stack.thread_group_mgr = tools.DummyThreadGroupManager()
         stack.current_traversal = 'prev_traversal'
         stack.converge_stack(template=stack.t, action=stack.UPDATE)
@@ -514,7 +515,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'R1': {'Type': 'GenericResourceType'}}}
         stack = parser.Stack(utils.dummy_context(), 'updated_time_test',
-                             templatem.Template(tmpl))
+                             templatem.Template(tmpl), convergence=True)
         stack.current_traversal = 'prev_traversal'
         stack.action, stack.status = stack.CREATE, stack.COMPLETE
         stack.store()

@@ -2985,7 +2985,8 @@ class ResetStateOnErrorTest(common.HeatTestCase):
         status = COMPLETE
 
         def __init__(self):
-            self.state_set = mock.MagicMock()
+            self.mark_failed = mock.MagicMock()
+            self.convergence = False
 
         @stack.reset_state_on_error
         def raise_exception(self):
@@ -3010,27 +3011,27 @@ class ResetStateOnErrorTest(common.HeatTestCase):
         dummy = self.DummyStack()
 
         self.assertEqual('Hello world', dummy.succeed())
-        self.assertFalse(dummy.state_set.called)
+        self.assertFalse(dummy.mark_failed.called)
 
     def test_failure(self):
         dummy = self.DummyStack()
 
         self.assertEqual('Hello world', dummy.fail())
-        self.assertFalse(dummy.state_set.called)
+        self.assertFalse(dummy.mark_failed.called)
 
     def test_reset_state_exception(self):
         dummy = self.DummyStack()
 
         exc = self.assertRaises(ValueError, dummy.raise_exception)
         self.assertIn('oops', str(exc))
-        self.assertTrue(dummy.state_set.called)
+        self.assertTrue(dummy.mark_failed.called)
 
     def test_reset_state_exit_exception(self):
         dummy = self.DummyStack()
 
         exc = self.assertRaises(BaseException, dummy.raise_exit_exception)
         self.assertIn('bye', str(exc))
-        self.assertTrue(dummy.state_set.called)
+        self.assertTrue(dummy.mark_failed.called)
 
 
 class StackStateSetTest(common.HeatTestCase):

@@ -205,7 +205,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(res)
         mock_ss.assert_not_called()
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
+    @mock.patch.object(stack.Stack, 'rollback')
     def test_resource_update_failure_sets_stack_state_as_failed(
             self, mock_tr, mock_cru, mock_crc, mock_pcr, mock_csc):
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
@@ -224,7 +224,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                          'ResourceNotAvailable: resources.A: The Resource (A)'
                          ' is not available.', s.status_reason)
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
+    @mock.patch.object(stack.Stack, 'rollback')
     def test_resource_cleanup_failure_sets_stack_state_as_failed(
             self, mock_tr, mock_cru, mock_crc, mock_pcr, mock_csc):
         self.is_update = False  # invokes check_resource_cleanup
@@ -244,9 +244,9 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                          'ResourceNotAvailable: resources.A: The Resource (A)'
                          ' is not available.', s.status_reason)
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
     def test_resource_update_failure_triggers_rollback_if_enabled(
-            self, mock_tr, mock_cru, mock_crc, mock_pcr, mock_csc):
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
+        mock_tr = self.stack.rollback = mock.Mock(return_value=None)
         self.stack.disable_rollback = False
         self.stack.store()
         dummy_ex = exception.ResourceNotAvailable(
@@ -257,14 +257,11 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    self.stack.current_traversal, {},
                                    self.is_update, None)
         self.assertTrue(mock_tr.called)
-        # make sure the rollback is called on given stack
-        call_args, call_kwargs = mock_tr.call_args
-        called_stack = call_args[0]
-        self.assertEqual(self.stack.id, called_stack.id)
+        mock_tr.assert_called_once_with()
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
     def test_resource_cleanup_failure_triggers_rollback_if_enabled(
-            self, mock_tr, mock_cru, mock_crc, mock_pcr, mock_csc):
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
+        mock_tr = self.stack.rollback = mock.Mock(return_value=None)
         self.is_update = False  # invokes check_resource_cleanup
         self.stack.disable_rollback = False
         self.stack.store()
@@ -275,13 +272,9 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.worker.check_resource(self.ctx, self.resource.id,
                                    self.stack.current_traversal, {},
                                    self.is_update, None)
-        self.assertTrue(mock_tr.called)
-        # make sure the rollback is called on given stack
-        call_args, call_kwargs = mock_tr.call_args
-        called_stack = call_args[0]
-        self.assertEqual(self.stack.id, called_stack.id)
+        mock_tr.assert_called_once_with()
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
+    @mock.patch.object(stack.Stack, 'rollback')
     def test_rollback_is_not_triggered_on_rollback_disabled_stack(
             self, mock_tr, mock_cru, mock_crc, mock_pcr, mock_csc):
         self.stack.disable_rollback = True
@@ -295,7 +288,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                    self.is_update, None)
         self.assertFalse(mock_tr.called)
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
+    @mock.patch.object(stack.Stack, 'rollback')
     def test_rollback_not_re_triggered_for_a_rolling_back_stack(
             self, mock_tr, mock_cru, mock_crc, mock_pcr, mock_csc):
         self.stack.disable_rollback = False
@@ -435,23 +428,23 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, 'purge_db')
     def test_handle_failure(self, mock_purgedb, mock_cru, mock_crc, mock_pcr,
                             mock_csc):
-        self.cr._handle_failure(self.ctx, self.stack, 'dummy-reason')
+        self.stack.mark_failed('dummy-reason')
         mock_purgedb.assert_called_once_with()
         self.assertEqual('dummy-reason', self.stack.status_reason)
 
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
-    def test_handle_failure_rollback(self, mock_tr, mock_cru, mock_crc,
+    def test_handle_failure_rollback(self, mock_cru, mock_crc,
                                      mock_pcr, mock_csc):
+        mock_tr = self.stack.rollback = mock.Mock(return_value=None)
         self.stack.disable_rollback = False
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
-        self.cr._handle_failure(self.ctx, self.stack, 'dummy-reason')
-        mock_tr.assert_called_once_with(self.stack)
+        self.stack.mark_failed('dummy-reason')
+        mock_tr.assert_called_once_with()
 
     @mock.patch.object(stack.Stack, 'purge_db')
     @mock.patch.object(stack.Stack, 'state_set')
     @mock.patch.object(check_resource.CheckResource,
                        'retrigger_check_resource')
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
+    @mock.patch.object(stack.Stack, 'rollback')
     def test_handle_rsrc_failure_when_update_fails(
             self, mock_tr, mock_rcr, mock_ss, mock_pdb, mock_cru, mock_crc,
             mock_pcr, mock_csc):
@@ -469,7 +462,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, 'state_set')
     @mock.patch.object(check_resource.CheckResource,
                        'retrigger_check_resource')
-    @mock.patch.object(check_resource.CheckResource, '_trigger_rollback')
+    @mock.patch.object(stack.Stack, 'rollback')
     def test_handle_rsrc_failure_when_update_fails_different_traversal(
             self, mock_tr, mock_rcr, mock_ss, mock_pdb, mock_cru, mock_crc,
             mock_pcr, mock_csc):
@@ -492,22 +485,21 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(mock_pdb.called)
         self.assertFalse(mock_tr.called)
 
-    @mock.patch.object(check_resource.CheckResource, '_handle_failure')
-    def test_handle_stack_timeout(self, mock_hf, mock_cru, mock_crc, mock_pcr,
+    def test_handle_stack_timeout(self, mock_cru, mock_crc, mock_pcr,
                                   mock_csc):
+        mock_mf = self.stack.mark_failed = mock.Mock(return_value=True)
         self.cr._handle_stack_timeout(self.ctx, self.stack)
-        mock_hf.assert_called_once_with(self.ctx, self.stack, u'Timed out')
+        mock_mf.assert_called_once_with(u'Timed out')
 
-    @mock.patch.object(check_resource.CheckResource,
-                       '_handle_failure')
     def test_do_check_resource_marks_stack_as_failed_if_stack_timesout(
-            self, mock_hf, mock_cru, mock_crc, mock_pcr, mock_csc):
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
+        mock_mf = self.stack.mark_failed = mock.Mock(return_value=True)
         mock_cru.side_effect = scheduler.Timeout(None, 60)
         self.is_update = True
         self.cr._do_check_resource(self.ctx, self.stack.current_traversal,
                                    self.stack.t, {}, self.is_update,
                                    self.resource, self.stack, {})
-        mock_hf.assert_called_once_with(self.ctx, self.stack, u'Timed out')
+        mock_mf.assert_called_once_with(u'Timed out')
 
     @mock.patch.object(check_resource.CheckResource,
                        '_handle_stack_timeout')

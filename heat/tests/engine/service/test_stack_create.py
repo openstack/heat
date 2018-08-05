@@ -42,6 +42,7 @@ class StackCreateTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.thread_group_mgr = service.ThreadGroupManager()
+        cfg.CONF.set_override('convergence_engine', False)
 
     @mock.patch.object(threadgroup, 'ThreadGroup')
     @mock.patch.object(stack.Stack, 'validate')
@@ -53,7 +54,8 @@ class StackCreateTest(common.HeatTestCase):
         params = {'foo': 'bar'}
         template = '{ "Template": "data" }'
 
-        stk = tools.get_stack(stack_name, self.ctx)
+        stk = tools.get_stack(stack_name, self.ctx,
+                              convergence=cfg.CONF.convergence_engine)
 
         files = None
         if files_container:
