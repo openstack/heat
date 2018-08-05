@@ -1995,7 +1995,8 @@ class Resource(status.ResourceStatus):
             # so use the stored frozen_definition instead
             self.properties = self.frozen_definition().properties(
                 self.properties_schema, self.context)
-            self.translate_properties(self.properties)
+            self.translate_properties(self.properties,
+                                      ignore_resolve_error=True)
 
         with self._action_recorder(action):
             if self.abandon_in_progress:
