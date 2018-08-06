@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    A new ``OS::Neutron::TaaS::TapService`` resource is added to support a
+    Tap Service in the Neutron Tap-as-a-service plugin.
+  - |
+    A new ``OS::Neutron::TaaS::TapFlow`` resource is added to support a Tap
+    Flow in the Neutron Tap-as-a-service plugin.

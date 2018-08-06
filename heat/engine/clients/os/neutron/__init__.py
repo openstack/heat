@@ -199,6 +199,10 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             path = "/sfc/flow_classifiers"
         elif resource == 'port_chain':
             path = "/sfc/port_chains"
+        elif resource == 'tap_service':
+            path = "/taas/tap_services"
+        elif resource == 'tap_flow':
+            path = "/taas/tap_flows"
         return path
 
     def create_ext_resource(self, resource, props):
@@ -228,6 +232,13 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
         path = self._resolve_resource_path(resource)
         return self.client().show_ext(path + '/%s', resource_id
                                       ).get(resource)
+
+    def check_ext_resource_status(self, resource, resource_id):
+        ext_resource = self.show_ext_resource(resource, resource_id)
+        status = ext_resource['status']
+        if status == 'ERROR':
+            raise exception.ResourceInError(resource_status=status)
+        return status == 'ACTIVE'
 
     def resolve_ext_resource(self, resource, name_or_id):
         """Returns the id and validate neutron ext resource."""
