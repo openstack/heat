@@ -3672,7 +3672,7 @@ class ServersTest(common.HeatTestCase):
                                                          args='Update Image')
         self.patchobject(glance.GlanceClientPlugin,
                          'find_image_by_name_or_id',
-                         side_effect=[1, ex])
+                         side_effect=ex)
         update_props = self.server_props.copy()
         update_props['image'] = 'Update Image'
         update_template = server.t.freeze(properties=update_props)

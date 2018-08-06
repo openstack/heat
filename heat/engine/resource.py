@@ -1075,7 +1075,7 @@ class Resource(object):
         """Return specified rules for resource."""
 
     def translate_properties(self, properties,
-                             client_resolve=True):
+                             client_resolve=True, ignore_resolve_error=False):
         """Translates properties with resource specific rules.
 
         The properties parameter is a properties object and the
@@ -1085,7 +1085,7 @@ class Resource(object):
         rules = self.translation_rules(properties) or []
         for rule in rules:
             try:
-                rule.execute_rule(client_resolve)
+                rule.execute_rule(client_resolve, ignore_resolve_error)
             except exception.ResourcePropertyConflict as ex:
                 path = [self.stack.t.RESOURCES, self.name,
                         self.stack.t.get_section_name(
@@ -1265,7 +1265,7 @@ class Resource(object):
         after_props = after.properties(self.properties_schema,
                                        self.context)
         self.translate_properties(after_props)
-        self.translate_properties(before_props)
+        self.translate_properties(before_props, ignore_resolve_error=True)
 
         if cfg.CONF.observe_on_update and before_props:
             if not self.resource_id:
