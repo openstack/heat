@@ -220,7 +220,10 @@ class StackResourceTest(StackResourceBaseTest):
         self.parent_resource.resource_id = 'fake_id'
 
         self.parent_resource.prepare_abandon()
-        self.parent_resource.delete_nested()
+        status = ('CREATE', 'COMPLETE', '', 'now_time')
+        with mock.patch.object(stack_object.Stack, 'get_status',
+                               return_value=status):
+            self.parent_resource.delete_nested()
 
         rpcc.return_value.abandon_stack.assert_called_once_with(
             self.parent_resource.context, mock.ANY)
@@ -523,13 +526,16 @@ class StackResourceTest(StackResourceBaseTest):
         def exc_filter(*args):
             try:
                 yield
-            except exception.NotFound:
+            except exception.EntityNotFound:
                 pass
 
         rpcc.return_value.ignore_error_by_name.side_effect = exc_filter
         rpcc.return_value.delete_stack = mock.Mock(
-            side_effect=exception.NotFound())
-        self.assertIsNone(self.parent_resource.delete_nested())
+            side_effect=exception.EntityNotFound('Stack', 'nested'))
+        status = ('CREATE', 'COMPLETE', '', 'now_time')
+        with mock.patch.object(stack_object.Stack, 'get_status',
+                               return_value=status):
+            self.assertIsNone(self.parent_resource.delete_nested())
         rpcc.return_value.delete_stack.assert_called_once_with(
             self.parent_resource.context, mock.ANY, cast=False)
 

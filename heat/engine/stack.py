@@ -1927,8 +1927,8 @@ class Stack(collections.Mapping):
 
         stack_status = self.COMPLETE
         reason = 'Stack %s completed successfully' % action
-        self.state_set(action, self.IN_PROGRESS, 'Stack %s started' %
-                       action)
+        self.state_set(action, self.IN_PROGRESS, 'Stack %s started at %s' %
+                       (action, oslo_timeutils.utcnow().isoformat()))
         if notify is not None:
             notify.signal()
 
