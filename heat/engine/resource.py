@@ -837,7 +837,10 @@ class Resource(object):
         handler = getattr(self, 'handle_%s' % handler_action, None)
 
         if callable(handler):
-            handler_data = handler(*args)
+            try:
+                handler_data = handler(*args)
+            except StopIteration:
+                raise RuntimeError('Plugin method raised StopIteration')
             yield
             if callable(check):
                 try:
@@ -851,6 +854,8 @@ class Resource(object):
                                 break
                             else:
                                 yield
+                except StopIteration:
+                    raise RuntimeError('Plugin method raised StopIteration')
                 except Exception:
                     raise
                 except:  # noqa
