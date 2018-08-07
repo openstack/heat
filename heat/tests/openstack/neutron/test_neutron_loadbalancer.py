@@ -368,6 +368,7 @@ class PoolTest(common.HeatTestCase):
         self.mock_create_vip.return_value = {'vip': {'id': 'xyz'}}
         self.mock_show.side_effect = [
             {'pool': {'status': 'PENDING_CREATE'}},
+            {'pool': {'status': 'ACTIVE'}},
             {'pool': {'status': 'ACTIVE'}}]
         self.mock_show_vip.side_effect = [
             {'vip': {'status': 'PENDING_CREATE'}},

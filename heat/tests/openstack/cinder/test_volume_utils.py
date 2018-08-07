@@ -61,7 +61,8 @@ class VolumeTestCase(common.HeatTestCase):
         result = [fva]
         for m in extra_create_server_volume_mocks:
             result.append(m)
-        self.fc.volumes.create_server_volume.side_effect = result
+        prev = self.fc.volumes.create_server_volume.side_effect or []
+        self.fc.volumes.create_server_volume.side_effect = list(prev) + result
         fv_ready = FakeVolume(final_status, id=fva.id)
         return fv_ready
 
