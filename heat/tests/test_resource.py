@@ -1056,10 +1056,8 @@ class ResourceTest(common.HeatTestCase):
                                             {'Foo': 'abc'})
         res = generic_rsrc.ResourceWithProps('test_resource', tmpl, self.stack)
 
-        generic_rsrc.ResourceWithProps.handle_create = mock.Mock()
-        generic_rsrc.ResourceWithProps.handle_delete = mock.Mock()
         m_v.side_effect = [True, exception.StackValidationFailed()]
-        generic_rsrc.ResourceWithProps.handle_create.side_effect = [
+        create_excs = [
             exception.ResourceInError(resource_name='test_resource',
                                       resource_status='ERROR',
                                       resource_type='GenericResourceType',
@@ -1072,8 +1070,11 @@ class ResourceTest(common.HeatTestCase):
                                       status_reason='just because'),
             None
         ]
+        self.patchobject(generic_rsrc.ResourceWithProps, 'handle_create',
+                         side_effect=create_excs)
 
-        generic_rsrc.ResourceWithProps.handle_delete.return_value = None
+        self.patchobject(generic_rsrc.ResourceWithProps, 'handle_delete',
+                         return_value=None)
         m_re.return_value = 0.01
         scheduler.TaskRunner(res.create)()
         self.assertEqual(2, m_re.call_count)
