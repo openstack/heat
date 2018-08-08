@@ -529,11 +529,13 @@ class Port(neutron.NeutronResource):
         if self.resource_id is None:
             return
         # store port fixed_ips for restoring after failed update
-        fixed_ips = self._show_resource().get('fixed_ips', [])
-        self.data_set('port_fip', jsonutils.dumps(fixed_ips))
-        # reset fixed_ips for this port by setting fixed_ips to []
-        props = {'fixed_ips': []}
-        self.client().update_port(self.resource_id, {'port': props})
+        # Ignore if the port does not exist in neutron (deleted)
+        with self.client_plugin().ignore_not_found:
+            fixed_ips = self._show_resource().get('fixed_ips', [])
+            self.data_set('port_fip', jsonutils.dumps(fixed_ips))
+            # reset fixed_ips for this port by setting fixed_ips to []
+            props = {'fixed_ips': []}
+            self.client().update_port(self.resource_id, {'port': props})
 
     def restore_prev_rsrc(self, convergence=False):
         # In case of convergence, during rollback, the previous rsrc is
