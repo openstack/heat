@@ -848,9 +848,6 @@ class Resource(status.ResourceStatus):
     def trove(self):
         return self.client('trove')
 
-    def ceilometer(self):
-        return self.client('ceilometer')
-
     def heat(self):
         return self.client('heat')
 
