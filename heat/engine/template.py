@@ -366,7 +366,8 @@ def parse(functions, stack, snippet, path='', template=None):
             if Func is not None:
                 try:
                     path = '.'.join([path, fn_name])
-                    if issubclass(Func, function.Macro):
+                    if (isinstance(Func, type) and
+                            issubclass(Func, function.Macro)):
                         return Func(stack, fn_name, args,
                                     functools.partial(recurse, path=path),
                                     template)
