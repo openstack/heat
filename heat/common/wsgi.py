@@ -339,6 +339,10 @@ class Server(object):
         signal.signal(signal.SIGTERM, self.kill_children)
         signal.signal(signal.SIGINT, self.kill_children)
         signal.signal(signal.SIGHUP, self.hup)
+
+        rfd, self.writepipe = os.pipe()
+        self.readpipe = eventlet.greenio.GreenPipe(rfd, 'r')
+
         while len(self.children) < childs_num:
             self.run_child()
 
@@ -537,6 +541,26 @@ class Server(object):
             LOG.info('Started child %s', pid)
             self.children.add(pid)
 
+    def _pipe_watcher(self):
+        def _on_timeout_exit(*args):
+            LOG.info('Graceful shutdown timeout exceeded, '
+                     'instantaneous exiting')
+            os._exit(1)
+
+        # This will block until the write end is closed when the parent
+        # dies unexpectedly
+
+        self.readpipe.read(1)
+        LOG.info('Parent process has died unexpectedly, exiting')
+
+        # allow up to 1 second for sys.exit to gracefully shutdown
+        signal.signal(signal.SIGALRM, _on_timeout_exit)
+        signal.alarm(1)
+        # do the same as child_hup
+        eventlet.wsgi.is_accepting = False
+        self.sock.close()
+        sys.exit(1)
+
     def run_server(self):
         """Run a WSGI server."""
         eventlet.wsgi.HttpProtocol.default_request_version = "HTTP/1.0"
@@ -544,6 +568,12 @@ class Server(object):
         eventlet.patcher.monkey_patch(all=False, socket=True)
         self.pool = eventlet.GreenPool(size=self.threads)
         socket_timeout = cfg.CONF.eventlet_opts.client_socket_timeout or None
+
+        # Close write to ensure only parent has it open
+        os.close(self.writepipe)
+        # Create greenthread to watch for parent to close pipe
+        eventlet.spawn_n(self._pipe_watcher)
+
         try:
             eventlet.wsgi.server(
                 self.sock,
