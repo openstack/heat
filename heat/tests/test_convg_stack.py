@@ -587,38 +587,31 @@ class TestConvgStackStateSet(common.HeatTestCase):
 
     def test_state_set_stack_suspend(self, mock_ps):
         mock_ps.return_value = 'updated'
-        ret_val = self.stack.state_set(
-            self.stack.SUSPEND, self.stack.IN_PROGRESS, 'Suspend started')
+        self.stack.state_set(self.stack.SUSPEND, self.stack.IN_PROGRESS,
+                             'Suspend started')
         self.assertTrue(mock_ps.called)
-        # Ensure that state_set returns None for other actions in convergence
-        self.assertIsNone(ret_val)
         mock_ps.reset_mock()
-        ret_val = self.stack.state_set(
-            self.stack.SUSPEND, self.stack.COMPLETE, 'Suspend complete')
+        self.stack.state_set(self.stack.SUSPEND, self.stack.COMPLETE,
+                             'Suspend complete')
         self.assertFalse(mock_ps.called)
-        self.assertIsNone(ret_val)
 
     def test_state_set_stack_resume(self, mock_ps):
-        ret_val = self.stack.state_set(
-            self.stack.RESUME, self.stack.IN_PROGRESS, 'Resume started')
+        self.stack.state_set(self.stack.RESUME, self.stack.IN_PROGRESS,
+                             'Resume started')
         self.assertTrue(mock_ps.called)
-        self.assertIsNone(ret_val)
         mock_ps.reset_mock()
-        ret_val = self.stack.state_set(self.stack.RESUME, self.stack.COMPLETE,
-                                       'Resume complete')
+        self.stack.state_set(self.stack.RESUME, self.stack.COMPLETE,
+                             'Resume complete')
         self.assertFalse(mock_ps.called)
-        self.assertIsNone(ret_val)
 
     def test_state_set_stack_snapshot(self, mock_ps):
-        ret_val = self.stack.state_set(
-            self.stack.SNAPSHOT, self.stack.IN_PROGRESS, 'Snapshot started')
+        self.stack.state_set(self.stack.SNAPSHOT, self.stack.IN_PROGRESS,
+                             'Snapshot started')
         self.assertTrue(mock_ps.called)
-        self.assertIsNone(ret_val)
         mock_ps.reset_mock()
-        ret_val = self.stack.state_set(
-            self.stack.SNAPSHOT, self.stack.COMPLETE, 'Snapshot complete')
+        self.stack.state_set(self.stack.SNAPSHOT, self.stack.COMPLETE,
+                             'Snapshot complete')
         self.assertFalse(mock_ps.called)
-        self.assertIsNone(ret_val)
 
     def test_state_set_stack_restore(self, mock_ps):
         mock_ps.return_value = 'updated'
