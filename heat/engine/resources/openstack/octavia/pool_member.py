@@ -130,29 +130,24 @@ class PoolMember(octavia_base.OctaviaBase):
         return props
 
     def _resource_create(self, properties):
+        pool = self.properties[self.POOL]
         return self.client().member_create(
-            self._get_pool_prop(), json={'member': properties})['member']
+            pool, json={'member': properties})['member']
 
     def _resource_update(self, prop_diff):
-        self.client().member_set(self._get_pool_prop(),
+        pool = self.properties[self.POOL]
+        self.client().member_set(pool,
                                  self.resource_id,
                                  json={'member': prop_diff})
 
-    def _get_pool_prop(self):
-        try:
-            return self.properties[self.POOL]
-        except ValueError:
-            if self.client_plugin().get_pool(self.properties.data[self.POOL]):
-                raise
-
     def _resource_delete(self):
-            pool = self._get_pool_prop()
-            if pool:
-                self.client().member_delete(pool, self.resource_id)
+        pool = self.properties[self.POOL]
+        if pool:
+            self.client().member_delete(pool, self.resource_id)
 
     def _show_resource(self):
-        return self.client().member_show(
-            self._get_pool_prop(), self.resource_id)
+        pool = self.properties[self.POOL]
+        return self.client().member_show(pool, self.resource_id)
 
 
 def resource_mapping():
