@@ -15,8 +15,11 @@ import collections
 import datetime
 import functools
 import itertools
+import os
 import pydoc
+import signal
 import socket
+import sys
 
 import eventlet
 from oslo_config import cfg
@@ -174,6 +177,10 @@ class ThreadGroupManager(object):
         :param kwargs: Keyword-args to be passed to func
 
         """
+        def _force_exit(*args):
+            LOG.info('Graceful exit timeout exceeded, forcing exit.')
+            os._exit(-1)
+
         def release(gt):
             """Callback function that will be passed to GreenThread.link().
 
@@ -188,7 +195,14 @@ class ThreadGroupManager(object):
                     assert not notify.signalled()
                     notify.signal()
             else:
-                lock.release()
+                try:
+                    lock.release()
+                except Exception:
+                    # allow up to 5 seconds for sys.exit to gracefully shutdown
+                    signal.signal(signal.SIGALRM, _force_exit)
+                    signal.alarm(5)
+                    LOG.exception("FATAL. Failed stack_lock release. Exiting")
+                    sys.exit(-1)
 
         # Link to self to allow the stack to run tasks
         stack.thread_group_mgr = self
