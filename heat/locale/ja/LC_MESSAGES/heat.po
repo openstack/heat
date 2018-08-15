@@ -8,20 +8,21 @@
 # Tomoyuki KATO <tomo@dream.daynight.jp>, 2013
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 # Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>, 2017. #zanata
+# Yuko Katabami <yukokatabami@gmail.com>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-02-17 05:29+0000\n"
+"POT-Creation-Date: 2018-08-14 16:18+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2017-04-28 06:33+0000\n"
-"Last-Translator: Yuko Fukuda <fukuda.yuko@jp.fujitsu.com>\n"
+"PO-Revision-Date: 2018-08-09 01:58+0000\n"
+"Last-Translator: Yuko Katabami <yukokatabami@gmail.com>\n"
 "Language: ja\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "Generated-By: Babel 2.0\n"
-"X-Generator: Zanata 3.9.6\n"
+"X-Generator: Zanata 4.3.3\n"
 "Language-Team: Japanese\n"
 
 #, python-format
@@ -262,6 +263,12 @@ msgid "%s Value Name must be a string"
 msgstr "%s 値名は文字列でなければなりません"
 
 #, python-format
+msgid "%s flag only supported in stack update (or update preview) request."
+msgstr ""
+"%s フラグは、スタックの更新 (または更新プレビュー) の要求でのみサポートされて"
+"います。"
+
+#, python-format
 msgid "%s is not a valid job location."
 msgstr "%s は有効なジョブロケーションではありません。"
 
@@ -336,17 +343,6 @@ msgid ""
 msgstr ""
 "システムの /dev/device_name でボリュームが接続される場合のデバイス名。例えば "
 "vdb"
-
-msgid ""
-"A dict of all network addresses with corresponding port_id. Each network "
-"will have two keys in dict, they are network name and network id. The port "
-"ID may be obtained through the following expression: \"{get_attr: [<server>, "
-"addresses, <network name_or_id>, 0, port]}\"."
-msgstr ""
-"対応する port_id を持つすべてのネットワークアドレスのディクショナリー。各ネッ"
-"トワークはディクショナリー内に 2 つのキー (ネットワーク名とネットワーク ID) "
-"を持ちます。ポート ID は以下の式で取得できます: \"{get_attr: [<server>, "
-"addresses, <network name_or_id>, 0, port]}\""
 
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
@@ -2635,7 +2631,7 @@ msgstr ""
 "外部リソース %(resource_type)s に対して不正な依存関係があります: "
 "%(external_id)s"
 
-#, fuzzy, python-format
+#, python-format
 msgid "Invalid filter parameters %s"
 msgstr "無効なフィルターパラメーター %s"
 
@@ -4102,6 +4098,9 @@ msgstr "指定されたインスタンスのプライベート IP アドレス�
 
 msgid "Project ID"
 msgstr "プロジェクト ID"
+
+msgid "Project ID to purge deleted stacks."
+msgstr "削除済みスタックを完全削除するためのプロジェクト ID"
 
 msgid ""
 "Projects to add volume type access to. NOTE: This property is only supported "

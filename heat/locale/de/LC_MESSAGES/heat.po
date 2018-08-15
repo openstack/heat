@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-03-12 03:47+0000\n"
+"POT-Creation-Date: 2018-08-14 16:18+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -532,17 +532,6 @@ msgstr ""
 "hat zwei Schlüssel in dict, sie sind Netzwerkname und Netzwerk-ID. Die Port-"
 "ID kann durch den folgenden Ausdruck erhalten werden: \"{get_attr: "
 "[<container>, addresss, <network name_or_id> , 0, port]} \"."
-
-msgid ""
-"A dict of all network addresses with corresponding port_id. Each network "
-"will have two keys in dict, they are network name and network id. The port "
-"ID may be obtained through the following expression: \"{get_attr: [<server>, "
-"addresses, <network name_or_id>, 0, port]}\"."
-msgstr ""
-"Ein Diktat aller Netzwerkadressen mit entsprechender Port-ID. Jedes Netzwerk "
-"hat zwei Schlüssel in dict, sie sind Netzwerkname und Netzwerk-ID. Die Port-"
-"ID kann durch den folgenden Ausdruck erhalten werden: \"{get_attr: "
-"[<server>, addresses, <network name_or_id> , 0, port]} \"."
 
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
@@ -1613,34 +1602,6 @@ msgstr "Kann %s nicht anhalten, resource_id nicht gesetzt"
 #, python-format
 msgid "Cannot suspend %s, stack not created"
 msgstr "Kann %s nicht anhalten, Stapel nicht erstellt"
-
-#, python-format
-msgid "Cannot use \"%(prop)s\" properties - nova does not support: %(error)s"
-msgstr ""
-"Eigenschaften von \"%(prop)s\" können nicht verwendet werden - nova "
-"unterstützt nicht: %(error)s"
-
-#, python-format
-msgid ""
-"Cannot use \"%(prop)s\" property - compute service does not support the "
-"required api microversion: %(ex)s"
-msgstr ""
-"Die Eigenschaft \"%(prop)s\" kann nicht verwendet werden - der Compute "
-"Service unterstützt nicht die erforderliche API-Mikroversion: %(ex)s"
-
-#, python-format
-msgid ""
-"Cannot use \"%(tag)s\" property in networks - nova does not support it: "
-"%(error)s"
-msgstr ""
-"Die Eigenschaft \"%(tag)s\" kann nicht in Netzwerken verwendet werden - nova "
-"unterstützt sie nicht: %(error)s"
-
-#, python-format
-msgid "Cannot use \"tags\" property - nova does not support it: %s"
-msgstr ""
-"Eigenschaft \"Tags\" kann nicht verwendet werden - nova unterstützt sie "
-"nicht: %s"
 
 msgid "Captured stderr from the configuration execution."
 msgstr "Eingefangener Stderr aus der Konfigurationsausführung."
@@ -8759,14 +8720,6 @@ msgstr "Der angegebene Verweis \"%(resource)s\" (in %(key)s) ist falsch."
 
 msgid "The specs key and value pairs of the QoS."
 msgstr "Die Schlüssel- und Wertepaare der QoS."
-
-msgid ""
-"The stack or some of its nested stacks are in progress. Note, that all the "
-"stacks should be in COMPLETE state in order to be migrated."
-msgstr ""
-"Der Stapel oder einige seiner verschachtelten Stapel sind in Bearbeitung. "
-"Beachten Sie, dass alle Stapel im Status COMPLETE sein müssen, um migriert "
-"zu werden."
 
 msgid "The start and end addresses for the allocation pools."
 msgstr "Die Start- und Endadressen für die Zuordnungspools."
