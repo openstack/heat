@@ -37,8 +37,8 @@ class Listener(octavia_base.OctaviaBase):
         'sni_container_refs', 'connection_limit', 'tenant_id'
     )
 
-    SUPPORTED_PROTOCOLS = (TCP, HTTP, HTTPS, TERMINATED_HTTPS, PROXY) = (
-        'TCP', 'HTTP', 'HTTPS', 'TERMINATED_HTTPS', 'PROXY')
+    SUPPORTED_PROTOCOLS = (TCP, HTTP, HTTPS, TERMINATED_HTTPS, PROXY, UDP) = (
+        'TCP', 'HTTP', 'HTTPS', 'TERMINATED_HTTPS', 'PROXY', 'UDP')
 
     ATTRIBUTES = (
         LOADBALANCERS_ATTR, DEFAULT_POOL_ID_ATTR
