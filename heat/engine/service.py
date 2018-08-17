@@ -666,11 +666,13 @@ class EngineService(service.ServiceBase):
         if stack_object.Stack.get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
 
-        tenant_limit = cfg.CONF.max_stacks_per_tenant
-        if stack_object.Stack.count_all(cnxt) >= tenant_limit:
-            message = _("You have reached the maximum stacks per tenant, "
-                        "%d. Please delete some stacks.") % tenant_limit
-            raise exception.RequestLimitExceeded(message=message)
+        # Do not stack limit check for admin since admin can see all stacks.
+        if not cnxt.is_admin:
+            tenant_limit = cfg.CONF.max_stacks_per_tenant
+            if stack_object.Stack.count_all(cnxt) >= tenant_limit:
+                message = _("You have reached the maximum stacks per tenant, "
+                            "%d. Please delete some stacks.") % tenant_limit
+                raise exception.RequestLimitExceeded(message=message)
         self._validate_template(cnxt, parsed_template)
 
     def _validate_template(self, cnxt, parsed_template):
