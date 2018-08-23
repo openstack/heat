@@ -675,7 +675,7 @@ resources:
                           expected_status='UPDATE_FAILED')
         self._stack_delete(stack_identifier)
 
-    def test_stack_update_with_conditions(self):
+    def _test_conditional(self, test3_resource):
         """Update manages new conditions added.
 
         When a new resource is added during updates, the stacks handles the new
@@ -687,12 +687,7 @@ resources:
 
         updated_template = copy.deepcopy(test_template_two_resource)
         updated_template['conditions'] = {'cond1': True}
-        updated_template['resources']['test3'] = {
-            'type': 'OS::Heat::TestResource',
-            'properties': {
-                'value': {'if': ['cond1', 'val3', 'val4']}
-            }
-        }
+        updated_template['resources']['test3'] = test3_resource
         test2_props = updated_template['resources']['test2']['properties']
         test2_props['action_wait_secs'] = {'create': 30}
 
@@ -708,3 +703,22 @@ resources:
             return True
 
         self.assertTrue(test.call_until_true(20, 2, check_resources))
+
+    def test_stack_update_with_if_conditions(self):
+        test3 = {
+            'type': 'OS::Heat::TestResource',
+            'properties': {
+                'value': {'if': ['cond1', 'val3', 'val4']}
+            }
+        }
+        self._test_conditional(test3)
+
+    def test_stack_update_with_conditions(self):
+        test3 = {
+            'type': 'OS::Heat::TestResource',
+            'condition': 'cond1',
+            'properties': {
+                'value': 'foo',
+            }
+        }
+        self._test_conditional(test3)
