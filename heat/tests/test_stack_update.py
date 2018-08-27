@@ -664,7 +664,7 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create = self.patchobject(generic_rsrc.ResourceWithResourceID,
                                        'handle_create', side_effect=Exception)
         mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
-                                   'mox_resource_id',
+                                   'mock_resource_id',
                                    return_value=None)
 
         self.stack.update(updated_stack)
@@ -718,7 +718,7 @@ class StackUpdateTest(common.HeatTestCase):
                                        'handle_create',
                                        side_effect=[None, Exception])
         mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
-                                   'mox_resource_id', return_value=None)
+                                   'mock_resource_id', return_value=None)
 
         self.stack.update(updated_stack)
         # set resource_id for AResource because handle_create() is overwritten
@@ -772,7 +772,7 @@ class StackUpdateTest(common.HeatTestCase):
         mock_create = self.patchobject(generic_rsrc.ResourceWithResourceID,
                                        'handle_create', side_effect=Exception)
         mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
-                                   'mox_resource_id', return_value=None)
+                                   'mock_resource_id', return_value=None)
 
         self.stack.update(updated_stack)
         # Override stack status and resources status for emulating
@@ -827,7 +827,7 @@ class StackUpdateTest(common.HeatTestCase):
                                        'handle_create',
                                        side_effect=[None, Exception])
         mock_id = self.patchobject(generic_rsrc.ResourceWithResourceID,
-                                   'mox_resource_id', return_value=None)
+                                   'mock_resource_id', return_value=None)
 
         self.stack.update(updated_stack)
         # set resource_id for AResource because handle_create() is mocked

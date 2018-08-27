@@ -184,9 +184,9 @@ class ResourceWithResourceID(GenericResource):
         self.resource_id_set(self.properties.get('ID'))
 
     def handle_delete(self):
-        self.mox_resource_id(self.resource_id)
+        self.mock_resource_id(self.resource_id)
 
-    def mox_resource_id(self, resource_id):
+    def mock_resource_id(self, resource_id):
         pass
 
 
