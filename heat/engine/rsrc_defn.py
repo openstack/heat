@@ -187,6 +187,10 @@ class ResourceDefinition(object):
 
         This returns a new resource definition, with all of the functions
         parsed in the context of the specified stack and template.
+
+        Any conditions are *not* included - it is assumed that the resource is
+        being interpreted in any context that it should be enabled in that
+        context.
         """
         assert not getattr(self, '_frozen', False
                            ), "Cannot re-parse a frozen definition"
@@ -202,7 +206,7 @@ class ResourceDefinition(object):
             deletion_policy=reparse_snippet(self._deletion_policy),
             update_policy=reparse_snippet(self._update_policy),
             external_id=reparse_snippet(self._external_id),
-            condition=self._condition)
+            condition=None)
 
     def validate(self):
         """Validate intrinsic functions that appear in the definition."""
