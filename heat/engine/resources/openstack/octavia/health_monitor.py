@@ -106,7 +106,8 @@ class HealthMonitor(octavia_base.OctaviaBase):
             _('One of predefined health monitor types.'),
             required=True,
             constraints=[
-                constraints.AllowedValues(['PING', 'TCP', 'HTTP', 'HTTPS']),
+                constraints.AllowedValues(['PING', 'TCP', 'HTTP', 'HTTPS',
+                                           'UDP-CONNECT']),
             ]
         ),
         URL_PATH: properties.Schema(
