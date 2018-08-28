@@ -112,6 +112,7 @@
       - api-ref-jobs
       - install-guide-jobs
       - release-openstack-server
+      - periodic-stable-jobs
     check:
       queue: heat
       jobs:
