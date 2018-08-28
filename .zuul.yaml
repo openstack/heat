@@ -76,6 +76,14 @@
       use_identity_v3_only: 1
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - periodic-stable-jobs
+      - check-requirements
+      - release-notes-jobs
+      - install-guide-jobs
     check:
       jobs:
         - heat-functional-orig-mysql-lbaasv2
@@ -85,8 +93,12 @@
         - heat-functional-convg-mysql-lbaasv2-py35
         - heat-functional-convg-mysql-lbaasv2-identity-v3-only
     gate:
+      queue: heat
       jobs:
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
+    post:
+      jobs:
+        - openstack-tox-cover
