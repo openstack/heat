@@ -111,6 +111,14 @@
       topology: multinode
 
 - project:
+    templates:
+      - openstack-python-jobs
+      - openstack-python35-jobs
+      - publish-openstack-sphinx-docs
+      - periodic-stable-jobs
+      - check-requirements
+      - release-notes-jobs
+      - install-guide-jobs
     check:
       jobs:
         - grenade-heat
@@ -122,6 +130,7 @@
         - heat-functional-convg-mysql-lbaasv2-py35
         - heat-functional-convg-mysql-lbaasv2-identity-v3-only
     gate:
+      queue: heat
       jobs:
         - grenade-heat
         - heat-functional-orig-mysql-lbaasv2
@@ -133,3 +142,6 @@
         - tripleo-ci-centos-7-scenario002-multinode-oooq
         - tripleo-ci-centos-7-scenario002-multinode-oooq-container
 
+    post:
+      jobs:
+        - openstack-tox-cover
