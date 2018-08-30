@@ -443,12 +443,16 @@ class StackResource(resource.Resource):
         if status == self.IN_PROGRESS:
             return False
         elif status == self.COMPLETE:
-            ret = stack_lock.StackLock.get_engine_id(
-                self.context, self.resource_id) is None
-            if ret:
+            # For operations where we do not take a resource lock
+            # (i.e. legacy-style), check that the stack lock has been
+            # released before reporting completeness.
+            done = (self._should_lock_on_action(expected_action) or
+                    stack_lock.StackLock.get_engine_id(
+                self.context, self.resource_id) is None)
+            if done:
                 # Reset nested, to indicate we changed status
                 self._nested = None
-            return ret
+            return done
         elif status == self.FAILED:
             raise exception.ResourceFailure(status_reason, self,
                                             action=action)
