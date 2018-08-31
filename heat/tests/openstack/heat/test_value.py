@@ -226,7 +226,7 @@ class TestValueUpdate(TestValue):
             param2=True, param_type2="boolean")),
     ]
 
-    def test_value(self):
+    def test_value_update(self):
         ts1, tl1 = self.get_strict_and_loose_templates(self.param_type1)
         ts2, tl2 = self.get_strict_and_loose_templates(self.param_type2)
 
@@ -244,7 +244,7 @@ class TestValueUpdate(TestValue):
             else:
                 # starting with param2, updating to param1
                 p2, p1, e2, e1 = self.param1, self.param2, env1, env2
-            stack = self.create_stack(t_initial, env=e1)
+            stack = self.create_stack(copy.deepcopy(t_initial), env=e1)
             self.assertEqual(p1, stack['my_value2'].FnGetAtt('value'))
             res1_id = stack['my_value'].id
             res2_id = stack['my_value2'].id
@@ -252,7 +252,7 @@ class TestValueUpdate(TestValue):
 
             updated_stack = parser.Stack(
                 stack.context, 'updated_stack',
-                template.Template(t_updated, env=e2))
+                template.Template(copy.deepcopy(t_updated), env=e2))
             updated_stack.validate()
             stack.update(updated_stack)
             self.assertEqual(p2, stack['my_value2'].FnGetAtt('value'))

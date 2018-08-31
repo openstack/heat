@@ -184,6 +184,8 @@ class StackUpdate(object):
                               res_name)
                     self.previous_stack.t.add_resource(new_res.t)
                     self.previous_stack.t.store(self.previous_stack.context)
+                    self.existing_stack.t.add_resource(new_res.t)
+                    self.existing_stack.t.store(self.existing_stack.context)
 
                     LOG.info("Resource %(res_name)s for stack "
                              "%(stack_name)s updated",

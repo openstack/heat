@@ -722,3 +722,39 @@ resources:
             }
         }
         self._test_conditional(test3)
+
+    def test_inplace_update_old_ref_deleted_failed_stack(self):
+        template = '''
+heat_template_version: pike
+resources:
+  test1:
+    type: OS::Heat::TestResource
+    properties:
+      value: test
+  test2:
+    type: OS::Heat::TestResource
+    properties:
+      value: {get_attr: [test1, output]}
+  test3:
+    type: OS::Heat::TestResource
+    properties:
+      value: test3
+      fail: false
+      action_wait_secs:
+        update: 5
+'''
+        stack_identifier = self.stack_create(
+            template=template)
+
+        _template = template.replace('test1:',
+                                     'test-1:').replace('fail: false',
+                                                        'fail: true')
+        updated_template = _template.replace(
+            '{get_attr: [test1',
+            '{get_attr: [test-1').replace('value: test3',
+                                          'value: test-3')
+        self.update_stack(stack_identifier,
+                          template=updated_template,
+                          expected_status='UPDATE_FAILED')
+        self.update_stack(stack_identifier, template=template,
+                          expected_status='UPDATE_COMPLETE')
