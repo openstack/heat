@@ -61,12 +61,12 @@ https://review.openstack.org/#/c/279450/ . In this patch was executed scenario
 already existing in Rally ``HeatStacks.create_and_delete_stack``.
 During executing this scenario Rally creates and then, when stack is created,
 delete Heat stack. All existing scenarios can be found here:
-https://github.com/openstack/rally/blob/master/rally/plugins/openstack/scenarios/heat/stacks.py
+https://github.com/openstack/rally-openstack/blob/master/rally_openstack/scenarios/heat/stacks.py
 
 Mentioned scenario uses Heat template as a parameter for task. The template
 path should be mentioned for argument ``template_path``. It can be one of Heat
 templates presented in Rally repository
-(https://github.com/openstack/rally/tree/master/samples/tasks/scenarios/heat/templates)
+(https://github.com/openstack/rally-openstack/tree/master/samples/tasks/scenarios/heat/templates)
 or new one, like it was done for mentioned patch. New added template should be
 placed in ``rally-scenarios/extra/`` directory.
 
