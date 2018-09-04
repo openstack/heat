@@ -226,14 +226,13 @@ class VolumeTest(vt_base.VolumeTestCase):
 
         # delete script
         fva = vt_base.FakeVolume('in-use')
-        self.fc.volumes.get_server_volume.return_value = fva
         self.cinder_fc.volumes.get.side_effect = [
             fva, vt_base.FakeVolume('detaching', id=fva.id),
             vt_base.FakeVolume('available', id=fva.id)
         ]
         self.fc.volumes.delete_server_volume.return_value = None
         self.fc.volumes.get_server_volume.side_effect = [
-            fva, fakes_nova.fake_exception]
+            fva, fva, fakes_nova.fake_exception()]
 
         scheduler.TaskRunner(rsrc.delete)()
         self.fc.volumes.get_server_volume.assert_called_with(u'WikiDatabase',
@@ -261,7 +260,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         # delete script
         fva = vt_base.FakeVolume('in-use')
         self.fc.volumes.get_server_volume.side_effect = [
-            fva, fva, fakes_nova.fake_exception]
+            fva, fva, fakes_nova.fake_exception()]
         self.cinder_fc.volumes.get.side_effect = [
             fva, vt_base.FakeVolume('available', id=fva.id)]
 
@@ -322,8 +321,8 @@ class VolumeTest(vt_base.VolumeTestCase):
         rsrc = self.create_attachment(self.t, stack, 'MountPoint')
 
         # delete script
-        self.cinder_fc.volumes.get.return_value = fva
-        exc = fakes_nova.fake_exception
+        self.cinder_fc.volumes.get.side_effect = [fva]
+        exc = fakes_nova.fake_exception()
         self.fc.volumes.get_server_volume.side_effect = exc
 
         scheduler.TaskRunner(rsrc.delete)()
@@ -348,7 +347,7 @@ class VolumeTest(vt_base.VolumeTestCase):
 
         # delete script
         self.fc.volumes.get_server_volume.side_effect = [
-            fva, fva, fakes_nova.fake_exception]
+            fva, fva, fakes_nova.fake_exception()]
         self.cinder_fc.volumes.get.side_effect = [
             fva, vt_base.FakeVolume('in-use', id=fva.id),
             vt_base.FakeVolume('detaching', id=fva.id),
@@ -542,6 +541,11 @@ class VolumeTest(vt_base.VolumeTestCase):
 
         rsrc = self.create_volume(self.t, stack, 'DataVolume')
 
+        self.cinder_fc.volumes.get.side_effect = [
+            fv,
+            vt_base.FakeVolume('available'),
+            cinder_exp.NotFound('Not found')
+        ]
         scheduler.TaskRunner(rsrc.destroy)()
 
         self.m_backups.create.assert_called_once_with(fv.id)
@@ -594,6 +598,11 @@ class VolumeTest(vt_base.VolumeTestCase):
         ex = self.assertRaises(exception.ResourceFailure, create)
         self.assertIn('Went to status error due to "Unknown"',
                       six.text_type(ex))
+
+        self.cinder_fc.volumes.get.side_effect = [
+            fva,
+            cinder_exp.NotFound('Not found')
+        ]
 
         scheduler.TaskRunner(rsrc.destroy)()
 

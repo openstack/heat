@@ -95,7 +95,7 @@ class VPCTestBase(common.HeatTestCase):
                 "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
                 "id": "aaaa"
             }}]
-        for i in range(3):
+        for i in range(7):
             show_network_returns.append(
                 {"network": {
                     "status": "ACTIVE",
@@ -355,7 +355,7 @@ Resources:
 
         self.mockclient.show_network.assert_called_with('aaaa')
         self.mockclient.list_routers.assert_called_with(name=self.vpc_name)
-        self.assertEqual(2, self.mockclient.list_routers.call_count)
+        self.assertEqual(5, self.mockclient.list_routers.call_count)
 
         self.assertEqual(7, self.mockclient.show_network.call_count)
 
@@ -719,14 +719,16 @@ Resources:
         self.assertEqual(2, self.mockclient.create_router.call_count)
         self.mockclient.create_router.assert_called_with(
             {'router': {'name': self.rt_name}})
-        self.mockclient.add_interface_router.assert_called_once_with(
-            u'bbbb', {'subnet_id': 'cccc'})
+        self.mockclient.add_interface_router.assert_has_calls([
+            mock.call('bbbb', {'subnet_id': u'cccc'}),
+            mock.call('ffff', {'subnet_id': u'cccc'}),
+        ])
         self.mockclient.list_networks.assert_called_once_with(
             **{'router:external': True})
 
         gateway = stack['the_gateway']
         self.assertResourceState(gateway, gateway.physical_resource_name())
-        self.mockclient.add_gateway_router.assert_called_once_with(
+        self.mockclient.add_gateway_router.assert_called_with(
             'ffff', {'network_id': '0389f747-7785-4757-b7bb-2ab07e4b09c3'})
 
         attachment = stack['the_attachment']
@@ -736,9 +738,10 @@ Resources:
         self.assertEqual([route_table], list(attachment._vpc_route_tables()))
 
         stack.delete()
-        self.mockclient.remove_interface_router.assert_called_with(
-            'ffff',
-            {'subnet_id': u'cccc'})
+        self.mockclient.remove_interface_router.assert_has_calls([
+            mock.call('ffff', {'subnet_id': u'cccc'}),
+            mock.call('bbbb', {'subnet_id': u'cccc'}),
+        ])
         self.mockclient.remove_gateway_router.assert_called_with('ffff')
         self.assertEqual(2, self.mockclient.remove_gateway_router.call_count)
         self.assertEqual(2, self.mockclient.show_subnet.call_count)
@@ -783,8 +786,10 @@ Resources:
         stack = self.create_stack(self.test_template)
         self.mockclient.create_router.assert_called_with(
             {'router': {'name': self.rt_name}})
-        self.mockclient.add_interface_router.assert_called_once_with(
-            u'bbbb', {'subnet_id': 'cccc'})
+        self.mockclient.add_interface_router.assert_has_calls([
+            mock.call('bbbb', {'subnet_id': u'cccc'}),
+            mock.call('ffff', {'subnet_id': u'cccc'}),
+        ])
 
         route_table = stack['the_route_table']
         self.assertResourceState(route_table, 'ffff')
@@ -800,9 +805,10 @@ Resources:
         scheduler.TaskRunner(route_table.delete)()
 
         stack.delete()
-        self.mockclient.remove_interface_router.assert_called_with(
-            'ffff',
-            {'subnet_id': u'cccc'})
+        self.mockclient.remove_interface_router.assert_has_calls([
+            mock.call('ffff', {'subnet_id': u'cccc'}),
+            mock.call('bbbb', {'subnet_id': u'cccc'}),
+        ])
         self.mockclient.remove_gateway_router.assert_called_once_with('ffff')
         self.assertEqual(2, self.mockclient.show_subnet.call_count)
         self.mockclient.show_subnet.assert_called_with('cccc')
