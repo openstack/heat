@@ -463,6 +463,33 @@ Resources:
         # delete old not needed rules
         self.stubout_neutron_get_security_group()
 
+        stack = self.create_stack(self.test_template_neutron)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'aaaa')
+
+        # make updated template
+        props = copy.deepcopy(sg.properties.data)
+        props['SecurityGroupIngress'] = [
+            {'IpProtocol': 'tcp',
+             'FromPort': '80',
+             'ToPort': '80',
+             'CidrIp': '0.0.0.0/0'},
+            {'IpProtocol': 'tcp',
+             'FromPort': '443',
+             'ToPort': '443',
+             'CidrIp': '0.0.0.0/0'},
+            {'IpProtocol': 'tcp',
+             'SourceSecurityGroupId': 'zzzz'},
+        ]
+        props['SecurityGroupEgress'] = [
+            {'IpProtocol': 'tcp',
+             'FromPort': '22',
+             'ToPort': '22',
+             'CidrIp': '0.0.0.0/0'},
+            {'SourceSecurityGroupName': 'xxxx'},
+        ]
+        after = rsrc_defn.ResourceDefinition(sg.name, sg.type(), props)
+
         # create missing rules
         self.m_csgr.side_effect = [
             {
@@ -501,32 +528,7 @@ Resources:
                 }
             }
         ]
-        stack = self.create_stack(self.test_template_neutron)
-        sg = stack['the_sg']
-        self.assertResourceState(sg, 'aaaa')
 
-        # make updated template
-        props = copy.deepcopy(sg.properties.data)
-        props['SecurityGroupIngress'] = [
-            {'IpProtocol': 'tcp',
-             'FromPort': '80',
-             'ToPort': '80',
-             'CidrIp': '0.0.0.0/0'},
-            {'IpProtocol': 'tcp',
-             'FromPort': '443',
-             'ToPort': '443',
-             'CidrIp': '0.0.0.0/0'},
-            {'IpProtocol': 'tcp',
-             'SourceSecurityGroupId': 'zzzz'},
-        ]
-        props['SecurityGroupEgress'] = [
-            {'IpProtocol': 'tcp',
-             'FromPort': '22',
-             'ToPort': '22',
-             'CidrIp': '0.0.0.0/0'},
-            {'SourceSecurityGroupName': 'xxxx'},
-        ]
-        after = rsrc_defn.ResourceDefinition(sg.name, sg.type(), props)
         scheduler.TaskRunner(sg.update, after)()
 
         self.assertEqual((sg.UPDATE, sg.COMPLETE), sg.state)
