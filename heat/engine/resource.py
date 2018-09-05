@@ -1465,7 +1465,7 @@ class Resource(status.ResourceStatus):
                 self.state_set(self.UPDATE, self.FAILED,
                                six.text_type(failure))
                 raise failure
-            self.replaced_by = None
+        self.replaced_by = None
 
         runner = scheduler.TaskRunner(
             self.update, new_res_def,

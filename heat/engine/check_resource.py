@@ -321,14 +321,6 @@ class CheckResource(object):
         stack.adopt_stack_data = adopt_stack_data
         stack.thread_group_mgr = self.thread_group_mgr
 
-        if is_update:
-            if (rsrc.replaced_by is not None and
-                    rsrc.current_template_id != tmpl.id):
-                LOG.debug('Resource %s with id %s already replaced by %s; '
-                          'not checking',
-                          rsrc.name, resource_id, rsrc.replaced_by)
-                return
-
         try:
             check_resource_done = self._do_check_resource(cnxt,
                                                           current_traversal,
