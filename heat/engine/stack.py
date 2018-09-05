@@ -42,6 +42,7 @@ from heat.engine import parent_rsrc
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.engine import status
 from heat.engine import stk_defn
 from heat.engine import sync_point
 from heat.engine import template as tmpl
@@ -1462,26 +1463,33 @@ class Stack(collections.Mapping):
         self.converge_stack(rollback_tmpl, action=self.ROLLBACK)
 
     def _get_best_existing_rsrc_db(self, rsrc_name):
-        candidate = None
         if self.ext_rsrcs_db:
-            for ext_rsrc in self.ext_rsrcs_db.values():
-                if ext_rsrc.name != rsrc_name:
-                    continue
-                if ext_rsrc.current_template_id == self.t.id:
-                    # Rollback where the previous resource still exists
-                    candidate = ext_rsrc
-                    break
-                elif (ext_rsrc.current_template_id ==
-                        self.prev_raw_template_id):
-                    # Current resource is otherwise a good candidate
-                    candidate = ext_rsrc
-                elif candidate is None:
-                    # In multiple concurrent updates, if candidate is not
-                    # found in current/previous template, it could be found
-                    # in old tmpl.
-                    candidate = ext_rsrc
+            def suitability(ext_rsrc):
+                score = 0
 
-        return candidate
+                if ext_rsrc.status == status.ResourceStatus.FAILED:
+                    score -= 30
+                if ext_rsrc.action == status.ResourceStatus.DELETE:
+                    score -= 50
+                if ext_rsrc.replaced_by:
+                    score -= 1
+                if ext_rsrc.current_template_id == self.prev_raw_template_id:
+                    # Current resource
+                    score += 5
+                if ext_rsrc.current_template_id == self.t.id:
+                    # Rolling back to previous resource
+                    score += 10
+
+                return score, ext_rsrc.updated_at
+
+            candidates = sorted((r for r in self.ext_rsrcs_db.values()
+                                 if r.name == rsrc_name),
+                                key=suitability,
+                                reverse=True)
+            if candidates:
+                return candidates[0]
+
+        return None
 
     def _update_or_store_resources(self):
         self.ext_rsrcs_db = self.db_active_resources_get()

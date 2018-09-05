@@ -68,9 +68,8 @@ def _change_rsrc_properties(template, rsrcs, values):
         for rsrc_name in rsrcs:
             rsrc_prop = modified_template['resources'][
                 rsrc_name]['properties']
-            for prop in rsrc_prop:
-                if prop in values:
-                    rsrc_prop[prop] = values[prop]
+            for prop, new_val in values.items():
+                rsrc_prop[prop] = new_val
         return modified_template
 
 
@@ -279,6 +278,31 @@ resources:
                              'test2': 'OS::Heat::TestResource'}
         self.assertEqual(updated_resources,
                          self.list_resources(stack_identifier))
+
+    @test.requires_convergence
+    def test_stack_update_replace_manual_rollback(self):
+        template = _change_rsrc_properties(test_template_one_resource,
+                                           ['test1'],
+                                           {'update_replace_value': '1'})
+        stack_identifier = self.stack_create(template=template)
+        original_resource_id = self.get_physical_resource_id(stack_identifier,
+                                                             'test1')
+
+        tmpl_update = _change_rsrc_properties(test_template_one_resource,
+                                              ['test1'],
+                                              {'update_replace_value': '2',
+                                               'fail': True})
+        # Update with bad template, we should fail
+        self.update_stack(stack_identifier, tmpl_update,
+                          expected_status='UPDATE_FAILED',
+                          disable_rollback=True)
+        # Manually roll back to previous template
+        self.update_stack(stack_identifier, template)
+        final_resource_id = self.get_physical_resource_id(stack_identifier,
+                                                          'test1')
+        # Original resource was good, and replacement was never created, so it
+        # should be kept.
+        self.assertEqual(original_resource_id, final_resource_id)
 
     def test_stack_update_provider(self):
         template = _change_rsrc_properties(
