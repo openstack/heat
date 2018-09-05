@@ -109,8 +109,8 @@
       - publish-openstack-docs-pti
       - check-requirements
       - release-notes-jobs-python3
+      - openstack-lower-constraints-jobs
     check:
-      queue: heat
       jobs:
         - grenade-heat
         - grenade-heat-multinode
@@ -119,7 +119,6 @@
         - heat-functional-convg-mysql-lbaasv2-amqp1
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py35
-        - openstack-tox-lower-constraints
     gate:
       queue: heat
       jobs:
@@ -128,7 +127,6 @@
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-py35
-        - openstack-tox-lower-constraints
     post:
       jobs:
         - openstack-tox-cover
