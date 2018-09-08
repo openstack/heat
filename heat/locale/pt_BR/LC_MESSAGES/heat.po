@@ -6,16 +6,17 @@
 # Marcelo Dieder <marcelodieder@gmail.com>, 2013
 # Rodrigo Felix de Almeida <rodrigofelixdealmeida@gmail.com>, 2014
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
+# André Franciosi <andre@franciosi.org>, 2018. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-08-14 16:18+0000\n"
+"POT-Creation-Date: 2018-09-04 23:46+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2016-04-12 05:31+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2018-09-07 09:49+0000\n"
+"Last-Translator: André Franciosi <andre@franciosi.org>\n"
 "Language: pt_BR\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "Generated-By: Babel 2.0\n"
@@ -612,6 +613,9 @@ msgstr "Ação %s não permitida para o usuário"
 msgid "Action to be performed on the traffic matching the rule."
 msgstr "Ação a ser executada no tráfego correspondendo a regra."
 
+msgid "Action type of the policy."
+msgstr "Tipo de ação da política."
+
 msgid "Actual input parameter values of the task."
 msgstr "Valores de parâmetro de entrada real da tarefa. "
 
@@ -764,6 +768,9 @@ msgstr ""
 "padrão é 0, se não especificado e significa que não há limite para o tamanho "
 "da ram."
 
+msgid "An HTTP URI query fragment."
+msgstr "Um fragmento da query HTTP URI."
+
 msgid "An address scope ID to assign to the subnet pool."
 msgstr "ID do escopo de endereço para designar ao conjunto de sub-redes."
 
@@ -879,6 +886,9 @@ msgstr ""
 #, python-format
 msgid "Arguments to %s not fully resolved"
 msgstr "Argumentos para %s não totalmente resolvidos"
+
+msgid "Arguments to add to the job."
+msgstr "Argumentos para adicionar a tarefa."
 
 #, python-format
 msgid "Attempt to delete a stack with id: %(id)s %(msg)s"
@@ -1532,11 +1542,17 @@ msgstr "Descrição da entrada."
 msgid "Description of the job binary."
 msgstr "Descrição do binário da tarefa."
 
+msgid "Description of the job."
+msgstr "Descrição da tarefa."
+
 msgid "Description of the metering label."
 msgstr "Descrição do rótulo de medição."
 
 msgid "Description of the output."
 msgstr "Descrição da saída."
+
+msgid "Description of the policy."
+msgstr "Descrição da política."
 
 msgid "Description of the pool."
 msgstr "Descrição do pool."
@@ -1557,10 +1573,10 @@ msgid "Description of this Load Balancer."
 msgstr "Descrição desse Balanceador de Carga."
 
 msgid "Description of this listener."
-msgstr "Descrição desse listener."
+msgstr "Descrição deste listener."
 
 msgid "Description of this pool."
-msgstr "Descrição desse conjunto."
+msgstr "Descrição deste conjunto."
 
 msgid "Desired IPs for this port."
 msgstr "IPs desejado para esta porta."
@@ -1620,6 +1636,9 @@ msgstr ""
 
 msgid "Dictionary containing workflow tasks."
 msgstr "Dicionário contendo tarefas de fluxo de trabalho."
+
+msgid "Dictionary of L7-parameters."
+msgstr "Dicionário dos parâmetros L7."
 
 msgid "Dictionary of node configurations."
 msgstr "Dicionário das configurações do nó."
@@ -1814,6 +1833,9 @@ msgstr "Excluir estado para cidr."
 msgid "Expected 1 external network, found %d"
 msgstr "Esperado 1 rede externa, localizadas %d"
 
+msgid "Expiration date of the URL."
+msgstr "Data de expiração da URL."
+
 msgid "Export locations of share."
 msgstr "Exportar locais de compartilhamento."
 
@@ -1954,6 +1976,9 @@ msgstr "Propriedade falsa !c."
 
 msgid "Fake property a."
 msgstr "Propriedade falsa a."
+
+msgid "Fake property b."
+msgstr "Propriedade falsa b."
 
 msgid "Fake property c."
 msgstr "Propriedade falsa c."
@@ -3445,6 +3470,9 @@ msgstr "Nome da entrada."
 msgid "Name of the job binary."
 msgstr "Nome do binário da tarefa."
 
+msgid "Name of the job."
+msgstr "Nome da tarefa."
+
 msgid "Name of the metering label."
 msgstr "Nome do rótulo de medição."
 
@@ -3463,6 +3491,9 @@ msgstr "Nome da notificação. Por padrão, o nome do recurso físico é usado."
 
 msgid "Name of the output."
 msgstr "O nome da saída."
+
+msgid "Name of the policy."
+msgstr "Nome da política."
 
 msgid "Name of the pool."
 msgstr "Nome do pool."
@@ -3543,7 +3574,7 @@ msgid "Name of this listener."
 msgstr "Nome do listener."
 
 msgid "Name of this pool."
-msgstr "Nome desse conjunto."
+msgstr "Nome deste conjunto."
 
 msgid "Name or ID Nova flavor for the nodes."
 msgstr "Nome ou tipo do ID Nova para os nós."
@@ -3576,6 +3607,9 @@ msgstr ""
 
 msgid "Name or ID of target cluster."
 msgstr "Nome ou ID do cluster de destino."
+
+msgid "Name or ID of the image."
+msgstr "Nome ou ID da imagem."
 
 msgid "Name or ID of the load balancing pool."
 msgstr "Nome ou ID do conjunto de balanceamento de carga."
@@ -4051,6 +4085,9 @@ msgstr ""
 msgid "Plugin name."
 msgstr "Nome do plugin."
 
+msgid "Policies attached to the cluster."
+msgstr "Políticas anexadas ao cluster."
+
 msgid "Policies for removal of resources on update."
 msgstr "Políticas para remoção de recursos na atualização."
 
@@ -4472,6 +4509,9 @@ msgstr "A rota duplica uma rota existente."
 
 msgid "Route table ID."
 msgstr "ID da tabela de roteamento."
+
+msgid "Rule type."
+msgstr "Tipo da regra."
 
 msgid "Safety assessment lifetime configuration for the ike policy."
 msgstr ""
@@ -4900,7 +4940,7 @@ msgid "Suspend of server %s failed"
 msgstr "A suspensão do servidor %s falhou"
 
 msgid "Swap space in MB."
-msgstr "O espaço de troca, em MB."
+msgstr "O espaço de troca em MB."
 
 msgid "System SIGHUP signal received."
 msgstr "Sinal SIGHUP do sistema recebido."
@@ -5349,11 +5389,17 @@ msgstr "O estado administrativo do monitor de funcionamento."
 msgid "The administrative state of the ipsec site connection."
 msgstr "O estado administrativo da conexão do site ipsec."
 
+msgid "The administrative state of the policy."
+msgstr "O estado administrativo da política."
+
 msgid "The administrative state of the pool member."
 msgstr "O estado administrativo do membro do conjunto."
 
 msgid "The administrative state of the router."
 msgstr "O estado administrativo do roteador."
+
+msgid "The administrative state of the rule."
+msgstr "O estado administrativo da regra."
 
 msgid "The administrative state of the vpn service."
 msgstr "O estado administrativo do serviço de vpn."
@@ -5600,6 +5646,9 @@ msgstr "O algoritmo de criptografia utilizado pela política ike."
 
 msgid "The environment is not a valid YAML mapping data type."
 msgstr "O ambiente não é um tipo de dados de mapeamento YAML válido."
+
+msgid "The environment variables."
+msgstr "As variáveis de ambiente."
 
 msgid "The expiration date for the secret in ISO-8601 format."
 msgstr "A data de expiração para o segredo no formato ISO-8601."
@@ -5906,6 +5955,9 @@ msgstr "O nome ou ID do cluster de destino."
 msgid "The name or ID of the bay model."
 msgstr "O nome ou ID do modelo do compartimento."
 
+msgid "The name or ID of the policy."
+msgstr "O nome ou ID da política."
+
 msgid "The name or ID of the subnet on which to allocate the VIP address."
 msgstr "O nome ou ID da sub-rede no qual alocar o endereço VIP."
 
@@ -5990,6 +6042,9 @@ msgid ""
 msgstr ""
 "O número de sinais de sucesso que deve ser recebido antes que o processo de "
 "criação da pilha continue."
+
+msgid "The number of virtual cpus."
+msgstr "O número das CPUs virtuais."
 
 msgid ""
 "The optional public key. This allows users to supply the public key from a "
@@ -6151,7 +6206,7 @@ msgid "The resource %s is already being updated."
 msgstr "O recurso %s já está sendo atualizado."
 
 msgid "The resource href of the queue."
-msgstr "O recurso href para a fila. "
+msgstr "O recurso href sa fila. "
 
 msgid "The route mode of the ipsec site connection."
 msgstr "O modo de roteamento da conexão do site ipsec."
@@ -6607,6 +6662,9 @@ msgstr "Tipo de receptor."
 msgid "Type of the data source."
 msgstr "Tipo da origem de dados."
 
+msgid "Type of the job."
+msgstr "Tipo da tarefa."
+
 msgid "Type of the notification."
 msgstr "O tipo da notificação."
 
@@ -6967,6 +7025,9 @@ msgstr "O valor deve ser JSON válido: %s"
 msgid "Value must match pattern: %s"
 msgstr "O valor deve corresponder ao padrão: %s"
 
+msgid "Value to compare."
+msgstr "Valores para comparação."
+
 msgid ""
 "Value which can be set or changed on stack update to trigger the resource "
 "for replacement with a new random string. The salt value itself is ignored "
@@ -7279,7 +7340,7 @@ msgid "min/max must be numeric"
 msgstr "mín/máx deve ser numérico"
 
 msgid "need more memory."
-msgstr "mais memória é necessária."
+msgstr "precisa mais memória."
 
 msgid "no resource data found"
 msgstr "nenhum dado de recurso localizado"
