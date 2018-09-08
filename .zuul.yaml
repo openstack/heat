@@ -103,13 +103,14 @@
 
 - project:
     templates:
+      - openstack-cover-jobs
+      - openstack-lower-constraints-jobs
       - openstack-python-jobs
       - openstack-python35-jobs
       - openstack-python36-jobs
       - publish-openstack-docs-pti
       - check-requirements
       - release-notes-jobs-python3
-      - openstack-lower-constraints-jobs
     check:
       jobs:
         - grenade-heat
@@ -127,9 +128,6 @@
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-py35
-    post:
-      jobs:
-        - openstack-tox-cover
     experimental:
       jobs:
         - tripleo-ci-centos-7-scenario002-multinode-oooq
