@@ -12,8 +12,6 @@
 
 import mock
 
-from zunclient import exceptions as zc_exc
-
 from heat.tests import common
 from heat.tests import utils
 
@@ -42,15 +40,3 @@ class ZunClientPluginTest(common.HeatTestCase):
         self.plugin.update_container(self.resource_id, **prop_diff)
         self.client.containers.update.assert_called_once_with(
             self.resource_id, cpu=10, memory=10, name='fake-container')
-
-    def test_container_update_not_acceptable(self):
-        self.client.containers.update.side_effect = [
-            zc_exc.NotAcceptable(), None]
-        prop_diff = {'cpu': 10, 'memory': 10, 'name': 'fake-container'}
-        self.plugin.update_container(self.resource_id, **prop_diff)
-        self.client.containers.update.assert_has_calls([
-            mock.call(self.resource_id, cpu=10, memory=10,
-                      name='fake-container'),
-            mock.call(self.resource_id, cpu=10, memory=10)])
-        self.client.containers.rename.assert_called_once_with(
-            self.resource_id, name='fake-container')

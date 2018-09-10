@@ -49,16 +49,9 @@ class ZunClientPlugin(client_plugin.ClientPlugin):
         return client
 
     def update_container(self, container_id, **prop_diff):
-        try:
-            if prop_diff:
-                self.client(version=self.V1_18).containers.update(
-                    container_id, **prop_diff)
-        except zc_exc.NotAcceptable:
-            if 'name' in prop_diff:
-                name = prop_diff.pop('name')
-                self.client().containers.rename(container_id, name=name)
-            if prop_diff:
-                self.client().containers.update(container_id, **prop_diff)
+        if prop_diff:
+            self.client(version=self.V1_18).containers.update(
+                container_id, **prop_diff)
 
     def network_detach(self, container_id, port_id):
         with self.ignore_not_found:
