@@ -41,6 +41,13 @@ class VersionNegotiationFilter(wsgi.Middleware):
         return the correct API controller, otherwise, if we
         find an Accept: header, process it
         """
+
+        # Make sure the request path is valid UTF-8
+        try:
+            req.path
+        except UnicodeDecodeError:
+            return webob.exc.HTTPBadRequest()
+
         # See if a version identifier is in the URI passed to
         # us already. If so, simply return the right version
         # API controller
