@@ -150,6 +150,8 @@ class DeployedServer(server_base.BaseServer):
         ),
     }
 
+    default_client_name = 'heat'
+
     def __init__(self, name, json_snippet, stack):
         super(DeployedServer, self).__init__(name, json_snippet, stack)
         self._register_access_key()

@@ -58,7 +58,7 @@ class KsClientWrapper(object):
     directly instantiate instances of this class inside resources themselves.
     """
 
-    def __init__(self, context):
+    def __init__(self, context, region_name):
         # If a trust_id is specified in the context, we immediately
         # authenticate so we can populate the context with a trust token
         # otherwise, we delay client authentication until needed to avoid
@@ -75,6 +75,7 @@ class KsClientWrapper(object):
         self._admin_auth = None
         self._domain_admin_auth = None
         self._domain_admin_client = None
+        self._region_name = region_name
 
         self.session = self.context.keystone_session
         self.v3_endpoint = self.context.keystone_v3_endpoint
@@ -123,8 +124,7 @@ class KsClientWrapper(object):
         importutils.import_module('keystonemiddleware.auth_token')
         auth_region = cfg.CONF.keystone_authtoken.region_name
         if not auth_region:
-            auth_region = (self.context.region_name or
-                           cfg.CONF.region_name_for_services)
+            auth_region = self._region_name
         return auth_region
 
     @property
@@ -596,9 +596,9 @@ class KeystoneClient(object):
     needs to be initialized.
     """
 
-    def __new__(cls, context):
+    def __new__(cls, context, region_name=None):
         if cfg.CONF.keystone_backend == _default_keystone_backend:
-            return KsClientWrapper(context)
+            return KsClientWrapper(context, region_name)
         else:
             return importutils.import_object(
                 cfg.CONF.keystone_backend,

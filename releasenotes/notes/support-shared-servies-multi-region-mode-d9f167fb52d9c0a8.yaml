@@ -1,0 +1,4 @@
+---
+features:
+  - Support shared services in multi region mode. The services are declared
+    in a list in config. shared_services_types=image, volume, volumev2.
