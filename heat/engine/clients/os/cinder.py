@@ -140,7 +140,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         if server_id and server_id not in server_ids:
             return True
 
-        if vol.status in ('in-use', 'detaching'):
+        if vol.status in ('in-use', 'detaching', 'reserved'):
             LOG.debug('%s - volume still in use', vol_id)
             return False
 
