@@ -119,8 +119,13 @@ class KsClientWrapper(object):
         return self._client
 
     @property
-    def region_name(self):
-        return self.context.region_name or cfg.CONF.region_name_for_services
+    def auth_region_name(self):
+        importutils.import_module('keystonemiddleware.auth_token')
+        auth_region = cfg.CONF.keystone_authtoken.region_name
+        if not auth_region:
+            auth_region = (self.context.region_name or
+                           cfg.CONF.region_name_for_services)
+        return auth_region
 
     @property
     def domain_admin_auth(self):
@@ -152,13 +157,13 @@ class KsClientWrapper(object):
             self._domain_admin_client = kc_v3.Client(
                 session=self.session,
                 auth=self.domain_admin_auth,
-                region_name=self.region_name)
+                region_name=self.auth_region_name)
 
         return self._domain_admin_client
 
     def _v3_client_init(self):
         client = kc_v3.Client(session=self.session,
-                              region_name=self.region_name)
+                              region_name=self.auth_region_name)
 
         if hasattr(self.context.auth_plugin, 'get_access'):
             # NOTE(jamielennox): get_access returns the current token without
