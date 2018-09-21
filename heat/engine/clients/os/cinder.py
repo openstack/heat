@@ -128,11 +128,16 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
         return (isinstance(ex, exceptions.ClientException) and
                 ex.code == 409)
 
-    def check_detach_volume_complete(self, vol_id):
+    def check_detach_volume_complete(self, vol_id, server_id=None):
         try:
             vol = self.client().volumes.get(vol_id)
         except Exception as ex:
             self.ignore_not_found(ex)
+            return True
+
+        server_ids = [
+            a['server_id'] for a in vol.attachments if 'server_id' in a]
+        if server_id and server_id not in server_ids:
             return True
 
         if vol.status in ('in-use', 'detaching'):
