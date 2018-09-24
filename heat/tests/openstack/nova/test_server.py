@@ -218,6 +218,19 @@ resources:
 """
 
 
+class ServerStatus(object):
+    def __init__(self, server, statuses):
+        self._server = server
+        self._status = iter(statuses)
+
+    def __call__(self, server_id):
+        try:
+            self._server.status = next(self._status)
+        except StopIteration:
+            raise AssertionError('Unexpected call to servers.get()')
+        return self._server
+
+
 class ServersTest(common.HeatTestCase):
     def setUp(self):
         super(ServersTest, self).setUp()
@@ -1621,12 +1634,12 @@ class ServersTest(common.HeatTestCase):
         # this makes sure the auto increment worked on server creation
         self.assertGreater(server.id, 0)
 
-        def make_soft_delete(*args):
-            return_server.status = "SOFT_DELETED"
-            return return_server
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[return_server, return_server,
-                                      make_soft_delete()])
+                         side_effect=ServerStatus(return_server,
+                                                  [return_server.status,
+                                                   return_server.status,
+                                                   "SOFT_DELETED",
+                                                   "DELETED"]))
         scheduler.TaskRunner(server.delete)()
         self.assertEqual((server.DELETE, server.COMPLETE), server.state)
 
@@ -2019,23 +2032,22 @@ class ServersTest(common.HeatTestCase):
         update_props['flavor'] = 'm1.small'
         update_template = server.t.freeze(properties=update_props)
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('ACTIVE'),
-                                      set_status('RESIZE'),
-                                      set_status('VERIFY_RESIZE'),
-                                      set_status('VERIFY_RESIZE'),
-                                      set_status('ACTIVE')])
+                         side_effect=ServerStatus(return_server,
+                                                  ['ACTIVE',
+                                                   'RESIZE',
+                                                   'VERIFY_RESIZE',
+                                                   'VERIFY_RESIZE',
+                                                   'ACTIVE']))
         mock_post = self.patchobject(self.fc.client,
                                      'post_servers_1234_action',
                                      return_value=(202, None))
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
-        mock_post.called_once_with(body={'resize': {'flavorRef': 2}})
-        mock_post.called_once_with(body={'confirmResize': None})
+        mock_post.assert_has_calls([
+            mock.call(body={'resize': {'flavorRef': '2'}}),
+            mock.call(body={'confirmResize': None}),
+        ])
 
     def test_server_update_server_flavor_failed(self):
         """Check raising exception due to resize call failing.
@@ -2051,13 +2063,9 @@ class ServersTest(common.HeatTestCase):
         update_props['flavor'] = 'm1.small'
         update_template = server.t.freeze(properties=update_props)
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('RESIZE'),
-                                      set_status('ERROR')])
+                         side_effect=ServerStatus(return_server,
+                                                  ['RESIZE', 'ERROR']))
         mock_post = self.patchobject(self.fc.client,
                                      'post_servers_1234_action',
                                      return_value=(202, None))
@@ -2067,7 +2075,7 @@ class ServersTest(common.HeatTestCase):
             "Error: resources.srv_update2: Resizing to '2' failed, "
             "status 'ERROR'", six.text_type(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
-        mock_post.called_once_with(body={'resize': {'flavorRef': 2}})
+        mock_post.assert_called_once_with(body={'resize': {'flavorRef': '2'}})
 
     def test_server_update_flavor_resize_has_not_started(self):
         """Test update of server flavor if server resize has not started.
@@ -2090,17 +2098,14 @@ class ServersTest(common.HeatTestCase):
         # define status transition when server resize
         # ACTIVE(initial) -> ACTIVE -> RESIZE -> VERIFY_RESIZE
 
-        def set_status(status):
-            server.status = status
-            return server
-
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('ACTIVE'),
-                                      set_status('ACTIVE'),
-                                      set_status('RESIZE'),
-                                      set_status('VERIFY_RESIZE'),
-                                      set_status('VERIFY_RESIZE'),
-                                      set_status('ACTIVE')])
+                         side_effect=ServerStatus(server,
+                                                  ['ACTIVE',
+                                                   'ACTIVE',
+                                                   'RESIZE',
+                                                   'VERIFY_RESIZE',
+                                                   'VERIFY_RESIZE',
+                                                   'ACTIVE']))
 
         mock_post = self.patchobject(self.fc.client,
                                      'post_servers_1234_action',
@@ -2109,8 +2114,10 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server_resource.update, update_template)()
         self.assertEqual((server_resource.UPDATE, server_resource.COMPLETE),
                          server_resource.state)
-        mock_post.called_once_with(body={'resize': {'flavorRef': 2}})
-        mock_post.called_once_with(body={'confirmResize': None})
+        mock_post.assert_has_calls([
+            mock.call(body={'resize': {'flavorRef': '2'}}),
+            mock.call(body={'confirmResize': None}),
+        ])
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
     def test_server_update_server_flavor_replace(self, mock_replace):
@@ -2313,13 +2320,9 @@ class ServersTest(common.HeatTestCase):
         server.reparse()
         mock_rebuild = self.patchobject(self.fc.servers, 'rebuild')
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('REBUILD'),
-                                      set_status('ERROR')])
+                         side_effect=ServerStatus(return_server,
+                                                  ['REBUILD', 'ERROR']))
         updater = scheduler.TaskRunner(server.update, update_template)
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
@@ -2392,15 +2395,12 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         server.state_set(state[0], state[1])
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(return_server, 'suspend')
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('ACTIVE'),
-                                      set_status('ACTIVE'),
-                                      set_status('SUSPENDED')])
+                         side_effect=ServerStatus(return_server,
+                                                  ['ACTIVE',
+                                                   'ACTIVE',
+                                                   'SUSPENDED']))
 
         scheduler.TaskRunner(server.suspend)()
         self.assertEqual((server.SUSPEND, server.COMPLETE), server.state)
@@ -2424,15 +2424,12 @@ class ServersTest(common.HeatTestCase):
                                           'srv_susp_uk')
         server.resource_id = '1234'
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(return_server, 'suspend')
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('ACTIVE'),
-                                      set_status('ACTIVE'),
-                                      set_status('TRANSMOGRIFIED')])
+                         side_effect=ServerStatus(return_server,
+                                                  ['ACTIVE',
+                                                   'ACTIVE',
+                                                   'TRANSMOGRIFIED']))
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.suspend))
         self.assertIsInstance(ex.exc, exception.ResourceUnknownStatus)
@@ -2449,15 +2446,12 @@ class ServersTest(common.HeatTestCase):
         server.resource_id = '1234'
         server.state_set(state[0], state[1])
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(return_server, 'resume')
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status('SUSPENDED'),
-                                      set_status('SUSPENDED'),
-                                      set_status('ACTIVE')])
+                         side_effect=ServerStatus(return_server,
+                                                  ['SUSPENDED',
+                                                   'SUSPENDED',
+                                                   'ACTIVE']))
 
         scheduler.TaskRunner(server.resume)()
         self.assertEqual((server.RESUME, server.COMPLETE), server.state)
@@ -2545,13 +2539,10 @@ class ServersTest(common.HeatTestCase):
                                          'srv_sts_bld')
         server.resource_id = '1234'
 
-        def set_status(status):
-            return_server.status = status
-            return return_server
-
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[set_status(uncommon_status),
-                                      set_status('ACTIVE')])
+                         side_effect=ServerStatus(return_server,
+                                                  [uncommon_status,
+                                                   'ACTIVE']))
 
         scheduler.TaskRunner(server.create)()
         self.assertEqual((server.CREATE, server.COMPLETE), server.state)
@@ -3753,10 +3744,9 @@ class ServersTest(common.HeatTestCase):
             self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
             self.assertEqual(1, mock_detach.call_count)
             self.assertEqual(1, mock_attach.call_count)
-            mock_attach.called_once_with(
-                {'port_id': None,
-                 'net_id': auto_allocate_net,
-                 'fip': None})
+            mock_attach.assert_called_once_with(None,
+                                                [auto_allocate_net],
+                                                None)
         else:
             self.assertRaises(exception.ResourceFailure, updater)
             self.assertEqual(0, mock_detach.call_count)
@@ -4109,10 +4099,12 @@ class ServersTest(common.HeatTestCase):
         mock_create = self.patchobject(self.fc.servers, 'create',
                                        return_value=return_server)
         self.patchobject(self.fc.servers, 'get',
-                         side_effect=[return_server, None])
+                         return_value=return_server)
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
                          return_value='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')
+        self.patchobject(return_server, 'get', return_value=None)
+
         scheduler.TaskRunner(stack.create)()
         self.assertEqual(1, mock_create.call_count)
         self.assertEqual((stack.CREATE, stack.COMPLETE), stack.state)
