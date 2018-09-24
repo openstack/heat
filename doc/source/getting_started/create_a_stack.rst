@@ -75,6 +75,10 @@ Which will respond::
    template. In case if it be a "html" page with template, Heat will return
    an error.
 
+.. note::
+   You cannot rename a stack after it has been launched.
+
+
 List stacks
 ~~~~~~~~~~~
 List the stacks in your tenant::
