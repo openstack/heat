@@ -48,19 +48,19 @@ class Schema(constr.Schema):
     )
 
     TYPES = (
-        STRING, MAP, LIST, INTEGER, BOOLEAN
+        UNKNOWN, STRING, MAP, LIST, INTEGER, BOOLEAN
     ) = (
-        'String', 'Map', 'List', 'Integer', 'Boolean'
+        None, 'String', 'Map', 'List', 'Integer', 'Boolean'
     )
 
     def __init__(self, description=None,
                  support_status=support.SupportStatus(),
                  cache_mode=CACHE_LOCAL,
-                 type=None):
-        self.description = description
+                 type=UNKNOWN):
+        super(Schema, self).__init__(type, description)
         self.support_status = support_status
         self.cache_mode = cache_mode
-        self.type = type
+        self.validate()
 
     def __getitem__(self, key):
         if key == self.DESCRIPTION:
