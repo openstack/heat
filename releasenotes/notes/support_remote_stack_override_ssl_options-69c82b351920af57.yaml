@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Add ``ca_cert`` and ``insecure`` properties for
+    ``OS::Heat::Stack`` resource type. The ``ca_cert`` is the contents of a CA
+    Certificate file that can be used to verify a remote cloud or region's
+    server certificate. ``insecure`` is boolean option, CA cert will be use if
+    we didn't setup insecure flag.

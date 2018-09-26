@@ -11,8 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 import six
+import tempfile
 
 from heat.common import auth_plugin
 from heat.common import context
@@ -25,6 +27,40 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 from heat.engine import template
+
+LOG = logging.getLogger(__name__)
+
+
+class TempCACertFile(object):
+    def __init__(self, ca_cert):
+        self._cacert = ca_cert
+        self._cacert_temp_file = None
+
+    def __enter__(self):
+        self.tempfile_path = self._store_temp_ca_cert()
+        return self.tempfile_path
+
+    def __exit__(self, type, value, traceback):
+        if self._cacert_temp_file:
+            self._cacert_temp_file.close()
+
+    def _store_temp_ca_cert(self):
+        if self._cacert:
+            try:
+                self._cacert_temp_file = tempfile.NamedTemporaryFile()
+                self._cacert_temp_file.write(
+                    six.text_type(self._cacert).encode('utf-8'))
+                # Add seek func to make sure the writen context will flush to
+                # tempfile with python 2.7. we can use flush() for python 2.7
+                # but not 3.5.
+                self._cacert_temp_file.seek(0)
+                file_path = self._cacert_temp_file.name
+                return file_path
+            except Exception:
+                LOG.exception("Error when create template file for CA cert")
+                if self._cacert_temp_file:
+                    self._cacert_temp_file.close()
+                raise
 
 
 class RemoteStack(resource.Resource):
@@ -50,9 +86,9 @@ class RemoteStack(resource.Resource):
     )
 
     _CONTEXT_KEYS = (
-        REGION_NAME, CREDENTIAL_SECRET_ID
+        REGION_NAME, CREDENTIAL_SECRET_ID, CA_CERT, SSL_INSECURE
     ) = (
-        'region_name', 'credential_secret_id'
+        'region_name', 'credential_secret_id', 'ca_cert', 'insecure'
     )
 
     properties_schema = {
@@ -71,6 +107,22 @@ class RemoteStack(resource.Resource):
                     _('A Barbican secret ID. The Barbican secret should '
                       'contain an OpenStack credential that can be used to '
                       'access a remote cloud.'),
+                    required=False,
+                    update_allowed=True,
+                    support_status=support.SupportStatus(version='12.0.0'),
+                ),
+                CA_CERT: properties.Schema(
+                    properties.Schema.STRING,
+                    _('CA Cert for SSL.'),
+                    required=False,
+                    update_allowed=True,
+                    support_status=support.SupportStatus(version='12.0.0'),
+                ),
+                SSL_INSECURE: properties.Schema(
+                    properties.Schema.BOOLEAN,
+                    _("If set, then the server's certificate will not be "
+                      "verified."),
+                    default=False,
                     required=False,
                     update_allowed=True,
                     support_status=support.SupportStatus(version='12.0.0'),
@@ -112,19 +164,44 @@ class RemoteStack(resource.Resource):
         super(RemoteStack, self).__init__(name, definition, stack)
         self._region_name = None
         self._local_context = None
+        self._ssl_verify = None
+        self._cacert = None
 
-    def _context(self):
-        if self._local_context:
-            return self._local_context
+    @property
+    def cacert(self):
+        ctx_props = self.properties.get(self.CONTEXT)
+        if ctx_props:
+            self._cacert = ctx_props[self.CA_CERT]
+        return self._cacert
 
+    def _get_from_secret(self, key):
+        result = super(RemoteStack, self).client_plugin(
+            'barbican').get_secret_payload_by_ref(
+            secret_ref='secrets/%s' % (key))
+        return result
+
+    def _context(self, cacert_path=None):
+        need_reassign = False
+        # To get ctx_props first, since cacert_path might change each time we
+        # call _context
         ctx_props = self.properties.get(self.CONTEXT)
         if ctx_props:
             self._credential = ctx_props[self.CREDENTIAL_SECRET_ID]
             self._region_name = ctx_props[self.REGION_NAME] if ctx_props[
                 self.REGION_NAME] else self.context.region_name
+            _insecure = ctx_props[self.SSL_INSECURE]
+
+            _ssl_verify = False if _insecure else (
+                cacert_path or True)
+            need_reassign = self._ssl_verify != _ssl_verify
+            if need_reassign:
+                self._ssl_verify = _ssl_verify
         else:
             self._credential = None
             self._region_name = self.context.region_name
+
+        if self._local_context and not need_reassign:
+            return self._local_context
 
         if ctx_props and self._credential:
             return self._prepare_cloud_context()
@@ -134,9 +211,7 @@ class RemoteStack(resource.Resource):
     def _fetch_barbican_credential(self):
         """Fetch credential information and return context dict."""
 
-        auth = super(RemoteStack, self).client_plugin(
-            'barbican').get_secret_payload_by_ref(
-            secret_ref='secrets/%s' % (self._credential))
+        auth = self._get_from_secret(self._credential)
         return auth
 
     def _prepare_cloud_context(self):
@@ -150,6 +225,8 @@ class RemoteStack(resource.Resource):
             'show_deleted': dict_ctxt['show_deleted']
         })
         self._local_context = context.RequestContext.from_dict(dict_ctxt)
+        if self._ssl_verify is not None:
+            self._local_context.keystone_session.verify = self._ssl_verify
         self._local_context._auth_plugin = (
             auth_plugin.get_keystone_plugin_loader(
                 auth, self._local_context.keystone_session))
@@ -163,11 +240,14 @@ class RemoteStack(resource.Resource):
         dict_ctxt.update({'region_name': self._region_name,
                           'overwrite': False})
         self._local_context = context.RequestContext.from_dict(dict_ctxt)
+        if self._ssl_verify is not None:
+            self._local_context.keystone_session.verify = self._ssl_verify
         return self._local_context
 
-    def heat(self):
+    def heat(self, cacert_path):
         # A convenience method overriding Resource.heat()
-        return self._context().clients.client(self.default_client_name)
+        return self._context(
+            cacert_path).clients.client(self.default_client_name)
 
     def client_plugin(self):
         # A convenience method overriding Resource.client_plugin()
@@ -177,7 +257,8 @@ class RemoteStack(resource.Resource):
         super(RemoteStack, self).validate()
 
         try:
-            self.heat()
+            with TempCACertFile(self.cacert) as cacert_path:
+                self.heat(cacert_path)
         except Exception as ex:
             if self._credential:
                 location = "remote cloud"
@@ -197,7 +278,8 @@ class RemoteStack(resource.Resource):
                 'files': self.stack.t.files,
                 'environment': env.user_env_as_dict(),
             }
-            self.heat().stacks.validate(**args)
+            with TempCACertFile(self.cacert) as cacert_path:
+                self.heat(cacert_path).stacks.validate(**args)
         except Exception as ex:
             if self._credential:
                 location = "remote cloud"
@@ -221,34 +303,44 @@ class RemoteStack(resource.Resource):
             'files': self.stack.t.files,
             'environment': env.user_env_as_dict(),
         }
-        remote_stack_id = self.heat().stacks.create(**args)['stack']['id']
+        with TempCACertFile(self.cacert) as cacert_path:
+            remote_stack_id = self.heat(
+                cacert_path).stacks.create(**args)['stack']['id']
         self.resource_id_set(remote_stack_id)
 
     def handle_delete(self):
         if self.resource_id is not None:
             with self.client_plugin().ignore_not_found:
-                self.heat().stacks.delete(stack_id=self.resource_id)
+                with TempCACertFile(self.cacert) as cacert_path:
+                    self.heat(
+                        cacert_path).stacks.delete(stack_id=self.resource_id)
 
     def handle_resume(self):
         if self.resource_id is None:
             raise exception.Error(_('Cannot resume %s, resource not found')
                                   % self.name)
-        self.heat().actions.resume(stack_id=self.resource_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            self.heat(cacert_path).actions.resume(stack_id=self.resource_id)
 
     def handle_suspend(self):
         if self.resource_id is None:
             raise exception.Error(_('Cannot suspend %s, resource not found')
                                   % self.name)
-        self.heat().actions.suspend(stack_id=self.resource_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            self.heat(cacert_path).actions.suspend(stack_id=self.resource_id)
 
     def handle_snapshot(self):
-        snapshot = self.heat().stacks.snapshot(stack_id=self.resource_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            snapshot = self.heat(
+                cacert_path).stacks.snapshot(stack_id=self.resource_id)
         self.data_set('snapshot_id', snapshot['id'])
 
     def handle_restore(self, defn, restore_data):
         snapshot_id = restore_data['resource_data']['snapshot_id']
-        snapshot = self.heat().stacks.snapshot_show(self.resource_id,
-                                                    snapshot_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            snapshot = self.heat(
+                cacert_path).stacks.snapshot_show(self.resource_id,
+                                                  snapshot_id)
         s_data = snapshot['snapshot']['data']
         env = environment.Environment(s_data['environment'])
         files = s_data['files']
@@ -261,7 +353,8 @@ class RemoteStack(resource.Resource):
         return defn.freeze(properties=props)
 
     def handle_check(self):
-        self.heat().actions.check(stack_id=self.resource_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            self.heat(cacert_path).actions.check(stack_id=self.resource_id)
 
     def _needs_update(self, after, before, after_props, before_props,
                       prev_resource, check_init_complete=True):
@@ -293,10 +386,13 @@ class RemoteStack(resource.Resource):
                 'files': self.stack.t.files,
                 'environment': env.user_env_as_dict(),
             }
-            self.heat().stacks.update(**fields)
+            with TempCACertFile(self.cacert) as cacert_path:
+                self.heat(cacert_path).stacks.update(**fields)
 
     def _check_action_complete(self, action):
-        stack = self.heat().stacks.get(stack_id=self.resource_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            stack = self.heat(
+                cacert_path).stacks.get(stack_id=self.resource_id)
         if stack.action != action:
             return False
 
@@ -346,7 +442,9 @@ class RemoteStack(resource.Resource):
     def _resolve_attribute(self, name):
         if self.resource_id is None:
             return
-        stack = self.heat().stacks.get(stack_id=self.resource_id)
+        with TempCACertFile(self.cacert) as cacert_path:
+            stack = self.heat(
+                cacert_path).stacks.get(stack_id=self.resource_id)
         if name == self.NAME_ATTR:
             value = getattr(stack, name, None)
             return value or self.physical_resource_name_or_FnGetRefId()
