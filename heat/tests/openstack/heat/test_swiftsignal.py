@@ -910,9 +910,10 @@ class SwiftSignalTest(common.HeatTestCase):
         mock_name.return_value = obj_name
         mock_swift_object.get_container.return_value = cont_index(obj_name, 2)
         mock_swift_object.get_object.side_effect = (
-            (obj_header, ''),
             swiftclient_client.ClientException(
-                "Object %s not found" % obj_name, http_status=404)
+                "Object %s not found" % obj_name, http_status=404),
+            (obj_header, '{"id": 1}'),
+            (obj_header, '{"id": 2}'),
         )
 
         st.create()
