@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# ``upgrade-heat``
+
+function configure_heat_upgrade {
+    local xtrace
+    xtrace=$(set +o | grep xtrace)
+    set -o xtrace
+
+    # The dist name for heat changed in rocky from "heat" to
+    # "openstack-heat". Having the metadata for both packages
+    # installed causes our plugins to be listed twice, so we need to
+    # remove the old one before devstack installs the new one.
+    # Using pip to uninstall the old code doesn't seem to work,
+    # so this script works a bit more aggressively. These steps
+    # should not be necessary for deployments using standard
+    # system packages from distributions.
+
+    local python_interpreter="python"
+    if python3_enabled; then
+        python_interpreter="python3"
+    fi
+
+    local sys_path=$($python_interpreter -c 'import sys; print(" ".join(sys.path))')
+    local sys_path_dir
+    local egg_link
+    local easy_file
+    for sys_path_dir in $sys_path; do
+        # Installing something in editable mode creates an "egg link"
+        # file that points to the location of the source files and
+        # metadata. When we do the upgrades for projects that preserve
+        # their name, the existing file is modified to point to the
+        # new location. In this case, heat's name is changing so we
+        # end up with a new file using the new name and the old one is
+        # untouched. We need to remove it ourselves.
+        egg_link="$sys_path_dir/heat.egg-link"
+        if [ -e "$egg_link" ]; then
+            sudo rm -f "$egg_link"
+        fi
+        # Installing a directory in editable mode adds the directory
+        # to the .pth file that setuptools manages. When we do the
+        # upgrades for projects that preserve their name, the old
+        # entry is automatically replaced with the new one. In this
+        # case, heat's name is changing, so setuptools doesn't figure
+        # out that it should remove the old entry, and we have to do
+        # it ourselves.
+        easy_file=$sys_path_dir/easy-install.pth
+        if [ -f $easy_file ]; then
+            sudo sed --in-place '/old\/heat/d' $easy_file
+        fi
+    done
+
+    ## reset to previous state
+    $xtrace
+}
