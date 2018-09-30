@@ -42,6 +42,9 @@
           set -x
           export PROJECTS="openstack-dev/grenade $PROJECTS"
           export PROJECTS="openstack/heat-tempest-plugin $PROJECTS"
+          # Grenade needs to clone the placement repo on the Stein side since
+          # the repo did not exist in Rocky.
+          export PROJECTS="openstack/placement $PROJECTS"
           export PYTHONUNBUFFERED=true
           export GRENADE_PLUGINRC="enable_grenade_plugin heat https://git.openstack.org/openstack/heat"
           export DEVSTACK_GATE_NEUTRON=1
