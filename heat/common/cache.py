@@ -45,7 +45,7 @@ def register_cache_configurations(conf):
         cfg.BoolOpt("caching", default=True,
                     help=_(
                         'Toggle to enable/disable caching when Orchestration '
-                        'Engine validates property constraints of stack.'
+                        'Engine validates property constraints of stack. '
                         'During property validation with constraints '
                         'Orchestration Engine caches requests to other '
                         'OpenStack services. Please note that the global '
