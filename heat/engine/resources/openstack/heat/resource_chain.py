@@ -25,6 +25,7 @@ from heat.engine import properties
 from heat.engine.resources import stack_resource
 from heat.engine import rsrc_defn
 from heat.engine import support
+from heat.objects import service as service_objects
 from heat.scaling import template as scl_template
 
 LOG = logging.getLogger(__name__)
@@ -118,12 +119,19 @@ class ResourceChain(stack_resource.StackResource):
         resource_types = self.properties[self.RESOURCES]
         resource_names = self._resource_names(resource_types)
         name_def_tuples = []
+        # Impose a concurrency limit if concurrent is set. This minimizes the
+        # memory usage when the chain contains lots of resources, but it keeps
+        # performance to a reasonable level.
+        concurrency_limit = service_objects.Service.active_service_count(
+            self.context) or 1
         for index, rt in enumerate(resource_types):
             name = resource_names[index]
 
             depends_on = None
             if index > 0 and not self.properties[self.CONCURRENT]:
                 depends_on = [resource_names[index - 1]]
+            elif index >= concurrency_limit:
+                depends_on = [resource_names[index - concurrency_limit]]
 
             t = (name, self._build_resource_definition(name, rt,
                                                        depends_on=depends_on))
