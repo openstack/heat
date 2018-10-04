@@ -126,6 +126,8 @@ class FakeVolume(object):
             setattr(self, key, value)
         if 'id' not in attrs:
             self.id = self._ID
+        if 'attachments' not in attrs:
+            self.attachments = [{'server_id': 'WikiDatabase'}]
 
 
 class FakeBackup(FakeVolume):

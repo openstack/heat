@@ -507,9 +507,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             prg_detach.called = True
             return False
         if not prg_detach.cinder_complete:
-            cinder_complete_res = self.client_plugin(
-            ).check_detach_volume_complete(prg_detach.vol_id)
-            prg_detach.cinder_complete = cinder_complete_res
+            prg_detach.cinder_complete = self.client_plugin(
+            ).check_detach_volume_complete(prg_detach.vol_id,
+                                           prg_detach.srv_id)
             return False
         if not prg_detach.nova_complete:
             prg_detach.nova_complete = self.client_plugin(
@@ -770,7 +770,8 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             return True
         if not prg_detach.cinder_complete:
             prg_detach.cinder_complete = self.client_plugin(
-            ).check_detach_volume_complete(prg_detach.vol_id)
+            ).check_detach_volume_complete(prg_detach.vol_id,
+                                           prg_detach.srv_id)
             return False
         if not prg_detach.nova_complete:
             prg_detach.nova_complete = self.client_plugin(
