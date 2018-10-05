@@ -184,8 +184,7 @@ class ThreadGroupManager(object):
                 stack.persist_state_and_release_lock(lock.engine_id)
 
                 notify = kwargs.get('notify')
-                if notify is not None:
-                    assert not notify.signalled()
+                if notify is not None and not notify.signalled():
                     notify.signal()
             else:
                 lock.release()
