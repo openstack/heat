@@ -2242,7 +2242,16 @@ class Stack(collections.Mapping):
         db_rsrcs = self.db_active_resources_get()
         if db_rsrcs is not None:
             for res in db_rsrcs.values():
-                res.update_and_save(values=values)
+                # delete db resources not in current_template_id
+                try:
+                    self.defn.resource_definition(res.name)
+                except KeyError:
+                    LOG.warning("Resource %(res)s not found in template "
+                                "for stack %(st)s, deleting from db.",
+                                {'res': res.name, 'st': self.id})
+                    resource_objects.Resource.delete(self.context, res.id)
+                else:
+                    res.update_and_save(values=values)
         self.set_resource_deps()
         self.current_traversal = uuidutils.generate_uuid()
         self.convergence = True
