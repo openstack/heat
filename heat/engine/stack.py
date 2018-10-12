@@ -1338,7 +1338,7 @@ class Stack(collections.Mapping):
         self.reset_dependencies()
         self._resources = None
 
-        if action is not self.CREATE:
+        if action != self.CREATE:
             self.updated_time = oslo_timeutils.utcnow()
 
         if new_stack is not None:
