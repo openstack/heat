@@ -70,7 +70,7 @@ requires additional information in the Identity service.
 
      .. code-block:: console
 
-        $ openstack role add --project service --user heat admin
+        $ openstack role add --project services --user heat admin
 
      .. note::
 
