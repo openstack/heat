@@ -37,11 +37,11 @@ class ProviderNet(net.Net):
     PROPERTIES = (
         NAME, PROVIDER_NETWORK_TYPE, PROVIDER_PHYSICAL_NETWORK,
         PROVIDER_SEGMENTATION_ID, ADMIN_STATE_UP, SHARED,
-        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL,
+        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL, TAGS,
     ) = (
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
-        'port_security_enabled', 'router_external',
+        'port_security_enabled', 'router_external', 'tags',
 
     )
 
@@ -103,6 +103,13 @@ class ProviderNet(net.Net):
             update_allowed=True,
             support_status=support.SupportStatus(version='6.0.0')
         ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('The tags to be added to the provider network.'),
+            schema=properties.Schema(properties.Schema.STRING),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='12.0.0')
+        ),
     }
 
     attributes_schema = {
@@ -161,9 +168,13 @@ class ProviderNet(net.Net):
             self.physical_resource_name())
 
         ProviderNet.prepare_provider_properties(props)
+        tags = props.pop(self.TAGS, [])
 
         prov_net = self.client().create_network({'network': props})['network']
         self.resource_id_set(prov_net['id'])
+
+        if tags:
+            self.set_tags(tags)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Updates the resource with provided properties.
@@ -173,6 +184,9 @@ class ProviderNet(net.Net):
         if prop_diff:
             ProviderNet.prepare_provider_properties(prop_diff)
             self.prepare_update_properties(prop_diff)
+            if self.TAGS in prop_diff:
+                self.set_tags(prop_diff.pop(self.TAGS))
+        if prop_diff:
             self.client().update_network(self.resource_id,
                                          {'network': prop_diff})
 
