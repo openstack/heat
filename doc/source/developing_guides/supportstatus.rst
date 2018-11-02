@@ -107,6 +107,14 @@ object from documentation and from result of :code:`resource-type-list` CLI
 command, if object is resource. Also, :code:`resource-type-show` command with
 such resource will raise `NotSupported` exception.
 
+The purpose of hiding, rather than removing, obsolete resources or properties
+is to ensure that users can continue to operate existing stacks - replacing or
+removing the offending resources, or deleting the entire stack. Steps should be
+taken to ensure that these operations can succeed, e.g. by replacing a hidden
+resource type's implementation with one that is equivalent to
+``OS::Heat::None`` when the underlying API no longer exists, supplying a
+*substitute_class* for a resource type, or adding a property translation rule.
+
 Using Support Status during code writing
 ----------------------------------------
 When adding new objects or adding objects instead of some old (e.g. property
