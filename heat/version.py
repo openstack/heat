@@ -14,4 +14,4 @@
 
 import pbr.version
 
-version_info = pbr.version.VersionInfo('heat')
+version_info = pbr.version.VersionInfo('openstack-heat')

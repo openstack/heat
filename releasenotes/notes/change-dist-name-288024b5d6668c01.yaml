@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The distribution name has been changed from "heat" to
+    "openstack-heat" so that we can publish packages to pypi.org. This
+    may have an effect on downstream package builds if they rely on
+    asking setuptools to determine the package name.
