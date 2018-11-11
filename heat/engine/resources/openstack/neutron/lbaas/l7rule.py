@@ -144,7 +144,7 @@ class L7Rule(neutron.NeutronResource):
 
     def handle_create(self):
         rule_args = dict((k, v) for k, v in self.properties.items()
-                         if k is not self.L7POLICY)
+                         if k != self.L7POLICY)
         return rule_args
 
     def check_create_complete(self, rule_args):
