@@ -336,6 +336,10 @@ man_pages = [
     ('man/heat-manage', 'heat-manage',
      u'Script which helps manage specific database operations',
      [u'Heat Developers'], 1),
+    ('man/heat-status', 'heat-status',
+     u'Script to check status of Heat deployment.',
+     [u'Heat Developers'], 1),
+
 ]
 
 # If true, show URL addresses after external links.
