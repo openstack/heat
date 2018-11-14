@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add a new OS::Glance::WebImage resource supporting the web-download import
+    of Glance v2.
