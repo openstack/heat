@@ -23,7 +23,7 @@ ERROR = 'ERROR'
 notifier_opts = [
     cfg.StrOpt('default_notification_level',
                default=INFO,
-               help=_('Default notification level for outgoing'
+               help=_('Default notification level for outgoing '
                       'notifications.')),
     cfg.StrOpt('default_publisher_id',
                help=_('Default publisher_id for outgoing notifications.')),
