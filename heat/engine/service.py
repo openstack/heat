@@ -1415,13 +1415,14 @@ class EngineService(service.ServiceBase):
         """
 
         st = self._get_stack(cnxt, stack_identity)
-        if (st.status == parser.Stack.COMPLETE and
-                st.action == parser.Stack.DELETE):
-            raise exception.EntityNotFound(entity='Stack', name=st.name)
-
         LOG.info('Deleting stack %s', st.name)
         stack = parser.Stack.load(cnxt, stack=st)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
+        if (stack.status == stack.COMPLETE and stack.action == stack.DELETE):
+            # In convergence try to soft delete the stack again
+            if stack.convergence:
+                self.thread_group_mgr.start(stack.id, stack.purge_db)
+            raise exception.EntityNotFound(entity='Stack', name=stack.name)
 
         if stack.convergence:
             stack.thread_group_mgr = self.thread_group_mgr
