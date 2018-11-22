@@ -166,7 +166,7 @@ class MistralExternalResource(resource.Resource):
 
         if execution.state in ('ERROR', 'CANCELLED'):
             raise exception.ResourceFailure(
-                exception_or_error=execution.state,
+                exception_or_error=execution.state_info,
                 resource=self,
                 action=action)
 
