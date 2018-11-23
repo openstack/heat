@@ -133,5 +133,4 @@
         - openstack-tox-cover
     experimental:
       jobs:
-        - tripleo-ci-centos-7-scenario002-multinode-oooq
         - tripleo-ci-centos-7-scenario002-multinode-oooq-container
