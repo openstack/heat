@@ -62,9 +62,14 @@ class GetParam(function.Function):
     def __init__(self, stack, fn_name, args):
         super(GetParam, self).__init__(stack, fn_name, args)
 
-        self.parameters = self.stack.parameters
+        if self.stack is not None:
+            self.parameters = self.stack.parameters
+        else:
+            self.parameters = None
 
     def result(self):
+        assert self.parameters is not None, "No stack definition in Function"
+
         args = function.resolve(self.args)
 
         if not args:
@@ -542,9 +547,11 @@ class GetFile(function.Function):
     def __init__(self, stack, fn_name, args):
         super(GetFile, self).__init__(stack, fn_name, args)
 
-        self.files = self.stack.t.files
+        self.files = self.stack.t.files if self.stack is not None else None
 
     def result(self):
+        assert self.files is not None, "No stack definition in Function"
+
         args = function.resolve(self.args)
         if not (isinstance(args, six.string_types)):
             raise TypeError(_('Argument to "%s" must be a string') %
