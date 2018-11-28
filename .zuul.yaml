@@ -17,6 +17,7 @@
       - openstack/oslo.messaging
       - openstack/python-barbicanclient
       - openstack/python-heatclient
+      - openstack/heat-agents
       - openstack/python-zaqarclient
       - openstack/zaqar
     irrelevant-files:

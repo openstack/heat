@@ -52,6 +52,7 @@
           export PROJECTS="openstack/ceilometer $PROJECTS"
           export PROJECTS="openstack/aodh $PROJECTS"
           export PROJECTS="openstack/zaqar $PROJECTS"
+          export PROJECTS="openstack/heat-agents $PROJECTS"
           export PROJECTS="openstack/python-zaqarclient $PROJECTS"
           export PROJECTS="openstack/neutron $PROJECTS"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin ceilometer git://git.openstack.org/openstack/ceilometer"

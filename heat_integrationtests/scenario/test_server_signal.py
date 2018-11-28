@@ -21,11 +21,11 @@ class ServerSignalIntegrationTest(scenario_base.ScenarioTestsBase):
     """Test a server in a created network can signal to heat."""
 
     def _test_server_signal(self, user_data_format='RAW',
-                            image=None):
+                            image=None, flavor=None):
         """Check a server in a created network can signal to heat."""
         parameters = {
             'key_name': self.keypair_name,
-            'flavor': self.conf.minimal_instance_type,
+            'flavor': flavor,
             'image': image,
             'timeout': self.conf.build_timeout,
             'user_data_format': user_data_format
@@ -76,10 +76,12 @@ class ServerSignalIntegrationTest(scenario_base.ScenarioTestsBase):
                 "Timed out waiting for %s to become reachable" % server_ip)
 
     def test_server_signal_userdata_format_raw(self):
-        self._test_server_signal(image=self.conf.minimal_image_ref)
+        self._test_server_signal(image=self.conf.minimal_image_ref,
+                                 flavor=self.conf.minimal_instance_type)
 
     def test_server_signal_userdata_format_software_config(self):
         if not self.conf.image_ref:
             raise self.skipException("No image configured to test")
         self._test_server_signal(user_data_format='SOFTWARE_CONFIG',
-                                 image=self.conf.image_ref)
+                                 image=self.conf.image_ref,
+                                 flavor=self.conf.instance_type)
