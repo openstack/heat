@@ -92,8 +92,8 @@ class StackResource(resource.Resource):
 
         return "nested_stack"
 
-    def _outputs_to_attribs(self, parsed_template):
-        outputs = parsed_template.outputs(None)
+    def _outputs_to_attribs(self, json_snippet):
+        outputs = json_snippet.get('Outputs')
         if not self.attributes and outputs:
             self.attributes_schema = (
                 attributes.Attributes.schema_from_outputs(outputs))

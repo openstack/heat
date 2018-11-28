@@ -200,9 +200,11 @@ class Attributes(collections.Mapping):
         return outp
 
     @staticmethod
-    def schema_from_outputs(outputs):
-        return dict((o.name, Schema(o.description()))
-                    for o in outputs.values())
+    def schema_from_outputs(json_snippet):
+        if json_snippet:
+            return dict((k, Schema(v.get("Description")))
+                        for k, v in json_snippet.items())
+        return {}
 
     def _validate_type(self, attrib, value):
         if attrib.schema.type == attrib.schema.STRING:
