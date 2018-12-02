@@ -108,7 +108,7 @@ class TemplateResource(stack_resource.StackResource):
         return ((properties.Properties.schema_from_params(
                 tmpl.param_schemata(param_defaults))),
                 (attributes.Attributes.schema_from_outputs(
-                 tmpl.outputs(None))))
+                 tmpl[tmpl.OUTPUTS])))
 
     def _generate_schema(self):
         self._parsed_nested = None
