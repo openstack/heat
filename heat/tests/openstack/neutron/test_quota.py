@@ -40,11 +40,13 @@ resources:
       security_group: 5
       router: 5
       port: 5
+      subnetpool: 5
+      rbac_policy: 5
 '''
 
 valid_properties = [
     'subnet', 'network', 'floatingip', 'security_group_rule',
-    'security_group', 'router', 'port'
+    'security_group', 'router', 'port', 'subnetpool', 'rbac_policy'
 ]
 
 
@@ -90,8 +92,9 @@ class NeutronQuotaTest(common.HeatTestCase):
         my_quota.reparse()
 
         msg = ('At least one of the following properties must be specified: '
-               'floatingip, network, port, router, '
-               'security_group, security_group_rule, subnet.')
+               'floatingip, network, port, rbac_policy, router, '
+               'security_group, security_group_rule, subnet, '
+               'subnetpool.')
         self.assertRaisesRegex(exception.PropertyUnspecifiedError, msg,
                                my_quota.validate)
 
@@ -108,7 +111,9 @@ class NeutronQuotaTest(common.HeatTestCase):
                 'security_group_rule': 5,
                 'security_group': 5,
                 'router': 5,
-                'port': 5
+                'port': 5,
+                'subnetpool': 5,
+                'rbac_policy': 5
             }
         }
         self.update_quota.assert_called_once_with(
@@ -121,7 +126,7 @@ class NeutronQuotaTest(common.HeatTestCase):
         tmpl_diff = mock.MagicMock()
         prop_diff = mock.MagicMock()
         props = {'project': 'some_project_id', 'floatingip': 1,
-                 'security_group': 4}
+                 'security_group': 4, 'rbac_policy': 8}
         json_snippet = rsrc_defn.ResourceDefinition(
             self.my_quota.name,
             'OS::Neutron::Quota',
@@ -131,7 +136,8 @@ class NeutronQuotaTest(common.HeatTestCase):
         body = {
             "quota": {
                 'floatingip': 1,
-                'security_group': 4
+                'security_group': 4,
+                'rbac_policy': 8
             }
         }
         self.update_quota.assert_called_once_with(
