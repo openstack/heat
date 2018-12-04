@@ -784,6 +784,18 @@ class ResourceGroup(stack_resource.StackResource):
 
         return list(tasks())
 
+    def preview(self):
+        # NOTE(pas-ha) just need to use include_all in _assemble_nested,
+        # so this method is a simplified copy of preview() from StackResource,
+        # and next two lines are basically a modified copy of child_template()
+        names = self._resource_names()
+        child_template = self._assemble_nested(names, include_all=True)
+        params = self.child_params()
+        name = "%s-%s" % (self.stack.name, self.name)
+        self._nested = self._parse_nested_stack(name, child_template, params)
+
+        return self.nested().preview_resources()
+
     def child_template(self):
         names = self._resource_names()
         return self._assemble_nested(names)
