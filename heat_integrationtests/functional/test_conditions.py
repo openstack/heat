@@ -619,3 +619,64 @@ class CreateUpdateResConditionTest(functional_base.FunctionalTestsBase):
         self.update_stack(stack_identifier, template=fail_rename_tmpl,
                           expected_status='UPDATE_FAILED')
         self.update_stack(stack_identifier, template=recover_rename_tmpl)
+
+
+root_output_tmpl = '''
+heat_template_version: 2016-10-14
+parameters:
+  env_type:
+    type: string
+    default: test
+conditions:
+  cd1: {equals : [{get_param: env_type}, "prod"]}
+resources:
+  nested:
+    type: nested_output.yaml
+    properties:
+      env_type: {get_param: env_type}
+outputs:
+  standard:
+    value: {get_attr: [nested, standard]}
+  cond:
+    value: {get_attr: [nested, cond]}
+    condition: cd1
+  cond_value:
+    value: {get_attr: [nested, cond_value]}
+'''
+
+nested_output_tmpl = '''
+heat_template_version: 2016-10-14
+parameters:
+  env_type:
+    type: string
+conditions:
+  cd1: {equals : [{get_param: env_type}, "prod"]}
+outputs:
+  standard:
+    value: hello
+  cond:
+    value: world
+    condition: cd1
+  cond_value:
+    value: {if: [cd1, 'prod', 'test']}
+'''
+
+
+class CreateNestedOutputConditionTest(functional_base.FunctionalTestsBase):
+
+    def test_condition_nested_outputs(self):
+        stack_identifier = self.stack_create(template=root_output_tmpl,
+                                             files={'nested_output.yaml':
+                                                    nested_output_tmpl})
+
+        standard = self.client.stacks.output_show(stack_identifier,
+                                                  'standard')['output']
+        self.assertEqual('hello', standard['output_value'])
+
+        cond = self.client.stacks.output_show(stack_identifier,
+                                              'cond')['output']
+        self.assertIsNone(cond['output_value'])
+
+        cond_val = self.client.stacks.output_show(stack_identifier,
+                                                  'cond_value')['output']
+        self.assertEqual('test', cond_val['output_value'])
