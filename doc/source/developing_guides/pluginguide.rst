@@ -642,8 +642,8 @@ your resource plugin! This has previously caused `problems
 <https://bugs.launchpad.net/heat/+bug/1554625>`_ for multiple operations,
 usually due to uncaught exceptions, If you feel you need to override
 `add_dependencies()`, please reach out to Heat developers on the `#heat` IRC
-channel on FreeNode or on the `openstack-dev
-<mailto:openstack-dev@lists.openstack.org>`_ mailing list to discuss the
+channel on FreeNode or on the `openstack-discuss
+<mailto:openstack-discuss@lists.openstack.org>`_ mailing list to discuss the
 possibility of a better solution.
 
 Registering Resource Plug-ins
