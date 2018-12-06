@@ -219,7 +219,7 @@ class ThreadGroupManager(object):
         if stack_id not in self.groups:
             self.groups[stack_id] = threadgroup.ThreadGroup()
         self.groups[stack_id].add_timer(cfg.CONF.periodic_interval,
-                                        func, *args, **kwargs)
+                                        func, None, *args, **kwargs)
 
     def add_msg_queue(self, stack_id, msg_queue):
         self.msg_queues[stack_id].append(msg_queue)
