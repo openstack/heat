@@ -338,12 +338,15 @@ class Resource(status.ResourceStatus):
                                           cache_data=data)
 
         initial_stk_defn = latest_stk_defn = curr_stack.defn
-        if (db_res.current_template_id != curr_stack.t.id and
-            (db_res.action != cls.INIT or
-             not is_update or
-             current_traversal != curr_stack.current_traversal)):
+
+        current_template_id = db_res.current_template_id
+        using_new_template = (current_template_id != curr_stack.t.id and
+                              current_template_id is not None)
+        will_create = (db_res.action == cls.INIT and
+                       is_update and
+                       current_traversal == curr_stack.current_traversal)
+        if using_new_template and not will_create:
             # load the definition associated with the resource's template
-            current_template_id = db_res.current_template_id
             current_template = template.Template.load(context,
                                                       current_template_id)
             initial_stk_defn = curr_stack.defn.clone_with_new_template(
