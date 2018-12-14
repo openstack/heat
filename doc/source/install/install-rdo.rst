@@ -70,7 +70,18 @@ requires additional information in the Identity service.
 
      .. code-block:: console
 
-        $ openstack role add --project services --user heat admin
+        $ openstack role add --project service --user heat admin
+
+     .. note::
+
+        If installing OpenStack manually following the `Keystone install
+        guide`_, the name of the services project is ``service`` as given
+        above. However, traditional methods of installing RDO (such as
+        PackStack and TripleO) use ``services`` as the name of the service
+        project. If you installed RDO using a Puppet-based method, substitute
+        ``services`` as the project name.
+
+     .. _`Keystone install guide`: https://docs.openstack.org/keystone/latest/install/keystone-users-rdo.html
 
      .. note::
 
