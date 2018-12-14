@@ -70,7 +70,7 @@ class PortPairTest(common.HeatTestCase):
         return value
 
     def test_resource_handle_create(self):
-        mock_port_pair_create = self.test_client_plugin.create_sfc_resource
+        mock_port_pair_create = self.test_client_plugin.create_ext_resource
         mock_resource = self._get_mock_resource()
         mock_port_pair_create.return_value = mock_resource
 
@@ -110,7 +110,7 @@ class PortPairTest(common.HeatTestCase):
         )
 
     def test_resource_handle_delete(self):
-        mock_port_pair_delete = self.test_client_plugin.delete_sfc_resource
+        mock_port_pair_delete = self.test_client_plugin.delete_ext_resource
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         mock_port_pair_delete.return_value = None
         self.assertIsNone(self.test_resource.handle_delete())
@@ -121,23 +121,23 @@ class PortPairTest(common.HeatTestCase):
         self.test_resource.resource_id = None
         self.assertIsNone(self.test_resource.handle_delete())
         self.assertEqual(0, self.test_client_plugin.
-                         delete_sfc_resource.call_count)
+                         delete_ext_resource.call_count)
 
     def test_resource_handle_delete_not_found(self):
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
-        mock_port_pair_delete = self.test_client_plugin.delete_sfc_resource
+        mock_port_pair_delete = self.test_client_plugin.delete_ext_resource
         mock_port_pair_delete.side_effect = self.test_client_plugin.NotFound
         self.assertIsNone(self.test_resource.handle_delete())
 
     def test_resource_show_resource(self):
-        mock_port_pair_get = self.test_client_plugin.show_sfc_resource
+        mock_port_pair_get = self.test_client_plugin.show_ext_resource
         mock_port_pair_get.return_value = {}
         self.assertEqual({},
                          self.test_resource._show_resource(),
                          'Failed to show resource')
 
     def test_resource_handle_update(self):
-        mock_port_pair_patch = self.test_client_plugin.update_sfc_resource
+        mock_port_pair_patch = self.test_client_plugin.update_ext_resource
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
 
         prop_diff = {

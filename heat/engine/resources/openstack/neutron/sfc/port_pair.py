@@ -96,7 +96,7 @@ class PortPair(neutron.NeutronResource):
         ]
 
     def _show_resource(self):
-        return self.client_plugin().show_sfc_resource('port_pair',
+        return self.client_plugin().show_ext_resource('port_pair',
                                                       self.resource_id)
 
     def handle_create(self):
@@ -104,21 +104,21 @@ class PortPair(neutron.NeutronResource):
                                         self.physical_resource_name())
         props['ingress'] = props.get(self.INGRESS)
         props['egress'] = props.get(self.EGRESS)
-        port_pair = self.client_plugin().create_sfc_resource('port_pair',
+        port_pair = self.client_plugin().create_ext_resource('port_pair',
                                                              props)
         self.resource_id_set(port_pair['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.prepare_update_properties(prop_diff)
-            self.client_plugin().update_sfc_resource('port_pair', prop_diff,
+            self.client_plugin().update_ext_resource('port_pair', prop_diff,
                                                      self.resource_id)
 
     def handle_delete(self):
         if self.resource_id is None:
             return
         with self.client_plugin().ignore_not_found:
-                self.client_plugin().delete_sfc_resource('port_pair',
+                self.client_plugin().delete_ext_resource('port_pair',
                                                          self.resource_id)
 
 

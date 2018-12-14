@@ -78,7 +78,7 @@ class PortPairGroup(neutron.NeutronResource):
         ]
 
     def _show_resource(self):
-        return self.client_plugin().show_sfc_resource('port_pair_group',
+        return self.client_plugin().show_ext_resource('port_pair_group',
                                                       self.resource_id)
 
     def handle_create(self):
@@ -86,14 +86,14 @@ class PortPairGroup(neutron.NeutronResource):
             self.properties,
             self.physical_resource_name())
 
-        port_pair_group = self.client_plugin().create_sfc_resource(
+        port_pair_group = self.client_plugin().create_ext_resource(
             'port_pair_group', props)
         self.resource_id_set(port_pair_group['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.prepare_update_properties(prop_diff)
-            self.client_plugin().update_sfc_resource(
+            self.client_plugin().update_ext_resource(
                 'port_pair_group',
                 prop_diff,
                 self.resource_id)
@@ -102,7 +102,7 @@ class PortPairGroup(neutron.NeutronResource):
         if self.resource_id is None:
             return
         with self.client_plugin().ignore_not_found:
-            self.client_plugin().delete_sfc_resource('port_pair_group',
+            self.client_plugin().delete_ext_resource('port_pair_group',
                                                      self.resource_id)
 
 

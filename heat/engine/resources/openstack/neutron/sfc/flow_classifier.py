@@ -159,21 +159,21 @@ class FlowClassifier(neutron.NeutronResource):
         ]
 
     def _show_resource(self):
-        return self.client_plugin().show_sfc_resource('flow_classifier',
+        return self.client_plugin().show_ext_resource('flow_classifier',
                                                       self.resource_id)
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
-        flow_classifier = self.client_plugin().create_sfc_resource(
+        flow_classifier = self.client_plugin().create_ext_resource(
             'flow_classifier', props)
         self.resource_id_set(flow_classifier['id'])
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.prepare_update_properties(prop_diff)
-            self.client_plugin().update_sfc_resource('flow_classifier',
+            self.client_plugin().update_ext_resource('flow_classifier',
                                                      prop_diff,
                                                      self.resource_id)
 
@@ -181,7 +181,7 @@ class FlowClassifier(neutron.NeutronResource):
         if self.resource_id is None:
             return
         with self.client_plugin().ignore_not_found:
-                self.client_plugin().delete_sfc_resource('flow_classifier',
+                self.client_plugin().delete_ext_resource('flow_classifier',
                                                          self.resource_id)
 
 
