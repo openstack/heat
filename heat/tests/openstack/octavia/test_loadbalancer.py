@@ -56,7 +56,7 @@ class LoadBalancerTest(common.HeatTestCase):
                 'vip_address': '10.0.0.4',
                 'vip_subnet_id': '123',
                 'provider': 'octavia',
-                'tenant_id': '1234',
+                'project_id': '1234',
                 'admin_state_up': True,
             }
         }

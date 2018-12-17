@@ -126,6 +126,8 @@ class LoadBalancer(octavia_base.OctaviaBase):
         if self.NAME not in props:
             props[self.NAME] = self.physical_resource_name()
         props['vip_subnet_id'] = props.pop(self.VIP_SUBNET)
+        if 'tenant_id' in props:
+            props['project_id'] = props.pop('tenant_id')
         return props
 
     def handle_create(self):
