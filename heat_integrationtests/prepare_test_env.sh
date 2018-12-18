@@ -18,7 +18,7 @@
 
 set -e
 
-DEST=${DEST:-/opt/stack/new}
+CONF_DEST=${DEST:-/opt/stack/new}
 
 source $DEST/devstack/inc/ini-config
 
@@ -27,7 +27,7 @@ set -x
 function _config_iniset {
     local conf_file=$1
 
-    source $DEST/devstack/openrc demo demo
+    source $TOP_DIR/openrc demo demo
     # user creds
     iniset $conf_file heat_plugin username $OS_USERNAME
     iniset $conf_file heat_plugin password $OS_PASSWORD
@@ -40,17 +40,20 @@ function _config_iniset {
     iniset $conf_file heat_plugin region $OS_REGION_NAME
     iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
 
-    source $DEST/devstack/openrc admin admin
-    iniset $conf_file heat_plugin admin_username $OS_USERNAME
-    iniset $conf_file heat_plugin admin_password $OS_PASSWORD
+    local default_image_name=${DEFAULT_IMAGE_NAME:-cirros-0.3.6-x86_64-disk}
 
     # Register the flavors for booting test servers
     iniset $conf_file heat_plugin instance_type m1.heat_int
     iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 
     iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-29-1.2.x86_64
-    iniset $conf_file heat_plugin minimal_image_ref cirros-0.3.5-x86_64-disk
+    iniset $conf_file heat_plugin minimal_image_ref $default_image_name
     iniset $conf_file heat_plugin hidden_stack_tag hidden
+
+    source $TOP_DIR/openrc admin admin
+    iniset $conf_file heat_plugin admin_username $OS_USERNAME
+    iniset $conf_file heat_plugin admin_password $OS_PASSWORD
+
 
     if [ "$DISABLE_CONVERGENCE" == "true" ]; then
         iniset $conf_file heat_plugin convergence_engine_enabled false
@@ -60,7 +63,7 @@ function _config_iniset {
 
 function _config_functionaltests
 {
-    local conf_file=$DEST/heat/heat_integrationtests/heat_integrationtests.conf
+    local conf_file=$CONF_DEST/heat/heat_integrationtests/heat_integrationtests.conf
     _config_iniset $conf_file
 
     # Skip NotificationTest till bug #1721202 is fixed
@@ -71,11 +74,11 @@ function _config_functionaltests
 
 function _config_tempest_plugin
 {
-    local conf_file=$DEST/tempest/etc/tempest.conf
+    local conf_file=$CONF_DEST/tempest/etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     _config_iniset $conf_file
-    iniset $conf_file heat_plugin heat_config_notify_script $DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
-    iniset $conf_file heat_plugin boot_config_env $DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
+    iniset $conf_file heat_plugin heat_config_notify_script $CONF_DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
+    iniset $conf_file heat_plugin boot_config_env $CONF_DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 
     # Skip SoftwareConfigIntegrationTest because it requires a custom image
     # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
