@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    We now allowed global admins to operate software deployment and software config resources from other projects.
