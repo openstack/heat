@@ -17,6 +17,7 @@
 set -ex
 
 export DEST=${DEST:-/opt/stack/new}
+export TOP_DIR=${TOP_DIR:-/opt/stack/new/devstack}
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_network.sh
 

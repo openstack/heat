@@ -16,14 +16,14 @@
 
 set -ex
 
-source $DEST/devstack/openrc demo demo
+source $TOP_DIR/openrc demo demo
 
 # delete the network created
 openstack router remove subnet router1 heat-subnet
 openstack subnet delete heat-subnet
 openstack network delete heat-net
 
-source $DEST/devstack/openrc admin admin
+source $TOP_DIR/openrc admin admin
 
 # delete the flavors created
 openstack flavor delete m1.heat_int
