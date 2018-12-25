@@ -822,11 +822,11 @@ class Stack(collections.Mapping):
 
     def access_allowed(self, credential_id, resource_name):
         """Is credential_id authorised to access resource by resource_name."""
-        if not self.resources:
-            # this also triggers lazy-loading of resources
-            # so is required for register_access_allowed_handler
-            # to be called
-            return False
+        if not self.resources or resource_name not in self.resources:
+            # this handle the case that sd in action delete,
+            # try to load access_allowed_handlers if resources object
+            # haven't been loaded.
+            [res.name for res in self.iter_resources()]
 
         handler = self._access_allowed_handlers.get(credential_id)
         return handler and handler(resource_name)
