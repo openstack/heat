@@ -40,6 +40,9 @@ resources:
       segmentation_id: 101
       router_external: False
       shared: true
+      tags:
+        - tag1
+        - tag2
 '''
 
 stpna = {
@@ -54,7 +57,7 @@ stpna = {
         "provider:segmentation_id": "101",
         "router:external": False,
         "tenant_id": "c1210485b2424d48804aad5d39c61b8f",
-        "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
     }
 }
 
@@ -85,6 +88,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
         return rsrc
 
     def test_create_provider_net(self):
+        resource_type = 'networks'
         rsrc = self.create_provider_net()
         self.mockclient.show_network.side_effect = [
             stpnb,
@@ -127,6 +131,11 @@ class NeutronProviderNetTest(common.HeatTestCase):
                 'shared': True
             }
         })
+        self.mockclient.replace_tag.assert_called_with(
+            resource_type,
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'tags': ['tag1', 'tag2']}
+        )
         self.mockclient.show_network.assert_called_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         self.assertEqual(5, self.mockclient.show_network.call_count)
@@ -135,6 +144,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
         self.assertEqual(2, self.mockclient.delete_network.call_count)
 
     def test_update_provider_net(self):
+        resource_type = 'networks'
         rsrc = self.create_provider_net()
         self.mockclient.show_network.side_effect = [stpnb, stpna]
         self.mockclient.update_network.return_value = None
@@ -149,7 +159,8 @@ class NeutronProviderNetTest(common.HeatTestCase):
             'physical_network': 'physnet_1',
             'segmentation_id': '102',
             'port_security_enabled': False,
-            'router_external': True
+            'router_external': True,
+            'tags': [],
         }
         update_snippet = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(),
                                                       prop_diff)
@@ -171,6 +182,11 @@ class NeutronProviderNetTest(common.HeatTestCase):
                 'router:external': False,
                 'shared': True}
         })
+        self.mockclient.replace_tag.assert_called_with(
+            resource_type,
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
+            {'tags': []}
+        )
         self.mockclient.show_network.assert_called_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         self.assertEqual(2, self.mockclient.show_network.call_count)
@@ -214,6 +230,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
                 'provider:network_type': 'flat',
                 'id': 'af216806-4462-4c68-bfa4-9580857e71c3',
                 'provider:segmentation_id': None,
+                'tags': ['tag1', 'tag2'],
             }
         }
 
@@ -225,7 +242,8 @@ class NeutronProviderNetTest(common.HeatTestCase):
             'network_type': 'flat',
             'port_security_enabled': True,
             'segmentation_id': None,
-            'router_external': False
+            'router_external': False,
+            'tags': ['tag1', 'tag2'],
         }
 
         self.assertEqual(expected, reality)
