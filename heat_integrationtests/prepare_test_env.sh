@@ -77,7 +77,7 @@ function _config_tempest_plugin
     local conf_file=$CONF_DEST/tempest/etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     _config_iniset $conf_file
-    iniset $conf_file heat_plugin heat_config_notify_script $CONF_DEST/heat-templates/hot/software-config/elements/heat-config/bin/heat-config-notify
+    iniset $conf_file heat_plugin heat_config_notify_script $CONF_DEST/heat-agents/heat-config/bin/heat-config-notify
     iniset $conf_file heat_plugin boot_config_env $CONF_DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 
     # Skip SoftwareConfigIntegrationTest because it requires a custom image
