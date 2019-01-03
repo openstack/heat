@@ -129,4 +129,4 @@
         - heat-functional-convg-mysql-lbaasv2-py3
     experimental:
       jobs:
-        - tripleo-ci-centos-7-scenario002-multinode-oooq-container
+        - tripleo-ci-centos-7-scenario002-standalone
