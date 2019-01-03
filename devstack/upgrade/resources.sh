@@ -57,19 +57,6 @@ function _run_heat_integrationtests {
     local devstack_dir=$1
 
     pushd $devstack_dir/../tempest
-    conf_file=etc/tempest.conf
-    iniset_multiline $conf_file service_available heat_plugin True
-    iniset $conf_file heat_plugin username $OS_USERNAME
-    iniset $conf_file heat_plugin password $OS_PASSWORD
-    iniset $conf_file heat_plugin tenant_name $OS_PROJECT_NAME
-    iniset $conf_file heat_plugin auth_url $OS_AUTH_URL
-    iniset $conf_file heat_plugin user_domain_id $OS_USER_DOMAIN_ID
-    iniset $conf_file heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
-    iniset $conf_file heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
-    iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
-    iniset $conf_file heat_plugin region $OS_REGION_NAME
-    iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
-
     export DEST=$(dirname $devstack_dir)
     $DEST/heat/heat_integrationtests/prepare_test_env.sh
     $DEST/heat/heat_integrationtests/prepare_test_network.sh
