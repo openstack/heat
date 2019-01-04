@@ -284,6 +284,8 @@ resources:
             default = nodes.literal('', json.dumps(prop.default))
             para.append(default)
             definition.append(para)
+        elif prop_key == 'description' and prop.update_allowed:
+            para = nodes.line('', _('Defaults to the resource description'))
 
         for constraint in prop.constraints:
             para = nodes.line('', str(constraint))

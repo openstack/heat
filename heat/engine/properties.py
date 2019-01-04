@@ -377,7 +377,8 @@ class Property(object):
 class Properties(collections.Mapping):
 
     def __init__(self, schema, data, resolver=lambda d: d, parent_name=None,
-                 context=None, section=None, translation=None):
+                 context=None, section=None, translation=None,
+                 rsrc_description=None):
         self.props = dict((k, Property(s, k, context, path=parent_name))
                           for k, s in schema.items())
         self.resolve = resolver
@@ -387,6 +388,7 @@ class Properties(collections.Mapping):
         self.context = context
         self.translation = (trans.Translation(properties=self)
                             if translation is None else translation)
+        self.rsrc_description = rsrc_description or None
 
     def update_translation(self, rules, client_resolve=True,
                            ignore_resolve_error=False):
@@ -507,6 +509,10 @@ class Properties(collections.Mapping):
                                   translation=self.translation)
         elif prop.required():
             raise ValueError(_('Property %s not assigned') % key)
+        elif key == 'description' and prop.schema.update_allowed:
+            return self.rsrc_description
+        else:
+            return None
 
     def __getitem__(self, key):
         return self._get_property_value(key)
