@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The ``OS::Trove::Cluster`` resource type now supports specifying an
+    availability zone.
