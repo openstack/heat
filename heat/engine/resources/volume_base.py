@@ -211,7 +211,7 @@ class BaseVolumeAttachment(resource.Resource):
 
         if not prg.cinder_complete:
             prg.cinder_complete = self.client_plugin(
-            ).check_detach_volume_complete(prg.vol_id)
+            ).check_detach_volume_complete(prg.vol_id, prg.srv_id)
             return False
         if not prg.nova_complete:
             prg.nova_complete = self.client_plugin(
