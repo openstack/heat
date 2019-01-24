@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2018-10-05 22:20+0000\n"
+"POT-Creation-Date: 2019-01-24 04:18+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1944,6 +1944,9 @@ msgstr "클러스터 ips에 대해 manila에 설정된 권한을 제어합니다
 
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "기간 인수에 사용할 단위이며 기본값을 일로 설정합니다."
+
+msgid "HTTP verb to use for signaling output values"
+msgstr "출력 값 신호를 보내는 데 사용할 HTTP verb"
 
 msgid "Hadoop cluster name."
 msgstr "Hadoop 클러스터 이름입니다."
