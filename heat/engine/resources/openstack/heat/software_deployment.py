@@ -384,7 +384,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                                   'values'))
                 yield swc_io.InputConfig(
                     name=self.DEPLOY_SIGNAL_VERB, value='POST',
-                    description=_('HTTP verb to use for signaling output'
+                    description=_('HTTP verb to use for signaling output '
                                   'values'))
 
             elif self._signal_transport_temp_url():
@@ -395,7 +395,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                                   'values'))
                 yield swc_io.InputConfig(
                     name=self.DEPLOY_SIGNAL_VERB, value='PUT',
-                    description=_('HTTP verb to use for signaling output'
+                    description=_('HTTP verb to use for signaling output '
                                   'values'))
 
             elif (self._signal_transport_heat() or
