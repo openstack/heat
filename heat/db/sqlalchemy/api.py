@@ -1147,7 +1147,7 @@ def software_config_create(context, values):
 
 def software_config_get(context, config_id):
     result = context.session.query(models.SoftwareConfig).get(config_id)
-    if (result is not None and context is not None and
+    if (result is not None and context is not None and not context.is_admin and
             result.tenant != context.tenant_id):
         result = None
 

@@ -1059,36 +1059,62 @@ class SqlAlchemyTest(common.HeatTestCase):
             db_api.software_config_get,
             self.ctx,
             config_id)
+        # admin can get the software_config
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        config = db_api.software_config_get(admin_ctx, config_id)
+        self.assertIsNotNone(config)
 
-    def test_software_config_get_all(self):
-        self.assertEqual([], db_api.software_config_get_all(self.ctx))
+    def _create_software_config_record(self):
         tenant_id = self.ctx.tenant_id
         software_config = db_api.software_config_create(
             self.ctx, {'name': 'config_mysql',
                        'tenant': tenant_id})
         self.assertIsNotNone(software_config)
-        software_configs = db_api.software_config_get_all(self.ctx)
+
+        return software_config.id
+
+    def _test_software_config_get_all(self, get_ctx=None):
+        self.assertEqual([], db_api.software_config_get_all(self.ctx))
+        scf_id = self._create_software_config_record()
+        software_configs = db_api.software_config_get_all(get_ctx or self.ctx)
         self.assertEqual(1, len(software_configs))
-        self.assertEqual(software_config.id, software_configs[0].id)
+        self.assertEqual(scf_id, software_configs[0].id)
+
+    def test_software_config_get_all(self):
+        self._test_software_config_get_all()
+
+    def test_software_config_get_all_by_admin(self):
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        self._test_software_config_get_all(get_ctx=admin_ctx)
 
     def test_software_config_delete(self):
-        tenant_id = self.ctx.tenant_id
-        config = db_api.software_config_create(
-            self.ctx, {'name': 'config_mysql',
-                       'tenant': tenant_id})
-        config_id = config.id
-        db_api.software_config_delete(self.ctx, config_id)
+        scf_id = self._create_software_config_record()
+
+        cfg = db_api.software_config_get(self.ctx, scf_id)
+        self.assertIsNotNone(cfg)
+
+        db_api.software_config_delete(self.ctx, scf_id)
         err = self.assertRaises(
             exception.NotFound,
             db_api.software_config_get,
             self.ctx,
-            config_id)
-        self.assertIn(config_id, six.text_type(err))
+            scf_id)
+        self.assertIn(scf_id, six.text_type(err))
 
         err = self.assertRaises(
             exception.NotFound, db_api.software_config_delete,
-            self.ctx, config_id)
-        self.assertIn(config_id, six.text_type(err))
+            self.ctx, scf_id)
+        self.assertIn(scf_id, six.text_type(err))
+
+    def test_software_config_delete_by_admin(self):
+        scf_id = self._create_software_config_record()
+        cfg = db_api.software_config_get(self.ctx, scf_id)
+        self.assertIsNotNone(cfg)
+        admin_ctx = utils.dummy_context(is_admin=True,
+                                        tenant_id='admin_tenant')
+        db_api.software_config_delete(admin_ctx, scf_id)
 
     def test_software_config_delete_not_allowed(self):
         tenant_id = self.ctx.tenant_id
