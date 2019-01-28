@@ -865,7 +865,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
         status = cp.get_status(server)
         LOG.debug('%(name)s check_suspend_complete status = %(status)s',
                   {'name': self.name, 'status': status})
-        if status in list(cp.deferred_server_statuses + ['ACTIVE']):
+        if status in (cp.deferred_server_statuses | {'ACTIVE'}):
             return status == 'SUSPENDED'
         else:
             exc = exception.ResourceUnknownStatus(

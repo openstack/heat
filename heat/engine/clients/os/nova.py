@@ -48,7 +48,7 @@ CLIENT_NAME = 'nova'
 class NovaClientPlugin(microversion_mixin.MicroversionMixin,
                        client_plugin.ClientPlugin):
 
-    deferred_server_statuses = ['BUILD',
+    deferred_server_statuses = {'BUILD',
                                 'HARD_REBOOT',
                                 'PASSWORD',
                                 'REBOOT',
@@ -57,7 +57,7 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
                                 'REVERT_RESIZE',
                                 'SHUTOFF',
                                 'SUSPENDED',
-                                'VERIFY_RESIZE']
+                                'VERIFY_RESIZE'}
 
     exceptions_module = exceptions
 
