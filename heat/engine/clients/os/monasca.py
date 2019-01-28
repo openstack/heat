@@ -14,6 +14,7 @@
 from monascaclient import client
 from monascaclient import exc as monasca_exc
 
+from heat.common import endpoint_utils
 from heat.common import exception as heat_exc
 from heat.engine.clients import client_plugin
 from heat.engine import constraints
@@ -37,6 +38,9 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
             self.VERSION,
             token=self.context.keystone_session.get_token(),
             endpoint=endpoint,
+            auth_url=endpoint_utils.get_auth_uri(),
+            project_name=self.context.project_name,
+            project_domain_id=self.context.project_domain,
             cacert=self._get_client_option(CLIENT_NAME, 'ca_file'),
             cert_file=self._get_client_option(CLIENT_NAME, 'cert_file'),
             key_file=self._get_client_option(CLIENT_NAME, 'key_file'),
