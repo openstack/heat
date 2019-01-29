@@ -57,14 +57,14 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
                                             name=domain_id_or_name)
 
     def get_zone_id(self, zone_id_or_name):
+        client = self.client(version=self.V2)
         try:
-            zone_obj = self.client(version=self.V2).zones.get(zone_id_or_name)
+            zone_obj = client.zones.get(zone_id_or_name)
             return zone_obj['id']
         except exceptions.NotFound:
-            zones = self.client().zones.list(
-                criterion=dict(name=zone_id_or_name))
+            zones = client.zones.list(criterion=dict(name=zone_id_or_name))
             if len(zones) == 1:
-                    return zones[0]['id']
+                return zones[0]['id']
 
         raise heat_exception.EntityNotFound(entity='Designate Zone',
                                             name=zone_id_or_name)
