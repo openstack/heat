@@ -35,6 +35,10 @@ if is_heat_enabled; then
         # Start the heat API and heat taskmgr components
         echo_summary "Starting heat"
         start_heat
+
+    elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
+        echo_summary "Configuring Tempest for Heat"
+        configure_tempest_for_heat
     fi
 
     if [[ "$1" == "unstack" ]]; then

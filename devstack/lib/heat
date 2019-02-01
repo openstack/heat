@@ -442,6 +442,15 @@ function create_heat_accounts {
     fi
 }
 
+# configure_tempest_for_heat()
+# NOTE (gmann): Configure all the Tempest setting for Heat service in
+# this function.
+function configure_tempest_for_heat {
+    if is_service_enabled tempest; then
+        iniset $TEMPEST_CONFIG service_available heat True
+    fi
+}
+
 # Restore xtrace
 $_XTRACE_HEAT
 
