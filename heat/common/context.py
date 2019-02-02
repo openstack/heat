@@ -134,8 +134,7 @@ class RequestContext(context.RequestContext):
             self._object_cache[cache_cls] = cache
         return cache
 
-    user_id = _moved_attr('user')
-    tenant_id = _moved_attr('tenant')
+    tenant_id = _moved_attr('project_id')
 
     @property
     def session(self):
@@ -157,7 +156,7 @@ class RequestContext(context.RequestContext):
 
     def to_dict(self):
         user_idt = u'{user} {tenant}'.format(user=self.user_id or '-',
-                                             tenant=self.tenant_id or '-')
+                                             tenant=self.project_id or '-')
 
         return {'auth_token': self.auth_token,
                 'username': self.username,
@@ -165,7 +164,9 @@ class RequestContext(context.RequestContext):
                 'password': self.password,
                 'aws_creds': self.aws_creds,
                 'tenant': self.project_name,
-                'tenant_id': self.tenant_id,
+                'tenant_id': self.project_id,
+                'project_name': self.project_name,
+                'project_id': self.project_id,
                 'trust_id': self.trust_id,
                 'trustor_user_id': self.trustor_user_id,
                 'auth_token_info': self.auth_token_info,
@@ -186,11 +187,11 @@ class RequestContext(context.RequestContext):
         return cls(
             auth_token=values.get('auth_token'),
             username=values.get('username'),
-            user=values.get('user_id'),
+            user_id=values.get('user_id'),
             password=values.get('password'),
             aws_creds=values.get('aws_creds'),
-            project_name=values.get('tenant'),
-            tenant=values.get('tenant_id'),
+            project_name=values.get('project_name', values.get('tenant')),
+            project_id=values.get('project_id', values.get('tenant_id')),
             trust_id=values.get('trust_id'),
             trustor_user_id=values.get('trustor_user_id'),
             auth_token_info=values.get('auth_token_info'),
@@ -212,7 +213,7 @@ class RequestContext(context.RequestContext):
         # what should be used when writing policy but are maintained for
         # compatibility.
         policy['user'] = self.user_id
-        policy['tenant'] = self.tenant_id
+        policy['tenant'] = self.project_id
         policy['is_admin'] = self.is_admin
         policy['auth_token_info'] = self.auth_token_info
 
@@ -256,7 +257,7 @@ class RequestContext(context.RequestContext):
         if self.password:
             return generic.Password(username=self.username,
                                     password=self.password,
-                                    project_id=self.tenant_id,
+                                    project_id=self.project_id,
                                     user_domain_id=self.user_domain,
                                     auth_url=self.keystone_v3_endpoint)
 
