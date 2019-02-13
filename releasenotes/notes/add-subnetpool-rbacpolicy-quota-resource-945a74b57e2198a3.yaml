@@ -1,0 +1,3 @@
+---
+features:
+  - Add rbac_policy and subnetpool support for OS::Neutron::Quota resource.

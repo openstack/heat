@@ -33,6 +33,8 @@ class NeutronQuota(neutron.NeutronResource):
         - security_group
         - router
         - port
+        - subnetpool
+        - rbac_policy
 
     Note that default neutron security policy usage of this resource
     is limited to being used by administrators only. Administrators should be
@@ -46,10 +48,10 @@ class NeutronQuota(neutron.NeutronResource):
 
     PROPERTIES = (
         PROJECT, SUBNET, NETWORK, FLOATINGIP, SECURITY_GROUP_RULE,
-        SECURITY_GROUP, ROUTER, PORT
+        SECURITY_GROUP, ROUTER, PORT, SUBNETPOOL, RBAC_POLICY
     ) = (
         'project', 'subnet', 'network', 'floatingip', 'security_group_rule',
-        'security_group', 'router', 'port'
+        'security_group', 'router', 'port', 'subnetpool', 'rbac_policy'
     )
 
     properties_schema = {
@@ -109,6 +111,22 @@ class NeutronQuota(neutron.NeutronResource):
               'Setting -1 means unlimited.'),
             constraints=[constraints.Range(min=-1)],
             update_allowed=True
+        ),
+        SUBNETPOOL: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Quota for the number of subnet pools. '
+              'Setting -1 means unlimited.'),
+            constraints=[constraints.Range(min=-1)],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='12.0.0')
+        ),
+        RBAC_POLICY: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Quota for the number of rbac policies. '
+              'Setting -1 means unlimited.'),
+            constraints=[constraints.Range(min=-1)],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='12.0.0')
         )
     }
 
