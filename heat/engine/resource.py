@@ -536,7 +536,7 @@ class Resource(status.ResourceStatus):
         if self.stack.env.registry.matches_hook(self.name, hook):
             self.trigger_hook(hook)
             self._add_event(self.action, self.status,
-                            _("%(a)s paused until Hook %(h)s is cleared")
+                            "%(a)s paused until Hook %(h)s is cleared"
                             % {'a': action, 'h': hook})
             LOG.info('Reached hook on %s', self)
 
