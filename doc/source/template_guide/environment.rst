@@ -71,18 +71,18 @@ strategies in an environment file.
 
 There are three merge strategy types:
 
-  ``overwrite``
-      Overwrites a parameter, existing parameter values are replaced.
+``overwrite``
+    Overwrites a parameter, existing parameter values are replaced.
 
-  ``merge``
-      Merges the existing parameter value and the new value. String values
-      are concatenated, comma delimited lists are extended and json values
-      are updated.
+``merge``
+    Merges the existing parameter value and the new value. String values
+    are concatenated, comma delimited lists are extended and json values
+    are updated.
 
-  ``deep_merge``
-      Json values are deep merged. Not useful for other types like comma
-      delimited lists and strings. If specified for them, it falls back to
-      ``merge``.
+``deep_merge``
+    Json values are deep merged. Not useful for other types like comma
+    delimited lists and strings. If specified for them, it falls back to
+    ``merge``.
 
 You can provide a default merge strategy and/or parameter specific merge strategies
 per environment file. Parameter specific merge strategy is only used for that
