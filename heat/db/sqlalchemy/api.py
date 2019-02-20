@@ -571,7 +571,7 @@ def stack_get_by_name(context, stack_name):
              models.Stack.tenant == context.tenant_id,
              models.Stack.stack_user_project_id == context.tenant_id)
              ).filter_by(name=stack_name)
-    return query.first()
+    return query.order_by(models.Stack.created_at).first()
 
 
 def stack_get(context, stack_id, show_deleted=False, eager_load=True):
@@ -757,7 +757,17 @@ def stack_count_all(context, filters=None,
 def stack_create(context, values):
     stack_ref = models.Stack()
     stack_ref.update(values)
+    stack_name = stack_ref.name
     stack_ref.save(context.session)
+
+    # Even though we just created a stack with this name, we may not find
+    # it again because some unit tests create stacks with deleted_at set. Also
+    # some backup stacks may not be found, for reasons that are unclear.
+    earliest = stack_get_by_name(context, stack_name)
+    if earliest is not None and earliest.id != stack_ref.id:
+        context.session.query(models.Stack).filter_by(id=stack_ref.id).delete()
+        raise exception.StackExists(stack_name=stack_name)
+
     return stack_ref
 
 

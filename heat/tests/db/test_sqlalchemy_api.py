@@ -357,6 +357,21 @@ class SqlAlchemyTest(common.HeatTestCase):
         st = db_api.stack_get_by_name(self.ctx, name)
         self.assertIsNone(st)
 
+    def test_stack_create_multiple(self):
+        name = 'stack_race'
+        stack = self._setup_test_stack(name, UUID1,
+                                       stack_user_project_id=UUID2)[1]
+        self.assertRaises(exception.StackExists,
+                          self._setup_test_stack,
+                          name, UUID2, stack_user_project_id=UUID2)
+
+        st = db_api.stack_get_by_name(self.ctx, name)
+        self.assertEqual(UUID1, st.id)
+
+        stack.delete()
+
+        self.assertIsNone(db_api.stack_get_by_name(self.ctx, name))
+
     def test_nested_stack_get_by_name(self):
         stack1 = self._setup_test_stack('neststack1', UUID1)[1]
         stack2 = self._setup_test_stack('neststack2', UUID2,
