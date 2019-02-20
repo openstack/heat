@@ -1,0 +1,6 @@
+---
+features:
+  - A new ``OS::Vitrage::Template`` resource is added to configure and create
+    a Vitrage template. The Vitrage template can be used, for example, for
+    executing a Mistral healing workflow in case there is an alarm on an
+    instance.
