@@ -51,6 +51,8 @@ class Enforcer(object):
 
         # register rules
         self.enforcer.register_defaults(policies.list_rules())
+        self.file_rules = self.enforcer.file_rules
+        self.registered_rules = self.enforcer.registered_rules
 
     def set_rules(self, rules, overwrite=True):
         """Create a new Rules object based on the provided dict of rules."""
@@ -114,6 +116,13 @@ class Enforcer(object):
         """
         return self._check(context, 'context_is_admin', target={}, exc=None,
                            is_registered_policy=True)
+
+
+def get_policy_enforcer():
+    # This method is used by oslopolicy CLI scripts to generate policy
+    # files from overrides on disk and defaults in code.
+    CONF([], project='heat')
+    return get_enforcer()
 
 
 def get_enforcer():
