@@ -539,7 +539,17 @@ class KeystoneClientTest(common.HeatTestCase):
     def test_create_trust_context_trust_create_deletegate_all_roles(self):
         self._test_create_trust_context_trust_create()
 
-    def _test_create_trust_context_trust_create(self, delegate_roles=None):
+    def test_create_trust_context_trust_create_with_enabled_redelegation(self):
+        cfg.CONF.set_override('reauthentication_auth_method', 'trusts')
+        cfg.CONF.set_override('allow_trusts_redelegation', True)
+        self._test_create_trust_context_trust_create(redelegate=True)
+
+    def test_create_trust_context_trust_create_with_no_redelegation(self):
+        cfg.CONF.set_override('reauthentication_auth_method', 'trusts')
+        self._test_create_trust_context_trust_create()
+
+    def _test_create_trust_context_trust_create(self, delegate_roles=None,
+                                                redelegate=False):
 
         """Test create_trust_context when creating a trust."""
 
@@ -571,6 +581,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m_load_auth.assert_called_once_with(
             cfg.CONF, 'trustee', trust_id=None)
         self.mock_ks_v3_client.trusts.create.assert_called_once_with(
+            allow_redelegation=redelegate,
             trustor_user='5678',
             trustee_user='1234',
             project='42',
@@ -630,6 +641,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m_load_auth.assert_called_with(
             cfg.CONF, 'trustee', trust_id=None)
         self.mock_ks_v3_client.trusts.create.assert_called_once_with(
+            allow_redelegation=False,
             trustor_user='5678',
             trustee_user='1234',
             project='42',

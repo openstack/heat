@@ -1,0 +1,19 @@
+---
+features:
+  - |
+    Added new config option ``[DEFAULT]allow_trusts_redelegation`` (``False``
+    by default). When enabled and ``reauthentication_auth_method`` is set to
+    ``trusts``, Heat will always create trusts with enabled redelegation,
+    for both trusts used for long running stacks and for trusts used for
+    deferred authentication.
+security:
+  - |
+    With both ``reauthentication_auth_method`` set to ``trusts`` and
+    ``allow_trusts_redelegation`` set to ``True`` (new config option, ``False``
+    by default), Heat will always create trusts with enabled redelegation,
+    for both trusts used for long running stacks and for trusts used for
+    deferred authentication. This have security implications and is only
+    recommended when Heat is set to use trust and you experience problems
+    with other services Heat consumes that also require to create trusts
+    from token being passed by Heat (examples are Aodh and Heat running in
+    another region).

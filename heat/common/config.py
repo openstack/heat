@@ -117,6 +117,18 @@ engine_opts = [
                help=_('Allow reauthentication on token expiry, such that'
                       ' long-running tasks may complete. Note this defeats'
                       ' the expiry of any provided user tokens.')),
+    cfg.BoolOpt('allow_trusts_redelegation',
+                default=False,
+                help=_('Create trusts with redelegation enabled. '
+                       'This option is only used when '
+                       'reauthentication_auth_method is set to "trusts". '
+                       'Note that enabling this option does have '
+                       'security implications as all trusts created by Heat '
+                       'will use both impersonation and redelegation enabled. '
+                       'Enable it only when there are other services that '
+                       'need to create trusts from tokens Heat uses to '
+                       'access them, examples are Aodh and Heat in another '
+                       'region when configured to use trusts too.')),
     cfg.ListOpt('trusts_delegated_roles',
                 default=[],
                 help=_('Subset of trustor roles to be delegated to heat.'
