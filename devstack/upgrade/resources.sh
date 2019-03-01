@@ -73,8 +73,10 @@ function _run_heat_integrationtests {
 }
 
 function create {
-    # run heat integration tests instead of tempest smoke before create
-    _run_heat_integrationtests $BASE_DEVSTACK_DIR
+    if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
+        # run heat integration tests instead of tempest smoke before create
+        _run_heat_integrationtests $BASE_DEVSTACK_DIR
+    fi
 
     source $TOP_DIR/openrc admin admin
     # creates a tenant for the server
@@ -110,7 +112,9 @@ function verify {
     _heat_set_user
     local side="$1"
     if [[ "$side" = "post-upgrade" ]]; then
-        _run_heat_integrationtests $TARGET_DEVSTACK_DIR
+        if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
+            _run_heat_integrationtests $TARGET_DEVSTACK_DIR
+        fi
     fi
     stack_name=$(resource_get heat stack_name)
     heat stack-show $stack_name
