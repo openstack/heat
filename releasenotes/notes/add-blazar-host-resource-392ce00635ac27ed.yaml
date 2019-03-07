@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    A new ``OS::Blazar::Host`` resource is added to manage compute hosts for
+    the lease/reservation in OpenStack.
