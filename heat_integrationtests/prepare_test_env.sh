@@ -84,10 +84,13 @@ function _config_tempest_plugin
     # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
     # Skip AutoscalingLoadBalancerTest and AutoscalingLoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
     iniset $conf_file heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, \
-        SoftwareConfigIntegrationTest, VolumeBackupRestoreIntegrationTest'
+        SoftwareConfigIntegrationTest'
 
     # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
     iniset $conf_file heat_plugin skip_functional_test_list 'LoadBalancerv2Test'
+
+    # disable cinder backup feature
+    iniset $conf_file volume-feature-enabled backup False
 
     cat $conf_file
 }
