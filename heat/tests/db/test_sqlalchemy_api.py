@@ -30,6 +30,7 @@ from sqlalchemy.orm import session
 
 from heat.common import context
 from heat.common import exception
+from heat.common import short_id
 from heat.common import template_format
 from heat.db.sqlalchemy import api as db_api
 from heat.db.sqlalchemy import models
@@ -95,6 +96,7 @@ class SqlAlchemyTest(common.HeatTestCase):
                              stack_user_project_id=stack_user_project_id)
         with utils.UUIDStub(stack_id):
             stack.store(backup=backup)
+
         return (template, stack)
 
     def _mock_create(self):
@@ -310,7 +312,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         )
 
     def test_resource_data_delete(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('res_data_delete', UUID1)[1]
         self._mock_create()
 
         stack.create()
@@ -335,73 +337,74 @@ class SqlAlchemyTest(common.HeatTestCase):
         )
 
     def test_stack_get_by_name(self):
-        stack = self._setup_test_stack('stack', UUID1,
+        name = 'stack_get_by_name'
+        stack = self._setup_test_stack(name, UUID1,
                                        stack_user_project_id=UUID2)[1]
 
-        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        st = db_api.stack_get_by_name(self.ctx, name)
         self.assertEqual(UUID1, st.id)
 
         self.ctx.tenant = UUID3
-        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        st = db_api.stack_get_by_name(self.ctx, name)
         self.assertIsNone(st)
 
         self.ctx.tenant = UUID2
-        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        st = db_api.stack_get_by_name(self.ctx, name)
         self.assertEqual(UUID1, st.id)
 
         stack.delete()
 
-        st = db_api.stack_get_by_name(self.ctx, 'stack')
+        st = db_api.stack_get_by_name(self.ctx, name)
         self.assertIsNone(st)
 
     def test_nested_stack_get_by_name(self):
-        stack1 = self._setup_test_stack('stack1', UUID1)[1]
-        stack2 = self._setup_test_stack('stack2', UUID2,
+        stack1 = self._setup_test_stack('neststack1', UUID1)[1]
+        stack2 = self._setup_test_stack('neststack2', UUID2,
                                         owner_id=stack1.id)[1]
 
-        result = db_api.stack_get_by_name(self.ctx, 'stack2')
+        result = db_api.stack_get_by_name(self.ctx, 'neststack2')
         self.assertEqual(UUID2, result.id)
 
         stack2.delete()
 
-        result = db_api.stack_get_by_name(self.ctx, 'stack2')
+        result = db_api.stack_get_by_name(self.ctx, 'neststack2')
         self.assertIsNone(result)
 
     def test_stack_get_by_name_and_owner_id(self):
-        stack1 = self._setup_test_stack('stack1', UUID1,
+        stack1 = self._setup_test_stack('ownstack1', UUID1,
                                         stack_user_project_id=UUID3)[1]
-        stack2 = self._setup_test_stack('stack2', UUID2,
+        stack2 = self._setup_test_stack('ownstack2', UUID2,
                                         owner_id=stack1.id,
                                         stack_user_project_id=UUID3)[1]
 
-        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'ownstack2',
                                                        None)
         self.assertIsNone(result)
 
-        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'ownstack2',
                                                        stack1.id)
 
         self.assertEqual(UUID2, result.id)
 
         self.ctx.tenant = str(uuid.uuid4())
-        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'ownstack2',
                                                        None)
         self.assertIsNone(result)
 
         self.ctx.tenant = UUID3
-        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'ownstack2',
                                                        stack1.id)
 
         self.assertEqual(UUID2, result.id)
 
         stack2.delete()
 
-        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'stack2',
+        result = db_api.stack_get_by_name_and_owner_id(self.ctx, 'ownstack2',
                                                        stack1.id)
         self.assertIsNone(result)
 
     def test_stack_get(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('stack_get', UUID1)[1]
 
         st = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
         self.assertEqual(UUID1, st.id)
@@ -414,7 +417,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(UUID1, st.id)
 
     def test_stack_get_status(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('stack_get_status', UUID1)[1]
 
         st = db_api.stack_get_status(self.ctx, UUID1)
         self.assertEqual(('CREATE', 'IN_PROGRESS', '', None), st)
@@ -430,7 +433,7 @@ class SqlAlchemyTest(common.HeatTestCase):
                           db_api.stack_get_status, self.ctx, UUID2)
 
     def test_stack_get_show_deleted_context(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('stack_get_deleted', UUID1)[1]
 
         self.assertFalse(self.ctx.show_deleted)
         st = db_api.stack_get(self.ctx, UUID1)
@@ -445,7 +448,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(UUID1, st.id)
 
     def test_stack_get_all(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stack_get_all_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_get_all(self.ctx)
         self.assertEqual(3, len(st_db))
@@ -459,7 +463,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(1, len(st_db))
 
     def test_stack_get_all_show_deleted(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stack_get_all_deleted_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_get_all(self.ctx)
         self.assertEqual(3, len(st_db))
@@ -472,11 +477,11 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(3, len(st_db))
 
     def test_stack_get_all_show_nested(self):
-        stack1 = self._setup_test_stack('stack1', UUID1)[1]
-        stack2 = self._setup_test_stack('stack2', UUID2,
+        stack1 = self._setup_test_stack('neststack_get_all_1', UUID1)[1]
+        stack2 = self._setup_test_stack('neststack_get_all_2', UUID2,
                                         owner_id=stack1.id)[1]
         # Backup stack should not be returned
-        stack3 = self._setup_test_stack('stack1*', UUID3,
+        stack3 = self._setup_test_stack('neststack_get_all_1*', UUID3,
                                         owner_id=stack1.id,
                                         backup=True)[1]
 
@@ -493,7 +498,7 @@ class SqlAlchemyTest(common.HeatTestCase):
 
     def test_stack_get_all_with_filters(self):
         self._setup_test_stack('foo', UUID1)
-        self._setup_test_stack('bar', UUID2)
+        self._setup_test_stack('baz', UUID2)
 
         filters = {'name': 'foo'}
         results = db_api.stack_get_all(self.ctx,
@@ -503,7 +508,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual('foo', results[0]['name'])
 
     def test_stack_get_all_filter_matches_in_list(self):
-        self._setup_test_stack('foo', UUID1)
+        self._setup_test_stack('wibble', UUID1)
         self._setup_test_stack('bar', UUID2)
 
         filters = {'name': ['bar', 'quux']}
@@ -514,8 +519,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual('bar', results[0]['name'])
 
     def test_stack_get_all_returns_all_if_no_filters(self):
-        self._setup_test_stack('foo', UUID1)
-        self._setup_test_stack('bar', UUID2)
+        self._setup_test_stack('stack_get_all_no_filter1', UUID1)
+        self._setup_test_stack('stack_get_all_no_filter2', UUID2)
 
         filters = None
         results = db_api.stack_get_all(self.ctx,
@@ -524,7 +529,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(2, len(results))
 
     def test_stack_get_all_default_sort_keys_and_dir(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_def_sort_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_get_all(self.ctx)
         self.assertEqual(3, len(st_db))
@@ -533,7 +539,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(stacks[0].id, st_db[2].id)
 
     def test_stack_get_all_default_sort_dir(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_def_sort_dir_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_get_all(self.ctx, sort_dir='asc')
         self.assertEqual(3, len(st_db))
@@ -542,7 +549,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(stacks[2].id, st_db[2].id)
 
     def test_stack_get_all_str_sort_keys(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_str_sort_keys_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_get_all(self.ctx,
                                      sort_keys='creation_time')
@@ -564,21 +572,24 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(expected_keys, used_sort_keys)
 
     def test_stack_get_all_marker(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_marker_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_get_all(self.ctx, marker=stacks[1].id)
         self.assertEqual(1, len(st_db))
         self.assertEqual(stacks[0].id, st_db[0].id)
 
     def test_stack_get_all_non_existing_marker(self):
-        [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        [self._setup_test_stack('stacks_nonex_marker_%d' % i, x)[1]
+         for i, x in enumerate(UUIDs)]
 
         uuid = 'this stack doesn\'t exist'
         st_db = db_api.stack_get_all(self.ctx, marker=uuid)
         self.assertEqual(3, len(st_db))
 
     def test_stack_get_all_doesnt_mutate_sort_keys(self):
-        [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        [self._setup_test_stack('stacks_sort_nomutate_%d' % i, x)[1]
+         for i, x in enumerate(UUIDs)]
         sort_keys = ['id']
 
         db_api.stack_get_all(self.ctx, sort_keys=sort_keys)
@@ -587,7 +598,8 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_stack_get_all_hidden_tags(self):
         cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
 
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_hidden_tags_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['hidden']
         stacks[0].store()
         stacks[1].tags = ['random']
@@ -605,7 +617,8 @@ class SqlAlchemyTest(common.HeatTestCase):
             self.assertNotEqual(stacks[0].id, stack.id)
 
     def test_stack_get_all_by_tags(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_tags_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag1']
         stacks[0].store()
         stacks[1].tags = ['tag1', 'tag2']
@@ -623,7 +636,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(1, len(st_db))
 
     def test_stack_get_all_by_tags_any(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_tags_any_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag2']
         stacks[0].store()
         stacks[1].tags = ['tag1', 'tag2']
@@ -639,7 +653,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(3, len(st_db))
 
     def test_stack_get_all_by_not_tags(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_not_tags_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag1']
         stacks[0].store()
         stacks[1].tags = ['tag1', 'tag2']
@@ -658,7 +673,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(2, len(st_db))
 
     def test_stack_get_all_by_not_tags_any(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_not_tags_any_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag2']
         stacks[0].store()
         stacks[1].tags = ['tag1', 'tag2']
@@ -674,7 +690,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(0, len(st_db))
 
     def test_stack_get_all_by_tag_with_pagination(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_tag_page_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag1']
         stacks[0].store()
         stacks[1].tags = ['tag2']
@@ -697,7 +714,8 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_stack_get_all_by_tag_with_show_hidden(self):
         cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
 
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_tag_hidden_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag1']
         stacks[0].store()
         stacks[1].tags = ['hidden', 'tag1']
@@ -712,7 +730,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(1, len(st_db))
 
     def test_stack_count_all(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_count_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
 
         st_db = db_api.stack_count_all(self.ctx)
         self.assertEqual(3, st_db)
@@ -734,7 +753,8 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_count_all_hidden_tags(self):
         cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
 
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_count_hid_tag_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['hidden']
         stacks[0].store()
         stacks[1].tags = ['random']
@@ -747,7 +767,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(2, st_db_visible)
 
     def test_count_all_by_tags(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_count_all_tag_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag1']
         stacks[0].store()
         stacks[1].tags = ['tag2']
@@ -764,7 +785,8 @@ class SqlAlchemyTest(common.HeatTestCase):
     def test_count_all_by_tag_with_show_hidden(self):
         cfg.CONF.set_override('hidden_stack_tags', ['hidden'])
 
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stacks_count_all_tagsh_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         stacks[0].tags = ['tag1']
         stacks[0].store()
         stacks[1].tags = ['hidden', 'tag1']
@@ -779,13 +801,12 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(1, st_db)
 
     def test_stack_count_all_with_filters(self):
-        self._setup_test_stack('foo', UUID1)
-        self._setup_test_stack('bar', UUID2)
-        self._setup_test_stack('bar', UUID3)
-        filters = {'name': 'bar'}
+        self._setup_test_stack('sca_foo', UUID1)
+        self._setup_test_stack('sca_bar', UUID2)
+        filters = {'name': 'sca_bar'}
 
         st_db = db_api.stack_count_all(self.ctx, filters=filters)
-        self.assertEqual(2, st_db)
+        self.assertEqual(1, st_db)
 
     def test_stack_count_all_show_nested(self):
         stack1 = self._setup_test_stack('stack1', UUID1)[1]
@@ -803,7 +824,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(2, st_db)
 
     def test_event_get_all_by_stack(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('stack_events', UUID1)[1]
         self._mock_create()
 
         stack.create()
@@ -900,7 +921,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         )
 
     def test_event_count_all_by_stack(self):
-        stack = self._setup_test_stack('stack', UUID1)[1]
+        stack = self._setup_test_stack('stack_event_count', UUID1)[1]
         self._mock_create()
 
         stack.create()
@@ -926,7 +947,8 @@ class SqlAlchemyTest(common.HeatTestCase):
         )
 
     def test_event_get_all_by_tenant(self):
-        stacks = [self._setup_test_stack('stack', x)[1] for x in UUIDs]
+        stacks = [self._setup_test_stack('stack_ev_ten_%d' % i, x)[1]
+                  for i, x in enumerate(UUIDs)]
         self._mock_create()
 
         [s.create() for s in stacks]
@@ -1427,7 +1449,7 @@ def create_user_creds(ctx, **kwargs):
 
 def create_stack(ctx, template, user_creds, **kwargs):
     values = {
-        'name': 'db_test_stack_name',
+        'name': short_id.generate_id(),
         'raw_template_id': template.id,
         'username': ctx.username,
         'tenant': ctx.tenant_id,
@@ -1444,6 +1466,8 @@ def create_stack(ctx, template, user_creds, **kwargs):
         'prev_raw_template': None
     }
     values.update(kwargs)
+    if 'tenant' in kwargs:
+        ctx.tenant_id = kwargs['tenant']
     return db_api.stack_create(ctx, values)
 
 
@@ -1711,7 +1735,7 @@ class DBAPIStackTest(common.HeatTestCase):
     def test_stack_create(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         self.assertIsNotNone(stack.id)
-        self.assertEqual('db_test_stack_name', stack.name)
+        self.assertEqual(12, len(stack.name))
         self.assertEqual(self.template.id, stack.raw_template_id)
         self.assertEqual(self.ctx.username, stack.username)
         self.assertEqual(self.ctx.tenant_id, stack.tenant)
@@ -1741,7 +1765,7 @@ class DBAPIStackTest(common.HeatTestCase):
         ret_stack = db_api.stack_get(self.ctx, stack_id, show_deleted=True)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack_id, ret_stack.id)
-        self.assertEqual('db_test_stack_name', ret_stack.name)
+        self.assertEqual(12, len(ret_stack.name))
 
         # Testing child resources deletion
         self.assertRaises(exception.NotFound, db_api.resource_get,
@@ -1857,7 +1881,7 @@ class DBAPIStackTest(common.HeatTestCase):
         ret_stack = db_api.stack_get(self.ctx, stack.id, show_deleted=False)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack.id, ret_stack.id)
-        self.assertEqual('db_test_stack_name', ret_stack.name)
+        self.assertEqual(12, len(ret_stack.name))
 
     def test_stack_get_returns_none_if_stack_does_not_exist(self):
         stack = db_api.stack_get(self.ctx, UUID1, show_deleted=False)
@@ -1876,7 +1900,7 @@ class DBAPIStackTest(common.HeatTestCase):
         ret_stack = db_api.stack_get(self.ctx, stack.id, show_deleted=False)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack.id, ret_stack.id)
-        self.assertEqual('db_test_stack_name', ret_stack.name)
+        self.assertEqual(12, len(ret_stack.name))
 
     def test_stack_get_can_return_a_stack_from_different_tenant(self):
         # create a stack with the common tenant
@@ -1888,14 +1912,14 @@ class DBAPIStackTest(common.HeatTestCase):
         ret_stack = db_api.stack_get(admin_ctx, stack.id,
                                      show_deleted=False)
         self.assertEqual(stack.id, ret_stack.id)
-        self.assertEqual('db_test_stack_name', ret_stack.name)
+        self.assertEqual(12, len(ret_stack.name))
 
     def test_stack_get_by_name(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         ret_stack = db_api.stack_get_by_name(self.ctx, stack.name)
         self.assertIsNotNone(ret_stack)
         self.assertEqual(stack.id, ret_stack.id)
-        self.assertEqual('db_test_stack_name', ret_stack.name)
+        self.assertEqual(12, len(ret_stack.name))
 
         self.assertIsNone(db_api.stack_get_by_name(self.ctx, 'abc'))
 
