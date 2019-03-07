@@ -1,0 +1,6 @@
+---
+features:
+  - New resource ``OS::Neutron::L2Gateway`` to allow management of Neutron
+    Layer2 Gateway.  This resource provides life-cycle management of layer2
+    gateway instances. The resource depends on the Neutron ``l2-gateway``
+    extension.
