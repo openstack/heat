@@ -63,7 +63,7 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
     NOVA_API_VERSION = '2.1'
 
-    max_microversion = None
+    max_microversion = cfg.CONF.max_nova_api_microversion
 
     service_types = [COMPUTE] = ['compute']
 

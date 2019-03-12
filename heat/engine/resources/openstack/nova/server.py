@@ -579,6 +579,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             properties.Schema.MAP,
             _('A map of files to create/overwrite on the server upon boot. '
               'Keys are file names and values are the file contents.'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='12.0.0',
+                message=_('This is not supported with nova api '
+                          'microversion 2.57 and above. '
+                          'OS::Nova::Server resource will not support '
+                          'it in the future. Please use user_data or metadata '
+                          'instead. However, you can set heat config option '
+                          'max_nova_api_microversion < 2.57 to use '
+                          'this property in the meantime.')
+            ),
             default={}
         ),
         ADMIN_PASS: properties.Schema(
