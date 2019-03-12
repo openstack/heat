@@ -90,7 +90,14 @@ class MissingCredentialError(HeatException):
 
 
 class AuthorizationFailure(HeatException):
-    msg_fmt = _("Authorization failed.")
+    msg_fmt = _("Authorization failed.%(failure_reason)s")
+
+    def __init__(self, failure_reason=""):
+        if failure_reason != "":
+            # Add a space to make message more readable
+            failure_reason = " " + failure_reason
+        super(AuthorizationFailure, self).__init__(
+            failure_reason=failure_reason)
 
 
 class NotAuthenticated(HeatException):
