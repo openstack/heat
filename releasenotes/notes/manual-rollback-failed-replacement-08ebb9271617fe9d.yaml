@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Heat can now perform a stack update to roll back to a previous version of a
+    resource after a previous attempt to create a replacement for it failed
+    (provided that convergence is enabled). This allows the user to recover a
+    stack where a resource has been inadvertantly replaced with a definition
+    than can never succeed because it conflicts with the original. Previously
+    this required automatic rollback to be enabled, or the user had to update
+    the stack with a non-conflicting definition before rolling back to the
+    original.
