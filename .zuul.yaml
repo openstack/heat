@@ -94,7 +94,7 @@
 - job:
     name: grenade-heat-multinode
     parent: grenade-heat
-    nodeset: ubuntu-xenial-2-node
+    nodeset: ubuntu-bionic-2-node
     roles:
       - zuul: openstack-infra/zuul-jobs
     pre-run: playbooks/devstack/multinode-networking/pre.yaml
