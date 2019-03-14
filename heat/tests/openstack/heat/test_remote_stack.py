@@ -25,7 +25,6 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import policy
 from heat.common import template_format
-from heat.engine.clients.os import barbican as barbican_client
 from heat.engine.clients.os import heat_plugin
 from heat.engine import environment
 from heat.engine import node_data
@@ -305,23 +304,21 @@ class RemoteStackTest(tests_common.HeatTestCase):
         self.heat.stacks.create.assert_called_with(**args)
         self.assertEqual(2, len(self.heat.stacks.get.call_args_list))
 
-    def _create_with_remote_credential(self, credential_secret_id=None):
-        self.auth = (
-            '{"auth_type": "v3applicationcredential", '
-            '"auth": {"auth_url": "http://192.168.1.101/identity/v3", '
-            '"application_credential_id": "9dfa187e5a354484bf9c49a2b674333a", '
-            '"application_credential_secret": "sec"} }')
+    def _create_with_remote_credential(self, credential_secret_id=None,
+                                       ca_cert=None, insecure=False):
 
         t = template_format.parse(parent_stack_template)
         properties = t['resources']['remote_stack']['properties']
         if credential_secret_id:
             properties['context']['credential_secret_id'] = (
                 credential_secret_id)
+        if ca_cert:
+            properties['context']['ca_cert'] = (
+                ca_cert)
+        if insecure:
+            properties['context']['insecure'] = insecure
         t = json.dumps(t)
         self.patchobject(policy.Enforcer, 'check_is_admin')
-        self.m_gsbr = self.patchobject(
-            barbican_client.BarbicanClientPlugin, 'get_secret_payload_by_ref')
-        self.m_gsbr.return_value = self.auth
 
         rsrc = self.create_remote_stack(stack_template=t)
         env = environment.get_child_environment(rsrc.stack.env,
@@ -340,14 +337,22 @@ class RemoteStackTest(tests_common.HeatTestCase):
         rsrc.validate()
         return rsrc
 
-    def test_create_with_credential_secret_id(self):
+    @mock.patch('heat.engine.clients.os.barbican.BarbicanClientPlugin.'
+                'get_secret_payload_by_ref')
+    def test_create_with_credential_secret_id(self, m_gsbr):
+        secret = (
+            '{"auth_type": "v3applicationcredential", '
+            '"auth": {"auth_url": "http://192.168.1.101/identity/v3", '
+            '"application_credential_id": "9dfa187e5a354484bf9c49a2b674333a", '
+            '"application_credential_secret": "sec"} }')
+        m_gsbr.return_value = secret
         self.m_plugin = mock.Mock()
         self.m_loader = self.patchobject(
             ks_loading, 'get_plugin_loader', return_value=self.m_plugin)
         self._create_with_remote_credential('cred_2')
         self.assertEqual(
             [mock.call(secret_ref='secrets/cred_2')]*2,
-            self.m_gsbr.call_args_list)
+            m_gsbr.call_args_list)
         expected_load_options = [
             mock.call(
                 application_credential_id='9dfa187e5a354484bf9c49a2b674333a',
@@ -356,6 +361,19 @@ class RemoteStackTest(tests_common.HeatTestCase):
 
         self.assertEqual(expected_load_options,
                          self.m_plugin.load_from_options.call_args_list)
+
+    def test_create_with_ca_cert(self):
+        ca_cert = (
+            "-----BEGIN CERTIFICATE----- A CA CERT -----END CERTIFICATE-----")
+        rsrc = self._create_with_remote_credential(
+            ca_cert=ca_cert)
+        self.assertEqual(ca_cert, rsrc._cacert)
+        self.assertEqual(ca_cert, rsrc.cacert)
+        self.assertTrue('/tmp/' in rsrc._ssl_verify)
+
+    def test_create_with_insecure(self):
+        rsrc = self._create_with_remote_credential(insecure=True)
+        self.assertFalse(rsrc._ssl_verify)
 
     def test_create_failed(self):
         returns = [get_stack(stack_status='CREATE_IN_PROGRESS'),
