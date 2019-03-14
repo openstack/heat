@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Add multiple OpenStack orchestration support - User can now use
+    ``OS::Heat::Stack`` to create stack in another OpenStack cloud.
+    Must provide properties ``credential_secret_id`` in ``context``.
+    Remote stack resource will get authentication information from
+    cloud credential to refresh context before calling stack create.
