@@ -64,9 +64,9 @@
 
           # Enable octavia plugin and services
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin octavia https://git.openstack.org/openstack/octavia"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_FILE=/tmp/test-only-amphora-x64-haproxy-ubuntu-xenial.qcow2"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_FILE=/tmp/test-only-amphora-x64-haproxy-ubuntu-bionic.qcow2"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_SIZE=3"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_NAME=test-only-amphora-x64-haproxy-ubuntu-xenial"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_NAME=test-only-amphora-x64-haproxy-ubuntu-bionic"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMPHORA_DRIVER=amphora_noop_driver"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_COMPUTE_DRIVER=compute_noop_driver"
           export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_NETWORK_DRIVER=network_noop_driver"
