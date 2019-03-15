@@ -14,6 +14,21 @@
 from heat_integrationtests.functional import functional_base
 
 
+class SimpleStackValidationTest(functional_base.FunctionalTestsBase):
+
+    def test_validate_json_content(self):
+        template = u'''
+heat_template_version: rocky
+resources:
+  server:
+    type: OS::Heat::TestResource
+    properties:
+      value: =%da
+'''
+        self.stack_create(template=template,
+                          expected_status='CREATE_COMPLETE')
+
+
 class StackValidationTest(functional_base.FunctionalTestsBase):
 
     def setUp(self):
