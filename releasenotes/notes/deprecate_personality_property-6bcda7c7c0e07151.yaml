@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    New config ``max_nova_api_microversion`` to set the maximum nova
+    API microversion for nova client plugin. If``max_nova_api_microversion``
+    is set, any nova features supported with microversion number above
+    max_nova_api_microversion will not be available.
+deprecations:
+  - |
+    ``personality`` property of ``OS::Nova::Server`` is now deprecated, please
+    use ``user_data`` or ``metadata`` instead. If that property really
+    required, use config ``max_nova_api_microversion`` to set the maximum nova
+    API microversion <2.57 for nova client plugin to support personality
+    property.

@@ -152,6 +152,11 @@ engine_opts = [
                default=10,
                help=_('Number of times to check whether an interface has '
                       'been attached or detached.')),
+    cfg.FloatOpt('max_nova_api_microversion',
+                 help=_('Maximum nova API version for client plugin. With '
+                        'this limitation, any nova feature supported with '
+                        'microversion number above max_nova_api_microversion '
+                        'will not be available.')),
     cfg.IntOpt('event_purge_batch_size',
                min=1,
                default=200,
