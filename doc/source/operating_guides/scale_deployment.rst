@@ -48,9 +48,9 @@ Basic Architecture
 ------------------
 
 The heat architecture is as defined at :doc:`heat architecture
-<../developing_guides/architecture>` and shown in the diagram below,
-where we have a CLI that sends HTTP requests to the REST and CFN APIs, which in
-turn make calls using AMQP to the heat-engine::
+<../contributor/architecture>` and shown in the diagram below, where we have
+a CLI that sends HTTP requests to the REST and CFN APIs, which in turn make
+calls using AMQP to the heat-engine::
 
                    |- [REST API] -|
  [CLI] -- <HTTP> --                -- <AMQP> -- [ENGINE]

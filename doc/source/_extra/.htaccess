@@ -1,3 +1,5 @@
-redirectmatch 301 ^/heat/([^/]+)/(architecture|pluginguide|schedulerhints|gmr|supportstatus)\.html$ /heat/$1/developing_guides/$2.html
+redirectmatch 301 ^/heat/([^/]+)/(architecture|pluginguide|schedulerhints|gmr|supportstatus)\.html$ /heat/$1/contributor/$2.html
+redirectmatch 301 ^/heat/([^/]+)/developing_guides/(index|architecture|pluginguide|schedulerhints|gmr|supportstatus)\.html$ /heat/$1/contributor/$2.html
 redirectmatch 301 ^/heat/([^/]+)/(scale_deployment)\.html$ /heat/$1/operating_guides/$2.html
 redirectmatch 301 ^/heat/([^/]+)/configuration/(api|clients)\.html /heat/$1/configuration/config-options.html
+redirectmatch 301 ^/heat/([^/]+)/contributing/(index|blueprints)\.html /heat/$1/contributor/$2.html

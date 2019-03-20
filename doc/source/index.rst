@@ -90,14 +90,14 @@ Developing Heat
 .. toctree::
     :maxdepth: 1
 
-    contributing/index
+    contributor/index
     getting_started/on_devstack
-    developing_guides/architecture
-    developing_guides/pluginguide
-    developing_guides/schedulerhints
-    developing_guides/gmr
-    developing_guides/supportstatus
-    developing_guides/rally_on_gates
+    contributor/architecture
+    contributor/pluginguide
+    contributor/schedulerhints
+    contributor/gmr
+    contributor/supportstatus
+    contributor/rally_on_gates
     api/index
 
 Indices and tables
