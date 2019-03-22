@@ -1,0 +1,6 @@
+---
+features:
+  - Support ``tags`` property for the resource ``OS::Octavia::PoolMember``, the
+    property is allowed to be updated as well. The resource tag was introduced
+    in Octavia since Stein release, do not specify tags in Heat template if you are
+    using the previous versions.

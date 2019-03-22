@@ -61,6 +61,7 @@ class PoolMemberTest(common.HeatTestCase):
                 'weight': 1,
                 'subnet_id': '123',
                 'admin_state_up': True,
+                'tags': ['tag1', 'tag2']
             }
         }
         props = self.member.handle_create()
@@ -95,6 +96,7 @@ class PoolMemberTest(common.HeatTestCase):
         prop_diff = {
             'admin_state_up': False,
             'weight': 2,
+            'tags': ['tag3', 'tag4']
         }
 
         prop_diff = self.member.handle_update(None, None, prop_diff)

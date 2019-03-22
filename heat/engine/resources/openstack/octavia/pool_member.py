@@ -15,6 +15,7 @@ from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.octavia import octavia_base
+from heat.engine import support
 from heat.engine import translation
 
 
@@ -26,10 +27,10 @@ class PoolMember(octavia_base.OctaviaBase):
 
     PROPERTIES = (
         POOL, ADDRESS, PROTOCOL_PORT, MONITOR_ADDRESS, MONITOR_PORT,
-        WEIGHT, ADMIN_STATE_UP, SUBNET,
+        WEIGHT, ADMIN_STATE_UP, SUBNET, TAGS
     ) = (
         'pool', 'address', 'protocol_port', 'monitor_address', 'monitor_port',
-        'weight', 'admin_state_up', 'subnet'
+        'weight', 'admin_state_up', 'subnet', 'tags'
     )
 
     ATTRIBUTES = (
@@ -100,6 +101,13 @@ class PoolMember(octavia_base.OctaviaBase):
             constraints=[
                 constraints.CustomConstraint('neutron.subnet')
             ],
+        ),
+        TAGS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of simple strings assigned to the member. The property '
+              'is supported with Stein Octavia or newer version.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='13.0.0'),
         ),
     }
 

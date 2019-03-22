@@ -80,6 +80,7 @@ resources:
       weight: 1
       subnet: sub123
       admin_state_up: True
+      tags: ['tag1', 'tag2']
 '''
 
 MONITOR_TEMPLATE = '''
