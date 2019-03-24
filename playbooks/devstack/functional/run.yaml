@@ -17,7 +17,7 @@
               dest: devstack-gate
           EOF
           /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              git://git.openstack.org \
+              https://git.openstack.org \
               openstack-infra/devstack-gate
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
@@ -64,12 +64,12 @@
           export PROJECTS="openstack/zaqar $PROJECTS"
           export PROJECTS="openstack/python-zaqarclient $PROJECTS"
           export PROJECTS="openstack/neutron $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin ceilometer git://git.openstack.org/openstack/ceilometer"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin aodh git://git.openstack.org/openstack/aodh"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar git://git.openstack.org/openstack/zaqar"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron git://git.openstack.org/openstack/neutron"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin aodh https://git.openstack.org/openstack/aodh"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://git.openstack.org/openstack/zaqar"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron https://git.openstack.org/openstack/neutron"
 
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat git://git.openstack.org/openstack/heat"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://git.openstack.org/openstack/heat"
 
           # Enable LBaaS V2 plugin
           export PROJECTS="openstack/neutron-lbaas $PROJECTS"
@@ -96,7 +96,7 @@
           if [ "{{ use_amqp1 }}" -eq 1 ] ; then
               export PROJECTS="openstack/devstack-plugin-amqp1 $PROJECTS"
               export DEVSTACK_LOCAL_CONFIG+=$'\n'"export AMQP1_SERVICE=qpid-hybrid"
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin devstack-plugin-amqp1 git://git.openstack.org/openstack/devstack-plugin-amqp1"
+              export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin devstack-plugin-amqp1 https://git.openstack.org/openstack/devstack-plugin-amqp1"
               export DEVSTACK_LOCAL_CONFIG+=$'\n'"export CELLSV2_SETUP=singleconductor"
               export DEVSTACK_PROJECT_FROM_GIT="oslo.messaging,$DEVSTACK_PROJECT_FROM_GIT"
           fi
