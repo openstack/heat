@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import contextlib
 import copy
 import eventlet
 import functools
@@ -378,6 +379,15 @@ class Stack(collections.Mapping):
             self._db_resources = _db_resources
         return self._db_resources
 
+    @contextlib.contextmanager
+    def _previous_definition(self, stk_defn):
+        cur_defn = self.defn
+        try:
+            self.defn = stk_defn
+            yield
+        finally:
+            self.defn = cur_defn
+
     def _resource_from_db_resource(self, db_res, stk_def_cache=None):
         tid = db_res.current_template_id
         if tid is None:
@@ -406,8 +416,9 @@ class Stack(collections.Mapping):
         except KeyError:
             return None
 
-        res = resource.Resource(db_res.name, defn, self)
-        res._load_data(db_res)
+        with self._previous_definition(stk_def):
+            res = resource.Resource(db_res.name, defn, self)
+            res._load_data(db_res)
         return res
 
     def resource_get(self, name):
