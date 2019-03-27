@@ -1757,7 +1757,7 @@ class ValidateTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
-        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+        self.assertIn('3 is not an allowed value [1, 4, 8]',
                       six.text_type(err))
 
     def test_validate_not_allowed_values_integer_str(self):
@@ -1769,7 +1769,7 @@ class ValidateTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
-        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+        self.assertIn('"3" is not an allowed value ["1", "4", "8"]',
                       six.text_type(err))
 
         # test with size parameter provided as number
@@ -1777,7 +1777,7 @@ class ValidateTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template)
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
-        self.assertIn('"3" is not an allowed value [1, 4, 8]',
+        self.assertIn('3 is not an allowed value ["1", "4", "8"]',
                       six.text_type(err))
 
     def test_validate_invalid_outputs(self):

@@ -73,14 +73,12 @@ class RBACPolicyTest(common.HeatTestCase):
 
     def test_validate_action_for_network(self):
         msg = ('Property error: resources.rbac.properties.action: '
-               '"invalid" is not an allowed value '
-               r'\[access_as_shared, access_as_external\]')
+               '"invalid" is not an allowed value')
         self._test_validate_invalid_action(msg)
 
     def test_validate_action_for_qos_policy(self):
         msg = ('Property error: resources.rbac.properties.action: '
-               '"invalid" is not an allowed value '
-               r'\[access_as_shared, access_as_external\]')
+               '"invalid" is not an allowed value')
         self._test_validate_invalid_action(msg, obj_type='qos_policy')
         # we dont support access_as_external for qos_policy
         msg = ('Property error: resources.rbac.properties.action: '

@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Non-ASCII text that appears in parameter constraints (e.g. in the
+    description of a constraint, or a list of allowed values) will now be
+    handled correctly when generating error messages if the constraint is not
+    met.
