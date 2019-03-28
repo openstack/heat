@@ -207,12 +207,14 @@ class NeutronQoSBandwidthLimitRuleTest(common.HeatTestCase):
                 'id': 'cf0eab12-ef8b-4a62-98d0-70576583c17a',
                 'max_kbps': 1000,
                 'max_burst_kbps': 1000,
+                'direction': 'egress',
                 'tenant_id': 'd66c74c01d6c41b9846088c1ad9634d0'
             }
         }
 
         create_props = {'max_kbps': 1000,
                         'max_burst_kbps': 1000,
+                        'direction': 'egress',
                         'tenant_id': 'd66c74c01d6c41b9846088c1ad9634d0'}
         self.neutronclient.create_bandwidth_limit_rule.return_value = rule
 
@@ -260,7 +262,7 @@ class NeutronQoSBandwidthLimitRuleTest(common.HeatTestCase):
         self.bandwidth_limit_rule.handle_update(
             json_snippet={},
             tmpl_diff={},
-            prop_diff=prop_diff)
+            prop_diff=prop_diff.copy())
 
         self.neutronclient.update_bandwidth_limit_rule.assert_called_once_with(
             rule_id,
@@ -274,6 +276,7 @@ class NeutronQoSBandwidthLimitRuleTest(common.HeatTestCase):
                 'id': 'cf0eab12-ef8b-4a62-98d0-70576583c17a',
                 'max_kbps': 1000,
                 'max_burst_kbps': 1000,
+                'direction': 'egress',
                 'tenant_id': 'd66c74c01d6c41b9846088c1ad9634d0'
             }
         }
