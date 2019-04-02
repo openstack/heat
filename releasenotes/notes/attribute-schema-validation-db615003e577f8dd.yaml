@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    When loading a Resource plugin, the attribute schema is now validated in
+    the same way that the properties schema is. Third-party resource plugins
+    should be tested to check that they still comply.
