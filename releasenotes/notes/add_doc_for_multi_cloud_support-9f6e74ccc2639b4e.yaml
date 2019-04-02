@@ -1,0 +1,4 @@
+---
+other:
+  - |
+    New document is out for ``multi-clouds support``, check out https://docs.openstack.org/heat/latest/template_guide/multi-clouds.html for more information.
