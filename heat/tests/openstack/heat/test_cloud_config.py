@@ -12,6 +12,7 @@
 #    under the License.
 
 import uuid
+import yaml
 
 import mock
 
@@ -53,6 +54,7 @@ class CloudConfigTest(common.HeatTestCase):
         kwargs = self.rpc_client.create_software_config.call_args[1]
         self.assertEqual({
             'name': self.config.physical_resource_name(),
-            'config': '#cloud-config\n{foo: bar}\n',
+            'config': '\n'.join(['#cloud-config',
+                                 yaml.safe_dump({'foo': 'bar'})]),
             'group': 'Heat::Ungrouped'
         }, kwargs)
