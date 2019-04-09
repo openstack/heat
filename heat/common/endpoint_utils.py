@@ -34,5 +34,8 @@ def get_auth_uri(v3=True):
     else:
         # Import auth_token to have keystone_authtoken settings setup.
         importutils.import_module('keystonemiddleware.auth_token')
-        auth_uri = cfg.CONF.keystone_authtoken.www_authenticate_uri
+        try:
+            auth_uri = cfg.CONF.keystone_authtoken.www_authenticate_uri
+        except cfg.NoSuchOptError:
+            auth_uri = cfg.CONF.keystone_authtoken.auth_uri
         return auth_uri.replace('v2.0', 'v3') if auth_uri and v3 else auth_uri

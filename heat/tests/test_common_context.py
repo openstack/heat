@@ -218,8 +218,12 @@ class TestRequestContext(common.HeatTestCase):
         [clients_keystone] section.
         """
         importutils.import_module('keystonemiddleware.auth_token')
-        cfg.CONF.set_override('www_authenticate_uri', 'http://abc/v2.0',
-                              group='keystone_authtoken')
+        try:
+            cfg.CONF.set_override('www_authenticate_uri', 'http://abc/v2.0',
+                                  group='keystone_authtoken')
+        except cfg.NoSuchOptError:
+            cfg.CONF.set_override('auth_uri', 'http://abc/v2.0',
+                                  group='keystone_authtoken')
         policy_check = 'heat.common.policy.Enforcer.check_is_admin'
         with mock.patch(policy_check) as pc:
             pc.return_value = False
