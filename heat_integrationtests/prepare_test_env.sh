@@ -81,8 +81,8 @@ function _config_tempest_plugin
     iniset $conf_file heat_plugin boot_config_env $CONF_DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
 
     # support test multi-cloud
-    openstack application credential create heat_multicloud --secret secret --unrestricted
-    app_cred_id=$(openstack application credential show heat_multicloud|grep ' id '|awk '{print $4}')
+    app_cred_id=$((openstack application credential show  heat_multicloud || openstack application credential create heat_multicloud \
+        --secret secret --unrestricted) | grep ' id '|awk '{print $4}')
     export OS_CREDENTIAL_SECRET_ID=$(openstack secret store -n heat-multi-cloud-test-cred --payload '{"auth_type": "v3applicationcredential", "auth": {"auth_url": $OS_AUTH_URL, "application_credential_id": $app_cred_id, "application_credential_secret": "secret"}, "roles": ["admin"], "project_id": $app_cred_project_id}')
     iniset $conf_file heat_features_enabled multi_cloud True
     iniset $conf_file heat_plugin heat_plugin credential_secret_id $OS_CREDENTIAL_SECRET_ID
