@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    The ``OS::Neutron::QosBandwidthLimitRule`` resource type now supports an
+    optional ``direction`` property, allowing users to set the ingress
+    bandwidth limit in a QoS rule. Previously only the egress bandwidth limit
+    could be set.
