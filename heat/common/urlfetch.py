@@ -13,6 +13,8 @@
 
 """Utility for fetching a resource (e.g. a template) from a URL."""
 
+import socket
+
 from oslo_config import cfg
 from oslo_log import log as logging
 import requests
@@ -74,6 +76,6 @@ def get(url, allowed_schemes=('http', 'https')):
                                     cfg.CONF.max_template_size)
         return result
 
-    except exceptions.RequestException as ex:
+    except (exceptions.RequestException, socket.timeout) as ex:
         LOG.info('Failed to retrieve template: %s', ex)
         raise URLFetchError(_('Failed to retrieve template from %s') % url)
