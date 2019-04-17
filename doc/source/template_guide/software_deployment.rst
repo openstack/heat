@@ -474,11 +474,11 @@ required in later examples:
 
     # Clone the required repositories. Some of these are also available
     # via pypi or as distro packages.
-    git clone https://git.openstack.org/openstack/tripleo-image-elements.git
-    git clone https://git.openstack.org/openstack/heat-agents.git
+    git clone https://opendev.org/openstack/tripleo-image-elements
+    git clone https://opendev.org/openstack/heat-agents
 
     # Install diskimage-builder from source
-    sudo pip install git+https://git.openstack.org/openstack/diskimage-builder.git
+    sudo pip install git+https://opendev.org/openstack/diskimage-builder
 
     # Required by diskimage-builder to discover element collections
     export ELEMENTS_PATH=tripleo-image-elements/elements:heat-agents/
@@ -787,8 +787,8 @@ contents of the file ``example-puppet-manifest.pp``, containing:
 .. _cloud-init: https://cloudinit.readthedocs.io/
 .. _curl: https://curl.haxx.se/
 .. _`Orchestration API`: https://developer.openstack.org/api-ref/orchestration/v1/
-.. _os-refresh-config: https://git.openstack.org/cgit/openstack/os-refresh-config
-.. _os-apply-config: https://git.openstack.org/cgit/openstack/os-apply-config
-.. _tripleo-heat-templates: https://git.openstack.org/cgit/openstack/tripleo-heat-templates
-.. _tripleo-image-elements: https://git.openstack.org/cgit/openstack/tripleo-image-elements
+.. _os-refresh-config: https://opendev.org/openstack/os-refresh-config
+.. _os-apply-config: https://opendev.org/openstack/os-apply-config
+.. _tripleo-heat-templates: https://opendev.org/openstack/tripleo-heat-templates
+.. _tripleo-image-elements: https://opendev.org/openstack/tripleo-image-elements
 .. _puppet: https://puppet.com/
