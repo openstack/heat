@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import shlex
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -316,6 +317,9 @@ class Container(resource.Resource,
         networks = args.pop(self.NETWORKS, None)
         if networks:
             args['nets'] = self._build_nets(networks)
+        command = args.pop(self.COMMAND, None)
+        if command:
+            args['command'] = shlex.split(command)
         container = self.client().containers.run(**args)
         self.resource_id_set(container.uuid)
         return container.uuid
