@@ -5,7 +5,7 @@
     post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
     required-projects:
-      - openstack-infra/devstack-gate
+      - openstack/devstack-gate
       - openstack/aodh
       - openstack/barbican
       - openstack/barbican-tempest-plugin
@@ -74,8 +74,8 @@
     post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
     required-projects:
-      - openstack-dev/grenade
-      - openstack-infra/devstack-gate
+      - openstack/grenade
+      - openstack/devstack-gate
       - openstack/heat
       - openstack/heat-tempest-plugin
     irrelevant-files:
@@ -96,7 +96,7 @@
     parent: grenade-heat
     nodeset: ubuntu-xenial-2-node
     roles:
-      - zuul: openstack-infra/zuul-jobs
+      - zuul: zuul/zuul-jobs
     pre-run: playbooks/devstack/multinode-networking/pre.yaml
     vars:
       topology: multinode
