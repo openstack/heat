@@ -13,12 +13,12 @@
           set -x
           cat > clonemap.yaml << EOF
           clonemap:
-            - name: openstack-infra/devstack-gate
+            - name: openstack/devstack-gate
               dest: devstack-gate
           EOF
           /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              https://git.openstack.org \
-              openstack-infra/devstack-gate
+              https://opendev.org \
+              openstack/devstack-gate
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
       environment: '{{ zuul | zuul_legacy_vars }}'
@@ -29,7 +29,7 @@
           set -x
           cat << 'EOF' >>"/tmp/dg-local.conf"
           [[local|localrc]]
-          enable_plugin heat https://git.openstack.org/openstack/heat
+          enable_plugin heat https://opendev.org/openstack/heat
           TEMPEST_PLUGINS+=' ../heat-tempest-plugin'
           EOF
         executable: /bin/bash
@@ -40,10 +40,10 @@
         cmd: |
           set -e
           set -x
-          export PROJECTS="openstack-dev/grenade $PROJECTS"
+          export PROJECTS="openstack/grenade $PROJECTS"
           export PROJECTS="openstack/heat-tempest-plugin $PROJECTS"
           export PYTHONUNBUFFERED=true
-          export GRENADE_PLUGINRC="enable_grenade_plugin heat https://git.openstack.org/openstack/heat"
+          export GRENADE_PLUGINRC="enable_grenade_plugin heat https://opendev.org/openstack/heat"
           export DEVSTACK_GATE_NEUTRON=1
           export DEVSTACK_GATE_TEMPEST=1
           export DEVSTACK_GATE_TEMPEST_NOTESTS=1
