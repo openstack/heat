@@ -5,7 +5,7 @@
     post-run: playbooks/devstack/functional/post.yaml
     timeout: 7800
     required-projects:
-      - openstack-infra/devstack-gate
+      - openstack/devstack-gate
       - openstack/aodh
       - openstack/barbican
       - openstack/barbican-tempest-plugin

@@ -13,12 +13,12 @@
           set -x
           cat > clonemap.yaml << EOF
           clonemap:
-            - name: openstack-infra/devstack-gate
+            - name: openstack/devstack-gate
               dest: devstack-gate
           EOF
           /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              https://git.openstack.org \
-              openstack-infra/devstack-gate
+              https://opendev.org \
+              openstack/devstack-gate
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
 
@@ -64,22 +64,22 @@
           export PROJECTS="openstack/zaqar $PROJECTS"
           export PROJECTS="openstack/python-zaqarclient $PROJECTS"
           export PROJECTS="openstack/neutron $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin aodh https://git.openstack.org/openstack/aodh"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://git.openstack.org/openstack/zaqar"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron https://git.openstack.org/openstack/neutron"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin ceilometer https://opendev.org/openstack/ceilometer"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin aodh https://opendev.org/openstack/aodh"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://opendev.org/openstack/zaqar"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron https://opendev.org/openstack/neutron"
 
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://git.openstack.org/openstack/heat"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://opendev.org/openstack/heat"
 
           # Enable LBaaS V2 plugin
           export PROJECTS="openstack/neutron-lbaas $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://git.openstack.org/openstack/neutron-lbaas"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron-lbaas https://opendev.org/openstack/neutron-lbaas"
           # enabling lbaas plugin does not enable the lbaasv2 service, explicitly enable it
           services+=,q-lbaasv2
           export PROJECTS="openstack/barbican $PROJECTS"
           export PROJECTS="openstack/python-barbicanclient $PROJECTS"
           export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin barbican https://git.openstack.org/openstack/barbican"
+          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin barbican https://opendev.org/openstack/barbican"
           # the lbaas v2 driver choice is in the gate pre test hook
 
           export OVERRIDE_ENABLED_SERVICES=$services
@@ -96,7 +96,7 @@
           if [ "{{ use_amqp1 }}" -eq 1 ] ; then
               export PROJECTS="openstack/devstack-plugin-amqp1 $PROJECTS"
               export DEVSTACK_LOCAL_CONFIG+=$'\n'"export AMQP1_SERVICE=qpid-hybrid"
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin devstack-plugin-amqp1 https://git.openstack.org/openstack/devstack-plugin-amqp1"
+              export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin devstack-plugin-amqp1 https://opendev.org/openstack/devstack-plugin-amqp1"
               export DEVSTACK_LOCAL_CONFIG+=$'\n'"export CELLSV2_SETUP=singleconductor"
               export DEVSTACK_PROJECT_FROM_GIT="oslo.messaging,$DEVSTACK_PROJECT_FROM_GIT"
           fi
