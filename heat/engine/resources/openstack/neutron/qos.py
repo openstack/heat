@@ -156,9 +156,9 @@ class QoSBandwidthLimitRule(QoSRule):
     entity = 'bandwidth_limit_rule'
 
     PROPERTIES = (
-        MAX_BANDWIDTH, MAX_BURST_BANDWIDTH,
+        MAX_BANDWIDTH, MAX_BURST_BANDWIDTH, DIRECTION
     ) = (
-        'max_kbps', 'max_burst_kbps',
+        'max_kbps', 'max_burst_kbps', 'direction'
     )
 
     properties_schema = {
@@ -179,6 +179,16 @@ class QoSBandwidthLimitRule(QoSRule):
                 constraints.Range(min=0)
             ],
             default=0
+        ),
+        DIRECTION: properties.Schema(
+            properties.Schema.STRING,
+            _('Traffic direction from the point of view of the port.'),
+            update_allowed=True,
+            constraints=[
+                constraints.AllowedValues(['egress', 'ingress']),
+            ],
+            default='egress',
+            support_status=support.SupportStatus(version='13.0.0')
         )
     }
 
