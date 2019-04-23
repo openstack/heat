@@ -153,6 +153,6 @@ References
 
 .. _cold-upgrades: https://governance.openstack.org/tc/reference/tags/assert_supports-upgrade.html
 
-.. _spec about rolling upgrades: https://review.openstack.org/#/c/407989/
+.. _spec about rolling upgrades: https://review.opendev.org/#/c/407989/
 
 .. _RabbitMQ: http://www.rabbitmq.com/management.html
