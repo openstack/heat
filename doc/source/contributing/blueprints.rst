@@ -2,13 +2,13 @@ Blueprints and Specs
 ====================
 
 The Heat team uses the `heat-specs
-<https://git.openstack.org/cgit/openstack/heat-specs>`_ repository for its
+<https://opendev.org/openstack/heat-specs>`_ repository for its
 specification reviews. Detailed information can be found `here
 <https://wiki.openstack.org/wiki/Blueprints#Heat>`_.
 
 Please note that we use a template for spec submissions. Please use the
 `template for the latest release
-<https://git.openstack.org/cgit/openstack/heat-specs/tree/specs/templates>`_.
+<https://opendev.org/openstack/heat-specs/src/branch/master/specs/templates>`_.
 It is not required to fill out all sections in the template.
 
 You have to create a Story in StoryBoard `heat storyboard

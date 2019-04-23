@@ -59,7 +59,7 @@ Launching a stack
 -----------------
 Now lets launch a stack, using an example template from the heat-templates repository::
 
-    $ openstack stack create -t http://git.openstack.org/cgit/openstack/heat-templates/plain/hot/F20/WordPress_Native.yaml --parameter key_name=heat_key --parameter image_id=my-fedora-image --parameter instance_type=m1.small teststack
+    $ openstack stack create -t https://opendev.org/openstack/heat-templates/raw/src/branch/master/hot/F20/WordPress_Native.yaml --parameter key_name=heat_key --parameter image_id=my-fedora-image --parameter instance_type=m1.small teststack
 
 Which will respond::
 

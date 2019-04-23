@@ -29,6 +29,6 @@ DockerInc Resource
 This plugin enables the use of  Docker containers in a Heat template and
 requires the `docker-py <https://pypi.org/project/docker-py>`_
 package. You can find more information in the `DOCKER_README
-<https://git.openstack.org/cgit/openstack/heat/tree/contrib/heat_docker/README.md>`_.
+<https://opendev.org/openstack/heat/src/branch/master/contrib/heat_docker/README.md>`_.
 
 .. contribrespages:: DockerInc::

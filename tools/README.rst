@@ -32,7 +32,7 @@ Review dashboards
 Generate gerrit review URL for heat. This can pop up some patches
 that might requires reviews. You can generate it with following
 command under `gerrit-dash-creator` repo
-( https://git.openstack.org/cgit/openstack/gerrit-dash-creator )
+( https://opendev.org/openstack/gerrit-dash-creator )
 
     $ ./gerrit-dash-creator heat.dash
 

@@ -39,12 +39,12 @@ plugin add the following to the `[[local|localrc]]` section of `local.conf`::
   [[local|localrc]]
 
   #Enable heat plugin
-  enable_plugin heat https://git.openstack.org/openstack/heat
+  enable_plugin heat https://opendev.org/openstack/heat
 
 To use stable branches, make sure devstack is on that branch,
 and specify the branch name to enable_plugin, for example::
 
-  enable_plugin heat https://git.openstack.org/openstack/heat stable/newton
+  enable_plugin heat https://opendev.org/openstack/heat stable/newton
 
 It would also be useful to automatically download and register
 a VM image that heat can launch. To do that add the following to
@@ -68,8 +68,8 @@ Adding the following lines to `[[local|localrc]]` section of `local.conf`
 will enable the services::
 
     CEILOMETER_BACKEND=mongodb
-    enable_plugin ceilometer https://git.openstack.org/openstack/ceilometer
-    enable_plugin aodh https://git.openstack.org/openstack/aodh
+    enable_plugin ceilometer https://opendev.org/openstack/ceilometer
+    enable_plugin aodh https://opendev.org/openstack/aodh
 
 Configure DevStack to enable OSprofiler
 ---------------------------------------

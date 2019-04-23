@@ -15,7 +15,7 @@
 Hello World HOT Template
 ========================
 
-https://git.openstack.org/cgit/openstack/heat-templates/tree/hot/hello_world.yaml
+https://opendev.org/openstack/heat-templates/src/branch/master/hot/hello_world.yaml
 
 Description
 -----------

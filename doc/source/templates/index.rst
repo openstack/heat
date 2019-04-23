@@ -15,7 +15,7 @@
 Example Templates
 =================
 
-This page documents the templates at https://git.openstack.org/cgit/openstack/heat-templates/
+This page documents the templates at https://opendev.org/openstack/heat-templates/
 
 Example HOT Templates
 =====================
