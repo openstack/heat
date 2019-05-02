@@ -328,6 +328,17 @@ class KsClientWrapper(object):
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
             return self.create_stack_user(username=username, password=password)
+        # We are creating automated user, for which most of security
+        # compliance restrictions possibly set in Keystone should not apply,
+        # https://docs.openstack.org/keystone/latest/admin/security-compliance.html
+        # TODO(pas-ha) find a way to deal with password_regex and
+        # disable_user_account_days_inactive
+        # TODO(pas-ha) think if we also need to add lock_password too
+        user_options = {
+            "ignore_change_password_upon_first_use": True,
+            "ignore_password_expiry": True,
+            "ignore_lockout_failure_attempts": True
+        }
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the
         # heat-generated "stack users" which will generally have credentials
@@ -339,7 +350,8 @@ class KsClientWrapper(object):
             # Create user
             user = self.domain_admin_client.users.create(
                 name=self._get_username(username), password=password,
-                default_project=project_id, domain=self.stack_domain_id)
+                default_project=project_id, domain=self.stack_domain_id,
+                options=user_options)
             # Add to stack user role
             LOG.debug("Adding user %(user)s to role %(role)s",
                       {'user': user.id, 'role': role_id})
