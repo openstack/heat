@@ -251,6 +251,9 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx = utils.dummy_context()
         self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
+        user_options = dict(ignore_password_expiry=True,
+                            ignore_change_password_upon_first_use=True,
+                            ignore_lockout_failure_attempts=True)
 
         # mock keystone client functions
         self._stub_domain_admin_client()
@@ -266,7 +269,8 @@ class KeystoneClientTest(common.HeatTestCase):
             name='duser',
             password=None,
             default_project='aproject',
-            domain='adomain123')
+            domain='adomain123',
+            options=user_options)
         self.mock_ks_v3_client.roles.grant.assert_called_once_with(
             project='aproject',
             role='4546',
