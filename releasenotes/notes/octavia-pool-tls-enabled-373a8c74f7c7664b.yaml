@@ -1,0 +1,6 @@
+---
+features:
+  - Support ``tls_enabled`` property for the resource ``OS::Octavia::Pool``, the
+    property is allowed to be updated as well. The property 'tls_enabled' was
+    introduced in Octavia since Stein release. The default value is False if it
+    is not specified in Heat template.
