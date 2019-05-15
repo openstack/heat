@@ -118,6 +118,25 @@ class CIDRConstraint(constraints.BaseCustomConstraint):
             return False
 
 
+class IPCIDRConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context, template=None):
+        try:
+            if '/' in value:
+                msg = validators.validate_subnet(value)
+            else:
+                msg = validators.validate_ip_address(value)
+            if msg is not None:
+                self._error_message = msg
+                return False
+            else:
+                return True
+        except Exception:
+            self._error_message = '{} is not a valid IP or CIDR'.format(
+                value)
+            return False
+
+
 class ISO8601Constraint(constraints.BaseCustomConstraint):
 
     def validate(self, value, context, template=None):

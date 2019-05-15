@@ -266,7 +266,7 @@ class Port(neutron.NeutronResource):
                         _('IP address to allow through this port.'),
                         required=True,
                         constraints=[
-                            constraints.CustomConstraint('net_cidr')
+                            constraints.CustomConstraint('ip_or_cidr')
                         ]
                     ),
                 },
