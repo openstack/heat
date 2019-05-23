@@ -274,7 +274,7 @@ class ZunContainerTest(common.HeatTestCase):
         self.client.containers.run.assert_called_once_with(
             name=self.fake_name,
             image=self.fake_image,
-            command=self.fake_command,
+            command=self.fake_command.split(),
             cpu=self.fake_cpu,
             memory=self.fake_memory,
             environment=self.fake_env,
