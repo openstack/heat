@@ -416,9 +416,11 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 yield swc_io.InputConfig(
                     name=self.DEPLOY_PROJECT_ID, value=creds['project_id'],
                     description=_('ID of project for API authentication'))
-                yield swc_io.InputConfig(
-                    name=self.DEPLOY_REGION_NAME, value=creds['region_name'],
-                    description=_('Region name for API authentication'))
+                if creds['region_name']:
+                    yield swc_io.InputConfig(
+                        name=self.DEPLOY_REGION_NAME,
+                        value=creds['region_name'],
+                        description=_('Region name for API authentication'))
             if self._signal_transport_zaqar():
                 yield swc_io.InputConfig(
                     name=self.DEPLOY_QUEUE_ID,
