@@ -201,7 +201,6 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         get_ec2_signed_url.return_value = 'http://192.0.2.2/signed_url'
 
         self.deployment = self.stack['deployment_mysql']
-
         self.rpc_client = mock.MagicMock()
         self.deployment._rpc_client = self.rpc_client
 
@@ -1097,6 +1096,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_fn_get_att(self):
         self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
         mock_sd = {
             'outputs': [
                 {'name': 'failed', 'error_output': True},
@@ -1132,6 +1132,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
 
     def test_fn_get_att_error(self):
         self._create_stack(self.template)
+        self.deployment.resource_id = 'c8a19429-7fde-47ea-a42f-40045488226c'
 
         mock_sd = {
             'outputs': [],
