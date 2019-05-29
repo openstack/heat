@@ -101,7 +101,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         DEPLOY_USERNAME, DEPLOY_PASSWORD,
         DEPLOY_PROJECT_ID, DEPLOY_USER_ID,
         DEPLOY_SIGNAL_VERB, DEPLOY_SIGNAL_TRANSPORT,
-        DEPLOY_QUEUE_ID
+        DEPLOY_QUEUE_ID, DEPLOY_REGION_NAME
     ) = (
         'deploy_server_id', 'deploy_action',
         'deploy_signal_id', 'deploy_stack_id',
@@ -109,7 +109,7 @@ class SoftwareDeployment(signal_responder.SignalResponder):
         'deploy_username', 'deploy_password',
         'deploy_project_id', 'deploy_user_id',
         'deploy_signal_verb', 'deploy_signal_transport',
-        'deploy_queue_id'
+        'deploy_queue_id', 'deploy_region_name'
     )
 
     SIGNAL_TRANSPORTS = (
@@ -416,7 +416,9 @@ class SoftwareDeployment(signal_responder.SignalResponder):
                 yield swc_io.InputConfig(
                     name=self.DEPLOY_PROJECT_ID, value=creds['project_id'],
                     description=_('ID of project for API authentication'))
-
+                yield swc_io.InputConfig(
+                    name=self.DEPLOY_REGION_NAME, value=creds['region_name'],
+                    description=_('Region name for API authentication'))
             if self._signal_transport_zaqar():
                 yield swc_io.InputConfig(
                     name=self.DEPLOY_QUEUE_ID,
