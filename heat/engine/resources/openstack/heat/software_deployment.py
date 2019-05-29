@@ -545,12 +545,13 @@ class SoftwareDeployment(signal_responder.SignalResponder):
 
     def get_attribute(self, key, *path):
         """Resource attributes map to deployment outputs values."""
-        sd = self.rpc_client().show_software_deployment(
-            self.context, self.resource_id)
-        ov = sd[rpc_api.SOFTWARE_DEPLOYMENT_OUTPUT_VALUES] or {}
-        if key in ov:
-            attribute = ov.get(key)
-            return attributes.select_from_attribute(attribute, path)
+        if self.resource_id is not None:
+            sd = self.rpc_client().show_software_deployment(
+                self.context, self.resource_id)
+            ov = sd[rpc_api.SOFTWARE_DEPLOYMENT_OUTPUT_VALUES] or {}
+            if key in ov:
+                attribute = ov.get(key)
+                return attributes.select_from_attribute(attribute, path)
 
         # Since there is no value for this key yet, check the output schemas
         # to find out if the key is valid
