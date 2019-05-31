@@ -1,0 +1,4 @@
+---
+features:
+  - OS::Aodh::LBMemberHealthAlarm resource plugin is added to manage
+    Aodh loadbalancer_member_health alarm.
