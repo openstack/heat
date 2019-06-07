@@ -139,7 +139,8 @@ class DeployedServersTest(common.HeatTestCase):
     def _setup_test_stack(self, stack_name, test_templ=ds_tmpl):
         t = template_format.parse(test_templ)
         tmpl = template.Template(t, env=environment.Environment())
-        stack = parser.Stack(utils.dummy_context(), stack_name, tmpl,
+        stack = parser.Stack(utils.dummy_context(region_name="RegionOne"),
+                             stack_name, tmpl,
                              stack_id=uuidutils.generate_uuid(),
                              stack_user_project_id='8888')
         return (tmpl, stack)
@@ -479,6 +480,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'auth_url': 'http://server.test:5000/v2.0',
                     'password': server.password,
                     'project_id': '8888',
+                    'region_name': 'RegionOne',
                     'resource_name': 'server',
                     'stack_id': 'server_heat_s/%s' % stack.id,
                     'user_id': '1234'
@@ -510,6 +512,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'auth_url': 'http://server.test:5000/v2.0',
                     'password': server.password,
                     'project_id': '8888',
+                    'region_name': 'RegionOne',
                     'resource_name': 'server',
                     'stack_id': 'server_heat_s/%s' % stack.id,
                     'user_id': '1234'
@@ -569,6 +572,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'password': server.password,
                     'auth_url': 'http://server.test:5000/v2.0',
                     'project_id': '8888',
+                    'region_name': 'RegionOne',
                     'queue_id': queue_id
                 },
                 'collectors': ['zaqar', 'local']
@@ -586,6 +590,7 @@ class DeployedServersTest(common.HeatTestCase):
                     'password': server.password,
                     'auth_url': 'http://server.test:5000/v2.0',
                     'project_id': '8888',
+                    'region_name': 'RegionOne',
                     'queue_id': queue_id
                 },
                 'collectors': ['zaqar', 'local'],
