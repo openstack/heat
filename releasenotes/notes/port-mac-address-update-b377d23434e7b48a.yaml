@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    ``OS::Neutron::Port`` resources will now be replaced when the
+    ``mac_address`` property is modified. Neutron is unable to update the MAC
+    address of a port once the port is in use.
