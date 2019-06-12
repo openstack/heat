@@ -551,8 +551,8 @@ class NeutronSubnetTest(common.HeatTestCase):
                                rsrc.validate)
         msg = ("Property error: "
                "resources.sub_net.properties.host_routes[0].destination: "
-               "Error validating value 'invalid_cidr': Invalid net cidr "
-               "invalid IPNetwork invalid_cidr ")
+               "Error validating value 'invalid_cidr': "
+               "'invalid_cidr' is not a valid IP address")
         self.assertEqual(msg, six.text_type(ex))
 
     def test_ipv6_validate_ra_mode(self):
