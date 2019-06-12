@@ -29,21 +29,26 @@ class FakeClient(object):
         expected = (method, url)
         called = self.client.callstack[pos][0:2]
 
-        assert self.client.callstack, ("Expected %s %s "
-                                       "but no calls were made." % expected)
+        if not self.client.callstack:
+            raise AssertionError("Expected %s %s "
+                                 "but no calls were made." % expected)
 
-        assert expected == called, 'Expected %s %s; got %s %s' % (
-            expected + called)
+        if expected != called:
+            raise AssertionError('Expected %s %s; got %s %s' %
+                                 (expected + called))
 
         if body is not None:
-            assert self.client.callstack[pos][2] == body
+            if self.client.callstack[pos][2] != body:
+                raise AssertionError('%s != %s',
+                                     (self.client.callstack[pos][2], body))
 
     def assert_called_anytime(self, method, url, body=None):
         """Assert that an API method was called anytime in the test."""
         expected = (method, url)
 
-        assert self.client.callstack, ("Expected %s %s but no calls "
-                                       "were made." % expected)
+        if not self.client.callstack:
+            raise AssertionError("Expected %s %s but no calls "
+                                 "were made." % expected)
 
         found = False
         for entry in self.client.callstack:
@@ -51,16 +56,12 @@ class FakeClient(object):
                 found = True
                 break
 
-        assert found, 'Expected %s %s; got %s' % (expected,
-                                                  self.client.callstack)
+        if not found:
+            raise AssertionError('Expected %s %s; got %s' %
+                                 (expected, self.client.callstack))
         if body is not None:
-            try:
-                assert entry[2] == body
-            except AssertionError:
-                print(entry[2])
-                print("!=")
-                print(body)
-                raise
+            if entry[2] != body:
+                raise AssertionError("%s != %s" % (entry[2], body))
 
         self.client.callstack = []
 

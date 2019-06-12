@@ -79,7 +79,8 @@ class FakeApp(object):
     def __call__(self, env, start_response):
         """Assert that expected environment is present when finally called."""
         for k, v in self.expected_env.items():
-            assert env[k] == v, '%s != %s' % (env[k], v)
+            if env[k] != v:
+                raise AssertionError('%s != %s' % (env[k], v))
         resp = webob.Response()
         resp.body = six.b('SUCCESS')
         return resp(env, start_response)
