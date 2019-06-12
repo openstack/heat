@@ -102,15 +102,22 @@ class TestCIDRConstraint(common.HeatTestCase):
         super(TestCIDRConstraint, self).setUp()
         self.constraint = cc.CIDRConstraint()
 
-    def test_valid_cidr_format(self):
+    def test_valid_format(self):
         validate_format = [
             '10.0.0.0/24',
+            '1.1.1.1',
+            '1.0.1.1',
+            '255.255.255.255',
             '6000::/64',
+            '2002:2002::20c:29ff:fe7d:811a',
+            '::1',
+            '2002::',
+            '2002::1',
         ]
-        for cidr in validate_format:
-            self.assertTrue(self.constraint.validate(cidr, None))
+        for value in validate_format:
+            self.assertTrue(self.constraint.validate(value, None))
 
-    def test_invalid_cidr_format(self):
+    def test_invalid_format(self):
         invalidate_format = [
             '::/129',
             'Invalid cidr',
@@ -120,25 +127,45 @@ class TestCIDRConstraint(common.HeatTestCase):
             '10.0/24',
             '10.0.a.10/24',
             '8.8.8.0/ 24',
-            '8.8.8.8'
+            None,
+            123,
+            '1.1',
+            '1.1.',
+            '1.1.1',
+            '1.1.1.',
+            '1.1.1.256',
+            '1.a.1.1',
+            '2002::2001::1',
+            '2002::g',
+            '2001::0::',
+            '20c:29ff:fe7d:811a'
         ]
-        for cidr in invalidate_format:
-            self.assertFalse(self.constraint.validate(cidr, None))
+        for value in invalidate_format:
+            self.assertFalse(self.constraint.validate(value, None))
 
     @mock.patch('neutron_lib.api.validators.validate_subnet')
-    def test_validate(self, mock_validate_subnet):
+    @mock.patch('neutron_lib.api.validators.validate_ip_address')
+    def test_validate(self, mock_validate_ip, mock_validate_subnet):
         test_formats = [
             '10.0.0/24',
             '10.0/24',
-        ]
-        self.assertFalse(self.constraint.validate('10.0.0.0/33', None))
+            '10.0.0.0/33',
 
+        ]
         for cidr in test_formats:
             self.assertFalse(self.constraint.validate(cidr, None))
+            mock_validate_subnet.assert_called_with(cidr)
+        self.assertEqual(mock_validate_subnet.call_count, 3)
 
-        mock_validate_subnet.assert_any_call('10.0.0/24')
-        mock_validate_subnet.assert_called_with('10.0/24')
-        self.assertEqual(mock_validate_subnet.call_count, 2)
+        test_formats = [
+            '10.0.0',
+            '10.0',
+            '10.0.0.0',
+        ]
+        for ip in test_formats:
+            self.assertFalse(self.constraint.validate(ip, None))
+            mock_validate_ip.assert_called_with(ip)
+        self.assertEqual(mock_validate_ip.call_count, 3)
 
 
 class TestISO8601Constraint(common.HeatTestCase):
