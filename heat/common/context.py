@@ -46,7 +46,7 @@ LOG = logging.getLogger(__name__)
 # username = heat
 # password = password
 # user_domain_id = default
-PASSWORD_PLUGIN = 'password'
+PASSWORD_PLUGIN = 'password'  # nosec Bandit B105
 TRUSTEE_CONF_GROUP = 'trustee'
 ks_loading.register_auth_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
 
