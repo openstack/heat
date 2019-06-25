@@ -1,9 +1,0 @@
-gcc
-python-devel
-libxml2-devel
-libxslt-devel
-libyaml-devel
-openssl-devel
-libffi-devel
-mariadb-devel
-postgresql-devel

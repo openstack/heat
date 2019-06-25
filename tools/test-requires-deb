@@ -1,9 +1,0 @@
-build-essential
-python-dev
-libxml2-dev
-libxslt1-dev
-libyaml-dev
-libssl-dev
-libffi-dev
-libmysqlclient-dev
-libpq-dev
