@@ -17,14 +17,10 @@ cfn-json2yaml
 Package lists
 =============
 
-Lists of Linux packages to install in order to successfully run heat's
-unit test suit on a clean new Linux distribution.
-
-test-requires-deb
-  list of DEB packages as of Ubuntu 14.04 Trusty
-
-test-requires-rpm
-  list of RPM packages as of Fedora 20
+To test that every Linux package is installed that is necessary to
+successfully run heat's unit test suit on a clean new Linux distribution
+run ``tox -e bindep``. This will report missing dependencies (based on
+bindep.txt in heat repository).
 
 Review dashboards
 =================
