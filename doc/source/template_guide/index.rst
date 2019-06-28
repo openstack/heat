@@ -21,6 +21,7 @@ Template Guide
 
    hot_guide
    hello_world
+   feature_guide
    hot_spec
    basic_resources
    software_deployment
