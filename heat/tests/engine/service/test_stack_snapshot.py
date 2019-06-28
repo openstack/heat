@@ -192,7 +192,7 @@ class SnapshotServiceTest(common.HeatTestCase):
                                stk.identifier(), snapshot_id)
         self.assertEqual(exception.NotFound, ex.exc_info[0])
 
-        self.assertTrue(2, mock_load.call_count)
+        self.assertEqual(2, mock_load.call_count)
 
     @mock.patch.object(stack.Stack, 'load')
     def test_list_snapshots(self, mock_load):
