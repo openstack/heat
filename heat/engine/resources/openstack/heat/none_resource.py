@@ -38,6 +38,10 @@ class NoneResource(resource.Resource):
                       prev_resource, check_init_complete=True):
         return False
 
+    def frozen_definition(self):
+        return self.t.freeze(
+            properties=properties.Properties(schema={}, data={}))
+
     def reparse(self, client_resolve=True):
         self.properties = properties.Properties(schema={}, data={})
         self.translate_properties(self.properties, client_resolve)
