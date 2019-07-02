@@ -1596,8 +1596,11 @@ class ListConcat(function.Function):
                   not isinstance(m, six.string_types)):
                 return m
             else:
-                msg = _('Incorrect arguments: Items to concat must be lists.')
-                raise TypeError(msg)
+                msg = _('Incorrect arguments: Items to concat must be lists. '
+                        '%(args)s contains an item that is not a list: '
+                        '%(item)s')
+                raise TypeError(msg % dict(item=jsonutils.dumps(m),
+                                           args=jsonutils.dumps(args)))
 
         ret_list = []
         for m in args:
