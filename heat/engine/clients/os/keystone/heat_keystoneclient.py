@@ -223,12 +223,13 @@ class KsClientWrapper(object):
                                        token_info['token']['roles']]
             else:
                 role_kw['role_names'] = self.context.roles
+        allow_redelegation = (cfg.CONF.reauthentication_auth_method == 'trusts'
+                              and cfg.CONF.allow_trusts_redelegation)
         try:
-            trust = self.client.trusts.create(trustor_user=trustor_user_id,
-                                              trustee_user=trustee_user_id,
-                                              project=trustor_proj_id,
-                                              impersonation=True,
-                                              **role_kw)
+            trust = self.client.trusts.create(
+                trustor_user=trustor_user_id, trustee_user=trustee_user_id,
+                project=trustor_proj_id, impersonation=True,
+                allow_redelegation=allow_redelegation, **role_kw)
         except ks_exception.NotFound:
             LOG.debug("Failed to find roles %s for user %s"
                       % (role_kw, trustor_user_id))
