@@ -122,6 +122,8 @@ class SenlinClusterTest(common.HeatTestCase):
         self.assertEqual((cluster.CREATE, cluster.COMPLETE),
                          cluster.state)
         self.assertEqual(self.fake_cl.id, cluster.resource_id)
+        self.assertEqual(1, self.senlin_mock.get_action.call_count)
+        self.assertEqual(1, self.senlin_mock.get_cluster.call_count)
         return cluster
 
     def test_cluster_create_success(self):
@@ -149,17 +151,17 @@ class SenlinClusterTest(common.HeatTestCase):
         cfg.CONF.set_override('action_retry_limit', 0)
         cluster = self._init_cluster(self.t)
         self.senlin_mock.create_cluster.return_value = self.fake_cl
-        mock_action = mock.MagicMock()
-        mock_action.status = 'FAILED'
-        mock_action.status_reason = 'oops'
+        mock_cluster = mock.MagicMock()
+        mock_cluster.status = 'ERROR'
+        mock_cluster.status_reason = 'oops'
         self.senlin_mock.get_policy.return_value = mock.Mock(
             id='fake_policy_id'
         )
-        self.senlin_mock.get_action.return_value = mock_action
+        self.senlin_mock.get_cluster.return_value = mock_cluster
         create_task = scheduler.TaskRunner(cluster.create)
         ex = self.assertRaises(exception.ResourceFailure, create_task)
         expected = ('ResourceInError: resources.senlin-cluster: '
-                    'Went to status FAILED due to "oops"')
+                    'Went to status ERROR due to "oops"')
         self.assertEqual(expected, six.text_type(ex))
 
     def test_cluster_delete_success(self):
@@ -205,7 +207,7 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.update_cluster.assert_called_once_with(
             cluster=self.fake_cl, **cluster_update_kwargs)
-        self.assertEqual(3, self.senlin_mock.get_action.call_count)
+        self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_desire_capacity(self):
         cluster = self._create_cluster(self.t)
@@ -226,7 +228,7 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.cluster_resize.assert_called_once_with(
             cluster=cluster.resource_id, **cluster_resize_kwargs)
-        self.assertEqual(3, self.senlin_mock.get_action.call_count)
+        self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_policy_add_remove(self):
         cluster = self._create_cluster(self.t)
@@ -259,7 +261,7 @@ class SenlinClusterTest(common.HeatTestCase):
         self.senlin_mock.cluster_detach_policy.assert_called_once_with(
             **detach_policy_kwargs)
         self.assertEqual(0, self.senlin_mock.cluster_update_policy.call_count)
-        self.assertEqual(4, self.senlin_mock.get_action.call_count)
+        self.assertEqual(3, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_policy_exists(self):
         cluster = self._create_cluster(self.t)

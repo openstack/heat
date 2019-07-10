@@ -218,12 +218,11 @@ class Cluster(res_base.BaseSenlinResource):
         }
 
         cluster = self.client().create_cluster(**params)
-        action_id = cluster.location.split('/')[-1]
         self.resource_id_set(cluster.id)
         # for cluster creation, we just to check the action status
         # the action is executed above
         action = {
-            'action_id': action_id,
+            'cluster_id': cluster.id,
             'done': False,
         }
         actions.append(action)
