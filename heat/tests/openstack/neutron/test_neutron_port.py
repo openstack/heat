@@ -927,6 +927,7 @@ class UpdatePortTest(common.HeatTestCase):
                              addr_pair=None,
                              vnic_type=None)),
         ('with_no_name', dict(secgrp=['8a2f582a-e1cd-480f-b85d-b02631c10656'],
+                              orig_name='original',
                               name=None,
                               value_specs={},
                               fixed_ips=None,
@@ -990,12 +991,43 @@ class UpdatePortTest(common.HeatTestCase):
 
     def test_update_port(self):
         t = template_format.parse(neutron_port_template)
+        create_name = getattr(self, 'orig_name', None)
+        if create_name is not None:
+            t['resources']['port']['properties']['name'] = create_name
         stack = utils.parse_stack(t)
 
+        def res_id(client, resource, name_or_id, cmd_resource=None):
+            return {
+                'network': 'net1234',
+                'subnet': 'sub1234',
+            }[resource]
+
         self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
-                         return_value='net1234')
-        create_port = self.patchobject(neutronclient.Client, 'create_port')
+                         side_effect=res_id)
+
+        create_port_result = {
+            'port': {
+                "status": "BUILD",
+                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+            }
+        }
+        show_port_result = {
+            'port': {
+                "status": "ACTIVE",
+                "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+                "fixed_ips": {
+                    "subnet_id": "d0e971a6-a6b4-4f4c-8c88-b75e9c120b7e",
+                    "ip_address": "10.0.0.2"
+                }
+            }
+        }
+
+        create_port = self.patchobject(neutronclient.Client, 'create_port',
+                                       return_value=create_port_result)
         update_port = self.patchobject(neutronclient.Client, 'update_port')
+        show_port = self.patchobject(neutronclient.Client, 'show_port',
+                                     return_value=show_port_result)
+
         fake_groups_list = {
             'security_groups': [
                 {
@@ -1012,11 +1044,17 @@ class UpdatePortTest(common.HeatTestCase):
         set_tag_mock = self.patchobject(neutronclient.Client, 'replace_tag')
 
         props = {'network_id': u'net1234',
-                 'name': str(utils.PhysName(stack.name, 'port')),
+                 'fixed_ips': [{'subnet_id': 'sub1234',
+                                'ip_address': '10.0.3.21'}],
+                 'name': (create_name if create_name is not None else
+                          utils.PhysName(stack.name, 'port')),
                  'admin_state_up': True,
-                 'device_owner': u'network:dhcp'}
+                 'device_owner': u'network:dhcp',
+                 'device_id': '',
+                 'binding:vnic_type': 'normal'}
 
         update_props = props.copy()
+        update_props['name'] = getattr(self, 'name', create_name)
         update_props['security_groups'] = self.secgrp
         update_props['value_specs'] = self.value_specs
         update_props['tags'] = ['test_tag']
@@ -1027,23 +1065,32 @@ class UpdatePortTest(common.HeatTestCase):
 
         update_dict = update_props.copy()
 
+        if update_props['allowed_address_pairs'] is None:
+            update_dict['allowed_address_pairs'] = []
+
         if update_props['security_groups'] is None:
-            update_dict['security_groups'] = ['default']
+            update_dict['security_groups'] = [
+                '0389f747-7785-4757-b7bb-2ab07e4b09c3',
+            ]
 
         if update_props['name'] is None:
-            update_dict['name'] = utils.PhysName(stack.name, 'test_subnet')
+            update_dict['name'] = utils.PhysName(stack.name, 'port')
 
         value_specs = update_dict.pop('value_specs')
         if value_specs:
             for value_spec in six.iteritems(value_specs):
                 update_dict[value_spec[0]] = value_spec[1]
+        else:
+            # BUG(zaneb): this is necessary because of a regression
+            # from https://review.opendev.org/263119
+            update_dict['value_specs'] = {}
 
         tags = update_dict.pop('tags')
 
         # create port
         port = stack['port']
-        self.assertIsNone(scheduler.TaskRunner(port.handle_create)())
-        create_port.assset_called_once_with(props)
+        self.assertIsNone(scheduler.TaskRunner(port.create)())
+        create_port.assert_called_once_with({'port': props})
         # update port
         update_snippet = rsrc_defn.ResourceDefinition(port.name, port.type(),
                                                       update_props)
@@ -1051,7 +1098,8 @@ class UpdatePortTest(common.HeatTestCase):
                                                update_snippet, {},
                                                update_props)())
 
-        update_port.assset_called_once_with(update_dict)
+        update_port.assert_called_once_with(
+            'fc68ea2c-b60b-4b4f-bd82-94ec81110766', {'port': update_dict})
         set_tag_mock.assert_called_with('ports', port.resource_id,
                                         {'tags': tags})
         # check, that update does not cause of Update Replace
@@ -1069,3 +1117,4 @@ class UpdatePortTest(common.HeatTestCase):
         # update with empty prop_diff
         scheduler.TaskRunner(port.handle_update, update_snippet, {}, {})()
         self.assertEqual(1, update_port.call_count)
+        show_port.assert_called_with('fc68ea2c-b60b-4b4f-bd82-94ec81110766')
