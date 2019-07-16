@@ -1573,6 +1573,16 @@ class Stack(collections.Mapping):
                 rsrc.state_set(rsrc.action,
                                rsrc.FAILED,
                                six.text_type(reason))
+        if self.action == self.UPDATE and not self.convergence:
+            backup_stack = self._backup_stack(False)
+            existing_params = environment.Environment({env_fmt.PARAMETERS:
+                                                      self.t.env.params})
+            template = tmpl.Template.load(self.context,
+                                          self.prev_raw_template_id)
+            bkp_stack_template = backup_stack.t if backup_stack else None
+            self._merge_user_param_template(existing_params, template,
+                                            bkp_stack_template)
+
         self.state_set(self.action, self.FAILED, six.text_type(reason))
 
     @scheduler.wrappertask
@@ -1701,20 +1711,8 @@ class Stack(collections.Mapping):
             self._log_status()
             self._send_notification_and_add_event()
             if self.status == self.FAILED:
-                # Since template was incrementally updated based on existing
-                # and new stack resources, we should have user params of both.
-                existing_params.load(newstack.t.env.user_env_as_dict())
-                self.t.env = existing_params
-                # Update the template version, in case new things were used
-                self.t.t[newstack.t.version[0]] = max(
-                    newstack.t.version[1], self.t.version[1])
-                self.t.merge_snippets(newstack.t)
-                self.t.store(self.context)
-                backup_stack.t.env = existing_params
-                backup_stack.t.t[newstack.t.version[0]] = max(
-                    newstack.t.version[1], self.t.version[1])
-                backup_stack.t.merge_snippets(newstack.t)
-                backup_stack.t.store(self.context)
+                self._merge_user_param_template(existing_params, newstack.t,
+                                                backup_stack.t)
             self.store()
 
             if previous_template_id is not None:
@@ -1724,6 +1722,24 @@ class Stack(collections.Mapping):
             lifecycle_plugin_utils.do_post_ops(self.context, self,
                                                newstack, action,
                                                (self.status == self.FAILED))
+
+    def _merge_user_param_template(self, existing_params, new_template,
+                                   bkp_stack_template):
+        # Since template was incrementally updated based on existing
+        # and new stack resources, we should have user params of both.
+        existing_params.load(new_template.env.user_env_as_dict())
+        self.t.env = existing_params
+        # Update the template version, in case new things were used
+        self.t.t[new_template.version[0]] = max(new_template.version[1],
+                                                self.t.version[1])
+        self.t.merge_snippets(new_template)
+        self.t.store(self.context)
+        if bkp_stack_template:
+            bkp_stack_template.env = existing_params
+            bkp_stack_template.t[new_template.version[0]] = max(
+                new_template.version[1], self.t.version[1])
+            bkp_stack_template.merge_snippets(new_template)
+            bkp_stack_template.store(self.context)
 
     def _update_exception_handler(self, exc, action):
         """Handle exceptions in update_task.
