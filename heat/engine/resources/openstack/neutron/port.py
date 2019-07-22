@@ -384,7 +384,7 @@ class Port(neutron.NeutronResource):
             _("The attributes of the network owning the port. (The full list "
               "of response parameters can be found in the `Openstack "
               "Networking service API reference "
-              "<https://developer.openstack.org/api-ref/network/>`_.) The "
+              "<https://docs.openstack.org/api-ref/network/>`_.) The "
               "following examples demonstrate some (not all) possible "
               "expressions. (Obtains the network, the MTU (Maximum "
               "transmission unit), the network tags and the l2_adjacency "

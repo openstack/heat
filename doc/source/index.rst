@@ -82,7 +82,7 @@ Using the Heat Service
 - `OpenStack Orchestration API v1 Reference`_
 - `Python and CLI client`_
 
-.. _`OpenStack Orchestration API v1 Reference`: https://developer.openstack.org/api-ref/orchestration/v1/
+.. _`OpenStack Orchestration API v1 Reference`: https://docs.openstack.org/api-ref/orchestration/v1/
 .. _`Python and CLI client`: https://docs.openstack.org/python-heatclient/latest
 
 Developing Heat

@@ -786,7 +786,7 @@ contents of the file ``example-puppet-manifest.pp``, containing:
 .. _`Metadata service`: https://docs.openstack.org/nova/latest/admin/networking-nova.html#metadata-service
 .. _cloud-init: https://cloudinit.readthedocs.io/
 .. _curl: https://curl.haxx.se/
-.. _`Orchestration API`: https://developer.openstack.org/api-ref/orchestration/v1/
+.. _`Orchestration API`: https://docs.openstack.org/api-ref/orchestration/v1/
 .. _os-refresh-config: https://opendev.org/openstack/os-refresh-config
 .. _os-apply-config: https://opendev.org/openstack/os-apply-config
 .. _tripleo-heat-templates: https://opendev.org/openstack/tripleo-heat-templates
