@@ -1118,6 +1118,8 @@ def _delete_event_rows(context, stack_id, limit):
     return retval
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def event_create(context, values):
     if 'stack_id' in values and cfg.CONF.max_events_per_stack:
         # only count events and purge on average
