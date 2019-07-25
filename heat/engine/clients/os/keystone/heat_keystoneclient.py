@@ -563,6 +563,29 @@ class KsClientWrapper(object):
         self._check_stack_domain_user(user_id, project_id, 'enable')
         self.domain_admin_client.users.update(user=user_id, enabled=True)
 
+    def server_keystone_endpoint_url(self, fallback_endpoint):
+        ks_endpoint_type = cfg.CONF.server_keystone_endpoint_type
+        if ((ks_endpoint_type == 'public') or (
+            ks_endpoint_type == 'internal') or
+                (ks_endpoint_type == 'admin')):
+            if (hasattr(self.context, 'auth_plugin') and
+                    hasattr(self.context.auth_plugin, 'get_access')):
+                try:
+                    auth_ref = self.context.auth_plugin.get_access(
+                        self.session)
+                    if hasattr(auth_ref, "service_catalog"):
+                        unversioned_sc_auth_uri = (
+                            auth_ref.service_catalog.get_urls(
+                                service_type='identity',
+                                interface=ks_endpoint_type))
+                        if len(unversioned_sc_auth_uri) > 0:
+                            sc_auth_uri = (
+                                unversioned_sc_auth_uri[0] + "/v3")
+                            return sc_auth_uri
+                except ks_exception.Unauthorized:
+                    LOG.error("Keystone client authentication failed")
+        return fallback_endpoint
+
 
 class KeystoneClient(object):
     """Keystone Auth Client.

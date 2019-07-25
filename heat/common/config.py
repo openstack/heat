@@ -88,7 +88,14 @@ service_opts = [
     cfg.IntOpt('num_engine_workers',
                help=_('Number of heat-engine processes to fork and run. '
                       'Will default to either to 4 or number of CPUs on '
-                      'the host, whichever is greater.'))]
+                      'the host, whichever is greater.')),
+    cfg.StrOpt('server_keystone_endpoint_type',
+               choices=['', 'public', 'internal', 'admin'],
+               default='',
+               help=_('If set, is used to control which authentication '
+                      'endpoint is used by user-controlled servers to make '
+                      'calls back to Heat. '
+                      'If unset www_authenticate_uri is used.'))]
 
 engine_opts = [
     cfg.ListOpt('plugin_dirs',
