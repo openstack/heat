@@ -40,6 +40,7 @@ resources:
         - 28c25a04-3f73-45a7-a2b4-59e183943ddc
       port_security_enabled: False
       dns_domain: openstack.org.
+      value_specs: {'mtu': 1500}
       tags:
         - tag1
         - tag2
@@ -184,7 +185,8 @@ class NeutronNetTest(common.HeatTestCase):
                  'tenant_id': u'c1210485b2424d48804aad5d39c61b8f',
                  'dns_domain': u'openstack.org.',
                  'shared': True,
-                 'port_security_enabled': False}
+                 'port_security_enabled': False,
+                 'mtu': 1500}
              }
         )
         add_dhcp_agent_mock.assert_called_with(
@@ -250,7 +252,8 @@ class NeutronNetTest(common.HeatTestCase):
             }}
         )
         # Update with value_specs
-        prop_diff['value_specs'] = {"port_security_enabled": True}
+        prop_diff['value_specs'] = {"port_security_enabled": True,
+                                    'mtu': 1500}
         rsrc.handle_update(update_snippet, {}, prop_diff)
         update_net_mock.assert_called_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',

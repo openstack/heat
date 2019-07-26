@@ -92,8 +92,12 @@ class NeutronResource(resource.Resource):
                           attrs['port_security_enabled'])
 
     @staticmethod
-    def merge_value_specs(props):
+    def merge_value_specs(props, before_value_specs=None):
         value_spec_props = props.pop('value_specs')
+        if before_value_specs:
+            for k in list(value_spec_props):
+                if value_spec_props[k] == before_value_specs.get(k, None):
+                    value_spec_props.pop(k)
         props.update(value_spec_props)
 
     def prepare_update_properties(self, prop_diff):
@@ -103,7 +107,8 @@ class NeutronResource(resource.Resource):
         2. Defaults resource name to physical resource name if None
         """
         if 'value_specs' in prop_diff and prop_diff['value_specs']:
-            NeutronResource.merge_value_specs(prop_diff)
+            NeutronResource.merge_value_specs(
+                prop_diff, self.properties[self.VALUE_SPECS])
         if 'name' in prop_diff and prop_diff['name'] is None:
             prop_diff['name'] = self.physical_resource_name()
 
