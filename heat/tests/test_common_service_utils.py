@@ -51,23 +51,23 @@ class TestServiceUtils(common.HeatTestCase):
 
         self.assertEqual(service_dict['status'], 'up')
 
-        # check again within first report_interval time (60)
+        # check again within first report_interval time
         service_dict = service_utils.format_service(service)
         self.assertEqual(service_dict['status'], 'up')
 
-        # check update not happen within report_interval time (60+)
+        # check update not happen within 2*report_interval time
         service.created_at = (timeutils.utcnow() -
-                              datetime.timedelta(0, 70))
+                              datetime.timedelta(0, 130))
         service_dict = service_utils.format_service(service)
         self.assertEqual(service_dict['status'], 'down')
 
-        # check update happened after report_interval time (60+)
+        # check update happened after 2* report_interval time
         service.updated_at = (timeutils.utcnow() -
-                              datetime.timedelta(0, 70))
+                              datetime.timedelta(0, 130))
         service_dict = service_utils.format_service(service)
         self.assertEqual(service_dict['status'], 'down')
 
-        # check update happened within report_interval time (60)
+        # check update happened within report_interval time
         service.updated_at = (timeutils.utcnow() -
                               datetime.timedelta(0, 50))
         service_dict = service_utils.format_service(service)
