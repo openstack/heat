@@ -245,7 +245,6 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('mac_addr')
             ],
-            update_allowed=True,
         ),
         ALLOWED_ADDRESS_PAIRS: properties.Schema(
             properties.Schema.LIST,
@@ -543,7 +542,6 @@ class Port(neutron.NeutronResource):
         result = super(Port, self).parse_live_resource_data(
             resource_properties, resource_data)
         result[self.QOS_POLICY] = resource_data.get('qos_policy_id')
-        result.pop(self.MAC_ADDRESS)
         fixed_ips = resource_data.get(self.FIXED_IPS) or []
         if fixed_ips:
             result.update({self.FIXED_IPS: []})
