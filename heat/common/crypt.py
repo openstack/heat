@@ -125,7 +125,12 @@ def decrypted_dict(data, encryption_key=None):
         return return_data
     for prop_name, prop_value in data.items():
         method, value = prop_value
-        decrypted_value = decrypt(method, value, encryption_key)
+        try:
+            decrypted_value = decrypt(method, value, encryption_key)
+        except UnicodeDecodeError:
+            # The dict contained valid JSON on the way in, so if what comes
+            # out is garbage then the key was incorrect.
+            raise exception.InvalidEncryptionKey()
         prop_string = jsonutils.loads(decrypted_value)
         return_data[prop_name] = prop_string
     return return_data
