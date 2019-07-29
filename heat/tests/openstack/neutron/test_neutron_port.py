@@ -1080,10 +1080,6 @@ class UpdatePortTest(common.HeatTestCase):
         if value_specs:
             for value_spec in six.iteritems(value_specs):
                 update_dict[value_spec[0]] = value_spec[1]
-        else:
-            # BUG(zaneb): this is necessary because of a regression
-            # from https://review.opendev.org/263119
-            update_dict['value_specs'] = {}
 
         tags = update_dict.pop('tags')
 
