@@ -51,14 +51,10 @@ def format_service(service):
         return
 
     status = 'down'
-    if service.updated_at is not None:
-        if ((timeutils.utcnow() - service.updated_at).total_seconds()
-                <= service.report_interval):
-            status = 'up'
-    else:
-        if ((timeutils.utcnow() - service.created_at).total_seconds()
-                <= service.report_interval):
-            status = 'up'
+    last_updated = service.updated_at or service.created_at
+    check_interval = (timeutils.utcnow() - last_updated).total_seconds()
+    if check_interval <= 2 * service.report_interval:
+        status = 'up'
 
     result = {
         SERVICE_ID: service.id,
