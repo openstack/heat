@@ -680,7 +680,8 @@ class EngineService(service.ServiceBase):
         # Do not stack limit check for admin since admin can see all stacks.
         if not cnxt.is_admin:
             tenant_limit = cfg.CONF.max_stacks_per_tenant
-            if stack_object.Stack.count_all(cnxt) >= tenant_limit:
+            if (tenant_limit >= 0 and
+                    stack_object.Stack.count_all(cnxt) >= tenant_limit):
                 message = _("You have reached the maximum stacks per tenant, "
                             "%d. Please delete some stacks.") % tenant_limit
                 raise exception.RequestLimitExceeded(message=message)
