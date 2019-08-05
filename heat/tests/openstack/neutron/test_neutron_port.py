@@ -183,6 +183,8 @@ class NeutronPortTest(common.HeatTestCase):
 
     def test_allowed_address_pair(self):
         t = template_format.parse(neutron_port_with_address_pair_template)
+        t['resources']['port']['properties'][
+            'allowed_address_pairs'][0]['ip_address'] = '10.0.3.21'
         stack = utils.parse_stack(t)
 
         self.find_mock.return_value = 'abcd1234'
@@ -200,7 +202,7 @@ class NeutronPortTest(common.HeatTestCase):
         self.create_mock.assert_called_once_with({'port': {
             'network_id': u'abcd1234',
             'allowed_address_pairs': [{
-                'ip_address': u'10.0.3.21/8',
+                'ip_address': u'10.0.3.21',
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName(stack.name, 'port'),
