@@ -147,4 +147,4 @@ defined, then all the trustor roles are delegated to trustee.
    The trustor delegated roles must be pre-configured in the
    OpenStack Identity service before using them in the Orchestration service.
 
-.. _Identity management trusts: <https://docs.openstack.org/keystone/latest/admin/identity-use-trusts.html>
+.. _Identity management trusts: https://docs.openstack.org/keystone/latest/admin/identity-use-trusts.html
