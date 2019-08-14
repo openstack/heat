@@ -50,6 +50,17 @@ class SenlinClientPlugin(sdk_plugin.OpenStackSDKPlugin):
             )
         return False
 
+    def cluster_is_active(self, cluster_id):
+        cluster = self.client().get_cluster(cluster_id)
+        if cluster.status == 'ACTIVE':
+            return True
+        elif cluster.status == 'ERROR':
+            raise exception.ResourceInError(
+                status_reason=cluster.status_reason,
+                resource_status=cluster.status,
+            )
+        return False
+
     def get_profile_id(self, profile_name):
         profile = self.client().get_profile(profile_name)
         return profile.id
@@ -72,15 +83,19 @@ class SenlinClientPlugin(sdk_plugin.OpenStackSDKPlugin):
             if action['done']:
                 continue
             all_executed = False
-            if action['action_id'] is None:
-                func = getattr(self.client(), action['func'])
-                ret = func(**action['params'])
-                if isinstance(ret, dict):
-                    action['action_id'] = ret['action']
+            if 'action_id' in action:
+                if action['action_id'] is None:
+                    func = getattr(self.client(), action['func'])
+                    ret = func(**action['params'])
+                    if isinstance(ret, dict):
+                        action['action_id'] = ret['action']
+                    else:
+                        action['action_id'] = ret.location.split('/')[-1]
                 else:
-                    action['action_id'] = ret.location.split('/')[-1]
+                    ret = self.check_action_status(action['action_id'])
+                    action['done'] = ret
             else:
-                ret = self.check_action_status(action['action_id'])
+                ret = self.cluster_is_active(action['cluster_id'])
                 action['done'] = ret
             # Execute these actions one by one.
             break
