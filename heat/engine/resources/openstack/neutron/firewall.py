@@ -142,7 +142,7 @@ class Firewall(neutron.NeutronResource):
         status = attributes['status']
         if status == 'PENDING_CREATE':
             return False
-        elif status == 'ACTIVE':
+        elif status == 'ACTIVE' or status == 'INACTIVE':
             return True
         elif status == 'ERROR':
             raise exception.ResourceInError(
