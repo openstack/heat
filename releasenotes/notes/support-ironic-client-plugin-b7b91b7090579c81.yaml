@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Introduce a Ironic client plugin module that will be used by the Ironic's
+    resources.
+    Support only ironicclient version >=2.8.0 to get allocation functionality
+    support.
