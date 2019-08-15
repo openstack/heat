@@ -38,6 +38,8 @@ from heat.engine import clients
 LOG = logging.getLogger(__name__)
 
 
+cfg.CONF.import_opt('client_retry_limit', 'heat.common.config')
+
 # Note, we yield the options via list_opts to enable generation of the
 # sample heat.conf, but we don't register these options directly via
 # cfg.CONF.register*, it's done via ks_loading.register_auth_conf_options
@@ -122,6 +124,7 @@ class RequestContext(context.RequestContext):
         self._session = None
         self._clients = None
         self._keystone_session = session.Session(
+            connect_retries=cfg.CONF.client_retry_limit,
             **config.get_ssl_options('keystone'))
         self.trust_id = trust_id
         self.trustor_user_id = trustor_user_id
