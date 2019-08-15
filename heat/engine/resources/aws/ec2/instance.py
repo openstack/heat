@@ -558,6 +558,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
             if server is not None:
                 self.resource_id_set(server.id)
 
+        assert server is not None
         creator = progress.ServerCreateProgress(server.id)
         attachers = []
         for vol_id, device in self.volumes():

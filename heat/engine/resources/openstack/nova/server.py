@@ -884,6 +884,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             if server is not None:
                 self.resource_id_set(server.id)
 
+        assert server is not None
         return server.id
 
     def check_create_complete(self, server_id):

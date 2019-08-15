@@ -336,7 +336,7 @@ class ResourceFailure(HeatExceptionWithPath):
                 path = res_path
         else:
             self.exc = None
-            res_failed = 'Resource %s failed: ' % action.upper()
+            res_failed = 'Resource %s failed: ' % self.action.upper()
             if res_failed in exception_or_error:
                 (error, message, new_path) = self._from_status_reason(
                     exception_or_error)
