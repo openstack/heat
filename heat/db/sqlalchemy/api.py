@@ -1548,6 +1548,8 @@ def sync_point_get(context, entity_id, traversal_id, is_update):
     )
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
                                  input_data):
