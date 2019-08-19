@@ -419,13 +419,13 @@ function create_heat_accounts {
         get_or_create_endpoint \
             "orchestration" \
             "$REGION_NAME" \
-            "$heat_api_service_url" "$heat_api_service_url" "$heat_api_service_url"
+            "$heat_api_service_url"
 
         get_or_create_service "heat-cfn" "cloudformation" "Heat CloudFormation Service"
         get_or_create_endpoint \
             "cloudformation"  \
             "$REGION_NAME" \
-            "$heat_cfn_api_service_url" "$heat_cfn_api_service_url" "$heat_cfn_api_service_url"
+            "$heat_cfn_api_service_url"
 
         # heat_stack_user role is for users created by Heat
         get_or_create_role "heat_stack_user"
