@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 from troveclient import client as tc
 from troveclient import exceptions
 
@@ -36,6 +37,7 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
             'endpoint_type': endpoint_type,
             'service_type': self.DATABASE,
             'session': con.keystone_session,
+            'connect_retries': cfg.CONF.client_retry_limit,
             'region_name': self._get_region_name()
         }
 

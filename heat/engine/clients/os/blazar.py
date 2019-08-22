@@ -13,6 +13,7 @@
 
 from blazarclient import client as blazar_client
 from blazarclient import exception as client_exception
+from oslo_config import cfg
 
 from heat.engine.clients import client_plugin
 
@@ -30,6 +31,7 @@ class BlazarClientPlugin(client_plugin.ClientPlugin):
             'service_type': self.RESERVATION,
             'interface': interface,
             'region_name': self._get_region_name(),
+            'connect_retries': cfg.CONF.client_retry_limit
         }
 
         client = blazar_client.Client(**args)
