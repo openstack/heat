@@ -13,6 +13,7 @@
 
 from aodhclient import client as ac
 from aodhclient import exceptions
+from oslo_config import cfg
 
 from heat.engine.clients import client_plugin
 
@@ -37,6 +38,7 @@ class AodhClientPlugin(client_plugin.ClientPlugin):
             session=self.context.keystone_session,
             interface=interface,
             service_type=self.ALARMING,
+            connect_retries=cfg.CONF.client_retry_limit,
             region_name=self._get_region_name())
 
     def is_not_found(self, ex):

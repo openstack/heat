@@ -163,6 +163,7 @@ class KsClientWrapper(object):
 
     def _v3_client_init(self):
         client = kc_v3.Client(session=self.session,
+                              connect_retries=cfg.CONF.client_retry_limit,
                               region_name=self.auth_region_name)
 
         if hasattr(self.context.auth_plugin, 'get_access'):
