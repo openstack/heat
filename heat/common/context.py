@@ -12,6 +12,7 @@
 #    under the License.
 
 from keystoneauth1 import access
+from keystoneauth1 import exceptions as ksa_exceptions
 from keystoneauth1.identity import access as access_plugin
 from keystoneauth1.identity import generic
 from keystoneauth1 import loading as ks_loading
@@ -24,6 +25,7 @@ import oslo_messaging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
 import six
+import tenacity
 
 from heat.common import config
 from heat.common import endpoint_utils
@@ -49,6 +51,15 @@ LOG = logging.getLogger(__name__)
 PASSWORD_PLUGIN = 'password'  # nosec Bandit B105
 TRUSTEE_CONF_GROUP = 'trustee'
 ks_loading.register_auth_conf_options(cfg.CONF, TRUSTEE_CONF_GROUP)
+
+
+retry_on_connection_timeout = tenacity.retry(
+    stop=tenacity.stop_after_attempt(cfg.CONF.client_retry_limit+1),
+    wait=tenacity.wait_random(max=2),
+    retry=tenacity.retry_if_exception_type(
+        (ksa_exceptions.ConnectFailure,
+         ksa_exceptions.DiscoveryFailure)),
+    reraise=True)
 
 
 def list_opts():
@@ -288,6 +299,8 @@ class RequestContext(context.RequestContext):
 
 
 class StoredContext(RequestContext):
+
+    @retry_on_connection_timeout
     def _load_keystone_data(self):
         self._keystone_loaded = True
         auth_ref = self.auth_plugin.get_access(self.keystone_session)
