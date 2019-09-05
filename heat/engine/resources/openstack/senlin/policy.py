@@ -107,7 +107,7 @@ class Policy(res_base.BaseSenlinResource):
     def remove_bindings(self, bindings):
         for bd in bindings:
             try:
-                bd['action'] = self.client().cluster_detach_policy(
+                bd['action'] = self.client().detach_policy_from_cluster(
                     bd[self.BD_CLUSTER], self.resource_id)['action']
                 bd['finished'] = False
             except Exception as ex:
@@ -120,7 +120,7 @@ class Policy(res_base.BaseSenlinResource):
 
     def add_bindings(self, bindings):
         for bd in bindings:
-            bd['action'] = self.client().cluster_attach_policy(
+            bd['action'] = self.client().attach_policy_to_cluster(
                 bd[self.BD_CLUSTER], self.resource_id,
                 enabled=bd[self.BD_ENABLED])['action']
             bd['finished'] = False

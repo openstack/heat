@@ -15,6 +15,7 @@
 import copy
 import mock
 
+from openstack.clustering.v1._proxy import Proxy
 from openstack import exceptions
 from oslo_config import cfg
 
@@ -71,7 +72,7 @@ class SenlinPolicyTest(common.HeatTestCase):
                          return_value=True)
         self.patchobject(senlin.PolicyTypeConstraint, 'validate',
                          return_value=True)
-        self.senlin_mock = mock.MagicMock()
+        self.senlin_mock = mock.MagicMock(spec=Proxy)
         self.senlin_mock.get_cluster.return_value = mock.Mock(
             id='c1_id')
         self.patchobject(policy.Policy, 'client',
@@ -89,7 +90,7 @@ class SenlinPolicyTest(common.HeatTestCase):
     def _create_policy(self, template):
         policy = self._init_policy(template)
         self.senlin_mock.create_policy.return_value = self.fake_p
-        self.senlin_mock.cluster_attach_policy.return_value = {
+        self.senlin_mock.attach_policy_to_cluster.return_value = {
             'action': 'fake_action'}
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='SUCCEEDED')
@@ -97,7 +98,7 @@ class SenlinPolicyTest(common.HeatTestCase):
         self.assertEqual((policy.CREATE, policy.COMPLETE),
                          policy.state)
         self.assertEqual(self.fake_p.id, policy.resource_id)
-        self.senlin_mock.cluster_attach_policy.assert_called_once_with(
+        self.senlin_mock.attach_policy_to_cluster.assert_called_once_with(
             'c1_id', policy.resource_id, enabled=True)
         self.senlin_mock.get_action.assert_called_once_with('fake_action')
         return policy
@@ -115,7 +116,7 @@ class SenlinPolicyTest(common.HeatTestCase):
         cfg.CONF.set_override('action_retry_limit', 0)
         policy = self._init_policy(self.t)
         self.senlin_mock.create_policy.return_value = self.fake_p
-        self.senlin_mock.cluster_attach_policy.return_value = {
+        self.senlin_mock.attach_policy_to_cluster.return_value = {
             'action': 'fake_action'}
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='FAILED', status_reason='oops',
@@ -130,14 +131,14 @@ class SenlinPolicyTest(common.HeatTestCase):
         self.assertEqual(err_msg, policy.status_reason)
 
     def test_policy_delete_not_found(self):
-        self.senlin_mock.cluster_detach_policy.return_value = {
+        self.senlin_mock.detach_policy_from_cluster.return_value = {
             'action': 'fake_action'}
         policy = self._create_policy(self.t)
         self.senlin_mock.get_policy.side_effect = [
             exceptions.ResourceNotFound('SenlinPolicy'),
         ]
         scheduler.TaskRunner(policy.delete)()
-        self.senlin_mock.cluster_detach_policy.assert_called_once_with(
+        self.senlin_mock.detach_policy_from_cluster.assert_called_once_with(
             'c1_id', policy.resource_id)
         self.senlin_mock.delete_policy.assert_called_once_with(
             policy.resource_id)
@@ -147,11 +148,11 @@ class SenlinPolicyTest(common.HeatTestCase):
         self.senlin_mock.get_policy.side_effect = [
             exceptions.ResourceNotFound('SenlinPolicy'),
         ]
-        self.senlin_mock.cluster_detach_policy.side_effect = [
+        self.senlin_mock.detach_policy_from_cluster.side_effect = [
             exceptions.HttpException(http_status=400),
         ]
         scheduler.TaskRunner(policy.delete)()
-        self.senlin_mock.cluster_detach_policy.assert_called_once_with(
+        self.senlin_mock.detach_policy_from_cluster.assert_called_once_with(
             'c1_id', policy.resource_id)
         self.senlin_mock.delete_policy.assert_called_once_with(
             policy.resource_id)
@@ -170,18 +171,18 @@ class SenlinPolicyTest(common.HeatTestCase):
         props['name'] = 'new_name'
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_cluster = rsrc_defns['senlin-policy']
-        self.senlin_mock.cluster_attach_policy.return_value = {
+        self.senlin_mock.attach_policy_to_cluster.return_value = {
             'action': 'fake_action1'}
-        self.senlin_mock.cluster_detach_policy.return_value = {
+        self.senlin_mock.detach_policy_from_cluster.return_value = {
             'action': 'fake_action2'}
         self.senlin_mock.get_policy.return_value = self.fake_p
         scheduler.TaskRunner(policy.update, new_cluster)()
         self.assertEqual((policy.UPDATE, policy.COMPLETE), policy.state)
         self.senlin_mock.update_policy.assert_called_once_with(
             self.fake_p, name='new_name')
-        self.senlin_mock.cluster_detach_policy.assert_called_once_with(
+        self.senlin_mock.detach_policy_from_cluster.assert_called_once_with(
             'c1_id', policy.resource_id)
-        self.senlin_mock.cluster_attach_policy.assert_called_with(
+        self.senlin_mock.attach_policy_to_cluster.assert_called_with(
             'c2_id', policy.resource_id, enabled=True)
 
     def test_policy_resolve_attribute(self):
