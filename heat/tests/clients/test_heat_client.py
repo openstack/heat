@@ -86,6 +86,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.m_client.assert_called_once_with(
             session=utils.AnyInstance(ks_session.Session),
             auth=self.mock_ks_auth,
+            connect_retries=2,
             region_name=None)
 
     def _stubs_auth(self, method='token', trust_scoped=True,
@@ -1519,6 +1520,7 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
         self.m_client.assert_called_once_with(
             session=utils.AnyInstance(ks_session.Session),
             auth=self.mock_ks_auth,
+            connect_retries=2,
             region_name=None)
 
     def _stub_domain_admin_client(self, domain_id='adomain123'):
