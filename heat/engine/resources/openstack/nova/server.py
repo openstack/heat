@@ -330,7 +330,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                     BLOCK_DEVICE_MAPPING_DELETE_ON_TERM: properties.Schema(
                         properties.Schema.BOOLEAN,
                         _('Indicate whether the volume should be deleted '
-                          'when the server is terminated.')
+                          'when the server is terminated. '
+                          'Defaults to "False" in case of a volume, snapshot '
+                          'or image and to "True" in case of swap or '
+                          'ephemeral.')
                     ),
                 },
             ),
