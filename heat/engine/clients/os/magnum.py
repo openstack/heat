@@ -13,6 +13,7 @@
 
 from magnumclient import exceptions as mc_exc
 from magnumclient.v1 import client as magnum_client
+from oslo_config import cfg
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
@@ -31,6 +32,7 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
             'interface': interface,
             'service_type': self.CONTAINER,
             'session': self.context.keystone_session,
+            'connect_retries': cfg.CONF.client_retry_limit,
             'region_name': self._get_region_name()
         }
         client = magnum_client.Client(**args)

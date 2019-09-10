@@ -38,6 +38,7 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
             args['username'] = self.context.username
             args['password'] = self.context.password
 
+        args['connect_retries'] = cfg.CONF.client_retry_limit
         return hc.Client('1', endpoint_override=endpoint,
                          session=self.context.keystone_session,
                          **args)

@@ -14,6 +14,7 @@
 from cinderclient import client as cc
 from cinderclient import exceptions
 from keystoneauth1 import exceptions as ks_exceptions
+from oslo_config import cfg
 from oslo_log import log as logging
 
 from heat.common import exception
@@ -62,6 +63,7 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
             'interface': self.interface,
             'service_type': self.service_type,
             'region_name': self._get_region_name(),
+            'connect_retries': cfg.CONF.client_retry_limit,
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug')
         }

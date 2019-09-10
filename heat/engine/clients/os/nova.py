@@ -90,6 +90,7 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
             'endpoint_type': endpoint_type,
             'service_type': self.COMPUTE,
             'region_name': self._get_region_name(),
+            'connect_retries': cfg.CONF.client_retry_limit,
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug')
             }
