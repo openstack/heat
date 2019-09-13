@@ -118,28 +118,21 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
 
     def test_get_host(self):
         """Tests the get_host function."""
-        my_host_name = 'myhost'
+        my_hypervisor_hostname = 'myhost'
         my_host = mock.MagicMock()
-        my_host.host_name = my_host_name
-        my_host.service = 'compute'
+        my_host.hypervisor_hostname = my_hypervisor_hostname
 
-        wrong_host = mock.MagicMock()
-        wrong_host.host_name = 'wrong_host'
-        wrong_host.service = 'compute'
-        self.nova_client.hosts.list.side_effect = [
-            [my_host],
-            [wrong_host],
-            exception.EntityNotFound(entity='Host', name='nohost')
+        self.nova_client.hypervisors.search.side_effect = [
+            my_host, nova_exceptions.NotFound(404)
         ]
-        self.assertEqual(my_host, self.nova_plugin.get_host(my_host_name))
-        self.assertRaises(exception.EntityNotFound,
-                          self.nova_plugin.get_host, my_host_name)
-        self.assertRaises(exception.EntityNotFound,
+        self.assertEqual(my_host,
+                         self.nova_plugin.get_host(my_hypervisor_hostname))
+        self.assertRaises(nova_exceptions.NotFound,
                           self.nova_plugin.get_host, 'nohost')
-        self.assertEqual(3, self.nova_client.hosts.list.call_count)
-        calls = [mock.call(), mock.call(), mock.call()]
+        self.assertEqual(2, self.nova_client.hypervisors.search.call_count)
+        calls = [mock.call('myhost'), mock.call('nohost')]
         self.assertEqual(calls,
-                         self.nova_client.hosts.list.call_args_list)
+                         self.nova_client.hypervisors.search.call_args_list)
 
     def test_get_keypair(self):
         """Tests the get_keypair function."""
@@ -558,7 +551,9 @@ class HostConstraintTest(common.HeatTestCase):
     def test_validation_error(self):
         self.mock_get_host.side_effect = exception.EntityNotFound(
             entity='Host', name='bar')
-        self.assertFalse(self.constraint.validate("bar", self.ctx))
+        self.assertRaises(
+            exception.EntityNotFound,
+            self.constraint.validate, "bar", self.ctx)
 
 
 class KeypairConstraintTest(common.HeatTestCase):

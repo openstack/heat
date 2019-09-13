@@ -281,20 +281,15 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
         return flavor
 
-    def get_host(self, host_name):
-        """Get the host id specified by name.
+    def get_host(self, hypervisor_hostname):
+        """Gets list of matching hypervisors by specified name.
 
-        :param host_name: the name of host to find
-        :returns: the list of match hosts
-        :raises exception.EntityNotFound:
+        :param hypervisor_hostname: the name of host to find
+        :returns: list of matching hypervisor hosts
+        :raises nova client exceptions.NotFound:
         """
 
-        host_list = self.client().hosts.list()
-        for host in host_list:
-            if host.host_name == host_name and host.service == self.COMPUTE:
-                return host
-
-        raise exception.EntityNotFound(entity='Host', name=host_name)
+        return self.client().hypervisors.search(hypervisor_hostname)
 
     def get_keypair(self, key_name):
         """Get the public key specified by :key_name:
@@ -871,5 +866,7 @@ class FlavorConstraint(NovaBaseConstraint):
 
 
 class HostConstraint(NovaBaseConstraint):
+
+    expected_exceptions = (exceptions.NotFound,)
 
     resource_getter_name = 'get_host'
