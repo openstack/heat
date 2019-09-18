@@ -56,7 +56,6 @@ class HostAggregate(resource.Resource):
         AVAILABILITY_ZONE: properties.Schema(
             properties.Schema.STRING,
             _('Name for the availability zone.'),
-            required=True,
             update_allowed=True,
         ),
         HOSTS: properties.Schema(
