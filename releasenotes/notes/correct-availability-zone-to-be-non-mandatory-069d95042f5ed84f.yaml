@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Erroneously, availability_zone for host aggregate resource types was
+    considered mandatory in heat templates.
+
+    Behaviour has been adjusted to bring this in line with the CLI and GUI, in
+    which it is optional.
