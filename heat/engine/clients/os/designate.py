@@ -13,8 +13,12 @@
 
 from designateclient import client
 from designateclient import exceptions
-from designateclient.v1 import domains
-from designateclient.v1 import records
+
+try:
+    from designateclient.v1 import domains
+    from designateclient.v1 import records
+except ImportError:
+    pass
 
 from heat.common import exception as heat_exception
 from heat.engine.clients import client_plugin
@@ -31,7 +35,7 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
 
     supported_versions = [V1, V2] = ['1', '2']
 
-    default_version = V1
+    default_version = V2
 
     def _create(self, version=default_version):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')

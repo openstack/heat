@@ -161,8 +161,13 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         MULTI_ATTACH: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Whether allow the volume to be attached more than once.'),
-            support_status=support.SupportStatus(version='6.0.0'),
-            default=False
+            default=False,
+            support_status=support.SupportStatus(
+                status=support.HIDDEN,
+                version='13.0.0',
+                previous_status=support.SupportStatus(
+                    status=support.SUPPORTED,
+                    version='6.0.0'))
         ),
     }
 
@@ -290,7 +295,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             arguments['imageRef'] = self.properties[self.IMAGE_REF]
 
         optionals = (self.SNAPSHOT_ID, self.VOLUME_TYPE, self.SOURCE_VOLID,
-                     self.METADATA, self.MULTI_ATTACH)
+                     self.METADATA)
 
         arguments.update((prop, self.properties[prop]) for prop in optionals
                          if self.properties[prop] is not None)

@@ -65,7 +65,6 @@ resources:
       availability_zone: nova
       size: 1
       name: test_name
-      multiattach: True
   attachment:
     type: OS::Cinder::VolumeAttachment
     properties:
@@ -144,8 +143,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             description='test_description',
             name='test_name',
             metadata={'key': 'value'},
-            volume_type='lvm',
-            multiattach=False)
+            volume_type='lvm')
         self.assertEqual(2, self.cinder_fc.volumes.get.call_count)
 
     def test_cinder_create_from_image(self):
@@ -176,7 +174,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             description='ImageVolumeDescription',
             name='ImageVolume',
             imageRef=image_id,
-            multiattach=False,
             metadata={})
         self.assertEqual(2, self.cinder_fc.volumes.get.call_count)
 
@@ -208,7 +205,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone='nova',
             description='ImageVolumeDescription',
             name='ImageVolume',
-            multiattach=False,
             metadata={})
         self.cinder_fc.volumes.get.assert_called_once_with(fv.id)
 
@@ -232,7 +228,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone='nova',
             description=None,
             name=vol_name,
-            multiattach=False,
             metadata={}
         )
         self.assertEqual(2, self.cinder_fc.volumes.get.call_count)
@@ -246,7 +241,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             description='desc', volume_type='lvm',
             metadata={'key': 'value'}, source_volid=None,
             bootable=False, created_at='2013-02-25T02:40:21.000000',
-            encrypted=False, attachments=[], multiattach=False)
+            encrypted=False, attachments=[])
 
         self._mock_create_volume(vt_base.FakeVolume('creating'),
                                  self.stack_name,
@@ -273,7 +268,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.assertEqual(u'False', rsrc.FnGetAtt('encrypted'))
         self.assertEqual(u'[]', rsrc.FnGetAtt('attachments'))
         self.assertEqual([], rsrc.FnGetAtt('attachments_list'))
-        self.assertEqual('False', rsrc.FnGetAtt('multiattach'))
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'unknown')
         self.assertEqual(
@@ -577,7 +571,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone='nova',
             description='test_description',
             name='test_name',
-            multiattach=False,
             metadata={u'key': u'value'})
         self.cinder_fc.volumes.get.assert_called_with(fv.id)
 
@@ -617,7 +610,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=2, availability_zone='nova',
             description=None,
             name=vol_name,
-            multiattach=False,
             metadata={}
         )
         self.cinder_fc.volumes.extend.assert_called_once_with(fv.id, 3)
@@ -720,7 +712,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name',
-            multiattach=False,
             metadata={}
         )
         self.cinder_fc.backups.create.assert_called_once_with(fv.id,
@@ -763,7 +754,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name',
-            multiattach=False,
             metadata={}
         )
         self.cinder_fc.backups.create.assert_called_once_with(
@@ -857,7 +847,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=2, availability_zone='nova',
             description=None,
             name=vol2_name,
-            multiattach=False,
             metadata={}
         )
         self.fc.volumes.get_server_volume.assert_called_with(
@@ -938,27 +927,8 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, name='test_name', description=None,
             availability_zone='nova',
             scheduler_hints={'hint1': 'good_advice'},
-            multiattach=False,
             metadata={}
         )
-        self.assertEqual(2, self.cinder_fc.volumes.get.call_count)
-
-    def test_cinder_create_with_multiattach(self):
-        fv = vt_base.FakeVolume('creating')
-
-        self.cinder_fc.volumes.create.return_value = fv
-        fv_ready = vt_base.FakeVolume('available', id=fv.id)
-        self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
-
-        self.stack_name = 'test_cvolume_multiattach_stack'
-        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
-        self.create_volume(self.t, stack, 'volume4')
-
-        self.cinder_fc.volumes.create.assert_called_once_with(
-            size=1, name='test_name', description=None,
-            availability_zone='nova',
-            multiattach=True,
-            metadata={})
         self.assertEqual(2, self.cinder_fc.volumes.get.call_count)
 
     def test_cinder_create_with_stack_scheduler_hints(self):
@@ -989,7 +959,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, name='test_name', description='test_description',
             availability_zone=None,
             metadata={},
-            multiattach=False,
             scheduler_hints={shm.HEAT_ROOT_STACK_ID: stack.root_stack_id(),
                              shm.HEAT_STACK_ID: stack.id,
                              shm.HEAT_STACK_NAME: stack.name,
@@ -1171,7 +1140,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone=None,
             description='test_description',
             name='test_name',
-            multiattach=False,
             metadata={}
         )
         self.cinder_fc.backups.create.assert_called_once_with(
@@ -1244,7 +1212,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             'volume_image_metadata': {'image_id': '1234',
                                       'image_name': 'test'},
             'description': None,
-            'multiattach': False,
             'source_volid': None,
             'name': 'test-volume-jbdbgdsy3vyg',
             'volume_type': 'lvmdriver-1'
