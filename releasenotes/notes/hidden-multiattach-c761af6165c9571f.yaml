@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    ``multiattach``` property in ``OS::Cinder::Volume`` is now hidden.
+    Please use ``multiattach`` key in ``metadata`` property of
+    ``OS::Cinder::VolumeType`` instead.

@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Designate client already removed support for designate V1. We now switch
+    default version for designate client plugin from V1 to V2.
