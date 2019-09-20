@@ -308,7 +308,7 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
     def build_userdata(self, metadata, userdata=None, instance_user=None,
                        user_data_format='HEAT_CFNTOOLS'):
-        """Build multipart data blob for CloudInit.
+        """Build multipart data blob for CloudInit and Ignition.
 
         Data blob includes user-supplied Metadata, user data, and the required
         Heat in-instance configuration.
@@ -329,6 +329,10 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
         is_cfntools = user_data_format == 'HEAT_CFNTOOLS'
         is_software_config = user_data_format == 'SOFTWARE_CONFIG'
+
+        if (is_software_config and
+                NovaClientPlugin.is_ignition_format(userdata)):
+            return NovaClientPlugin.build_ignition_data(metadata, userdata)
 
         def make_subpart(content, filename, subtype=None):
             if subtype is None:
@@ -427,6 +431,46 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         mime_blob = multipart.MIMEMultipart(_subparts=subparts)
 
         return mime_blob.as_string()
+
+    @staticmethod
+    def is_ignition_format(userdata):
+        try:
+            payload = jsonutils.loads(userdata)
+            ig = payload.get("ignition")
+            return True if ig and ig.get("version") else False
+        except Exception:
+            return False
+
+    @staticmethod
+    def build_ignition_data(metadata, userdata):
+        if not metadata:
+            return userdata
+
+        payload = jsonutils.loads(userdata)
+        encoded_metadata = urlparse.quote(jsonutils.dumps(metadata))
+        cfn_init_data = {
+            "filesystem": "root",
+            "group": {"name": "root"},
+            "path": "/var/lib/os-collect-config/local-data",
+            "user": {"name": "root"},
+            "contents": {
+                "source": "data:," + encoded_metadata,
+                "verification": {}},
+            "mode": 0o640
+        }
+
+        storage = payload.setdefault('storage', {})
+        try:
+            files = storage.setdefault('files', [])
+        except AttributeError:
+            raise ValueError('Ignition "storage" section must be a map')
+        else:
+            try:
+                files.append(cfn_init_data)
+            except AttributeError:
+                raise ValueError('Ignition "files" section must be a list')
+
+        return jsonutils.dumps(payload)
 
     def check_delete_server_complete(self, server_id):
         """Wait for server to disappear from Nova."""

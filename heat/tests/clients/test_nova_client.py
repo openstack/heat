@@ -394,6 +394,32 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
         self.assertIn('useradd', data)
         self.assertIn('ec2-user', data)
 
+    def test_build_userdata_with_ignition(self):
+        metadata = {"os-collect-config": {"heat": {"password": "***"}}}
+        userdata = '{"ignition": {"version": "3.0"}, "storage": {"files": []}}'
+        ud_format = 'SOFTWARE_CONFIG'
+        data = self.nova_plugin.build_userdata(metadata,
+                                               userdata=userdata,
+                                               user_data_format=ud_format)
+        ig = json.loads(data)
+        self.assertEqual("/var/lib/os-collect-config/local-data",
+                         ig["storage"]["files"][0]["path"])
+        self.assertEqual("data:,%7B%22os-collect-config%22%3A%20%7B%22heat"
+                         "%22%3A%20%7B%22password%22%3A%20%22%2A%2A%2A%22"
+                         "%7D%7D%7D",
+                         ig["storage"]["files"][0]["contents"]["source"])
+
+    def test_build_userdata_with_invalid_ignition(self):
+        metadata = {"os-collect-config": {"heat": {"password": "***"}}}
+        userdata = '{"ignition": {"version": "3.0"}, "storage": []}'
+        ud_format = 'SOFTWARE_CONFIG'
+
+        self.assertRaises(ValueError,
+                          self.nova_plugin.build_userdata,
+                          metadata,
+                          userdata=userdata,
+                          user_data_format=ud_format)
+
 
 class NovaClientPluginMetadataTest(NovaClientPluginTestCase):
 
