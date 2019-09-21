@@ -312,6 +312,8 @@ def format_resource_properties(resource):
         try:
             return resource.properties[prop]
         except (KeyError, ValueError):
+            LOG.exception("Error in fetching property %s of resource %s" %
+                          (prop, resource.name))
             return None
 
     return dict((prop, get_property(prop))
