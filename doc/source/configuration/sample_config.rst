@@ -7,6 +7,14 @@ auto-generated from heat when this documentation is built, so if you are
 having issues with an option, please compare your version of heat with the
 version of this documentation.
 
-The sample configuration can also be downloaded in `file form <../_static/heat.conf.sample>`_.
+.. only:: html
 
-.. literalinclude:: ../_static/heat.conf.sample
+   The sample configuration can also be downloaded in
+   `file form <../_static/heat.conf.sample>`_.
+
+   .. literalinclude:: ../_static/heat.conf.sample
+
+.. only:: latex
+
+   See the online version of this documentation for the full example config
+   file.
