@@ -26,9 +26,7 @@
 # serve to show the default.
 
 import os
-import subprocess
 import sys
-import warnings
 
 html_theme = 'openstackdocs'
 html_theme_options = {
@@ -63,18 +61,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Orchestration API Reference'
 copyright = u'2010-present, OpenStack Foundation'
-
-# The version info for the project you're documenting, acts as replacement for
-# |version| and |release|, also used in various other places throughout the
-# built documents.
-#
-from heat.version import version_info
-# The full version, including alpha/beta/rc tags.
-release = version_info.release_string()
-# The short X.Y version.
-version = version_info.version_string()
 
 # openstackdocstheme options
 repository_name = 'openstack/heat'
@@ -151,17 +138,6 @@ pygments_style = 'sphinx'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ['_static']
-
-# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
-# using the given strftime format.
-# html_last_updated_fmt = '%b %d, %Y'
-git_cmd = ["git", "log", "--pretty=format:'%ad, commit %h'", "--date=local",
-           "-n1"]
-try:
-    html_last_updated_fmt = subprocess.check_output(git_cmd).decode('utf-8')
-except Exception:
-    warnings.warn('Cannot get last updated time from git repository. '
-                  'Not setting "html_last_updated_fmt".')
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
