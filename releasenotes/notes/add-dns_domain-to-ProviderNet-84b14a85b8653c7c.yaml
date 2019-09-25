@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Added ``dns_domain`` property to resource type
+    ``OS::Neutron::ProviderNet``. This specifies the DNS domain to use when
+    publishing DNS records for ports on this network.
