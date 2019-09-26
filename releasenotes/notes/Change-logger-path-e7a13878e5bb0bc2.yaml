@@ -1,0 +1,10 @@
+---
+upgrade:
+  - |
+    We have change some log pathes as below
+    * Migrate ``heat.engine.clients.keystoneclient`` to
+    ``heat.engine.clients.os.keystone.heat_keystoneclient``
+    * remove ``heat.all``
+    * remove ``heat.api``
+    * remove ``heat.api.cfn``
+    * remove ``heat.engine``
