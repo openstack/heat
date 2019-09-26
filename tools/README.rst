@@ -35,4 +35,4 @@ command under `gerrit-dash-creator` repo
 The sample of heat.dash can be found under ./dashboards/
 
 Get the output URL and add it to your gerrit menu
-(at ``https://review.openstack.org/#/settings/preferences``).
+(at ``https://review.opendev.org/#/settings/preferences``).
