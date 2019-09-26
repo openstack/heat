@@ -18,9 +18,13 @@ An OpenStack Heat server that can run all services.
 import eventlet
 eventlet.monkey_patch(os=False)
 
-import six
-
 import sys
+
+from oslo_config import cfg
+import oslo_i18n as i18n
+from oslo_log import log as logging
+from oslo_service import systemd
+import six
 
 from heat.cmd import api
 from heat.cmd import api_cfn
@@ -28,10 +32,7 @@ from heat.cmd import engine
 from heat.common import config
 from heat.common import messaging
 from heat import version
-from oslo_config import cfg
-import oslo_i18n as i18n
-from oslo_log import log as logging
-from oslo_service import systemd
+
 
 i18n.enable_lazy()
 
