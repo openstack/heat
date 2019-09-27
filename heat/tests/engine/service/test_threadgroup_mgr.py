@@ -76,7 +76,7 @@ class ThreadGroupManagerTest(common.HeatTestCase):
         self.assertEqual(self.tg_mock, thm.groups[stack_id])
         self.tg_mock.add_timer.assert_called_with(
             self.cfg_mock.CONF.periodic_interval,
-            self.f, *self.fargs, **self.fkwargs)
+            self.f, None, *self.fargs, **self.fkwargs)
 
     def test_tgm_add_msg_queue(self):
         stack_id = 'add_msg_queues_test'
