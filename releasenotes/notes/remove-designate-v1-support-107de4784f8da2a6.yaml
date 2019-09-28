@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    Designate project had removed v1 api support since stable/queens.
+    Heat has now removed support for v1 resources ``OS::Designate::Domain``
+    and ``OS::Designate::Record`` completely and replaced them with
+    placeholders for existing templates with those resources. The
+    ``designate.domain`` custom constraint has also been removed.
