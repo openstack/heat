@@ -520,7 +520,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
               'the user_data is passed to Nova unmodified. '
               'For SOFTWARE_CONFIG user_data is bundled as part of the '
               'software config data, and metadata is derived from any '
-              'associated SoftwareDeployment resources.'),
+              'associated SoftwareDeployment resources. And if the '
+              'user_data is in CoreOS ignition(json) format, the metadata '
+              'will be injected into the user_data automatically by Heat.'),
             default=cfg.CONF.default_user_data_format,
             constraints=[
                 constraints.AllowedValues(_SOFTWARE_CONFIG_FORMATS),
@@ -556,9 +558,10 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         ),
         USER_DATA: properties.Schema(
             properties.Schema.STRING,
-            _('User data script to be executed by cloud-init. Changes cause '
-              'replacement of the resource by default, but can be ignored '
-              'altogether by setting the `user_data_update_policy` property.'),
+            _('User data script to be executed by cloud-init or CoreOS '
+              'ignition. Changes cause replacement of the resource '
+              'by default, but can be ignored altogether by setting the '
+              '`user_data_update_policy` property.'),
             default='',
             update_allowed=True
         ),

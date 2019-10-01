@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Heat can now support software deployments with CoreOS by passing
+    a CoreOS Ignition config in the ``user_data`` property for an
+    ``OS::Nova::Server`` resource when the ``user_data_format`` is
+    set to ``SOFTWARE_CONFIG``.
