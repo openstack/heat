@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-01-24 04:18+0000\n"
+"POT-Creation-Date: 2019-09-29 20:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -143,10 +143,6 @@ msgstr "模板\"%s\"必须为字符串"
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr "“repeat”语法应该是 %s"
-
-#, python-format
-msgid "%(a)s paused until Hook %(h)s is cleared"
-msgstr "%(a)s 暂停到清除挂钩 %(h)s 为止"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
@@ -815,9 +811,6 @@ msgstr "ike 策略的认证散列算法。"
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr "IPSec 策略的认证散列算法。"
 
-msgid "Authorization failed."
-msgstr "授权失败。"
-
 msgid "AutoScaling group ID to apply policy to."
 msgstr "要对其应用策略的 AutoScaling 组标识。"
 
@@ -924,13 +917,6 @@ msgstr "无法检查 %s，未创建堆栈"
 #, python-format
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr "无法同时定义下列属性：%(props)s。"
-
-#, python-format
-msgid ""
-"Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
-"\"%(exc)s\""
-msgstr ""
-"由于发生以下异常，无法与区域“%(region)s”上 Heat 端点建立连接：“%(exc)s”"
 
 msgid ""
 "Cannot get stack domain user token, no stack domain id configured, please "
@@ -1127,28 +1113,8 @@ msgstr "找不到定制负载均衡器模板"
 msgid "DB instance restore point."
 msgstr "数据库实例复原点。"
 
-msgid "DNS Domain id or name."
-msgstr "DNS 域标识或名称。"
-
 msgid "DNS IP address used inside tenant's network."
 msgstr "租户网络中使用的 DNS IP 地址。"
-
-msgid "DNS Record type."
-msgstr "DNS 记录类型。"
-
-msgid "DNS domain serial."
-msgstr "DNS 域序列号。"
-
-msgid ""
-"DNS record data, varies based on the type of record. For more details, "
-"please refer rfc 1035."
-msgstr ""
-"DNS 记录数据，根据记录类型不同而变化。有关更多详细信息，请参阅 rfc 1035。"
-
-msgid ""
-"DNS record priority. It is considered only for MX and SRV types, otherwise, "
-"it is ignored."
-msgstr "DNS 记录优先级。仅针对 MX 和 SRV 类型考虑此项，否则它被忽略。"
 
 #, python-format
 msgid "Data supplied was not valid: %(reason)s"
@@ -1331,9 +1297,6 @@ msgstr "VPN 服务的描述。"
 msgid "Description for this interface."
 msgstr "此接口的描述。"
 
-msgid "Description of domain."
-msgstr "域的描述。"
-
 msgid "Description of keystone group."
 msgstr "keystone 组的描述。"
 
@@ -1348,9 +1311,6 @@ msgstr "keystone 服务的描述。"
 
 msgid "Description of keystone user."
 msgstr "keystone 用户的描述。"
-
-msgid "Description of record."
-msgstr "记录的描述。"
 
 msgid "Description of the Node Group Template."
 msgstr "节点组模板的描述。"
@@ -1491,12 +1451,6 @@ msgstr "映像的磁盘格式。"
 
 msgid "Does not contain a valid AWS Access Key or certificate"
 msgstr "未包含有效 AWS 访问密钥或证书"
-
-msgid "Domain email."
-msgstr "域电子邮件。"
-
-msgid "Domain name."
-msgstr "域名。"
 
 #, python-format
 msgid "Duplicate names %s"
@@ -1753,13 +1707,6 @@ msgstr "无法更新支架“%(name)s” - %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr "未能更新，找不到端口信息。"
-
-#, python-format
-msgid ""
-"Failed validating stack template using Heat endpoint at region \"%(region)s"
-"\" due to \"%(exc)s\""
-msgstr ""
-"由于发生以下异常，未能使用区域“%(region)s”上 Heat 端点验证堆栈模板：“%(exc)s”"
 
 msgid "Fake attribute !a."
 msgstr "伪属性 !a。"
@@ -3898,9 +3845,6 @@ msgstr "RX/TX 因子。"
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr "重建服务器失败，状态为“%s”"
-
-msgid "Record name."
-msgstr "记录名称。"
 
 #, python-format
 msgid "Recursion depth exceeds %d."

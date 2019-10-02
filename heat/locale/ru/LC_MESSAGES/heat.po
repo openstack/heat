@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-01-24 04:18+0000\n"
+"POT-Creation-Date: 2019-09-29 20:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -149,10 +149,6 @@ msgstr "Шаблон \"%s\" должен быть строкой"
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr "Формат \"repeat\" должен быть %s"
-
-#, python-format
-msgid "%(a)s paused until Hook %(h)s is cleared"
-msgstr "%(a)s приостанавливается до очистки Hook %(h)s"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
@@ -901,9 +897,6 @@ msgstr "Хэш-алгоритм идентификации для стратег
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr "Хэш-алгоритм идентификации для стратегии ipsec."
 
-msgid "Authorization failed."
-msgstr "Доступ не предоставлен."
-
 msgid "AutoScaling group ID to apply policy to."
 msgstr "ИД группы AutoScaling, к которой применяется стратегия."
 
@@ -1016,14 +1009,6 @@ msgstr "Проверить %s невозможно, стек не создан"
 #, python-format
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr "Не удается определить следующие свойства одновременно: %(props)s."
-
-#, python-format
-msgid ""
-"Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
-"\"%(exc)s\""
-msgstr ""
-"Не удалось установить соединение с конечной точкой Heat в области "
-"\"%(region)s\", причина: \"%(exc)s\""
 
 msgid ""
 "Cannot get stack domain user token, no stack domain id configured, please "
@@ -1230,29 +1215,8 @@ msgstr "Не найден пользовательский шаблон LoadBala
 msgid "DB instance restore point."
 msgstr "Точка восстановления экземпляра БД."
 
-msgid "DNS Domain id or name."
-msgstr "ИД домена или имя DNS."
-
 msgid "DNS IP address used inside tenant's network."
 msgstr "IP-адрес сервера DNS, используемый в сети арендатора."
-
-msgid "DNS Record type."
-msgstr "Тип записи DNS."
-
-msgid "DNS domain serial."
-msgstr "Серийный номер домена в DNS."
-
-msgid ""
-"DNS record data, varies based on the type of record. For more details, "
-"please refer rfc 1035."
-msgstr "Данные записи DNS, зависят от типа записи. См. rfc 1035."
-
-msgid ""
-"DNS record priority. It is considered only for MX and SRV types, otherwise, "
-"it is ignored."
-msgstr ""
-"Приоритет записи DNS. Действует только для записей типа MX и SRV, для прочих "
-"- игнорируется."
 
 #, python-format
 msgid "Data supplied was not valid: %(reason)s"
@@ -1459,9 +1423,6 @@ msgstr "Описание службы vpn."
 msgid "Description for this interface."
 msgstr "Описание этого интерфейса."
 
-msgid "Description of domain."
-msgstr "Описание домена."
-
 msgid "Description of keystone group."
 msgstr "Описание группы keystone."
 
@@ -1476,9 +1437,6 @@ msgstr "Описание службы keystone."
 
 msgid "Description of keystone user."
 msgstr "Описание пользователя keystone."
-
-msgid "Description of record."
-msgstr "Описание записи."
 
 msgid "Description of the Node Group Template."
 msgstr "Описание шаблона группы узлов."
@@ -1623,12 +1581,6 @@ msgstr "Дисковый формат образа."
 
 msgid "Does not contain a valid AWS Access Key or certificate"
 msgstr "Не содержится верный ключ доступа AWS или сертификат"
-
-msgid "Domain email."
-msgstr "Электронная почта домена."
-
-msgid "Domain name."
-msgstr "Имя домена."
 
 #, python-format
 msgid "Duplicate names %s"
@@ -1905,14 +1857,6 @@ msgstr "Не удается обновить отсек '%(name)s' - %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr "Не удалось обновить: не найдена информация о портах."
-
-#, python-format
-msgid ""
-"Failed validating stack template using Heat endpoint at region \"%(region)s"
-"\" due to \"%(exc)s\""
-msgstr ""
-"Не удалось проверить шаблон стека с помощью конечной точки Heat в области "
-"\"%(region)s\", причина: \"%(exc)s\""
 
 msgid "Fake attribute !a."
 msgstr "Поддельный атрибут !a."
@@ -4240,9 +4184,6 @@ msgstr "Фактор RX/TX."
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr "Изменение конфигурации сервера не выполнено, состояние '%s'"
-
-msgid "Record name."
-msgstr "Имя записи."
 
 #, python-format
 msgid "Recursion depth exceeds %d."

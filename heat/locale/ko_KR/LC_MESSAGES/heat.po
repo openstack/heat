@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-01-24 04:18+0000\n"
+"POT-Creation-Date: 2019-09-29 20:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -152,10 +152,6 @@ msgstr "\"%s\" 템플리트는 문자열이어야 함"
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr "\"repeat\" 구문은 %s이어야 함"
-
-#, python-format
-msgid "%(a)s paused until Hook %(h)s is cleared"
-msgstr "후크 %(h)s을(를) 지울 때까지 %(a)s을(를) 일시정지함"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
@@ -852,9 +848,6 @@ msgstr "ike 정책의 인증 해시 알고리즘입니다."
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr "ipsec 정책의 인증 해시 알고리즘입니다."
 
-msgid "Authorization failed."
-msgstr "권한 부여에 실패했습니다. "
-
 msgid "AutoScaling group ID to apply policy to."
 msgstr "정책을 적용할 AutoScaling 그룹 ID입니다."
 
@@ -965,14 +958,6 @@ msgstr "%s을(를) 검사할 수 없음. 스택이 작성되지 않음"
 #, python-format
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr "다음 특성을 동시에 정의할 수 없음: %(props)s."
-
-#, python-format
-msgid ""
-"Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
-"\"%(exc)s\""
-msgstr ""
-"다음 이유로 리젼 \"%(region)s\"에서 히트 엔드포인트에 연결을 설정할 수 없음: "
-"\"%(exc)s\""
 
 msgid ""
 "Cannot get stack domain user token, no stack domain id configured, please "
@@ -1180,31 +1165,8 @@ msgstr "사용자 정의 로드 밸런서 템플리트를 찾을 수 없음"
 msgid "DB instance restore point."
 msgstr "DB 인스턴스 복원 지점입니다."
 
-msgid "DNS Domain id or name."
-msgstr "DNS 도메인 id 또는 이름."
-
 msgid "DNS IP address used inside tenant's network."
 msgstr "테넌트의 네트워크 내에서 사용하는 DNS IP 주소입니다."
-
-msgid "DNS Record type."
-msgstr "DNS 레코드 유형."
-
-msgid "DNS domain serial."
-msgstr "DNS 도메인 일련 번호."
-
-msgid ""
-"DNS record data, varies based on the type of record. For more details, "
-"please refer rfc 1035."
-msgstr ""
-"DNS 레코드 데이터는 레코드 타입에 따라 다양합니다. 자세한 내용은 rfc 1035를 "
-"참조하십시오."
-
-msgid ""
-"DNS record priority. It is considered only for MX and SRV types, otherwise, "
-"it is ignored."
-msgstr ""
-"DNS 레코드 우선순위입니다. MX 및 SRV 타입에만 고려되며, 그렇지 않은 경우 무시"
-"합니다."
 
 #, python-format
 msgid "Data supplied was not valid: %(reason)s"
@@ -1398,9 +1360,6 @@ msgstr "vpn 서비스에 대한 설명입니다."
 msgid "Description for this interface."
 msgstr "이 인터페이스에 대한 설명입니다."
 
-msgid "Description of domain."
-msgstr "도메인의 설명입니다."
-
 msgid "Description of keystone group."
 msgstr "keystone 그룹의 설명입니다."
 
@@ -1415,9 +1374,6 @@ msgstr "keystone 서비스의 설명입니다."
 
 msgid "Description of keystone user."
 msgstr "keystone 사용자의 설명입니다."
-
-msgid "Description of record."
-msgstr "레코드 설명."
 
 msgid "Description of the Node Group Template."
 msgstr "노드 그룹 템플리트의 설명입니다."
@@ -1560,12 +1516,6 @@ msgstr "이미지의 디스크 형식입니다."
 
 msgid "Does not contain a valid AWS Access Key or certificate"
 msgstr "올바른 AWS 액세스 키 또는 인증서를 포함하고 있지 않음"
-
-msgid "Domain email."
-msgstr "도메인 이메일."
-
-msgid "Domain name."
-msgstr "도메인 이름."
 
 #, python-format
 msgid "Duplicate names %s"
@@ -1832,14 +1782,6 @@ msgstr "Bay '%(name)s' - %(reason)s 업데이트 실패"
 
 msgid "Failed to update, can not found port info."
 msgstr "업데이트에 실패했고 포트 정보를 찾을 수 없습니다."
-
-#, python-format
-msgid ""
-"Failed validating stack template using Heat endpoint at region \"%(region)s"
-"\" due to \"%(exc)s\""
-msgstr ""
-"다음 리젼에서 히트 엔드포인트를 사용하여 스택 템플리트의 유효성을 검증하지 못"
-"함: \"%(region)s\", 이유: \"%(exc)s\""
 
 msgid "Fake attribute !a."
 msgstr "Fake 속성 !a."
@@ -4072,9 +4014,6 @@ msgstr "RX/TX 요인입니다."
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr "서버 다시 빌드 실패. 상태 '%s'"
-
-msgid "Record name."
-msgstr "레코드 이름."
 
 #, python-format
 msgid "Recursion depth exceeds %d."

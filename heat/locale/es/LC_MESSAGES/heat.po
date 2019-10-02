@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-01-24 04:18+0000\n"
+"POT-Creation-Date: 2019-09-29 20:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -149,10 +149,6 @@ msgstr "La plantilla \"%s\" debe ser una serie"
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr "La sintaxis de \"repeat\" debe ser %s"
-
-#, python-format
-msgid "%(a)s paused until Hook %(h)s is cleared"
-msgstr "%(a)s se ha detenido hasta que se borre el gancho %(h)s"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
@@ -927,9 +923,6 @@ msgstr "El algoritmo hash de autenticación para la política ike."
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr "El algoritmo hash de autenticación para la política ipsec."
 
-msgid "Authorization failed."
-msgstr "Ha fallado la autorización."
-
 msgid "AutoScaling group ID to apply policy to."
 msgstr "ID de grupo de escalado automático al que aplicar la política."
 
@@ -1045,14 +1038,6 @@ msgstr "No se puede comprobar %s, pila no creada"
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr ""
 "No se puede definir las siguientes propiedades al mismo tiempo: %(props)s."
-
-#, python-format
-msgid ""
-"Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
-"\"%(exc)s\""
-msgstr ""
-"No se puede establecer la conexión con el punto final de Heat en la región "
-"\"%(region)s\" debido a \"%(exc)s\""
 
 msgid ""
 "Cannot get stack domain user token, no stack domain id configured, please "
@@ -1273,31 +1258,8 @@ msgstr "No se puede encontrar plantilla de equilibrador de carga personalizada"
 msgid "DB instance restore point."
 msgstr "Punto de restauración de instancia de base de datos."
 
-msgid "DNS Domain id or name."
-msgstr "ID o nombre de dominio DNS."
-
 msgid "DNS IP address used inside tenant's network."
 msgstr "Dirección IP DNS utilizada dentro de la red del inquilino."
-
-msgid "DNS Record type."
-msgstr "Tipo de registro DNS."
-
-msgid "DNS domain serial."
-msgstr "Serial de dominio DNS."
-
-msgid ""
-"DNS record data, varies based on the type of record. For more details, "
-"please refer rfc 1035."
-msgstr ""
-"Los datos de registro DNS varían según el tipo de recurso. Para obtener "
-"información más detallada, consulte rfc 1035."
-
-msgid ""
-"DNS record priority. It is considered only for MX and SRV types, otherwise, "
-"it is ignored."
-msgstr ""
-"Prioridad del registro DNS. Solo se tiene en cuenta para los tipos MX y SRV, "
-"en otros casos se ignora."
 
 #, python-format
 msgid "Data supplied was not valid: %(reason)s"
@@ -1510,9 +1472,6 @@ msgstr "Descripción para el servicio vpn."
 msgid "Description for this interface."
 msgstr "Descripción para esta interfaz."
 
-msgid "Description of domain."
-msgstr "Descripción del dominio."
-
 msgid "Description of keystone group."
 msgstr "Descripción del grupo de keystone."
 
@@ -1527,9 +1486,6 @@ msgstr "Descripción del servicio de keystone."
 
 msgid "Description of keystone user."
 msgstr "Descripción del usuario de keystone."
-
-msgid "Description of record."
-msgstr "Descripción del registro."
 
 msgid "Description of the Node Group Template."
 msgstr "Descripción de la plantilla del grupo de nodos."
@@ -1676,12 +1632,6 @@ msgstr "Formato de disco de la imagen."
 
 msgid "Does not contain a valid AWS Access Key or certificate"
 msgstr "No contiene una clave AWS Access Key o un certificádo válido"
-
-msgid "Domain email."
-msgstr "Correo electrónico del dominio."
-
-msgid "Domain name."
-msgstr "Nombre de dominio."
 
 #, python-format
 msgid "Duplicate names %s"
@@ -1966,14 +1916,6 @@ msgstr "No se ha podido actualizar la bahía '%(name)s' - %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr "Ha fallado la actualización, no se encuentra información de puerto."
-
-#, python-format
-msgid ""
-"Failed validating stack template using Heat endpoint at region \"%(region)s"
-"\" due to \"%(exc)s\""
-msgstr ""
-"No se ha podido validar la plantilla de pila utilizando el punto final de "
-"Heat en la región \"%(region)s\" debido a \"%(exc)s\""
 
 msgid "Fake attribute !a."
 msgstr "Atributo ficticio !a."
@@ -4391,9 +4333,6 @@ msgstr "Factor RX/TX."
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr "La reconstrucción del servidor ha fallado, estado '%s'"
-
-msgid "Record name."
-msgstr "Nombre de registro."
 
 #, python-format
 msgid "Recursion depth exceeds %d."
