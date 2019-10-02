@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-01-24 04:18+0000\n"
+"POT-Creation-Date: 2019-10-01 05:53+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -142,10 +142,6 @@ msgstr "\"%s\" 範本必須是字串"
 #, python-format
 msgid "\"repeat\" syntax should be %s"
 msgstr "\"repeat\" 語法應該為 %s"
-
-#, python-format
-msgid "%(a)s paused until Hook %(h)s is cleared"
-msgstr "%(a)s 已暫停，直到清除連結鉤 %(h)s 為止"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
@@ -815,9 +811,6 @@ msgstr "IKE 原則的鑑別雜湊演算法。"
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr "IPSec 原則的鑑別雜湊演算法。"
 
-msgid "Authorization failed."
-msgstr "授權失敗。"
-
 msgid "AutoScaling group ID to apply policy to."
 msgstr "要套用原則的 AutoScaling 群組 ID。"
 
@@ -924,12 +917,6 @@ msgstr "無法檢查 %s，未建立堆疊"
 #, python-format
 msgid "Cannot define the following properties at the same time: %(props)s."
 msgstr "無法同時定義下列內容：%(props)s。"
-
-#, python-format
-msgid ""
-"Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
-"\"%(exc)s\""
-msgstr "無法建立與區域 \"%(region)s\" 中 Heat 端點的連線，因為\"%(exc)s\""
 
 msgid ""
 "Cannot get stack domain user token, no stack domain id configured, please "
@@ -1127,28 +1114,8 @@ msgstr "找不到自訂負載平衡器範本"
 msgid "DB instance restore point."
 msgstr "DB 實例還原點。"
 
-msgid "DNS Domain id or name."
-msgstr "DNS 網域 ID 或名稱。"
-
 msgid "DNS IP address used inside tenant's network."
 msgstr "租戶網路內使用的 DNS IP 位址。"
-
-msgid "DNS Record type."
-msgstr "DNS 記錄類型。"
-
-msgid "DNS domain serial."
-msgstr "DNS 網域序列。"
-
-msgid ""
-"DNS record data, varies based on the type of record. For more details, "
-"please refer rfc 1035."
-msgstr ""
-"DNS 記錄資料，根據記錄的類型而有所不同。 如需更多詳細資料，請參閱 RFC 1035。"
-
-msgid ""
-"DNS record priority. It is considered only for MX and SRV types, otherwise, "
-"it is ignored."
-msgstr "DNS 記錄優先順序。只將其視為 MX 和 SRV 類型，否則會將其忽略。"
 
 #, python-format
 msgid "Data supplied was not valid: %(reason)s"
@@ -1331,9 +1298,6 @@ msgstr "VPN 服務的說明。"
 msgid "Description for this interface."
 msgstr "此介面的說明。"
 
-msgid "Description of domain."
-msgstr "網域的說明。"
-
 msgid "Description of keystone group."
 msgstr "Keystone 群組的說明。"
 
@@ -1348,9 +1312,6 @@ msgstr "Keystone 服務的說明。"
 
 msgid "Description of keystone user."
 msgstr "Keystone 使用者的說明。"
-
-msgid "Description of record."
-msgstr "記錄的說明。"
 
 msgid "Description of the Node Group Template."
 msgstr "節點群組範本的說明。"
@@ -1491,12 +1452,6 @@ msgstr "映像檔的磁碟格式。"
 
 msgid "Does not contain a valid AWS Access Key or certificate"
 msgstr "不包含有效的「AWS 存取金鑰」或憑證"
-
-msgid "Domain email."
-msgstr "網域電子郵件。"
-
-msgid "Domain name."
-msgstr "地域名稱。"
 
 #, python-format
 msgid "Duplicate names %s"
@@ -1756,13 +1711,6 @@ msgstr "無法更新機架 '%(name)s' - %(reason)s"
 msgid "Failed to update, can not found port info."
 msgstr "無法更新，找不到埠資訊。"
 
-#, python-format
-msgid ""
-"Failed validating stack template using Heat endpoint at region \"%(region)s"
-"\" due to \"%(exc)s\""
-msgstr ""
-"使用區域 \"%(region)s\" 中的 Heat 端點來驗證堆疊範本失敗，因為 \"%(exc)s\""
-
 msgid "Fake attribute !a."
 msgstr "偽造屬性 !a。"
 
@@ -1947,18 +1895,6 @@ msgstr ""
 "Heat API 資源信號。ZAQAR_SIGNAL 將建立要使用所提供之 Keystone 認證向其傳送信"
 "號的專用 zaqar 佇列。NO_SIGNAL 將導致資源跳至「完成」狀態，而不會等待任何信"
 "號。"
-
-msgid ""
-"How the user_data should be formatted for the server. For HEAT_CFNTOOLS, the "
-"user_data is bundled as part of the heat-cfntools cloud-init boot "
-"configuration data. For RAW the user_data is passed to Nova unmodified. For "
-"SOFTWARE_CONFIG user_data is bundled as part of the software config data, "
-"and metadata is derived from any associated SoftwareDeployment resources."
-msgstr ""
-"應該如何給伺服器格式化 user_data。對於 HEAT_CFNTOOLS，user_data 會組合到 "
-"heat-cfntools cloud-init 啟動配置資料，成為其一部分。對於 RAW，user_data 會按"
-"原狀傳遞給 Nova。對於 SOFTWARE_CONFIG，user_data 會組合到軟體配置資料，成為其"
-"一部分，而 meta 資料衍生自任何相關聯的 SoftwareDeployment 資源。"
 
 msgid "Human readable name for the secret."
 msgstr "人類可讀的密碼名稱。"
@@ -2864,6 +2800,11 @@ msgstr "叢集中的資源數目上限。-1 表示無限。"
 
 msgid "Maximum number of resources in the group."
 msgstr "群組中的資源數目上限。"
+
+msgid ""
+"Maximum number of seconds for a monitor to wait for a connection to be "
+"established before it times out."
+msgstr "監視器等待建立連線發生逾時之前的秒數上限。"
 
 msgid "Maximum number of stacks any one tenant may have active at one time."
 msgstr "任何一個承租人一次可具有的作用中堆疊數目上限。"
@@ -3906,9 +3847,6 @@ msgstr "RX/TX 因數。"
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr "重建伺服器時失敗，狀態為 '%s'"
-
-msgid "Record name."
-msgstr "記錄名稱。"
 
 #, python-format
 msgid "Recursion depth exceeds %d."
@@ -5321,6 +5259,9 @@ msgid ""
 msgstr ""
 "範圍中安全群組規則所符合的埠號下限。如果通訊協定是 TCP 或 UDP，此值必須小於或"
 "等於 port_range_max 屬性的值。如果通訊協定是ICMP，則此值必須是 ICMP 類型。"
+
+msgid "The minimum time in seconds between regular connections of the member."
+msgstr "成員的兩次定期連線之間的最短時間（以秒為單位）。"
 
 msgid "The name for the QoS policy."
 msgstr "服務品質原則的名稱。"
