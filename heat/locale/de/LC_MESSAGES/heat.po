@@ -8,16 +8,17 @@
 # Andreas Jaeger <jaegerandi@gmail.com>, 2016. #zanata
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 # Frank Kloeker <eumel@arcor.de>, 2018. #zanata
+# Andreas Jaeger <jaegerandi@gmail.com>, 2019. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-01-24 04:18+0000\n"
+"POT-Creation-Date: 2019-09-29 20:00+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2018-03-06 07:22+0000\n"
-"Last-Translator: Copied by Zanata <copied-by-zanata@zanata.org>\n"
+"PO-Revision-Date: 2019-10-01 06:40+0000\n"
+"Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "Generated-By: Babel 2.0\n"
@@ -225,10 +226,6 @@ msgid ""
 msgstr ""
 "\"value_path\", \"value\" und \"value_name\" schließen sich gegenseitig aus "
 "und können nicht gleichzeitig angegeben werden."
-
-#, python-format
-msgid "%(a)s paused until Hook %(h)s is cleared"
-msgstr "%(a)s wurde angehalten, bis Hook %(h)s gelöscht wurde"
 
 #, python-format
 msgid "%(action)s is not supported for resource."
@@ -1390,8 +1387,9 @@ msgstr "Authentifizierungs-Hash-Algorithmus für die Ike-Richtlinie."
 msgid "Authentication hash algorithm for the ipsec policy."
 msgstr "Authentifizierungs-Hash-Algorithmus für die IPSec-Richtlinie."
 
-msgid "Authorization failed."
-msgstr "Autorisation fehlgeschlagen."
+#, python-format
+msgid "Authorization failed.%(failure_reason)s"
+msgstr "Authorisierung fehlgeschlagen. %(failure_reason)s"
 
 msgid "AutoScaling group ID to apply policy to."
 msgstr "AutoScaling-Gruppen-ID, auf die die Richtlinie angewendet werden soll."
@@ -1552,14 +1550,6 @@ msgstr ""
 #, python-format
 msgid "Cannot define the following properties at the same time: %s"
 msgstr "Folgende Eigenschaften können nicht gleichzeitig definiert werden: %s"
-
-#, python-format
-msgid ""
-"Cannot establish connection to Heat endpoint at region \"%(region)s\" due to "
-"\"%(exc)s\""
-msgstr ""
-"Verbindung zum Heat-Endpunkt in der Region \"%(region)s\" kann aufgrund von "
-"\"%(exc)s\" nicht hergestellt werden"
 
 #, python-format
 msgid "Cannot get console url: %s"
@@ -1842,17 +1832,11 @@ msgstr ""
 msgid "DB instance restore point."
 msgstr "DB-Instanzwiederherstellungspunkt"
 
-msgid "DNS Domain id or name."
-msgstr "DNS-Domänen-ID oder -Name"
-
 msgid "DNS IP address used inside tenant's network."
 msgstr "DNS-IP-Adresse, die im Netzwerk des Mandanten verwendet wird."
 
 msgid "DNS Name for the zone."
 msgstr "DNS-Name für die Zone."
-
-msgid "DNS Record type."
-msgstr "DNS-Aufnahmetyp"
 
 msgid "DNS RecordSet type."
 msgstr "DNS-Datensatztyp."
@@ -1866,28 +1850,11 @@ msgstr "DNS-Domäne mit Floating-IP verbunden."
 msgid "DNS domain associated with this network."
 msgstr "DNS-Domäne, die diesem Netzwerk zugeordnet ist."
 
-msgid "DNS domain serial."
-msgstr "DNS-Domänen-Serial"
-
 msgid "DNS name associated with floating ip."
 msgstr "DNS-Name mit Floating-IP verbunden."
 
 msgid "DNS name associated with the port."
 msgstr "DNS-Name, der dem Port zugeordnet ist."
-
-msgid ""
-"DNS record data, varies based on the type of record. For more details, "
-"please refer rfc 1035."
-msgstr ""
-"DNS-Datensatzdaten variieren je nach Art des Datensatzes. Weitere "
-"Informationen finden Sie in RFC 1035."
-
-msgid ""
-"DNS record priority. It is considered only for MX and SRV types, otherwise, "
-"it is ignored."
-msgstr ""
-"DNS-Eintragspriorität Es wird nur für MX- und SRV-Typen berücksichtigt, "
-"andernfalls wird es ignoriert."
 
 msgid "DNS zone serial number."
 msgstr "DNS-Zonen-Seriennummer"
@@ -2142,9 +2109,6 @@ msgstr "Beschreibung für diese Schnittstelle"
 msgid "Description of RecordSet."
 msgstr "Beschreibung von RecordSet."
 
-msgid "Description of domain."
-msgstr "Beschreibung der Domäne"
-
 msgid "Description of keystone domain."
 msgstr "Beschreibung der Keystone-Domäne"
 
@@ -2162,9 +2126,6 @@ msgstr "Beschreibung des Keystone-Service."
 
 msgid "Description of keystone user."
 msgstr "Beschreibung des Keystone-Benutzers"
-
-msgid "Description of record."
-msgstr "Beschreibung des Datensatzes"
 
 msgid "Description of the Node Group Template."
 msgstr "Beschreibung der Knotengruppenvorlage"
@@ -2364,17 +2325,11 @@ msgid "Does not contain a valid AWS Access Key or certificate"
 msgstr ""
 "Enthält keinen gültigen AWS-Zugriffsschlüssel oder ein gültiges Zertifikat"
 
-msgid "Domain email."
-msgstr "Domänen-E-Mail"
-
 msgid "Domain id for project."
 msgstr "Domänen-ID für das Projekt"
 
 msgid "Domain id for user."
 msgstr "Domänen-ID für den Benutzer"
-
-msgid "Domain name."
-msgstr "Domänenname"
 
 #, python-format
 msgid "Duplicate names %s"
@@ -2769,14 +2724,6 @@ msgstr "Fehler beim Aktualisieren der Clustervorlage '%(name)s' - %(reason)s"
 msgid "Failed to update, can not found port info."
 msgstr "Fehler beim Aktualisieren, keine Port-Informationen gefunden."
 
-#, python-format
-msgid ""
-"Failed validating stack template using Heat endpoint at region \"%(region)s"
-"\" due to \"%(exc)s\""
-msgstr ""
-"Fehler beim Überprüfen der Stapelvorlage mit dem Heat-Endpunkt in der Region "
-"\"%(region)s\" aufgrund von \"%(exc)s\""
-
 msgid "Fake attribute !a."
 msgstr "Gefälschtes Attribut !a."
 
@@ -2791,6 +2738,9 @@ msgstr "Gefälschte Eigenschaft !c."
 
 msgid "Fake property a."
 msgstr "Gefälschte Eigenschaft a."
+
+msgid "Fake property b."
+msgstr "Gefälschte Eigenschaft b."
 
 msgid "Fake property c."
 msgstr "Gefälschte Eigenschaft c."
@@ -3483,9 +3433,6 @@ msgstr ""
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr "Falsche Argumente zu \"%(fn_name)s\" sollten sein: %(example)s"
-
-msgid "Incorrect arguments: Items to concat must be lists."
-msgstr "Falsche Argumente: Zu concat gehörende Elemente müssen Listen sein."
 
 msgid "Incorrect arguments: Items to merge must be maps."
 msgstr "Falsche Argumente: Zu vereinende Elemente müssen Maps sein."
@@ -5578,6 +5525,9 @@ msgstr "Zeitraum (Sekunden) für die Auswertung."
 msgid "Physical ID of the VPC. Not implemented."
 msgstr "Physische ID der VPC. Nicht implementiert."
 
+msgid "Placeholder"
+msgstr "Platzhalter"
+
 msgid "Please use OS::Heat::SoftwareDeploymentGroup instead."
 msgstr "Bitte verwenden Sie stattdessen OS::Heat::SoftwareDeploymentGroup."
 
@@ -6135,9 +6085,6 @@ msgstr "RX / TX-Faktor."
 #, python-format
 msgid "Rebuilding server failed, status '%s'"
 msgstr "Neuaufbau des Servers fehlgeschlagen, Status ' %s'"
-
-msgid "Record name."
-msgstr "Namen aufzeichnen"
 
 msgid "RecordSet name."
 msgstr "RecordSet-Name"
@@ -9116,6 +9063,20 @@ msgstr ""
 "in der Gruppe [cache]) aktiviert sein muss, um diese Funktion zu verwenden."
 
 msgid ""
+"Toggle to enable/disable caching when Orchestration Engine validates "
+"property constraints of stack. During property validation with constraints "
+"Orchestration Engine caches requests to other OpenStack services. Please "
+"note that the global toggle for oslo.cache(enabled=True in [cache] group) "
+"must be enabled to use this feature."
+msgstr ""
+"Umschalten zum Aktivieren/Deaktivieren des Caching, wenn die Orchestrierungs-"
+"Engine die Eigenschafteneinschränkungen von stack überprüft. Bei der "
+"Überprüfung der Eigenschaften mit Einschränkungen speichert die "
+"Orchestrierung Engine Anfragen an andere OpenStack-Dienste zwischen. Bitte "
+"beachten Sie, dass der globale Schalter für oslo.cache (enables=True in der "
+"Gruppe [cache]) aktiviert sein muss, um diese Funktion zu verwenden."
+
+msgid ""
 "Token for stack-user which can be used for signalling handle when "
 "signal_transport is set to TOKEN_SIGNAL. None for all other signal "
 "transports."
@@ -9500,12 +9461,6 @@ msgstr "Aktualisieren eines Stapels, wenn dieser angehalten ist"
 
 msgid "Use LBaaS V2 instead."
 msgstr "Verwenden Sie stattdessen LBaaS V2."
-
-msgid "Use OS::Designate::RecordSet instead."
-msgstr "Verwenden Sie stattdessen OS::Designate::RecordSet."
-
-msgid "Use OS::Designate::Zone instead."
-msgstr "Verwenden Sie stattdessen OS::Designate::Zone."
 
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
