@@ -31,7 +31,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.common import password_gen
 
-LOG = logging.getLogger('heat.engine.clients.keystoneclient')
+LOG = logging.getLogger(__name__)
 
 AccessKey = collections.namedtuple('AccessKey', ['id', 'access', 'secret'])
 

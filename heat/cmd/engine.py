@@ -37,19 +37,21 @@ from heat.engine import template
 from heat.rpc import api as rpc_api
 from heat import version
 
+
 i18n.enable_lazy()
 
-LOG = logging.getLogger('heat.engine')
+CONF = cfg.CONF
 
 
 def launch_engine(setup_logging=True):
     if setup_logging:
-        logging.register_options(cfg.CONF)
-    cfg.CONF(project='heat', prog='heat-engine',
-             version=version.version_info.version_string())
+        logging.register_options(CONF)
+    CONF(project='heat', prog='heat-engine',
+         version=version.version_info.version_string())
     if setup_logging:
-        logging.setup(cfg.CONF, 'heat-engine')
+        logging.setup(CONF, CONF.prog)
         logging.set_defaults()
+    LOG = logging.getLogger(CONF.prog)
     messaging.setup()
 
     config.startup_sanity_check()
@@ -64,14 +66,14 @@ def launch_engine(setup_logging=True):
 
     from heat.engine import service as engine  # noqa
 
-    profiler.setup('heat-engine', cfg.CONF.host)
+    profiler.setup(CONF.prog, CONF.host)
     gmr.TextGuruMeditation.setup_autorun(version)
-    srv = engine.EngineService(cfg.CONF.host, rpc_api.ENGINE_TOPIC)
-    workers = cfg.CONF.num_engine_workers
+    srv = engine.EngineService(CONF.host, rpc_api.ENGINE_TOPIC)
+    workers = CONF.num_engine_workers
     if not workers:
         workers = max(4, processutils.get_worker_count())
 
-    launcher = service.launch(cfg.CONF, srv, workers=workers,
+    launcher = service.launch(CONF, srv, workers=workers,
                               restart_method='mutate')
     return launcher
 
