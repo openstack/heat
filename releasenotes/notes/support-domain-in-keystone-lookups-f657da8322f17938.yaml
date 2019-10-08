@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Supports user, group, role and project lookup across domains. Added domain
+    parameter to keystone lookup functions. Heat templates now support
+    user{domain}, group{domain}, role{domain} and project{domain} to support
+    cross domain lookup. Keystone constrains will also work across domain.

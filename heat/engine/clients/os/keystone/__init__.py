@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import re
+
 from keystoneauth1 import exceptions as ks_exceptions
 
 from heat.common import exception
@@ -37,26 +39,59 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
     def is_conflict(self, ex):
         return isinstance(ex, ks_exceptions.Conflict)
 
-    def get_role_id(self, role):
+    def parse_entity_with_domain(self, entity_with_domain, entity_type):
+        """Parse keystone entity user/role/project with domain.
+
+        entity_with_domain should be in entity{domain} format.
+
+        Returns a tuple of (entity, domain).
+        """
+        try:
+            match = re.search(r"\{(.*?)\}$", entity_with_domain)
+            if match:
+                entity = entity_with_domain[:match.start()]
+                domain = match.group(1)
+                domain = self.get_domain_id(domain)
+                return (entity, domain)
+            else:
+                return (entity_with_domain, None)
+        except Exception:
+            raise exception.EntityNotFound(entity=entity_type,
+                                           name=entity_with_domain)
+
+    def get_role_id(self, role, domain=None):
+        if role is None:
+            return None
+
+        if not domain:
+            role, domain = self.parse_entity_with_domain(role, 'KeystoneRole')
+
         try:
             role_obj = self.client().client.roles.get(role)
             return role_obj.id
         except ks_exceptions.NotFound:
-            role_list = self.client().client.roles.list(name=role)
+            role_list = self.client().client.roles.list(name=role,
+                                                        domain=domain)
             for role_obj in role_list:
                 if role_obj.name == role:
                     return role_obj.id
 
         raise exception.EntityNotFound(entity='KeystoneRole', name=role)
 
-    def get_project_id(self, project):
+    def get_project_id(self, project, domain=None):
         if project is None:
             return None
+
+        if not domain:
+            project, domain = self.parse_entity_with_domain(project,
+                                                            'KeystoneProject')
+
         try:
             project_obj = self.client().client.projects.get(project)
             return project_obj.id
         except ks_exceptions.NotFound:
-            project_list = self.client().client.projects.list(name=project)
+            project_list = self.client().client.projects.list(name=project,
+                                                              domain=domain)
             for project_obj in project_list:
                 if project_obj.name == project:
                     return project_obj.id
@@ -78,14 +113,20 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
 
         raise exception.EntityNotFound(entity='KeystoneDomain', name=domain)
 
-    def get_group_id(self, group):
+    def get_group_id(self, group, domain=None):
         if group is None:
             return None
+
+        if not domain:
+            group, domain = self.parse_entity_with_domain(group,
+                                                          'KeystoneGroup')
+
         try:
             group_obj = self.client().client.groups.get(group)
             return group_obj.id
         except ks_exceptions.NotFound:
-            group_list = self.client().client.groups.list(name=group)
+            group_list = self.client().client.groups.list(name=group,
+                                                          domain=domain)
             for group_obj in group_list:
                 if group_obj.name == group:
                     return group_obj.id
@@ -109,14 +150,20 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
                 raise exception.EntityNotFound(entity='KeystoneService',
                                                name=service)
 
-    def get_user_id(self, user):
+    def get_user_id(self, user, domain=None):
         if user is None:
             return None
+
+        if not domain:
+            user, domain = self.parse_entity_with_domain(user,
+                                                         'KeystoneUser')
+
         try:
             user_obj = self.client().client.users.get(user)
             return user_obj.id
         except ks_exceptions.NotFound:
-            user_list = self.client().client.users.list(name=user)
+            user_list = self.client().client.users.list(name=user,
+                                                        domain=domain)
             for user_obj in user_list:
                 if user_obj.name == user:
                     return user_obj.id
