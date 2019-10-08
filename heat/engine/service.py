@@ -674,6 +674,9 @@ class EngineService(service.ServiceBase):
             raise exception.MissingCredentialError(required='X-Auth-Key')
 
     def _validate_new_stack(self, cnxt, stack_name, parsed_template):
+        # We'll check that the stack name is unique in the tenant while
+        # storing it in the database to avoid races, but also check it here
+        # before validating so we can fail early.
         if stack_object.Stack.get_by_name(cnxt, stack_name):
             raise exception.StackExists(stack_name=stack_name)
 
