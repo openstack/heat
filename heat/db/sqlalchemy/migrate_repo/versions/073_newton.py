@@ -22,6 +22,18 @@ def upgrade(migrate_engine):
     meta = sqlalchemy.MetaData()
     meta.bind = migrate_engine
 
+    raw_template_files = sqlalchemy.Table(
+        'raw_template_files', meta,
+        sqlalchemy.Column('id', sqlalchemy.Integer,
+                          primary_key=True,
+                          nullable=False),
+        sqlalchemy.Column('files', types.Json),
+        sqlalchemy.Column('created_at', sqlalchemy.DateTime),
+        sqlalchemy.Column('updated_at', sqlalchemy.DateTime),
+        mysql_engine='InnoDB',
+        mysql_charset='utf8'
+    )
+
     raw_template = sqlalchemy.Table(
         'raw_template', meta,
         sqlalchemy.Column('id', sqlalchemy.Integer, primary_key=True,
@@ -31,7 +43,10 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('template', types.LongText),
         sqlalchemy.Column('files', types.Json),
         sqlalchemy.Column('environment', types.Json),
-
+        sqlalchemy.Column('files_id', sqlalchemy.Integer(),
+                          sqlalchemy.ForeignKey(
+                              'raw_template_files.id',
+                              name='raw_tmpl_files_fkey_ref')),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
     )
@@ -145,7 +160,9 @@ def upgrade(migrate_engine):
         sqlalchemy.Column('decrypt_method', sqlalchemy.String(length=64)),
         sqlalchemy.Column('resource_id',
                           sqlalchemy.Integer,
-                          sqlalchemy.ForeignKey('resource.id'),
+                          sqlalchemy.ForeignKey('resource.id',
+                                                name='fk_resource_id',
+                                                ondelete='CASCADE'),
                           nullable=False),
         mysql_engine='InnoDB',
         mysql_charset='utf8'
@@ -342,6 +359,7 @@ def upgrade(migrate_engine):
     )
 
     tables = (
+        raw_template_files,
         raw_template,
         user_creds,
         stack,
