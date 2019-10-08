@@ -4191,16 +4191,46 @@ class ServersTest(common.HeatTestCase):
     def test_server_check_snapshot_complete_fail(self):
         self._test_server_check_snapshot_complete()
 
+    def test_server_check_snapshot_complete_with_not_complete_task_state(self):
+        for task_state in {'image_uploading', 'image_snapshot_pending',
+                           'image_snapshot', 'image_pending_upload'}:
+            self._test_check_snapshot_complete_with_task_state(
+                task_state=task_state)
+
+    def test_server_check_snapshot_complete_with_active_task_state(self):
+        self._test_check_snapshot_complete_with_task_state()
+
+    def _test_check_snapshot_complete_with_task_state(self,
+                                                      task_state='active'):
+        return_server = self.fc.servers.list()[1]
+        return_server.id = '1234'
+        server = self._create_test_server(return_server,
+                                          'test_server_snapshot')
+        image = mock.MagicMock(status='active')
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=image)
+        server_with_task_state = mock.Mock()
+        setattr(server_with_task_state, 'OS-EXT-STS:task_state', task_state)
+        mock_get = self.patchobject(
+            nova.NovaClientPlugin, 'get_server',
+            return_value=server_with_task_state)
+
+        if task_state not in {'image_uploading', 'image_snapshot_pending',
+                              'image_snapshot', 'image_pending_upload'}:
+            self.assertTrue(server.check_snapshot_complete('fake_iamge_id'))
+        else:
+            self.assertFalse(server.check_snapshot_complete('fake_iamge_id'))
+        mock_get.assert_called_once_with(server.resource_id)
+
     def _test_server_check_snapshot_complete(self, image_status='ERROR'):
         return_server = self.fc.servers.list()[1]
         return_server.id = '1234'
         server = self._create_test_server(return_server,
                                           'test_server_snapshot')
-        image_in_error = mock.Mock()
-        image_in_error.status = image_status
-
+        image_in_error = mock.MagicMock(status=image_status)
         self.patchobject(glance.GlanceClientPlugin, 'get_image',
                          return_value=image_in_error)
+
         self.assertRaises(exception.ResourceFailure,
                           scheduler.TaskRunner(server.snapshot))
 

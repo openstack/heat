@@ -1748,7 +1748,11 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
     def check_snapshot_complete(self, image_id):
         image = self.client_plugin('glance').get_image(image_id)
         if image.status.lower() == self.IMAGE_ACTIVE:
-            return True
+            server = self.client_plugin().get_server(self.resource_id)
+            task_state = getattr(server, 'OS-EXT-STS:task_state', '')
+            if task_state not in {'image_uploading', 'image_snapshot_pending',
+                                  'image_snapshot', 'image_pending_upload'}:
+                return True
         elif image.status.lower() in (self.IMAGE_ERROR, self.IMAGE_DELETED):
             raise exception.Error(image.status)
 
