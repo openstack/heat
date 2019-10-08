@@ -302,7 +302,7 @@ Resources:
         nested_t = template_format.parse(self.nested_template)
         nested_t['Parameters']['KeyName']['Default'] = 'Key'
 
-        nested_stack = parser.Stack(ctx, 'test',
+        nested_stack = parser.Stack(ctx, 'test_nested',
                                     template.Template(nested_t))
         nested_stack.store()
 

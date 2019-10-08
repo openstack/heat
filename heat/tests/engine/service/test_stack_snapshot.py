@@ -245,7 +245,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         mock_load.assert_called_once_with(self.ctx, stack=mock.ANY)
         mock_load.reset_mock()
 
-        stk2 = self._create_stack('stack_snapshot_restore_other_stack_1')
+        stk2 = self._create_stack('stack_snapshot_restore_other_stack_2')
         mock_load.return_value = stk2
 
         ex = self.assertRaises(dispatcher.ExpectedException,
