@@ -396,7 +396,7 @@ resources:
         del api_args[rpc_api.STACK_TAGS]
         _, _, updated_stack = self.man._prepare_stack_updates(
             self.ctx, stk, t, {}, None, None, None, api_args, None)
-        self.assertIsNone(updated_stack.tags)
+        self.assertEqual([], updated_stack.tags)
 
     def test_stack_update_existing_registry(self):
         # Use a template with existing flag and ensure the

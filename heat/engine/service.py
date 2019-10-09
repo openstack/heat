@@ -896,7 +896,7 @@ class EngineService(service.ServiceBase):
         # stack definition. If PARAM_EXISTING is specified, we merge
         # any environment provided into the existing one and attempt
         # to use the existing stack template, if one is not provided.
-        if args.get(rpc_api.PARAM_EXISTING):
+        if args.get(rpc_api.PARAM_EXISTING, False):
             assert template_id is None, \
                 "Cannot specify template_id with PARAM_EXISTING"
 
@@ -976,9 +976,9 @@ class EngineService(service.ServiceBase):
         common_params.setdefault(rpc_api.PARAM_CONVERGE,
                                  current_stack.converge)
 
-        if args.get(rpc_api.PARAM_EXISTING):
-            common_params.setdefault(rpc_api.STACK_TAGS,
-                                     current_stack.tags)
+        if args.get(rpc_api.PARAM_EXISTING, False):
+            if rpc_api.STACK_TAGS not in common_params:
+                common_params[rpc_api.STACK_TAGS] = current_stack.tags
         current_kwargs.update(common_params)
         updated_stack = parser.Stack(cnxt, stack_name, tmpl,
                                      **current_kwargs)
