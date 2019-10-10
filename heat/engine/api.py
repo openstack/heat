@@ -60,7 +60,7 @@ def extract_args(params):
         kwargs[rpc_api.PARAM_ADOPT_STACK_DATA] = adopt_data
 
     tags = params.get(rpc_api.PARAM_TAGS)
-    if tags:
+    if tags is not None:
         if not isinstance(tags, list):
             raise ValueError(_('Invalid tags, not a list: %s') % tags)
 

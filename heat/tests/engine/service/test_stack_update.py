@@ -385,11 +385,21 @@ resources:
             self.ctx, stk, t, {}, None, None, None, api_args, None)
         self.assertEqual(['tag1'], updated_stack.tags)
 
+        # update clear old tags
+        api_args[rpc_api.STACK_TAGS] = []
+        _, _, updated_stack = self.man._prepare_stack_updates(
+            self.ctx, stk, t, {}, None, None, None, api_args, None)
+        self.assertEqual([], updated_stack.tags)
+
         # with new tags
         api_args[rpc_api.STACK_TAGS] = ['tag2']
         _, _, updated_stack = self.man._prepare_stack_updates(
             self.ctx, stk, t, {}, None, None, None, api_args, None)
         self.assertEqual(['tag2'], updated_stack.tags)
+        api_args[rpc_api.STACK_TAGS] = ['tag3']
+        _, _, updated_stack = self.man._prepare_stack_updates(
+            self.ctx, stk, t, {}, None, None, None, api_args, None)
+        self.assertEqual(['tag3'], updated_stack.tags)
 
         # with no PARAM_EXISTING flag and no tags
         del api_args[rpc_api.PARAM_EXISTING]
