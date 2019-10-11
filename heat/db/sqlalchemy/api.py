@@ -13,6 +13,7 @@
 
 """Implementation of SQLAlchemy backend."""
 import datetime
+import functools
 import itertools
 import random
 
@@ -24,6 +25,7 @@ from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 from oslo_utils import encodeutils
+from oslo_utils import excutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import six
@@ -86,6 +88,26 @@ def get_engine():
 
 def get_session():
     return get_facade().get_session()
+
+
+def retry_on_deadlock(func):
+    @functools.wraps(func)
+    def try_func(context, *args, **kwargs):
+        if (context.session.transaction is None or
+                not context.session.autocommit):
+            wrapped = oslo_db_api.wrap_db_retry(max_retries=3,
+                                                retry_on_deadlock=True,
+                                                retry_interval=0.5,
+                                                inc_retry_interval=True)(func)
+            return wrapped(context, *args, **kwargs)
+        else:
+            try:
+                return func(context, *args, **kwargs)
+            except db_exception.DBDeadlock:
+                with excutils.save_and_reraise_exception():
+                    LOG.debug('Not retrying on DBDeadlock '
+                              'because transaction not closed')
+    return try_func
 
 
 def update_and_save(context, obj, values):
@@ -239,8 +261,7 @@ def resource_get_all(context):
     return results
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def resource_purge_deleted(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
     query = context.session.query(models.Resource)
@@ -261,8 +282,7 @@ def _add_atomic_key_to_values(values, atomic_key):
         values['atomic_key'] = atomic_key + 1
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     return _try_resource_update(context, resource_id, values, atomic_key,
@@ -459,8 +479,7 @@ def resource_create(context, values):
     return resource_ref
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def resource_create_replacement(context,
                                 existing_res_id, existing_res_values,
                                 new_res_values,
@@ -784,8 +803,7 @@ def stack_create(context, values):
     return stack_ref
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def stack_update(context, stack_id, values, exp_trvsl=None):
     session = context.session
     with session.begin(subtransactions=True):
@@ -1141,8 +1159,7 @@ def _delete_event_rows(context, stack_id, limit):
     return retval
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def event_create(context, values):
     if 'stack_id' in values and cfg.CONF.max_events_per_stack:
         # only count events and purge on average
@@ -1554,8 +1571,7 @@ def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
     return rows_deleted
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def sync_point_create(context, values):
     values['entity_id'] = str(values['entity_id'])
     sync_point_ref = models.SyncPoint()
@@ -1571,8 +1587,7 @@ def sync_point_get(context, entity_id, traversal_id, is_update):
     )
 
 
-@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True)
+@retry_on_deadlock
 def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
                                  input_data):
