@@ -2724,8 +2724,8 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
             db_api.resource_update_and_save(other_ctx, orig.id,
                                             {'atomic_key': 2})
 
-        self.patchobject(db_api, 'resource_update',
-                         new=mock.Mock(wraps=db_api.resource_update,
+        self.patchobject(db_api, '_try_resource_update',
+                         new=mock.Mock(wraps=db_api._try_resource_update,
                                        side_effect=update_atomic_key))
 
         self.assertRaises(exception.UpdateInProgress,
@@ -2767,8 +2767,8 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
                                             {'engine_id': 'a',
                                              'atomic_key': 2})
 
-        self.patchobject(db_api, 'resource_update',
-                         new=mock.Mock(wraps=db_api.resource_update,
+        self.patchobject(db_api, '_try_resource_update',
+                         new=mock.Mock(wraps=db_api._try_resource_update,
                                        side_effect=lock_resource))
 
         self.assertRaises(exception.UpdateInProgress,

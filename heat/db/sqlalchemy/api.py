@@ -265,6 +265,12 @@ def _add_atomic_key_to_values(values, atomic_key):
                            retry_interval=0.5, inc_retry_interval=True)
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
+    return _try_resource_update(context, resource_id, values, atomic_key,
+                                expected_engine_id)
+
+
+def _try_resource_update(context, resource_id, values, atomic_key,
+                         expected_engine_id=None):
     session = context.session
     with session.begin(subtransactions=True):
         _add_atomic_key_to_values(values, atomic_key)
@@ -453,6 +459,8 @@ def resource_create(context, values):
     return resource_ref
 
 
+@oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
+                           retry_interval=0.5, inc_retry_interval=True)
 def resource_create_replacement(context,
                                 existing_res_id, existing_res_values,
                                 new_res_values,
@@ -463,10 +471,10 @@ def resource_create_replacement(context,
             new_res = resource_create(context, new_res_values)
             update_data = {'replaced_by': new_res.id}
             update_data.update(existing_res_values)
-            if not resource_update(context,
-                                   existing_res_id, update_data,
-                                   atomic_key,
-                                   expected_engine_id=expected_engine_id):
+            if not _try_resource_update(context,
+                                        existing_res_id, update_data,
+                                        atomic_key,
+                                        expected_engine_id=expected_engine_id):
                 data = {}
                 if 'name' in new_res_values:
                     data['resource_name'] = new_res_values['name']
