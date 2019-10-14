@@ -402,8 +402,10 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
                                                userdata=userdata,
                                                user_data_format=ud_format)
         ig = json.loads(data)
-        self.assertEqual("/var/lib/os-collect-config/local-data",
+        self.assertEqual("/var/lib/heat-cfntools/cfn-init-data",
                          ig["storage"]["files"][0]["path"])
+        self.assertEqual("/var/lib/cloud/data/cfn-init-data",
+                         ig["storage"]["files"][1]["path"])
         self.assertEqual("data:,%7B%22os-collect-config%22%3A%20%7B%22heat"
                          "%22%3A%20%7B%22password%22%3A%20%22%2A%2A%2A%22"
                          "%7D%7D%7D",
