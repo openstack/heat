@@ -448,10 +448,12 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
         payload = jsonutils.loads(userdata)
         encoded_metadata = urlparse.quote(jsonutils.dumps(metadata))
-        cfn_init_data = {
+        path_list = ["/var/lib/heat-cfntools/cfn-init-data",
+                     "/var/lib/cloud/data/cfn-init-data"]
+        ignition_format_metadata = {
             "filesystem": "root",
             "group": {"name": "root"},
-            "path": "/var/lib/os-collect-config/local-data",
+            "path": "",
             "user": {"name": "root"},
             "contents": {
                 "source": "data:," + encoded_metadata,
@@ -459,16 +461,19 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             "mode": 0o640
         }
 
-        storage = payload.setdefault('storage', {})
-        try:
-            files = storage.setdefault('files', [])
-        except AttributeError:
-            raise ValueError('Ignition "storage" section must be a map')
-        else:
+        for path in path_list:
+            storage = payload.setdefault('storage', {})
             try:
-                files.append(cfn_init_data)
+                files = storage.setdefault('files', [])
             except AttributeError:
-                raise ValueError('Ignition "files" section must be a list')
+                raise ValueError('Ignition "storage" section must be a map')
+            else:
+                try:
+                    data = ignition_format_metadata.copy()
+                    data["path"] = path
+                    files.append(data)
+                except AttributeError:
+                    raise ValueError('Ignition "files" section must be a list')
 
         return jsonutils.dumps(payload)
 
