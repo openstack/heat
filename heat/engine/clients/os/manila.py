@@ -16,6 +16,7 @@ from heat.engine.clients import client_plugin
 from heat.engine import constraints
 from manilaclient import client as manila_client
 from manilaclient import exceptions
+from oslo_config import cfg
 
 MANILACLIENT_VERSION = "2"
 CLIENT_NAME = 'manila'
@@ -33,6 +34,7 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
             'endpoint_type': endpoint_type,
             'service_type': self.SHARE,
             'session': self.context.keystone_session,
+            'connect_retries': cfg.CONF.client_retry_limit,
             'region_name': self._get_region_name()
         }
         client = manila_client.Client(MANILACLIENT_VERSION, **args)

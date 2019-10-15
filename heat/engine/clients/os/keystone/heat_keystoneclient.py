@@ -152,12 +152,14 @@ class KsClientWrapper(object):
             self._domain_admin_client = kc_v3.Client(
                 session=self.session,
                 auth=self.domain_admin_auth,
+                connect_retries=cfg.CONF.client_retry_limit,
                 region_name=self.region_name)
 
         return self._domain_admin_client
 
     def _v3_client_init(self):
         client = kc_v3.Client(session=self.session,
+                              connect_retries=cfg.CONF.client_retry_limit,
                               region_name=self.region_name)
 
         if hasattr(self.context.auth_plugin, 'get_access'):

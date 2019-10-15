@@ -14,6 +14,7 @@
 from barbicanclient import exceptions
 from barbicanclient.v1 import client as barbican_client
 from barbicanclient.v1 import containers
+from oslo_config import cfg
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
@@ -33,6 +34,7 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
             session=self.context.keystone_session,
             service_type=self.KEY_MANAGER,
             interface=interface,
+            connect_retries=cfg.CONF.client_retry_limit,
             region_name=self._get_region_name())
         return client
 

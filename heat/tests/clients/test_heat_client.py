@@ -95,6 +95,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         n = kc_v3.Client(session=mox.IsA(ks_session.Session),
                          auth=mock_ks_auth,
+                         connect_retries=2,
                          region_name=None)
         n.AndReturn(self.mock_admin_client)
 
@@ -139,6 +140,7 @@ class KeystoneClientTest(common.HeatTestCase):
 
         if client:
             c = kc_v3.Client(session=mox.IsA(ks_session.Session),
+                             connect_retries=2,
                              region_name=None)
             c.AndReturn(self.mock_ks_v3_client)
 
@@ -1448,6 +1450,7 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
 
         n = kc_v3.Client(session=mox.IsA(ks_session.Session),
                          auth=mock_ks_auth,
+                         connect_retries=2,
                          region_name=None)
         n.AndReturn(self.mock_admin_client)
 

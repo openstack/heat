@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo_config import cfg
 from saharaclient.api import base as sahara_base
 from saharaclient import client as sahara_client
 import six
@@ -38,6 +39,7 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
             'endpoint_type': endpoint_type,
             'service_type': self.DATA_PROCESSING,
             'session': con.keystone_session,
+            'connect_retries': cfg.CONF.client_retry_limit,
             'region_name': self._get_region_name()
         }
         client = sahara_client.Client('1.1', **args)

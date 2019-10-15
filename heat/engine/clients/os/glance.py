@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
 from oslo_utils import uuidutils
 
 from glanceclient import client as gc
@@ -41,6 +42,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         return gc.Client(version, session=con.keystone_session,
                          interface=interface,
                          service_type=self.IMAGE,
+                         connect_retries=cfg.CONF.client_retry_limit,
                          region_name=self._get_region_name())
 
     def _find_with_attr(self, entity, **kwargs):

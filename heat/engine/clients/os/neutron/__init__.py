@@ -14,6 +14,7 @@
 from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as nc
+from oslo_config import cfg
 from oslo_utils import uuidutils
 
 from heat.common import exception
@@ -44,7 +45,8 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
             'session': con.keystone_session,
             'service_type': self.NETWORK,
             'interface': interface,
-            'region_name': self._get_region_name()
+            'region_name': self._get_region_name(),
+            'connect_retries': cfg.CONF.client_retry_limit
         }
 
         return nc.Client(**args)
