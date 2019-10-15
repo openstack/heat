@@ -56,7 +56,7 @@ class HealthMonitor(octavia_base.OctaviaBase):
         ),
         DELAY: properties.Schema(
             properties.Schema.INTEGER,
-            _('The minimum time in milliseconds between regular connections '
+            _('The minimum time in seconds between regular connections '
               'of the member.'),
             required=True,
             update_allowed=True,
@@ -95,7 +95,7 @@ class HealthMonitor(octavia_base.OctaviaBase):
         ),
         TIMEOUT: properties.Schema(
             properties.Schema.INTEGER,
-            _('Maximum number of milliseconds for a monitor to wait for a '
+            _('Maximum number of seconds for a monitor to wait for a '
               'connection to be established before it times out.'),
             required=True,
             update_allowed=True,
