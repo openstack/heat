@@ -121,3 +121,6 @@ class FakeKeystoneClient(object):
 
     def stack_domain_user_token(self, user_id, project_id, password):
         return 'adomainusertoken'
+
+    def server_keystone_endpoint_url(self, fallback_endpoint):
+        return fallback_endpoint

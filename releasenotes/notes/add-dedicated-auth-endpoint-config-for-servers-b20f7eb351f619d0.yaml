@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    Added a new config option server_keystone_endpoint_type to specify
+    the keystone authentication endpoint (public/internal/admin)
+    to pass into cloud-init data.
+    If left unset the original behavior should remain unchanged.
+
+    This feature allows the deployer to unambiguously specify the
+    keystone endpoint passed to user provisioned servers, and is particularly
+    useful where the deployment network architecture requires the heat
+    service to interact with the internal endpoint,
+    but user provisioned servers only have access to the external network.
+
+    For more information see
+    http://lists.openstack.org/pipermail/openstack-discuss/2019-February/002925.html
