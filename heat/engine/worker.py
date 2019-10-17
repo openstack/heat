@@ -157,9 +157,8 @@ class WorkerService(object):
             db_api.resource_update_and_save(stack.context, rsrc.id, values)
             # The old resource might be in the graph (a rollback case);
             # just re-trigger it.
-            key = parser.ConvergenceNode(rsrc.replaces, is_update)
-            check_resource.retrigger_check_resource(stack.context, is_update,
-                                                    key.rsrc_id, stack)
+            check_resource.retrigger_check_resource(stack.context,
+                                                    rsrc.replaces, stack)
 
     @context.request_context
     @log_exceptions
