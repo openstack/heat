@@ -246,7 +246,7 @@ def resource_purge_deleted(context, stack_id):
     query = context.session.query(models.Resource)
     result = query.filter_by(**filters)
     attr_ids = [r.attr_data_id for r in result if r.attr_data_id is not None]
-    with context.session.begin(subtransactions=True):
+    with context.session.begin():
         result.delete()
         if attr_ids:
             context.session.query(models.ResourcePropertiesData).filter(
@@ -300,7 +300,7 @@ def resource_delete(context, resource_id):
 
 def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
     session = context.session
-    with session.begin(subtransactions=True):
+    with session.begin():
         values = {'attr_data_id': attr_id}
         _add_atomic_key_to_values(values, atomic_key)
         rows_updated = session.query(models.Resource).filter(and_(
@@ -326,7 +326,7 @@ def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
 
 def resource_attr_data_delete(context, resource_id, attr_id):
     session = context.session
-    with session.begin(subtransactions=True):
+    with session.begin():
         resource = session.query(models.Resource).get(resource_id)
         attr_prop_data = session.query(
             models.ResourcePropertiesData).get(attr_id)
@@ -448,7 +448,7 @@ def resource_exchange_stacks(context, resource_id1, resource_id2):
 def resource_data_delete(context, resource_id, key):
     result = resource_data_get_by_key(context, resource_id, key)
     session = context.session
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.delete(result)
 
 
@@ -467,7 +467,7 @@ def resource_create_replacement(context,
                                 atomic_key, expected_engine_id=None):
     session = context.session
     try:
-        with session.begin(subtransactions=True):
+        with session.begin():
             new_res = resource_create(context, new_res_values)
             update_data = {'replaced_by': new_res.id}
             update_data.update(existing_res_values)
@@ -1250,7 +1250,7 @@ def software_deployment_update(context, deployment_id, values):
 def software_deployment_delete(context, deployment_id):
     deployment = software_deployment_get(context, deployment_id)
     session = context.session
-    with session.begin(subtransactions=True):
+    with session.begin():
         session.delete(deployment)
 
 
@@ -1616,7 +1616,7 @@ def _db_encrypt_or_decrypt_template_params(
         batch_size=batch_size)
     next_batch = list(itertools.islice(template_batches, batch_size))
     while next_batch:
-        with session.begin(subtransactions=True):
+        with session.begin():
             for raw_template in next_batch:
                 try:
                     if verbose:
@@ -1699,7 +1699,7 @@ def _db_encrypt_or_decrypt_resource_prop_data_legacy(
         batch_size=batch_size)
     next_batch = list(itertools.islice(resource_batches, batch_size))
     while next_batch:
-        with session.begin(subtransactions=True):
+        with session.begin():
             for resource in next_batch:
                 if not resource.properties_data:
                     continue
@@ -1746,7 +1746,7 @@ def _db_encrypt_or_decrypt_resource_prop_data(
         model=models.ResourcePropertiesData, batch_size=batch_size)
     next_batch = list(itertools.islice(rpd_batches, batch_size))
     while next_batch:
-        with session.begin(subtransactions=True):
+        with session.begin():
             for rpd in next_batch:
                 if not rpd.data:
                     continue

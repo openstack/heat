@@ -2320,18 +2320,12 @@ class EngineService(service.ServiceBase):
         try:
             for st in stacks:
                 lock = stack_lock.StackLock(ctxt, st.id, self.engine_id)
-                lock.acquire()
                 locks.append(lock)
-            sess = ctxt.session
-            sess.begin(subtransactions=True)
-            try:
+                lock.acquire()
+            with ctxt.session.begin():
                 for st in stacks:
                     if not st.convergence:
                         st.migrate_to_convergence()
-                sess.commit()
-            except Exception:
-                sess.rollback()
-                raise
         finally:
             for lock in locks:
                 lock.release()
