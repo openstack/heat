@@ -15,7 +15,9 @@ from blazarclient import client as blazar_client
 from blazarclient import exception as client_exception
 from oslo_config import cfg
 
+from heat.common import exception
 from heat.engine.clients import client_plugin
+from heat.engine import constraints
 
 CLIENT_NAME = 'blazar'
 
@@ -58,3 +60,16 @@ class BlazarClientPlugin(client_plugin.ClientPlugin):
 
     def get_host(self, id):
         return self.client().host.get(id)
+
+
+class BlazarBaseConstraint(constraints.BaseCustomConstraint):
+
+    resource_client_name = CLIENT_NAME
+
+
+class ReservationConstraint(BlazarBaseConstraint):
+    expected_exceptions = (
+        exception.EntityNotFound,
+        client_exception.BlazarClientException,)
+
+    resource_getter_name = 'get_lease'
