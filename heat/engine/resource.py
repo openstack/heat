@@ -1456,6 +1456,23 @@ class Resource(status.ResourceStatus):
                                       new_requires=new_requires)
         runner(timeout=timeout, progress_callback=progress_callback)
 
+    def handle_preempt(self):
+        """Pre-empt an in-progress update when a new update is available.
+
+        This method is called when a previous convergence update is in
+        progress but a new update for the resource is available. By default
+        it does nothing, but subclasses may override it to cancel the
+        in-progress update if it is safe to do so.
+
+        Note that this method does not run in the context of the in-progress
+        update and has no access to runtime information about it; nor is it
+        safe to make changes to the Resource in the database. If implemented,
+        this method should cause the existing update to complete by external
+        means. If this leaves the resource in a FAILED state, that should be
+        taken into account in needs_replace_failed().
+        """
+        return
+
     def preview_update(self, after, before, after_props, before_props,
                        prev_resource, check_init_complete=False):
         """Simulates update without actually updating the resource.
