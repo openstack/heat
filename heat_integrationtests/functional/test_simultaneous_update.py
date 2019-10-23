@@ -12,6 +12,7 @@
 
 
 import copy
+import json
 import time
 
 from heat_integrationtests.common import test
@@ -91,3 +92,85 @@ class SimultaneousUpdateStackTest(functional_base.FunctionalTestsBase):
         time.sleep(50)
 
         self.update_stack(stack_id, after)
+
+
+input_param = 'input'
+preempt_nested_stack_type = 'preempt.yaml'
+preempt_root_rsrcs = {
+    'nested_stack': {
+        'type': preempt_nested_stack_type,
+        'properties': {
+            'input': {'get_param': input_param},
+        },
+    }
+}
+preempt_root_out = {'get_attr': ['nested_stack', 'delay_stack']}
+preempt_delay_stack_type = 'delay.yaml'
+preempt_nested_rsrcs = {
+    'delay_stack': {
+        'type': preempt_delay_stack_type,
+        'properties': {
+            'input': {'get_param': input_param},
+        },
+    }
+}
+preempt_nested_out = {'get_resource': 'delay_stack'}
+preempt_delay_rsrcs = {
+    'delay_resource': {
+        'type': 'OS::Heat::TestResource',
+        'properties': {
+            'action_wait_secs': {
+                'update': 6000,
+            },
+            'value': {'get_param': input_param},
+        },
+    }
+}
+
+
+def _tmpl_with_rsrcs(rsrcs, output_value=None):
+    tmpl = {
+        'heat_template_version': 'queens',
+        'parameters': {
+            input_param: {
+                'type': 'string',
+            },
+        },
+        'resources': rsrcs,
+    }
+    if output_value is not None:
+        outputs = {'delay_stack': {'value': output_value}}
+        tmpl['outputs'] = outputs
+    return json.dumps(tmpl)
+
+
+class SimultaneousUpdateNestedStackTest(functional_base.FunctionalTestsBase):
+    @test.requires_convergence
+    def test_nested_preemption(self):
+        root_tmpl = _tmpl_with_rsrcs(preempt_root_rsrcs,
+                                     preempt_root_out)
+        files = {
+            preempt_nested_stack_type: _tmpl_with_rsrcs(preempt_nested_rsrcs,
+                                                        preempt_nested_out),
+            preempt_delay_stack_type: _tmpl_with_rsrcs(preempt_delay_rsrcs),
+        }
+        stack_id = self.stack_create(template=root_tmpl, files=files,
+                                     parameters={input_param: 'foo'})
+        delay_stack_uuid = self.get_stack_output(stack_id, 'delay_stack')
+
+        # Start an update that includes a long delay in the second nested stack
+        self.update_stack(stack_id, template=root_tmpl, files=files,
+                          parameters={input_param: 'bar'},
+                          expected_status='UPDATE_IN_PROGRESS')
+        self._wait_for_resource_status(delay_stack_uuid, 'delay_resource',
+                                       'UPDATE_IN_PROGRESS')
+
+        # Update again to check that we preempt update of the first nested
+        # stack. This will delete the second nested stack, after preempting the
+        # update of that stack as well, which will cause the delay resource
+        # within to be cancelled.
+        empty_nest_files = {
+            preempt_nested_stack_type: _tmpl_with_rsrcs({}),
+        }
+        self.update_stack(stack_id, template=root_tmpl, files=empty_nest_files,
+                          parameters={input_param: 'baz'})

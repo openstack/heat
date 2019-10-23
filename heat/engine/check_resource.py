@@ -163,6 +163,8 @@ class CheckResource(object):
 
             return True
         except exception.UpdateInProgress:
+            LOG.debug('Waiting for existing update to unlock resource %s',
+                      rsrc.id)
             if self._stale_resource_needs_retry(cnxt, rsrc, prev_template_id):
                 rpc_data = sync_point.serialize_input_data(self.input_data)
                 self._rpc_client.check_resource(cnxt,
@@ -170,6 +172,8 @@ class CheckResource(object):
                                                 current_traversal,
                                                 rpc_data, is_update,
                                                 adopt_stack_data)
+            else:
+                rsrc.handle_preempt()
         except exception.ResourceFailure as ex:
             action = ex.action or rsrc.action
             reason = 'Resource %s failed: %s' % (action,

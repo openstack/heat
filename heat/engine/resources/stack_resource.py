@@ -561,9 +561,10 @@ class StackResource(resource.Resource):
         return self._check_status_complete(target_action,
                                            cookie=cookie)
 
-    def handle_update_cancel(self, cookie):
+    def _handle_cancel(self):
         stack_identity = self.nested_identifier()
         if stack_identity is not None:
+            LOG.debug('Cancelling %s of %s' % (self.action, self))
             try:
                 self.rpc_client().stack_cancel_update(
                     self.context,
@@ -572,6 +573,12 @@ class StackResource(resource.Resource):
             except exception.NotSupported:
                 LOG.debug('Nested stack %s not in cancellable state',
                           stack_identity.stack_name)
+
+    def handle_preempt(self):
+        self._handle_cancel()
+
+    def handle_update_cancel(self, cookie):
+        self._handle_cancel()
 
     def handle_create_cancel(self, cookie):
         return self.handle_update_cancel(cookie)
