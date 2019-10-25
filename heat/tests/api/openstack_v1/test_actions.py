@@ -88,6 +88,28 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
             ('stack_resume', {'stack_identity': stack_identity})
         )
 
+    def test_action_check(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'action', True)
+        stack_identity = identifier.HeatIdentifier(self.tenant,
+                                                   'wordpress', '1')
+        body = {'check': None}
+        req = self._post(stack_identity._tenant_path() + '/actions',
+                         data=json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     return_value=None)
+
+        result = self.controller.action(req, tenant_id=self.tenant,
+                                        stack_name=stack_identity.stack_name,
+                                        stack_id=stack_identity.stack_id,
+                                        body=body)
+        self.assertIsNone(result)
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('stack_check', {'stack_identity': stack_identity})
+        )
+
     def _test_action_cancel_update(self, mock_enforce, with_rollback=True):
         self._mock_enforce_setup(mock_enforce, 'action', True)
         stack_identity = identifier.HeatIdentifier(self.tenant,
