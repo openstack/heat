@@ -472,6 +472,18 @@ stacks_policies = [
         deprecated_rule=deprecated_update_patch
     ),
     policy.DocumentedRuleDefault(
+        name=POLICY_ROOT % 'update_no_change',
+        check_str='rule:%s' % (POLICY_ROOT % 'update_patch'),
+        scope_types=['system', 'project'],
+        description='Update stack (PATCH) with no changes.',
+        operations=[
+            {
+                'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}',
+                'method': 'PATCH'
+            }
+        ]
+    ),
+    policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview_update',
         check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
         scope_types=['system', 'project'],
