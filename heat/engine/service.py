@@ -1165,6 +1165,7 @@ class EngineService(service.ServiceBase):
         LOG.info('Starting cancel of updating stack %s', db_stack.name)
 
         if current_stack.convergence:
+            current_stack.thread_group_mgr = self.thread_group_mgr
             if cancel_with_rollback:
                 func = current_stack.rollback
             else:
