@@ -125,11 +125,11 @@ class WorkerService(object):
                 _stop_traversal(child)
 
     def stop_all_workers(self, stack):
-        # stop the traversal
-        if stack.status == stack.IN_PROGRESS:
-            self.stop_traversal(stack)
+        """Cancel all existing worker threads for the stack.
 
-        # cancel existing workers
+        Threads will stop running at their next yield point, whether or not the
+        resource operations are complete.
+        """
         cancelled = _cancel_workers(stack, self.thread_group_mgr,
                                     self.engine_id, self._rpc_client)
         if not cancelled:

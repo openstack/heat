@@ -37,5 +37,8 @@ class Worker(message_processor.MessageProcessor):
                                  adopt_stack_data,
                                  converge)
 
+    def stop_traversal(self, current_stack):
+        pass
+
     def stop_all_workers(self, current_stack):
         pass
