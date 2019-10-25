@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    Operators can now apply different authorization policies to each action
+    supported by the action API (``actions:suspend`` for suspend,
+    ``actions:resume`` for resume, ``actions:check`` for check,
+    ``actions:cancel_update`` for cancel operation and roll back, and
+    ``actions:cancel_without_rollback`` for cancel operation without rolling
+    back). The default for each is to use the existing ``actions:action`` rule
+    that was previously the only way to specify policy for actions.
