@@ -93,7 +93,7 @@ class TestPolicyEnforce(common.HeatTestCase):
         class DummyController(object):
             REQUEST_SCOPE = 'test'
 
-            @util.policy_enforce
+            @util.registered_policy_enforce
             def an_action(self, req):
                 return 'woot'
 
