@@ -46,8 +46,6 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.fake_nova = mock.MagicMock()
         self.fake_keypairs = mock.MagicMock()
         self.fake_nova.keypairs = self.fake_keypairs
-        self.patchobject(nova.NovaClientPlugin, 'has_extension',
-                         return_value=True)
         self.cp_mock = self.patchobject(nova.NovaClientPlugin, 'client',
                                         return_value=self.fake_nova)
 

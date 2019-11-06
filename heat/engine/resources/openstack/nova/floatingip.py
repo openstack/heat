@@ -49,8 +49,6 @@ class NovaFloatingIp(resource.Resource):
         )
     )
 
-    required_service_extension = 'os-floating-ips'
-
     PROPERTIES = (POOL,) = ('pool',)
 
     ATTRIBUTES = (

@@ -1349,8 +1349,6 @@ class ServersTest(common.HeatTestCase):
   }
 }
 '''
-        self.patchobject(nova.NovaClientPlugin, 'has_extension',
-                         return_value=True)
         t = template_format.parse(nova_keypair_template)
         templ = template.Template(t)
         self.patchobject(nova.NovaClientPlugin, 'client',
@@ -4947,7 +4945,6 @@ class ServerInternalPortTest(ServersTest):
         server.client = mock.Mock()
         server.client().servers.get.return_value = Fake()
         server.client_plugin = mock.Mock()
-        server.client_plugin().has_extension.return_value = True
         server._data = {"internal_ports": '[{"id": "1122"}]',
                         "external_ports": '[{"id": "3344"},{"id": "5566"}]'}
 
@@ -5220,28 +5217,3 @@ class ServerInternalPortTest(ServersTest):
             mock.call('prev_rsrc', 1122),
             mock.call('prev_rsrc', 3344),
             mock.call('prev_rsrc', 5566)])
-
-    def test_store_external_ports_os_interface_not_installed(self):
-        t, stack, server = self._return_template_stack_and_rsrc_defn(
-            'test', tmpl_server_with_network_id)
-
-        class Fake(object):
-            def interface_list(self):
-                return [iface('1122'),
-                        iface('1122'),
-                        iface('2233'),
-                        iface('3344')]
-
-        server.client = mock.Mock()
-        server.client().servers.get.return_value = Fake()
-        server.client_plugin = mock.Mock()
-        server.client_plugin().has_extension.return_value = False
-
-        server._data = {"internal_ports": '[{"id": "1122"}]',
-                        "external_ports": '[{"id": "3344"},{"id": "5566"}]'}
-
-        iface = collections.namedtuple('iface', ['port_id'])
-        update_data = self.patchobject(server, '_data_update_ports')
-
-        server.store_external_ports()
-        self.assertEqual(0, update_data.call_count)

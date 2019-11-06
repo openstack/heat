@@ -45,27 +45,21 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
 
     def test_create(self):
         context = utils.dummy_context()
-        ext_mock = self.patchobject(nc, 'discover_extensions')
         plugin = context.clients.client_plugin('nova')
         plugin.max_microversion = '2.53'
         client = plugin.client()
-        ext_mock.assert_called_once_with('2.53')
         self.assertIsNotNone(client.servers)
 
     def test_v2_26_create(self):
         ctxt = utils.dummy_context()
-        ext_mock = self.patchobject(nc, 'discover_extensions')
         self.patchobject(nc, 'Client', return_value=mock.Mock())
 
         plugin = ctxt.clients.client_plugin('nova')
         plugin.max_microversion = '2.53'
         plugin.client(version='2.26')
 
-        ext_mock.assert_called_once_with('2.26')
-
     def test_v2_26_create_failed(self):
         ctxt = utils.dummy_context()
-        self.patchobject(nc, 'discover_extensions')
         plugin = ctxt.clients.client_plugin('nova')
         plugin.max_microversion = '2.23'
         client_stub = mock.Mock()
@@ -654,30 +648,3 @@ class ConsoleUrlsTest(common.HeatTestCase):
         self.console_method.side_effect = exc("spam")
 
         self._test_get_console_url_tolerate_exception('spam')
-
-
-class NovaClientPluginExtensionsTest(NovaClientPluginTestCase):
-    """Tests for extensions in novaclient."""
-
-    def test_has_no_extensions(self):
-        self.nova_client.list_extensions.show_all.return_value = []
-        self.assertFalse(self.nova_plugin.has_extension(
-            "os-virtual-interfaces"))
-
-    def test_has_no_interface_extensions(self):
-        mock_extension = mock.Mock()
-        p = mock.PropertyMock(return_value='os-xxxx')
-        type(mock_extension).alias = p
-        self.nova_client.list_extensions.show_all.return_value = [
-            mock_extension]
-        self.assertFalse(self.nova_plugin.has_extension(
-            "os-virtual-interfaces"))
-
-    def test_has_os_interface_extension(self):
-        mock_extension = mock.Mock()
-        p = mock.PropertyMock(return_value='os-virtual-interfaces')
-        type(mock_extension).alias = p
-        self.nova_client.list_extensions.show_all.return_value = [
-            mock_extension]
-        self.assertTrue(self.nova_plugin.has_extension(
-            "os-virtual-interfaces"))

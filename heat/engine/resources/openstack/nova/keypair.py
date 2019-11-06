@@ -43,8 +43,6 @@ class KeyPair(resource.Resource):
 
     support_status = support.SupportStatus(version='2014.1')
 
-    required_service_extension = 'os-keypairs'
-
     PROPERTIES = (
         NAME, SAVE_PRIVATE_KEY, PUBLIC_KEY, KEY_TYPE, USER,
     ) = (

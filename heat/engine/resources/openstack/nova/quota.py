@@ -53,8 +53,6 @@ class NovaQuota(resource.Resource):
 
     entity = 'quotas'
 
-    required_service_extension = 'os-quota-sets'
-
     PROPERTIES = (
         PROJECT, CORES, FIXED_IPS, FLOATING_IPS, INSTANCES,
         INJECTED_FILES, INJECTED_FILE_CONTENT_BYTES, INJECTED_FILE_PATH_BYTES,

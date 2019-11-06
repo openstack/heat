@@ -364,6 +364,19 @@ class FakeSessionClient(base_client.SessionClient):
             'OS-FLV-EXT-DATA:ephemeral': 30}})
 
     #
+    # Interfaces
+    #
+
+    def get_servers_5678_os_interface(self, **kw):
+        return (200, {'interfaceAttachments':
+                      [{"fixed_ips":
+                        [{"ip_address": "10.0.0.1",
+                          "subnet_id": "f8a6e8f8-c2ec-497c-9f23-da9616de54ef"
+                          }],
+                        "port_id": "ce531f90-199f-48c0-816c-13e38010b442"
+                        }]})
+
+    #
     # Floating ips
     #
 

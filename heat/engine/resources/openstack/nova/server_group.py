@@ -33,8 +33,6 @@ class ServerGroup(resource.Resource):
 
     entity = 'server_groups'
 
-    required_service_extension = 'os-server-groups'
-
     PROPERTIES = (
         NAME, POLICIES
     ) = (

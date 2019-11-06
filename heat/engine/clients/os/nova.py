@@ -82,11 +82,9 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
     def _get_args(self, version):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
-        extensions = nc.discover_extensions(version)
 
         return {
             'session': self.context.keystone_session,
-            'extensions': extensions,
             'endpoint_type': endpoint_type,
             'service_type': self.COMPUTE,
             'region_name': self._get_region_name(),
@@ -828,15 +826,6 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 if iface.port_id == port_id:
                     return True
         return False
-
-    @os_client.MEMOIZE_EXTENSIONS
-    def _list_extensions(self):
-        extensions = self.client().list_extensions.show_all()
-        return set(extension.alias for extension in extensions)
-
-    def has_extension(self, alias):
-        """Check if specific extension is present."""
-        return alias in self._list_extensions()
 
 
 class NovaBaseConstraint(constraints.BaseCustomConstraint):

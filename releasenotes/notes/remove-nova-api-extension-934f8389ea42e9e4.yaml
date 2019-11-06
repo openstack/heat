@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    Nova has removed api extension support and its api bindings.
+    Heat has now removed support for extensions from nova client
+    plugin and the resource plugins using it.

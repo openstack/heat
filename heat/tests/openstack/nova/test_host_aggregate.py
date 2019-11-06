@@ -39,9 +39,6 @@ AGGREGATE_TEMPLATE = {
 class NovaHostAggregateTest(common.HeatTestCase):
     def setUp(self):
         super(NovaHostAggregateTest, self).setUp()
-        self.patchobject(nova.NovaClientPlugin,
-                         'has_extension',
-                         return_value=True)
         self.ctx = utils.dummy_context()
 
         self.stack = stack.Stack(

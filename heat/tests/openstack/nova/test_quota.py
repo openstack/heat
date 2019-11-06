@@ -16,7 +16,6 @@ import six
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import keystone as k_plugin
-from heat.engine.clients.os import nova as n_plugin
 from heat.engine import rsrc_defn
 from heat.engine import stack as parser
 from heat.engine import template
@@ -62,8 +61,6 @@ class NovaQuotaTest(common.HeatTestCase):
         super(NovaQuotaTest, self).setUp()
 
         self.ctx = utils.dummy_context()
-        self.patchobject(n_plugin.NovaClientPlugin, 'has_extension',
-                         return_value=True)
         self.patchobject(k_plugin.KeystoneClientPlugin, 'get_project_id',
                          return_value='some_project_id')
         tpl = template_format.parse(quota_template)

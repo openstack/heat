@@ -41,8 +41,6 @@ class NovaFlavor(resource.Resource):
 
     default_client_name = 'nova'
 
-    required_service_extension = 'os-flavor-manage'
-
     entity = 'flavors'
 
     PROPERTIES = (
