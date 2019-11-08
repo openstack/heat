@@ -671,6 +671,8 @@ Resources:
     Type: OS::Heat::TestResource
     Properties:
       fail: true
+      action_wait_secs:
+        create: 3
   check_deps_failed:
     Type: OS::Heat::TestResource
     DependsOn: check_failed

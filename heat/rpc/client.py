@@ -60,7 +60,6 @@ class EngineClient(object):
         1.34 - Add migrate_convergence_1 call
         1.35 - Add with_condition to list_template_functions
         1.36 - Add files_container to create/update/preview/validate
-        1.37 - Make stack check convergence aware
     """
 
     BASE_RPC_API_VERSION = '1.0'

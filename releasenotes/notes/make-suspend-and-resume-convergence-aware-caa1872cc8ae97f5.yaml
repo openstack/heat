@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Stack suspend and resume actions are now convergence aware.
+    These actions are fully supported by convergence mode.

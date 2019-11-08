@@ -422,10 +422,12 @@ def _check_for_message(msg_queue):
 def check_resource_update(rsrc, template_id, requires, engine_id,
                           stack, msg_queue):
     """Create or update the Resource if appropriate."""
+    if stack.action == stack.SUSPEND:
+        return
     check_message = functools.partial(_check_for_message, msg_queue)
-    if stack.action == stack.CHECK:
-        rsrc.check_convergence(engine_id, stack.time_remaining(),
-                               check_message)
+    if stack.action in [stack.CHECK, stack.RESUME]:
+        do_convergence = getattr(rsrc, stack.action.lower() + "_convergence")
+        do_convergence(engine_id, stack.time_remaining(), check_message)
     elif rsrc.action == resource.Resource.INIT:
         rsrc.create_convergence(template_id, requires, engine_id,
                                 stack.time_remaining(), check_message)
@@ -437,9 +439,12 @@ def check_resource_update(rsrc, template_id, requires, engine_id,
 
 def check_resource_cleanup(rsrc, template_id, engine_id, stack, msg_queue):
     """Delete the Resource if appropriate."""
-    if stack.action == stack.CHECK:
+    if stack.action in [stack.CHECK, stack.RESUME]:
         return
-
     check_message = functools.partial(_check_for_message, msg_queue)
-    rsrc.delete_convergence(template_id, engine_id,
-                            stack.time_remaining(), check_message)
+    if stack.action == stack.SUSPEND:
+        rsrc.suspend_convergence(engine_id, stack.time_remaining(),
+                                 check_message)
+    else:
+        rsrc.delete_convergence(template_id, engine_id,
+                                stack.time_remaining(), check_message)
