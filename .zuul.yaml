@@ -33,21 +33,21 @@
       sql: mysql
       use_amqp1: 0
       use_apache: 1
-      use_python3: 0
+      use_python3: 1
       branch_override: default
 
 - job:
-    name: heat-functional-orig-mysql-lbaasv2
+    name: heat-functional-legacy
     parent: heat-functional-devstack-base
     vars:
       disable_convergence: 'true'
 
 - job:
-    name: heat-functional-convg-mysql-lbaasv2
+    name: heat-functional
     parent: heat-functional-devstack-base
 
 - job:
-    name: heat-functional-convg-mysql-lbaasv2-amqp1
+    name: heat-functional-amqp1
     parent: heat-functional-devstack-base
     voting: false
     branches: master
@@ -55,17 +55,11 @@
       use_amqp1: 1
 
 - job:
-    name: heat-functional-convg-mysql-lbaasv2-non-apache
+    name: heat-functional-non-apache
     parent: heat-functional-devstack-base
     voting: false
     vars:
       use_apache: 0
-
-- job:
-    name: heat-functional-convg-mysql-lbaasv2-py3
-    parent: heat-functional-devstack-base
-    vars:
-      use_python3: 1
 
 - job:
     name: grenade-heat
@@ -105,8 +99,7 @@
     templates:
       - openstack-cover-jobs
       - openstack-lower-constraints-jobs
-      - openstack-python-jobs
-      - openstack-python3-train-jobs
+      - openstack-python3-ussuri-jobs
       - periodic-stable-jobs
       - publish-openstack-docs-pti
       - check-requirements
@@ -115,19 +108,17 @@
       jobs:
         - grenade-heat
         - grenade-heat-multinode
-        - heat-functional-orig-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-amqp1
-        - heat-functional-convg-mysql-lbaasv2-non-apache
-        - heat-functional-convg-mysql-lbaasv2-py3
+        - heat-functional
+        - heat-functional-legacy
+        - heat-functional-amqp1
+        - heat-functional-non-apache
     gate:
       queue: heat
       jobs:
         - grenade-heat
         - grenade-heat-multinode
-        - heat-functional-orig-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-py3
+        - heat-functional
+        - heat-functional-legacy
     experimental:
       jobs:
         - tripleo-ci-centos-7-scenario002-standalone

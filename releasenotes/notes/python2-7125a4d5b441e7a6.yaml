@@ -1,0 +1,5 @@
+---
+critical:
+  - |
+    Python 2 is no longer supported. This release runs only on Python 3 and is
+    tested only on Python 3.6 and 3.7.
