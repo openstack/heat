@@ -48,6 +48,7 @@
           export DEVSTACK_GATE_TEMPEST=1
           export DEVSTACK_GATE_TEMPEST_NOTESTS=1
           export DEVSTACK_GATE_GRENADE=pullup
+          export DEVSTACK_GATE_USE_PYTHON3=True
           if [ "{{ branch_override }}" != "default" ] ; then
               export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
           fi
