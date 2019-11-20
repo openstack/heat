@@ -18,7 +18,6 @@ import itertools
 from oslo_serialization import jsonutils
 from oslo_utils import encodeutils
 from oslo_utils import strutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -87,8 +86,7 @@ class Schema(constr.Schema):
                         message=_('Default must be a comma-delimited list '
                                   'string: %s') % err)
             elif self.type == self.LIST and isinstance(self.default, list):
-                default_value = [(six.text_type(x))
-                                 for x in self.default]
+                default_value = [(str(x)) for x in self.default]
             try:
                 self.validate_constraints(default_value, context,
                                           [constr.CustomConstraint])
@@ -184,7 +182,6 @@ class Schema(constr.Schema):
             return super(Schema, self).__getitem__(key)
 
 
-@six.python_2_unicode_compatible
 class Parameter(object):
     """A template parameter."""
 
@@ -247,10 +244,10 @@ class Parameter(object):
             else:
                 raise exception.UserParameterMissing(key=self.name)
         except exception.StackValidationFailed as ex:
-            msg = err_msg % dict(name=self.name, exp=six.text_type(ex))
+            msg = err_msg % dict(name=self.name, exp=str(ex))
             raise exception.StackValidationFailed(message=msg)
         except exception.InvalidSchemaError as ex:
-            msg = err_msg % dict(name=self.name, exp=six.text_type(ex))
+            msg = err_msg % dict(name=self.name, exp=str(ex))
             raise exception.InvalidSchemaError(message=msg)
 
     def value(self):
@@ -302,13 +299,13 @@ class Parameter(object):
 
     @classmethod
     def _value_as_text(cls, value):
-        return six.text_type(value)
+        return str(value)
 
     def __str__(self):
         """Return a string representation of the parameter."""
         value = self.value()
         if self.hidden():
-            return six.text_type('******')
+            return str('******')
         else:
             return self._value_as_text(value)
 
@@ -330,7 +327,7 @@ class NumberParam(Parameter):
         try:
             Schema.str_to_num(val)
         except (ValueError, TypeError) as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
+            raise exception.StackValidationFailed(message=str(ex))
         self.schema.validate_value(val, context)
 
     def value(self):
@@ -346,7 +343,7 @@ class BooleanParam(Parameter):
         try:
             strutils.bool_from_string(val, strict=True)
         except ValueError as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
+            raise exception.StackValidationFailed(message=str(ex))
         self.schema.validate_value(val, context)
 
     def value(self):
@@ -402,12 +399,12 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
     def parse(self, value):
         # only parse when value is not already a list
         if isinstance(value, list):
-            return [(six.text_type(x)) for x in value]
+            return [(str(x)) for x in value]
         try:
             return param_utils.delim_string_to_list(value)
         except (KeyError, AttributeError) as err:
             message = _('Value must be a comma-delimited list string: %s')
-            raise ValueError(message % six.text_type(err))
+            raise ValueError(message % str(err))
         return value
 
     def value(self):
@@ -432,7 +429,7 @@ class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
         try:
             parsed = self.parse(val)
         except ValueError as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
+            raise exception.StackValidationFailed(message=str(ex))
         self.schema.validate_value(parsed, context)
 
 
@@ -448,7 +445,7 @@ class JsonParam(ParsedParameter):
     def parse(self, value):
         try:
             val = value
-            if not isinstance(val, six.string_types):
+            if not isinstance(val, str):
                 # turn off oslo_serialization's clever to_primitive()
                 val = jsonutils.dumps(val, default=None)
             if val:
@@ -481,12 +478,11 @@ class JsonParam(ParsedParameter):
         try:
             parsed = self.parse(val)
         except ValueError as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
+            raise exception.StackValidationFailed(message=str(ex))
         self.schema.validate_value(parsed, context)
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Parameters(collections.Mapping):
+class Parameters(collections.Mapping, metaclass=abc.ABCMeta):
     """Parameters of a stack.
 
     The parameters of a stack, with type checking, defaults, etc. specified by
@@ -513,7 +509,7 @@ class Parameters(collections.Mapping):
 
         schemata = self.tmpl.param_schemata()
         user_parameters = (user_parameter(si) for si in
-                           six.iteritems(schemata))
+                           schemata.items())
         pseudo_parameters = self._pseudo_parameters(stack_identifier)
 
         self.params = dict((p.name,
@@ -534,7 +530,7 @@ class Parameters(collections.Mapping):
         """
         self._validate_user_parameters()
 
-        for param in six.itervalues(self.params):
+        for param in self.params.values():
             param.validate(validate_value, context)
 
     def __contains__(self, key):
@@ -560,7 +556,7 @@ class Parameters(collections.Mapping):
         function) and return the resulting dictionary.
         """
         return dict((n, func(p))
-                    for n, p in six.iteritems(self.params) if filter_func(p))
+                    for n, p in self.params.items() if filter_func(p))
 
     def set_stack_id(self, stack_identifier):
         """Set the StackId pseudo parameter value."""

@@ -14,7 +14,6 @@
 import collections
 
 from oslo_serialization import jsonutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -274,9 +273,9 @@ class Property(object):
     def _get_string(self, value):
         if value is None:
             value = self.has_default() and self.default() or ''
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             if isinstance(value, (bool, int)):
-                value = six.text_type(value)
+                value = str(value)
             else:
                 raise ValueError(_('Value must be a string; got %r') % value)
         return value
@@ -306,24 +305,23 @@ class Property(object):
             # via a provider resource, in particular lists-of-dicts which
             # cannot be handled correctly via comma_delimited_list
             if self.schema.allow_conversion:
-                if isinstance(value, six.string_types):
+                if isinstance(value, str):
                     return value
                 elif isinstance(value, collections.Sequence):
                     return jsonutils.dumps(value)
             raise TypeError(_('"%s" is not a map') % value)
 
-        return dict(self._get_children(six.iteritems(value),
+        return dict(self._get_children(value.items(),
                                        validate=validate,
                                        translation=translation))
 
     def _get_list(self, value, validate=False, translation=None):
         if value is None:
             value = self.has_default() and self.default() or []
-        if self.schema.allow_conversion and isinstance(value,
-                                                       six.string_types):
+        if self.schema.allow_conversion and isinstance(value, str):
             value = param_utils.delim_string_to_list(value)
         if (not isinstance(value, collections.Sequence) or
-                isinstance(value, six.string_types)):
+                isinstance(value, str)):
             raise TypeError(_('"%s" is not a list') % repr(value))
 
         return [v[1] for v in self._get_children(enumerate(value),
@@ -341,7 +339,7 @@ class Property(object):
             value = self.has_default() and self.default() or False
         if isinstance(value, bool):
             return value
-        if isinstance(value, six.string_types):
+        if isinstance(value, str):
             normalised = value.lower()
             if normalised not in ['true', 'false']:
                 raise ValueError(_('"%s" is not a valid boolean') % normalised)
@@ -432,7 +430,7 @@ class Properties(collections.Mapping):
                         else:
                             path = [key]
                         raise exception.StackValidationFailed(
-                            path=path, message=six.text_type(e))
+                            path=path, message=str(e))
 
                 # are there unimplemented Properties
                 if not prop.implemented() and key in self.data:
@@ -488,7 +486,7 @@ class Properties(collections.Mapping):
             # the resolver function could raise any number of exceptions,
             # so handle this generically
             except Exception as e:
-                raise ValueError(six.text_type(e))
+                raise ValueError(str(e))
 
     def _get_property_value(self, key, validate=False):
         if key not in self:
@@ -658,7 +656,7 @@ class Properties(collections.Mapping):
             return {}, {}
 
         param_prop_defs = [param_prop_def_items(n, s, template_type)
-                           for n, s in six.iteritems(schemata(schema))
+                           for n, s in schemata(schema).items()
                            if s.implemented]
         param_items, prop_items = zip(*param_prop_defs)
         return dict(param_items), dict(prop_items)

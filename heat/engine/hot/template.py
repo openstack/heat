@@ -12,8 +12,6 @@
 
 import functools
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.cfn import functions as cfn_funcs
@@ -159,7 +157,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
             if not attrs:
                 raise exception.StackValidationFailed(message=message)
             try:
-                for attr, attr_value in six.iteritems(attrs):
+                for attr, attr_value in attrs.items():
                     if attr not in allowed_keys:
                         raise KeyError(err_msg % attr)
                 if sub_section not in attrs:
@@ -183,7 +181,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
         for name, attrs in sorted(data.items()):
             cfn_object = {}
 
-            for attr, attr_value in six.iteritems(attrs):
+            for attr, attr_value in attrs.items():
                 cfn_attr = mapping[attr]
                 if cfn_attr is not None:
                     cfn_object[cfn_attr] = attr_value
@@ -201,18 +199,18 @@ class HOTemplate20130523(template_common.CommonTemplate):
 
     def get_section_name(self, section):
         cfn_to_hot_attrs = dict(
-            zip(six.itervalues(self._HOT_TO_CFN_ATTRS),
-                six.iterkeys(self._HOT_TO_CFN_ATTRS)))
+            zip(self._HOT_TO_CFN_ATTRS.values(),
+                self._HOT_TO_CFN_ATTRS.keys()))
         return cfn_to_hot_attrs.get(section, section)
 
     def param_schemata(self, param_defaults=None):
         parameter_section = self.t.get(self.PARAMETERS) or {}
         pdefaults = param_defaults or {}
-        for name, schema in six.iteritems(parameter_section):
+        for name, schema in parameter_section.items():
             if name in pdefaults:
                 parameter_section[name]['default'] = pdefaults[name]
 
-        params = six.iteritems(parameter_section)
+        params = parameter_section.items()
         return dict((name, self.param_schema_class.from_dict(name, schema))
                     for name, schema in params)
 
@@ -228,7 +226,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
         valid_keys = frozenset(self._RESOURCE_KEYS)
 
         def defns():
-            for name, snippet in six.iteritems(resources):
+            for name, snippet in resources.items():
                 try:
                     invalid_keys = set(snippet) - valid_keys
                     if invalid_keys:
@@ -239,7 +237,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
                     defn_data = dict(self._rsrc_defn_args(stack, name,
                                                           snippet))
                 except (TypeError, ValueError, KeyError) as ex:
-                    msg = six.text_type(ex)
+                    msg = str(ex)
                     raise exception.StackValidationFailed(message=msg)
 
                 defn = rsrc_defn.ResourceDefinition(name, **defn_data)
@@ -250,7 +248,7 @@ class HOTemplate20130523(template_common.CommonTemplate):
                         enabled = conditions.is_enabled(cond_name)
                     except ValueError as exc:
                         path = [self.RESOURCES, name, self.RES_CONDITION]
-                        message = six.text_type(exc)
+                        message = str(exc)
                         raise exception.StackValidationFailed(path=path,
                                                               message=message)
                     if not enabled:
@@ -490,7 +488,7 @@ class HOTemplate20161014(HOTemplate20160408):
             tmpl, template_id, files, env)
 
         self._parser_condition_functions = {}
-        for n, f in six.iteritems(self.functions):
+        for n, f in self.functions.items():
             if not f == hot_funcs.Removed:
                 self._parser_condition_functions[n] = function.Invalid
             else:
@@ -512,14 +510,14 @@ class HOTemplate20161014(HOTemplate20160408):
 
         yield ('external_id',
                self._parse_resource_field(self.RES_EXTERNAL_ID,
-                                          (six.string_types,
+                                          (str,
                                            function.Function),
                                           'string',
                                           name, data, parse))
 
         yield ('condition',
                self._parse_resource_field(self.RES_CONDITION,
-                                          (six.string_types, bool,
+                                          (str, bool,
                                            function.Function),
                                           'string_or_boolean',
                                           name, data, parse_cond))

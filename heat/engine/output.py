@@ -13,7 +13,6 @@
 
 import collections
 import copy
-import six
 
 from heat.common import exception
 from heat.engine import function
@@ -47,8 +46,7 @@ class OutputDefinition(object):
         if self._deps is None:
             try:
                 required_resources = function.dependencies(self._value)
-                self._deps = set(six.moves.map(lambda rp: rp.name,
-                                               required_resources))
+                self._deps = set(map(lambda rp: rp.name, required_resources))
             except (exception.InvalidTemplateAttribute,
                     exception.InvalidTemplateReference):
                 # This output ain't gonna work anyway
@@ -83,7 +81,7 @@ class OutputDefinition(object):
         if self._description is None:
             return 'No description given'
 
-        return six.text_type(self._description)
+        return str(self._description)
 
     def render_hot(self):
         def items():
