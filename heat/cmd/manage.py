@@ -19,7 +19,6 @@ import sys
 
 from oslo_config import cfg
 from oslo_log import log
-from six import moves
 
 from heat.common import context
 from heat.common import exception
@@ -106,7 +105,7 @@ def do_reset_stack_status():
             "intended to recover from specific crashes."))
     print(_("It is advised to shutdown all Heat engines beforehand."))
     print(_("Continue ? [y/N]"))
-    data = moves.input()
+    data = input()
     if not data.lower().startswith('y'):
         return
     ctxt = context.get_admin_context()

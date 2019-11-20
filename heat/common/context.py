@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import functools
+
 from keystoneauth1 import access
 from keystoneauth1.identity import access as access_plugin
 from keystoneauth1.identity import generic
@@ -23,7 +25,6 @@ from oslo_log import log as logging
 import oslo_messaging
 from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
-import six
 
 from heat.common import config
 from heat.common import endpoint_utils
@@ -407,7 +408,7 @@ def ContextMiddleware_filter_factory(global_conf, **local_conf):
 
 
 def request_context(func):
-    @six.wraps(func)
+    @functools.wraps(func)
     def wrapped(self, ctx, *args, **kwargs):
         try:
             return func(self, ctx, *args, **kwargs)

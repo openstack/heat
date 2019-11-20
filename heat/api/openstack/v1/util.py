@@ -11,7 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
+import functools
+
 from webob import exc
 
 from heat.common.i18n import _
@@ -41,7 +42,7 @@ def registered_policy_enforce(handler):
 
 
 def _policy_enforce(handler, is_registered_policy=False):
-    @six.wraps(handler)
+    @functools.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
         if req.context.tenant_id != tenant_id and not req.context.is_admin:
             raise exc.HTTPForbidden()
@@ -77,7 +78,7 @@ def registered_identified_stack(handler):
 
 def _identified_stack(handler, is_registered_policy=False):
 
-    @six.wraps(handler)
+    @functools.wraps(handler)
     def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
         stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
                                                    stack_name,
@@ -126,7 +127,7 @@ def get_allowed_params(params, whitelist):
     """
     allowed_params = {}
 
-    for key, get_type in six.iteritems(whitelist):
+    for key, get_type in whitelist.items():
         assert get_type in PARAM_TYPES
 
         value = None

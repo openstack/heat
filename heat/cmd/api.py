@@ -28,7 +28,6 @@ import oslo_i18n as i18n
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from oslo_service import systemd
-import six
 
 from heat.common import config
 from heat.common import messaging
@@ -72,5 +71,5 @@ def main():
         systemd.notify_once()
         server.wait()
     except RuntimeError as e:
-        msg = six.text_type(e)
+        msg = str(e)
         sys.exit("ERROR: %s" % msg)
