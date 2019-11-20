@@ -14,7 +14,6 @@ import copy
 import json
 
 from heatclient import exc
-import six
 import yaml
 
 from heat_integrationtests.functional import functional_base
@@ -88,12 +87,12 @@ resources:
         ex = self.assertRaises(exc.HTTPBadRequest, self.update_stack,
                                stack_identifier, template_two_nested,
                                environment=env, files=files)
-        self.assertIn(expected_err, six.text_type(ex))
+        self.assertIn(expected_err, str(ex))
 
         ex = self.assertRaises(exc.HTTPBadRequest, self.stack_create,
                                template=template_two_nested,
                                environment=env, files=files)
-        self.assertIn(expected_err, six.text_type(ex))
+        self.assertIn(expected_err, str(ex))
 
     def _validate_resources(self, stack_identifier, expected_count):
         resources = self.list_group_resources(stack_identifier,

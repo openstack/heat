@@ -15,14 +15,13 @@ import random
 import re
 import subprocess
 import time
+import urllib
 
 import fixtures
 from heatclient import exc as heat_exceptions
 from keystoneauth1 import exceptions as kc_exceptions
 from oslo_log import log as logging
 from oslo_utils import timeutils
-import six
-from six.moves import urllib
 from tempest import config
 import testscenarios
 import testtools
@@ -59,7 +58,7 @@ def call_until_true(duration, sleep_for, func, *args, **kwargs):
 
 
 def rand_name(name=''):
-    randbits = six.text_type(random.randint(1, 0x7fffffff))
+    randbits = str(random.randint(1, 0x7fffffff))
     if name:
         return name + '-' + randbits
     else:

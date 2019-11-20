@@ -13,7 +13,6 @@
 
 import mock
 from oslo_messaging.rpc import dispatcher
-import six
 import webob
 
 from heat.common import exception
@@ -1309,7 +1308,7 @@ class ValidateTest(common.HeatTestCase):
 
         res = dict(self.engine.validate_template(self.ctx, t, {}))
         self.assertEqual({'Error': 'Resources must contain Resource. '
-                          'Found a [%s] instead' % six.text_type},
+                          'Found a [%s] instead' % str},
                          res)
 
     def test_invalid_section_cfn(self):
@@ -1621,7 +1620,7 @@ class ValidateTest(common.HeatTestCase):
                            'parameter_groups.Database '
                            'Group: The InstanceType parameter must be '
                            'assigned to one parameter group only.'),
-                         six.text_type(exc))
+                         str(exc))
 
     def test_validate_duplicate_parameters_no_label(self):
         t = template_format.parse(test_template_parameters_duplicate_no_label)
@@ -1634,7 +1633,7 @@ class ValidateTest(common.HeatTestCase):
                            'parameter_groups.: '
                            'The key_name parameter must be '
                            'assigned to one parameter group only.'),
-                         six.text_type(exc))
+                         str(exc))
 
     def test_validate_invalid_parameter_in_group(self):
         t = template_format.parse(test_template_invalid_parameter_name)
@@ -1652,7 +1651,7 @@ class ValidateTest(common.HeatTestCase):
                            'parameter_groups.Database Group: The grouped '
                            'parameter SomethingNotHere does not '
                            'reference a valid parameter.'),
-                         six.text_type(exc))
+                         str(exc))
 
     def test_validate_invalid_parameter_no_label(self):
         t = template_format.parse(test_template_invalid_parameter_no_label)
@@ -1666,7 +1665,7 @@ class ValidateTest(common.HeatTestCase):
                            'parameter_groups.: The grouped '
                            'parameter key_name does not '
                            'reference a valid parameter.'),
-                         six.text_type(exc))
+                         str(exc))
 
     def test_validate_no_parameters_in_group(self):
         t = template_format.parse(test_template_no_parameters)
@@ -1677,7 +1676,7 @@ class ValidateTest(common.HeatTestCase):
 
         self.assertEqual(_('Parameter Groups error: parameter_groups.Server '
                            'Group: The parameters must be provided for each '
-                           'parameter group.'), six.text_type(exc))
+                           'parameter group.'), str(exc))
 
     def test_validate_parameter_groups_not_list(self):
         t = template_format.parse(test_template_parameter_groups_not_list)
@@ -1688,7 +1687,7 @@ class ValidateTest(common.HeatTestCase):
 
         self.assertEqual(_('Parameter Groups error: parameter_groups: '
                            'The parameter_groups should be '
-                           'a list.'), six.text_type(exc))
+                           'a list.'), str(exc))
 
     def test_validate_parameters_not_list(self):
         t = template_format.parse(test_template_parameters_not_list)
@@ -1700,7 +1699,7 @@ class ValidateTest(common.HeatTestCase):
         self.assertEqual(_('Parameter Groups error: '
                            'parameter_groups.Server Group: '
                            'The parameters of parameter group should be '
-                           'a list.'), six.text_type(exc))
+                           'a list.'), str(exc))
 
     def test_validate_parameters_error_no_label(self):
         t = template_format.parse(test_template_parameters_error_no_label)
@@ -1711,7 +1710,7 @@ class ValidateTest(common.HeatTestCase):
 
         self.assertEqual(_('Parameter Groups error: parameter_groups.: '
                            'The parameters of parameter group should be '
-                           'a list.'), six.text_type(exc))
+                           'a list.'), str(exc))
 
     def test_validate_allowed_values_integer(self):
         t = template_format.parse(test_template_allowed_integers)
@@ -1750,7 +1749,7 @@ class ValidateTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('"3" is not an allowed value [1, 4, 8]',
-                      six.text_type(err))
+                      str(err))
 
         # test with size parameter provided as number
         template.env = environment.Environment({'size': 3})
@@ -1758,7 +1757,7 @@ class ValidateTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('3 is not an allowed value [1, 4, 8]',
-                      six.text_type(err))
+                      str(err))
 
     def test_validate_not_allowed_values_integer_str(self):
         t = template_format.parse(test_template_allowed_integers_str)
@@ -1770,7 +1769,7 @@ class ValidateTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('"3" is not an allowed value ["1", "4", "8"]',
-                      six.text_type(err))
+                      str(err))
 
         # test with size parameter provided as number
         template.env = environment.Environment({'size': 3})
@@ -1778,7 +1777,7 @@ class ValidateTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('3 is not an allowed value ["1", "4", "8"]',
-                      six.text_type(err))
+                      str(err))
 
     def test_validate_invalid_outputs(self):
         t = template_format.parse(test_template_invalid_outputs)
@@ -1789,7 +1788,7 @@ class ValidateTest(common.HeatTestCase):
         error_message = ('outputs.string.value.get_attr: Arguments to '
                          '"get_attr" must be of the form '
                          '[resource_name, attribute, (path), ...]')
-        self.assertEqual(error_message, six.text_type(err))
+        self.assertEqual(error_message, str(err))
 
     def test_validate_resource_attr_invalid_type(self):
         t = template_format.parse("""
@@ -1802,7 +1801,7 @@ class ValidateTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', template)
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
         self.assertEqual('Resource resource type type must be string',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_resource_attr_invalid_type_cfn(self):
         t = template_format.parse("""
@@ -1814,7 +1813,7 @@ class ValidateTest(common.HeatTestCase):
         stack = parser.Stack(self.ctx, 'test_stack', tmpl.Template(t))
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
         self.assertEqual('Resource Resource Type type must be string',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_validate_resource_invalid_key(self):
         t = template_format.parse("""
@@ -1827,7 +1826,7 @@ class ValidateTest(common.HeatTestCase):
         template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
-        self.assertIn('wibble', six.text_type(ex))
+        self.assertIn('wibble', str(ex))
 
     def test_validate_resource_invalid_cfn_key_in_hot(self):
         t = template_format.parse("""
@@ -1840,7 +1839,7 @@ class ValidateTest(common.HeatTestCase):
         template = tmpl.Template(t)
         stack = parser.Stack(self.ctx, 'test_stack', template)
         ex = self.assertRaises(exception.StackValidationFailed, stack.validate)
-        self.assertIn('Properties', six.text_type(ex))
+        self.assertIn('Properties', str(ex))
 
     def test_validate_resource_invalid_key_cfn(self):
         t = template_format.parse("""
