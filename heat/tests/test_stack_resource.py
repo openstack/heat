@@ -19,7 +19,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging import exceptions as msg_exceptions
 from oslo_serialization import jsonutils
-import six
 
 from heat.common import exception
 from heat.common import identifier
@@ -408,7 +407,7 @@ class StackResourceTest(StackResourceBaseTest):
                          'incorrect.')
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertEqual(raise_exc_msg, six.text_type(exc))
+        self.assertEqual(raise_exc_msg, str(exc))
 
     def _test_validate_unknown_resource_type(self, stack_name, tmpl,
                                              resource_name):
@@ -418,7 +417,7 @@ class StackResourceTest(StackResourceBaseTest):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn(raise_exc_msg, six.text_type(exc))
+        self.assertIn(raise_exc_msg, str(exc))
 
     def test_validate_resource_group(self):
         # test validate without nested template
@@ -760,7 +759,7 @@ class StackResourceAttrTest(StackResourceBaseTest):
         name = '%s-%s' % (self.parent_stack.name, self.parent_resource.name)
         exc = self.assertRaises(AssertionError,
                                 self.parent_resource.validate_nested_stack)
-        self.assertEqual(expected_message, six.text_type(exc))
+        self.assertEqual(expected_message, str(exc))
         mock_parse_nested.assert_called_once_with(name, 'foo', {})
 
 
@@ -815,7 +814,7 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         complete = getattr(self.parent_resource,
                            'check_%s_complete' % self.action)
         exc = self.assertRaises(exception.ResourceFailure, complete, None)
-        self.assertEqual(exp, six.text_type(exc))
+        self.assertEqual(exp, str(exc))
         self.mock_status.assert_called_once_with(
             self.parent_resource.context, self.parent_resource.resource_id)
 
@@ -882,7 +881,7 @@ class WithTemplateTest(StackResourceBaseTest):
         def __eq__(self, other):
             if getattr(self, 'match', None) is not None:
                 return other == self.match
-            if not isinstance(other, six.integer_types):
+            if not isinstance(other, int):
                 return False
 
             self.match = other

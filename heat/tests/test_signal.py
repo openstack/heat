@@ -15,8 +15,7 @@ import datetime
 
 from keystoneauth1 import exceptions as kc_exceptions
 import mock
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format
@@ -624,7 +623,7 @@ class SignalTest(common.HeatTestCase):
         msg = 'Signal resource during %s is not supported.' % action
         exc = self.assertRaises(exception.NotSupported, rsrc.signal,
                                 details=err_metadata)
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def test_signal_in_delete_state(self):
         # assert that we get the correct exception when calling a

@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -87,7 +86,7 @@ class ResourceDefinitionTest(common.HeatTestCase):
         rd = self.make_me_one_with_everything()
         metadata = rd.metadata()
         self.assertEqual({'Baz': 'quux'}, metadata)
-        self.assertIsInstance(metadata['Baz'], six.string_types)
+        self.assertIsInstance(metadata['Baz'], str)
 
     def test_dependencies_default(self):
         rd = rsrc_defn.ResourceDefinition('rsrc', 'SomeType')
