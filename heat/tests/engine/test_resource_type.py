@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.engine import environment
@@ -196,7 +195,7 @@ class ResourceTypeTest(common.HeatTestCase):
                                    type_name='ResourceWithWrongRefOnFile')
             msg = ('There was an error loading the definition of the global '
                    'resource type ResourceWithWrongRefOnFile.')
-            self.assertIn(msg, six.text_type(ex))
+            self.assertIn(msg, str(ex))
 
     def test_resource_schema_no_template_file(self):
         self._no_template_file(self.eng.resource_schema)
@@ -209,7 +208,7 @@ class ResourceTypeTest(common.HeatTestCase):
                                self.eng.resource_schema,
                                self.ctx, type_name='Bogus')
         msg = 'The Resource Type (Bogus) could not be found.'
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     def test_resource_schema_unavailable(self):
         type_name = 'ResourceWithDefaultClientName'
@@ -227,7 +226,7 @@ class ResourceTypeTest(common.HeatTestCase):
                    'type ResourceWithDefaultClientName, reason: '
                    'Service endpoint not in service catalog.')
             self.assertEqual(msg,
-                             six.text_type(ex),
+                             str(ex),
                              'invalid exception message')
 
             mock_is_service_available.assert_called_once_with(self.ctx)

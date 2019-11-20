@@ -14,7 +14,6 @@
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
-import six
 
 from heat.common import exception
 from heat.engine import service
@@ -168,4 +167,4 @@ class StackServiceAdoptTest(common.HeatTestCase):
             template, {}, None,
             {'adopt_stack_data': str(adopt_data)})
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
-        self.assertIn('Stack Adopt', six.text_type(ex.exc_info[1]))
+        self.assertIn('Stack Adopt', str(ex.exc_info[1]))

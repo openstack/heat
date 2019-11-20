@@ -15,7 +15,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 from oslo_service import threadgroup
-import six
 from swiftclient import exceptions
 
 from heat.common import environment_util as env_util
@@ -94,7 +93,7 @@ class StackCreateTest(common.HeatTestCase):
             self.assertEqual(exception.NotFound, ex.exc_info[0])
             self.assertIn('Could not fetch files from container '
                           'test_container, reason: error.',
-                          six.text_type(ex.exc_info[1]))
+                          str(ex.exc_info[1]))
 
     def test_stack_create(self):
         stack_name = 'service_create_test_stack'
@@ -153,7 +152,7 @@ class StackCreateTest(common.HeatTestCase):
                                self._test_stack_create, stack_name)
         self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
         self.assertIn("You have reached the maximum stacks per tenant",
-                      six.text_type(ex.exc_info[1]))
+                      str(ex.exc_info[1]))
 
     @mock.patch.object(stack.Stack, 'validate')
     def test_stack_create_verify_err(self, mock_validate):
@@ -238,7 +237,7 @@ class StackCreateTest(common.HeatTestCase):
                                template, params, None, {}, None)
         self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
         self.assertEqual('Missing required credential: X-Auth-Key',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
@@ -259,7 +258,7 @@ class StackCreateTest(common.HeatTestCase):
                                template, params, None, {})
         self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
         self.assertEqual('Missing required credential: X-Auth-User',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_tmpl.assert_called_once_with(template, files=None)
         mock_env.assert_called_once_with(params)
@@ -326,7 +325,7 @@ class StackCreateTest(common.HeatTestCase):
                                tpl, params, None, {})
         self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      six.text_type(ex.exc_info[1]))
+                      str(ex.exc_info[1]))
 
     @mock.patch.object(threadgroup, 'ThreadGroup')
     @mock.patch.object(stack.Stack, 'validate')
@@ -421,7 +420,7 @@ class StackCreateTest(common.HeatTestCase):
                                self.man._validate_deferred_auth_context,
                                ctx, stk)
         self.assertEqual('Missing required credential: X-Auth-User',
-                         six.text_type(ex))
+                         str(ex))
 
         # missing password
         ctx = utils.dummy_context(password=None)
@@ -429,7 +428,7 @@ class StackCreateTest(common.HeatTestCase):
                                self.man._validate_deferred_auth_context,
                                ctx, stk)
         self.assertEqual('Missing required credential: X-Auth-Key',
-                         six.text_type(ex))
+                         str(ex))
 
     @mock.patch.object(instances.Instance, 'validate')
     @mock.patch.object(stack.Stack, 'total_resources')

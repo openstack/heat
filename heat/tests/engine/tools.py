@@ -10,9 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import sys
-
-import six
+import functools
 
 from heat.common import template_format
 from heat.engine.clients.os import glance
@@ -268,7 +266,7 @@ def stack_context(stack_name, create_res=True, convergence=False):
     of test success/failure.
     """
     def stack_delete(test_fn):
-        @six.wraps(test_fn)
+        @functools.wraps(test_fn)
         def wrapped_test(test_case, *args, **kwargs):
             def create_stack():
                 ctx = getattr(test_case, 'ctx', None)
@@ -285,12 +283,11 @@ def stack_context(stack_name, create_res=True, convergence=False):
             create_stack()
             try:
                 test_fn(test_case, *args, **kwargs)
-            except Exception:
-                exc_class, exc_val, exc_tb = sys.exc_info()
+            except Exception as err:
                 try:
                     delete_stack()
                 finally:
-                    six.reraise(exc_class, exc_val, exc_tb)
+                    raise err from None
             else:
                 delete_stack()
 
