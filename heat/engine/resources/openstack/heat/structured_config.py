@@ -15,8 +15,6 @@ import collections
 import copy
 import functools
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -150,8 +148,8 @@ class StructuredDeployment(sd.SoftwareDeployment):
     def get_input_key_arg(snippet, input_key):
         if len(snippet) != 1:
             return None
-        fn_name, fn_arg = next(six.iteritems(snippet))
-        if (fn_name == input_key and isinstance(fn_arg, six.string_types)):
+        fn_name, fn_arg = next(iter(snippet.items()))
+        if (fn_name == input_key and isinstance(fn_arg, str)):
             return fn_arg
 
     @staticmethod
@@ -175,8 +173,8 @@ class StructuredDeployment(sd.SoftwareDeployment):
                                                                 check_input_val
                                                                 )
 
-            return dict((k, parse(v)) for k, v in six.iteritems(snippet))
-        elif (not isinstance(snippet, six.string_types) and
+            return dict((k, parse(v)) for k, v in snippet.items())
+        elif (not isinstance(snippet, str) and
               isinstance(snippet, collections.Iterable)):
             return [parse(v) for v in snippet]
         else:

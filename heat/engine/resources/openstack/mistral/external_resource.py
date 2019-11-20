@@ -13,7 +13,6 @@
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -212,7 +211,7 @@ class MistralExternalResource(resource.Resource):
                 LOG.debug('ExternalResource id set to %(rid)s from Mistral '
                           'execution %(eid)s output' % {'eid': execution_id,
                                                         'rid': rsrc_id})
-            self.resource_id_set(six.text_type(rsrc_id)[:255])
+            self.resource_id_set(str(rsrc_id)[:255])
         return success
 
     def _resolve_attribute(self, name):

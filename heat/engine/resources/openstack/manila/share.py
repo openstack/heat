@@ -13,7 +13,6 @@
 
 from oslo_log import log as logging
 from oslo_utils import encodeutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -197,7 +196,7 @@ class ManilaShare(resource.Resource):
         if self.resource_id is None:
             return
         share = self._request_share()
-        return six.text_type(getattr(share, name))
+        return str(getattr(share, name))
 
     def handle_create(self):
         # Request IDs of entities from manila
@@ -345,7 +344,7 @@ class ManilaShare(resource.Resource):
         result[self.ACCESS_RULES] = []
         for rule in rules:
             result[self.ACCESS_RULES].append(
-                {(k, v) for (k, v) in six.iteritems(rule)
+                {(k, v) for (k, v) in rule.items()
                  if k in self._ACCESS_RULE_PROPERTIES})
         return result
 
