@@ -21,7 +21,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_policy import policy
 from oslo_utils import excutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -151,7 +150,7 @@ class ResourceEnforcer(Enforcer):
         except policy.PolicyNotRegistered:
             result = True
         except self.exc as ex:
-            LOG.info(six.text_type(ex))
+            LOG.info(str(ex))
             raise
         if not result:
             if self.exc:

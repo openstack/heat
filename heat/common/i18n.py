@@ -17,29 +17,10 @@
 # recommendations from
 # https://docs.openstack.org/oslo.i18n/latest/user/usage.html
 
-import six
-
 import oslo_i18n as i18n
-from oslo_utils import encodeutils
 
 
 _translators = i18n.TranslatorFactory(domain='heat')
 
 # The primary translation function using the well-known name "_"
 _ = _translators.primary
-
-
-def repr_wrapper(klass):
-    """A decorator that defines __repr__ method under Python 2.
-
-    Under Python 2 it will encode repr return value to str type.
-    Under Python 3 it does nothing.
-    """
-    if six.PY2:
-        if '__repr__' not in klass.__dict__:
-            raise ValueError("@repr_wrapper cannot be applied "
-                             "to %s because it doesn't define __repr__()." %
-                             klass.__name__)
-        klass._repr = klass.__repr__
-        klass.__repr__ = lambda self: encodeutils.safe_encode(self._repr())
-    return klass

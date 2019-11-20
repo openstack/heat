@@ -12,7 +12,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-import six
 
 
 LOG = logging.getLogger(__name__)
@@ -23,5 +22,5 @@ def log_fail_msg(manager, entrypoint, exception):
                 '"%(message)s". Not using %(name)s.',
                 {'module_name': entrypoint.module_name,
                  'message': getattr(exception, 'message',
-                                    six.text_type(exception)),
+                                    str(exception)),
                  'name': entrypoint.name})
