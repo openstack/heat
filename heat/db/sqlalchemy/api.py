@@ -28,7 +28,6 @@ from oslo_utils import encodeutils
 from oslo_utils import excutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
-import six
 import sqlalchemy
 from sqlalchemy import and_
 from sqlalchemy import func
@@ -112,7 +111,7 @@ def retry_on_deadlock(func):
 
 def update_and_save(context, obj, values):
     with context.session.begin(subtransactions=True):
-        for k, v in six.iteritems(values):
+        for k, v in values.items():
             setattr(obj, k, v)
 
 
@@ -663,7 +662,7 @@ def _get_sort_keys(sort_keys, mapping):
     :param mapping: a mapping from keys to DB column names
     :returns: filtered list of sort keys
     """
-    if isinstance(sort_keys, six.string_types):
+    if isinstance(sort_keys, str):
         sort_keys = [sort_keys]
     return [mapping[key] for key in sort_keys or [] if key in mapping]
 
@@ -951,7 +950,7 @@ def user_creds_create(context):
     else:
         user_creds_ref.update(values)
         method, password = crypt.encrypt(values['password'])
-        if len(six.text_type(password)) > 255:
+        if len(str(password)) > 255:
             raise exception.Error(_("Length of OS_PASSWORD after encryption"
                                     " exceeds Heat limit (255 chars)"))
         user_creds_ref.password = password
@@ -1177,7 +1176,7 @@ def event_create(context, values):
                 _delete_event_rows(context, values['stack_id'],
                                    cfg.CONF.event_purge_batch_size)
             except db_exception.DBError as exc:
-                LOG.error('Failed to purge events: %s', six.text_type(exc))
+                LOG.error('Failed to purge events: %s', str(exc))
     event_ref = models.Event()
     event_ref.update(values)
     event_ref.save(context.session)
@@ -1666,7 +1665,7 @@ def _db_encrypt_or_decrypt_template_params(
                                     not param_schemata[param_name].hidden):
                                 continue
                             encrypted_val = crypt.encrypt(
-                                six.text_type(param_val), encryption_key)
+                                str(param_val), encryption_key)
                             env['parameters'][param_name] = encrypted_val
                             encrypted_params.append(param_name)
                             needs_update = True

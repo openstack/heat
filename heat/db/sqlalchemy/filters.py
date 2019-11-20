@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 
 def exact_filter(query, model, filters):
     """Applies exact match filtering to a query.
@@ -33,7 +31,7 @@ def exact_filter(query, model, filters):
     if filters is None:
         filters = {}
 
-    for key, value in six.iteritems(filters):
+    for key, value in filters.items():
         if isinstance(value, (list, tuple, set, frozenset)):
             column_attr = getattr(model, key)
             query = query.filter(column_attr.in_(value))

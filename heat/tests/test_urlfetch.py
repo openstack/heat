@@ -11,10 +11,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import io
+import urllib.error
+import urllib.request
+
 from oslo_config import cfg
 import requests
 from requests import exceptions
-import six
 
 from heat.common import urlfetch
 from heat.tests import common
@@ -42,15 +45,15 @@ class UrlFetchTest(common.HeatTestCase):
     def test_file_scheme_supported(self):
         data = '{ "foo": "bar" }'
         url = 'file:///etc/profile'
-        mock_open = self.patchobject(six.moves.urllib.request, 'urlopen')
-        mock_open.return_value = six.moves.cStringIO(data)
+        mock_open = self.patchobject(urllib.request, 'urlopen')
+        mock_open.return_value = io.StringIO(data)
         self.assertEqual(data, urlfetch.get(url, allowed_schemes=['file']))
         mock_open.assert_called_once_with(url)
 
     def test_file_scheme_failure(self):
         url = 'file:///etc/profile'
-        mock_open = self.patchobject(six.moves.urllib.request, 'urlopen')
-        mock_open.side_effect = six.moves.urllib.error.URLError('oops')
+        mock_open = self.patchobject(urllib.request, 'urlopen')
+        mock_open.side_effect = urllib.error.URLError('oops')
         self.assertRaises(urlfetch.URLFetchError,
                           urlfetch.get, url, allowed_schemes=['file'])
         mock_open.assert_called_once_with(url)
@@ -109,5 +112,5 @@ class UrlFetchTest(common.HeatTestCase):
         mock_get.return_value = response
         exception = self.assertRaises(urlfetch.URLFetchError,
                                       urlfetch.get, url)
-        self.assertIn("Template exceeds", six.text_type(exception))
+        self.assertIn("Template exceeds", str(exception))
         mock_get.assert_called_once_with(url, stream=True)
