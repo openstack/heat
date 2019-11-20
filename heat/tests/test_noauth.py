@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
 import webob
 
 from heat.common import noauth
@@ -47,7 +46,7 @@ class FakeApp(object):
             if env[k] != v:
                 raise AssertionError('%s != %s' % (env[k], v))
         resp = webob.Response()
-        resp.body = six.b('SUCCESS')
+        resp.body = 'SUCCESS'.encode('latin-1')
         return resp(env, start_response)
 
 

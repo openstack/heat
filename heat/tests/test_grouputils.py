@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import grouputils
 from heat.common import identifier
@@ -50,7 +49,7 @@ class GroupUtilsTest(common.HeatTestCase):
         group.nested.return_value = stack
 
         # member list (sorted)
-        members = [r for r in six.itervalues(stack)]
+        members = [r for r in stack.values()]
         expected = sorted(members, key=lambda r: (r.created_time, r.name))
         actual = grouputils.get_members(group)
         self.assertEqual(expected, actual)
