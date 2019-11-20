@@ -16,7 +16,6 @@
 from oslo_config import cfg
 from saharaclient.api import base as sahara_base
 from saharaclient import client as sahara_client
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -117,7 +116,7 @@ class SaharaClientPlugin(client_plugin.ClientPlugin):
             raise exception.Error(
                 _("Error retrieving %(entity)s list from sahara: "
                   "%(err)s") % dict(entity=resource_name,
-                                    err=six.text_type(ex)))
+                                    err=str(ex)))
         num_matches = len(obj_list)
         if num_matches == 0:
             raise exception.EntityNotFound(entity=resource_name or 'entity',

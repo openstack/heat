@@ -15,7 +15,6 @@ import croniter
 import eventlet
 import netaddr
 import pytz
-import six
 
 from neutron_lib.api import validators
 from oslo_utils import timeutils
@@ -35,7 +34,7 @@ class IPConstraint(constraints.BaseCustomConstraint):
 
     def validate(self, value, context, template=None):
         self._error_message = 'Invalid IP address'
-        if not isinstance(value, six.string_types):
+        if not isinstance(value, str):
             return False
         msg = validators.validate_ip_address(value)
         if msg is not None:
@@ -59,7 +58,7 @@ class DNSNameConstraint(constraints.BaseCustomConstraint):
             self._error_message = ("'%(value)s' not in valid format."
                                    " Reason: %(reason)s") % {
                                        'value': value,
-                                       'reason': six.text_type(ex)}
+                                       'reason': str(ex)}
             return False
         return True
 
@@ -114,7 +113,7 @@ class CIDRConstraint(constraints.BaseCustomConstraint):
                 return False
             return True
         except Exception as ex:
-            self._error_message = 'Invalid net cidr %s ' % six.text_type(ex)
+            self._error_message = 'Invalid net cidr %s ' % str(ex)
             return False
 
 
@@ -158,7 +157,7 @@ class CRONExpressionConstraint(constraints.BaseCustomConstraint):
             return True
         except Exception as ex:
             self._error_message = _(
-                'Invalid CRON expression: %s') % six.text_type(ex)
+                'Invalid CRON expression: %s') % str(ex)
         return False
 
 
@@ -172,7 +171,7 @@ class TimezoneConstraint(constraints.BaseCustomConstraint):
             return True
         except Exception as ex:
             self._error_message = _(
-                'Invalid timezone: %s') % six.text_type(ex)
+                'Invalid timezone: %s') % str(ex)
         return False
 
 
@@ -190,5 +189,5 @@ class ExpirationConstraint(constraints.BaseCustomConstraint):
         except Exception as ex:
             self._error_message = (_(
                 'Expiration {0} is invalid: {1}').format(value,
-                                                         six.text_type(ex)))
+                                                         str(ex)))
         return False

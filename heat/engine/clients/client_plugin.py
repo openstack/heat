@@ -21,7 +21,6 @@ from oslo_config import cfg
 from oslo_utils import excutils
 
 import requests
-import six
 
 from heat.common import config
 from heat.common import exception as heat_exception
@@ -29,8 +28,7 @@ from heat.common import exception as heat_exception
 cfg.CONF.import_opt('client_retry_limit', 'heat.common.config')
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ClientPlugin(object):
+class ClientPlugin(object, metaclass=abc.ABCMeta):
 
     # Module which contains all exceptions classes which the client
     # may emit
@@ -139,11 +137,10 @@ class ClientPlugin(object):
         if self.exceptions_module:
             if isinstance(self.exceptions_module, list):
                 for m in self.exceptions_module:
-                    if type(ex) in six.itervalues(m.__dict__):
+                    if type(ex) in m.__dict__.values():
                         return True
             else:
-                return type(ex) in six.itervalues(
-                    self.exceptions_module.__dict__)
+                return type(ex) in self.exceptions_module.__dict__.values()
         return False
 
     def is_not_found(self, ex):

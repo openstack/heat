@@ -16,7 +16,6 @@ import weakref
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import importutils
-import six
 from stevedore import enabled
 
 from heat.common import exception
@@ -95,7 +94,7 @@ class ClientBackend(object):
                                                  context)
             except (ImportError, RuntimeError, cfg.NoSuchOptError) as err:
                 msg = _('Invalid cloud_backend setting in heat.conf '
-                        'detected - %s') % six.text_type(err)
+                        'detected - %s') % str(err)
                 LOG.error(msg)
                 raise exception.Invalid(reason=msg)
 
