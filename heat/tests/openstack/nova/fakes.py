@@ -18,7 +18,7 @@ import mock
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
 import requests
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from heat.tests import fakes
 

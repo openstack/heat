@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -109,4 +108,4 @@ class SaharaDataSourceTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed, ds.validate)
         error_msg = ('Property error: resources.data-source.properties.'
                      'credentials: Property user not assigned')
-        self.assertEqual(error_msg, six.text_type(ex))
+        self.assertEqual(error_msg, str(ex))

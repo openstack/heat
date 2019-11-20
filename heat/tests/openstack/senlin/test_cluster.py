@@ -16,7 +16,6 @@
 import copy
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -162,7 +161,7 @@ class SenlinClusterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, create_task)
         expected = ('ResourceInError: resources.senlin-cluster: '
                     'Went to status ERROR due to "oops"')
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
     def test_cluster_delete_success(self):
         cluster = self._create_cluster(self.t)
@@ -179,7 +178,7 @@ class SenlinClusterTest(common.HeatTestCase):
         delete_task = scheduler.TaskRunner(cluster.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
         expected = 'Error: resources.senlin-cluster: oops'
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
     def test_cluster_update_profile(self):
         cluster = self._create_cluster(self.t)
@@ -302,7 +301,7 @@ class SenlinClusterTest(common.HeatTestCase):
             scheduler.TaskRunner(cluster.update, update_snippet))
         self.assertEqual('ResourceInError: resources.senlin-cluster: '
                          'Went to status FAILED due to "Unknown"',
-                         six.text_type(exc))
+                         str(exc))
 
     def test_cluster_get_attr_collect(self):
         cluster = self._create_cluster(self.t)
@@ -372,7 +371,7 @@ class TestSenlinClusterValidation(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                stack['senlin-cluster'].validate)
         self.assertEqual('min_size can not be greater than max_size',
-                         six.text_type(ex))
+                         str(ex))
 
     def test_invalid_desired_capacity(self):
         self.t['resources']['senlin-cluster']['properties']['min_size'] = 1
@@ -384,5 +383,5 @@ class TestSenlinClusterValidation(common.HeatTestCase):
                                stack['senlin-cluster'].validate)
         self.assertEqual(
             'desired_capacity must be between min_size and max_size',
-            six.text_type(ex)
+            str(ex)
         )
