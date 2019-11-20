@@ -13,7 +13,6 @@
 
 from oslo_log import log as logging
 from oslo_utils import excutils
-import six
 
 from heat.common import exception
 from heat.common import grouputils
@@ -327,7 +326,7 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
                 with excutils.save_and_reraise_exception():
                     try:
                         notif.update({'suffix': 'error',
-                                      'message': six.text_type(resize_ex),
+                                      'message': str(resize_ex),
                                       'capacity': grouputils.get_size(self),
                                       })
                         notification.send(**notif)

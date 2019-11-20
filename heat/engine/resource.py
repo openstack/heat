@@ -23,7 +23,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
 from oslo_utils import reflection
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -80,7 +79,7 @@ class NoActionRequired(Exception):
         msg = (_("The resource %(res)s could not perform "
                  "scaling action: %(reason)s") %
                {'res': res_name, 'reason': reason})
-        super(Exception, self).__init__(six.text_type(msg))
+        super(Exception, self).__init__(str(msg))
 
 
 class PollDelay(Exception):
@@ -97,7 +96,6 @@ class PollDelay(Exception):
         self.period = period
 
 
-@six.python_2_unicode_compatible
 class Resource(status.ResourceStatus):
     BASE_ATTRIBUTES = (SHOW, ) = (attributes.SHOW_ATTR, )
 
@@ -190,7 +188,7 @@ class Resource(status.ResourceStatus):
             ex = exception.ResourceTypeUnavailable(
                 resource_type=resource_type,
                 service_name=cls.default_client_name,
-                reason=six.text_type(exc))
+                reason=str(exc))
             raise ex
         else:
             if not svc_available:
@@ -198,7 +196,7 @@ class Resource(status.ResourceStatus):
                     resource_type=resource_type,
                     service_name=cls.default_client_name,
                     reason=reason)
-                LOG.info(six.text_type(ex))
+                LOG.info(str(ex))
                 raise ex
 
     def __init__(self, name, definition, stack):
@@ -453,7 +451,7 @@ class Resource(status.ResourceStatus):
 
     def calc_update_allowed(self, props):
         update_allowed_set = set(self.update_allowed_properties)
-        for (psk, psv) in six.iteritems(props.props):
+        for (psk, psv) in props.props.items():
             if psv.update_allowed():
                 update_allowed_set.add(psk)
         return update_allowed_set
@@ -517,7 +515,7 @@ class Resource(status.ResourceStatus):
                       "not setting metadata",
                       {'name': self.name, 'id': self.id, 'st': db_res.status})
             raise exception.ResourceNotAvailable(resource_name=self.name)
-        LOG.debug('Setting metadata for %s', six.text_type(self))
+        LOG.debug('Setting metadata for %s', str(self))
         if refresh:
             metadata = merge_metadata(metadata, db_res.rsrc_metadata)
         if db_res.update_metadata(metadata):
@@ -657,7 +655,7 @@ class Resource(status.ResourceStatus):
         """
         update_allowed_set = self.calc_update_allowed(after_props)
         immutable_set = set()
-        for (psk, psv) in six.iteritems(after_props.props):
+        for (psk, psv) in after_props.props.items():
             if psv.immutable():
                 immutable_set.add(psk)
 
@@ -672,7 +670,7 @@ class Resource(status.ResourceStatus):
                 # already been validated.
                 LOG.warning('Ignoring error in old property value '
                             '%(prop_name)s: %(msg)s',
-                            {'prop_name': key, 'msg': six.text_type(exc)})
+                            {'prop_name': key, 'msg': str(exc)})
                 return True
 
             return before != after_props.get(key)
@@ -707,13 +705,13 @@ class Resource(status.ResourceStatus):
             if self.resource_id is not None:
                 text = '%s "%s" [%s] %s' % (class_name, self.name,
                                             self.resource_id,
-                                            six.text_type(self.stack))
+                                            str(self.stack))
             else:
                 text = '%s "%s" %s' % (class_name, self.name,
-                                       six.text_type(self.stack))
+                                       str(self.stack))
         else:
             text = '%s "%s"' % (class_name, self.name)
-        return six.text_type(text)
+        return str(text)
 
     def add_explicit_dependencies(self, deps):
         """Add all dependencies explicitly specified in the template.
@@ -923,22 +921,22 @@ class Resource(status.ResourceStatus):
                 LOG.info('Update in progress for %s', self.name)
         except expected_exceptions as ex:
             with excutils.save_and_reraise_exception():
-                self.state_set(action, self.COMPLETE, six.text_type(ex),
+                self.state_set(action, self.COMPLETE, str(ex),
                                lock=lock_release)
-                LOG.debug('%s', six.text_type(ex))
+                LOG.debug('%s', str(ex))
         except Exception as ex:
             LOG.info('%(action)s: %(info)s',
                      {"action": action,
-                      "info": six.text_type(self)},
+                      "info": str(self)},
                      exc_info=True)
             failure = exception.ResourceFailure(ex, self, action)
-            self.state_set(action, self.FAILED, six.text_type(failure),
+            self.state_set(action, self.FAILED, str(failure),
                            lock=lock_release)
             raise failure
         except BaseException as exc:
             with excutils.save_and_reraise_exception():
                 try:
-                    reason = six.text_type(exc)
+                    reason = str(exc)
                     msg = '%s aborted' % action
                     if reason:
                         msg += ' (%s)' % reason
@@ -1107,7 +1105,7 @@ class Resource(status.ResourceStatus):
         """
         def get_attrs(attrs, cacheable_only=False):
             for attr in attrs:
-                path = (attr,) if isinstance(attr, six.string_types) else attr
+                path = (attr,) if isinstance(attr, str) else attr
                 if (cacheable_only and
                     (self.attributes.get_cache_mode(path[0]) ==
                      attributes.Schema.CACHE_NONE)):
@@ -1201,7 +1199,7 @@ class Resource(status.ResourceStatus):
         action = self.CREATE
         if (self.action, self.status) != (self.INIT, self.COMPLETE):
             exc = exception.Error(_('State %s invalid for create')
-                                  % six.text_type(self.state))
+                                  % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
         if self.external_id is not None:
@@ -1329,7 +1327,7 @@ class Resource(status.ResourceStatus):
 
         # save the resource data
         if data and isinstance(data, dict):
-            for key, value in six.iteritems(data):
+            for key, value in data.items():
                 self.data_set(key, value)
 
         # save the resource metadata
@@ -1417,7 +1415,7 @@ class Resource(status.ResourceStatus):
         if 'replace' in restricted_actions:
             ex = exception.ResourceActionRestricted(action='replace')
             failure = exception.ResourceFailure(ex, self, self.UPDATE)
-            self._add_event(self.UPDATE, self.FAILED, six.text_type(ex))
+            self._add_event(self.UPDATE, self.FAILED, str(ex))
             raise failure
         else:
             raise UpdateReplace(self.name)
@@ -1452,7 +1450,7 @@ class Resource(status.ResourceStatus):
             except Exception as e:
                 failure = exception.ResourceFailure(e, self, self.action)
                 self.state_set(self.UPDATE, self.FAILED,
-                               six.text_type(failure))
+                               str(failure))
                 raise failure
         self.replaced_by = None
 
@@ -1582,7 +1580,7 @@ class Resource(status.ResourceStatus):
             # if any exception happen, we should set the resource to
             # FAILED, then raise ResourceFailure
             failure = exception.ResourceFailure(e, self, action)
-            self.state_set(action, self.FAILED, six.text_type(failure))
+            self.state_set(action, self.FAILED, str(failure))
             raise failure
 
     @classmethod
@@ -1659,7 +1657,7 @@ class Resource(status.ResourceStatus):
                         self._prepare_update_replace(action)
         except exception.ResourceActionRestricted as ae:
             failure = exception.ResourceFailure(ae, self, action)
-            self._add_event(action, self.FAILED, six.text_type(ae))
+            self._add_event(action, self.FAILED, str(ae))
             raise failure
 
         if not needs_update:
@@ -1793,7 +1791,7 @@ class Resource(status.ResourceStatus):
                 (self.action != self.SUSPEND and
                  self.status != self.COMPLETE)):
             exc = exception.Error(_('State %s invalid for suspend')
-                                  % six.text_type(self.state))
+                                  % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
         LOG.info('suspending %s', self)
@@ -1814,7 +1812,7 @@ class Resource(status.ResourceStatus):
                               (self.RESUME, self.FAILED),
                               (self.RESUME, self.COMPLETE)):
             exc = exception.Error(_('State %s invalid for resume')
-                                  % six.text_type(self.state))
+                                  % str(self.state))
             raise exception.ResourceFailure(exc, self, action)
 
         LOG.info('resuming %s', self)
@@ -2038,7 +2036,7 @@ class Resource(status.ResourceStatus):
                 while True:
                     count += 1
                     LOG.info('delete %(name)s attempt %(attempt)d' %
-                             {'name': six.text_type(self), 'attempt': count+1})
+                             {'name': str(self), 'attempt': count+1})
                     if count:
                         delay = timeutils.retry_backoff_delay(count,
                                                               jitter_max=2.0)
@@ -2091,7 +2089,7 @@ class Resource(status.ResourceStatus):
 
         rs = {'action': self.action,
               'status': self.status,
-              'status_reason': six.text_type(self.status_reason),
+              'status_reason': str(self.status_reason),
               'stack_id': self.stack.id,
               'physical_resource_id': self.resource_id,
               'name': self.name,
@@ -2119,7 +2117,7 @@ class Resource(status.ResourceStatus):
                     self.context, self.id, rs)
                 if lock != self.LOCK_NONE:
                     LOG.error('No calling_engine_id in store() %s',
-                              six.text_type(rs))
+                              str(rs))
             else:
                 self._store_with_lock(rs, lock)
         else:
@@ -2145,7 +2143,7 @@ class Resource(status.ResourceStatus):
             self._incr_atomic_key(self._atomic_key)
         else:
             LOG.info('Resource %s is locked or does not exist',
-                     six.text_type(self))
+                     str(self))
             LOG.debug('Resource id:%(resource_id)s locked or does not exist. '
                       'Expected atomic_key:%(atomic_key)s, '
                       'accessing from engine_id:%(engine_id)s',
@@ -2370,9 +2368,9 @@ class Resource(status.ResourceStatus):
         logic specific to the resource implementation.
         """
         if self.resource_id is not None:
-            return six.text_type(self.resource_id)
+            return str(self.resource_id)
         else:
-            return six.text_type(self.name)
+            return str(self.name)
 
     def FnGetRefId(self):
         """For the intrinsic function Ref.
@@ -2384,7 +2382,7 @@ class Resource(status.ResourceStatus):
     def physical_resource_name_or_FnGetRefId(self):
         res_name = self.physical_resource_name()
         if res_name is not None:
-            return six.text_type(res_name)
+            return str(res_name)
         else:
             return Resource.get_reference_id(self)
 
@@ -2438,13 +2436,13 @@ class Resource(status.ResourceStatus):
             hook = details['unset_hook']
             if not environment.valid_hook_type(hook):
                 msg = (_('Invalid hook type "%(hook)s" for %(resource)s') %
-                       {'hook': hook, 'resource': six.text_type(self)})
+                       {'hook': hook, 'resource': str(self)})
                 raise exception.InvalidBreakPointHook(message=msg)
 
             if not self.has_hook(hook):
                 msg = (_('The "%(hook)s" hook is not defined '
                          'on %(resource)s') %
-                       {'hook': hook, 'resource': six.text_type(self)})
+                       {'hook': hook, 'resource': str(self)})
                 raise exception.InvalidBreakPointHook(message=msg)
 
     def _unset_hook(self, details):
@@ -2453,7 +2451,7 @@ class Resource(status.ResourceStatus):
         hook = details['unset_hook']
         self.clear_hook(hook)
         LOG.info('Clearing %(hook)s hook on %(resource)s',
-                 {'hook': hook, 'resource': six.text_type(self)})
+                 {'hook': hook, 'resource': str(self)})
         self._add_event(self.action, self.status,
                         "Hook %s is cleared" % hook)
 
@@ -2464,7 +2462,7 @@ class Resource(status.ResourceStatus):
         def get_string_details():
             if details is None:
                 return 'No signal details provided'
-            if isinstance(details, six.string_types):
+            if isinstance(details, str):
                 return details
             if isinstance(details, dict):
                 if all(k in details for k in ('previous', 'current',
@@ -2490,8 +2488,8 @@ class Resource(status.ResourceStatus):
                 # No spam required
                 return
             LOG.info('signal %(name)s : %(msg)s',
-                     {'name': six.text_type(self),
-                      'msg': six.text_type(ex)},
+                     {'name': str(self),
+                      'msg': str(ex)},
                      exc_info=True)
             failure = exception.ResourceFailure(ex, self)
             raise failure

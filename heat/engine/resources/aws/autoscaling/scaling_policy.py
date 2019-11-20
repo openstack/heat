@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -101,9 +99,9 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
 
     def get_reference_id(self):
         if self.resource_id is not None:
-            return six.text_type(self._get_ec2_signed_url())
+            return str(self._get_ec2_signed_url())
         else:
-            return six.text_type(self.name)
+            return str(self.name)
 
 
 def resource_mapping():
