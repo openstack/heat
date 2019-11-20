@@ -32,7 +32,6 @@ from oslo_service import threadgroup
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
-import six
 import webob
 
 from heat.common import context
@@ -251,7 +250,7 @@ class ThreadGroupManager(object):
 
             for th in threads:
                 th.link(mark_done, th)
-            while not all(six.itervalues(links_done)):
+            while not all(links_done.values()):
                 eventlet.sleep()
 
     def send(self, stack_id, message):
@@ -695,7 +694,7 @@ class EngineService(service.ServiceBase):
         except AssertionError:
             raise
         except Exception as ex:
-            raise exception.StackValidationFailed(message=six.text_type(ex))
+            raise exception.StackValidationFailed(message=str(ex))
 
         max_resources = cfg.CONF.max_resources_per_stack
         if max_resources == -1:
@@ -834,7 +833,7 @@ class EngineService(service.ServiceBase):
                     stack.create_stack_user_project_id()
                 except exception.AuthorizationFailure as ex:
                     stack.state_set(stack.action, stack.FAILED,
-                                    six.text_type(ex))
+                                    str(ex))
 
         def _stack_create(stack, msg_queue=None):
             # Create/Adopt a stack, and create the periodic task if successful
@@ -1288,7 +1287,7 @@ class EngineService(service.ServiceBase):
         try:
             self._validate_template(cnxt, tmpl)
         except Exception as ex:
-            return {'Error': six.text_type(ex)}
+            return {'Error': str(ex)}
 
         stack_name = 'dummy'
         stack = parser.Stack(cnxt, stack_name, tmpl,
@@ -1297,7 +1296,7 @@ class EngineService(service.ServiceBase):
             stack.validate(ignorable_errors=ignorable_errors,
                            validate_res_tmpl_only=True)
         except exception.StackValidationFailed as ex:
-            return {'Error': six.text_type(ex)}
+            return {'Error': str(ex)}
 
         def filter_parameter(p):
             return p.name not in stack.parameters.PSEUDO_PARAMETERS
@@ -1642,7 +1641,7 @@ class EngineService(service.ServiceBase):
             supported_funcs.update(tmpl_class.plugin.condition_functions)
 
         functions = []
-        for func_name, func in six.iteritems(supported_funcs):
+        for func_name, func in supported_funcs.items():
             if func is not hot_functions.Removed:
                 desc = pydoc.splitdoc(pydoc.getdoc(func))[0]
                 functions.append(
@@ -1679,7 +1678,7 @@ class EngineService(service.ServiceBase):
             raise exception.ResourceTypeUnavailable(
                 service_name=resource_class.default_client_name,
                 resource_type=type_name,
-                reason=six.text_type(exc))
+                reason=str(exc))
         else:
             if not svc_available:
                 raise exception.ResourceTypeUnavailable(
@@ -2021,7 +2020,7 @@ class EngineService(service.ServiceBase):
         stack = parser.Stack.load(cnxt, stack=s)
 
         return [api.format_stack_resource(resource)
-                for name, resource in six.iteritems(stack)
+                for name, resource in stack.items()
                 if resource_name is None or name == resource_name]
 
     @context.request_context
@@ -2103,7 +2102,7 @@ class EngineService(service.ServiceBase):
         if stack.status == stack.IN_PROGRESS:
             LOG.info('%(stack)s is in state %(action)s_IN_PROGRESS, '
                      'snapshot is not permitted.', {
-                         'stack': six.text_type(stack),
+                         'stack': str(stack),
                          'action': stack.action})
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)

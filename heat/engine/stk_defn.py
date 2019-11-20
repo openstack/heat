@@ -12,7 +12,6 @@
 #    under the License.
 
 import itertools
-import six
 
 from heat.common import exception
 from heat.engine import attributes
@@ -232,7 +231,7 @@ class ResourceProxy(status.ResourceStatus):
                   the "show" attribute.
         """
         all_attrs = self._res_data().attributes()
-        return dict((k, v) for k, v in six.iteritems(all_attrs)
+        return dict((k, v) for k, v in all_attrs.items()
                     if k != attributes.SHOW_ATTR)
 
 
@@ -253,8 +252,8 @@ def update_resource_data(stack_definition, resource_name, resource_data):
     res_defns = stack_definition._resource_defns or {}
     op_defns = stack_definition._output_defns or {}
 
-    all_defns = itertools.chain(six.itervalues(res_defns),
-                                six.itervalues(op_defns))
+    all_defns = itertools.chain(res_defns.values(),
+                                op_defns.values())
     for defn in all_defns:
         if resource_name in defn.required_resource_names():
             defn._all_dep_attrs = None
