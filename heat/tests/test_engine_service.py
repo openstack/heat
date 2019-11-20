@@ -17,7 +17,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils as json
-import six
 
 from heat.common import context
 from heat.common import environment_util as env_util
@@ -852,7 +851,7 @@ class StackServiceTest(common.HeatTestCase):
         ret = self.assertRaises(exception.InvalidTemplateVersions,
                                 self.eng.list_template_versions, self.ctx)
         self.assertIn('A template version alias c.something was added',
-                      six.text_type(ret))
+                      str(ret))
 
     @mock.patch('heat.engine.template._get_template_extension_manager')
     def test_list_template_functions(self, templ_mock):
@@ -920,7 +919,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.ctx,
                                version)
         msg = "Template with version %s not found" % version
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     def test_stack_list_outputs(self):
         t = template_format.parse(tools.wp_template)
@@ -1041,7 +1040,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.ctx, mock.ANY, 'bunny')
         self.assertEqual(exception.NotFound, ex.exc_info[0])
         self.assertEqual('Specified output key bunny not found.',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
     def test_stack_show_output_error(self):
         t = template_format.parse(tools.wp_template)
@@ -1202,7 +1201,7 @@ class StackServiceTest(common.HeatTestCase):
         msg = (u'"Type" is not a valid keyword '
                'inside a resource definition')
 
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     def test_validate_new_stack_checks_incorrect_sections(self):
         template = {'heat_template_version': '2013-05-23',
@@ -1214,7 +1213,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.ctx, 'test_existing_stack',
                                parsed_template)
         msg = u'The template section is invalid: unknown_section'
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     def test_validate_new_stack_checks_resource_limit(self):
         cfg.CONF.set_override('max_resources_per_stack', 5)
@@ -1237,7 +1236,7 @@ class StackServiceTest(common.HeatTestCase):
         tmpl.validate.side_effect = AssertionError(expected_message)
         exc = self.assertRaises(AssertionError, self.eng._validate_new_stack,
                                 self.ctx, 'stack_name', tmpl)
-        self.assertEqual(expected_message, six.text_type(exc))
+        self.assertEqual(expected_message, str(exc))
 
     @mock.patch('heat.engine.service.ThreadGroupManager',
                 return_value=mock.Mock())

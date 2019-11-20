@@ -12,7 +12,6 @@
 #    under the License.
 
 from oslo_config import cfg
-import six
 
 from heat.common import config
 from heat.common import crypt
@@ -35,7 +34,7 @@ class CryptTest(common.HeatTestCase):
                                 config.startup_sanity_check)
         exp_msg = ('heat.conf misconfigured, auth_encryption_key '
                    'must be 32 characters')
-        self.assertIn(exp_msg, six.text_type(err))
+        self.assertIn(exp_msg, str(err))
 
     def _test_encrypt_decrypt_dict(self, encryption_key=None):
         data = {'p1': u'happy',
@@ -73,4 +72,4 @@ class CryptTest(common.HeatTestCase):
                                '767c3ed056cbaa3b9dfedb8c6f825bf1')
         self.assertEqual('Can not decrypt data with the auth_encryption_key '
                          'in heat config.',
-                         six.text_type(ex))
+                         str(ex))

@@ -14,7 +14,6 @@
 import copy
 import uuid
 
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -77,7 +76,7 @@ class FunctionTest(common.HeatTestCase):
         func1 = TestFunction(None, 'foo', ['bar', 'baz'])
         expected = '%s %s' % ("<heat.tests.test_function.TestFunction",
                               "{foo: ['bar', 'baz']} -> 'wibble'>")
-        self.assertEqual(expected, six.text_type(func1))
+        self.assertEqual(expected, str(func1))
 
     def test_function_stack_reference_none(self):
         func1 = TestFunction(None, 'foo', ['bar', 'baz'])
@@ -87,7 +86,7 @@ class FunctionTest(common.HeatTestCase):
         func1 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
         expected = '%s %s' % ("<heat.tests.test_function.TestFunctionKeyError",
                               "{foo: ['bar', 'baz']} -> ???>")
-        self.assertEqual(expected, six.text_type(func1))
+        self.assertEqual(expected, str(func1))
 
     def test_function_eq_exception_key_error(self):
         func1 = TestFunctionKeyError(None, 'foo', ['bar', 'baz'])
@@ -106,7 +105,7 @@ class FunctionTest(common.HeatTestCase):
         expected = '%s %s' % (
             "<heat.tests.test_function.TestFunctionValueError",
             "{foo: ['bar', 'baz']} -> ???>")
-        self.assertEqual(expected, six.text_type(func1))
+        self.assertEqual(expected, str(func1))
 
     def test_function_eq_exception_value_error(self):
         func1 = TestFunctionValueError(None, 'foo', ['bar', 'baz'])
@@ -126,7 +125,7 @@ class FunctionTest(common.HeatTestCase):
             "<heat.tests.test_function.TestFunctionResult",
             "{foo: ['bar', 'baz']}",
             "{'foo': ['bar', 'baz']}>")
-        self.assertEqual(expected, six.text_type(func1))
+        self.assertEqual(expected, str(func1))
 
     def test_copy(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
@@ -278,7 +277,7 @@ class ValidateGetAttTest(common.HeatTestCase):
         ex = self.assertRaises(exception.InvalidTemplateReference,
                                func.validate)
         self.assertEqual('The specified reference "test_rsrc" (in unknown) '
-                         'is incorrect.', six.text_type(ex))
+                         'is incorrect.', str(ex))
 
     def test_resource_no_attribute_with_default_fn_get_att(self):
         res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
@@ -294,7 +293,7 @@ class ValidateGetAttTest(common.HeatTestCase):
         ex = self.assertRaises(exception.InvalidTemplateAttribute,
                                func.validate)
         self.assertEqual('The Referenced Attribute (test_rsrc Bar) '
-                         'is incorrect.', six.text_type(ex))
+                         'is incorrect.', str(ex))
 
     def test_resource_no_attribute_with_overwritten_fn_get_att(self):
         res_defn = rsrc_defn.ResourceDefinition('test_rsrc',
@@ -315,4 +314,4 @@ class ValidateGetAttTest(common.HeatTestCase):
                                self.stack.defn, 'Fn::GetAtt', [self.rsrc.name])
         self.assertEqual('Arguments to "Fn::GetAtt" must be '
                          'of the form [resource_name, attribute]',
-                         six.text_type(ex))
+                         str(ex))
