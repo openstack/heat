@@ -13,7 +13,6 @@
 
 import copy
 import mock
-import six
 
 from oslo_config import cfg
 from zunclient import exceptions as zc_exc
@@ -306,7 +305,7 @@ class ZunContainerTest(common.HeatTestCase):
             exception.ResourceFailure,
             scheduler.TaskRunner(c.create))
         self.assertEqual((c.CREATE, c.FAILED), c.state)
-        self.assertIn("Error in creating container ", six.text_type(exc))
+        self.assertIn("Error in creating container ", str(exc))
 
     def test_container_create_unknown_status(self):
         c = self._create_resource('container', self.rsrc_defn, self.stack,
@@ -315,7 +314,7 @@ class ZunContainerTest(common.HeatTestCase):
             exception.ResourceFailure,
             scheduler.TaskRunner(c.create))
         self.assertEqual((c.CREATE, c.FAILED), c.state)
-        self.assertIn("Unknown status Container", six.text_type(exc))
+        self.assertIn("Unknown status Container", str(exc))
 
     def test_container_update(self):
         c = self._create_resource('container', self.rsrc_defn, self.stack)

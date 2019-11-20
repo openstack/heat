@@ -13,7 +13,6 @@
 
 import copy
 import mock
-import six
 from troveclient import exceptions as troveexc
 
 from heat.common import exception
@@ -210,7 +209,7 @@ class TroveClusterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed, tc.validate)
         error_msg = ('Datastore version 2.6.2 for datastore type mongodb is '
                      'not valid. Allowed versions are 2.6.1.')
-        self.assertEqual(error_msg, six.text_type(ex))
+        self.assertEqual(error_msg, str(ex))
 
     def test_validate_invalid_flavor(self):
         self.troveclient.flavors.get.side_effect = troveexc.NotFound()
@@ -223,4 +222,4 @@ class TroveClusterTest(common.HeatTestCase):
         error_msg = ("Property error: "
                      "resources.cluster.properties.instances[0].flavor: "
                      "Error validating value 'm1.small': Not Found (HTTP 404)")
-        self.assertEqual(error_msg, six.text_type(ex))
+        self.assertEqual(error_msg, str(ex))

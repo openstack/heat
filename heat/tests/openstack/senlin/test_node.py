@@ -15,7 +15,6 @@
 import copy
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -122,7 +121,7 @@ class SenlinNodeTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, create_task)
         expected = ('ResourceInError: resources.senlin-node: '
                     'Went to status FAILED due to "oops"')
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
     def test_node_delete_success(self):
         node = self._create_node()
@@ -139,7 +138,7 @@ class SenlinNodeTest(common.HeatTestCase):
         delete_task = scheduler.TaskRunner(node.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
         expected = 'Error: resources.senlin-node: oops'
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
     def test_node_update_profile(self):
         node = self._create_node()
@@ -208,7 +207,7 @@ class SenlinNodeTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, update_task)
         expected = ('ResourceInError: resources.senlin-node: Went to '
                     'status FAILED due to "oops"')
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
         self.assertEqual((node.UPDATE, node.FAILED), node.state)
         self.assertEqual(2, self.senlin_mock.get_action.call_count)
 

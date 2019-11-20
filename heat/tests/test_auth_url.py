@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import mock
-import six
 import webob
 from webob import exc
 
@@ -29,7 +28,7 @@ class FakeApp(object):
     def __call__(self, environ, start_response):
         """Assert that headers are correctly set up when finally called."""
         resp = webob.Response()
-        resp.body = six.b('SUCCESS')
+        resp.body = 'SUCCESS'.encode('latin-1')
         return resp(environ, start_response)
 
 
