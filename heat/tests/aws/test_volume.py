@@ -16,7 +16,6 @@ import copy
 from cinderclient import exceptions as cinder_exp
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -105,7 +104,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         self._mock_delete_volume(fv)
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(rsrc.destroy))
-        self.assertIn("Volume in use", six.text_type(ex))
+        self.assertIn("Volume in use", str(ex))
         self.cinder_fc.volumes.get.side_effect = [
             vt_base.FakeVolume('available'), cinder_exp.NotFound('Not found')]
 
@@ -176,7 +175,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         ex = self.assertRaises(exception.ResourceFailure,
                                self.create_volume, self.t, stack, 'DataVolume')
         self.assertIn('Went to status error due to "Unknown"',
-                      six.text_type(ex))
+                      str(ex))
 
     def test_volume_bad_tags(self):
         stack_name = 'test_volume_bad_tags_stack'
@@ -188,7 +187,7 @@ class VolumeTest(vt_base.VolumeTestCase):
                                self.create_volume, self.t, stack, 'DataVolume')
         self.assertEqual("Property error: "
                          "Resources.DataVolume.Properties.Tags[0]: "
-                         "Unknown Property Foo", six.text_type(ex))
+                         "Unknown Property Foo", str(ex))
 
     def test_volume_attachment_error(self):
         stack_name = 'test_volume_attach_error_stack'
@@ -208,7 +207,7 @@ class VolumeTest(vt_base.VolumeTestCase):
                                self.create_attachment,
                                self.t, stack, 'MountPoint')
         self.assertIn("Volume attachment failed - Unknown status error",
-                      six.text_type(ex))
+                      str(ex))
         self.validate_mock_create_server_volume_script()
 
     def test_volume_attachment(self):
@@ -383,7 +382,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         detach_task = scheduler.TaskRunner(rsrc.delete)
         ex = self.assertRaises(exception.ResourceFailure, detach_task)
         self.assertIn('Volume detachment failed - Unknown status error',
-                      six.text_type(ex))
+                      str(ex))
 
         self.fc.volumes.delete_server_volume.assert_called_once_with(
             u'WikiDatabase', 'vol-123')
@@ -476,7 +475,7 @@ class VolumeTest(vt_base.VolumeTestCase):
                       "Update to properties "
                       "AvailabilityZone, Size, Tags of DataVolume "
                       "(AWS::EC2::Volume) is not supported",
-                      six.text_type(ex))
+                      str(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
 
     def test_volume_check(self):
@@ -568,7 +567,7 @@ class VolumeTest(vt_base.VolumeTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(rsrc.destroy))
-        self.assertIn('Unknown status error', six.text_type(ex))
+        self.assertIn('Unknown status error', str(ex))
 
         self.m_backups.create.assert_called_once_with(fv.id)
         self.m_backups.get.assert_called_once_with(fb.id)
@@ -597,7 +596,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         create = scheduler.TaskRunner(rsrc.create)
         ex = self.assertRaises(exception.ResourceFailure, create)
         self.assertIn('Went to status error due to "Unknown"',
-                      six.text_type(ex))
+                      str(ex))
 
         self.cinder_fc.volumes.get.side_effect = [
             fva,
@@ -650,7 +649,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         ex = self.assertRaises(exception.ResourceFailure,
                                self.create_volume, self.t, stack, 'DataVolume')
         self.assertIn('Went to status error due to "Unknown"',
-                      six.text_type(ex))
+                      str(ex))
 
         cinder.CinderClientPlugin._create.assert_called_once_with()
         self.m_restore.assert_called_once_with('backup-123')
@@ -665,7 +664,7 @@ class VolumeTest(vt_base.VolumeTestCase):
                                   self.t, stack, 'DataVolume')
         self.assertEqual(
             "Property error: Resources.DataVolume.Properties.Size: "
-            "0 is out of range (min: 1, max: None)", six.text_type(error))
+            "0 is out of range (min: 1, max: None)", str(error))
 
     def test_volume_attachment_updates_not_supported(self):
         self.patchobject(nova.NovaClientPlugin, 'get_server')
@@ -694,7 +693,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         self.assertIn('NotSupported: resources.MountPoint: '
                       'Update to properties Device, InstanceId, '
                       'VolumeId of MountPoint (AWS::EC2::VolumeAttachment)',
-                      six.text_type(ex))
+                      str(ex))
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.validate_mock_create_server_volume_script()
 

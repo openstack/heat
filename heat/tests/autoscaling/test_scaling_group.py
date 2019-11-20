@@ -16,7 +16,6 @@ import json
 
 import mock
 from oslo_utils import timeutils
-import six
 
 from heat.common import exception
 from heat.common import grouputils
@@ -77,7 +76,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "The size of AutoScalingGroup can not be less than zero"
-        self.assertEqual(expected_msg, six.text_type(e))
+        self.assertEqual(expected_msg, str(e))
 
     def test_invalid_max_size(self):
         t = template_format.parse(as_template)
@@ -96,7 +95,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "MinSize can not be greater than MaxSize"
-        self.assertEqual(expected_msg, six.text_type(e))
+        self.assertEqual(expected_msg, str(e))
 
     def test_invalid_desiredcapacity(self):
         t = template_format.parse(as_template)
@@ -114,7 +113,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
-        self.assertEqual(expected_msg, six.text_type(e))
+        self.assertEqual(expected_msg, str(e))
 
     def test_invalid_desiredcapacity_zero(self):
         t = template_format.parse(as_template)
@@ -133,7 +132,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                               stack, 'WebServerGroup')
 
         expected_msg = "DesiredCapacity must be between MinSize and MaxSize"
-        self.assertEqual(expected_msg, six.text_type(e))
+        self.assertEqual(expected_msg, str(e))
 
     def test_validate_without_InstanceId_and_LaunchConfigurationName(self):
         t = template_format.parse(as_template)
@@ -146,7 +145,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                      "must be provided.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn(error_msg, str(exc))
 
     def test_validate_with_InstanceId_and_LaunchConfigurationName(self):
         t = template_format.parse(as_template)
@@ -158,7 +157,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                      "must be provided.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn(error_msg, str(exc))
 
     def _stub_nova_server_get(self, not_found=False):
         mock_server = mock.MagicMock()
@@ -207,7 +206,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
                "not be found.")
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn(msg, six.text_type(exc))
+        self.assertIn(msg, str(exc))
 
 
 class TestScalingGroupTags(common.HeatTestCase):
@@ -640,7 +639,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
         error = self.assertRaises(
             exception.StackValidationFailed, stack.validate)
-        self.assertIn("foo", six.text_type(error))
+        self.assertIn("foo", str(error))
 
     def test_parse_with_bad_pausetime_in_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
@@ -650,7 +649,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl, params=inline_templates.as_params)
         error = self.assertRaises(
             exception.StackValidationFailed, stack.validate)
-        self.assertIn("Only ISO 8601 duration format", six.text_type(error))
+        self.assertIn("Only ISO 8601 duration format", str(error))
 
 
 class RollingUpdatePolicyDiffTest(common.HeatTestCase):

@@ -16,7 +16,6 @@ import uuid
 
 import mock
 from neutronclient.v2_0 import client as neutronclient
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -245,7 +244,7 @@ class InstancesTest(common.HeatTestCase):
         self.assertIn("WebServer.Properties.Volumes[0].VolumeId: "
                       "Error validating value '1234': The Volume "
                       "(1234) could not be found.",
-                      six.text_type(exc))
+                      str(exc))
 
         mock_get_vol.assert_called_once_with('1234')
 
@@ -285,7 +284,7 @@ class InstancesTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 instance.validate)
         self.assertIn("Ebs is missing, this is required",
-                      six.text_type(exc))
+                      str(exc))
 
     def test_validate_BlockDeviceMappings_without_SnapshotId_property(self):
         stack_name = 'without_SnapshotId'
@@ -305,7 +304,7 @@ class InstancesTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 instance.validate)
         self.assertIn("SnapshotId is missing, this is required",
-                      six.text_type(exc))
+                      str(exc))
 
     def test_validate_BlockDeviceMappings_without_DeviceName_property(self):
         stack_name = 'without_DeviceName'
@@ -330,7 +329,7 @@ class InstancesTest(common.HeatTestCase):
             'Property error: '
             'Resources.WebServer.Properties.BlockDeviceMappings[0]: '
             'Property DeviceName not assigned')
-        self.assertIn(excepted_error, six.text_type(exc))
+        self.assertIn(excepted_error, str(exc))
 
     def test_instance_create_with_image_id(self):
         return_server = self.fc.servers.list()[1]
@@ -397,7 +396,7 @@ class InstancesTest(common.HeatTestCase):
             "StackValidationFailed: resources.instance_create_image_err: "
             "Property error: WebServer.Properties.ImageId: "
             "Error validating value 'Slackware': No image matching Slackware.",
-            six.text_type(error))
+            str(error))
 
     def test_instance_create_duplicate_image_name_err(self):
         stack_name = 'test_instance_create_image_name_err_stack'
@@ -427,7 +426,7 @@ class InstancesTest(common.HeatTestCase):
             "Property error: WebServer.Properties.ImageId: "
             "Error validating value 'CentOS 5.2': No image unique match "
             "found for CentOS 5.2.",
-            six.text_type(error))
+            str(error))
 
     def test_instance_create_image_id_err(self):
         stack_name = 'test_instance_create_image_id_err_stack'
@@ -454,7 +453,7 @@ class InstancesTest(common.HeatTestCase):
             "StackValidationFailed: resources.instance_create_image_err: "
             "Property error: WebServer.Properties.ImageId: "
             "Error validating value '1': No image matching 1.",
-            six.text_type(error))
+            str(error))
 
     def test_handle_check(self):
         (tmpl, stack) = self._setup_test_stack('test_instance_check_active')
@@ -480,7 +479,7 @@ class InstancesTest(common.HeatTestCase):
                          return_value=False)
 
         exc = self.assertRaises(exception.Error, instance.handle_check)
-        self.assertIn('foo', six.text_type(exc))
+        self.assertIn('foo', str(exc))
 
     def test_instance_create_unexpected_status(self):
         # checking via check_create_complete only so not to mock
@@ -497,7 +496,7 @@ class InstancesTest(common.HeatTestCase):
                               instance.check_create_complete,
                               (creator, None))
         self.assertEqual('Instance is not active - Unknown status BOGUS '
-                         'due to "Unknown"', six.text_type(e))
+                         'due to "Unknown"', str(e))
 
         self.fc.servers.get.assert_called_once_with(instance.resource_id)
 
@@ -521,7 +520,7 @@ class InstancesTest(common.HeatTestCase):
                               (creator, None))
         self.assertEqual(
             'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
-            six.text_type(e))
+            str(e))
 
         self.fc.servers.get.assert_called_once_with(instance.resource_id)
 
@@ -541,7 +540,7 @@ class InstancesTest(common.HeatTestCase):
             (creator, None))
         self.assertEqual(
             'Went to status ERROR due to "Message: Unknown, Code: Unknown"',
-            six.text_type(e))
+            str(e))
 
         self.fc.servers.get.assert_called_once_with(instance.resource_id)
 
@@ -761,7 +760,7 @@ class InstancesTest(common.HeatTestCase):
         self.assertEqual(
             "Error: resources.ud_type_f: "
             "Resizing to '2' failed, status 'ERROR'",
-            six.text_type(error))
+            str(error))
         self.assertEqual((instance.UPDATE, instance.FAILED), instance.state)
 
         self.fc.servers.get.assert_called_with('1234')

@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -124,4 +123,4 @@ class LBUtilsTest(common.HeatTestCase):
                                   lbutils.reconfigure_loadbalancers,
                                   [non_lb], id_list)
         self.assertIn("Unsupported resource 'non_lb' in LoadBalancerNames",
-                      six.text_type(error))
+                      str(error))
