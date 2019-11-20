@@ -15,7 +15,6 @@ import uuid
 
 import mock
 from saharaclient.api import base as sahara_base
-import six
 
 from heat.common import exception
 from heat.engine.clients.os import sahara
@@ -86,7 +85,7 @@ class SaharaUtilsTest(common.HeatTestCase):
         e = self.assertRaises(exception.Error,
                               self.sahara_plugin.find_resource_by_name,
                               'images', img_name)
-        self.assertEqual(expected_error, six.text_type(e))
+        self.assertEqual(expected_error, str(e))
 
         self.sahara_client.images.find.assert_called_once_with(name=img_name)
 
@@ -152,7 +151,7 @@ class SaharaUtilsTest(common.HeatTestCase):
                                plugin_name, '1.2.3')
         self.assertEqual("Requested plugin 'vanilla' doesn't support version "
                          "'1.2.3'. Allowed versions are 1.2.1, 2.6.0, 2.7.1",
-                         six.text_type(ex))
+                         str(ex))
         calls = [mock.call(plugin_name), mock.call(plugin_name)]
         self.sahara_client.plugins.get.assert_has_calls(calls)
 

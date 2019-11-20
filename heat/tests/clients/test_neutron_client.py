@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 import mock
 from neutronclient.common import exceptions as qe
 
@@ -169,7 +167,7 @@ class NeutronConstraintsValidate(common.HeatTestCase):
             )
             expected = ("The neutron extension (%s) could not be found." %
                         constraint.extension)
-            self.assertEqual(expected, six.text_type(ex))
+            self.assertEqual(expected, str(ex))
         self.assertTrue(constraint.validate("foo", ctx))
         self.assertFalse(constraint.validate("bar", ctx))
         mock_find.assert_has_calls(

@@ -23,7 +23,6 @@ import mock
 from oslo_config import cfg
 from oslo_db import exception as db_exception
 from oslo_utils import timeutils
-import six
 from sqlalchemy.orm import exc
 from sqlalchemy.orm import session
 
@@ -1015,7 +1014,7 @@ class SqlAlchemyTest(common.HeatTestCase):
                                   db_api.user_creds_create,
                                   self.ctx)
         self.assertIn('Length of OS_PASSWORD after encryption exceeds '
-                      'Heat limit (255 chars)', six.text_type(error))
+                      'Heat limit (255 chars)', str(error))
 
     def test_user_creds_trust(self):
         self.ctx.username = None
@@ -1138,12 +1137,12 @@ class SqlAlchemyTest(common.HeatTestCase):
             db_api.software_config_get,
             self.ctx,
             scf_id)
-        self.assertIn(scf_id, six.text_type(err))
+        self.assertIn(scf_id, str(err))
 
         err = self.assertRaises(
             exception.NotFound, db_api.software_config_delete,
             self.ctx, scf_id)
-        self.assertIn(scf_id, six.text_type(err))
+        self.assertIn(scf_id, str(err))
 
     def test_software_config_delete_by_admin(self):
         scf_id = self._create_software_config_record()
@@ -1171,7 +1170,7 @@ class SqlAlchemyTest(common.HeatTestCase):
             self.ctx, config_id)
         msg = ("Software config with id %s can not be deleted as it is "
                "referenced" % config_id)
-        self.assertIn(msg, six.text_type(err))
+        self.assertIn(msg, str(err))
 
     def _deployment_values(self):
         tenant_id = self.ctx.tenant_id
@@ -1260,7 +1259,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.software_deployment_update,
                                 self.ctx, deployment_id, values={})
-        self.assertIn(deployment_id, six.text_type(err))
+        self.assertIn(deployment_id, str(err))
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         deployment_id = deployment.id
@@ -1282,7 +1281,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.software_deployment_delete,
                                 self.ctx, deployment_id)
-        self.assertIn(deployment_id, six.text_type(err))
+        self.assertIn(deployment_id, str(err))
         values = self._deployment_values()
         deployment = db_api.software_deployment_create(self.ctx, values)
         deployment_id = deployment.id
@@ -1297,7 +1296,7 @@ class SqlAlchemyTest(common.HeatTestCase):
             test_ctx,
             deployment_id)
 
-        self.assertIn(deployment_id, six.text_type(err))
+        self.assertIn(deployment_id, str(err))
 
     def test_software_deployment_delete(self):
         self._test_software_deployment_delete()
@@ -1384,7 +1383,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.snapshot_update,
                                 self.ctx, snapshot_id, values={})
-        self.assertIn(snapshot_id, six.text_type(err))
+        self.assertIn(snapshot_id, str(err))
 
     def test_snapshot_update(self):
         template = create_raw_template(self.ctx)
@@ -1404,7 +1403,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         err = self.assertRaises(exception.NotFound,
                                 db_api.snapshot_delete,
                                 self.ctx, snapshot_id)
-        self.assertIn(snapshot_id, six.text_type(err))
+        self.assertIn(snapshot_id, str(err))
 
     def test_snapshot_delete(self):
         template = create_raw_template(self.ctx)
@@ -1424,7 +1423,7 @@ class SqlAlchemyTest(common.HeatTestCase):
             self.ctx,
             snapshot_id)
 
-        self.assertIn(snapshot_id, six.text_type(err))
+        self.assertIn(snapshot_id, str(err))
 
     def test_snapshot_get_all(self):
         template = create_raw_template(self.ctx)
@@ -1686,7 +1685,7 @@ class DBAPIUserCredsTest(common.HeatTestCase):
             self.ctx, user_creds['id'])
         exp_msg = ('Attempt to delete user creds with id '
                    '%s that does not exist' % user_creds['id'])
-        self.assertIn(exp_msg, six.text_type(err))
+        self.assertIn(exp_msg, str(err))
         self.assertEqual(0, mock_delete.call_count)
 
     def test_user_creds_delete_retries(self):

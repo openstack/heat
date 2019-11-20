@@ -13,7 +13,6 @@
 
 from keystoneauth1 import exceptions as keystone_exceptions
 import mock
-import six
 
 from heat.common import exception
 from heat.engine.clients.os import keystone
@@ -299,7 +298,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
         msg = ("Keystone has more than one service with same name "
                "%s. Please use service id instead of name" %
                self.sample_name)
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.services.get,
                           self.sample_name)
@@ -323,7 +322,7 @@ class KeystoneClientPluginServiceTest(common.HeatTestCase):
                                self.sample_name)
         msg = ("The KeystoneService (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.services.get,
                           self.sample_name)
@@ -427,7 +426,7 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
                                self.sample_name)
         msg = ("The KeystoneRole (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.roles.get,
                           self.sample_name)
@@ -451,7 +450,7 @@ class KeystoneClientPluginRoleTest(common.HeatTestCase):
                                self.sample_name_and_domain)
         msg = ("The KeystoneRole (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.roles.get,
                           self.sample_name)
@@ -570,7 +569,7 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
                                self.sample_name)
         msg = ("The KeystoneProject (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.projects.get,
                           self.sample_name)
@@ -593,7 +592,7 @@ class KeystoneClientPluginProjectTest(common.HeatTestCase):
                                self.sample_name_and_domain)
         msg = ("The KeystoneProject (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.projects.get,
                           self.sample_name)
@@ -685,7 +684,7 @@ class KeystoneClientPluginDomainTest(common.HeatTestCase):
                                self.sample_name)
         msg = ("The KeystoneDomain (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.domains.get,
                           self.sample_name)
@@ -789,7 +788,7 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
                                self.sample_name)
         msg = ("The KeystoneGroup (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.groups.get,
                           self.sample_name)
@@ -813,7 +812,7 @@ class KeystoneClientPluginGroupTest(common.HeatTestCase):
                                self.sample_name_and_domain)
         msg = ("The KeystoneGroup (%(name)s) could not be found." %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.groups.get,
                           self.sample_name)
@@ -924,7 +923,7 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
                                self.sample_name)
         msg = ('The KeystoneUser (%(name)s) could not be found.' %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self.assertRaises(keystone_exceptions.NotFound,
                           self._client.client.users.get,
                           self.sample_name)
@@ -990,4 +989,4 @@ class KeystoneClientPluginRegionTest(common.HeatTestCase):
                                self.sample_name)
         msg = ('The KeystoneRegion (%(name)s) could not be found.' %
                {'name': self.sample_name})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
