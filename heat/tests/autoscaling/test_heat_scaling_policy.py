@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -61,7 +60,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
                                stack.validate)
         self.assertIn('min_adjustment_step property should only '
                       'be specified for adjustment_type with '
-                      'value percent_change_in_capacity.', six.text_type(ex))
+                      'value percent_change_in_capacity.', str(ex))
 
     def test_scaling_policy_bad_group(self):
         t = template_format.parse(inline_templates.as_heat_template_bad_group)
@@ -70,7 +69,7 @@ class TestAutoScalingPolicy(common.HeatTestCase):
 
         ex = self.assertRaises(exception.ResourceFailure, up_policy.signal)
         self.assertIn('Alarm my-policy could '
-                      'not find scaling group', six.text_type(ex))
+                      'not find scaling group', str(ex))
 
     def test_scaling_policy_adjust_no_action(self):
         t = template_format.parse(as_template)

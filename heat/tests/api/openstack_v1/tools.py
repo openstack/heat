@@ -15,7 +15,6 @@ import mock
 from oslo_config import cfg
 from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
-import six
 import webob.exc
 
 from heat.common import wsgi
@@ -94,7 +93,7 @@ class ControllerTest(object):
         req = wsgi.Request(environ)
         req.context = utils.dummy_context('api_test_user', self.tenant)
         self.context = req.context
-        req.body = six.b(data)
+        req.body = data.encode('latin-1')
         return req
 
     def _post(self, path, data, content_type='application/json'):
