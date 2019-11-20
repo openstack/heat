@@ -10,12 +10,12 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+from urllib import parse
 
 from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -154,7 +154,7 @@ class SignalResponder(stack_user.StackUser):
             endpoint = heat_client_plugin.get_heat_cfn_url()
             signal_url = ''.join([endpoint, signal_type])
 
-        host_url = urlparse.urlparse(signal_url)
+        host_url = parse.urlparse(signal_url)
 
         path = self.identifier().arn_url_path()
 
@@ -162,7 +162,7 @@ class SignalResponder(stack_user.StackUser):
         # processing in the CFN API (ec2token.py) has an unquoted path, so we
         # need to calculate the signature with the path component unquoted, but
         # ensure the actual URL contains the quoted version...
-        unquoted_path = urlparse.unquote(host_url.path + path)
+        unquoted_path = parse.unquote(host_url.path + path)
         request = {'host': host_url.netloc.lower(),
                    'verb': SIGNAL_VERB[signal_type],
                    'path': unquoted_path,
@@ -176,7 +176,7 @@ class SignalResponder(stack_user.StackUser):
         signer = ec2_utils.Ec2Signer(secret_key)
         request['params']['Signature'] = signer.generate(request)
 
-        qs = urlparse.urlencode(request['params'])
+        qs = parse.urlencode(request['params'])
         url = "%s%s?%s" % (signal_url.lower(),
                            path, qs)
 
@@ -208,7 +208,7 @@ class SignalResponder(stack_user.StackUser):
         if project_id is not None:
             path = project_id + path[path.find('/'):]
 
-        url = urlparse.urljoin(url, '%s/signal' % path)
+        url = parse.urljoin(url, '%s/signal' % path)
 
         self.data_set('heat_signal_url', url)
         return url

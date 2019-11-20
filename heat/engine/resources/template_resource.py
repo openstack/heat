@@ -14,7 +14,6 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from requests import exceptions
-import six
 
 from heat.common import exception
 from heat.common import grouputils
@@ -98,7 +97,7 @@ class TemplateResource(stack_resource.StackResource):
         try:
             return urlfetch.get(template_name, allowed_schemes=allowed_schemes)
         except (IOError, exceptions.RequestException) as r_exc:
-            args = {'name': template_name, 'exc': six.text_type(r_exc)}
+            args = {'name': template_name, 'exc': str(r_exc)}
             msg = _('Could not fetch remote template '
                     '"%(name)s": %(exc)s') % args
             raise exception.NotFound(msg_fmt=msg)
@@ -290,7 +289,7 @@ class TemplateResource(stack_resource.StackResource):
 
     def validate_template(self):
         if self.validation_exception is not None:
-            msg = six.text_type(self.validation_exception)
+            msg = str(self.validation_exception)
             raise exception.StackValidationFailed(message=msg)
 
         return super(TemplateResource, self).validate_template()
@@ -317,7 +316,7 @@ class TemplateResource(stack_resource.StackResource):
 
     def get_reference_id(self):
         if self.resource_id is None:
-            return six.text_type(self.name)
+            return str(self.name)
 
         if STACK_ID_OUTPUT in self.attributes.cached_attrs:
             return self.attributes.cached_attrs[STACK_ID_OUTPUT]
