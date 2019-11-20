@@ -16,7 +16,6 @@ from neutronclient.common import exceptions
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -212,7 +211,7 @@ class HealthMonitorTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.monitor: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.mock_create.assert_called_once_with(self.create_snippet)
 
@@ -247,7 +246,7 @@ class HealthMonitorTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.monitor: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.mock_create.assert_called_once_with(self.create_snippet)
         self.mock_delete.assert_called_once_with('5678')
@@ -269,7 +268,7 @@ class HealthMonitorTest(common.HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (monitor subnet_id) is incorrect.',
-            six.text_type(error))
+            str(error))
         self.mock_create.assert_called_once_with(self.create_snippet)
 
     def test_update(self):
@@ -423,7 +422,7 @@ class PoolTest(common.HeatTestCase):
         self.assertEqual(
             'ResourceInError: resources.pool: '
             'Went to status ERROR due to "error in pool"',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.mock_create.assert_called_once_with(pool_create_snippet)
         self.mock_create_vip.assert_called_once_with(vip_create_snippet)
@@ -457,7 +456,7 @@ class PoolTest(common.HeatTestCase):
         self.assertEqual('ResourceUnknownStatus: resources.pool: '
                          'Pool creation failed due to '
                          'vip - Unknown status SOMETHING due to "Unknown"',
-                         six.text_type(error))
+                         str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.mock_create.assert_called_once_with(pool_create_snippet)
         self.mock_create_vip.assert_called_once_with(vip_create_snippet)
@@ -482,7 +481,7 @@ class PoolTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.pool: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.mock_create.assert_called_once_with(pool_create_snippet)
 
@@ -571,7 +570,7 @@ class PoolTest(common.HeatTestCase):
 
         error = self.assertRaises(exception.StackValidationFailed,
                                   resource.validate)
-        self.assertEqual(msg, six.text_type(error))
+        self.assertEqual(msg, str(error))
 
     def test_validation_not_failing_without_session_persistence(self):
         snippet = template_format.parse(pool_template)
@@ -670,7 +669,7 @@ class PoolTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.pool: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.mock_delete_vip.assert_called_once_with('xyz')
         self.mock_delete.assert_not_called()
@@ -688,7 +687,7 @@ class PoolTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.pool: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
         self.mock_delete.assert_called_once_with('5678')
         self.mock_delete_vip.assert_called_once_with('xyz')
@@ -716,7 +715,7 @@ class PoolTest(common.HeatTestCase):
                                   rsrc.FnGetAtt, 'net_id')
         self.assertEqual(
             'The Referenced Attribute (pool net_id) is incorrect.',
-            six.text_type(error))
+            str(error))
 
     def test_update(self):
         rsrc = self.create_pool()
