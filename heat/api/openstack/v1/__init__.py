@@ -12,7 +12,6 @@
 #    under the License.
 
 import routes
-import six
 
 from heat.api.openstack.v1 import actions
 from heat.api.openstack.v1 import build_info
@@ -51,7 +50,7 @@ class API(wsgi.Router):
             for r in routes:
                 url = path_prefix + r['url']
                 methods = r['method']
-                if isinstance(methods, six.string_types):
+                if isinstance(methods, str):
                     methods = [methods]
                 methods_str = ','.join(methods)
                 mapper.connect(r['name'], url, controller=controller,

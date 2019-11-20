@@ -17,7 +17,6 @@
 """Heat API exception subclasses - maps API response errors to AWS Errors."""
 
 from oslo_utils import reflection
-import six
 import webob.exc
 
 from heat.common.i18n import _
@@ -322,7 +321,7 @@ def map_remote_error(ex):
         ex_type = ex_type[:-len('_Remote')]
 
     safe = getattr(ex, 'safe', False)
-    detail = six.text_type(ex) if safe else None
+    detail = str(ex) if safe else None
 
     if ex_type in inval_param_errors:
         return HeatInvalidParameterValueError(detail=detail)

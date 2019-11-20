@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -42,7 +41,7 @@ class SoftwareConfigController(object):
         try:
             return param_utils.extract_bool(name, value)
         except ValueError as e:
-            raise exc.HTTPBadRequest(six.text_type(e))
+            raise exc.HTTPBadRequest(str(e))
 
     def _index(self, req, use_admin_cnxt=False):
         whitelist = {

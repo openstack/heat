@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -57,7 +56,7 @@ class ActionController(object):
         if len(body) > 1:
             raise exc.HTTPBadRequest(_("Multiple actions specified"))
 
-        ac = next(six.iterkeys(body))
+        ac = next(iter(body.keys()))
         if ac not in self.ACTIONS:
             raise exc.HTTPBadRequest(_("Invalid action %s specified") % ac)
 

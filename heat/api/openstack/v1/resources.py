@@ -13,7 +13,6 @@
 
 import itertools
 
-import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -89,7 +88,7 @@ class ResourceController(object):
             try:
                 return extractor(key, req.params[key])
             except ValueError as e:
-                raise exc.HTTPBadRequest(six.text_type(e))
+                raise exc.HTTPBadRequest(str(e))
         else:
             return default
 
@@ -111,7 +110,7 @@ class ResourceController(object):
                                                rpc_api.PARAM_WITH_DETAIL]))
         if invalid_keys:
             raise exc.HTTPBadRequest(_('Invalid filter parameters %s') %
-                                     six.text_type(list(invalid_keys)))
+                                     str(list(invalid_keys)))
 
         nested_depth = self._extract_to_param(req,
                                               rpc_api.PARAM_NESTED_DEPTH,
@@ -186,7 +185,7 @@ class ResourceController(object):
                 RES_UPDATE_MARK_UNHEALTHY,
                 body[RES_UPDATE_MARK_UNHEALTHY])
         except ValueError as e:
-            raise exc.HTTPBadRequest(six.text_type(e))
+            raise exc.HTTPBadRequest(str(e))
 
         data[RES_UPDATE_STATUS_REASON] = body.get(RES_UPDATE_STATUS_REASON, "")
         self.rpc_client.resource_mark_unhealthy(req.context,

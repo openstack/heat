@@ -19,7 +19,6 @@ import pydoc
 from docutils import core
 from docutils import nodes
 from docutils.parsers import rst
-import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -433,7 +432,7 @@ def _filter_resources(prefix=None, path=None, statuses=None):
                     else:
                         filtered_resources[name] = [cls]
 
-    return sorted(six.iteritems(filtered_resources))
+    return sorted(filtered_resources.items())
 
 
 def _load_all_resources():

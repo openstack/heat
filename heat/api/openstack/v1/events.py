@@ -13,7 +13,6 @@
 
 import itertools
 
-import six
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -133,7 +132,7 @@ class EventController(object):
                     params[key] = param_utils.extract_int(
                         key, params[key], allow_zero=True)
         except ValueError as e:
-            raise exc.HTTPBadRequest(six.text_type(e))
+            raise exc.HTTPBadRequest(str(e))
 
         if resource_name is None:
             if not filter_params:
