@@ -12,8 +12,7 @@
 #    under the License.
 
 import copy
-import six
-from six import itertools
+import itertools
 import uuid
 
 from oslo_config import cfg
@@ -749,7 +748,7 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
 
     def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
-            key = attr if isinstance(attr, six.string_types) else attr[0]
+            key = attr if isinstance(attr, str) else attr[0]
             n_attr = self._member_attribute_name(key)
             output_name = self._attribute_output_name(self.ATTR_ATTRIBUTES,
                                                       n_attr)

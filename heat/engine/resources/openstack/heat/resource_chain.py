@@ -12,7 +12,6 @@
 #    under the License.
 
 import functools
-import six
 
 from oslo_log import log as logging
 
@@ -155,7 +154,7 @@ class ResourceChain(stack_resource.StackResource):
         return {}
 
     def _attribute_output_name(self, *attr_path):
-        return ', '.join(six.text_type(a) for a in attr_path)
+        return ', '.join(str(a) for a in attr_path)
 
     def get_attribute(self, key, *path):
         if key == self.ATTR_ATTRIBUTES and not path:
@@ -198,7 +197,7 @@ class ResourceChain(stack_resource.StackResource):
 
     def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
-            if isinstance(attr, six.string_types):
+            if isinstance(attr, str):
                 key, path = attr, []
             else:
                 key, path = attr[0], list(attr[1:])
@@ -227,7 +226,7 @@ class ResourceChain(stack_resource.StackResource):
     @staticmethod
     def _resource_names(resource_types):
         """Returns a list of unique resource names to create."""
-        return [six.text_type(i) for i, t in enumerate(resource_types)]
+        return [str(i) for i, t in enumerate(resource_types)]
 
     def _build_resource_definition(self, resource_name, resource_type,
                                    depends_on=None):

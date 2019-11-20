@@ -13,7 +13,6 @@
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
 import tempfile
 
 from heat.common import auth_plugin
@@ -49,7 +48,7 @@ class TempCACertFile(object):
             try:
                 self._cacert_temp_file = tempfile.NamedTemporaryFile()
                 self._cacert_temp_file.write(
-                    six.text_type(self._cacert).encode('utf-8'))
+                    str(self._cacert).encode('utf-8'))
                 # Add seek func to make sure the writen context will flush to
                 # tempfile with python 2.7. we can use flush() for python 2.7
                 # but not 3.5.
@@ -266,7 +265,7 @@ class RemoteStack(resource.Resource):
                 location = "remote cloud"
             else:
                 location = 'region "%s"' % self._region_name
-            exc_info = dict(location=location, exc=six.text_type(ex))
+            exc_info = dict(location=location, exc=str(ex))
             msg = _('Cannot establish connection to Heat endpoint at '
                     '%(location)s due to "%(exc)s"') % exc_info
             raise exception.StackValidationFailed(message=msg)
@@ -287,7 +286,7 @@ class RemoteStack(resource.Resource):
                 location = "remote cloud"
             else:
                 location = 'region "%s"' % self._region_name
-            exc_info = dict(location=location, exc=six.text_type(ex))
+            exc_info = dict(location=location, exc=str(ex))
             msg = _('Failed validating stack template using Heat endpoint at '
                     '%(location)s due to "%(exc)s"') % exc_info
             raise exception.StackValidationFailed(message=msg)

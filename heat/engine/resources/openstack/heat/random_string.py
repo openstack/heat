@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.common import password_gen
@@ -235,7 +233,7 @@ class RandomString(resource.Resource):
         if self.resource_id is not None:
             return self.data().get('value')
         else:
-            return six.text_type(self.name)
+            return str(self.name)
 
 
 def resource_mapping():
