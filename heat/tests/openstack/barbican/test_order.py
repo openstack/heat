@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -231,5 +230,5 @@ class TestOrder(common.HeatTestCase):
         self.barbican.orders.get.return_value = mock_not_active
         exc = self.assertRaises(exception.Error,
                                 res.check_create_complete, 'foo')
-        self.assertIn('foo', six.text_type(exc))
-        self.assertIn('500', six.text_type(exc))
+        self.assertIn('foo', str(exc))
+        self.assertIn('500', str(exc))

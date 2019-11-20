@@ -15,7 +15,7 @@ import mock
 
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format

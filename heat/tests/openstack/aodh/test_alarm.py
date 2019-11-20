@@ -16,7 +16,6 @@ import copy
 import json
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -350,7 +349,7 @@ class AodhAlarmTest(common.HeatTestCase):
         rsrc.properties.data = rsrc.get_alarm_props(properties)
         self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
         for key in rsrc.properties.data['threshold_rule']['query']:
-            self.assertIsInstance(key['value'], six.text_type)
+            self.assertIsInstance(key['value'], str)
 
     def test_no_matching_metadata(self):
         """Make sure that we can pass in an empty matching_metadata."""
@@ -381,7 +380,7 @@ class AodhAlarmTest(common.HeatTestCase):
                                       rsrc.validate)
             self.assertEqual(
                 "Property error: Resources.MEMAlarmHigh.Properties.%s: "
-                "Value '60a' is not an integer" % p, six.text_type(error))
+                "Value '60a' is not an integer" % p, str(error))
 
     def test_mem_alarm_high_not_integer_parameters(self):
         orig_snippet = template_format.parse(not_string_alarm_template)
@@ -415,7 +414,7 @@ class AodhAlarmTest(common.HeatTestCase):
         self.assertEqual(
             "Property error: Resources.MEMAlarmHigh.Properties: "
             "Property meter_name not assigned",
-            six.text_type(error))
+            str(error))
 
         for p in ('period', 'evaluation_periods', 'statistic',
                   'comparison_operator'):

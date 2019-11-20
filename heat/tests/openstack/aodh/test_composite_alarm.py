@@ -14,7 +14,6 @@
 import copy
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -138,7 +137,7 @@ class CompositeAlarmTest(common.HeatTestCase):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 res.validate)
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn(error_msg, str(exc))
 
     def test_show_resource(self):
         test_stack = self.create_stack(template=alarm_template)
