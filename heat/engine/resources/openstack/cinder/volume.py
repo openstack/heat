@@ -13,7 +13,6 @@
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -310,7 +309,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         cinder = self.client()
         vol = cinder.volumes.get(self.resource_id)
         if name == self.METADATA_ATTR:
-            return six.text_type(jsonutils.dumps(vol.metadata))
+            return str(jsonutils.dumps(vol.metadata))
         elif name == self.METADATA_VALUES_ATTR:
             return vol.metadata
         if name == self.DISPLAY_NAME_ATTR:
@@ -319,7 +318,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             return vol.description
         elif name == self.ATTACHMENTS_LIST:
             return vol.attachments
-        return six.text_type(getattr(vol, name))
+        return str(getattr(vol, name))
 
     def check_create_complete(self, vol_id):
         complete = super(CinderVolume, self).check_create_complete(vol_id)
@@ -355,7 +354,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             if self.client_plugin().is_client_exception(ex):
                 raise exception.Error(_(
                     "Failed to extend volume %(vol)s - %(err)s") % {
-                        'vol': self.resource_id, 'err': six.text_type(ex)})
+                        'vol': self.resource_id, 'err': str(ex)})
             else:
                 raise
         return True

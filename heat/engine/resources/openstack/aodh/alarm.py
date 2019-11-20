@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common.i18n import _
 from heat.engine import constraints
 from heat.engine import properties
@@ -157,7 +155,7 @@ class AodhAlarm(alarm_base.BaseAlarm):
 
         # make sure the matching_metadata appears in the query like this:
         # {field: metadata.$prefix.x, ...}
-        for m_k, m_v in six.iteritems(mmd):
+        for m_k, m_v in mmd.items():
             key = 'metadata.%s' % prefix
             if m_k.startswith('metadata.'):
                 m_k = m_k[len('metadata.'):]
@@ -168,7 +166,7 @@ class AodhAlarm(alarm_base.BaseAlarm):
             # NOTE(prazumovsky): type of query value must be a string, but
             # matching_metadata value type can not be a string, so we
             # must convert value to a string type.
-            query.append(dict(field=key, op='eq', value=six.text_type(m_v)))
+            query.append(dict(field=key, op='eq', value=str(m_v)))
         if self.MATCHING_METADATA in kwargs:
             del kwargs[self.MATCHING_METADATA]
         if self.QUERY in kwargs:

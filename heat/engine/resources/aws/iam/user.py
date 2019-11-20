@@ -12,7 +12,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -80,7 +79,7 @@ class User(stack_user.StackUser):
             # If a non-string (e.g embedded IAM dict policy) is passed, we
             # ignore the policy (don't reject it because we previously ignored
             # and we don't want to break templates which previously worked
-            if not isinstance(policy, six.string_types):
+            if not isinstance(policy, str):
                 LOG.debug("Ignoring policy %s, must be string "
                           "resource name", policy)
                 continue
@@ -118,7 +117,7 @@ class User(stack_user.StackUser):
     def access_allowed(self, resource_name):
         policies = (self.properties[self.POLICIES] or [])
         for policy in policies:
-            if not isinstance(policy, six.string_types):
+            if not isinstance(policy, str):
                 LOG.debug("Ignoring policy %s, must be string "
                           "resource name", policy)
                 continue

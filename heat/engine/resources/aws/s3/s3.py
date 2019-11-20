@@ -10,8 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -165,11 +164,11 @@ class S3Bucket(resource.Resource):
             self.client_plugin().ignore_not_found(ex)
 
     def get_reference_id(self):
-        return six.text_type(self.resource_id)
+        return str(self.resource_id)
 
     def _resolve_attribute(self, name):
         url = self.client().get_auth()[0]
-        parsed = list(urlparse.urlparse(url))
+        parsed = list(parse.urlparse(url))
         if name == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
         elif name == self.WEBSITE_URL:
