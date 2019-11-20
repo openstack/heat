@@ -14,7 +14,6 @@
 import copy
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import grouputils
@@ -685,7 +684,7 @@ class ResourceGroupTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resg.validate)
         exp_msg = 'The Resource Type (idontexist) could not be found.'
-        self.assertIn(exp_msg, six.text_type(exc))
+        self.assertIn(exp_msg, str(exc))
 
     def test_reference_attr(self):
         stack = utils.parse_stack(template2)
@@ -712,7 +711,7 @@ class ResourceGroupTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resg.validate)
         errstr = "removal_policies: \"'notallowed'\" is not a list"
-        self.assertIn(errstr, six.text_type(exc))
+        self.assertIn(errstr, str(exc))
 
     def test_invalid_removal_policies_nomap(self):
         """Test that error raised for malformed removal_policies."""
@@ -725,7 +724,7 @@ class ResourceGroupTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resg.validate)
         errstr = '"notallowed" is not a map'
-        self.assertIn(errstr, six.text_type(exc))
+        self.assertIn(errstr, str(exc))
 
     def test_child_template(self):
         stack = utils.parse_stack(template2)
@@ -1103,7 +1102,7 @@ class ResourceGroupAttrTest(common.HeatTestCase):
         ex = self.assertRaises(exception.NotFound, resg.FnGetAtt,
                                'resource.2')
         self.assertIn("Member '2' not found in group resource 'group1'.",
-                      six.text_type(ex))
+                      str(ex))
 
     def test_get_attribute_convg(self):
         cache_data = {'group1': node_data.NodeData.from_dict({
@@ -1363,7 +1362,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         error = self.assertRaises(
             exception.StackValidationFailed, stack.validate)
-        self.assertIn("foo", six.text_type(error))
+        self.assertIn("foo", str(error))
 
 
 class RollingUpdatePolicyDiffTest(common.HeatTestCase):
@@ -1459,7 +1458,7 @@ class RollingUpdateTest(common.HeatTestCase):
         err = self.assertRaises(ValueError, self.current_grp._update_timeout,
                                 3, 100)
         self.assertIn('The current update policy will result in stack update '
-                      'timeout.', six.text_type(err))
+                      'timeout.', str(err))
 
     def test_update_time_sufficient(self):
         current = copy.deepcopy(template)

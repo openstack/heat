@@ -17,7 +17,6 @@ import uuid
 import mock
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
-import six
 
 from heat.common import identifier
 from heat.common import template_format
@@ -262,7 +261,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(six.text_type({}), wc_att)
+        self.assertEqual(str({}), wc_att)
 
         handle = self.stack['wait_handle']
         self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)

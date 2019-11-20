@@ -14,7 +14,6 @@
 import re
 
 import mock
-import six
 from testtools import matchers
 
 from heat.common import exception
@@ -193,7 +192,7 @@ Resources:
                                 self.create_stack, template_random_string)
         self.assertEqual("Length property cannot be smaller than combined "
                          "character class and character sequence minimums",
-                         six.text_type(exc))
+                         str(exc))
 
     def test_max_length(self):
         template_random_string = '''
@@ -222,7 +221,7 @@ Resources:
         exc = self.assertRaises(exception.StackValidationFailed,
                                 self.create_stack, template_random_string)
         self.assertIn('513 is out of range (min: 1, max: 512)',
-                      six.text_type(exc))
+                      str(exc))
 
 
 class TestGenerateRandomString(common.HeatTestCase):

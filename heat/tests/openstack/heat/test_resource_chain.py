@@ -13,7 +13,6 @@
 
 import copy
 import mock
-import six
 
 from heat.common import exception
 from heat.engine import node_data
@@ -348,7 +347,7 @@ class ResourceChainAttrTest(common.HeatTestCase):
         ex = self.assertRaises(exception.NotFound, chain.FnGetAtt,
                                'resource.2')
         self.assertIn("Member '2' not found in group resource 'test'",
-                      six.text_type(ex))
+                      str(ex))
 
     def _create_dummy_stack(self, expect_count=2, expect_attrs=None):
         self.stack = utils.parse_stack(TEMPLATE)
