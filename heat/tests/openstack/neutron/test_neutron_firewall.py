@@ -15,7 +15,6 @@ import mock
 from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -128,7 +127,7 @@ class FirewallTest(common.HeatTestCase):
         self.assertEqual(
             'ResourceInError: resources.firewall: '
             'Went to status ERROR due to "Error in Firewall"',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall.assert_called_once_with({
@@ -155,7 +154,7 @@ class FirewallTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.firewall: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall.assert_called_once_with({
@@ -224,7 +223,7 @@ class FirewallTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.firewall: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall.assert_called_once_with({
@@ -274,7 +273,7 @@ class FirewallTest(common.HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (firewall subnet_id) is '
-            'incorrect.', six.text_type(error))
+            'incorrect.', str(error))
 
         self.mockclient.create_firewall.assert_called_once_with({
             'firewall': {
@@ -427,7 +426,7 @@ class FirewallPolicyTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.firewall_policy: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall_policy.assert_called_once_with({
@@ -485,7 +484,7 @@ class FirewallPolicyTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.firewall_policy: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall_policy.assert_called_once_with({
@@ -523,7 +522,7 @@ class FirewallPolicyTest(common.HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (firewall_policy subnet_id) is '
-            'incorrect.', six.text_type(error))
+            'incorrect.', str(error))
 
         self.mockclient.create_firewall_policy.assert_called_once_with({
             'firewall_policy': {
@@ -635,7 +634,7 @@ class FirewallRuleTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.firewall_rule: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall_rule.assert_called_once_with({
@@ -696,7 +695,7 @@ class FirewallRuleTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.firewall_rule: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.DELETE, rsrc.FAILED), rsrc.state)
 
         self.mockclient.create_firewall_rule.assert_called_once_with({
@@ -736,7 +735,7 @@ class FirewallRuleTest(common.HeatTestCase):
                                   rsrc.FnGetAtt, 'subnet_id')
         self.assertEqual(
             'The Referenced Attribute (firewall_rule subnet_id) is '
-            'incorrect.', six.text_type(error))
+            'incorrect.', str(error))
 
         self.mockclient.create_firewall_rule.assert_called_once_with({
             'firewall_rule': {

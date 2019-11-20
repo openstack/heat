@@ -12,7 +12,6 @@
 #    under the License.
 
 from neutronclient.common import exceptions as qe
-import six
 
 from heat.common import exception
 from heat.engine import attributes
@@ -42,7 +41,7 @@ class NeutronTest(common.HeatTestCase):
         banned_keys = {'shared': True,
                        'name': 'foo',
                        'tenant_id': '1234'}
-        for key, val in six.iteritems(banned_keys):
+        for key, val in banned_keys.items():
             vs.update({key: val})
             msg = '%s not allowed in value_specs' % key
             self.assertEqual(msg, nr.NeutronResource.validate_properties(p))
@@ -67,13 +66,13 @@ class NeutronTest(common.HeatTestCase):
             nr.NeutronResource.is_built, {'status': 'ERROR'})
         self.assertEqual(
             'Went to status ERROR due to "Unknown"',
-            six.text_type(e))
+            str(e))
         e = self.assertRaises(
             exception.ResourceUnknownStatus,
             nr.NeutronResource.is_built, {'status': 'FROBULATING'})
         self.assertEqual('Resource is not built - Unknown status '
                          'FROBULATING due to "Unknown"',
-                         six.text_type(e))
+                         str(e))
 
     def _get_some_neutron_resource(self):
         class SomeNeutronResource(nr.NeutronResource):

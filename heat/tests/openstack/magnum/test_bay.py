@@ -14,7 +14,6 @@
 import copy
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -78,7 +77,7 @@ class TestMagnumBay(common.HeatTestCase):
         exc = self.assertRaises(
             exception.ResourceFailure,
             scheduler.TaskRunner(b.create))
-        self.assertIn("Failed to create Bay", six.text_type(exc))
+        self.assertIn("Failed to create Bay", str(exc))
 
     def test_bay_create_unknown_status(self):
         b = self._create_resource('bay', self.rsrc_defn, self.stack,
@@ -86,7 +85,7 @@ class TestMagnumBay(common.HeatTestCase):
         exc = self.assertRaises(
             exception.ResourceFailure,
             scheduler.TaskRunner(b.create))
-        self.assertIn("Unknown status creating Bay", six.text_type(exc))
+        self.assertIn("Unknown status creating Bay", str(exc))
 
     def test_bay_update(self):
         b = self._create_resource('bay', self.rsrc_defn, self.stack)
@@ -114,7 +113,7 @@ class TestMagnumBay(common.HeatTestCase):
         exc = self.assertRaises(
             exception.ResourceFailure,
             scheduler.TaskRunner(b.update, new_bm))
-        self.assertIn("Failed to update Bay", six.text_type(exc))
+        self.assertIn("Failed to update Bay", str(exc))
 
     def test_bay_update_unknown_status(self):
         b = self._create_resource('bay', self.rsrc_defn, self.stack)
@@ -129,7 +128,7 @@ class TestMagnumBay(common.HeatTestCase):
         exc = self.assertRaises(
             exception.ResourceFailure,
             scheduler.TaskRunner(b.update, new_bm))
-        self.assertIn("Unknown status updating Bay", six.text_type(exc))
+        self.assertIn("Unknown status updating Bay", str(exc))
 
     def test_bay_delete(self):
         b = self._create_resource('bay', self.rsrc_defn, self.stack)

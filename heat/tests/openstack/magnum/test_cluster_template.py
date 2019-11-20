@@ -14,7 +14,6 @@
 import copy
 import mock
 from neutronclient.neutron import v2_0 as neutronV20
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -133,7 +132,7 @@ class TestMagnumClusterTemplate(common.HeatTestCase):
                "expecting a ['rexray'] volume driver.")
         ex = self.assertRaises(exception.StackValidationFailed,
                                stack['test_cluster_template'].validate)
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     def _cluster_template_update(self, update_status='UPDATE_COMPLETE',
                                  exc_msg=None):
@@ -153,7 +152,7 @@ class TestMagnumClusterTemplate(common.HeatTestCase):
             exc = self.assertRaises(
                 exception.ResourceFailure,
                 scheduler.TaskRunner(ct.update, new_ct))
-            self.assertIn(exc_msg, six.text_type(exc))
+            self.assertIn(exc_msg, str(exc))
 
     def test_cluster_update(self):
         self._cluster_template_update()

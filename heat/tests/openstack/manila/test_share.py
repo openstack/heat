@@ -14,7 +14,6 @@ import collections
 import copy
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -125,7 +124,7 @@ class ManilaShareTest(common.HeatTestCase):
         exc = self.assertRaises(exception.ResourceInError,
                                 share.check_create_complete,
                                 self.failed_share)
-        self.assertIn("Error during creation", six.text_type(exc))
+        self.assertIn("Error during creation", str(exc))
 
     def test_share_create_unknown_status(self):
         share = self._init_share("stack_share_create_unknown")
@@ -133,7 +132,7 @@ class ManilaShareTest(common.HeatTestCase):
         exc = self.assertRaises(exception.ResourceUnknownStatus,
                                 share.check_create_complete,
                                 self.deleting_share)
-        self.assertIn("Unknown status", six.text_type(exc))
+        self.assertIn("Unknown status", str(exc))
 
     def test_share_check(self):
         share = self._create_share("stack_share_check")
@@ -148,7 +147,7 @@ class ManilaShareTest(common.HeatTestCase):
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(share.check))
         self.assertIn("Error: resources.test_share: 'status': expected "
-                      "'['available']'", six.text_type(exc))
+                      "'['available']'", str(exc))
 
     def test_share_update(self):
         share = self._create_share("stack_share_update")
