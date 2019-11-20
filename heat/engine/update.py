@@ -12,7 +12,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-import six
 
 from heat.common import exception
 from heat.engine import dependencies
@@ -145,7 +144,7 @@ class StackUpdate(object):
             failure = exception.ResourceFailure(ex, existing_res,
                                                 existing_res.UPDATE)
             existing_res._add_event(existing_res.UPDATE, existing_res.FAILED,
-                                    six.text_type(ex))
+                                    str(ex))
             raise failure
 
     def _update_resource_data(self, resource):
@@ -255,7 +254,7 @@ class StackUpdate(object):
             for e in existing_deps.graph(reverse=True).edges():
                 yield e
             # Don't cleanup old resources until after they have been replaced
-            for name, res in six.iteritems(self.existing_stack):
+            for name, res in self.existing_stack.items():
                 if name in self.new_stack:
                     yield (res, self.new_stack[name])
 

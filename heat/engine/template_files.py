@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import six
 import weakref
 
 from heat.common import context
@@ -40,7 +39,7 @@ class TemplateFiles(collections.Mapping):
             self.files_id = files.files_id
             self.files = files.files
             return
-        if isinstance(files, six.integer_types):
+        if isinstance(files, int):
             self.files_id = files
             if self.files_id in _d:
                 self.files = _d[self.files_id]

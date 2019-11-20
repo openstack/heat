@@ -14,7 +14,6 @@
 import json
 
 import mock
-import six
 import webob.exc
 
 import heat.api.middleware.fault as fault
@@ -221,7 +220,7 @@ class ActionControllerTest(tools.ControllerTest, common.HeatTestCase):
             stack_id=stack_identity.stack_id,
             body=body)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_action_badaction_ise(self, mock_enforce):
         stack_identity = identifier.HeatIdentifier(self.tenant,
