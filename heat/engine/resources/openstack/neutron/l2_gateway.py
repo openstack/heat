@@ -13,7 +13,6 @@
 #    under the License.
 
 import collections
-import six
 
 from heat.common.i18n import _
 from heat.engine import properties
@@ -111,7 +110,7 @@ class L2Gateway(neutron.NeutronResource):
             return dict((k, L2Gateway._remove_none_value_props(v)) for k, v
                         in props.items() if v is not None)
         elif (isinstance(props, collections.Sequence) and
-              not isinstance(props, six.string_types)):
+              not isinstance(props, str)):
             return list(L2Gateway._remove_none_value_props(l) for l in props
                         if l is not None)
         return props

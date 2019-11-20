@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -266,7 +264,7 @@ class Router(neutron.NeutronResource):
         external_gw = self.properties[self.EXTERNAL_GATEWAY]
         if external_gw:
             external_gw_net = external_gw.get(self.EXTERNAL_GATEWAY_NETWORK)
-            for res in six.itervalues(self.stack):
+            for res in self.stack.values():
                 if res.has_interface('OS::Neutron::Subnet'):
                     try:
                         subnet_net = res.properties.get(subnet.Subnet.NETWORK)
@@ -639,7 +637,7 @@ class RouterGateway(neutron.NeutronResource):
 
     def add_dependencies(self, deps):
         super(RouterGateway, self).add_dependencies(deps)
-        for resource in six.itervalues(self.stack):
+        for resource in self.stack.values():
             # depend on any RouterInterface in this template with the same
             # router_id as this router_id
             if resource.has_interface('OS::Neutron::RouterInterface'):

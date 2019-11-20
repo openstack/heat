@@ -12,7 +12,7 @@
 #    under the License.
 
 import re
-from six.moves import urllib
+from urllib import parse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -115,7 +115,7 @@ class MonascaNotification(resource.Resource):
 
         if self.properties[self.TYPE] == self.WEBHOOK:
             try:
-                parsed_address = urllib.parse.urlparse(address)
+                parsed_address = parse.urlparse(address)
             except Exception:
                 msg = _('Address "%(addr)s" should have correct format '
                         'required by "%(wh)s" type of "%(type)s" '
