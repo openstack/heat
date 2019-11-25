@@ -1,0 +1,5 @@
+---
+deprecations:
+  - file injection is deprecated in compute api. Deprecating injected_files,
+    injected_file_content_bites, and injected_file_path_bytes properties
+    accordingly in OS::Nova::Quota resource.

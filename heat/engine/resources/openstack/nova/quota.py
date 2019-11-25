@@ -115,6 +115,14 @@ class NovaQuota(resource.Resource):
             properties.Schema.INTEGER,
             _('Quota for the number of injected files. '
               'Setting the value to -1 removes the limit.'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='14.0.0',
+                message=_('File injection is deprecated '
+                          'from compute REST API '
+                          'OS::Nova::Quota resource will not support '
+                          'it in the future.')
+            ),
             constraints=[
                 constraints.Range(min=-1),
             ],
@@ -124,6 +132,14 @@ class NovaQuota(resource.Resource):
             properties.Schema.INTEGER,
             _('Quota for the number of injected file content bytes. '
               'Setting the value to -1 removes the limit.'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='14.0.0',
+                message=_('File injection is deprecated '
+                          'from compute REST API '
+                          'OS::Nova::Quota resource will not support '
+                          'it in the future.')
+            ),
             constraints=[
                 constraints.Range(min=-1),
             ],
@@ -133,6 +149,14 @@ class NovaQuota(resource.Resource):
             properties.Schema.INTEGER,
             _('Quota for the number of injected file path bytes. '
               'Setting the value to -1 removes the limit.'),
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='14.0.0',
+                message=_('File injection is deprecated '
+                          'from compute REST API '
+                          'OS::Nova::Quota resource will not support '
+                          'it in the future.')
+            ),
             constraints=[
                 constraints.Range(min=-1),
             ],
