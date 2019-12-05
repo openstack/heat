@@ -243,8 +243,8 @@ class FirewallPolicy(neutron.NeutronResource):
         ),
         FIREWALL_RULES: properties.Schema(
             properties.Schema.LIST,
-            _('An ordered list of firewall rules to apply to the firewall.'),
-            required=True,
+            _('An ordered list of firewall rules to apply to the firewall. '
+              '(Prior to version 14.0.0 this was a required property).'),
             update_allowed=True
         ),
     }
