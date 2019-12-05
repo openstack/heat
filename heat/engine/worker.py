@@ -110,6 +110,9 @@ class WorkerService(object):
         Marks the stack as FAILED due to cancellation, but, allows all
         in_progress resources to complete normally; no worker is stopped
         abruptly.
+
+        Any in-progress traversals are also stopped on all nested stacks that
+        are descendants of the one passed.
         """
         _stop_traversal(stack)
 
