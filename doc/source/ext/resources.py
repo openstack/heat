@@ -245,7 +245,10 @@ resources:
         if not prop.implemented:
             para = nodes.line('', _('Not implemented.'))
             note = nodes.note('', para)
-            definition.append(note)
+            if sub_prop:
+                definition.append(para)
+            else:
+                definition.append(note)
             return
 
         if sub_prop and prop.type not in (properties.Schema.LIST,
@@ -351,11 +354,14 @@ resources:
         if not self.attrs_schemata:
             return
         section = self._section(parent, _('Attributes'), '%s-attrs')
+        definition_list = nodes.definition_list()
+        section.append(definition_list)
+
         for prop_key, prop in sorted(self.attrs_schemata.items()):
             if prop.support_status.status != support.HIDDEN:
                 description = prop.description
                 attr_section = self._prop_section(
-                    section, prop_key, '%s-attr-' + prop_key)
+                    definition_list, prop_key, '%s-attr-' + prop_key)
 
                 self._status_str(prop.support_status, attr_section)
 
@@ -367,9 +373,12 @@ resources:
         if not self.update_policy_schemata:
             return
         section = self._section(parent, _('update_policy'), '%s-updpolicy')
+        definition_list = nodes.definition_list()
+        section.append(definition_list)
+
         for _key, _prop in sorted(self.update_policy_schemata.items(),
                                   key=cmp_to_key(self.cmp_prop)):
-            self.contribute_property(section, _key, _prop)
+            self.contribute_property(definition_list, _key, _prop)
 
 
 class IntegrateResourcePages(ResourcePages):

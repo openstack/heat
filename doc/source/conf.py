@@ -259,7 +259,7 @@ htmlhelp_basename = 'Heatdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual])
 latex_documents = [
-    ('index', 'Heat.tex', u'Heat Documentation',
+    ('index', 'doc-heat.tex', u'Heat Documentation',
      u'Heat Developers', 'manual'),
 ]
 
@@ -281,8 +281,16 @@ latex_documents = [
 # latex_appendices = []
 
 # If false, no module index is generated.
-# latex_domain_indices = True
+latex_domain_indices = False
 
+# Disable usage of xindy https://bugzilla.redhat.com/show_bug.cgi?id=1643664
+latex_use_xindy = False
+
+latex_elements = {
+    'makeindex': '',
+    'printindex': '',
+    'preamble': r'\setcounter{tocdepth}{3}',
+}
 
 # -- Options for manual page output -------------------------------------------
 
