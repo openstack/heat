@@ -142,7 +142,11 @@ def raw_template_update(context, template_id, values):
 
 
 def raw_template_delete(context, template_id):
-    raw_template = raw_template_get(context, template_id)
+    try:
+        raw_template = raw_template_get(context, template_id)
+    except exception.NotFound:
+        # Ignore not found
+        return
     raw_tmpl_files_id = raw_template.files_id
     session = context.session
     with session.begin(subtransactions=True):
