@@ -24,7 +24,6 @@ import requests
 import six
 
 from heat.common import config
-from heat.common import context
 from heat.common import exception as heat_exception
 
 cfg.CONF.import_opt('client_retry_limit', 'heat.common.config')
@@ -94,7 +93,6 @@ class ClientPlugin(object):
     def url_for(self, **kwargs):
         keystone_session = self.context.keystone_session
 
-        @context.retry_on_connection_timeout
         def get_endpoint():
             return keystone_session.get_endpoint(**kwargs)
 
