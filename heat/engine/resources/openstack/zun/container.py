@@ -39,12 +39,12 @@ class Container(resource.Resource,
         NAME, IMAGE, COMMAND, CPU, MEMORY,
         ENVIRONMENT, WORKDIR, LABELS, IMAGE_PULL_POLICY,
         RESTART_POLICY, INTERACTIVE, IMAGE_DRIVER, HINTS,
-        HOSTNAME, SECURITY_GROUPS, MOUNTS, NETWORKS,
+        HOSTNAME, SECURITY_GROUPS, MOUNTS, NETWORKS, TTY,
     ) = (
         'name', 'image', 'command', 'cpu', 'memory',
         'environment', 'workdir', 'labels', 'image_pull_policy',
         'restart_policy', 'interactive', 'image_driver', 'hints',
-        'hostname', 'security_groups', 'mounts', 'networks',
+        'hostname', 'security_groups', 'mounts', 'networks', 'tty',
     )
 
     _NETWORK_KEYS = (
@@ -128,6 +128,11 @@ class Container(resource.Resource,
         INTERACTIVE: properties.Schema(
             properties.Schema.BOOLEAN,
             _('Keep STDIN open even if not attached.'),
+        ),
+        TTY: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Whether the container allocates a TTY for itself.'),
+            support_status=support.SupportStatus(version='14.0.0'),
         ),
         IMAGE_DRIVER: properties.Schema(
             properties.Schema.STRING,
@@ -320,7 +325,12 @@ class Container(resource.Resource,
         command = args.pop(self.COMMAND, None)
         if command:
             args['command'] = shlex.split(command)
-        container = self.client().containers.run(**args)
+
+        if self.TTY in args:
+            container = self.client(
+                version=self.client_plugin().V1_36).containers.run(**args)
+        else:
+            container = self.client().containers.run(**args)
         self.resource_id_set(container.uuid)
         return container.uuid
 
