@@ -15,6 +15,7 @@ import functools
 import sys
 import types
 
+import debtcollector
 import eventlet
 from oslo_log import log as logging
 from oslo_utils import encodeutils
@@ -293,7 +294,11 @@ class TaskRunner(object):
         return self.__nonzero__()
 
 
-def wrappertask(task):  # noqa: C901
+@debtcollector.removals.remove(message="Use the Python 3 'yield from' keyword "
+                                       "in place of 'yield', instead of "
+                                       "decorating with @wrappertask.",
+                               stacklevel=1)
+def wrappertask(task):
     """Decorator for a task that needs to drive a subtask.
 
     This is essentially a replacement for the Python 3-only "yield from"
@@ -311,6 +316,9 @@ def wrappertask(task):  # noqa: C901
 
     @functools.wraps(task)
     def wrapper(*args, **kwargs):
+        # This could be simplified by using 'yield from' for the parent loop
+        # as well, but not without adding yet another frame to the stack
+        # for the subtasks.
         parent = task(*args, **kwargs)
 
         try:
@@ -321,28 +329,7 @@ def wrappertask(task):  # noqa: C901
         while True:
             try:
                 if isinstance(subtask, types.GeneratorType):
-                    subtask_running = True
-                    try:
-                        step = next(subtask)
-                    except StopIteration:
-                        subtask_running = False
-
-                    while subtask_running:
-                        try:
-                            yield step
-                        except GeneratorExit:
-                            subtask.close()
-                            raise
-                        except:  # noqa
-                            try:
-                                step = subtask.throw(*sys.exc_info())
-                            except StopIteration:
-                                subtask_running = False
-                        else:
-                            try:
-                                step = next(subtask)
-                            except StopIteration:
-                                subtask_running = False
+                    yield from subtask
                 else:
                     yield subtask
             except GeneratorExit:

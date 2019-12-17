@@ -1005,7 +1005,6 @@ class Resource(status.ResourceStatus):
                                     action
                                 )
 
-    @scheduler.wrappertask
     def _do_action(self, action, pre_func=None, resource_data=None):
         """Perform a transition to a new state via a specified action.
 
@@ -1028,7 +1027,7 @@ class Resource(status.ResourceStatus):
                 pre_func()
 
             handler_args = [resource_data] if resource_data is not None else []
-            yield self.action_handler_task(action, args=handler_args)
+            yield from self.action_handler_task(action, args=handler_args)
 
     def _update_stored_properties(self):
         old_props = self._stored_properties_data
@@ -1189,7 +1188,6 @@ class Resource(status.ResourceStatus):
                         message="%s" % error_message)
                 raise
 
-    @scheduler.wrappertask
     def create(self):
         """Create the resource.
 
@@ -1203,18 +1201,18 @@ class Resource(status.ResourceStatus):
             raise exception.ResourceFailure(exc, self, action)
 
         if self.external_id is not None:
-            yield self._do_action(self.ADOPT,
-                                  resource_data={
-                                      'resource_id': self.external_id})
-            yield self.check()
+            yield from self._do_action(self.ADOPT,
+                                       resource_data={
+                                           'resource_id': self.external_id})
+            yield from self.check()
             return
 
         # This method can be called when we replace a resource, too. In that
         # case, a hook has already been dealt with in `Resource.update` so we
         # shouldn't do it here again:
         if self.stack.action == self.stack.CREATE:
-            yield self._break_if_required(
-                self.CREATE, environment.HOOK_PRE_CREATE)
+            yield from self._break_if_required(self.CREATE,
+                                               environment.HOOK_PRE_CREATE)
 
         LOG.info('creating %s', self)
 
@@ -1239,13 +1237,13 @@ class Resource(status.ResourceStatus):
                 delay = timeutils.retry_backoff_delay(count[action],
                                                       jitter_max=2.0)
                 waiter = scheduler.TaskRunner(self.pause)
-                yield waiter.as_task(timeout=delay)
+                yield from waiter.as_task(timeout=delay)
             elif action == self.CREATE:
                 # Only validate properties in first create call.
                 pre_func = self.properties.validate
 
             try:
-                yield self._do_action(action, pre_func)
+                yield from self._do_action(action, pre_func)
                 if action == self.CREATE:
                     first_failure = None
                     break
@@ -1282,8 +1280,8 @@ class Resource(status.ResourceStatus):
             raise first_failure
 
         if self.stack.action == self.stack.CREATE:
-            yield self._break_if_required(
-                self.CREATE, environment.HOOK_POST_CREATE)
+            yield from self._break_if_required(self.CREATE,
+                                               environment.HOOK_POST_CREATE)
 
     @staticmethod
     def pause():
@@ -1312,7 +1310,7 @@ class Resource(status.ResourceStatus):
         adopt.
         """
         self._update_stored_properties()
-        return self._do_action(self.ADOPT, resource_data=resource_data)
+        yield from self._do_action(self.ADOPT, resource_data=resource_data)
 
     def handle_adopt(self, resource_data=None):
         resource_id, data, metadata = self._get_resource_info(resource_data)
@@ -1606,7 +1604,6 @@ class Resource(status.ResourceStatus):
         elif new_template_id is not None:
             self.store(lock=lock)
 
-    @scheduler.wrappertask
     def update(self, after, before=None, prev_resource=None,
                new_template_id=None, new_requires=None):
         """Return a task to update the resource.
@@ -1634,8 +1631,8 @@ class Resource(status.ResourceStatus):
 
         after_props, before_props = self._prepare_update_props(after, before)
 
-        yield self._break_if_required(
-            self.UPDATE, environment.HOOK_PRE_UPDATE)
+        yield from self._break_if_required(self.UPDATE,
+                                           environment.HOOK_PRE_UPDATE)
 
         try:
             registry = self.stack.env.registry
@@ -1695,9 +1692,9 @@ class Resource(status.ResourceStatus):
                 if new_template_id is not None:
                     self.current_template_id = new_template_id
 
-                yield self.action_handler_task(action,
-                                               args=[after, tmpl_diff,
-                                                     prop_diff])
+                yield from self.action_handler_task(action,
+                                                    args=[after, tmpl_diff,
+                                                          prop_diff])
             except UpdateReplace:
                 with excutils.save_and_reraise_exception():
                     self.current_template_id = self.old_template_id
@@ -1710,8 +1707,8 @@ class Resource(status.ResourceStatus):
             if new_requires is not None:
                 self.requires = new_requires
 
-        yield self._break_if_required(
-            self.UPDATE, environment.HOOK_POST_UPDATE)
+        yield from self._break_if_required(self.UPDATE,
+                                           environment.HOOK_POST_UPDATE)
 
     def prepare_for_replace(self):
         """Prepare resource for replacing.
@@ -1731,7 +1728,6 @@ class Resource(status.ResourceStatus):
         """
         pass
 
-    @scheduler.wrappertask
     def check(self):
         """Checks that the physical resource is in its expected state.
 
@@ -1753,7 +1749,7 @@ class Resource(status.ResourceStatus):
                 raise failure
 
             with self.frozen_properties():
-                yield self._do_action(action)
+                yield from self._do_action(action)
         else:
             if self.state == (self.INIT, self.COMPLETE):
                 # No need to store status; better to leave the resource in
@@ -1778,7 +1774,6 @@ class Resource(status.ResourceStatus):
         if invalid_checks:
             raise exception.Error('; '.join(invalid_checks))
 
-    @scheduler.wrappertask
     def suspend(self):
         """Return a task to suspend the resource.
 
@@ -1798,9 +1793,8 @@ class Resource(status.ResourceStatus):
 
         LOG.info('suspending %s', self)
         with self.frozen_properties():
-            yield self._do_action(action)
+            yield from self._do_action(action)
 
-    @scheduler.wrappertask
     def resume(self):
         """Return a task to resume the resource.
 
@@ -1820,18 +1814,16 @@ class Resource(status.ResourceStatus):
 
         LOG.info('resuming %s', self)
         with self.frozen_properties():
-            yield self._do_action(action)
+            yield from self._do_action(action)
 
-    @scheduler.wrappertask
     def snapshot(self):
         """Snapshot the resource and return the created data, if any."""
         LOG.info('snapshotting %s', self)
         with self.frozen_properties():
-            yield self._do_action(self.SNAPSHOT)
+            yield from self._do_action(self.SNAPSHOT)
 
-    @scheduler.wrappertask
     def delete_snapshot(self, data):
-        yield self.action_handler_task('delete_snapshot', args=[data])
+        yield from self.action_handler_task('delete_snapshot', args=[data])
 
     def physical_resource_name(self):
         if self.id is None or self.action == self.INIT:
@@ -1981,7 +1973,6 @@ class Resource(status.ResourceStatus):
                 return self.resource_id
         return None
 
-    @scheduler.wrappertask
     def delete(self):
         """A task to delete the resource.
 
@@ -2009,8 +2000,8 @@ class Resource(status.ResourceStatus):
         # case, a hook has already been dealt with in `Resource.update` so we
         # shouldn't do it here again:
         if self.stack.action == self.stack.DELETE:
-            yield self._break_if_required(
-                self.DELETE, environment.HOOK_PRE_DELETE)
+            yield from self._break_if_required(self.DELETE,
+                                               environment.HOOK_PRE_DELETE)
 
         LOG.info('deleting %s', self)
 
@@ -2045,20 +2036,19 @@ class Resource(status.ResourceStatus):
                         delay = timeutils.retry_backoff_delay(count,
                                                               jitter_max=2.0)
                         waiter = scheduler.TaskRunner(self.pause)
-                        yield waiter.as_task(timeout=delay)
+                        yield from waiter.as_task(timeout=delay)
                     with excutils.exception_filter(should_retry):
-                        yield self.action_handler_task(action,
-                                                       *action_args)
+                        yield from self.action_handler_task(action,
+                                                            *action_args)
                         break
 
         if self.stack.action == self.stack.DELETE:
-            yield self._break_if_required(
-                self.DELETE, environment.HOOK_POST_DELETE)
+            yield from self._break_if_required(self.DELETE,
+                                               environment.HOOK_POST_DELETE)
 
-    @scheduler.wrappertask
     def destroy(self):
         """A task to delete the resource and remove it from the database."""
-        yield self.delete()
+        yield from self.delete()
 
         if self.id is None:
             return

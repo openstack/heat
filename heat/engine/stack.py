@@ -1155,7 +1155,6 @@ class Stack(collections.Mapping):
 
         return {'resource_data': data['resources'].get(resource.name)}
 
-    @scheduler.wrappertask
     def stack_task(self, action, reverse=False, post_func=None,
                    aggregate_exceptions=False, pre_completion_func=None,
                    notify=None):
@@ -1204,12 +1203,11 @@ class Stack(collections.Mapping):
                                 lambda x: {})
 
         @functools.wraps(getattr(resource.Resource, action_method))
-        @scheduler.wrappertask
         def resource_action(r):
             # Find e.g resource.create and call it
             handle = getattr(r, action_method)
 
-            yield handle(**handle_kwargs(r))
+            yield from handle(**handle_kwargs(r))
 
             if action == self.CREATE:
                 stk_defn.update_resource_data(self.defn, r.name, r.node_data())
@@ -1225,7 +1223,7 @@ class Stack(collections.Mapping):
             aggregate_exceptions=aggregate_exceptions)
 
         try:
-            yield action_task()
+            yield from action_task()
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
@@ -1591,7 +1589,6 @@ class Stack(collections.Mapping):
 
         self.state_set(self.action, self.FAILED, str(reason))
 
-    @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE,
                     msg_queue=None, notify=None):
         if action not in (self.UPDATE, self.ROLLBACK, self.RESTORE):
@@ -1674,8 +1671,8 @@ class Stack(collections.Mapping):
             check_message = functools.partial(self._check_for_message,
                                               msg_queue)
             try:
-                yield updater.as_task(timeout=self.timeout_secs(),
-                                      progress_callback=check_message)
+                yield from updater.as_task(timeout=self.timeout_secs(),
+                                           progress_callback=check_message)
             finally:
                 self.reset_dependencies()
 
@@ -1691,7 +1688,7 @@ class Stack(collections.Mapping):
             # so we roll back to the original state
             should_rollback = self._update_exception_handler(e, action)
             if should_rollback:
-                yield self.update_task(oldstack, action=self.ROLLBACK)
+                yield from self.update_task(oldstack, action=self.ROLLBACK)
         except BaseException as e:
             with excutils.save_and_reraise_exception():
                 self._update_exception_handler(e, action)
