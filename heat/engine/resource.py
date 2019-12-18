@@ -1206,7 +1206,7 @@ class Resource(status.ResourceStatus):
             yield self._do_action(self.ADOPT,
                                   resource_data={
                                       'resource_id': self.external_id})
-            self.check()
+            yield self.check()
             return
 
         # This method can be called when we replace a resource, too. In that
