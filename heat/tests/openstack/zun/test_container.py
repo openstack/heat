@@ -48,6 +48,7 @@ resources:
       image_pull_policy: always
       restart_policy: on-failure:2
       interactive: false
+      tty: false
       image_driver: docker
       hints:
         hintkey: hintval
@@ -108,6 +109,7 @@ class ZunContainerTest(common.HeatTestCase):
         self.fake_restart_policy = {'MaximumRetryCount': '2',
                                     'Name': 'on-failure'}
         self.fake_interactive = False
+        self.fake_tty = False
         self.fake_image_driver = 'docker'
         self.fake_hints = {'hintkey': 'hintval'}
         self.fake_hostname = 'myhost'
@@ -194,6 +196,7 @@ class ZunContainerTest(common.HeatTestCase):
         value.image_pull_policy = self.fake_image_policy
         value.restart_policy = self.fake_restart_policy
         value.interactive = self.fake_interactive
+        value.tty = self.fake_tty
         value.image_driver = self.fake_image_driver
         value.hints = self.fake_hints
         value.hostname = self.fake_hostname
@@ -249,6 +252,9 @@ class ZunContainerTest(common.HeatTestCase):
             self.fake_interactive,
             c.properties.get(container.Container.INTERACTIVE))
         self.assertEqual(
+            self.fake_tty,
+            c.properties.get(container.Container.TTY))
+        self.assertEqual(
             self.fake_image_driver,
             c.properties.get(container.Container.IMAGE_DRIVER))
         self.assertEqual(
@@ -283,6 +289,7 @@ class ZunContainerTest(common.HeatTestCase):
             image_pull_policy=self.fake_image_policy,
             restart_policy=self.fake_restart_policy,
             interactive=self.fake_interactive,
+            tty=self.fake_tty,
             image_driver=self.fake_image_driver,
             hints=self.fake_hints,
             hostname=self.fake_hostname,
