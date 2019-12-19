@@ -306,7 +306,8 @@ class ResourceDefinition(object):
         """
         props = properties.Properties(schema, self._properties or {},
                                       function.resolve, context=context,
-                                      section=PROPERTIES)
+                                      section=PROPERTIES,
+                                      rsrc_description=self.description)
         props.update_translation(self._rules, self._client_resolve)
         return props
 
