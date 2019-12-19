@@ -199,7 +199,7 @@ class HeatCustomGuidelines(object):
                               'with uppercase letter') % error_key.title(),
                  'snippet': description})
             self.print_guideline_error(**error_kwargs)
-        if not description.endswith('.'):
+        if not (description.endswith('.') or description.endswith('.)')):
             error_kwargs.update(
                 {'message': _('%s description summary omitted '
                               'terminator at the end') % error_key.title(),
@@ -250,7 +250,8 @@ class HeatCustomGuidelines(object):
                 if re.search("^(:param|:type|:returns|:rtype|:raises)",
                              line):
                     params = True
-        if not params and not doclines[-2].endswith('.'):
+        if not params and not (doclines[-2].endswith('.') or
+                               doclines[-2].endswith('.)')):
             error_kwargs.update(
                 {'message': _('%s description omitted '
                               'terminator at the end') % error_key.title(),
