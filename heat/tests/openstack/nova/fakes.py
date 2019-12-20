@@ -113,6 +113,8 @@ class FakeSessionClient(base_client.SessionClient):
                           "accessIPv6": "",
                           "metadata": {"Server Label": "Web Head 1",
                                        "Image Version": "2.1"}},
+
+                         # 1
                          {"id": "5678",
                           "name": "sample-server2",
                           "OS-EXT-AZ:availability_zone": "nova2",
@@ -137,6 +139,7 @@ class FakeSessionClient(base_client.SessionClient):
                                                      "OS-EXT-IPS-MAC:mac_addr":
                                                      "fa:16:3e:8c:44:cc"}]},
                           "metadata": {}},
+                         # 2
                          {"id": "9101",
                           "name": "hard-reboot",
                           "OS-EXT-SRV-ATTR:instance_name":
@@ -154,6 +157,7 @@ class FakeSessionClient(base_client.SessionClient):
                                         "private": [{"version": 4,
                                                      "addr": "10.13.12.13"}]},
                           "metadata": {"Server Label": "DB 1"}},
+                         # 3
                          {"id": "9102",
                           "name": "server-with-no-ip",
                           "OS-EXT-SRV-ATTR:instance_name":
@@ -166,6 +170,7 @@ class FakeSessionClient(base_client.SessionClient):
                           "accessIPv6": "",
                           "addresses": {"empty_net": []},
                           "metadata": {"Server Label": "DB 1"}},
+                         # 4
                          {"id": "9999",
                           "name": "sample-server3",
                           "OS-EXT-SRV-ATTR:instance_name":
@@ -186,10 +191,79 @@ class FakeSessionClient(base_client.SessionClient):
                           "os-extended-volumes:volumes_attached":
                               [{"id":
                                     "66359157-dace-43ab-a7ed-a7e7cd7be59d"}]},
+                         # 5
                          {"id": 56789,
                           "name": "server-with-metadata",
                           "OS-EXT-SRV-ATTR:instance_name":
                           "sample-server2",
+                          "image": {"id": 2, "name": "sample image"},
+                          "flavor": {"id": 1, "name": "256 MB Server"},
+                          "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                          "status": "ACTIVE",
+                          "accessIPv4": "192.0.2.0",
+                          "accessIPv6": "::babe:4317:0A83",
+                          "addresses": {"public": [{"version": 4,
+                                                    "addr": "4.5.6.7"},
+                                                   {"version": 4,
+                                                    "addr": "5.6.9.8"}],
+                                        "private": [{"version": 4,
+                                                     "addr": "10.13.12.13"}]},
+                          "metadata": {'test': '123', 'this': 'that'}},
+                         # 6
+                         {"id": "WikiDatabase",
+                          "name": "server-with-metadata",
+                          "OS-EXT-STS:task_state": None,
+                          "image": {"id": 2, "name": "sample image"},
+                          "flavor": {"id": 1, "name": "256 MB Server"},
+                          "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                          "status": "ACTIVE",
+                          "accessIPv4": "192.0.2.0",
+                          "accessIPv6": "::babe:4317:0A83",
+                          "addresses": {"public": [{"version": 4,
+                                                    "addr": "4.5.6.7"},
+                                                   {"version": 4,
+                                                    "addr": "5.6.9.8"}],
+                                        "private": [{"version": 4,
+                                                     "addr": "10.13.12.13"}]},
+                          "metadata": {'test': '123', 'this': 'that'}},
+                         # 7
+                         {"id": "InstanceInResize",
+                          "name": "server-with-metadata",
+                          "OS-EXT-STS:task_state": 'resize_finish',
+                          "image": {"id": 2, "name": "sample image"},
+                          "flavor": {"id": 1, "name": "256 MB Server"},
+                          "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                          "status": "ACTIVE",
+                          "accessIPv4": "192.0.2.0",
+                          "accessIPv6": "::babe:4317:0A83",
+                          "addresses": {"public": [{"version": 4,
+                                                    "addr": "4.5.6.7"},
+                                                   {"version": 4,
+                                                    "addr": "5.6.9.8"}],
+                                        "private": [{"version": 4,
+                                                     "addr": "10.13.12.13"}]},
+                          "metadata": {'test': '123', 'this': 'that'}},
+                         # 8
+                         {"id": "InstanceInActive",
+                          "name": "server-with-metadata",
+                          "OS-EXT-STS:task_state": 'active',
+                          "image": {"id": 2, "name": "sample image"},
+                          "flavor": {"id": 1, "name": "256 MB Server"},
+                          "hostId": "9e107d9d372bb6826bd81d3542a419d6",
+                          "status": "ACTIVE",
+                          "accessIPv4": "192.0.2.0",
+                          "accessIPv6": "::babe:4317:0A83",
+                          "addresses": {"public": [{"version": 4,
+                                                    "addr": "4.5.6.7"},
+                                                   {"version": 4,
+                                                    "addr": "5.6.9.8"}],
+                                        "private": [{"version": 4,
+                                                     "addr": "10.13.12.13"}]},
+                          "metadata": {'test': '123', 'this': 'that'}},
+                         # 9
+                         {"id": "AnotherServer",
+                          "name": "server-with-metadata",
+                          "OS-EXT-STS:task_state": 'active',
                           "image": {"id": 2, "name": "sample image"},
                           "flavor": {"id": 1, "name": "256 MB Server"},
                           "hostId": "9e107d9d372bb6826bd81d3542a419d6",
@@ -214,6 +288,22 @@ class FakeSessionClient(base_client.SessionClient):
 
     def get_servers_WikiServerOne(self, **kw):
         r = {'server': self.get_servers_detail()[1]['servers'][0]}
+        return (200, r)
+
+    def get_servers_WikiDatabase(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][6]}
+        return (200, r)
+
+    def get_servers_InstanceInResize(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][7]}
+        return (200, r)
+
+    def get_servers_InstanceInActive(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][8]}
+        return (200, r)
+
+    def get_servers_AnotherServer(self, **kw):
+        r = {'server': self.get_servers_detail()[1]['servers'][9]}
         return (200, r)
 
     def get_servers_WikiServerOne1(self, **kw):

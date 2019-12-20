@@ -169,6 +169,11 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
                 raise
         return server
 
+    def fetch_server_attr(self, server_id, attr):
+        server = self.fetch_server(server_id)
+        fetched_attr = getattr(server, attr, None)
+        return fetched_attr
+
     def refresh_server(self, server):
         """Refresh server's attributes.
 
@@ -561,6 +566,10 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         if status == 'ACTIVE':
             return True
         if status == 'VERIFY_RESIZE':
+            return False
+        task_state_in_nova = getattr(server, 'OS-EXT-STS:task_state', None)
+        # Wait till move out from any resize steps (including resize_finish).
+        if task_state_in_nova is not None and 'resize' in task_state_in_nova:
             return False
         else:
             msg = _("Confirm resize for server %s failed") % server_id
