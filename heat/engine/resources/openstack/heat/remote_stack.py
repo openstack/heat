@@ -467,7 +467,7 @@ class RemoteStack(resource.Resource):
             after_props.get(self.CONTEXT).get(
                 'region_name') != before_props.get(self.CONTEXT).get(
                     'region_name')):
-                return True
+            return True
         return False
 
 

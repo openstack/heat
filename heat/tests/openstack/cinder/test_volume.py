@@ -893,6 +893,37 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 
+    def test_cinder_volume_attachment_with_serv_resize_task_state(self):
+        self.stack_name = 'test_cvolume_attach_usrv_resize_task_state_stack'
+
+        fv1 = self._mock_create_server_volume_script(
+            vt_base.FakeVolume('attaching'))
+        fva = vt_base.FakeVolume('in-use')
+        fv2 = self._mock_create_server_volume_script(
+            vt_base.FakeVolume('attaching'), update=True)
+        self._mock_create_volume(vt_base.FakeVolume('creating'),
+                                 self.stack_name,
+                                 extra_get_mocks=[
+                                     fv1, fva,
+                                     vt_base.FakeVolume('available'), fv2])
+        self.stub_VolumeConstraint_validate()
+
+        # delete script
+        self.fc.volumes.get_server_volume.side_effect = [
+            fva, fva, fakes_nova.fake_exception()]
+        self.fc.volumes.delete_server_volume.return_value = None
+
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+
+        self.create_volume(self.t, stack, 'volume')
+
+        rsrc = self.create_attachment(self.t, stack, 'attachment')
+        prg_detach = mock.MagicMock(cinder_complete=True, nova_complete=True)
+        prg_attach = mock.MagicMock(called=False, srv_id='InstanceInResize')
+        self.assertEqual(False,
+                         rsrc.check_update_complete((prg_detach, prg_attach)))
+        self.assertEqual(False, prg_attach.called)
+
     def test_delete_attachment_has_not_been_created(self):
         self.stack_name = 'test_delete_attachment_has_not_been_created'
         stack = utils.parse_stack(self.t, stack_name=self.stack_name)
@@ -1234,3 +1265,87 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         }
 
         self.assertEqual(expected, reality)
+
+    def test_detach_volume_to_complete_with_resize_task_state(self):
+        fv = vt_base.FakeVolume('creating')
+        self.stack_name = 'test_cvolume_detach_with_resize_task_state_stack'
+
+        self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
+        self.stub_VolumeTypeConstraint_validate()
+        self.cinder_fc.volumes.create.return_value = fv
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
+
+        self.t['resources']['volume']['properties'].update({
+            'volume_type': 'lvm',
+        })
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+        rsrc = self.create_volume(self.t, stack, 'volume')
+        prg_detach = mock.MagicMock(called=False, srv_id='InstanceInResize')
+        self.assertEqual(False, rsrc._detach_volume_to_complete(prg_detach))
+        self.assertEqual(False, prg_detach.called)
+
+    def test_detach_volume_to_complete_with_active_task_state(self):
+        fv = vt_base.FakeVolume('creating')
+        self.stack_name = 'test_cvolume_detach_with_active_task_state_stack'
+
+        self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
+        self.stub_VolumeTypeConstraint_validate()
+        self.cinder_fc.volumes.create.return_value = fv
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
+
+        self.t['resources']['volume']['properties'].update({
+            'volume_type': 'lvm',
+        })
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+        rsrc = self.create_volume(self.t, stack, 'volume')
+        prg_detach = mock.MagicMock(called=False, srv_id='InstanceInActive')
+        self.assertEqual(False, rsrc._detach_volume_to_complete(prg_detach))
+        self.assertEqual(True, prg_detach.called)
+
+    def test_attach_volume_to_complete_with_resize_task_state(self):
+        fv = vt_base.FakeVolume('creating')
+        self.stack_name = 'test_cvolume_attach_with_resize_task_state_stack'
+
+        self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
+        self.stub_VolumeTypeConstraint_validate()
+        self.cinder_fc.volumes.create.return_value = fv
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
+
+        self.t['resources']['volume']['properties'].update({
+            'volume_type': 'lvm',
+        })
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+        rsrc = self.create_volume(self.t, stack, 'volume')
+        prg_attach = mock.MagicMock(called=False, srv_id='InstanceInResize')
+        self.assertEqual(False, rsrc._attach_volume_to_complete(prg_attach))
+        self.assertEqual(False, prg_attach.called)
+
+    def test_attach_volume_to_complete_with_active_task_state(self):
+        fv = vt_base.FakeVolume('creating')
+        self.stack_name = 'test_cvolume_attach_with_active_task_state_stack'
+
+        self.stub_SnapshotConstraint_validate()
+        self.stub_VolumeConstraint_validate()
+        self.stub_VolumeTypeConstraint_validate()
+        self.cinder_fc.volumes.create.return_value = fv
+        self.cinder_fc.volumes.create.return_value = fv
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
+
+        self.t['resources']['volume']['properties'].update({
+            'volume_type': 'lvm',
+        })
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+        rsrc = self.create_volume(self.t, stack, 'volume')
+        self._mock_create_server_volume_script(
+            vt_base.FakeVolume('attaching'))
+
+        prg_attach = mock.MagicMock(called=False, srv_id='InstanceInActive')
+        self.assertEqual(False, rsrc._attach_volume_to_complete(prg_attach))
+        self.assertEqual('vol-123', prg_attach.called)

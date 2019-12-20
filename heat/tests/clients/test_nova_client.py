@@ -181,6 +181,26 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
         observed = self.nova_plugin.get_status(server)
         self.assertEqual('ACTIVE', observed)
 
+    def test_check_verify_resize_task_state(self):
+        """Tests the check_verify_resize function with resize task_state."""
+        my_server = mock.MagicMock(status='Foo')
+        setattr(my_server, 'OS-EXT-STS:task_state', 'resize_finish')
+        self.nova_client.servers.get.side_effect = [my_server]
+
+        self.assertEqual(
+            False, self.nova_plugin.check_verify_resize('my_server'))
+
+    def test_check_verify_resize_error(self):
+        """Tests the check_verify_resize function with unknown status."""
+        my_server = mock.MagicMock(status='Foo')
+        setattr(my_server, 'OS-EXT-STS:task_state', 'active')
+        self.nova_client.servers.get.side_effect = [my_server]
+
+        self.assertRaises(
+            exception.ResourceUnknownStatus,
+            self.nova_plugin.check_verify_resize,
+            'my_server')
+
     def _absolute_limits(self):
         max_personality = mock.Mock()
         max_personality.name = 'maxPersonality'
