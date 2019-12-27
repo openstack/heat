@@ -14,16 +14,14 @@
 import os
 import unittest
 
-from heat_integrationtests.common import config
-
 from oslo_log import log as logging
+from tempest import config
 
 LOG = logging.getLogger(__name__, project=__name__)
 
 
 def load_tests(loader, standard_tests, pattern):
-    logging.setup(config.init_conf(), __name__)
-
+    logging.setup(config.CONF, __name__)
     suite = unittest.TestSuite()
 
     heat_integration_dir = os.path.dirname(os.path.abspath(__file__))

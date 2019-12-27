@@ -23,11 +23,11 @@ from oslo_log import log as logging
 from oslo_utils import timeutils
 import six
 from six.moves import urllib
+from tempest import config
 import testscenarios
 import testtools
 
 from heat_integrationtests.common import clients
-from heat_integrationtests.common import config
 from heat_integrationtests.common import exceptions
 
 LOG = logging.getLogger(__name__)
@@ -71,8 +71,7 @@ def requires_convergence(test_method):
 
     The decorated test will be skipped when convergence is disabled.
     '''
-    convergence_enabled = config.init_conf(
-    ).heat_plugin.convergence_engine_enabled
+    convergence_enabled = config.CONF.heat_plugin.convergence_engine_enabled
     skipper = testtools.skipUnless(convergence_enabled,
                                    "Convergence-only tests are disabled")
     return skipper(test_method)
@@ -84,7 +83,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def setUp(self):
         super(HeatIntegrationTest, self).setUp()
 
-        self.conf = config.init_conf().heat_plugin
+        self.conf = config.CONF.heat_plugin
 
         self.assertIsNotNone(self.conf.auth_url,
                              'No auth_url configured')

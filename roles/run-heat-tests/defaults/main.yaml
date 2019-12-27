@@ -1,0 +1,2 @@
+devstack_base_dir: /opt/stack
+tempest_test_timeout: ''
