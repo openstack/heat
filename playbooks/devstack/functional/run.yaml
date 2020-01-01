@@ -86,6 +86,7 @@
 
           export OVERRIDE_ENABLED_SERVICES=$services
 
+          export BRANCH_OVERRIDE="{{ branch_override | default('default') }}"
           if [ "{{ branch_override }}" != "default" ] ; then
               export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
           fi
