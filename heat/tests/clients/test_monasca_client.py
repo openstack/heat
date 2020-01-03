@@ -14,8 +14,6 @@
 import mock
 import six
 
-import monascaclient
-
 from heat.common import exception as heat_exception
 from heat.engine.clients.os import monasca as client_plugin
 from heat.tests import common
@@ -49,8 +47,7 @@ class MonascaClientPluginTest(common.HeatTestCase):
         client = plugin.client()
         self.assertIsNotNone(client.metrics)
 
-    @mock.patch.object(monascaclient.client, '_session')
-    def test_client_uses_session(self, mock_session):
+    def test_client_uses_session(self):
         context = mock.MagicMock()
         monasca_client = client_plugin.MonascaClientPlugin(context=context)
         self.assertIsNotNone(monasca_client._create())

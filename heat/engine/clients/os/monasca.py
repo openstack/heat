@@ -11,8 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from monascaclient import client
 from monascaclient import exc as monasca_exc
+from monascaclient.v2_0 import client as monasca_client
 
 from heat.common import exception as heat_exc
 from heat.engine.clients import client_plugin
@@ -32,9 +32,12 @@ class MonascaClientPlugin(client_plugin.ClientPlugin):
         interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         endpoint = self.url_for(service_type=self.MONITORING,
                                 endpoint_type=interface)
-        return client.Client(
-            self.VERSION,
+
+        # Directly use v2_0 client to avoid dynamic import in monasca client,
+        # We can switch back once https://review.opendev.org/#/c/700989 fixed.
+        return monasca_client.Client(
             session=self.context.keystone_session,
+            service_type='monitoring',
             endpoint=endpoint)
 
     def is_not_found(self, ex):
