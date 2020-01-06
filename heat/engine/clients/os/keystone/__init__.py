@@ -157,17 +157,16 @@ class KeystoneClientPlugin(client_plugin.ClientPlugin):
         if not domain:
             user, domain = self.parse_entity_with_domain(user,
                                                          'KeystoneUser')
-
         try:
             user_obj = self.client().client.users.get(user)
             return user_obj.id
         except ks_exceptions.NotFound:
-            user_list = self.client().client.users.list(name=user,
-                                                        domain=domain)
-            for user_obj in user_list:
-                if user_obj.name == user:
-                    return user_obj.id
-
+            try:
+                user_obj = self.client().client.users.find(name=user,
+                                                           domain=domain)
+                return user_obj.id
+            except ks_exceptions.NotFound:
+                pass
         raise exception.EntityNotFound(entity='KeystoneUser', name=user)
 
     def get_region_id(self, region):

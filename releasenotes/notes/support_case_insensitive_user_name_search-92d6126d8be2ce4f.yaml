@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    On clouds where Keystone usernames are `case-insensitive
+    <https://docs.openstack.org/keystone/latest/admin/case-insensitive.html>`_,
+    Heat will now allow usernames with any case as property and
+    parameter values where a Keystone user is expected
+    (i.e. a ``keystone.user`` custom constraint applies).
+    Previously the case had to match the case with which the name
+    was stored in Keystone, even if Keystone itself was
+    case-insensitive.
