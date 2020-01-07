@@ -11,6 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import abc
+
+import six
+
 from oslo_cache import core
 from oslo_config import cfg
 
@@ -25,3 +29,20 @@ MEMOIZE_FINDER = core.get_memoization_decorator(
     conf=cfg.CONF,
     region=cache.get_cache_region(),
     group="resource_finder_cache")
+
+
+@six.add_metaclass(abc.ABCMeta)
+class ExtensionMixin(object):
+    def __init__(self, *args, **kwargs):
+        super(ExtensionMixin, self).__init__(*args, **kwargs)
+        self._extensions = None
+
+    @abc.abstractmethod
+    def _list_extensions(self):
+        return []
+
+    def has_extension(self, alias):
+        """Check if specific extension is present."""
+        if self._extensions is None:
+            self._extensions = set(self._list_extensions())
+        return alias in self._extensions

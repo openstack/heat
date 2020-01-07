@@ -23,7 +23,8 @@ from heat.engine.clients import client_plugin
 from heat.engine.clients import os as os_client
 
 
-class NeutronClientPlugin(client_plugin.ClientPlugin):
+class NeutronClientPlugin(os_client.ExtensionMixin,
+                          client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
@@ -116,10 +117,6 @@ class NeutronClientPlugin(client_plugin.ClientPlugin):
     def _list_extensions(self):
         extensions = self.client().list_extensions().get('extensions')
         return set(extension.get('alias') for extension in extensions)
-
-    def has_extension(self, alias):
-        """Check if specific extension is present."""
-        return alias in self._list_extensions()
 
     def _resolve(self, props, key, id_key, key_type):
         if props.get(key):
