@@ -1,26 +1,106 @@
 - job:
-    name: heat-functional-devstack-base
-    parent: legacy-dsvm-base
+    name: heat-functional-base
+    parent: devstack
+    abstract: true
     run: playbooks/devstack/functional/run.yaml
     post-run: playbooks/devstack/functional/post.yaml
+    description: Base heat functional test job
     timeout: 7800
+    roles:
+      - zuul: opendev.org/openstack/devstack
+      - zuul: opendev.org/openstack/tempest
     required-projects:
       - openstack/devstack-gate
       - openstack/aodh
       - openstack/barbican
-      - openstack/barbican-tempest-plugin
       - openstack/ceilometer
-      - openstack/devstack-plugin-amqp1
       - openstack/heat
+      - openstack/heat-templates
       - openstack/heat-tempest-plugin
-      - openstack/neutron
       - openstack/octavia
+      - openstack/neutron
       - openstack/oslo.messaging
       - openstack/python-barbicanclient
       - openstack/python-heatclient
       - openstack/heat-agents
       - openstack/python-zaqarclient
       - openstack/zaqar
+      - openstack/tempest
+    vars:
+      gabbi_tempest_path: heat_tempest_plugin.tests.api.gabbits
+      tempest_plugins:
+        - heat-tempest-plugin
+      devstack_localrc:
+        TEMPEST_PLUGINS: '/opt/stack/heat-tempest-plugin'
+        HEAT_USE_MOD_WSGI: True
+        CEILOMETER_PIPELINE_INTERVAL: 60
+      devstack_services:
+        tls-proxy: false
+        s-account: false
+        s-container: false
+        s-object: false
+        s-proxy: false
+        tempest: true
+      devstack_plugins:
+        barbican: https://opendev.org/openstack/barbican
+        ceilometer: https://opendev.org/openstack/ceilometer
+        aodh: https://opendev.org/openstack/aodh
+        zaqar: https://opendev.org/openstack/zaqar
+        heat: https://opendev.org/openstack/heat
+        octavia: https://opendev.org/openstack/octavia
+      devstack_local_conf:
+        post-config:
+          $HEAT_CONF:
+            DEFAULT:
+              convergence_engine: true
+              stack_scheduler_hints: true
+              hidden_stack_tags: hidden
+              encrypt_parameters_and_properties: True
+              logging_exception_prefix: "%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s"
+              enable_stack_adopt: true
+              enable_stack_abandon: true
+              heat_api:
+                workers: 2
+              heat_api_cfn:
+                workers: 2
+              cache:
+                enabled: True
+              eventlet_opts:
+                client_socket_timeout: 120
+              oslo_messaging_notifications:
+                driver: messagingv2
+        test-config:
+          $TEMPEST_CONFIG:
+            service_available:
+              heat: True
+            heat_plugin:
+              convergence_engine_enabled: true
+              minimal_image_ref: ${DEFAULT_IMAGE_NAME:-cirros-0.3.6-x86_64-disk}
+              instance_type: m1.heat_int
+              minimal_instance_type: m1.heat_micro
+              image_ref: Fedora-Cloud-Base-29-1.2.x86_64
+              hidden_stack_tag: hidden
+              heat_config_notify_script: /opt/stack/heat-agents/heat-config/bin/heat-config-notify
+              boot_config_env: /opt/stack/heat-templates/hot/software-config/boot-config/test_image_env.yaml
+              credential_secret_id: $OS_CREDENTIAL_SECRET_ID
+            heat_features_enabled:
+              multi_cloud: True
+            # disable cinder backup feature
+            volume-feature-enabled:
+              backup: False
+      test_results_stage_name: test_results
+      zuul_copy_output:
+        '{{ devstack_base_dir }}/tempest/etc/tempest.conf': logs
+        '{{ devstack_base_dir }}/tempest/etc/accounts.yaml': logs
+        '{{ devstack_base_dir }}/tempest/tempest.log': logs
+        '{{ stage_dir }}/{{ test_results_stage_name }}.subunit': logs
+        '{{ stage_dir }}/{{ test_results_stage_name }}.html': logs
+        '{{ stage_dir }}/stackviz': logs
+      extensions_to_txt:
+        conf: true
+        log: true
+        yaml: true
+        yml: true
     irrelevant-files:
       - ^.*\.rst$
       - ^api-ref/.*$
@@ -28,44 +108,31 @@
       - ^heat/locale/.*$
       - ^heat/tests/.*$
       - ^releasenotes/.*$
-    vars:
-      disable_convergence: 'false'
-      sql: mysql
-      use_amqp1: 0
-      use_apache: 1
-      use_python3: 1
-      branch_override: default
 
-- job:
-    name: heat-functional-legacy
-    parent: heat-functional-devstack-base
-    vars:
-      disable_convergence: 'true'
 
 - job:
     name: heat-functional
-    parent: heat-functional-devstack-base
+    parent: heat-functional-base
 
 - job:
-    name: heat-functional-amqp1
-    parent: heat-functional-devstack-base
-    voting: false
-    branches: master
+    name: heat-functional-legacy
+    parent: heat-functional-base
     vars:
-      use_amqp1: 1
-
-- job:
-    name: heat-functional-non-apache
-    parent: heat-functional-devstack-base
-    voting: false
-    vars:
-      use_apache: 0
+      devstack_local_conf:
+        post-config:
+          $HEAT_CONF:
+            DEFAULT:
+              convergence_engine: false
+        test-config:
+          $TEMPEST_CONFIG:
+            heat_plugin:
+              convergence_engine_enabled: false
 
 - job:
     name: grenade-heat
     parent: legacy-dsvm-base
     run: playbooks/devstack/grenade/run.yaml
-    post-run: playbooks/devstack/functional/post.yaml
+    post-run: playbooks/devstack/grenade/post.yaml
     timeout: 7800
     required-projects:
       - openstack/grenade
@@ -110,8 +177,6 @@
         - grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
-        - heat-functional-amqp1
-        - heat-functional-non-apache
     gate:
       queue: heat
       jobs:

@@ -1,15 +1,19 @@
 - hosts: primary
+  name: Clear test env
   tasks:
+    - name: clear test env
+      shell:
+        cmd: |
+            /opt/stack/heat/heat_integrationtests/cleanup_test_env.sh
+        executable: /bin/bash
+        chdir: "{{ zuul.project.src_dir }}"
+      environment:
+        DEVSTACK_BASE_DIR: "{{ devstack_base_dir }}"
+      become: true
 
-    - name: Copy files from {{ ansible_user_dir }}/workspace/ on node
-      synchronize:
-        src: '{{ ansible_user_dir }}/workspace/'
-        dest: '{{ zuul.executor.log_root }}'
-        mode: pull
-        copy_links: true
-        verify_host: true
-        rsync_opts:
-          - --include=/logs/**
-          - --include=*/
-          - --exclude=*
-          - --prune-empty-dirs
+- hosts: tempest
+  become: true
+  roles:
+    - role: fetch-subunit-output
+      zuul_work_dir: '{{ devstack_base_dir }}/tempest'
+    - role: process-stackviz

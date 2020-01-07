@@ -1,116 +1,15 @@
 - hosts: all
-  name: Job for functional tests
-  tasks:
+  roles:
+    - orchestrate-devstack
 
-    - name: Ensure legacy workspace directory
-      file:
-        path: '{{ ansible_user_dir }}/workspace'
-        state: directory
-
-    - shell:
-        cmd: |
-          set -e
-          set -x
-          cat > clonemap.yaml << EOF
-          clonemap:
-            - name: openstack/devstack-gate
-              dest: devstack-gate
-          EOF
-          /usr/zuul-env/bin/zuul-cloner -m clonemap.yaml --cache-dir /opt/git \
-              https://opendev.org \
-              openstack/devstack-gate
-        executable: /bin/bash
-        chdir: '{{ ansible_user_dir }}/workspace'
-
-    - shell:
-        cmd: |
-          set -e
-          set -x
-          export PYTHONUNBUFFERED=true
-          services=rabbit,tempest,mysql,dstat,key
-          services+=,n-api,n-api-meta,n-cpu,n-cond,n-sch,n-crt
-          services+=,placement-api,placement-client
-          services+=,g-api,g-reg
-          services+=,c-sch,c-api,c-vol,c-bak
-          services+=,neutron-api,neutron-dhcp,neutron-metadata-agent,neutron-agent,neutron-l3,neutron-trunk
-
-          if [ "{{ use_python3 }}" -eq 1 ] ; then
-             export DEVSTACK_GATE_USE_PYTHON3=True
-             # Swift does not work so skip s-* for python3x for now
-          else
-             export DEVSTACK_GATE_USE_PYTHON3=False
-             services+=,s-proxy,s-object,s-container,s-account
-          fi
-
-          export DEVSTACK_GATE_NEUTRON=1
-          export DEVSTACK_GATE_TEMPEST=1
-          export DEVSTACK_GATE_TEMPEST_NOTESTS=1
-          export DEVSTACK_GATE_INSTALL_TESTONLY=1
-          export DEVSTACK_PROJECT_FROM_GIT=python-heatclient
-          export KEEP_LOCALRC=1
-          export PROJECTS="openstack/ceilometer $PROJECTS"
-          export PROJECTS="openstack/aodh $PROJECTS"
-          export PROJECTS="openstack/zaqar $PROJECTS"
-          export PROJECTS="openstack/heat-agents $PROJECTS"
-          export PROJECTS="openstack/python-zaqarclient $PROJECTS"
-          export PROJECTS="openstack/neutron $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin ceilometer https://opendev.org/openstack/ceilometer"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin aodh https://opendev.org/openstack/aodh"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin zaqar https://opendev.org/openstack/zaqar"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin neutron https://opendev.org/openstack/neutron"
-
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin heat https://opendev.org/openstack/heat"
-
-          # Enable octavia plugin and services
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin octavia https://opendev.org/openstack/octavia"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_FILE=/tmp/test-only-amphora-x64-haproxy-ubuntu-bionic.qcow2"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_SIZE=3"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMP_IMAGE_NAME=test-only-amphora-x64-haproxy-ubuntu-bionic"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_AMPHORA_DRIVER=amphora_noop_driver"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_COMPUTE_DRIVER=compute_noop_driver"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"OCTAVIA_NETWORK_DRIVER=network_noop_driver"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"DISABLE_AMP_IMAGE_BUILD=True"
-          services+=,octavia,o-cw,o-hk,o-hm,o-api
-          export PROJECTS="openstack/octavia $PROJECTS"
-          export PROJECTS="openstack/barbican $PROJECTS"
-          export PROJECTS="openstack/python-barbicanclient $PROJECTS"
-          export PROJECTS="openstack/barbican-tempest-plugin $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin barbican https://opendev.org/openstack/barbican"
-
-          # use heat-tempest-plugin
-          export PROJECTS="openstack/heat-tempest-plugin $PROJECTS"
-          export DEVSTACK_LOCAL_CONFIG+=$'\n'"TEMPEST_PLUGINS+=' /opt/stack/new/heat-tempest-plugin'"
-
-          export OVERRIDE_ENABLED_SERVICES=$services
-
-          if [ "{{ branch_override }}" != "default" ] ; then
-              export OVERRIDE_ZUUL_BRANCH=$BRANCH_OVERRIDE
-          fi
-          if [ "{{ use_apache  }}" -eq 0 ] ; then
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"HEAT_USE_MOD_WSGI=False"
-          fi
-          if [ "{{ use_amqp1 }}" -eq 1 ] ; then
-              export PROJECTS="openstack/devstack-plugin-amqp1 $PROJECTS"
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"export AMQP1_SERVICE=qpid-hybrid"
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"enable_plugin devstack-plugin-amqp1 https://opendev.org/openstack/devstack-plugin-amqp1"
-              export DEVSTACK_LOCAL_CONFIG+=$'\n'"export CELLSV2_SETUP=singleconductor"
-              export DEVSTACK_PROJECT_FROM_GIT="oslo.messaging,$DEVSTACK_PROJECT_FROM_GIT"
-          fi
-          export DISABLE_CONVERGENCE="{{ disable_convergence }}"
-          function pre_test_hook {
-              cd /opt/stack/new/heat/heat_integrationtests
-              source ./pre_test_hook.sh
-          }
-          export -f pre_test_hook
-
-          function post_test_hook {
-              cd /opt/stack/new/heat/heat_integrationtests
-              source ./post_test_hook.sh
-          }
-          export -f post_test_hook
-
-          cp devstack-gate/devstack-vm-gate-wrap.sh ./safe-devstack-vm-gate-wrap.sh
-          ./safe-devstack-vm-gate-wrap.sh
-        executable: /bin/bash
-        chdir: '{{ ansible_user_dir }}/workspace'
-      environment: '{{ zuul | zuul_legacy_vars }}'
+- hosts: tempest
+  environment:
+    # This enviroment variable is used by the optional tempest-gabbi
+    # job provided by the gabbi-tempest plugin. It can be safely ignored
+    # if that plugin is not being used.
+    GABBI_TEMPEST_PATH: "{{ gabbi_tempest_path | default('') }}"
+  roles:
+    - setup-tempest-run-dir
+    - setup-tempest-data-dir
+    - acl-devstack-files
+    - run-heat-tests

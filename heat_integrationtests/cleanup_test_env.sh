@@ -12,7 +12,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-# This script is executed inside post_test_hook function in devstack gate.
+# This script is executed in devstack gate.
 
 set -ex
 
