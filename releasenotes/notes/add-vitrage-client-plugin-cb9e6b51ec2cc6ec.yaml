@@ -1,0 +1,4 @@
+---
+features:
+  - Introduce a Vitrage client plugin module that will be used by the
+    Vitrage resources.
