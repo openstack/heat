@@ -1,22 +1,38 @@
 {
-    "description": "Initial template of KeyPair",
     "heat_template_version": "2016-10-14",
-    "outputs": {
-        "private_key": {
-            "description": "The private key if it has been saved.",
-            "value": "{\"get_attr\": [\"KeyPair\", \"private_key\"]}"
-        },
-        "public_key": {
-            "description": "The public key.",
-            "value": "{\"get_attr\": [\"KeyPair\", \"public_key\"]}"
-        },
-        "show": {
-            "description": "Detailed information about resource.",
-            "value": "{\"get_attr\": [\"KeyPair\", \"show\"]}"
-        }
-    },
+    "description": "Initial template of KeyPair",
     "parameters": {
+        "public_key": {
+            "type": "string",
+            "description": "The optional public key. This allows users to supply the public key from a pre-existing key pair. If not supplied, a new key pair will be generated."
+        },
+        "save_private_key": {
+            "default": false,
+            "type": "boolean",
+            "description": "True if the system should remember a generated private key; False otherwise."
+        },
+        "type": {
+            "type": "string",
+            "description": "Keypair type. Supported since Nova api version 2.2.",
+            "constraints": [
+                {
+                    "allowed_values": [
+                        "ssh",
+                        "x509"
+                    ]
+                }
+            ]
+        },
+        "user": {
+            "type": "string",
+            "description": "ID or name of user to whom to add key-pair. The usage of this property is limited to being used by administrators only. Supported since Nova api version 2.10.",
+            "constraints": [
+                {}
+            ]
+        },
         "name": {
+            "type": "string",
+            "description": "The name of the key pair.",
             "constraints": [
                 {
                     "length": {
@@ -24,34 +40,63 @@
                         "min": 1
                     }
                 }
-            ],
-            "description": "The name of the key pair.",
-            "type": "string"
-        },
-        "public_key": {
-            "description": "The optional public key. This allows users to supply the public key from a pre-existing key pair. If not supplied, a new key pair will be generated.",
-            "type": "string"
-        },
-        "save_private_key": {
-            "default": false,
-            "description": "True if the system should remember a generated private key; False otherwise.",
-            "type": "boolean"
+            ]
         }
     },
     "resources": {
         "KeyPair": {
+            "type": "OS::Nova::KeyPair",
             "properties": {
-                "name": {
-                    "get_param": "name"
-                },
                 "public_key": {
                     "get_param": "public_key"
                 },
                 "save_private_key": {
                     "get_param": "save_private_key"
+                },
+                "type": {
+                    "get_param": "type"
+                },
+                "user": {
+                    "get_param": "user"
+                },
+                "name": {
+                    "get_param": "name"
                 }
-            },
-            "type": "OS::Nova::KeyPair"
+            }
+        }
+    },
+    "outputs": {
+        "public_key": {
+            "description": "The public key.",
+            "value": {
+                "get_attr": [
+                    "KeyPair",
+                    "public_key"
+                ]
+            }
+        },
+        "private_key": {
+            "description": "The private key if it has been saved.",
+            "value": {
+                "get_attr": [
+                    "KeyPair",
+                    "private_key"
+                ]
+            }
+        },
+        "OS::stack_id": {
+            "value": {
+                "get_resource": "KeyPair"
+            }
+        },
+        "show": {
+            "description": "Detailed information about resource.",
+            "value": {
+                "get_attr": [
+                    "KeyPair",
+                    "show"
+                ]
+            }
         }
     }
 }

@@ -1,57 +1,95 @@
 {
-    "Description": "Initial template of KeyPair",
     "HeatTemplateFormatVersion": "2012-12-12",
-    "Outputs": {
-        "private_key": {
-            "Description": "The private key if it has been saved.",
-            "Value": "{\"Fn::GetAtt\": [\"KeyPair\", \"private_key\"]}"
-        },
-        "public_key": {
-            "Description": "The public key.",
-            "Value": "{\"Fn::GetAtt\": [\"KeyPair\", \"public_key\"]}"
-        },
-        "show": {
-            "Description": "Detailed information about resource.",
-            "Value": "{\"Fn::GetAtt\": [\"KeyPair\", \"show\"]}"
-        }
-    },
+    "Description": "Initial template of KeyPair",
     "Parameters": {
-        "name": {
-            "Description": "The name of the key pair.",
-            "MaxLength": 255,
-            "MinLength": 1,
-            "Type": "String"
-        },
         "public_key": {
-            "Description": "The optional public key. This allows users to supply the public key from a pre-existing key pair. If not supplied, a new key pair will be generated.",
-            "Type": "String"
+            "Type": "String",
+            "Description": "The optional public key. This allows users to supply the public key from a pre-existing key pair. If not supplied, a new key pair will be generated."
         },
         "save_private_key": {
+            "Default": false,
+            "Type": "Boolean",
+            "Description": "True if the system should remember a generated private key; False otherwise.",
             "AllowedValues": [
                 "True",
                 "true",
                 "False",
                 "false"
-            ],
-            "Default": false,
-            "Description": "True if the system should remember a generated private key; False otherwise.",
-            "Type": "Boolean"
+            ]
+        },
+        "type": {
+            "Type": "String",
+            "Description": "Keypair type. Supported since Nova api version 2.2.",
+            "AllowedValues": [
+                "ssh",
+                "x509"
+            ]
+        },
+        "user": {
+            "Type": "String",
+            "Description": "ID or name of user to whom to add key-pair. The usage of this property is limited to being used by administrators only. Supported since Nova api version 2.10."
+        },
+        "name": {
+            "MinLength": 1,
+            "Type": "String",
+            "Description": "The name of the key pair.",
+            "MaxLength": 255
         }
     },
     "Resources": {
         "KeyPair": {
+            "Type": "OS::Nova::KeyPair",
             "Properties": {
-                "name": {
-                    "Ref": "name"
-                },
                 "public_key": {
                     "Ref": "public_key"
                 },
                 "save_private_key": {
                     "Ref": "save_private_key"
+                },
+                "type": {
+                    "Ref": "type"
+                },
+                "user": {
+                    "Ref": "user"
+                },
+                "name": {
+                    "Ref": "name"
                 }
-            },
-            "Type": "OS::Nova::KeyPair"
+            }
+        }
+    },
+    "Outputs": {
+        "public_key": {
+            "Description": "The public key.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "KeyPair",
+                    "public_key"
+                ]
+            }
+        },
+        "private_key": {
+            "Description": "The private key if it has been saved.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "KeyPair",
+                    "private_key"
+                ]
+            }
+        },
+        "OS::stack_id": {
+            "Value": {
+                "Ref": "KeyPair"
+            }
+        },
+        "show": {
+            "Description": "Detailed information about resource.",
+            "Value": {
+                "Fn::GetAtt": [
+                    "KeyPair",
+                    "show"
+                ]
+            }
         }
     }
 }
