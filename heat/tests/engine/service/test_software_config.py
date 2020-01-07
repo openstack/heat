@@ -170,6 +170,20 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                          config['outputs'])
         self.assertEqual(kwargs['options'], config['options'])
 
+    def test_create_software_config_structured(self):
+        kwargs = {
+            'group': 'json-file',
+            'name': 'config_heat',
+            'config': {'foo': 'bar'},
+            'inputs': [{'name': 'mode'}],
+            'outputs': [{'name': 'endpoint'}],
+            'options': {}
+        }
+        config = self._create_software_config(**kwargs)
+        config_id = config['id']
+        config = self.engine.show_software_config(self.ctx, config_id)
+        self.assertEqual(kwargs['config'], config['config'])
+
     def test_delete_software_config(self):
         config = self._create_software_config()
         self.assertIsNotNone(config)
