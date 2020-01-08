@@ -29,7 +29,8 @@ LOG = logging.getLogger(__name__)
 CLIENT_NAME = 'cinder'
 
 
-class CinderClientPlugin(client_plugin.ClientPlugin):
+class CinderClientPlugin(os_client.ExtensionMixin,
+                         client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
@@ -75,10 +76,6 @@ class CinderClientPlugin(client_plugin.ClientPlugin):
     def _list_extensions(self):
         extensions = self.client().list_extensions.show_all()
         return set(extension.alias for extension in extensions)
-
-    def has_extension(self, alias):
-        """Check if specific extension is present."""
-        return alias in self._list_extensions()
 
     def get_volume(self, volume):
         try:

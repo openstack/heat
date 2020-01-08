@@ -49,6 +49,7 @@ class ClientPlugin(object):
         self._context = weakref.ref(context)
         self._clients = weakref.ref(context.clients)
         self._client_instances = {}
+        self._endpoint_existence = {}
 
     @property
     def context(self):
@@ -163,14 +164,18 @@ class ClientPlugin(object):
     def does_endpoint_exist(self,
                             service_type,
                             service_name):
-        endpoint_type = self._get_client_option(service_name,
-                                                'endpoint_type')
-        try:
-            self.url_for(service_type=service_type,
-                         endpoint_type=endpoint_type)
-            return True
-        except exceptions.EndpointNotFound:
-            return False
+        endpoint_key = (service_type, service_name)
+        if endpoint_key not in self._endpoint_existence:
+            endpoint_type = self._get_client_option(service_name,
+                                                    'endpoint_type')
+            try:
+                self.url_for(service_type=service_type,
+                             endpoint_type=endpoint_type)
+                self._endpoint_existence[endpoint_key] = True
+            except exceptions.EndpointNotFound:
+                self._endpoint_existence[endpoint_key] = False
+
+        return self._endpoint_existence[endpoint_key]
 
 
 def retry_if_connection_err(exception):
