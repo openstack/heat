@@ -129,6 +129,14 @@
               convergence_engine_enabled: false
 
 - job:
+    name: heat-functional-non-apache
+    parent: heat-functional-base
+    voting: false
+    vars:
+      devstack_localrc:
+        HEAT_USE_MOD_WSGI: False
+
+- job:
     name: grenade-heat
     parent: legacy-dsvm-base
     run: playbooks/devstack/grenade/run.yaml
@@ -177,6 +185,7 @@
         - grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
+        - heat-functional-non-apache
     gate:
       queue: heat
       jobs:
