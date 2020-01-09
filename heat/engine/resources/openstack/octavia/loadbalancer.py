@@ -16,6 +16,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.octavia import octavia_base
+from heat.engine import support
 from heat.engine import translation
 
 
@@ -28,16 +29,17 @@ class LoadBalancer(octavia_base.OctaviaBase):
 
     PROPERTIES = (
         DESCRIPTION, NAME, PROVIDER, VIP_ADDRESS, VIP_SUBNET,
-        ADMIN_STATE_UP, TENANT_ID
+        ADMIN_STATE_UP, TENANT_ID, FLAVOR
     ) = (
         'description', 'name', 'provider', 'vip_address', 'vip_subnet',
-        'admin_state_up', 'tenant_id'
+        'admin_state_up', 'tenant_id', 'flavor'
     )
 
     ATTRIBUTES = (
-        VIP_ADDRESS_ATTR, VIP_PORT_ATTR, VIP_SUBNET_ATTR, POOLS_ATTR
+        VIP_ADDRESS_ATTR, VIP_PORT_ATTR, VIP_SUBNET_ATTR, POOLS_ATTR,
+        FLAVOR_ID_ATTR
     ) = (
-        'vip_address', 'vip_port_id', 'vip_subnet_id', 'pools'
+        'vip_address', 'vip_port_id', 'vip_subnet_id', 'pools', 'flavor_id'
     )
 
     properties_schema = {
@@ -86,6 +88,14 @@ class LoadBalancer(octavia_base.OctaviaBase):
             constraints=[
                 constraints.CustomConstraint('keystone.project')
             ],
+        ),
+        FLAVOR: properties.Schema(
+            properties.Schema.STRING,
+            _('The name or ID of the flavor of the Load Balancer.'),
+            support_status=support.SupportStatus(version='14.0.0'),
+            constraints=[
+                constraints.CustomConstraint('octavia.flavor')
+            ]
         )
     }
 
@@ -106,6 +116,10 @@ class LoadBalancer(octavia_base.OctaviaBase):
             _('Pools this LoadBalancer is associated with.'),
             type=attributes.Schema.LIST,
         ),
+        FLAVOR_ID_ATTR: attributes.Schema(
+            _('The flavor ID of the LoadBalancer.'),
+            type=attributes.Schema.STRING,
+        )
     }
 
     def translation_rules(self, props):
@@ -118,6 +132,13 @@ class LoadBalancer(octavia_base.OctaviaBase):
                 finder='find_resourceid_by_name_or_id',
                 entity='subnet'
             ),
+            translation.TranslationRule(
+                props,
+                translation.TranslationRule.RESOLVE,
+                [self.FLAVOR],
+                client_plugin=self.client_plugin(),
+                finder='get_flavor',
+            ),
         ]
 
     def _prepare_args(self, properties):
@@ -126,6 +147,8 @@ class LoadBalancer(octavia_base.OctaviaBase):
         if self.NAME not in props:
             props[self.NAME] = self.physical_resource_name()
         props['vip_subnet_id'] = props.pop(self.VIP_SUBNET)
+        if self.FLAVOR in props:
+            props['flavor_id'] = props.pop(self.FLAVOR)
         if 'tenant_id' in props:
             props['project_id'] = props.pop('tenant_id')
         return props

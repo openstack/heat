@@ -78,6 +78,17 @@ class OctaviaClientPlugin(client_plugin.ClientPlugin):
                                     value=value, attr=DEFAULT_FIND_ATTR)
         return policy['id']
 
+    def get_flavor(self, value):
+        flavor = self.client().find(path=constants.BASE_FLAVOR_URL,
+                                    value=value, attr=DEFAULT_FIND_ATTR)
+        return flavor['id']
+
+    def get_flavorprofile(self, value):
+        flavorprofile = self.client().find(
+            path=constants.BASE_FLAVORPROFILE_URL,
+            value=value, attr=DEFAULT_FIND_ATTR)
+        return flavorprofile['id']
+
 
 class OctaviaConstraint(constraints.BaseCustomConstraint):
 
@@ -105,3 +116,11 @@ class PoolConstraint(OctaviaConstraint):
 
 class L7PolicyConstraint(OctaviaConstraint):
     base_url = constants.BASE_L7POLICY_URL
+
+
+class FlavorConstraint(OctaviaConstraint):
+    base_url = constants.BASE_FLAVOR_URL
+
+
+class FlavorProfileConstraint(OctaviaConstraint):
+    base_url = constants.BASE_FLAVORPROFILE_URL

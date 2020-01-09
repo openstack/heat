@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Add support for ``OS::Octavia::Flavor`` and ``OS::Octavia::FlavorProfile``
+    resources and add ``flavor`` parameter in ``OS::Octavia::LoadBalancer``,
+    allowing users to configure Load Balancer capabilities.

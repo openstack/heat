@@ -18,6 +18,7 @@ from osc_lib import exceptions
 
 from heat.common import exception
 from heat.common import template_format
+from heat.engine.clients.os.octavia import OctaviaClientPlugin
 from heat.engine.resources.openstack.octavia import loadbalancer
 from heat.tests import common
 from heat.tests.openstack.octavia import inline_templates
@@ -41,6 +42,8 @@ class LoadBalancerTest(common.HeatTestCase):
 
         self.patchobject(neutronV20, 'find_resourceid_by_name_or_id',
                          return_value='123')
+        self.patchobject(OctaviaClientPlugin, 'get_flavor',
+                         return_value='f123')
 
         self.lb.client_plugin().client = mock.MagicMock(
             return_value=self.octavia_client)
@@ -58,6 +61,7 @@ class LoadBalancerTest(common.HeatTestCase):
                 'provider': 'octavia',
                 'project_id': '1234',
                 'admin_state_up': True,
+                'flavor_id': 'f123',
             }
         }
 

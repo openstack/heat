@@ -25,6 +25,7 @@ resources:
       provider: octavia
       tenant_id: 1234
       admin_state_up: True
+      flavor: f123
 '''
 
 LISTENER_TEMPLATE = '''
@@ -131,4 +132,31 @@ resources:
       key: test_key
       value: test_value
       invert: False
+'''
+
+FLAVORPROFILE_TEMPLATE = '''
+heat_template_version: 2016-10-14
+description: Template to test FlavorProfile Octavia resource
+resources:
+  flavor_profile:
+    type: OS::Octavia::FlavorProfile
+    properties:
+      name: test_flavor_profile
+      provider_name: test_provider
+      flavor_data: |
+        {"flavor_data_key": "flavor_data_value"}
+'''
+
+
+FLAVOR_TEMPLATE = '''
+heat_template_version: 2016-10-14
+description: Template to test Flavor Octavia resource
+resources:
+  flavor:
+    type: OS::Octavia::Flavor
+    properties:
+      flavor_profile: test_flavor_profile_id
+      name: test_name
+      description: test_description
+      enabled: True
 '''
