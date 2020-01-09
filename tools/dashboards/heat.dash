@@ -11,6 +11,9 @@ foreach = (project:openstack/heat OR project:openstack/heat-agents OR
 [section "Heat Specs"]
 query = project:openstack/heat-specs
 
+[section "Stable branches"]
+query = branch:"^stable/.*"
+
 [section "Stories & Bug Fixes"]
 query = (intopic: ^story/.* OR intopic: ^bug/.* OR intopic: ^bp/.*)
 
