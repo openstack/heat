@@ -60,6 +60,13 @@ service_opts = [
                       'SSL is used.')),
     cfg.StrOpt('region_name_for_services',
                help=_('Default region name used to get services endpoints.')),
+    cfg.StrOpt('region_name_for_shared_services',
+               help=_('Region name for shared services endpoints.')),
+    cfg.ListOpt('shared_services_types',
+                default=['image', 'volume', 'volumev2'],
+                help=_('The shared services located in the other region.'
+                       'Needs region_name_for_shared_services option to '
+                       'be set for this to take effect.')),
     cfg.StrOpt('heat_stack_user_role',
                default="heat_stack_user",
                help=_('Keystone role for heat template-defined users.')),

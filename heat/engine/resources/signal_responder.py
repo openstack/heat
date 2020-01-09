@@ -93,6 +93,9 @@ class SignalResponder(stack_user.StackUser):
         return self.properties.get(
             self.SIGNAL_TRANSPORT) == self.ZAQAR_SIGNAL
 
+    def _get_region_name(self):
+        return self.client_plugin('heat')._get_region_name()
+
     def _get_heat_signal_credentials(self):
         """Return OpenStack credentials that can be used to send a signal.
 
@@ -110,8 +113,7 @@ class SignalResponder(stack_user.StackUser):
                 'password': self.password,
                 'project_id': self.stack.stack_user_project_id,
                 'domain_id': self.keystone().stack_domain_id,
-                'region_name': (self.context.region_name or
-                                cfg.CONF.region_name_for_services)}
+                'region_name': self._get_region_name()}
 
     def _get_ec2_signed_url(self, signal_type=SIGNAL):
         """Create properly formatted and pre-signed URL.
