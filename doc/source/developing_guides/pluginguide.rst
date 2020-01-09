@@ -347,16 +347,19 @@ overridden:
            """Default implementation; should be overridden by resources.
 
            :returns: the map of resource information or None
-           """
+            """
            if self.entity:
                try:
                    obj = getattr(self.client(), self.entity)
                    resource = obj.get(self.resource_id)
-                   return resource.to_dict()
-                except AttributeError as ex:
-                    LOG.warning(_LW("Resolving 'show' attribute has "
-                                    "failed : %s"), ex)
-                    return None
+                   if isinstance(resource, dict):
+                       return resource
+                   else:
+                       return resource.to_dict()
+               except AttributeError as ex:
+                   LOG.warning("Resolving 'show' attribute has failed : %s",
+                               ex)
+                   return None
 
 Property and Attribute Example
 ******************************
