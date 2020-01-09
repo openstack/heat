@@ -739,7 +739,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         """Test that templates are registered correctly.
 
         Test that templates persisted in the database prior to
-        https://review.openstack.org/#/c/79953/1 are registered correctly.
+        https://review.opendev.org/#/c/79953/1 are registered correctly.
         """
         env = {'resource_registry': {'http://example.com/test.template': None,
                                      'resources': {}}}

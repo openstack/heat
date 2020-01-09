@@ -57,7 +57,7 @@ Check performance or how to detect regression
 
 The easiest way of using Rally is to execute already existing scenarios.
 One of the examples is presented in patch
-https://review.openstack.org/#/c/279450/ . In this patch was executed scenario
+https://review.opendev.org/#/c/279450/ . In this patch was executed scenario
 already existing in Rally ``HeatStacks.create_and_delete_stack``.
 During executing this scenario Rally creates and then, when stack is created,
 delete Heat stack. All existing scenarios can be found here:
@@ -94,7 +94,7 @@ is disabled (e.g. Patch Set 7). The follow results were gotten:
 
 In the next patch set (Patch Set 8) was updated by adding Depends-On reference
 to commit message. It let to execute the same test with patch for devstack,
-which turns on caching (https://review.openstack.org/#/c/279400/).
+which turns on caching (https://review.opendev.org/#/c/279400/).
 The results for this case were:
 
 +------------------+----------+----------+----------+--------+------+
@@ -130,7 +130,7 @@ Compare output API performance
 
 Another example of using Rally job is writing custom Rally scenarios in Heat
 repository. There is an example of this is presented on review:
-https://review.openstack.org/#/c/270225/
+https://review.opendev.org/#/c/270225/
 
 It's similar on the first example, but requires more Rally specific coding.
 New tasks in ``heat-fakevirt.yaml`` use undefined in Rally repository
