@@ -111,13 +111,15 @@ class ExtraRoute(neutron.NeutronResource):
     def handle_delete(self):
         if not self.resource_id:
             return
-        (router_id, destination, nexthop) = self.resource_id.split(':')
+        router_id = self.properties[self.ROUTER_ID]
         with self.client_plugin().ignore_not_found:
             routes = self.client().show_router(
                 router_id).get('router').get('routes', [])
             try:
-                routes.remove({'destination': destination,
-                               'nexthop': nexthop})
+                routes.remove(
+                    {'destination': self.properties[self.DESTINATION],
+                     'nexthop': self.properties[self.NEXTHOP]}
+                )
             except ValueError:
                 return
             self.client().update_router(router_id,
