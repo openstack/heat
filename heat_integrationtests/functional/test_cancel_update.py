@@ -58,4 +58,8 @@ resources:
                           parameters=parameters,
                           expected_status='UPDATE_IN_PROGRESS')
 
+        # Ensure we start updating the server before rolling back
+        self._wait_for_resource_status(
+            stack_identifier, 'Server', 'CREATE_IN_PROGRESS')
+
         self.cancel_update_stack(stack_identifier)
