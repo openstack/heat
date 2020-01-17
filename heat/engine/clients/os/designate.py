@@ -39,7 +39,7 @@ class DesignateClientPlugin(client_plugin.ClientPlugin):
         return isinstance(ex, exceptions.NotFound)
 
     def get_zone_id(self, zone_id_or_name):
-        client = self.client(version='2')
+        client = self.client()
         try:
             zone_obj = client.zones.get(zone_id_or_name)
             return zone_obj['id']
