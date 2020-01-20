@@ -87,7 +87,8 @@ class PoolTest(common.HeatTestCase):
                 'listener_id': '123',
                 'loadbalancer_id': 'my_lb',
                 'protocol': 'HTTP',
-                'admin_state_up': True
+                'admin_state_up': True,
+                'tls_enabled': False,
             }
         }
 

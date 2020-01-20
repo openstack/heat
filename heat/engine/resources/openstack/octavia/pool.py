@@ -17,6 +17,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.octavia import octavia_base
+from heat.engine import support
 from heat.engine import translation
 
 
@@ -32,10 +33,11 @@ class Pool(octavia_base.OctaviaBase):
         ADMIN_STATE_UP, DESCRIPTION, SESSION_PERSISTENCE, NAME,
         LB_ALGORITHM, LISTENER, LOADBALANCER, PROTOCOL,
         SESSION_PERSISTENCE_TYPE, SESSION_PERSISTENCE_COOKIE_NAME,
+        TLS_ENABLED,
     ) = (
         'admin_state_up', 'description', 'session_persistence', 'name',
         'lb_algorithm', 'listener', 'loadbalancer', 'protocol',
-        'type', 'cookie_name'
+        'type', 'cookie_name', 'tls_enabled',
     )
 
     SESSION_PERSISTENCE_TYPES = (
@@ -123,6 +125,13 @@ class Pool(octavia_base.OctaviaBase):
             constraints=[
                 constraints.AllowedValues(SUPPORTED_PROTOCOLS),
             ]
+        ),
+        TLS_ENABLED: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Enable backend member re-encryption.'),
+            default=False,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='14.0.0'),
         ),
     }
 
