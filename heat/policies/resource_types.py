@@ -64,6 +64,12 @@ resource_types_policies = [
         check_str=base.RULE_PROJECT_ADMIN),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Blazar::Host',
+        check_str=base.RULE_PROJECT_ADMIN),
+    policy.RuleDefault(
+        name=POLICY_ROOT % 'OS::Octavia::Flavor',
+        check_str=base.RULE_PROJECT_ADMIN),
+    policy.RuleDefault(
+        name=POLICY_ROOT % 'OS::Octavia::FlavorProfile',
         check_str=base.RULE_PROJECT_ADMIN)
 ]
 
