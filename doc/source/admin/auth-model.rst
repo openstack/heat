@@ -77,7 +77,8 @@ which is consumed by *only* the trustee to obtain a
 such that the trustee has limited access to those
 roles delegated. In addition, the trustee has effective impersonation
 of the trustor user if it was selected when creating the trust.
-For more information, see `Identity Management trusts`_.
+For more information, see :keystone-doc:`Identity management trusts
+<admin/identity-use-trusts.html>`.
 
 Trusts authorization involves the following steps:
 
@@ -146,5 +147,3 @@ defined, then all the trustor roles are delegated to trustee.
 
    The trustor delegated roles must be pre-configured in the
    OpenStack Identity service before using them in the Orchestration service.
-
-.. _Identity management trusts: https://docs.openstack.org/keystone/latest/admin/identity-use-trusts.html
