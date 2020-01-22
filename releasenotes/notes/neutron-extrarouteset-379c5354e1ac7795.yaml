@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    New resource ``OS::Neutron::ExtraRouteSet`` is added to manage extra
+    routes of a Neutron router.
+deprecations:
+  - |
+    Unsupported contrib resource ``OS::Neutron::ExtraRoute`` is deprecated
+    in favor of ``OS::Neutron::ExtraRouteSet`` on all OpenStack clouds where
+    Neutron extension ``extraroute-atomic`` is available.

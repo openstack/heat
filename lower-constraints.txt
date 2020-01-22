@@ -116,7 +116,7 @@ python-manilaclient==1.16.0
 python-mimeparse==1.6.0
 python-mistralclient==3.1.0
 python-monascaclient==1.12.0
-python-neutronclient==6.7.0
+python-neutronclient==6.14.0
 python-novaclient==9.1.0
 python-octaviaclient==1.8.0
 python-openstackclient==3.12.0
