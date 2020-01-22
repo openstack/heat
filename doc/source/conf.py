@@ -102,6 +102,19 @@ bug_tag = 'docs'
 
 todo_include_todos = True
 
+# openstackdocstheme external link helper projects
+openstack_projects = [
+    'devstack',
+    'diskimage-builder',
+    'keystone',
+    'keystoneauth',
+    'nova',
+    'oslo.reports',
+    'python-barbicanclient',
+    'python-heatclient',
+    'python-openstackclient',
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
 

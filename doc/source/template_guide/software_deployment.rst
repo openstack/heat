@@ -39,18 +39,21 @@ you might want to do this, including:
 
 A number of tools are available for building custom images, including:
 
-* diskimage-builder_ image building tools for OpenStack
+* :diskimage-builder-doc:`diskimage-builder <>` image building tools for OpenStack
 
 * imagefactory_ builds images for a variety of operating system/cloud
   combinations
 
-Examples in this guide which require custom images will use diskimage-builder_.
+Examples in this guide that require custom images will use
+:diskimage-builder-doc:`diskimage-builder <>`.
 
 User-data boot scripts and cloud-init
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 When booting a server it is possible to specify the contents of the user-data
 to be passed to that server. This user-data is made available either from
-configured config-drive or from the `Metadata service`_.
+configured config-drive or from the :nova-doc:`Metadata service
+<admin/networking-nova.html#metadata-service>`
 
 How this user-data is consumed depends on the image being booted, but the most
 commonly used tool for default cloud images is cloud-init_.
@@ -779,11 +782,8 @@ contents of the file ``example-puppet-manifest.pp``, containing:
     }
 
 
-
 .. _`AWS::CloudFormation::Init`: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
-.. _diskimage-builder: https://docs.openstack.org/diskimage-builder/latest/
 .. _imagefactory: https://imgfac.org/
-.. _`Metadata service`: https://docs.openstack.org/nova/latest/admin/networking-nova.html#metadata-service
 .. _cloud-init: https://cloudinit.readthedocs.io/
 .. _curl: https://curl.haxx.se/
 .. _`Orchestration API`: https://developer.openstack.org/api-ref/orchestration/v1/
