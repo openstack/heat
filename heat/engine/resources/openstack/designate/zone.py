@@ -105,10 +105,6 @@ class DesignateZone(resource.Resource):
 
     entity = 'zones'
 
-    def client(self):
-        return super(DesignateZone,
-                     self).client(version=self.client_plugin().V2)
-
     def validate(self):
         super(DesignateZone, self).validate()
 

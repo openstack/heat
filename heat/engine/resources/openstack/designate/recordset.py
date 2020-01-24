@@ -98,10 +98,6 @@ class DesignateRecordSet(resource.Resource):
 
     entity = 'recordsets'
 
-    def client(self):
-        return super(DesignateRecordSet,
-                     self).client(version=self.client_plugin().V2)
-
     def handle_create(self):
         args = dict((k, v) for k, v in six.iteritems(self.properties) if v)
         args['type_'] = args.pop(self.TYPE)
