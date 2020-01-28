@@ -1,0 +1,10 @@
+---
+features:
+  - |
+    The ``OS::Glance::WebImage`` resource type now supports an
+    ``active`` property to allow administrators to deactivate
+    and reactivate the Image. Images remain active by default.
+  - |
+    The ``OS::Glance::WebImage`` resource type now supports a
+    ``members`` property for managing a list of other tenants
+    with access to the Image.
