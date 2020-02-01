@@ -1,0 +1,4 @@
+---
+features:
+  - New resource ``OS::Octavia::Quota`` is added to enable an admin to manage
+    Octavia service quotas for a specific project.
