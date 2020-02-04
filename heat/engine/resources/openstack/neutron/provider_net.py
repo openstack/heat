@@ -46,9 +46,9 @@ class ProviderNet(net.Net):
     )
 
     ATTRIBUTES = (
-        STATUS, SUBNETS,
+        STATUS, SUBNETS, SEGMENTS,
     ) = (
-        'status', 'subnets',
+        'status', 'subnets', 'segments',
     )
 
     NETWORK_TYPES = (
@@ -120,6 +120,11 @@ class ProviderNet(net.Net):
         SUBNETS: attributes.Schema(
             _("Subnets of this network."),
             type=attributes.Schema.LIST
+        ),
+        SEGMENTS: attributes.Schema(
+            _("The segments of this network."),
+            type=attributes.Schema.LIST,
+            support_status=support.SupportStatus(version='16.0.0'),
         ),
     }
 
