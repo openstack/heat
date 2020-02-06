@@ -20,6 +20,7 @@ To run the tests against DevStack, do the following::
 If the Heat Tempest Plugin is also installed, the tests from that will be run
 as well.
 
-If custom configuration is required, add it in the file
-``heat_integrationtests/heat_integrationtests.conf``. A sample configuration is
-available in ``heat_integrationtests/heat_integrationtests.conf.sample``
+These tests require both tempest and heat tempest plugin installed.
+If custom configuration is required, it should be configured in the
+heat tempest plugin configuration of the tempest config
+(see heat tempest plugin and tempest docs for more info).
