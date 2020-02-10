@@ -206,7 +206,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
         ),
         STATUS: attributes.Schema(
             _('The current status of the volume.'),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         CREATED_AT: attributes.Schema(
             _('The timestamp indicating volume creation.'),
