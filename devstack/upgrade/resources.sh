@@ -78,7 +78,8 @@ function _run_heat_integrationtests {
     UPGRADE_TESTS=upgrade_tests.list
     _write_heat_integrationtests $UPGRADE_TESTS
 
-    tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
+    export UPPER_CONSTRAINTS_FILE=${UPPER_CONSTRAINTS_FILE:-$DEST/requirements/upper-constraints.txt}
+    UPPER_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
         --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
         run --whitelist-file $UPGRADE_TESTS
     _heat_set_user
