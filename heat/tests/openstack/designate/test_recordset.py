@@ -165,7 +165,7 @@ class DesignateRecordSetTest(common.HeatTestCase):
         self.assertFalse(self.test_resource.check_update_complete())
         self.assertTrue(self.test_resource.check_update_complete())
         ex = self.assertRaises(exception.ResourceInError,
-                               self.test_resource.check_create_complete)
+                               self.test_resource.check_update_complete)
         self.assertIn('Error in RecordSet',
                       ex.message)
 
@@ -174,7 +174,8 @@ class DesignateRecordSetTest(common.HeatTestCase):
         self.test_resource.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
         mock_record_delete.return_value = None
 
-        self.assertIsNone(self.test_resource.handle_delete())
+        self.assertEqual(self.test_resource.resource_id,
+                         self.test_resource.handle_delete())
         mock_record_delete.assert_called_once_with(
             zone='1234567',
             recordset=self.test_resource.resource_id
@@ -192,10 +193,13 @@ class DesignateRecordSetTest(common.HeatTestCase):
     def test_check_delete_complete(self):
         self.test_resource.resource_id = self._get_mock_resource()['id']
         self._mock_check_status_active()
-        self.assertFalse(self.test_resource.check_delete_complete())
-        self.assertTrue(self.test_resource.check_delete_complete())
+        self.assertFalse(self.test_resource.check_delete_complete(
+            self.test_resource.resource_id))
+        self.assertTrue(self.test_resource.check_delete_complete(
+            self.test_resource.resource_id))
         ex = self.assertRaises(exception.ResourceInError,
-                               self.test_resource.check_create_complete)
+                               self.test_resource.check_delete_complete,
+                               self.test_resource.resource_id)
         self.assertIn('Error in RecordSet',
                       ex.message)
 
