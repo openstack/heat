@@ -36,11 +36,7 @@ function _heat_set_user {
     OS_PROJECT_DOMAIN_ID=$DEFAULT_DOMAIN
 }
 
-function _run_heat_api_tests {
-    local devstack_dir=$1
-
-    pushd $devstack_dir/../tempest
-    sed -i -e '/group_regex/c\group_regex=heat_tempest_plugin\\.tests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .stestr.conf
+function _config_tempest {
     conf_file=etc/tempest.conf
     iniset_multiline $conf_file service_available heat_plugin True
     iniset $conf_file heat_plugin username $OS_USERNAME
@@ -53,14 +49,57 @@ function _run_heat_api_tests {
     iniset $conf_file heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $conf_file heat_plugin region $OS_REGION_NAME
     iniset $conf_file heat_plugin auth_version $OS_IDENTITY_API_VERSION
-    tox -evenv-tempest -- tempest run --regex heat_tempest_plugin.tests.api
+}
+
+function _write_heat_integrationtests {
+    local upgrade_tests=$1
+    cat > $upgrade_tests <<EOF
+heat_tempest_plugin.tests.api
+EOF
+}
+
+function _run_heat_api_tests {
+    pushd $TARGET_RELEASE_DIR/tempest
+    sed -i -e '/group_regex/c\group_regex=heat_tempest_plugin\\.tests\\.api\\.test_heat_api(?:\\.|_)([^_]+)' .stestr.conf
+
+    # Run set of specified functional tests
+    UPGRADE_TESTS=upgrade_tests.list
+    _write_heat_integrationtests $UPGRADE_TESTS
+
+    _config_tempest
+
+    sudo UPPER_CONSTRAINTS_FILE=$TARGET_RELEASE_DIR/requirements/upper-constraints.txt \
+    tox -evenv-tempest -- stestr --test-path=$TARGET_RELEASE_DIR/heat/heat_integrationtests \
+    --top-dir=$TARGET_RELEASE_DIR/heat \
+    --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' run \
+    --whitelist-file $UPGRADE_TESTS
+    popd
+}
+
+function _run_heat_create_tests {
+    pushd $BASE_RELEASE_DIR/tempest
+    _config_tempest
+    # Old version of tempest is installed in grenade environment, so use
+    # .testr.conf instead of .stestr.conf
+    cat <<'EOF' >.testr.conf
+[DEFAULT]
+test_command=OS_STDOUT_CAPTURE=${OS_STDOUT_CAPTURE:-1} \
+             OS_STDERR_CAPTURE=${OS_STDERR_CAPTURE:-1} \
+             OS_TEST_TIMEOUT=${OS_TEST_TIMEOUT:-500} \
+             OS_TEST_LOCK_PATH=${OS_TEST_LOCK_PATH:-${TMPDIR:-'/tmp'}} \
+             ${PYTHON:-python} -m subunit.run discover -t ${OS_TOP_LEVEL:-./} \
+             ${OS_TEST_PATH:-./tempest/test_discover} $LISTOPT $IDOPTION
+test_id_option=--load-list $IDFILE
+test_list_option=--list
+group_regex=([^\.]*\.)*
+EOF
+
+    UPPER_CONSTRAINTS_FILE=$BASE_RELEASE_DIR/requirements/upper-constraints.txt tempest run --regex '(test_create_update.CreateStackTest|test_create_update.UpdateStackTest)'
     popd
 }
 
 function create {
-    # run heat api tests instead of tempest smoke before create
-    _run_heat_api_tests $BASE_DEVSTACK_DIR
-
+    _run_heat_create_tests
     # creates a tenant for the server
     eval $(openstack project create -f shell -c id $HEAT_PROJECT)
     if [[ -z "$id" ]]; then
@@ -94,7 +133,7 @@ function verify {
     _heat_set_user
     local side="$1"
     if [[ "$side" = "post-upgrade" ]]; then
-        _run_heat_api_tests $TARGET_DEVSTACK_DIR
+        _run_heat_api_tests
     fi
     stack_name=$(resource_get heat stack_name)
     heat stack-show $stack_name

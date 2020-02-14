@@ -21,6 +21,8 @@ sudo -E $DEST/heat/heat_integrationtests/prepare_test_env.sh
 sudo -E $DEST/heat/heat_integrationtests/prepare_test_network.sh
 
 cd $DEST/tempest
-sudo tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' run
+sudo UPPER_CONSTRAINTS_FILE=${UPPER_CONSTRAINTS_FILE:-$DEST/requirements/upper-constraints.txt} \
+tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
+--group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' run
 
 sudo -E $DEST/heat/heat_integrationtests/cleanup_test_env.sh
