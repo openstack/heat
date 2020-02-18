@@ -39,7 +39,8 @@ class StackUpdate(object):
         self.rollback = rollback
 
         self.existing_snippets = dict((n, r.frozen_definition())
-                                      for n, r in self.existing_stack.items())
+                                      for n, r in self.existing_stack.items()
+                                      if n in self.new_stack)
 
     def __repr__(self):
         if self.rollback:
