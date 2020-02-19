@@ -737,21 +737,30 @@ class IKEPolicyTest(common.HeatTestCase):
         rsrc = self.create_ikepolicy()
         self.mockclient.update_ikepolicy.return_value = None
 
+        new_props = {
+            'name': 'New IKEPolicy',
+            'auth_algorithm': 'sha512',
+            'description': 'New description',
+            'encryption_algorithm': 'aes-256',
+            'lifetime': {
+                'units': 'seconds',
+                'value': 1800
+            },
+            'pfs': 'group2',
+            'ike_version': 'v2'
+        }
+        update_body = {
+            'ikepolicy': new_props
+        }
         scheduler.TaskRunner(rsrc.create)()
         props = dict(rsrc.properties)
-        props['name'] = 'New IKEPolicy'
-        props['auth_algorithm'] = 'sha512'
+        props.update(new_props)
+
         update_template = rsrc.t.freeze(properties=props)
         scheduler.TaskRunner(rsrc.update, update_template)()
 
         self.mockclient.create_ikepolicy.assert_called_once_with(
             self.IKE_POLICY_CONF)
-        update_body = {
-            'ikepolicy': {
-                'name': 'New IKEPolicy',
-                'auth_algorithm': 'sha512'
-            }
-        }
         self.mockclient.update_ikepolicy.assert_called_once_with(
             'ike123', update_body)
 
