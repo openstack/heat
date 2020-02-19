@@ -703,12 +703,20 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         ACCESSIPV4: attributes.Schema(
             _('The manually assigned alternative public IPv4 address '
               'of the server.'),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='14.0.0',
+                previous_status=support.SupportStatus(version='2015.1')),
         ),
         ACCESSIPV6: attributes.Schema(
             _('The manually assigned alternative public IPv6 address '
               'of the server.'),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='14.0.0',
+                previous_status=support.SupportStatus(version='2015.1'))
         ),
         CONSOLE_URLS: attributes.Schema(
             _("URLs of server's consoles. "

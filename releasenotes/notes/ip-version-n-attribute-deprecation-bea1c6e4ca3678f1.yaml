@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The ``accessIPv4`` and ``accessIPv6`` attributes of the
+    ``OS::Nova::Server`` resource are now deprecated, since Nova returns empty
+    values for them. Use the ``addresses`` attribute instead to get IP
+    addresses.
