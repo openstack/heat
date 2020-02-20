@@ -62,15 +62,54 @@ test_template_two_resource = {
     }
 }
 
+test_template_updatae_flavor_and_volume_size = '''
+
+heat_template_version: 2013-05-23
+
+parameters:
+  volume_size:
+    default: 10
+    type: number
+  flavor:
+    type: string
+  network:
+    type: string
+  image:
+    type: string
+
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      image:  {get_param: image}
+      flavor: {get_param: flavor}
+      admin_pass: 1
+      networks:
+        - network: {get_param: network}
+  data_volume_attachment:
+    depends_on: my_instance
+    type: 'OS::Cinder::VolumeAttachment'
+    properties:
+      instance_uuid:
+        get_resource: my_instance
+      volume_id:
+        get_resource: data_volume
+  data_volume:
+    type: 'OS::Cinder::Volume'
+    properties:
+      name: myvolume
+      size: {get_param: volume_size}
+'''
+
 
 def _change_rsrc_properties(template, rsrcs, values):
-        modified_template = copy.deepcopy(template)
-        for rsrc_name in rsrcs:
-            rsrc_prop = modified_template['resources'][
-                rsrc_name]['properties']
-            for prop, new_val in values.items():
-                rsrc_prop[prop] = new_val
-        return modified_template
+    modified_template = copy.deepcopy(template)
+    for rsrc_name in rsrcs:
+        rsrc_prop = modified_template['resources'][
+            rsrc_name]['properties']
+        for prop, new_val in values.items():
+            rsrc_prop[prop] = new_val
+    return modified_template
 
 
 class CreateStackTest(functional_base.FunctionalTestsBase):
@@ -164,6 +203,26 @@ resources:
         self.update_stack(stack_identifier, template)
         self.assertEqual(expected_resources,
                          self.list_resources(stack_identifier))
+
+    def test_stack_update_flavor_volume(self):
+
+        parms = {'flavor': self.conf.minimal_instance_type,
+                 'volume_size': 10,
+                 'image': self.conf.minimal_image_ref,
+                 'network': self.conf.fixed_network_name}
+
+        stack_identifier = self.stack_create(
+            template=test_template_updatae_flavor_and_volume_size,
+            parameters=parms
+        )
+
+        parms_updated = parms
+        parms_updated['volume_size'] = 20
+        parms_updated['flavor'] = self.conf.instance_type
+        self.update_stack(
+            stack_identifier,
+            template=test_template_updatae_flavor_and_volume_size,
+            parameters=parms_updated)
 
     def test_stack_in_place_update(self):
         template = _change_rsrc_properties(test_template_one_resource,
