@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    The behavior of ``get_resource`` on an ``OS::Heat::AutoScalingGroup``
+    resource has changed. Previously it returned the physical resource name
+    (i.e. the name of the nested Heat stack which implemented the group). It
+    will now return the UUID of the nested stack if available. This will also
+    apply to any resource type that inherits from
+    ``OS::Heat::AutoScalingGroup``.
