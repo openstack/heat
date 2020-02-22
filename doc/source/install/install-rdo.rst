@@ -74,14 +74,13 @@ requires additional information in the Identity service.
 
      .. note::
 
-        If installing OpenStack manually following the `Keystone install
-        guide`_, the name of the services project is ``service`` as given
-        above. However, traditional methods of installing RDO (such as
-        PackStack and TripleO) use ``services`` as the name of the service
-        project. If you installed RDO using a Puppet-based method, substitute
-        ``services`` as the project name.
-
-     .. _`Keystone install guide`: https://docs.openstack.org/keystone/latest/install/keystone-users-rdo.html
+        If installing OpenStack manually following the :keystone-doc:`Keystone
+        install guide <install/keystone-users-rdo.html>`, the name of the
+        services project is ``service`` as given above. However, traditional
+        methods of installing RDO (such as PackStack and TripleO) use
+        ``services`` as the name of the service project. If you installed RDO
+        using a Puppet-based method, substitute ``services`` as the project
+        name.
 
      .. note::
 

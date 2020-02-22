@@ -13,10 +13,10 @@ multi-clouds features, and what's the environment requirement.
 
 .. note:: If you like to create a stack in multi-region environment,
   you don't need this feature at all. all you need to do is provide
-  `region_name` under `context` property for `OS::Heat::Stack`_.
+  `region_name` under `context` property for :ref:`OS::Heat::Stack`.
   If you like to see information on how to provide SSL support for
   your multi-region environment, you can jump to `Use CA
-  cert(Optional)`_ .
+  cert (Optional)`_ .
 
 Requirements
 ~~~~~~~~~~~~
@@ -58,17 +58,23 @@ Gathering credential information
 Before we start generating secret, let's talk about what credential format we
 need. credential is a JSON format string contains two keys ``auth_type``, and
 ``auth``. ``auth_type``, and ``auth`` following auth plugin loader rules from
-Keystone. You can find `plugin options`_  and `authentication plugins`_ in
-keystoneauth documents.
+Keystone. You can find :keystoneauth-doc:`plugin options
+<plugin-options.html>` and :keystoneauth-doc:`authentication plugins
+<authentication-plugins.html#loading-plugins-by-name>` in keystoneauth
+documents.
 
 * **auth_type** - ``auth_type`` is a string for plugin name. Allows value like
   `v3applicationcredential`, `password`, `v3oidcclientcredentials`, etc. You
-  need to provide `available plugins`_.
+  need to provide `available plugins
+  <plugin-options.html#available-plugins>`.
 
 * **auth** - auth is a dictionary contains all parameters for plugins to
   perform authentication. You can find all valid parameter references from
-  `available plugins`_ or get to all class path from `plugin names`_ for more
-  detail allowed value or trace plugin class from there.
+  :keystoneauth-doc:`available plugins
+  <plugin-options.html#available-plugins>` or get to all class path from
+  :keystoneauth-doc:`plugin names
+  <authentication-plugins.html#loading-plugins-by-name>` for more detail
+  allowed value or trace plugin class from there.
 
 As you can tell, all allowed authentication plugins for credentials follows
 plugins keystoneauth rules. So once new change in keystoneauth, it will also
@@ -81,15 +87,18 @@ Validate your credential
 ------------------------
 
 Now you have all your credential information ready, try to validate first if
-you can. You can either directly test them `via config`_, `via CLI`_, or
-`via keystoneauth sessions`_.
+you can. You can either directly test them :keystoneauth-doc:`via config
+<plugin-options.html#using-plugins-via-config-file>`,
+:keystoneauth-doc:`via CLI <plugin-options.html#using-plugins-via-cli>`,
+or :keystoneauth-doc:`via keystoneauth sessions <using-sessions.html>`.
 
 build credential secret
 -----------------------
 
-Once you're sure it's valid, we can start building the secret out.
-To build a secret you just have to follow standard Barbican CLI_ or API to
-store your secret.
+Once you're sure it's valid, we can start building the secret out. To build a
+secret you just have to follow the standard
+:python-barbicanclient-doc:`Barbican CLI <cli/cli_usage.html#secret-create>` or
+API to store your secret.
 
 The local site will read this secret to perform stack actions in remote site.
 Let's give a quick example here:
@@ -111,9 +120,8 @@ Create remote stacks
 Now, you have a secret id generated for your Barbican secret. Use that id as
 input for template.
 
-To create a remote stack, you can simply use `OS::Heat::Stack`_ resource, as
-child stack in your template (we also referring this structure as
-`nested stack`).
+To create a remote stack, you can simply use an :ref:`OS::Heat::Stack` resource
+in your template.
 
 In resource properties, provide `credential_secret_id` (Barbican secret ID
 from the secret we just builded for credential) under `context` property.
@@ -146,8 +154,8 @@ won't affect resources/stacks in remote site. So do such actions with super
 care.
 
 
-Use CA cert(Optional)
----------------------
+Use CA cert (Optional)
+----------------------
 
 For production clouds, it's very important to have SSL support. Here we
 provide CA cert method for your SSL access. If you wish to use that, use
@@ -174,13 +182,3 @@ Here is an example for you:
         template: { get_file: "remote-app.yaml" }
 
 .. note:: If insecure flag is on, ca_cert will be ignored.
-
-.. _`plugin options`: https://docs.openstack.org/keystoneauth/latest/plugin-options.html
-.. _`authentication plugins`: https://docs.openstack.org/keystoneauth/latest/authentication-plugins.html#loading-plugins-by-name
-.. _`plugin names`: https://docs.openstack.org/keystoneauth/latest/authentication-plugins.html#loading-plugins-by-name
-.. _`available plugins`: https://docs.openstack.org/keystoneauth/latest/plugin-options.html#available-plugins
-.. _`via keystoneauth sessions`: https://docs.openstack.org/keystoneauth/latest/using-sessions.html
-.. _`via config`: https://docs.openstack.org/keystoneauth/latest/plugin-options.html#using-plugins-via-config-file
-.. _`via CLI`: https://docs.openstack.org/keystoneauth/latest/plugin-options.html#using-plugins-via-cli
-.. _CLI: https://docs.openstack.org/python-barbicanclient/latest/cli/cli_usage.html#secret-create
-.. _`OS::Heat::Stack`: https://docs.openstack.org/heat/rocky/template_guide/openstack.html#OS::Heat::Stack
