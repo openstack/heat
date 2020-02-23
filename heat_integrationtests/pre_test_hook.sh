@@ -44,9 +44,9 @@ echo "[[local|localrc]]" >> $localconf
 #               to network
 if [[ -e /etc/ci/mirror_info.sh ]]; then
 	source /etc/ci/mirror_info.sh
-	echo "IMAGE_URLS+=${NODEPOOL_FEDORA_MIRROR}/releases/29/Cloud/x86_64/images/Fedora-Cloud-Base-29-1.2.x86_64.qcow2" >> $localconf
+	echo "IMAGE_URLS+=${NODEPOOL_FEDORA_MIRROR}/releases/30/Cloud/x86_64/images/Fedora-Cloud-Base-30-1.2.x86_64.qcow2" >> $localconf
 else
-	echo "IMAGE_URLS+=https://download.fedoraproject.org/pub/fedora/linux/releases/29/Cloud/x86_64/images/Fedora-Cloud-Base-29-1.2.x86_64.qcow2" >> $localconf
+	echo "IMAGE_URLS+=https://download.fedoraproject.org/pub/fedora/linux/releases/30/Cloud/x86_64/images/Fedora-Cloud-Base-30-1.2.x86_64.qcow2" >> $localconf
 fi
 
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
