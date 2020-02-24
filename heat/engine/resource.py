@@ -159,6 +159,9 @@ class Resource(status.ResourceStatus):
     # a signal to this resource
     signal_needs_metadata_updates = True
 
+    # Whether the resource is always replaced when CHECK_FAILED
+    always_replace_on_check_failed = True
+
     def __new__(cls, name, definition, stack):
         """Create a new Resource of the appropriate class for its type."""
 
@@ -1394,7 +1397,9 @@ class Resource(status.ResourceStatus):
                       prev_resource, check_init_complete=True):
         if self.status == self.FAILED:
             # always replace when a resource is in CHECK_FAILED
-            if self.action == self.CHECK or self.needs_replace_failed():
+            if ((self.action == self.CHECK and
+                 self.always_replace_on_check_failed) or (
+                     self.needs_replace_failed())):
                 raise UpdateReplace(self)
 
         if self.state == (self.DELETE, self.COMPLETE):
