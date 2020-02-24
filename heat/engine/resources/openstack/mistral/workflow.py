@@ -46,6 +46,8 @@ class Workflow(signal_responder.SignalResponder,
 
     entity = 'workflows'
 
+    always_replace_on_check_failed = False
+
     PROPERTIES = (
         NAME, TYPE, DESCRIPTION, INPUT, OUTPUT, TASKS, PARAMS,
         TASK_DEFAULTS, USE_REQUEST_BODY_AS_INPUT, TAGS
@@ -595,6 +597,19 @@ class Workflow(signal_responder.SignalResponder,
         if self.EXECUTIONS in self.data():
             executions.extend(self.data().get(self.EXECUTIONS).split(','))
         self.data_set(self.EXECUTIONS, ','.join(executions))
+
+    def needs_replace_failed(self):
+        if self.resource_id is None:
+            return True
+
+        if self.properties[self.NAME] is None:
+            return True
+
+        with self.client_plugin().ignore_not_found:
+            self.client().workflows.get(self.resource_id)
+            return False
+        self.resource_id_set(None)
+        return True
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
