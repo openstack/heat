@@ -78,7 +78,7 @@ such that the trustee has limited access to those
 roles delegated. In addition, the trustee has effective impersonation
 of the trustor user if it was selected when creating the trust.
 For more information, see :keystone-doc:`Identity management trusts
-<admin/identity-use-trusts.html>`.
+<user/trusts.html>`.
 
 Trusts authorization involves the following steps:
 
