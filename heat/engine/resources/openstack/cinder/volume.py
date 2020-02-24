@@ -280,7 +280,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
     def _create_arguments(self):
         arguments = {
             'size': self.properties[self.SIZE],
-            'availability_zone': self.properties[self.AVAILABILITY_ZONE],
+            'availability_zone': (self.properties[self.AVAILABILITY_ZONE] or
+                                  None),
         }
 
         scheduler_hints = self._scheduler_hints(

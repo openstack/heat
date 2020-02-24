@@ -1349,3 +1349,26 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         prg_attach = mock.MagicMock(called=False, srv_id='InstanceInActive')
         self.assertEqual(False, rsrc._attach_volume_to_complete(prg_attach))
         self.assertEqual('vol-123', prg_attach.called)
+
+    def test_empty_string_az(self):
+        fv = vt_base.FakeVolume('creating')
+        self.stack_name = 'test_cvolume_default_stack'
+
+        vol_name = utils.PhysName(self.stack_name, 'volume')
+        self.cinder_fc.volumes.create.return_value = fv
+        fv_ready = vt_base.FakeVolume('available', id=fv.id)
+        self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
+
+        self.t['resources']['volume']['properties'] = {
+            'size': '1',
+            'availability_zone': "",
+        }
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+        self.create_volume(self.t, stack, 'volume')
+
+        self.cinder_fc.volumes.create.assert_called_once_with(
+            size=1, availability_zone=None,
+            description=None,
+            name=vol_name,
+            metadata={}
+        )

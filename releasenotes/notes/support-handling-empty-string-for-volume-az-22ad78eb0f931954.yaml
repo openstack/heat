@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Empty string passing in for volume availability_zone can be correctly
+    handled now. For this case, it's same as no AZ set, so the default AZ in
+    cinder.conf will be used.
