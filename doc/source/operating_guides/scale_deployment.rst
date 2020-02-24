@@ -31,12 +31,12 @@ Assumptions
 
 This guide, using a devstack installation of OpenStack, assumes that:
 
-    1. You have configured devstack from `Single Machine Installation Guide
-       <https://docs.openstack.org/devstack/latest/guides/single-machine.html>`_;
-    2. You have set up heat on devstack, as defined at :doc:`heat and DevStack
-       <../getting_started/on_devstack>`;
-    3. You have installed HAProxy_ on the devstack
-       server.
+1. You have configured devstack from :devstack-doc:`Single Machine
+   Installation Guide <guides/single-machine.html>`;
+2. You have set up heat on devstack, as defined at :doc:`heat and DevStack
+   <../getting_started/on_devstack>`;
+3. You have installed HAProxy_ on the devstack
+   server.
 
 Architecture
 ============

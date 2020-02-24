@@ -90,4 +90,4 @@ Extending the GMR
 
 As mentioned above, additional sections can be added to the GMR for a
 particular executable. For more information, see the documentation about
-`oslo.reports <https://docs.openstack.org/oslo.reports/>`_
+:oslo.reports-doc:`oslo.reports <>`.
