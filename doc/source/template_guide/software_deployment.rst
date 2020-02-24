@@ -53,7 +53,7 @@ User-data boot scripts and cloud-init
 When booting a server it is possible to specify the contents of the user-data
 to be passed to that server. This user-data is made available either from
 configured config-drive or from the :nova-doc:`Metadata service
-<admin/networking-nova.html#metadata-service>`
+<user/metadata.html#metadata-service>`
 
 How this user-data is consumed depends on the image being booted, but the most
 commonly used tool for default cloud images is cloud-init_.

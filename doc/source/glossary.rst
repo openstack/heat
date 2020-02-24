@@ -57,9 +57,8 @@
 
    Metadata service
      A Compute service that enables virtual machine instances to
-     retrieve instance-specific data. See :nova-doc:`Metadata
-     service (OpenStack Administrator Guide)
-     <admin/networking-nova.html#metadata-service>`.
+     retrieve instance-specific data. See :nova-doc:`Nova Metadata
+     service documentation <user/metadata.html#metadata-service>`.
 
    Multi-region
      A feature of Heat that supports deployment to multiple regions.
@@ -161,8 +160,8 @@
    User data
      A :term:`resource property` that contains a user-provided data
      blob. User data gets passed to `cloud-init`_ to automatically
-     configure instances at boot time. See also :nova-doc:`User data
-     (OpenStack End User Guide) <user/user-data.html>`.
+     configure instances at boot time. See also :nova-doc:`Nova User data
+     documentation <user/metadata.html#user-provided-data>`.
 
      .. _cloud-init: https://cloudinit.readthedocs.io/
 
