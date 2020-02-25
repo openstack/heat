@@ -1407,7 +1407,8 @@ class StackTest(common.HeatTestCase):
         self.stack.store()
         stack_id = self.stack.id
         test_stack = stack.Stack.load(self.ctx, stack_id=stack_id)
-        self.assertIsNone(test_stack.tags)
+        self.assertIsNone(test_stack._tags)
+        self.assertEqual([], test_stack.tags)
 
         self.stack = stack.Stack(self.ctx, 'stack_name', self.tmpl)
         self.stack.tags = ['tag1', 'tag2']
@@ -1424,7 +1425,7 @@ class StackTest(common.HeatTestCase):
         self.stack.store()
         stack_id = self.stack.id
         test_stack = stack.Stack.load(self.ctx, stack_id=stack_id)
-        self.assertIsNone(test_stack.tags)
+        self.assertEqual([], test_stack.tags)
 
         self.stack = stack.Stack(self.ctx, 'stack_name', self.tmpl,
                                  tags=['tag1', 'tag2'])

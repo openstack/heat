@@ -173,6 +173,7 @@ class Stack(collections.Mapping):
         self._access_allowed_handlers = {}
         self._db_resources = None
         self._tags = tags
+        self._tags_stored = False
         self.adopt_stack_data = adopt_stack_data
         self.stack_user_project_id = stack_user_project_id
         self.created_time = created_time
@@ -182,7 +183,6 @@ class Stack(collections.Mapping):
         self.nested_depth = nested_depth
         self.convergence = convergence
         self.current_traversal = current_traversal
-        self.tags = tags
         self.prev_raw_template_id = prev_raw_template_id
         self.current_deps = current_deps
         self._worker_client = None
@@ -224,14 +224,17 @@ class Stack(collections.Mapping):
     @property
     def tags(self):
         if self._tags is None:
-            tags = stack_tag_object.StackTagList.get(
-                self.context, self.id)
-            if tags:
-                self._tags = [t.tag for t in tags]
+            if self.id is not None:
+                tags = stack_tag_object.StackTagList.get(self.context, self.id)
+                self._tags = [t.tag for t in tags] if tags else []
+            else:
+                self._tags = []
+            self._tags_stored = True
         return self._tags
 
     @tags.setter
     def tags(self, value):
+        self._tags_stored = (value == self._tags)
         self._tags = value
 
     @property
@@ -721,12 +724,22 @@ class Stack(collections.Mapping):
             self.id = new_s.id
             self.created_time = new_s.created_at
 
-        if self.tags:
-            stack_tag_object.StackTagList.set(self.context, self.id, self.tags)
+        self._store_tags()
 
         self._set_param_stackid()
 
         return self.id
+
+    def _store_tags(self):
+        if (self._tags is not None and
+                not self._tags_stored and
+                self.id is not None):
+            tags = self._tags
+            if tags:
+                stack_tag_object.StackTagList.set(self.context, self.id, tags)
+            else:
+                stack_tag_object.StackTagList.delete(self.context, self.id)
+            self._tags_stored = True
 
     def _backup_name(self):
         return '%s*' % self.name
@@ -1362,11 +1375,6 @@ class Stack(collections.Mapping):
             self._set_param_stackid()
 
             self.tags = new_stack.tags
-            if new_stack.tags:
-                stack_tag_object.StackTagList.set(self.context, self.id,
-                                                  new_stack.tags)
-            else:
-                stack_tag_object.StackTagList.delete(self.context, self.id)
 
         self.action = action
         self.status = self.IN_PROGRESS
@@ -1661,11 +1669,9 @@ class Stack(collections.Mapping):
             self._set_param_stackid()
 
             self.tags = newstack.tags
-            if newstack.tags:
-                stack_tag_object.StackTagList.set(self.context, self.id,
-                                                  newstack.tags)
-            else:
-                stack_tag_object.StackTagList.delete(self.context, self.id)
+            # Stack is already store()d in IN_PROGRESS state, so write tags now
+            # otherwise new set won't appear until COMPLETE/FAILED.
+            self._store_tags()
 
             check_message = functools.partial(self._check_for_message,
                                               msg_queue)
