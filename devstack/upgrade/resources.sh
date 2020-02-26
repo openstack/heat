@@ -53,6 +53,12 @@ heat_tempest_plugin.tests.functional.test_nova_server_networks
 EOF
 }
 
+function _run_heat_integrationt {
+        tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
+            --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
+            run --whitelist-file $UPGRADE_TESTS
+}
+
 function _run_heat_integrationtests {
     local devstack_dir=$1
 
@@ -65,9 +71,11 @@ function _run_heat_integrationtests {
     UPGRADE_TESTS=upgrade_tests.list
     _write_heat_integrationtests $UPGRADE_TESTS
 
-    tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
-        --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
-        run --whitelist-file $UPGRADE_TESTS
+    if [[ $2 == 'post-upgrade' ]]; then
+        _run_heat_integrationt
+    else
+        UPPER_CONSTRAINTS_FILE=${UPPER_CONSTRAINTS_FILE:-$DEST/requirements/upper-constraints.txt} _run_heat_integrationt
+    fi
     _heat_set_user
     popd
 }
@@ -75,7 +83,9 @@ function _run_heat_integrationtests {
 function create {
     if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
         # run heat integration tests instead of tempest smoke before create
-        _run_heat_integrationtests $BASE_DEVSTACK_DIR
+        # create function in grenade alway run in pre-upgrade.
+        # TODO(ricolin) but we need to update grenade to pass down $side to here.
+        _run_heat_integrationtests $BASE_DEVSTACK_DIR pre-upgrade
     fi
 
     source $TOP_DIR/openrc admin admin
@@ -113,7 +123,7 @@ function verify {
     local side="$1"
     if [[ "$side" = "post-upgrade" ]]; then
         if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
-            _run_heat_integrationtests $TARGET_DEVSTACK_DIR
+            _run_heat_integrationtests $TARGET_DEVSTACK_DIR $side
         fi
     fi
     stack_name=$(resource_get heat stack_name)
