@@ -17,6 +17,7 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine.resources.openstack.octavia import octavia_base
+from heat.engine import support
 from heat.engine import translation
 
 
@@ -30,11 +31,11 @@ class Listener(octavia_base.OctaviaBase):
     PROPERTIES = (
         PROTOCOL_PORT, PROTOCOL, LOADBALANCER, DEFAULT_POOL, NAME,
         ADMIN_STATE_UP, DESCRIPTION, DEFAULT_TLS_CONTAINER_REF,
-        SNI_CONTAINER_REFS, CONNECTION_LIMIT, TENANT_ID
+        SNI_CONTAINER_REFS, CONNECTION_LIMIT, TENANT_ID, ALLOWED_CIDRS
     ) = (
         'protocol_port', 'protocol', 'loadbalancer', 'default_pool', 'name',
         'admin_state_up', 'description', 'default_tls_container_ref',
-        'sni_container_refs', 'connection_limit', 'tenant_id'
+        'sni_container_refs', 'connection_limit', 'tenant_id', 'allowed_cidrs'
     )
 
     SUPPORTED_PROTOCOLS = (TCP, HTTP, HTTPS, TERMINATED_HTTPS, PROXY, UDP) = (
@@ -121,6 +122,20 @@ class Listener(octavia_base.OctaviaBase):
             properties.Schema.STRING,
             _('The ID of the tenant who owns the listener.')
         ),
+        ALLOWED_CIDRS: properties.Schema(
+            properties.Schema.LIST,
+            _('A list of IPv4, IPv6 or mix of both CIDRs. The default is all '
+              'allowed. When a list of CIDRs is provided, the default '
+              'switches to deny all.'),
+            update_allowed=True,
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                constraints=[
+                    constraints.CustomConstraint('net_cidr')
+                ]
+            ),
+            support_status=support.SupportStatus(version='14.0.0'),
+        )
     }
 
     attributes_schema = {

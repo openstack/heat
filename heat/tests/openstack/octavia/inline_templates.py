@@ -48,6 +48,9 @@ resources:
         - ref2
       connection_limit: -1
       tenant_id: 1234
+      allowed_cidrs:
+        - 10.10.0.0/16
+        - 192.168.0.0/16
 '''
 
 POOL_TEMPLATE = '''

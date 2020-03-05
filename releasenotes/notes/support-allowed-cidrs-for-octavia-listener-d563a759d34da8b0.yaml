@@ -1,0 +1,6 @@
+---
+features:
+  - Support ``allowed_cidrs`` property for the resource
+    ``OS::Octavia::Listener``, the property is allowed to be updated as well.
+    The property 'allowed_cidrs' was introduced in Octavia since Train release.
+    The default value is empty list if it is not specified in Heat template.
