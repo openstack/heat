@@ -41,6 +41,11 @@ class TestFunction(function.Function):
         return 'wibble'
 
 
+class NullFunction(function.Function):
+    def result(self):
+        return Ellipsis
+
+
 class TestFunctionKeyError(function.Function):
     def result(self):
         raise TypeError
@@ -168,6 +173,28 @@ class ResolveTest(common.HeatTestCase):
         self.assertEqual(['foo', {'bar': ['baz', {'blarg': 'wibble'}]}],
                          result)
         self.assertIsNot(result, snippet)
+
+    def test_resolve_func_with_null(self):
+        func = NullFunction(None, 'foo', ['bar', 'baz'])
+
+        self.assertIsNone(function.resolve(func))
+        self.assertIs(Ellipsis, function.resolve(func, nullable=True))
+
+    def test_resolve_dict_with_null(self):
+        func = NullFunction(None, 'foo', ['bar', 'baz'])
+        snippet = {'foo': 'bar', 'baz': func, 'blarg': 'wibble'}
+
+        result = function.resolve(snippet)
+
+        self.assertEqual({'foo': 'bar', 'blarg': 'wibble'}, result)
+
+    def test_resolve_list_with_null(self):
+        func = NullFunction(None, 'foo', ['bar', 'baz'])
+        snippet = ['foo', func, 'bar']
+
+        result = function.resolve(snippet)
+
+        self.assertEqual(['foo', 'bar'], result)
 
 
 class ValidateTest(common.HeatTestCase):

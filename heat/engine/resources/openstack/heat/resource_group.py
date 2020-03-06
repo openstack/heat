@@ -600,19 +600,25 @@ class ResourceGroup(stack_resource.StackResource):
         # At this stage, we don't mind if all of the parameters have values
         # assigned. Pass in a custom resolver to the properties to not
         # error when a parameter does not have a user entered value.
-        def ignore_param_resolve(snippet):
+        def ignore_param_resolve(snippet, nullable=False):
             if isinstance(snippet, function.Function):
                 try:
-                    return snippet.result()
+                    result = snippet.result()
                 except exception.UserParameterMissing:
                     return None
+                if not (nullable or function._non_null_value(result)):
+                    result = None
+                return result
 
             if isinstance(snippet, collections.Mapping):
-                return dict((k, ignore_param_resolve(v))
-                            for k, v in snippet.items())
+                return dict(filter(function._non_null_item,
+                                   ((k, ignore_param_resolve(v, nullable=True))
+                                    for k, v in snippet.items())))
             elif (not isinstance(snippet, str) and
                   isinstance(snippet, collections.Iterable)):
-                return [ignore_param_resolve(v) for v in snippet]
+                return list(filter(function._non_null_value,
+                                   (ignore_param_resolve(v, nullable=True)
+                                    for v in snippet)))
 
             return snippet
 
