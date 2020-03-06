@@ -1275,13 +1275,16 @@ class If(function.Macro):
     evaluates to false.
     """
 
+    def _read_args(self):
+        return self.args
+
     def parse_args(self, parse_func):
         try:
             if (not self.args or
                     not isinstance(self.args, collections.Sequence) or
                     isinstance(self.args, str)):
                 raise ValueError()
-            condition, value_if_true, value_if_false = self.args
+            condition, value_if_true, value_if_false = self._read_args()
         except ValueError:
             msg = _('Arguments to "%s" must be of the form: '
                     '[condition_name, value_if_true, value_if_false]')
@@ -1297,6 +1300,40 @@ class If(function.Macro):
             return cond
 
         return self.template.conditions(self.stack).is_enabled(cond)
+
+
+class IfNullable(If):
+    """A function to return corresponding value based on condition evaluation.
+
+    Takes the form::
+
+        if:
+          - <condition_name>
+          - <value_if_true>
+          - <value_if_false>
+
+    The value_if_true to be returned if the specified condition evaluates
+    to true, the value_if_false to be returned if the specified condition
+    evaluates to false.
+
+    If the value_if_false is omitted and the condition is false, the enclosing
+    item (list item, dictionary key/value pair, property definition) will be
+    treated as if it were not mentioned in the template::
+
+        if:
+          - <condition_name>
+          - <value_if_true>
+    """
+
+    def _read_args(self):
+        if not (2 <= len(self.args) <= 3):
+            raise ValueError()
+
+        if len(self.args) == 2:
+            condition, value_if_true = self.args
+            return condition, value_if_true, Ellipsis
+
+        return self.args
 
 
 class ConditionBoolean(function.Function):

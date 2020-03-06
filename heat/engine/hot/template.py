@@ -783,7 +783,8 @@ class HOTemplate20210416(HOTemplate20180831):
         # functions added in 2016-10-14
         'yaql': hot_funcs.Yaql,
         'map_replace': hot_funcs.MapReplace,
-        'if': hot_funcs.If,
+        # Modified in 2021-04-16
+        'if': hot_funcs.IfNullable,
 
         # functions added in 2017-02-24
         'filter': hot_funcs.Filter,
