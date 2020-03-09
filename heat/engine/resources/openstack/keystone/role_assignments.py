@@ -395,7 +395,8 @@ class KeystoneUserRoleAssignment(resource.Resource,
         self.update_assignment(user_id=self.user_id, prop_diff=prop_diff)
 
     def handle_delete(self):
-        self.delete_assignment(user_id=self.user_id)
+        with self.client_plugin().ignore_not_found:
+            self.delete_assignment(user_id=self.user_id)
 
     def validate(self):
         super(KeystoneUserRoleAssignment, self).validate()
@@ -453,7 +454,8 @@ class KeystoneGroupRoleAssignment(resource.Resource,
         self.update_assignment(group_id=self.group_id, prop_diff=prop_diff)
 
     def handle_delete(self):
-        self.delete_assignment(group_id=self.group_id)
+        with self.client_plugin().ignore_not_found:
+            self.delete_assignment(group_id=self.group_id)
 
     def validate(self):
         super(KeystoneGroupRoleAssignment, self).validate()
