@@ -15,6 +15,7 @@ import mock
 import six
 import yaml
 
+from mistralclient.api import base as mistral_base
 from mistralclient.api.v2 import executions
 from oslo_serialization import jsonutils
 
@@ -302,6 +303,21 @@ resources:
             result: <% $.hello %>
 """
 
+workflow_template_update_replace_failed = """
+heat_template_version: 2013-05-23
+resources:
+  workflow:
+    type: OS::Mistral::Workflow
+    properties:
+      name: hello_action
+      type: direct
+      tasks:
+        - name: hello
+          action: std.echo output='Good Morning!'
+          publish:
+            result: <% $.hello %>
+"""
+
 workflow_template_update = """
 heat_template_version: 2013-05-23
 resources:
@@ -373,12 +389,6 @@ class TestMistralWorkflow(common.HeatTestCase):
     def setUp(self):
         super(TestMistralWorkflow, self).setUp()
         self.ctx = utils.dummy_context()
-        tmpl = template_format.parse(workflow_template)
-        self.stack = utils.parse_stack(tmpl, stack_name='test_stack')
-
-        resource_defns = self.stack.t.resource_definitions(self.stack)
-        self.rsrc_defn = resource_defns['workflow']
-
         self.mistral = mock.Mock()
         self.patchobject(workflow.Workflow, 'client',
                          return_value=self.mistral)
@@ -388,8 +398,6 @@ class TestMistralWorkflow(common.HeatTestCase):
                                               '_create_user'))
         self.patches.append(mock.patch.object(signal_responder.SignalResponder,
                                               '_create_keypair'))
-        self.patches.append(mock.patch.object(client,
-                                              'mistral_base'))
         self.patches.append(mock.patch.object(client.MistralClientPlugin,
                                               '_create'))
         for patch in self.patches:
@@ -402,15 +410,20 @@ class TestMistralWorkflow(common.HeatTestCase):
         for patch in self.patches:
             patch.stop()
 
-    def _create_resource(self, name, snippet, stack):
-        wf = workflow.Workflow(name, snippet, stack)
+    def _create_resource(self, name, template=workflow_template):
+        tmpl = template_format.parse(template)
+        self.stack = utils.parse_stack(tmpl, stack_name='test_stack')
+
+        resource_defns = self.stack.t.resource_definitions(self.stack)
+        rsrc_defn = resource_defns['workflow']
+        wf = workflow.Workflow(name, rsrc_defn, self.stack)
         self.mistral.workflows.create.return_value = [
             FakeWorkflow('test_stack-workflow-b5fiekfci3yc')]
         scheduler.TaskRunner(wf.create)()
         return wf
 
     def test_create(self):
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        wf = self._create_resource('workflow')
         expected_state = (wf.CREATE, wf.COMPLETE)
         self.assertEqual(expected_state, wf.state)
         self.assertEqual('test_stack-workflow-b5fiekfci3yc', wf.resource_id)
@@ -462,7 +475,7 @@ class TestMistralWorkflow(common.HeatTestCase):
                 break
 
     def test_attributes(self):
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        wf = self._create_resource('workflow')
         self.mistral.workflows.get.return_value = (
             FakeWorkflow('test_stack-workflow-b5fiekfci3yc'))
         self.assertEqual({'name': 'test_stack-workflow-b5fiekfci3yc',
@@ -523,7 +536,7 @@ class TestMistralWorkflow(common.HeatTestCase):
                       six.text_type(exc))
 
     def test_update_replace(self):
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        wf = self._create_resource('workflow')
 
         t = template_format.parse(workflow_template_update_replace)
         rsrc_defns = template.Template(t).resource_definitions(self.stack)
@@ -540,8 +553,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual(msg, six.text_type(err))
 
     def test_update(self):
-        wf = self._create_resource('workflow', self.rsrc_defn,
-                                   self.stack)
+        wf = self._create_resource('workflow')
         t = template_format.parse(workflow_template_update)
         rsrc_defns = template.Template(t).resource_definitions(self.stack)
         new_wf = rsrc_defns['workflow']
@@ -552,8 +564,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual((wf.UPDATE, wf.COMPLETE), wf.state)
 
     def test_update_input(self):
-        wf = self._create_resource('workflow', self.rsrc_defn,
-                                   self.stack)
+        wf = self._create_resource('workflow')
         t = template_format.parse(workflow_template)
         t['resources']['workflow']['properties']['input'] = {'foo': 'bar'}
         rsrc_defns = template.Template(t).resource_definitions(self.stack)
@@ -565,8 +576,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual((wf.UPDATE, wf.COMPLETE), wf.state)
 
     def test_update_failed(self):
-        wf = self._create_resource('workflow', self.rsrc_defn,
-                                   self.stack)
+        wf = self._create_resource('workflow')
         t = template_format.parse(workflow_template_update)
         rsrc_defns = template.Template(t).resource_definitions(self.stack)
         new_wf = rsrc_defns['workflow']
@@ -575,8 +585,42 @@ class TestMistralWorkflow(common.HeatTestCase):
                           scheduler.TaskRunner(wf.update, new_wf))
         self.assertEqual((wf.UPDATE, wf.FAILED), wf.state)
 
+    def test_update_failed_no_replace(self):
+        wf = self._create_resource('workflow',
+                                   workflow_template_update_replace)
+        t = template_format.parse(workflow_template_update_replace_failed)
+        rsrc_defns = template.Template(t).resource_definitions(self.stack)
+        new_wf = rsrc_defns['workflow']
+        self.mistral.workflows.get.return_value = (
+            FakeWorkflow('test_stack-workflow-b5fiekfci3yc'))
+        self.mistral.workflows.update.side_effect = [
+            Exception('boom!'),
+            [FakeWorkflow('test_stack-workflow-b5fiekfci3yc')]]
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(wf.update, new_wf))
+        self.assertEqual((wf.UPDATE, wf.FAILED), wf.state)
+        scheduler.TaskRunner(wf.update, new_wf)()
+        self.assertTrue(self.mistral.workflows.update.called)
+        self.assertEqual((wf.UPDATE, wf.COMPLETE), wf.state)
+
+    def test_update_failed_replace_not_found(self):
+        wf = self._create_resource('workflow',
+                                   workflow_template_update_replace)
+        t = template_format.parse(workflow_template_update_replace_failed)
+        rsrc_defns = template.Template(t).resource_definitions(self.stack)
+        new_wf = rsrc_defns['workflow']
+        self.mistral.workflows.update.side_effect = Exception('boom!')
+        self.assertRaises(exception.ResourceFailure,
+                          scheduler.TaskRunner(wf.update, new_wf))
+        self.assertEqual((wf.UPDATE, wf.FAILED), wf.state)
+        self.mistral.workflows.get.side_effect = [
+            mistral_base.APIException(error_code=404)]
+        self.assertRaises(resource.UpdateReplace,
+                          scheduler.TaskRunner(wf.update,
+                                               new_wf))
+
     def test_delete_super_call_successful(self):
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        wf = self._create_resource('workflow')
 
         scheduler.TaskRunner(wf.delete)()
         self.assertEqual((wf.DELETE, wf.COMPLETE), wf.state)
@@ -584,7 +628,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         self.assertEqual(1, self.mistral.workflows.delete.call_count)
 
     def test_delete_executions_successful(self):
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        wf = self._create_resource('workflow')
 
         self.mistral.executuions.delete.return_value = None
         wf._data = {'executions': '1234,5678'}
@@ -596,7 +640,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         data_delete.assert_called_once_with('executions')
 
     def test_delete_executions_not_found(self):
-        wf = self._create_resource('workflow', self.rsrc_defn, self.stack)
+        wf = self._create_resource('workflow')
 
         self.mistral.executuions.delete.side_effect = [
             self.mistral.mistral_base.APIException(error_code=404),
