@@ -36,6 +36,9 @@ resource_types_policies = [
         name=POLICY_ROOT % 'OS::Nova::Quota',
         check_str=base.RULE_PROJECT_ADMIN),
     policy.RuleDefault(
+        name=POLICY_ROOT % 'OS::Octavia::Quota',
+        check_str=base.RULE_PROJECT_ADMIN),
+    policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Manila::ShareType',
         check_str=base.RULE_PROJECT_ADMIN),
     policy.RuleDefault(
