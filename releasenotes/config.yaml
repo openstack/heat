@@ -1,0 +1,4 @@
+---
+branch_name_re: '^stable/\w+$'
+release_tag_re: '((?:[\d.ab]|rc)+)'
+closed_branch_tag_re: '^(\w+)-eol$'
