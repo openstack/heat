@@ -1385,7 +1385,8 @@ class InstancesTest(common.HeatTestCase):
 
             self.nclient.create_port.assert_called_with({'port': props})
         if not all_uuids:
-            self.nclient.list_security_groups.assert_called_once_with()
+            self.nclient.list_security_groups.assert_called_once_with(
+                project_id=mock.ANY)
 
     def _get_fake_properties(self, sg='one'):
         fake_groups_list = {
