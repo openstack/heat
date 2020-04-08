@@ -23,7 +23,6 @@ from heat.engine import constraints
 from heat.engine.hot import template
 from heat.engine import output
 from heat.engine import properties
-from heat.engine import resource
 from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
 from heat.engine import rsrc_defn
 from heat.engine import support
@@ -207,9 +206,6 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
         return super(AutoScalingResourceGroup,
                      self)._create_template(num_instances, num_replace,
                                             template_version=template_version)
-
-    def get_reference_id(self):
-        return resource.Resource.get_reference_id(self)
 
     def _attribute_output_name(self, *attr_path):
         return ', '.join(six.text_type(a) for a in attr_path)
