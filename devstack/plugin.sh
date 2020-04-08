@@ -18,7 +18,9 @@ if is_heat_enabled; then
 
     elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
         if is_service_enabled tempest; then
-            setup_develop $TEMPEST_DIR
+            if [[ "$INSTALL_TEMPEST" == "True" ]]; then
+                setup_develop $TEMPEST_DIR
+            fi
         fi
 
     elif [[ "$1" == "stack" && "$2" == "post-config" ]]; then
