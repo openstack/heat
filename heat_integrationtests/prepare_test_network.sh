@@ -22,5 +22,5 @@ HEAT_PRIVATE_SUBNET_CIDR=10.0.5.0/24
 source $TOP_DIR/openrc demo demo
 
 openstack network show heat-net || openstack network create heat-net
-openstack subnet show heat-subnet || openstack subnet create heat-subnet --network heat-net --subnet-range $HEAT_PRIVATE_SUBNET_CIDR
-openstack router add subnet router1 heat-subnet
+subnet_id=$((openstack subnet show heat-subnet || openstack subnet create heat-subnet --network heat-net --subnet-range $HEAT_PRIVATE_SUBNET_CIDR) | grep " id " | awk '{print $4}')
+openstack router show router1 -c interfaces_info | grep -q $subnet_id || openstack router add subnet router1 $subnet_id
