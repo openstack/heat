@@ -73,6 +73,8 @@ class RemoteStack(resource.Resource):
     """
     default_client_name = 'heat'
 
+    entity = 'stacks'
+
     PROPERTIES = (
         CONTEXT, TEMPLATE, TIMEOUT, PARAMETERS,
     ) = (
