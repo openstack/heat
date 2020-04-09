@@ -716,9 +716,9 @@ class Stack(collections.Mapping):
                 self.user_creds_id = new_creds.id
 
             if self.convergence:
-                    # create a traversal ID
-                    self.current_traversal = uuidutils.generate_uuid()
-                    s['current_traversal'] = self.current_traversal
+                # create a traversal ID
+                self.current_traversal = uuidutils.generate_uuid()
+                s['current_traversal'] = self.current_traversal
 
             new_s = stack_object.Stack.create(self.context, s)
             self.id = new_s.id
@@ -1872,7 +1872,7 @@ class Stack(collections.Mapping):
                         else:
                             self.clients.client('keystone').delete_trust(
                                 trust_id)
-                    except Exception as ex:
+                    except Exception:
                         # We want the admin to be able to delete the stack
                         # Do not FAIL a delete when we cannot delete a trust.
                         # We already carry through and delete the credentials

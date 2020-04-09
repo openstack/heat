@@ -217,8 +217,8 @@ class GlanceWebImage(resource.Resource):
     def get_live_resource_data(self):
         image_data = super(GlanceWebImage, self).get_live_resource_data()
         if image_data.get('status') in ('deleted', 'killed'):
-                raise exception.EntityNotFound(entity='Resource',
-                                               name=self.name)
+            raise exception.EntityNotFound(entity='Resource',
+                                           name=self.name)
         return image_data
 
     def parse_live_resource_data(self, resource_properties, resource_data):
@@ -479,8 +479,8 @@ class GlanceImage(resource.Resource):
     def get_live_resource_data(self):
         image_data = super(GlanceImage, self).get_live_resource_data()
         if image_data.get('status') in ('deleted', 'killed'):
-                raise exception.EntityNotFound(entity='Resource',
-                                               name=self.name)
+            raise exception.EntityNotFound(entity='Resource',
+                                           name=self.name)
         return image_data
 
     def parse_live_resource_data(self, resource_properties, resource_data):

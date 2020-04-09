@@ -118,8 +118,8 @@ class PortPair(neutron.NeutronResource):
         if self.resource_id is None:
             return
         with self.client_plugin().ignore_not_found:
-                self.client_plugin().delete_ext_resource('port_pair',
-                                                         self.resource_id)
+            self.client_plugin().delete_ext_resource('port_pair',
+                                                     self.resource_id)
 
 
 def resource_mapping():

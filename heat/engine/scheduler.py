@@ -296,7 +296,7 @@ class TaskRunner(object):
         return self.__nonzero__()
 
 
-def wrappertask(task):
+def wrappertask(task):  # noqa: C901
     """Decorator for a task that needs to drive a subtask.
 
     This is essentially a replacement for the Python 3-only "yield from"

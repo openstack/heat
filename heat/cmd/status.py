@@ -50,5 +50,6 @@ def main():
     return upgradecheck.main(
         cfg.CONF, project='heat', upgrade_command=Checks())
 
+
 if __name__ == '__main__':
     sys.exit(main())

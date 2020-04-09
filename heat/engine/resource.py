@@ -918,7 +918,7 @@ class Resource(status.ResourceStatus):
         try:
             set_in_progress()
             yield
-        except exception.UpdateInProgress as ex:
+        except exception.UpdateInProgress:
             with excutils.save_and_reraise_exception():
                 LOG.info('Update in progress for %s', self.name)
         except expected_exceptions as ex:
@@ -1587,11 +1587,11 @@ class Resource(status.ResourceStatus):
 
     @classmethod
     def check_is_substituted(cls, new_res_type):
-            support_status = getattr(cls, 'support_status', None)
-            if support_status:
-                is_substituted = support_status.is_substituted(new_res_type)
-                return is_substituted
-            return False
+        support_status = getattr(cls, 'support_status', None)
+        if support_status:
+            is_substituted = support_status.is_substituted(new_res_type)
+            return is_substituted
+        return False
 
     def _persist_update_no_change(self, new_template_id):
         """Persist an update where the resource is unchanged."""

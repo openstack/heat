@@ -26,7 +26,7 @@ def _has_constraint(cset, ctype, cname):
                 and c.name == cname):
             return True
     else:
-            return False
+        return False
 
 
 class DBMigrationUtilsTest(common.HeatTestCase):

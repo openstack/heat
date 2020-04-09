@@ -442,11 +442,11 @@ class Workflow(signal_responder.SignalResponder,
                         error=_('Signal data error'),
                         message=message)
         if params is not None and not isinstance(params, dict):
-                message = (_('Params must be a map, find a '
-                             '%s') % type(params))
-                raise exception.StackValidationFailed(
-                    error=_('Signal data error'),
-                    message=message)
+            message = (_('Params must be a map, find a '
+                         '%s') % type(params))
+            raise exception.StackValidationFailed(
+                error=_('Signal data error'),
+                message=message)
 
     def validate(self):
         super(Workflow, self).validate()

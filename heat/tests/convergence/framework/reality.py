@@ -48,4 +48,5 @@ class RealityStore(object):
                                                    prop_name)
         return res_data.value
 
+
 reality = RealityStore()

@@ -112,4 +112,5 @@ class MessageProcessor(object):
         """Delete all the messages from the queue."""
         self.queue.clear()
 
+
 __all__ = ['MessageProcessor', 'asynchronous']

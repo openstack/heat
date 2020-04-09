@@ -71,8 +71,8 @@ class PropertySchemaTest(common.HeatTestCase):
         s = properties.Schema(properties.Schema.STRING, 'A string',
                               default='wibble',
                               constraints=[constraints.Length(4, 8)])
-        l = properties.Schema(properties.Schema.LIST, 'A list', schema=s)
-        self.assertEqual(d, dict(l))
+        ls = properties.Schema(properties.Schema.LIST, 'A list', schema=s)
+        self.assertEqual(d, dict(ls))
 
     def test_schema_map_schema(self):
         d = {
@@ -137,8 +137,8 @@ class PropertySchemaTest(common.HeatTestCase):
                               constraints=[constraints.Length(4, 8)])
         m = properties.Schema(properties.Schema.MAP, 'A map',
                               schema={'Foo': s})
-        l = properties.Schema(properties.Schema.LIST, 'A list', schema=m)
-        self.assertEqual(d, dict(l))
+        ls = properties.Schema(properties.Schema.LIST, 'A list', schema=m)
+        self.assertEqual(d, dict(ls))
 
     def test_all_resource_schemata(self):
         for resource_type in resources.global_env().get_types():
@@ -292,7 +292,7 @@ class PropertySchemaTest(common.HeatTestCase):
         self.assertEqual('[a-z]*', c.pattern)
 
     def test_from_legacy_list(self):
-        l = properties.Schema.from_legacy({
+        ls = properties.Schema.from_legacy({
             'Type': 'List',
             'Default': ['wibble'],
             'Schema': {
@@ -301,15 +301,15 @@ class PropertySchemaTest(common.HeatTestCase):
                 'MaxLength': 8,
             }
         })
-        self.assertEqual(properties.Schema.LIST, l.type)
-        self.assertEqual(['wibble'], l.default)
+        self.assertEqual(properties.Schema.LIST, ls.type)
+        self.assertEqual(['wibble'], ls.default)
 
-        ss = l.schema[0]
+        ss = ls.schema[0]
         self.assertEqual(properties.Schema.STRING, ss.type)
         self.assertEqual('wibble', ss.default)
 
     def test_from_legacy_map(self):
-        l = properties.Schema.from_legacy({
+        ls = properties.Schema.from_legacy({
             'Type': 'Map',
             'Schema': {
                 'foo': {
@@ -318,9 +318,9 @@ class PropertySchemaTest(common.HeatTestCase):
                 }
             }
         })
-        self.assertEqual(properties.Schema.MAP, l.type)
+        self.assertEqual(properties.Schema.MAP, ls.type)
 
-        ss = l.schema['foo']
+        ss = ls.schema['foo']
         self.assertEqual(properties.Schema.STRING, ss.type)
         self.assertEqual('wibble', ss.default)
 

@@ -135,8 +135,8 @@ class TapFlow(neutron.NeutronResource):
         if self.resource_id is None:
             return
         with self.client_plugin().ignore_not_found:
-                self.client_plugin().delete_ext_resource('tap_flow',
-                                                         self.resource_id)
+            self.client_plugin().delete_ext_resource('tap_flow',
+                                                     self.resource_id)
 
     def check_create_complete(self, data):
         return self.client_plugin().check_ext_resource_status(

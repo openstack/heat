@@ -188,8 +188,8 @@ class Pool(octavia_base.OctaviaBase):
         super(Pool, self).validate()
         if (self.properties[self.LISTENER] is None and
                 self.properties[self.LOADBALANCER] is None):
-                raise exception.PropertyUnspecifiedError(self.LISTENER,
-                                                         self.LOADBALANCER)
+            raise exception.PropertyUnspecifiedError(self.LISTENER,
+                                                     self.LOADBALANCER)
 
         if self.properties[self.SESSION_PERSISTENCE] is not None:
             session_p = self.properties[self.SESSION_PERSISTENCE]

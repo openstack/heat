@@ -15,6 +15,9 @@
 
 An OpenStack Heat server that can run all services.
 """
+
+# flake8: noqa: E402
+
 import eventlet
 eventlet.monkey_patch(os=False)
 
@@ -65,15 +68,15 @@ def _start_service_threads(services):
 
 
 def launch_all(setup_logging=True):
-        if setup_logging:
-            logging.register_options(cfg.CONF)
-        cfg.CONF(project='heat', prog='heat-all',
-                 version=version.version_info.version_string())
-        if setup_logging:
-            logging.setup(cfg.CONF, 'heat-all')
-        config.set_config_defaults()
-        messaging.setup()
-        return _start_service_threads(set(cfg.CONF.heat_all.enabled_services))
+    if setup_logging:
+        logging.register_options(cfg.CONF)
+    cfg.CONF(project='heat', prog='heat-all',
+             version=version.version_info.version_string())
+    if setup_logging:
+        logging.setup(cfg.CONF, 'heat-all')
+    config.set_config_defaults()
+    messaging.setup()
+    return _start_service_threads(set(cfg.CONF.heat_all.enabled_services))
 
 
 def main():

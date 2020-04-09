@@ -321,7 +321,7 @@ class Property(object):
             value = self.has_default() and self.default() or []
         if self.schema.allow_conversion and isinstance(value,
                                                        six.string_types):
-                value = param_utils.delim_string_to_list(value)
+            value = param_utils.delim_string_to_list(value)
         if (not isinstance(value, collections.Sequence) or
                 isinstance(value, six.string_types)):
             raise TypeError(_('"%s" is not a list') % repr(value))
