@@ -15,6 +15,8 @@
 
 import re
 
+from hacking import core
+
 
 """
 Guidelines for writing new hacking checks
@@ -31,6 +33,7 @@ Guidelines for writing new hacking checks
 """
 
 
+@core.flake8ext
 def no_log_warn(logical_line):
     """Disallow 'LOG.warn('
 
@@ -42,6 +45,7 @@ def no_log_warn(logical_line):
         yield(0, 'Heat301 Use LOG.warning() rather than LOG.warn()')
 
 
+@core.flake8ext
 def check_python3_no_iteritems(logical_line):
     msg = ("Heat302: Use dict.items() instead of dict.iteritems().")
 
@@ -49,6 +53,7 @@ def check_python3_no_iteritems(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def check_python3_no_iterkeys(logical_line):
     msg = ("Heat303: Use dict.keys() instead of dict.iterkeys().")
 
@@ -56,15 +61,9 @@ def check_python3_no_iterkeys(logical_line):
         yield(0, msg)
 
 
+@core.flake8ext
 def check_python3_no_itervalues(logical_line):
     msg = ("Heat304: Use dict.values() instead of dict.itervalues().")
 
     if re.search(r".*\.itervalues\(\)", logical_line):
         yield(0, msg)
-
-
-def factory(register):
-    register(no_log_warn)
-    register(check_python3_no_iteritems)
-    register(check_python3_no_iterkeys)
-    register(check_python3_no_itervalues)
