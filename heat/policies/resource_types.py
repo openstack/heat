@@ -51,6 +51,9 @@ resource_types_policies = [
         name=POLICY_ROOT % 'OS::Neutron::QoSBandwidthLimitRule',
         check_str=base.RULE_PROJECT_ADMIN),
     policy.RuleDefault(
+        name=POLICY_ROOT % 'OS::Neutron::QoSDscpMarkingRule',
+        check_str=base.RULE_PROJECT_ADMIN),
+    policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::Segment',
         check_str=base.RULE_PROJECT_ADMIN),
     policy.RuleDefault(
