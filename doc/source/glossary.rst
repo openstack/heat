@@ -24,10 +24,10 @@
    CFN
      An abbreviated form of "AWS CloudFormation".
 
-   Constraint
+   constraint
      Defines valid input :term:`parameters` for a :term:`template`.
 
-   Dependency
+   dependency
      When a :term:`resource` must wait for another resource to finish
      creation before being created itself. Heat adds an implicit
      dependency when a resource references another resource or one of
@@ -35,7 +35,7 @@
      dependency can also be created by the user in the template
      definition.
 
-   Environment
+   environment
      Used to affect the run-time behavior of the template. Provides a
      way to override the default resource implementation and
      parameters passed to Heat. See :ref:`Environments`.
@@ -48,8 +48,8 @@
    HOT
      An acronym for ":term:`Heat Orchestration Template`".
 
-   Input parameters
-     See :term:`Parameters`.
+   input parameters
+     See :term:`parameters`.
 
    Metadata
      May refer to :term:`Resource Metadata`, :term:`Nova Instance
@@ -60,14 +60,14 @@
      retrieve instance-specific data. See :nova-doc:`Nova Metadata
      service documentation <user/metadata.html#metadata-service>`.
 
-   Multi-region
+   multi-region
      A feature of Heat that supports deployment to multiple regions.
 
-   Nested resource
+   nested resource
      A :term:`resource` instantiated as part of a :term:`nested
      stack`.
 
-   Nested stack
+   nested stack
      A :term:`template` referenced by URL inside of another template.
      Used to reduce redundant resource definitions and group complex
      architectures into logical groups.
@@ -81,42 +81,42 @@
    OpenStack
      Open source software for building private and public clouds.
 
-   Orchestrate
+   orchestrate
      Arrange or direct the elements of a situation to produce a
      desired effect.
 
-   Outputs
+   outputs
      A top-level block in a :term:`template` that defines what data
      will be returned by a stack after instantiation.
 
-   Parameters
+   parameters
      A top-level block in a :term:`template` that defines what data
      can be passed to customise a template when it is used to create
      or update a :term:`stack`.
 
-   Provider resource
+   provider resource
      A :term:`resource` implemented by a :term:`provider
      template`. The parent resource's properties become the
      :term:`nested stack's <nested stack>` parameters.
 
-   Provider template
+   provider template
      Allows user-definable :term:`resource providers <resource
      provider>` to be specified via :term:`nested stacks <nested
      stack>`. The nested stack's :term:`outputs` become the parent
      stack's :term:`attributes <resource attribute>`.
 
-   Resource
+   resource
      An element of OpenStack infrastructure instantiated from a
-     particular :term:`resource provider`. See also :term:`Nested
+     particular :term:`resource provider`. See also :term:`nested
      resource`.
 
-   Resource attribute
+   resource attribute
      Data that can be obtained from a :term:`resource`, e.g. a
      server's public IP or name. Usually passed to another resource's
      :term:`properties <resource property>` or added to the stack's
      :term:`outputs`.
 
-   Resource group
+   resource group
      A :term:`resource provider` that creates one or more identically
      configured :term:`resources <resource>` or :term:`nested
      resources <nested resource>`.
@@ -127,37 +127,37 @@
 
      .. _AWS::CloudFormation::Init (AWS CloudFormation User Guide): https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-init.html
 
-   Resource plugin
+   resource plugin
      Python code that understands how to instantiate and manage a
      :term:`resource`. See `Heat Resource Plugins (OpenStack wiki)`_.
 
      .. _Heat Resource Plugins (OpenStack wiki): https://wiki.openstack.org/wiki/Heat/Plugins#Heat_Resource_Plugins
 
-   Resource property
+   resource property
      Data utilized for the instantiation of a :term:`resource`. Can be
      defined statically in a :term:`template` or passed in as
      :term:`input parameters <parameters>`.
 
-   Resource provider
+   resource provider
      The implementation of a particular resource type. May be a
-     :term:`Resource plugin` or a :term:`Provider template`.
+     :term:`resource plugin` or a :term:`provider template`.
 
-   Stack
+   stack
      A collection of instantiated :term:`resources <resource>` that
      are defined in a single :term:`template`.
 
-   Stack resource
+   stack resource
      A :term:`resource provider` that allows the management of a
      :term:`nested stack` as a :term:`resource` in a parent stack.
 
-   Template
+   template
      An orchestration document that details everything needed to carry
      out an :term:`orchestration <orchestrate>`.
 
-   Template resource
-     See :term:`Provider resource`.
+   template resource
+     See :term:`provider resource`.
 
-   User data
+   user data
      A :term:`resource property` that contains a user-provided data
      blob. User data gets passed to `cloud-init`_ to automatically
      configure instances at boot time. See also :nova-doc:`Nova User data
@@ -165,7 +165,7 @@
 
      .. _cloud-init: https://cloudinit.readthedocs.io/
 
-   Wait condition
+   wait condition
      A :term:`resource provider` that provides a way to communicate
      data or events from servers back to the orchestration
      engine. Most commonly used to pause the creation of the
