@@ -167,7 +167,11 @@ class NeutronClientPlugin(os_client.ExtensionMixin,
                 seclist.append(sg)
             else:
                 if not all_groups:
-                    response = self.client().list_security_groups()
+                    # filtering by project_id so that if the user
+                    # has access to multiple (like admin)
+                    # only groups from the token scope are returned
+                    response = self.client().list_security_groups(
+                        project_id=self.context.project_id)
                     all_groups = response['security_groups']
                 same_name_groups = [g for g in all_groups if g['name'] == sg]
                 groups = [g['id'] for g in same_name_groups]
@@ -176,15 +180,7 @@ class NeutronClientPlugin(os_client.ExtensionMixin,
                 elif len(groups) == 1:
                     seclist.append(groups[0])
                 else:
-                    # for admin roles, can get the other users'
-                    # securityGroups, so we should match the tenant_id with
-                    # the groups, and return the own one
-                    own_groups = [g['id'] for g in same_name_groups
-                                  if g['tenant_id'] == self.context.tenant_id]
-                    if len(own_groups) == 1:
-                        seclist.append(own_groups[0])
-                    else:
-                        raise exception.PhysicalResourceNameAmbiguity(name=sg)
+                    raise exception.PhysicalResourceNameAmbiguity(name=sg)
         return seclist
 
     def _resolve_resource_path(self, resource):

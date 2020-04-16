@@ -66,28 +66,6 @@ class NeutronClientPluginTest(NeutronClientPluginTestCase):
         self.neutron_client.list_security_groups.return_value = fake_list
         self.assertEqual(expected_groups,
                          self.neutron_plugin.get_secgroup_uuids(sgs_non_uuid))
-        # test only one belong to the tenant
-        fake_list = {
-            'security_groups': [
-                {
-                    'tenant_id': 'test_tenant_id',
-                    'id': '0389f747-7785-4757-b7bb-2ab07e4b09c3',
-                    'name': 'security_group_1',
-                    'security_group_rules': [],
-                    'description': 'no protocol'
-                },
-                {
-                    'tenant_id': 'not_test_tenant_id',
-                    'id': '384ccd91-447c-4d83-832c-06974a7d3d05',
-                    'name': 'security_group_1',
-                    'security_group_rules': [],
-                    'description': 'no protocol'
-                }
-            ]
-        }
-        self.neutron_client.list_security_groups.return_value = fake_list
-        self.assertEqual(expected_groups,
-                         self.neutron_plugin.get_secgroup_uuids(sgs_non_uuid))
         # test there are two securityGroups with same name, and the two
         # all belong to the tenant
         fake_list = {
