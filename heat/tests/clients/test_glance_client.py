@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
 import uuid
 
 from glanceclient import exc
-import mock
 
 from heat.engine.clients import client_exception as exception
 from heat.engine.clients.os import glance

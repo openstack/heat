@@ -11,10 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from heat.engine.clients.os import zaqar
-
 from heat.tests import common
 from heat.tests import utils
 

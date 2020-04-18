@@ -15,13 +15,13 @@
 #    under the License.
 
 
+from unittest import mock
+
 import fixtures
 import json
-import mock
+from oslo_config import cfg
 import socket
 import webob
-
-from oslo_config import cfg
 
 from heat.api.aws import exception as aws_exception
 from heat.common import exception

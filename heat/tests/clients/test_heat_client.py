@@ -12,7 +12,7 @@
 #    under the License.
 
 import json
-import mock
+from unittest import mock
 import uuid
 
 from keystoneauth1 import access as ks_access

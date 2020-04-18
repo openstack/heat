@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import collections
+from unittest import mock
 
 from manilaclient import exceptions
-import mock
 
 from heat.common import exception as heat_exception
 from heat.tests import common

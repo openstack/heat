@@ -12,9 +12,10 @@
 #    under the License.
 
 import json
+from unittest import mock
+
 from keystoneauth1 import loading as ks_loading
 from keystoneauth1 import session
-import mock
 
 from heat.common import auth_plugin
 from heat.common import config

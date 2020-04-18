@@ -11,9 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from heat.tests import common
 from heat.tests import utils
-import mock
 
 
 class BlazarClientPluginTest(common.HeatTestCase):

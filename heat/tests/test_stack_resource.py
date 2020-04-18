@@ -13,9 +13,9 @@
 
 import contextlib
 import json
+from unittest import mock
 import uuid
 
-import mock
 from oslo_config import cfg
 from oslo_messaging import exceptions as msg_exceptions
 from oslo_serialization import jsonutils

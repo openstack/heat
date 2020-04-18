@@ -11,7 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
+
 from neutronclient.neutron import v2_0 as neutronV20
 from openstack import exceptions
 from oslo_utils import excutils

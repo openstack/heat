@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils

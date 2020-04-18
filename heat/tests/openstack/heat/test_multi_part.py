@@ -13,9 +13,8 @@
 
 import contextlib
 import email
+from unittest import mock
 import uuid
-
-import mock
 
 from heat.common import exception as exc
 from heat.engine import stack as parser

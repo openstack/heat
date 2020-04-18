@@ -14,8 +14,7 @@
 
 import pkgutil
 import sys
-
-import mock
+from unittest import mock
 
 from heat.common import plugin_loader
 import heat.engine

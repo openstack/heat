@@ -13,8 +13,8 @@
 
 import datetime
 import json
+from unittest import mock
 
-import mock
 from oslo_utils import timeutils
 
 from heat.common import exception

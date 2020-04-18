@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from aodhclient import exceptions as aodh_exc
 from cinderclient import exceptions as cinder_exc
 from glanceclient import exc as glance_exc
@@ -20,7 +22,6 @@ from keystoneauth1 import exceptions as keystone_exc
 from keystoneauth1.identity import generic
 from manilaclient import exceptions as manila_exc
 from mistralclient.api import base as mistral_base
-import mock
 from neutronclient.common import exceptions as neutron_exc
 from openstack import exceptions
 from oslo_config import cfg

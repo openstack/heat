@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine import resource

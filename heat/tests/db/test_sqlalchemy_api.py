@@ -13,19 +13,18 @@
 
 import copy
 import datetime
-import fixtures
 import json
 import logging
 import time
+from unittest import mock
 import uuid
 
-import mock
+import fixtures
 from oslo_config import cfg
 from oslo_db import exception as db_exception
 from oslo_utils import timeutils
 from sqlalchemy.orm import exc
 from sqlalchemy.orm import session
-
 
 from heat.common import context
 from heat.common import exception

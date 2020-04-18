@@ -13,9 +13,9 @@
 #    under the License.
 
 import os
+from unittest import mock
 
 from keystoneauth1 import loading as ks_loading
-import mock
 from oslo_config import cfg
 from oslo_config import fixture as config_fixture
 from oslo_middleware import request_id

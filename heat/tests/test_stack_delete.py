@@ -13,10 +13,10 @@
 
 import copy
 import time
+from unittest import mock
 
 import fixtures
 from keystoneauth1 import exceptions as kc_exceptions
-import mock
 from oslo_log import log as logging
 
 from heat.common import exception

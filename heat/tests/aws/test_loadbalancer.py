@@ -12,8 +12,8 @@
 #    under the License.
 
 import copy
+from unittest import mock
 
-import mock
 from oslo_config import cfg
 
 from heat.common import exception

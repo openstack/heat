@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from ironicclient import exceptions as ic_exc
-import mock
 
 from heat.engine.clients.os import ironic as ic
 from heat.tests import common

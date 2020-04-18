@@ -14,7 +14,7 @@
 import collections
 import contextlib
 import copy
-import mock
+from unittest import mock
 
 from keystoneauth1 import exceptions as ks_exceptions
 from neutronclient.v2_0 import client as neutronclient

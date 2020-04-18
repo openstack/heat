@@ -14,8 +14,7 @@
 
 import copy
 import json
-
-import mock
+from unittest import mock
 
 from heat.common import exception
 from heat.common import template_format

@@ -8,7 +8,6 @@ bandit!=1.6.0,>=1.1.0 # Apache-2.0
 coverage!=4.4,>=4.0 # Apache-2.0
 fixtures>=3.0.0 # Apache-2.0/BSD
 kombu!=4.0.2,>=4.0.0 # BSD
-mock>=2.0.0 # BSD
 PyMySQL>=0.7.6 # MIT License
 oslotest>=3.2.0 # Apache-2.0
 psycopg2>=2.7 # LGPL/ZPL

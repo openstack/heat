@@ -17,10 +17,10 @@ import datetime
 import json
 import logging
 import time
+from unittest import mock
 
 import eventlet
 import fixtures
-import mock
 from oslo_config import cfg
 
 from heat.common import context

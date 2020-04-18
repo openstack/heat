@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from neutronclient.common import exceptions as neutron_exc
 from neutronclient.neutron import v2_0 as neutronV20

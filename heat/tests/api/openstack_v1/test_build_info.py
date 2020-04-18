@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 import heat.api.middleware.fault as fault
 import heat.api.openstack.v1.build_info as build_info

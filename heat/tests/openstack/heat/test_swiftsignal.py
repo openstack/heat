@@ -13,9 +13,9 @@
 
 import datetime
 import json
+from unittest import mock
 import uuid
 
-import mock
 from oslo_utils import timeutils
 from swiftclient import client as swiftclient_client
 from swiftclient import exceptions as swiftclient_exceptions

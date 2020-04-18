@@ -14,14 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
+from unittest import mock
+
 from novaclient import client as base_client
 from novaclient import exceptions as nova_exceptions
 import requests
 from urllib import parse as urlparse
 
 from heat.tests import fakes
-
 
 NOVA_API_VERSION = "2.1"
 

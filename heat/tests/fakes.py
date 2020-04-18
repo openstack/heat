@@ -18,8 +18,9 @@ wrong the tests might raise AssertionError. I've indicated in comments the
 places where actual behavior differs from the spec.
 """
 
+from unittest import mock
+
 from keystoneauth1 import plugin
-import mock
 
 
 class FakeClient(object):

@@ -13,11 +13,11 @@
 
 import collections
 import json
+from unittest import mock
 
 from heatclient import exc
 from heatclient.v1 import stacks
 from keystoneauth1 import loading as ks_loading
-import mock
 from oslo_config import cfg
 
 from heat.common import exception

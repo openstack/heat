@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from designateclient import client as designate_client
-import mock
 
 from heat.common import exception as heat_exception
 from heat.engine.clients.os import designate as client

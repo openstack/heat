@@ -12,8 +12,8 @@
 #    under the License.
 
 import copy
+from unittest import mock
 
-import mock
 
 from heat.common import template_format
 from heat.engine.resources.openstack.manila import share_type as mshare_type

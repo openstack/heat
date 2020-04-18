@@ -12,8 +12,8 @@
 #    under the License.
 
 import json
+from unittest import mock
 
-import mock
 import webob.exc
 
 import heat.api.middleware.fault as fault

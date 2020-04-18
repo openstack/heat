@@ -14,8 +14,8 @@
 import errno
 import os
 import subprocess
+from unittest import mock
 
-import mock
 
 from heat.cloudinit import loguserdata
 from heat.tests import common

@@ -13,8 +13,8 @@
 
 import json
 import os
+from unittest import mock
 
-import mock
 from oslo_config import fixture as config_fixture
 
 from heat.api.aws import exception

@@ -12,8 +12,8 @@
 #    under the License.
 
 import os
+from unittest import mock
 
-import mock
 import re
 import yaml
 

@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from magnumclient import exceptions as mc_exc
-import mock
 
 from heat.engine.clients.os import magnum as mc
 from heat.tests import common

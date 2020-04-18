@@ -13,9 +13,9 @@
 """Tests for :module:'heat.engine.clients.os.nova'."""
 
 import collections
+from unittest import mock
 import uuid
 
-import mock
 from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg

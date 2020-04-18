@@ -12,7 +12,8 @@
 #    under the License.
 
 import copy
-import mock
+from unittest import mock
+
 from troveclient import exceptions as troveexc
 
 from heat.common import exception

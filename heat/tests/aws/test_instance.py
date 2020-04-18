@@ -12,9 +12,9 @@
 #    under the License.
 
 import copy
+from unittest import mock
 import uuid
 
-import mock
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import exception

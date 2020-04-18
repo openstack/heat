@@ -11,10 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
 import uuid
 import yaml
 
-import mock
 
 from heat.engine import stack
 from heat.engine import template

@@ -12,8 +12,8 @@
 #    under the License.
 
 import re
+from unittest import mock
 
-import mock
 from testtools import matchers
 
 from heat.common import exception

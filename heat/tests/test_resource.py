@@ -13,14 +13,14 @@
 
 import collections
 import datetime
-import eventlet
 import itertools
 import json
 import os
 import sys
+from unittest import mock
 import uuid
 
-import mock
+import eventlet
 from oslo_config import cfg
 
 from heat.common import exception

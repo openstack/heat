@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from designateclient import exceptions as designate_exception
-import mock
 
 from heat.common import exception
 from heat.engine.resources.openstack.designate import recordset
