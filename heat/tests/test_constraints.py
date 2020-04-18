@@ -81,16 +81,16 @@ class SchemaTest(common.HeatTestCase):
         self.assertRaises(ValueError, r.validate, 6)
 
     def test_length_validate(self):
-        l = constraints.Length(min=5, max=5, description='a range')
-        l.validate('abcde')
+        cl = constraints.Length(min=5, max=5, description='a range')
+        cl.validate('abcde')
 
     def test_length_min_fail(self):
-        l = constraints.Length(min=5, description='a range')
-        self.assertRaises(ValueError, l.validate, 'abcd')
+        cl = constraints.Length(min=5, description='a range')
+        self.assertRaises(ValueError, cl.validate, 'abcd')
 
     def test_length_max_fail(self):
-        l = constraints.Length(max=5, description='a range')
-        self.assertRaises(ValueError, l.validate, 'abcdef')
+        cl = constraints.Length(max=5, description='a range')
+        self.assertRaises(ValueError, cl.validate, 'abcdef')
 
     def test_modulo_validate(self):
         r = constraints.Modulo(step=2, offset=1, description='a modulo')
@@ -196,8 +196,8 @@ class SchemaTest(common.HeatTestCase):
         s = constraints.Schema(constraints.Schema.STRING, 'A string',
                                default='wibble',
                                constraints=[constraints.Length(4, 8)])
-        l = constraints.Schema(constraints.Schema.LIST, 'A list', schema=s)
-        self.assertEqual(d, dict(l))
+        ls = constraints.Schema(constraints.Schema.LIST, 'A list', schema=s)
+        self.assertEqual(d, dict(ls))
 
     def test_schema_map_schema(self):
         d = {
@@ -252,8 +252,8 @@ class SchemaTest(common.HeatTestCase):
                                constraints=[constraints.Length(4, 8)])
         m = constraints.Schema(constraints.Schema.MAP, 'A map',
                                schema={'Foo': s})
-        l = constraints.Schema(constraints.Schema.LIST, 'A list', schema=m)
-        self.assertEqual(d, dict(l))
+        ls = constraints.Schema(constraints.Schema.LIST, 'A list', schema=m)
+        self.assertEqual(d, dict(ls))
 
     def test_invalid_type(self):
         self.assertRaises(exception.InvalidSchemaError, constraints.Schema,

@@ -18,6 +18,7 @@ import oslo_i18n as i18n
 def fake_translate_msgid(msgid, domain, desired_locale=None):
     return msgid
 
+
 i18n.enable_lazy()
 
 # To ensure messages don't really get translated while running tests.

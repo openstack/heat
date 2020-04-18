@@ -214,7 +214,7 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
     def _attribute_output_name(self, *attr_path):
         return ', '.join(six.text_type(a) for a in attr_path)
 
-    def get_attribute(self, key, *path):
+    def get_attribute(self, key, *path):  # noqa: C901
         if key == self.CURRENT_SIZE:
             return grouputils.get_size(self)
 

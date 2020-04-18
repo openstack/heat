@@ -17,8 +17,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 import six
 
-cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -27,6 +25,9 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import scheduler_hints as sh
+
+
+cfg.CONF.import_opt('max_server_name_length', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
 

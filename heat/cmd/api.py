@@ -16,6 +16,8 @@
 An OpenStack ReST API to Heat.
 """
 
+# flake8: noqa: E402
+
 import eventlet
 eventlet.monkey_patch(os=False)
 

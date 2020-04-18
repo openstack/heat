@@ -105,11 +105,11 @@ class CheckResource(object):
 
     def _retrigger_new_traversal(self, cnxt, current_traversal, is_update,
                                  stack_id, rsrc_id):
-            latest_stack = parser.Stack.load(cnxt, stack_id=stack_id,
-                                             force_reload=True)
-            if current_traversal != latest_stack.current_traversal:
-                self.retrigger_check_resource(cnxt, is_update, rsrc_id,
-                                              latest_stack)
+        latest_stack = parser.Stack.load(cnxt, stack_id=stack_id,
+                                         force_reload=True)
+        if current_traversal != latest_stack.current_traversal:
+            self.retrigger_check_resource(cnxt, is_update, rsrc_id,
+                                          latest_stack)
 
     def _handle_stack_timeout(self, cnxt, stack):
         failure_reason = u'Timed out'
@@ -183,7 +183,7 @@ class CheckResource(object):
         except scheduler.Timeout:
             self._handle_resource_failure(cnxt, is_update, rsrc.id,
                                           stack, u'Timed out')
-        except CancelOperation as ex:
+        except CancelOperation:
             # Stack is already marked FAILED, so we just need to retrigger
             # in case a new traversal has started and is waiting on us.
             self._retrigger_new_traversal(cnxt, current_traversal, is_update,

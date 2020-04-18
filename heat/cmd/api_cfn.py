@@ -18,6 +18,8 @@ translates it into a native representation.  It then calls the heat-engine via
 AMQP RPC to implement them.
 """
 
+# flake8: noqa: E402
+
 import eventlet
 eventlet.monkey_patch(os=False)
 

@@ -1242,9 +1242,9 @@ class DescriptionTest(common.HeatTestCase):
         self.assertEqual('f', scheduler.task_description(f))
 
     def test_lambda(self):
-        l = lambda: None
+        lam = lambda: None  # noqa: E731
 
-        self.assertEqual('<lambda>', scheduler.task_description(l))
+        self.assertEqual('<lambda>', scheduler.task_description(lam))
 
     def test_method(self):
         class C(object):

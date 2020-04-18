@@ -18,6 +18,8 @@ Normal communications is done via the heat API which then calls into this
 engine.
 """
 
+# flake8: noqa: E402
+
 import eventlet
 eventlet.monkey_patch()
 

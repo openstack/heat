@@ -54,11 +54,11 @@ class SupportStatus(object):
             self.previous_status = None
 
     def to_dict(self):
-            return {'status': self.status,
-                    'message': self.message,
-                    'version': self.version,
-                    'previous_status': self.previous_status.to_dict()
-                    if self.previous_status is not None else None}
+        return {'status': self.status,
+                'message': self.message,
+                'version': self.version,
+                'previous_status': self.previous_status.to_dict()
+                if self.previous_status is not None else None}
 
     def is_substituted(self, substitute_class):
         if self.substitute_class is None:

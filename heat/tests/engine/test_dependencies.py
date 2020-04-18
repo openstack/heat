@@ -57,16 +57,16 @@ class dependenciesTest(common.HeatTestCase):
 
     def test_single_node(self):
         d = dependencies.Dependencies([('only', None)])
-        l = list(iter(d))
-        self.assertEqual(1, len(l))
-        self.assertEqual('only', l[0])
+        li = list(iter(d))
+        self.assertEqual(1, len(li))
+        self.assertEqual('only', li[0])
 
     def test_disjoint(self):
         d = dependencies.Dependencies([('1', None), ('2', None)])
-        l = list(iter(d))
-        self.assertEqual(2, len(l))
-        self.assertIn('1', l)
-        self.assertIn('2', l)
+        li = list(iter(d))
+        self.assertEqual(2, len(li))
+        self.assertIn('1', li)
+        self.assertIn('2', li)
 
     def test_single_fwd(self):
         self._dep_test_fwd(('second', 'first'))
@@ -170,9 +170,9 @@ class dependenciesTest(common.HeatTestCase):
     def test_single_partial(self):
         d = dependencies.Dependencies([('last', 'first')])
         p = d['last']
-        l = list(iter(p))
-        self.assertEqual(1, len(l))
-        self.assertEqual('last', l[0])
+        li = list(iter(p))
+        self.assertEqual(1, len(li))
+        self.assertEqual('last', li[0])
 
     def test_simple_partial(self):
         d = dependencies.Dependencies([('last', 'middle'),

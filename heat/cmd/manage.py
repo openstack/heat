@@ -224,6 +224,7 @@ def add_command_parsers(subparsers):
 
     ServiceManageCommand.add_service_parsers(subparsers)
 
+
 command_opt = cfg.SubCommandOpt('command',
                                 title='Commands',
                                 help=_('Show available commands.'),
