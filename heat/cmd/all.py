@@ -27,7 +27,6 @@ from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
 from oslo_service import systemd
-import six
 
 from heat.cmd import api
 from heat.cmd import api_cfn
@@ -86,5 +85,5 @@ def main():
         systemd.notify_once()
         [service.wait() for service in services]
     except RuntimeError as e:
-        msg = six.text_type(e)
+        msg = str(e)
         sys.exit("ERROR: %s" % msg)

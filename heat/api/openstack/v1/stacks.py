@@ -15,8 +15,7 @@
 
 import contextlib
 from oslo_log import log as logging
-import six
-from six.moves.urllib import parse
+from urllib import parse
 from webob import exc
 
 from heat.api.openstack.v1 import util
@@ -79,7 +78,7 @@ class InstantiationData(object):
         try:
             yield
         except ValueError as parse_ex:
-            mdict = {'type': data_type, 'error': six.text_type(parse_ex)}
+            mdict = {'type': data_type, 'error': str(parse_ex)}
             msg = _("%(type)s not in valid format: %(error)s") % mdict
             raise exc.HTTPBadRequest(msg)
 
@@ -101,7 +100,7 @@ class InstantiationData(object):
             try:
                 adopt_data = template_format.simple_parse(adopt_data)
                 template_format.validate_template_limit(
-                    six.text_type(adopt_data['template']))
+                    str(adopt_data['template']))
                 return adopt_data['template']
             except (ValueError, KeyError) as ex:
                 err_reason = _('Invalid adopt data: %s') % ex
@@ -109,7 +108,7 @@ class InstantiationData(object):
         elif self.PARAM_TEMPLATE in self.data:
             template_data = self.data[self.PARAM_TEMPLATE]
             if isinstance(template_data, dict):
-                template_format.validate_template_limit(six.text_type(
+                template_format.validate_template_limit(str(
                     template_data))
                 return template_data
 
@@ -188,7 +187,7 @@ class StackController(object):
         try:
             return param_utils.extract_bool(name, value)
         except ValueError as e:
-            raise exc.HTTPBadRequest(six.text_type(e))
+            raise exc.HTTPBadRequest(str(e))
 
     def _extract_int_param(self, name, value,
                            allow_zero=True, allow_negative=False):
@@ -196,13 +195,13 @@ class StackController(object):
             return param_utils.extract_int(name, value,
                                            allow_zero, allow_negative)
         except ValueError as e:
-            raise exc.HTTPBadRequest(six.text_type(e))
+            raise exc.HTTPBadRequest(str(e))
 
     def _extract_tags_param(self, tags):
         try:
             return param_utils.extract_tags(tags)
         except ValueError as e:
-            raise exc.HTTPBadRequest(six.text_type(e))
+            raise exc.HTTPBadRequest(str(e))
 
     def _index(self, req, use_admin_cnxt=False):
         filter_whitelist = {
@@ -392,7 +391,7 @@ class StackController(object):
         if not is_update and key in args:
             msg = _("%s flag only supported in stack update (or update "
                     "preview) request.") % key
-            raise exc.HTTPBadRequest(six.text_type(msg))
+            raise exc.HTTPBadRequest(str(msg))
         return args
 
     @util.registered_policy_enforce
@@ -700,7 +699,7 @@ class StackController(object):
                     req.params.get(rpc_api.TEMPLATE_TYPE))
             except ValueError as ex:
                 msg = _("Template type is not supported: %s") % ex
-                raise exc.HTTPBadRequest(six.text_type(msg))
+                raise exc.HTTPBadRequest(str(msg))
 
         return self.rpc_client.generate_template(req.context,
                                                  type_name,
@@ -753,10 +752,7 @@ class StackSerializer(serializers.JSONResponseSerializer):
 
     def _populate_response_header(self, response, location, status):
         response.status = status
-        if six.PY2:
-            response.headers['Location'] = location.encode('utf-8')
-        else:
-            response.headers['Location'] = location
+        response.headers['Location'] = location
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -764,7 +760,7 @@ class StackSerializer(serializers.JSONResponseSerializer):
         self._populate_response_header(response,
                                        result['stack']['links'][0]['href'],
                                        201)
-        response.body = six.b(self.to_json(result))
+        response.body = self.to_json(result).encode('latin-1')
         return response
 
 

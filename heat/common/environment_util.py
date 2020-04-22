@@ -13,7 +13,6 @@
 import collections
 
 from oslo_serialization import jsonutils
-import six
 
 from heat.common import environment_format as env_fmt
 from heat.common import exception
@@ -62,10 +61,10 @@ def merge_map(old, new, deep_merge=False):
                 old_v = old.get(k)
                 old[k] = merge_map(old_v, v, deep_merge) if old_v else v
             elif (isinstance(v, collections.Sequence) and
-                    not isinstance(v, six.string_types)):
+                    not isinstance(v, str)):
                 old_v = old.get(k)
                 old[k] = merge_list(old_v, v) if old_v else v
-            elif isinstance(v, six.string_types):
+            elif isinstance(v, str):
                 old[k] = ''.join([old.get(k, ''), v])
             else:
                 old[k] = v
@@ -76,14 +75,14 @@ def merge_map(old, new, deep_merge=False):
 def parse_param(p_val, p_schema):
     try:
         if p_schema.type == p_schema.MAP:
-            if not isinstance(p_val, six.string_types):
+            if not isinstance(p_val, str):
                 p_val = jsonutils.dumps(p_val)
             if p_val:
                 return jsonutils.loads(p_val)
         elif not isinstance(p_val, collections.Sequence):
             raise ValueError()
     except (ValueError, TypeError) as err:
-        msg = _("Invalid parameter in environment %s.") % six.text_type(err)
+        msg = _("Invalid parameter in environment %s.") % str(err)
         raise ValueError(msg)
     return p_val
 
