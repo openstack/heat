@@ -24,7 +24,6 @@ import traceback
 
 from oslo_config import cfg
 from oslo_utils import reflection
-import six
 import webob
 
 from heat.common import exception
@@ -127,7 +126,7 @@ class FaultWrapper(wsgi.Middleware):
         if is_remote:
             ex_type = ex_type[:-len('_Remote')]
 
-        full_message = six.text_type(ex)
+        full_message = str(ex)
         if '\n' in full_message and is_remote:
             message, msg_trace = full_message.split('\n', 1)
         elif traceback_marker in full_message:

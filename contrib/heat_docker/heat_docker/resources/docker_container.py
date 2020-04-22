@@ -17,7 +17,6 @@
 import distutils
 
 from oslo_log import log as logging
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -340,7 +339,7 @@ class DockerContainer(resource.Resource):
     def _parse_networkinfo_ports(self, networkinfo):
         tcp = []
         udp = []
-        for port, info in six.iteritems(networkinfo['Ports']):
+        for port, info in networkinfo['Ports'].items():
             p = port.split('/')
             if not info or len(p) != 2 or 'HostPort' not in info[0]:
                 continue
