@@ -45,9 +45,9 @@ class MultipartMime(software_config.SoftwareConfig):
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
-        PARTS, CONFIG, FILENAME, TYPE, SUBTYPE
+        PARTS, CONFIG, FILENAME, TYPE, SUBTYPE, GROUP
     ) = (
-        'parts', 'config', 'filename', 'type', 'subtype'
+        'parts', 'config', 'filename', 'type', 'subtype', 'group'
     )
 
     TYPES = (
@@ -57,6 +57,14 @@ class MultipartMime(software_config.SoftwareConfig):
     )
 
     properties_schema = {
+        GROUP: properties.Schema(
+            properties.Schema.STRING,
+            _('Namespace to group this multi-part configs by when delivered '
+              'to a server. This may imply what configuration tool is going '
+              'to perform the configuration.'),
+            support_status=support.SupportStatus(version='14.0.0'),
+            default='Heat::Ungrouped'
+        ),
         PARTS: properties.Schema(
             properties.Schema.LIST,
             _('Parts belonging to this message.'),
@@ -96,7 +104,7 @@ class MultipartMime(software_config.SoftwareConfig):
         props = {
             rpc_api.SOFTWARE_CONFIG_NAME: self.physical_resource_name(),
             rpc_api.SOFTWARE_CONFIG_CONFIG: self.get_message(),
-            rpc_api.SOFTWARE_CONFIG_GROUP: 'Heat::Ungrouped'
+            rpc_api.SOFTWARE_CONFIG_GROUP: self.properties[self.GROUP]
         }
         sc = self.rpc_client().create_software_config(self.context, **props)
         self.resource_id_set(sc[rpc_api.SOFTWARE_CONFIG_ID])
