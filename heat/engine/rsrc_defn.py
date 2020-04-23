@@ -18,7 +18,6 @@ import operator
 import six
 
 from heat.common import exception
-from heat.common.i18n import repr_wrapper
 from heat.engine import function
 from heat.engine import properties
 
@@ -37,7 +36,6 @@ FIELDS = (
 )
 
 
-@repr_wrapper
 class ResourceDefinition(object):
     """A definition of a resource, independent of any template format."""
 

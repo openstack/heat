@@ -12,10 +12,9 @@
 #    under the License.
 
 import collections
+import io
 import random as random_module
 import string
-
-import six
 
 
 # NOTE(pas-ha) Heat officially supports only POSIX::Linux platform
@@ -88,19 +87,19 @@ def generate_password(length, char_classes):
     :param char_classes: Iterable over classes of characters from which to
                          generate a password
     """
-    char_buffer = six.StringIO()
+    char_buffer = io.StringIO()
     all_allowed_chars = set()
 
     # Add the minimum number of chars from each char class
     for char_class in char_classes:
         all_allowed_chars |= char_class.allowed_chars
         allowed_chars = tuple(char_class.allowed_chars)
-        for i in six.moves.xrange(char_class.min_count):
+        for i in range(char_class.min_count):
             char_buffer.write(random.choice(allowed_chars))
 
     # Fill up rest with random chars from provided classes
     combined_chars = tuple(all_allowed_chars)
-    for i in six.moves.xrange(max(0, length - char_buffer.tell())):
+    for i in range(max(0, length - char_buffer.tell())):
         char_buffer.write(random.choice(combined_chars))
 
     # Shuffle string

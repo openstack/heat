@@ -21,7 +21,6 @@ from oslo_utils import excutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import repr_wrapper
 from heat.common import timeutils
 
 LOG = logging.getLogger(__name__)
@@ -365,7 +364,6 @@ def wrappertask(task):  # noqa: C901
     return wrapper
 
 
-@repr_wrapper
 class DependencyTaskGroup(object):
     """Task which manages group of subtasks that have ordering dependencies."""
 

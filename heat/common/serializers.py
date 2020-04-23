@@ -23,7 +23,6 @@ import datetime
 from lxml import etree
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
 
 LOG = logging.getLogger(__name__)
 
@@ -34,7 +33,7 @@ class JSONResponseSerializer(object):
         def sanitizer(obj):
             if isinstance(obj, datetime.datetime):
                 return obj.isoformat()
-            return six.text_type(obj)
+            return str(obj)
 
         response = jsonutils.dumps(data, default=sanitizer)
 
@@ -46,7 +45,7 @@ class JSONResponseSerializer(object):
 
     def default(self, response, result):
         response.content_type = 'application/json'
-        response.body = six.b(self.to_json(result))
+        response.body = self.to_json(result).encode('latin-1')
 
 
 # Escape XML serialization for these keys, as the AWS API defines them as
@@ -75,11 +74,11 @@ class XMLResponseSerializer(object):
                 else:
                     self.object_to_element(value, subelement)
         else:
-            element.text = six.text_type(obj)
+            element.text = str(obj)
 
     def to_xml(self, data):
         # Assumption : root node is dict with single key
-        root = next(six.iterkeys(data))
+        root = next(iter(data.keys()))
         eltree = etree.Element(root)
         self.object_to_element(data.get(root), eltree)
         response = etree.tostring(eltree)

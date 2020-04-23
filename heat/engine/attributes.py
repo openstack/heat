@@ -17,7 +17,6 @@ from oslo_utils import strutils
 import six
 
 from heat.common.i18n import _
-from heat.common.i18n import repr_wrapper
 from heat.engine import constraints as constr
 from heat.engine import support
 
@@ -139,7 +138,6 @@ BASE_ATTRIBUTES = (SHOW_ATTR, ) = ('show', )
 ALL_ATTRIBUTES = '*'
 
 
-@repr_wrapper
 class Attributes(collections.Mapping):
     """Models a collection of Resource Attributes."""
 

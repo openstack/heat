@@ -15,7 +15,7 @@ import collections
 import re
 
 from oslo_utils import encodeutils
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from heat.common.i18n import _
 

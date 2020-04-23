@@ -15,7 +15,6 @@ from oslo_log import log as logging
 import six
 
 from heat.common import exception
-from heat.common.i18n import repr_wrapper
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
@@ -25,7 +24,6 @@ from heat.objects import resource as resource_objects
 LOG = logging.getLogger(__name__)
 
 
-@repr_wrapper
 class StackUpdate(object):
     """A Task to perform the update of an existing stack to a new template."""
 

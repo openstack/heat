@@ -19,12 +19,12 @@ existing package tree, use create_subpackage() to dynamically create a package
 for them before loading them.
 """
 
+import functools
 import pkgutil
 import sys
 import types
 
 from oslo_log import log as logging
-import six
 
 
 LOG = logging.getLogger(__name__)
@@ -46,7 +46,7 @@ def create_subpackage(path, parent_package_name, subpackage_name="plugins"):
     package_name = _module_name(parent_package_name, subpackage_name)
 
     package = types.ModuleType(package_name)
-    package.__path__ = ([path] if isinstance(path, six.string_types)
+    package.__path__ = ([path] if isinstance(path, str)
                         else list(path))
     sys.modules[package_name] = package
 
@@ -75,7 +75,7 @@ def _import_module(importer, module_name, package):
     # Make this accessible through the parent package for static imports
     local_name = module_name.partition(package.__name__ + '.')[2]
     module_components = local_name.split('.')
-    parent = six.moves.reduce(getattr, module_components[:-1], package)
+    parent = functools.reduce(getattr, module_components[:-1], package)
     setattr(parent, module_components[-1], module)
 
     return module

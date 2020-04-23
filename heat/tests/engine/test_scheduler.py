@@ -18,7 +18,6 @@ import eventlet
 import mock
 import six
 
-from heat.common.i18n import repr_wrapper
 from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import scheduler
@@ -1273,7 +1272,6 @@ class DescriptionTest(common.HeatTestCase):
         self.assertEqual('o', scheduler.task_description(C()))
 
     def test_unicode(self):
-        @repr_wrapper
         @six.python_2_unicode_compatible
         class C(object):
             def __str__(self):
