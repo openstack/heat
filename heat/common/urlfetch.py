@@ -14,12 +14,14 @@
 """Utility for fetching a resource (e.g. a template) from a URL."""
 
 import socket
+import urllib.error
+import urllib.parse
+import urllib.request
 
 from oslo_config import cfg
 from oslo_log import log as logging
 import requests
 from requests import exceptions
-from six.moves import urllib
 
 from heat.common import exception
 from heat.common.i18n import _

@@ -14,7 +14,6 @@
 import collections
 
 from oslo_serialization import jsonutils
-import six
 
 from heat.api.aws import utils as aws_utils
 from heat.common import exception
@@ -39,7 +38,7 @@ class FindInMap(function.Function):
         try:
             self._mapname, self._mapkey, self._mapvalue = self.args
         except ValueError as ex:
-            raise KeyError(six.text_type(ex))
+            raise KeyError(str(ex))
 
     def result(self):
         mapping = self.stack.t.maps[function.resolve(self._mapname)]
@@ -160,7 +159,7 @@ class Select(function.Function):
             # Handle by returning an empty string
             return ''
 
-        if isinstance(strings, six.string_types):
+        if isinstance(strings, str):
             # might be serialized json.
             try:
                 strings = jsonutils.loads(strings)
@@ -170,7 +169,7 @@ class Select(function.Function):
                 raise ValueError(_('"%(fn_name)s": %(err)s') % fmt_data)
 
         if isinstance(strings, collections.Mapping):
-            if not isinstance(index, six.string_types):
+            if not isinstance(index, str):
                 raise TypeError(_('Index to "%s" must be a string') %
                                 self.fn_name)
             return strings.get(index, '')
@@ -181,8 +180,8 @@ class Select(function.Function):
             pass
 
         if (isinstance(strings, collections.Sequence) and
-                not isinstance(strings, six.string_types)):
-            if not isinstance(index, six.integer_types):
+                not isinstance(strings, str)):
+            if not isinstance(index, int):
                 raise TypeError(_('Index to "%s" must be an integer') %
                                 self.fn_name)
 
@@ -230,7 +229,7 @@ class Split(function.Function):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (six.string_types, collections.Mapping)):
+        if isinstance(self.args, (str, collections.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -243,10 +242,10 @@ class Split(function.Function):
     def result(self):
         strings = function.resolve(self._strings)
 
-        if not isinstance(self._delim, six.string_types):
+        if not isinstance(self._delim, str):
             raise TypeError(_("Delimiter for %s must be string") %
                             self.fn_name)
-        if not isinstance(strings, six.string_types):
+        if not isinstance(strings, str):
             raise TypeError(_("String to split must be string; got %s") %
                             type(strings))
 
@@ -279,7 +278,7 @@ class Replace(hot_funcs.Replace):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (six.string_types, collections.Mapping)):
+        if isinstance(self.args, (str, collections.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -306,7 +305,7 @@ class Base64(function.Function):
 
     def result(self):
         resolved = function.resolve(self.args)
-        if not isinstance(resolved, six.string_types):
+        if not isinstance(resolved, str):
             raise TypeError(_('"%s" argument must be a string') % self.fn_name)
         return resolved
 
@@ -342,10 +341,10 @@ class MemberListToMap(function.Function):
             '''
             raise TypeError(_('Wrong Arguments try: "%s"') % correct)
 
-        if not isinstance(self._keyname, six.string_types):
+        if not isinstance(self._keyname, str):
             raise TypeError(_('%s Key Name must be a string') % self.fn_name)
 
-        if not isinstance(self._valuename, six.string_types):
+        if not isinstance(self._valuename, str):
             raise TypeError(_('%s Value Name must be a string') % self.fn_name)
 
     def result(self):
@@ -355,7 +354,7 @@ class MemberListToMap(function.Function):
             raise TypeError(_('Member list must be a list'))
 
         def item(s):
-            if not isinstance(s, six.string_types):
+            if not isinstance(s, str):
                 raise TypeError(_("Member list items must be strings"))
             return s.split('=', 1)
 
@@ -430,7 +429,7 @@ class Not(hot_funcs.Not):
                 '[condition]') % self.fn_name
         if (not self.args or
                 not isinstance(self.args, collections.Sequence) or
-                isinstance(self.args, six.string_types)):
+                isinstance(self.args, str)):
             raise ValueError(msg)
         if len(self.args) != 1:
             raise ValueError(msg)

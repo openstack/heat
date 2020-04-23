@@ -40,7 +40,6 @@ from oslo_utils import encodeutils
 from oslo_utils import importutils
 from paste.deploy import loadwsgi
 from routes import middleware
-import six
 import webob.dec
 import webob.exc
 
@@ -648,7 +647,7 @@ class Debug(Middleware):
         resp = req.get_response(self.application)
 
         print(("*" * 40) + " RESPONSE HEADERS")
-        for (key, value) in six.iteritems(resp.headers):
+        for (key, value) in resp.headers.items():
             print(key, "=", value)
         print('')
 
@@ -823,7 +822,7 @@ class JSONRequestDeserializer(object):
                 raise exception.RequestLimitExceeded(message=msg)
             return jsonutils.loads(datastring)
         except ValueError as ex:
-            raise webob.exc.HTTPBadRequest(six.text_type(ex))
+            raise webob.exc.HTTPBadRequest(str(ex))
 
     def default(self, request):
         if self.has_body(request):
@@ -1004,8 +1003,7 @@ def translate_exception(exc, locale):
     return exc
 
 
-@six.add_metaclass(abc.ABCMeta)
-class BasePasteFactory(object):
+class BasePasteFactory(object, metaclass=abc.ABCMeta):
     """A base class for paste app and filter factories.
 
     Sub-classes must override the KEY class attribute and provide

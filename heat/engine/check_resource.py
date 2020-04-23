@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import six
-
 import eventlet.queue
 import functools
 
@@ -83,7 +81,7 @@ class CheckResource(object):
                                  'during resource %s' % rsrc.action)
                 rsrc.state_set(rsrc.action,
                                rsrc.FAILED,
-                               six.text_type(status_reason))
+                               str(status_reason))
                 return True
         elif (rs_obj.engine_id is None and
               rs_obj.current_template_id == prev_template_id):
@@ -177,7 +175,7 @@ class CheckResource(object):
         except exception.ResourceFailure as ex:
             action = ex.action or rsrc.action
             reason = 'Resource %s failed: %s' % (action,
-                                                 six.text_type(ex))
+                                                 str(ex))
             self._handle_resource_failure(cnxt, is_update, rsrc.id,
                                           stack, reason)
         except scheduler.Timeout:
@@ -323,7 +321,7 @@ class CheckResource(object):
                                                   rsrc, stack)
         except BaseException as exc:
             with excutils.save_and_reraise_exception():
-                msg = six.text_type(exc)
+                msg = str(exc)
                 LOG.exception("Unexpected exception in resource check.")
                 self._handle_resource_failure(cnxt, is_update, rsrc.id,
                                               stack, msg)

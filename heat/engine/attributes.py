@@ -12,9 +12,9 @@
 #    under the License.
 
 import collections
+import functools
 
 from oslo_utils import strutils
-import six
 
 from heat.common.i18n import _
 from heat.engine import constraints as constr
@@ -206,14 +206,14 @@ class Attributes(collections.Mapping):
 
     def _validate_type(self, attrib, value):
         if attrib.schema.type == attrib.schema.STRING:
-            if not isinstance(value, six.string_types):
+            if not isinstance(value, str):
                 LOG.warning("Attribute %(name)s is not of type "
                             "%(att_type)s",
                             {'name': attrib.name,
                              'att_type': attrib.schema.STRING})
         elif attrib.schema.type == attrib.schema.LIST:
             if (not isinstance(value, collections.Sequence)
-                    or isinstance(value, six.string_types)):
+                    or isinstance(value, str)):
                 LOG.warning("Attribute %(name)s is not of type "
                             "%(att_type)s",
                             {'name': attrib.name,
@@ -296,7 +296,7 @@ class Attributes(collections.Mapping):
 
     def __repr__(self):
         return ("Attributes for %s:\n\t" % self._resource_name +
-                '\n\t'.join(six.itervalues(self)))
+                '\n\t'.join(self.values()))
 
 
 def select_from_attribute(attribute_value, path):
@@ -311,12 +311,12 @@ def select_from_attribute(attribute_value, path):
                                        collections.Sequence)):
             raise TypeError(_("Can't traverse attribute path"))
 
-        if not isinstance(key, (six.string_types, int)):
+        if not isinstance(key, (str, int)):
             raise TypeError(_('Path components in attributes must be strings'))
 
         return collection[key]
 
     try:
-        return six.moves.reduce(get_path_component, path, attribute_value)
+        return functools.reduce(get_path_component, path, attribute_value)
     except (KeyError, IndexError, TypeError):
         return None
