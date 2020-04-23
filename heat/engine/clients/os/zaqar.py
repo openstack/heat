@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from oslo_log import log as logging
 from zaqarclient.queues.v2 import client as zaqarclient
 from zaqarclient.transport import errors as zaqar_errors
@@ -75,7 +73,7 @@ class ZaqarClientPlugin(client_plugin.ClientPlugin):
         return isinstance(ex, zaqar_errors.ResourceNotFound)
 
     def get_queue(self, queue_name):
-        if not isinstance(queue_name, six.string_types):
+        if not isinstance(queue_name, str):
             raise TypeError(_('Queue name must be a string'))
         if not (0 < len(queue_name) <= 64):
             raise ValueError(_('Queue name length must be 1-64'))

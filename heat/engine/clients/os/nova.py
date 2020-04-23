@@ -18,6 +18,7 @@ from email.mime import text
 import os
 import pkgutil
 import string
+from urllib import parse as urlparse
 
 from neutronclient.common import exceptions as q_exceptions
 from novaclient import api_versions
@@ -27,8 +28,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import netutils
-import six
-from six.moves.urllib import parse as urlparse
 import tenacity
 
 from heat.common import exception
@@ -225,7 +224,7 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
         """
         # not checking with is_uuid_like as most tests use strings e.g. '1234'
-        if isinstance(server, six.string_types):
+        if isinstance(server, str):
             server = self.fetch_server(server)
             if server is None:
                 return False
@@ -607,7 +606,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 "nova server metadata needs to be a Map."))
 
         return dict((key, (value if isinstance(value,
-                                               six.string_types)
+                                               str)
                            else jsonutils.dumps(value))
                      ) for (key, value) in metadata.items())
 
@@ -675,7 +674,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 except exceptions.UnsupportedConsoleType as ex:
                     url = ex.message
                 except Exception as e:
-                    url = _('Cannot get console url: %s') % six.text_type(e)
+                    url = _('Cannot get console url: %s') % str(e)
 
                 return url
 

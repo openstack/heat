@@ -13,13 +13,10 @@
 
 import abc
 
-import six
-
 from heat.common import exception
 
 
-@six.add_metaclass(abc.ABCMeta)
-class MicroversionMixin(object):
+class MicroversionMixin(object, metaclass=abc.ABCMeta):
     """Mixin For microversion support."""
 
     def client(self, version=None):
