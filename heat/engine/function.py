@@ -16,14 +16,11 @@ import collections
 import itertools
 import weakref
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Function(object):
+class Function(metaclass=abc.ABCMeta):
     """Abstract base class for template functions."""
 
     def __init__(self, stack, fn_name, args):
@@ -98,13 +95,13 @@ class Function(object):
             return all_dep_attrs(self.args)
 
         def res_dep_attrs(resource_name):
-            return six.moves.zip(itertools.repeat(resource_name),
-                                 self.dep_attrs(resource_name))
+            return zip(itertools.repeat(resource_name),
+                       self.dep_attrs(resource_name))
 
         resource_names = self.stack.enabled_rsrc_names()
 
-        return itertools.chain.from_iterable(six.moves.map(res_dep_attrs,
-                                                           resource_names))
+        return itertools.chain.from_iterable(map(res_dep_attrs,
+                                                 resource_names))
 
     def __reduce__(self):
         """Return a representation of the function suitable for pickling.
@@ -160,8 +157,7 @@ class Function(object):
     __hash__ = None
 
 
-@six.add_metaclass(abc.ABCMeta)
-class Macro(Function):
+class Macro(Function, metaclass=abc.ABCMeta):
     """Abstract base class for template macros.
 
     A macro differs from a function in that it controls how the template is
@@ -260,7 +256,7 @@ def resolve(snippet):
 
     if isinstance(snippet, collections.Mapping):
         return dict((k, resolve(v)) for k, v in snippet.items())
-    elif (not isinstance(snippet, six.string_types) and
+    elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
         return [resolve(v) for v in snippet]
 
@@ -270,7 +266,7 @@ def resolve(snippet):
 def validate(snippet, path=None):
     if path is None:
         path = []
-    elif isinstance(path, six.string_types):
+    elif isinstance(path, str):
         path = [path]
 
     if isinstance(snippet, Function):
@@ -281,11 +277,11 @@ def validate(snippet, path=None):
         except Exception as e:
             raise exception.StackValidationFailed(
                 path=path + [snippet.fn_name],
-                message=six.text_type(e))
+                message=str(e))
     elif isinstance(snippet, collections.Mapping):
-        for k, v in six.iteritems(snippet):
+        for k, v in snippet.items():
             validate(v, path + [k])
-    elif (not isinstance(snippet, six.string_types) and
+    elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
         basepath = list(path)
         parent = basepath.pop() if basepath else ''
@@ -305,13 +301,13 @@ def dependencies(snippet, path=''):
 
     elif isinstance(snippet, collections.Mapping):
         def mkpath(key):
-            return '.'.join([path, six.text_type(key)])
+            return '.'.join([path, str(key)])
 
         deps = (dependencies(value,
                              mkpath(key)) for key, value in snippet.items())
         return itertools.chain.from_iterable(deps)
 
-    elif (not isinstance(snippet, six.string_types) and
+    elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
         def mkpath(idx):
             return ''.join([path, '[%d]' % idx])
@@ -340,7 +336,7 @@ def dep_attrs(snippet, resource_name):
     elif isinstance(snippet, collections.Mapping):
         attrs = (dep_attrs(val, resource_name) for val in snippet.values())
         return itertools.chain.from_iterable(attrs)
-    elif (not isinstance(snippet, six.string_types) and
+    elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
         attrs = (dep_attrs(value, resource_name) for value in snippet)
         return itertools.chain.from_iterable(attrs)
@@ -363,7 +359,7 @@ def all_dep_attrs(snippet):
     elif isinstance(snippet, collections.Mapping):
         res_attrs = (all_dep_attrs(value) for value in snippet.values())
         return itertools.chain.from_iterable(res_attrs)
-    elif (not isinstance(snippet, six.string_types) and
+    elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
         res_attrs = (all_dep_attrs(value) for value in snippet)
         return itertools.chain.from_iterable(res_attrs)

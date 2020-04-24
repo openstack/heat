@@ -12,14 +12,14 @@
 #    under the License.
 
 import collections
+import functools
 import hashlib
 import itertools
 
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 import yaql
 from yaql.language import exceptions
 
@@ -76,7 +76,7 @@ class GetParam(function.Function):
             raise ValueError(_('Function "%s" must have arguments') %
                              self.fn_name)
 
-        if isinstance(args, six.string_types):
+        if isinstance(args, str):
             param_name = args
             path_components = []
         elif isinstance(args, collections.Sequence):
@@ -86,7 +86,7 @@ class GetParam(function.Function):
             raise TypeError(_('Argument to "%s" must be string or list') %
                             self.fn_name)
 
-        if not isinstance(param_name, six.string_types):
+        if not isinstance(param_name, str):
             raise TypeError(_('Parameter name in "%s" must be string') %
                             self.fn_name)
 
@@ -100,12 +100,12 @@ class GetParam(function.Function):
                                            collections.Sequence)):
                 raise TypeError(_('"%s" can\'t traverse path') % self.fn_name)
 
-            if not isinstance(key, (six.string_types, int)):
+            if not isinstance(key, (str, int)):
                 raise TypeError(_('Path components in "%s" '
                                   'must be strings') % self.fn_name)
 
             if isinstance(collection, collections.Sequence
-                          ) and isinstance(key, six.string_types):
+                          ) and isinstance(key, str):
                 try:
                     key = int(key)
                 except ValueError:
@@ -116,7 +116,7 @@ class GetParam(function.Function):
             return collection[key]
 
         try:
-            return six.moves.reduce(get_path_component, path_components,
+            return functools.reduce(get_path_component, path_components,
                                     parameter)
         except (KeyError, IndexError, TypeError):
             return ''
@@ -168,7 +168,7 @@ class GetAttThenSelect(function.Function):
 
     def _parse_args(self):
         if (not isinstance(self.args, collections.Sequence) or
-                isinstance(self.args, six.string_types)):
+                isinstance(self.args, str)):
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
 
@@ -200,7 +200,7 @@ class GetAttThenSelect(function.Function):
                 attrs = [self._attr_path()]
             except Exception as exc:
                 LOG.debug("Ignoring exception calculating required attributes"
-                          ": %s %s", type(exc).__name__, six.text_type(exc))
+                          ": %s %s", type(exc).__name__, str(exc))
                 attrs = []
         else:
             attrs = []
@@ -400,13 +400,13 @@ class Replace(function.Function):
             return ''
 
         if not isinstance(value,
-                          (six.string_types, six.integer_types,
+                          (str, int,
                            float, bool)):
             raise TypeError(_('"%(name)s" params must be strings or numbers, '
                               'param %(param)s is not valid') %
                             {'name': self.fn_name, 'param': param})
 
-        return six.text_type(value)
+        return str(value)
 
     def result(self):
         template = function.resolve(self._string)
@@ -415,7 +415,7 @@ class Replace(function.Function):
         if self._strict:
             unreplaced_keys = set(mapping)
 
-        if not isinstance(template, six.string_types):
+        if not isinstance(template, str):
             raise TypeError(_('"%s" template must be a string') % self.fn_name)
 
         if not isinstance(mapping, collections.Mapping):
@@ -426,7 +426,7 @@ class Replace(function.Function):
                 return strings
 
             placeholder = keys[0]
-            if not isinstance(placeholder, six.string_types):
+            if not isinstance(placeholder, str):
                 raise TypeError(_('"%s" param placeholders must be strings') %
                                 self.fn_name)
 
@@ -490,7 +490,7 @@ class ReplaceJson(Replace):
             else:
                 _raise_empty_param_value_error()
 
-        if not isinstance(value, (six.string_types, six.integer_types,
+        if not isinstance(value, (str, int,
                                   float, bool)):
             if isinstance(value, (collections.Mapping, collections.Sequence)):
                 if not self._allow_empty_value and len(value) == 0:
@@ -507,7 +507,7 @@ class ReplaceJson(Replace):
                 raise TypeError(_('"%s" params must be strings, numbers, '
                                   'list or map.') % self.fn_name)
 
-        ret_value = six.text_type(value)
+        ret_value = str(value)
         if not self._allow_empty_value and not ret_value:
             _raise_empty_param_value_error()
         return ret_value
@@ -553,7 +553,7 @@ class GetFile(function.Function):
         assert self.files is not None, "No stack definition in Function"
 
         args = function.resolve(self.args)
-        if not (isinstance(args, six.string_types)):
+        if not (isinstance(args, str)):
             raise TypeError(_('Argument to "%s" must be a string') %
                             self.fn_name)
 
@@ -603,19 +603,19 @@ class Join(function.Function):
         strings = function.resolve(self._strings)
         if strings is None:
             strings = []
-        if (isinstance(strings, six.string_types) or
+        if (isinstance(strings, str) or
                 not isinstance(strings, collections.Sequence)):
             raise TypeError(_('"%s" must operate on a list') % self.fn_name)
 
         delim = function.resolve(self._delim)
-        if not isinstance(delim, six.string_types):
+        if not isinstance(delim, str):
             raise TypeError(_('"%s" delimiter must be a string') %
                             self.fn_name)
 
         def ensure_string(s):
             if s is None:
                 return ''
-            if not isinstance(s, six.string_types):
+            if not isinstance(s, str):
                 raise TypeError(
                     _('Items to join must be strings not %s'
                       ) % (repr(s)[:200]))
@@ -668,7 +668,7 @@ class JoinMultiple(function.Function):
         strings = []
         for jl in r_joinlists:
             if jl:
-                if (isinstance(jl, six.string_types) or
+                if (isinstance(jl, str) or
                         not isinstance(jl, collections.Sequence)):
                     raise TypeError(_('"%s" must operate on '
                                       'a list') % self.fn_name)
@@ -676,7 +676,7 @@ class JoinMultiple(function.Function):
                 strings += jl
 
         delim = function.resolve(self._delim)
-        if not isinstance(delim, six.string_types):
+        if not isinstance(delim, str):
             raise TypeError(_('"%s" delimiter must be a string') %
                             self.fn_name)
 
@@ -685,7 +685,7 @@ class JoinMultiple(function.Function):
                     ) % (repr(s)[:200])
             if s is None:
                 return ''
-            elif isinstance(s, six.string_types):
+            elif isinstance(s, str):
                 return s
             elif isinstance(s, (collections.Mapping, collections.Sequence)):
                 try:
@@ -801,7 +801,7 @@ class MapReplace(function.Function):
         repl_keys = ensure_map(repl_map.get('keys', {}))
         repl_values = ensure_map(repl_map.get('values', {}))
         ret_map = {}
-        for k, v in six.iteritems(in_map):
+        for k, v in in_map.items():
             key = repl_keys.get(k)
             if key is None:
                 key = k
@@ -930,12 +930,12 @@ class Repeat(function.Function):
     def _valid_arg(self, arg):
         if not (isinstance(arg, (collections.Sequence,
                                  function.Function)) and
-                not isinstance(arg, six.string_types)):
+                not isinstance(arg, str)):
             raise TypeError(_('The values of the "for_each" argument to '
                               '"%s" must be lists') % self.fn_name)
 
     def _do_replacement(self, keys, values, template):
-        if isinstance(template, six.string_types):
+        if isinstance(template, str):
             for (key, value) in zip(keys, values):
                 template = template.replace(key, value)
             return template
@@ -951,7 +951,7 @@ class Repeat(function.Function):
 
     def result(self):
         for_each = function.resolve(self._for_each)
-        keys, lists = six.moves.zip(*for_each.items())
+        keys, lists = zip(*for_each.items())
 
         # use empty list for references(None) else validation will fail
         value_lens = []
@@ -970,7 +970,7 @@ class Repeat(function.Function):
                                    'loop.') % self.fn_name)
 
         template = function.resolve(self._template)
-        iter_func = itertools.product if self._nested_loop else six.moves.zip
+        iter_func = itertools.product if self._nested_loop else zip
 
         return [self._do_replacement(keys, replacements, template)
                 for replacements in iter_func(*values)]
@@ -996,7 +996,7 @@ class RepeatWithMap(Repeat):
         if not (isinstance(arg, (collections.Sequence,
                                  collections.Mapping,
                                  function.Function)) and
-                not isinstance(arg, six.string_types)):
+                not isinstance(arg, str)):
             raise TypeError(_('The values of the "for_each" argument to '
                               '"%s" must be lists or maps') % self.fn_name)
 
@@ -1067,7 +1067,7 @@ class Digest(function.Function):
 
     def validate_usage(self, args):
         if not (isinstance(args, list) and
-                all([isinstance(a, six.string_types) for a in args])):
+                all([isinstance(a, str) for a in args])):
             msg = _('Argument to function "%s" must be a list of strings')
             raise TypeError(msg % self.fn_name)
 
@@ -1075,18 +1075,15 @@ class Digest(function.Function):
             msg = _('Function "%s" usage: ["<algorithm>", "<value>"]')
             raise ValueError(msg % self.fn_name)
 
-        if six.PY3:
-            algorithms = hashlib.algorithms_available
-        else:
-            algorithms = hashlib.algorithms
+        algorithms = hashlib.algorithms_available
 
         if args[0].lower() not in algorithms:
             msg = _('Algorithm must be one of %s')
-            raise ValueError(msg % six.text_type(algorithms))
+            raise ValueError(msg % str(algorithms))
 
     def digest(self, algorithm, value):
         _hash = hashlib.new(algorithm)
-        _hash.update(six.b(value))
+        _hash.update(value.encode('latin-1'))
 
         return _hash.hexdigest()
 
@@ -1121,7 +1118,7 @@ class StrSplit(function.Function):
                          'example': example}
         self.fn_name = fn_name
 
-        if isinstance(args, (six.string_types, collections.Mapping)):
+        if isinstance(args, (str, collections.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % self.fmt_data)
 
@@ -1214,7 +1211,7 @@ class Yaql(function.Function):
             self._parse(self._expression)
 
     def _parse(self, expression):
-        if not isinstance(expression, six.string_types):
+        if not isinstance(expression, str):
             raise TypeError(_('The "expression" argument to %s must '
                               'contain a string.') % self.fn_name)
 
@@ -1282,7 +1279,7 @@ class If(function.Macro):
         try:
             if (not self.args or
                     not isinstance(self.args, collections.Sequence) or
-                    isinstance(self.args, six.string_types)):
+                    isinstance(self.args, str)):
                 raise ValueError()
             condition, value_if_true, value_if_false = self.args
         except ValueError:
@@ -1311,7 +1308,7 @@ class ConditionBoolean(function.Function):
 
     def _check_args(self):
         if not (isinstance(self.args, collections.Sequence) and
-                not isinstance(self.args, six.string_types)):
+                not isinstance(self.args, str)):
             msg = _('Arguments to "%s" must be a list of conditions')
             raise ValueError(msg % self.fn_name)
         if not self.args or len(self.args) < 2:
@@ -1406,7 +1403,7 @@ class Filter(function.Function):
 
     def _parse_args(self):
         if (not isinstance(self.args, collections.Sequence) or
-                isinstance(self.args, six.string_types)):
+                isinstance(self.args, str)):
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
 
@@ -1476,7 +1473,7 @@ class MakeURL(function.Function):
                 elif arg == self.PORT:
                     port = args[arg]
                     if not isinstance(port, function.Function):
-                        if not isinstance(port, six.integer_types):
+                        if not isinstance(port, int):
                             try:
                                 port = int(port)
                             except ValueError:
@@ -1493,7 +1490,7 @@ class MakeURL(function.Function):
                                   'must be in range 1-65535') % port)
                 else:
                     if not isinstance(args[arg], (function.Function,
-                                                  six.string_types)):
+                                                  str)):
                         raise TypeError(_('The "%(arg)s" argument to '
                                           '"%(fn_name)s" must be a string') %
                                         {'arg': arg,
@@ -1544,7 +1541,7 @@ class MakeURL(function.Function):
             port = args.get(self.PORT, '')
             if port:
                 yield ':'
-                yield six.text_type(port)
+                yield str(port)
 
         path = urlparse.quote(args.get(self.PATH, ''))
 
@@ -1584,7 +1581,7 @@ class ListConcat(function.Function):
     def result(self):
         args = function.resolve(self.args)
 
-        if (isinstance(args, six.string_types) or
+        if (isinstance(args, str) or
                 not isinstance(args, collections.Sequence)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % self.fmt_data)
@@ -1593,7 +1590,7 @@ class ListConcat(function.Function):
             if m is None:
                 return []
             elif (isinstance(m, collections.Sequence) and
-                  not isinstance(m, six.string_types)):
+                  not isinstance(m, str)):
                 return m
             else:
                 msg = _('Incorrect arguments: Items to concat must be lists. '
