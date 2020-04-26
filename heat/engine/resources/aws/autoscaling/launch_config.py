@@ -11,9 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -200,7 +197,7 @@ class LaunchConfiguration(resource.Resource):
                                    for sg in server.security_groups]
         }
         lc_props = function.resolve(self.properties.data)
-        for key, value in six.iteritems(instance_props):
+        for key, value in instance_props.items():
             # the properties which are specified in launch configuration,
             # will override the attributes from the instance
             lc_props.setdefault(key, value)

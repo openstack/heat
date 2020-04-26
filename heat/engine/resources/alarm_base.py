@@ -17,7 +17,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 
-from six.moves.urllib import parse as urlparse
+from urllib import parse
 
 
 COMMON_PROPERTIES = (
@@ -231,7 +231,7 @@ class BaseAlarm(resource.Resource):
 
             for queue in kwargs.pop(queue_type, []):
                 query = {'queue_name': queue}
-                yield 'trust+zaqar://?%s' % urlparse.urlencode(query)
+                yield 'trust+zaqar://?%s' % parse.urlencode(query)
 
         action_props = {arg_types[0]: list(get_urls(*arg_types))
                         for arg_types in ((ALARM_ACTIONS, ALARM_QUEUES),

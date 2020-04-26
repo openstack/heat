@@ -15,7 +15,6 @@ import copy
 
 from oslo_config import cfg
 from oslo_log import log as logging
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -397,7 +396,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
 
         LOG.info('%(name)s._resolve_attribute(%(attname)s) == %(res)s',
                  {'name': self.name, 'attname': name, 'res': res})
-        return six.text_type(res) if res else None
+        return str(res) if res else None
 
     def _port_data_delete(self):
         # delete the port data which implicit-created
@@ -416,7 +415,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
             unsorted_nics = []
             for entry in network_interfaces:
                 nic = (entry
-                       if not isinstance(entry, six.string_types)
+                       if not isinstance(entry, str)
                        else {'NetworkInterfaceId': entry,
                              'DeviceIndex': len(unsorted_nics)})
                 unsorted_nics.append(nic)
@@ -521,7 +520,7 @@ class Instance(resource.Resource, sh.SchedulerHintsMixin):
                 hint = tm[self.NOVA_SCHEDULER_HINT_KEY]
                 hint_value = tm[self.NOVA_SCHEDULER_HINT_VALUE]
                 if hint in scheduler_hints:
-                    if isinstance(scheduler_hints[hint], six.string_types):
+                    if isinstance(scheduler_hints[hint], str):
                         scheduler_hints[hint] = [scheduler_hints[hint]]
                     scheduler_hints[hint].append(hint_value)
                 else:
