@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -228,8 +226,8 @@ class Order(resource.Resource):
                 raise exception.ResourcePropertyDependency(
                     prop1=self.PROFILE, prop2=self.CA_ID
                 )
-        declared_props = sorted([k for k, v in six.iteritems(
-            self.properties) if k != self.TYPE and v is not None])
+        declared_props = sorted([k for k, v in self.properties.items()
+                                 if k != self.TYPE and v is not None])
         allowed_props = sorted(self.ALLOWED_PROPERTIES_FOR_TYPE[
             self.properties[self.TYPE]])
         diff = sorted(set(declared_props) - set(allowed_props))

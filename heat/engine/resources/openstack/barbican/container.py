@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -192,12 +190,12 @@ class CertificateContainer(GenericContainer):
     }
 
     def create_container(self):
-        info = dict((k, v) for k, v in six.iteritems(self.properties)
+        info = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
         return self.client_plugin().create_certificate(**info)
 
     def get_refs(self):
-        return [v for k, v in six.iteritems(self.properties)
+        return [v for k, v in self.properties.items()
                 if (k != self.NAME and v is not None)]
 
 
@@ -239,12 +237,12 @@ class RSAContainer(GenericContainer):
     }
 
     def create_container(self):
-        info = dict((k, v) for k, v in six.iteritems(self.properties)
+        info = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
         return self.client_plugin().create_rsa(**info)
 
     def get_refs(self):
-        return [v for k, v in six.iteritems(self.properties)
+        return [v for k, v in self.properties.items()
                 if (k != self.NAME and v is not None)]
 
 
