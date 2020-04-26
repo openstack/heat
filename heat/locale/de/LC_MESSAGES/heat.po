@@ -9,15 +9,16 @@
 # Robert Simai <robert.simai@suse.com>, 2016. #zanata
 # Frank Kloeker <eumel@arcor.de>, 2018. #zanata
 # Andreas Jaeger <jaegerandi@gmail.com>, 2019. #zanata
+# Andreas Jaeger <jaegerandi@gmail.com>, 2020. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2019-12-20 05:37+0000\n"
+"POT-Creation-Date: 2020-04-24 12:33+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2019-10-01 06:39+0000\n"
+"PO-Revision-Date: 2020-04-25 08:04+0000\n"
 "Last-Translator: Andreas Jaeger <jaegerandi@gmail.com>\n"
 "Language: de\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -370,6 +371,11 @@ msgstr "%(server)s-Anschluss- %(number)s"
 #, python-format
 msgid "%(type)s not in valid format: %(error)s"
 msgstr "%(type)s nicht im gültigen Format: %(error)s"
+
+#, python-format
+msgid "%(value)s is out of range (min: %(min)s, max: %(max)s)"
+msgstr ""
+"%(value)s ist außerhalb des gültigen Bereichs (min: %(min)s, max: %(max)s)"
 
 #, python-format
 msgid "%s Key Name must be a string"
@@ -10004,6 +10010,12 @@ msgstr ""
 msgid "key replacement %s collides with a key in the output map"
 msgstr ""
 "Schlüsselersetzung %s kollidiert mit einem Schlüssel in der Ausgabekarte"
+
+#, python-format
+msgid "length (%(length)d) is out of range (min: %(min)s, max: %(max)s)"
+msgstr ""
+"Länge (%(length)d) ist außerhalb des gültigen Bereichs (min: %(min)s, max: "
+"%(max)s)"
 
 msgid "limit cannot be less than 4"
 msgstr "Limit kann nicht weniger als 4 sein"
