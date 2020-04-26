@@ -78,6 +78,7 @@ else
 fi
 HEAT_PLUGIN_DIR=${HEAT_PLUGIN_DIR:-$DATA_DIR/heat/plugins}
 ENABLE_HEAT_PLUGINS=${ENABLE_HEAT_PLUGINS:-}
+HEAT_ENGINE_WORKERS=${HEAT_ENGINE_WORKERS:=$(( ($(nproc)/4)<2 ? 2 : ($(nproc)/4) ))}
 
 # Functions
 # ---------
@@ -134,6 +135,9 @@ function configure_heat {
 
     # logging
     iniset $HEAT_CONF DEFAULT debug $ENABLE_DEBUG_LOG_LEVEL
+
+    # reduce Heat engine workers
+    iniset $HEAT_CONF DEFAULT num_engine_workers "$HEAT_ENGINE_WORKERS"
 
     local no_format="False"
     if [[ "$HEAT_USE_APACHE" == "True" && "$WSGI_MODE" != "uwsgi" ]]; then
