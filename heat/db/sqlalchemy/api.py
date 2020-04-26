@@ -89,23 +89,25 @@ def get_session():
     return get_facade().get_session()
 
 
-def retry_on_deadlock(func):
+def retry_on_db_error(func):
     @functools.wraps(func)
     def try_func(context, *args, **kwargs):
         if (context.session.transaction is None or
                 not context.session.autocommit):
             wrapped = oslo_db_api.wrap_db_retry(max_retries=3,
                                                 retry_on_deadlock=True,
+                                                retry_on_disconnect=True,
                                                 retry_interval=0.5,
                                                 inc_retry_interval=True)(func)
             return wrapped(context, *args, **kwargs)
         else:
             try:
                 return func(context, *args, **kwargs)
-            except db_exception.DBDeadlock:
+            except (db_exception.DBDeadlock, db_exception.DBConnectionError):
                 with excutils.save_and_reraise_exception():
-                    LOG.debug('Not retrying on DBDeadlock '
-                              'because transaction not closed')
+                    LOG.debug('Not retrying on DBDeadlock and '
+                              'DBConnectionError because '
+                              'transaction not closed')
     return try_func
 
 
@@ -264,7 +266,7 @@ def resource_get_all(context):
     return results
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def resource_purge_deleted(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
     query = context.session.query(models.Resource)
@@ -285,7 +287,7 @@ def _add_atomic_key_to_values(values, atomic_key):
         values['atomic_key'] = atomic_key + 1
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
     return _try_resource_update(context, resource_id, values, atomic_key,
@@ -482,7 +484,7 @@ def resource_create(context, values):
     return resource_ref
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def resource_create_replacement(context,
                                 existing_res_id, existing_res_values,
                                 new_res_values,
@@ -806,7 +808,7 @@ def stack_create(context, values):
     return stack_ref
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def stack_update(context, stack_id, values, exp_trvsl=None):
     session = context.session
     with session.begin(subtransactions=True):
@@ -864,7 +866,9 @@ def _is_duplicate_error(exc):
 
 
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
-                           retry_interval=0.5, inc_retry_interval=True,
+                           retry_on_disconnect=True,
+                           retry_interval=0.5,
+                           inc_retry_interval=True,
                            exception_checker=_is_duplicate_error)
 def stack_lock_create(context, stack_id, engine_id):
     with db_context.writer.independent.using(context) as session:
@@ -1162,7 +1166,7 @@ def _delete_event_rows(context, stack_id, limit):
     return retval
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def event_create(context, values):
     if 'stack_id' in values and cfg.CONF.max_events_per_stack:
         # only count events and purge on average
@@ -1574,7 +1578,7 @@ def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
     return rows_deleted
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def sync_point_create(context, values):
     values['entity_id'] = str(values['entity_id'])
     sync_point_ref = models.SyncPoint()
@@ -1590,7 +1594,7 @@ def sync_point_get(context, entity_id, traversal_id, is_update):
     )
 
 
-@retry_on_deadlock
+@retry_on_db_error
 def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
                                  input_data):
