@@ -15,7 +15,6 @@ import collections
 import copy
 import functools
 import itertools
-import six
 
 from oslo_log import log as logging
 
@@ -306,7 +305,7 @@ class ResourceGroup(stack_resource.StackResource):
         first_name = next(self._resource_names())
         test_tmpl = self._assemble_nested([first_name],
                                           include_all=True)
-        res_def = next(six.itervalues(test_tmpl.resource_definitions(None)))
+        res_def = next(iter(test_tmpl.resource_definitions(None).values()))
         # make sure we can resolve the nested resource type
         self.stack.env.get_class_to_instantiate(res_def.resource_type)
 
@@ -339,12 +338,12 @@ class ResourceGroup(stack_resource.StackResource):
             if self.REMOVAL_RSRC_LIST in r:
                 # Tolerate string or int list values
                 for n in r[self.REMOVAL_RSRC_LIST]:
-                    str_n = six.text_type(n)
+                    str_n = str(n)
                     if (str_n in current_blacklist or
                             self.resource_id is None or
                             str_n in insp.member_names(include_failed=True)):
                         yield str_n
-                    elif isinstance(n, six.string_types):
+                    elif isinstance(n, str):
                         try:
                             refids = self.get_output(self.REFS_MAP)
                         except (exception.NotFound,
@@ -399,9 +398,9 @@ class ResourceGroup(stack_resource.StackResource):
         def is_blacklisted(name):
             return name in name_blacklist
 
-        candidates = six.moves.map(six.text_type, itertools.count())
+        candidates = map(str, itertools.count())
 
-        return itertools.islice(six.moves.filterfalse(is_blacklisted,
+        return itertools.islice(itertools.filterfalse(is_blacklisted,
                                                       candidates),
                                 size)
 
@@ -488,7 +487,7 @@ class ResourceGroup(stack_resource.StackResource):
     def _attribute_output_name(self, *attr_path):
         if attr_path[0] == self.REFS:
             return self.REFS
-        return ', '.join(six.text_type(a) for a in attr_path)
+        return ', '.join(str(a) for a in attr_path)
 
     def get_attribute(self, key, *path):
         if key == self.REMOVED_RSRC_LIST:
@@ -546,7 +545,7 @@ class ResourceGroup(stack_resource.StackResource):
 
     def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
-            if isinstance(attr, six.string_types):
+            if isinstance(attr, str):
                 key, path = attr, []
             else:
                 key, path = attr[0], list(attr[1:])
@@ -611,7 +610,7 @@ class ResourceGroup(stack_resource.StackResource):
             if isinstance(snippet, collections.Mapping):
                 return dict((k, ignore_param_resolve(v))
                             for k, v in snippet.items())
-            elif (not isinstance(snippet, six.string_types) and
+            elif (not isinstance(snippet, str) and
                   isinstance(snippet, collections.Iterable)):
                 return [ignore_param_resolve(v) for v in snippet]
 
@@ -639,7 +638,7 @@ class ResourceGroup(stack_resource.StackResource):
         def recurse(x):
             return self._handle_repl_val(res_name, x)
 
-        if isinstance(val, six.string_types):
+        if isinstance(val, str):
             return val.replace(repl_var, res_name)
         elif isinstance(val, collections.Mapping):
             return {k: recurse(v) for k, v in val.items()}
@@ -706,7 +705,7 @@ class ResourceGroup(stack_resource.StackResource):
 
         old_resources = sorted(valid_resources, key=replace_priority)
         existing_names = set(n for n, d in valid_resources)
-        new_names = six.moves.filterfalse(lambda n: n in existing_names,
+        new_names = itertools.filterfalse(lambda n: n in existing_names,
                                           names)
         res_def = self.get_resource_def(include_all)
         definitions = scl_template.member_definitions(

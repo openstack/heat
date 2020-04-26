@@ -10,7 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -122,7 +121,7 @@ class DesignateZone(resource.Resource):
         raise_invalid_exception(self.SECONDARY, self.MASTERS)
 
     def handle_create(self):
-        args = dict((k, v) for k, v in six.iteritems(self.properties) if v)
+        args = dict((k, v) for k, v in self.properties.items() if v)
         args['type_'] = args.pop(self.TYPE)
 
         zone = self.client().zones.create(**args)

@@ -12,7 +12,6 @@
 #    under the License.
 
 import functools
-import six
 
 from oslo_log import log as logging
 
@@ -460,7 +459,7 @@ class InstanceGroup(stack_resource.StackResource):
 
     def _nested_output_defns(self, resource_names, get_attr_fn, get_res_fn):
         for attr in self.referenced_attrs():
-            if isinstance(attr, six.string_types):
+            if isinstance(attr, str):
                 key = attr
             else:
                 key = attr[0]

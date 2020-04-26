@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 import uuid
 
 from heat.engine import properties
@@ -47,7 +46,7 @@ class NoneResource(resource.Resource):
         self.translate_properties(self.properties, client_resolve)
 
     def handle_create(self):
-        self.resource_id_set(six.text_type(uuid.uuid4()))
+        self.resource_id_set(str(uuid.uuid4()))
         # set is_placeholder flag when resource trying to replace original
         # resource with a placeholder resource.
         self.data_set(self.IS_PLACEHOLDER, 'True')
