@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    New resource ``OS::Neutron::QoSMinimumBandwidthRule`` to support
+    ``minimum_bandwidth_rules`` in Neutron QoS. This resource depends
+    on Neutron API extension ``qos-bw-minimum-ingress`` and according
+    to the default policy it is admin-only.
