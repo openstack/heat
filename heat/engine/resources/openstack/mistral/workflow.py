@@ -14,7 +14,6 @@
 import copy
 
 from oslo_serialization import jsonutils
-import six
 import yaml
 
 from heat.common import exception
@@ -555,7 +554,7 @@ class Workflow(signal_responder.SignalResponder,
         if props.get(self.TASK_DEFAULTS) is not None:
             definition[defn_name][self.TASK_DEFAULTS.replace('_', '-')] = {
                 k.replace('_', '-'): v for k, v in
-                six.iteritems(props.get(self.TASK_DEFAULTS)) if v}
+                props.get(self.TASK_DEFAULTS).items() if v}
 
         return yaml.dump(definition, Dumper=yaml.CSafeDumper
                          if hasattr(yaml, 'CSafeDumper')
@@ -647,8 +646,8 @@ class Workflow(signal_responder.SignalResponder,
                     'created_at': execution.created_at,
                     'updated_at': execution.updated_at,
                     'state': execution.state,
-                    'input': jsonutils.loads(six.text_type(execution.input)),
-                    'output': jsonutils.loads(six.text_type(execution.output))
+                    'input': jsonutils.loads(str(execution.input)),
+                    'output': jsonutils.loads(str(execution.output))
                 }
 
             return [parse_execution_response(
@@ -661,7 +660,7 @@ class Workflow(signal_responder.SignalResponder,
                     self.INPUT: self.properties.get(self.INPUT)}
 
         elif name == self.ALARM_URL and self.resource_id is not None:
-            return six.text_type(self._get_ec2_signed_url())
+            return str(self._get_ec2_signed_url())
 
 
 def resource_mapping():

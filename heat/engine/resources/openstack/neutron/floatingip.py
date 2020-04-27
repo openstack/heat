@@ -10,7 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 
 from oslo_log import log as logging
 
@@ -238,7 +237,7 @@ class FloatingIP(neutron.NeutronResource):
                     except Exception as exc:
                         LOG.info("Ignoring Neutron error while "
                                  "getting FloatingIP dependencies: %s",
-                                 six.text_type(exc))
+                                 str(exc))
                         return False
             else:
                 try:
@@ -265,7 +264,7 @@ class FloatingIP(neutron.NeutronResource):
     def add_dependencies(self, deps):
         super(FloatingIP, self).add_dependencies(deps)
 
-        for resource in six.itervalues(self.stack):
+        for resource in self.stack.values():
             # depend on any RouterGateway in this template with the same
             # network_id as this floating_network_id
             if resource.has_interface('OS::Neutron::RouterGateway'):
@@ -388,7 +387,7 @@ class FloatingIPAssociation(neutron.NeutronResource):
     def add_dependencies(self, deps):
         super(FloatingIPAssociation, self).add_dependencies(deps)
 
-        for resource in six.itervalues(self.stack):
+        for resource in self.stack.values():
             if resource.has_interface('OS::Neutron::RouterInterface'):
 
                 def port_on_subnet(resource, subnet):

@@ -10,7 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -192,7 +191,7 @@ class KeyPair(resource.Resource):
     def _resolve_attribute(self, key):
         attr_fn = {self.PRIVATE_KEY_ATTR: self.private_key,
                    self.PUBLIC_KEY_ATTR: self.public_key}
-        return six.text_type(attr_fn[key])
+        return str(attr_fn[key])
 
     def get_reference_id(self):
         return self.resource_id

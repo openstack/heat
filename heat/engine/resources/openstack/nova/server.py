@@ -16,7 +16,6 @@ import copy
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import uuidutils
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -944,8 +943,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         server, server_data = resource_data
         result = {
             # there's a risk that flavor id will be int type, so cast to str
-            self.FLAVOR: six.text_type(server_data.get(self.FLAVOR)['id']),
-            self.IMAGE: six.text_type(server_data.get(self.IMAGE)['id']),
+            self.FLAVOR: str(server_data.get(self.FLAVOR)['id']),
+            self.IMAGE: str(server_data.get(self.IMAGE)['id']),
             self.NAME: server_data.get(self.NAME),
             self.METADATA: server_data.get(self.METADATA),
             self.NETWORKS: self._get_live_networks(server, resource_properties)
@@ -985,7 +984,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                         reality_net_ids.get(net_id).pop(idx)
                         break
 
-        for key, value in six.iteritems(reality_nets):
+        for key, value in reality_nets.items():
             for address in reality_nets[key]:
                 new_net = {self.NETWORK_ID: key,
                            self.NETWORK_FIXED_IP: address['addr']}
@@ -1232,7 +1231,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             return
         if not nets:
             return
-        for res in six.itervalues(self.stack):
+        for res in self.stack.values():
             if res.has_interface('OS::Neutron::Subnet'):
                 try:
                     subnet_net = res.properties.get(subnet.Subnet.NETWORK)

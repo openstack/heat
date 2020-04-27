@@ -13,7 +13,6 @@
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
-import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -437,7 +436,7 @@ class Port(neutron.NeutronResource):
         # It is not known which subnet a port might be assigned
         # to so all subnets in a network should be created before
         # the ports in that network.
-        for res in six.itervalues(self.stack):
+        for res in self.stack.values():
             if res.has_interface('OS::Neutron::Subnet'):
                 try:
                     dep_network = res.properties.get(subnet.Subnet.NETWORK)
