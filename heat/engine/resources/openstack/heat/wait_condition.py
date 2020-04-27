@@ -14,7 +14,6 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
-import six
 
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -158,7 +157,7 @@ class HeatWaitCondition(resource.Resource):
                          'key': key,
                          'res': res})
 
-            return six.text_type(jsonutils.dumps(res))
+            return str(jsonutils.dumps(res))
 
 
 def resource_mapping():

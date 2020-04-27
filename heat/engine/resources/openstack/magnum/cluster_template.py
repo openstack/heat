@@ -11,8 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -290,7 +288,7 @@ class ClusterTemplate(resource.Resource):
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             patch = [{'op': 'replace', 'path': '/' + k, 'value': v}
-                     for k, v in six.iteritems(prop_diff)]
+                     for k, v in prop_diff.items()]
             self.client().cluster_templates.update(self.resource_id, patch)
             return self.resource_id
 

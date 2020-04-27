@@ -14,8 +14,7 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
-import six
-from six.moves.urllib import parse
+from urllib import parse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -344,7 +343,7 @@ class SwiftSignal(resource.Resource):
 
     def _resolve_attribute(self, key):
         if key == self.DATA:
-            return six.text_type(jsonutils.dumps(self.get_data()))
+            return str(jsonutils.dumps(self.get_data()))
 
 
 def resource_mapping():
