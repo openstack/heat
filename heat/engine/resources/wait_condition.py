@@ -14,7 +14,6 @@
 import collections
 
 from oslo_log import log as logging
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -70,7 +69,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
                 raise ValueError(_("Metadata format invalid"))
 
             new_entry = signal_data.copy()
-            unique_id = six.text_type(new_entry.pop(self.UNIQUE_ID))
+            unique_id = str(new_entry.pop(self.UNIQUE_ID))
 
             new_rsrc_metadata = latest_rsrc_metadata.copy()
             if unique_id in new_rsrc_metadata:
@@ -92,12 +91,12 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
     def get_status(self):
         """Return a list of the Status values for the handle signals."""
         return [v[self.STATUS]
-                for v in six.itervalues(self.metadata_get(refresh=True))]
+                for v in self.metadata_get(refresh=True).values()]
 
     def get_status_reason(self, status):
         """Return a list of reasons associated with a particular status."""
         return [v[self.REASON]
-                for v in six.itervalues(self.metadata_get(refresh=True))
+                for v in self.metadata_get(refresh=True).values()
                 if v[self.STATUS] == status]
 
 

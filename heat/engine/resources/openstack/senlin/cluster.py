@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -319,7 +317,7 @@ class Cluster(res_base.BaseSenlinResource):
                 actions.append(action)
         # Update cluster
         if any(p in prop_diff for p in UPDATE_PROPS):
-            params = dict((k, v) for k, v in six.iteritems(prop_diff)
+            params = dict((k, v) for k, v in prop_diff.items()
                           if k in UPDATE_PROPS)
             params['cluster'] = cluster_obj
             if self.PROFILE in params:
@@ -333,7 +331,7 @@ class Cluster(res_base.BaseSenlinResource):
             actions.append(action)
         # Resize Cluster
         if any(p in prop_diff for p in RESIZE_PROPS):
-            params = dict((k, v) for k, v in six.iteritems(prop_diff)
+            params = dict((k, v) for k, v in prop_diff.items()
                           if k in RESIZE_PROPS)
             if self.DESIRED_CAPACITY in params:
                 params['adjustment_type'] = 'EXACT_CAPACITY'

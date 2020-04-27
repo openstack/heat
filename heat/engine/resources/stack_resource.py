@@ -18,7 +18,6 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
 from oslo_utils import reflection
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -397,7 +396,7 @@ class StackResource(resource.Resource):
         if not class_name.endswith('_Remote'):
             return False
 
-        full_message = six.text_type(ex)
+        full_message = str(ex)
         if full_message.find('\n') > -1:
             message, msg_trace = full_message.split('\n', 1)
         else:

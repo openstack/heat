@@ -20,7 +20,7 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 
-from six.moves.urllib import parse as urlparse
+from urllib import parse
 
 
 class ZaqarQueue(resource.Resource):
@@ -120,7 +120,7 @@ class ZaqarQueue(resource.Resource):
         queue_name = self.physical_resource_name()
         return '%s/v%s/queues/%s' % (client.api_url.rstrip('/'),
                                      client.api_version,
-                                     urlparse.quote(queue_name))
+                                     parse.quote(queue_name))
 
     def _resolve_attribute(self, name):
         if name == self.QUEUE_ID:
@@ -243,7 +243,7 @@ class ZaqarSignedQueueURL(resource.Resource):
             'project_id': data[self.PROJECT],
             'queue_name': self.properties[self.QUEUE],
         }
-        return urlparse.urlencode(query)
+        return parse.urlencode(query)
 
     def handle_delete(self):
         # We can't delete a signed URL

@@ -12,8 +12,7 @@
 #    under the License.
 
 from oslo_log import log as logging
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -224,10 +223,10 @@ class SwiftContainer(resource.Resource):
         self.client().get_container(self.resource_id)
 
     def get_reference_id(self):
-        return six.text_type(self.resource_id)
+        return str(self.resource_id)
 
     def _resolve_attribute(self, key):
-        parsed = list(urlparse.urlparse(self.client().url))
+        parsed = list(parse.urlparse(self.client().url))
         if key == self.DOMAIN_NAME:
             return parsed[1].split(':')[0]
         elif key == self.WEBSITE_URL:
