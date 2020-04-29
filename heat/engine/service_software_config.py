@@ -11,14 +11,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import itertools
 import uuid
 
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
 import requests
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse
 
 from heat.common import crypt
 from heat.common import exception
@@ -88,8 +88,7 @@ class SoftwareConfigService(object):
             cnxt, server_id)
 
         # filter out the sds with None config
-        flt_sd = six.moves.filterfalse(lambda sd: sd.config is None,
-                                       all_sd)
+        flt_sd = itertools.filterfalse(lambda sd: sd.config is None, all_sd)
         # sort the configs by config name, to give the list of metadata a
         # deterministic and controllable order.
         flt_sd_s = sorted(flt_sd, key=lambda sd: sd.config.name)
@@ -153,7 +152,7 @@ class SoftwareConfigService(object):
                 raise exception.ConcurrentTransaction(action=action)
 
     def _refresh_swift_software_deployment(self, cnxt, sd, deploy_signal_id):
-        container, object_name = urlparse.urlparse(
+        container, object_name = parse.urlparse(
             deploy_signal_id).path.split('/')[-2:]
         swift_plugin = cnxt.clients.client_plugin('swift')
         swift = swift_plugin.client()
@@ -281,7 +280,7 @@ class SoftwareConfigService(object):
             'stack_user_project_id': stack_user_project_id,
             'action': action,
             'status': status,
-            'status_reason': six.text_type(status_reason)})
+            'status_reason': str(status_reason)})
         self._push_metadata_software_deployments(
             cnxt, server_id, stack_user_project_id)
         return api.format_software_deployment(sd)
@@ -332,7 +331,7 @@ class SoftwareConfigService(object):
         if status == rpc_api.SOFTWARE_DEPLOYMENT_FAILED:
             # build a status reason out of all of the values of outputs
             # flagged as error_output
-            status_reasons = [' : '.join((k, six.text_type(status_reasons[k])))
+            status_reasons = [' : '.join((k, str(status_reasons[k])))
                               for k in status_reasons]
             status_reason = ', '.join(status_reasons)
         else:
@@ -362,7 +361,7 @@ class SoftwareConfigService(object):
         if status:
             update_data['status'] = status
         if status_reason:
-            update_data['status_reason'] = six.text_type(status_reason)
+            update_data['status_reason'] = str(status_reason)
         if updated_at:
             update_data['updated_at'] = timeutils.normalize_time(
                 timeutils.parse_isotime(updated_at))

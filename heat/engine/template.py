@@ -17,7 +17,6 @@ import copy
 import functools
 import hashlib
 
-import six
 from stevedore import extension
 
 from heat.common import exception
@@ -37,8 +36,8 @@ _template_classes = None
 
 def get_version(template_data, available_versions):
     version_keys = set(key for key, version in available_versions)
-    candidate_keys = set(k for k, v in six.iteritems(template_data) if
-                         isinstance(v, six.string_types))
+    candidate_keys = set(k for k, v in template_data.items() if
+                         isinstance(v, str))
 
     keys_present = version_keys & candidate_keys
 
@@ -61,7 +60,7 @@ def _get_template_extension_manager():
 
 
 def raise_extension_exception(extmanager, ep, err):
-    raise TemplatePluginNotRegistered(name=ep.name, error=six.text_type(err))
+    raise TemplatePluginNotRegistered(name=ep.name, error=str(err))
 
 
 class TemplatePluginNotRegistered(exception.HeatException):
@@ -296,7 +295,7 @@ class Template(collections.Mapping):
         sections (e.g. parameters are check by parameters schema class).
         """
         t_digest = hashlib.sha256(
-            six.text_type(self.t).encode('utf-8')).hexdigest()
+            str(self.t).encode('utf-8')).hexdigest()
 
         # TODO(kanagaraj-manickam) currently t_digest is stored in self. which
         # is used to check whether already template is validated or not.
@@ -315,7 +314,7 @@ class Template(collections.Mapping):
                 raise exception.InvalidTemplateSection(section=k)
 
         # check resources
-        for res in six.itervalues(self[self.RESOURCES]):
+        for res in self[self.RESOURCES].values():
             try:
                 if not res or not res.get('Type'):
                     message = _('Each Resource must contain '
@@ -358,10 +357,10 @@ def parse(functions, stack, snippet, path='', template=None):
 
     if isinstance(snippet, collections.Mapping):
         def mkpath(key):
-            return '.'.join([path, six.text_type(key)])
+            return '.'.join([path, str(key)])
 
         if len(snippet) == 1:
-            fn_name, args = next(six.iteritems(snippet))
+            fn_name, args = next(iter(snippet.items()))
             Func = functions.get(fn_name)
             if Func is not None:
                 try:
@@ -376,11 +375,11 @@ def parse(functions, stack, snippet, path='', template=None):
                 except (ValueError, TypeError, KeyError) as e:
                     raise exception.StackValidationFailed(
                         path=path,
-                        message=six.text_type(e))
+                        message=str(e))
 
         return dict((k, recurse(v, mkpath(k)))
-                    for k, v in six.iteritems(snippet))
-    elif (not isinstance(snippet, six.string_types) and
+                    for k, v in snippet.items())
+    elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
 
         def mkpath(idx):

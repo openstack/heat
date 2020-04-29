@@ -25,7 +25,6 @@ from oslo_utils import excutils
 from oslo_utils import timeutils as oslo_timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
-import six
 
 from heat.common import context as common_context
 from heat.common import environment_format as env_fmt
@@ -75,20 +74,20 @@ class ForcedCancel(Exception):
 
 
 def reset_state_on_error(func):
-    @six.wraps(func)
+    @functools.wraps(func)
     def handle_exceptions(stack, *args, **kwargs):
         errmsg = None
         try:
             return func(stack, *args, **kwargs)
         except Exception as exc:
             with excutils.save_and_reraise_exception():
-                errmsg = six.text_type(exc)
+                errmsg = str(exc)
                 LOG.error('Unexpected exception in %(func)s: %(msg)s',
                           {'func': func.__name__, 'msg': errmsg})
         except BaseException as exc:
             with excutils.save_and_reraise_exception():
                 exc_type = type(exc).__name__
-                errmsg = '%s(%s)' % (exc_type, six.text_type(exc))
+                errmsg = '%s(%s)' % (exc_type, str(exc))
                 LOG.info('Stopped due to %(msg)s in %(func)s',
                          {'func': func.__name__, 'msg': errmsg})
         finally:
@@ -101,7 +100,6 @@ def reset_state_on_error(func):
     return handle_exceptions
 
 
-@six.python_2_unicode_compatible
 class Stack(collections.Mapping):
 
     ACTIONS = (
@@ -337,7 +335,7 @@ class Stack(collections.Mapping):
             resources = self._db_resources_get()
 
         stk_def_cache = {}
-        for rsc in six.itervalues(resources):
+        for rsc in resources.values():
             loaded_res = self._resource_from_db_resource(rsc, stk_def_cache)
             if loaded_res is not None:
                 yield loaded_res
@@ -520,14 +518,14 @@ class Stack(collections.Mapping):
         """
         if self._dependencies is None:
             deps = dependencies.Dependencies()
-            for res in six.itervalues(self.resources):
+            for res in self.resources.values():
                 res.add_explicit_dependencies(deps)
             self._dependencies = deps
         return self._dependencies
 
     def _add_implicit_dependencies(self, deps, ignore_errors=True):
         """Augment the given dependencies with implicit ones from plugins."""
-        for res in six.itervalues(self.resources):
+        for res in self.resources.values():
             try:
                 res.add_dependencies(deps)
             except Exception as exc:
@@ -540,8 +538,8 @@ class Stack(collections.Mapping):
                 else:
                     LOG.warning('Ignoring error adding implicit '
                                 'dependencies for %(res)s: %(err)s',
-                                {'res': six.text_type(res),
-                                 'err': six.text_type(exc)})
+                                {'res': str(res),
+                                 'err': str(exc)})
 
     @classmethod
     def load(cls, context, stack_id=None, stack=None, show_deleted=True,
@@ -655,7 +653,7 @@ class Stack(collections.Mapping):
             stack.update({
                 'action': self.action,
                 'status': self.status,
-                'status_reason': six.text_type(self.status_reason)})
+                'status_reason': str(self.status_reason)})
 
         if only_db:
             stack['parent_resource_name'] = self.parent_resource_name
@@ -801,7 +799,7 @@ class Stack(collections.Mapping):
     def __str__(self):
         """Return a human-readable string representation of the stack."""
         text = 'Stack "%s" [%s]' % (self.name, self.id)
-        return six.text_type(text)
+        return str(text)
 
     def resource_by_refid(self, refid):
         """Return the resource in this stack with the specified refid.
@@ -809,7 +807,7 @@ class Stack(collections.Mapping):
         :returns: resource in this stack with the specified refid, or None if
                   not found.
         """
-        for r in six.itervalues(self):
+        for r in self.values():
             if r.state not in ((r.INIT, r.COMPLETE),
                                (r.CREATE, r.IN_PROGRESS),
                                (r.CREATE, r.COMPLETE),
@@ -906,7 +904,7 @@ class Stack(collections.Mapping):
         else:
             iter_rsc = self._explicit_dependencies()
 
-        unique_defns = set(res.t for res in six.itervalues(resources))
+        unique_defns = set(res.t for res in resources.values())
         unique_defn_names = set(defn.name for defn in unique_defns)
 
         for res in iter_rsc:
@@ -939,7 +937,7 @@ class Stack(collections.Mapping):
                 raise exception.StackValidationFailed(message=result)
             eventlet.sleep(0)
 
-        for op_name, output in six.iteritems(self.outputs):
+        for op_name, output in self.outputs.items():
             try:
                 output.validate()
             except exception.StackValidationFailed as ex:
@@ -958,7 +956,7 @@ class Stack(collections.Mapping):
         during its lifecycle using the configured deferred authentication
         method.
         """
-        return any(res.requires_deferred_auth for res in six.itervalues(self))
+        return any(res.requires_deferred_auth for res in self.values())
 
     def _add_event(self, action, status, reason):
         """Add a state change event to the database."""
@@ -1045,7 +1043,7 @@ class Stack(collections.Mapping):
         if stack is not None:
             values = {'action': self.action,
                       'status': self.status,
-                      'status_reason': six.text_type(self.status_reason)}
+                      'status_reason': str(self.status_reason)}
             self._send_notification_and_add_event()
             if self.convergence:
                 # do things differently for convergence
@@ -1075,7 +1073,7 @@ class Stack(collections.Mapping):
         if stack is not None:
             values = {'action': self.action,
                       'status': self.status,
-                      'status_reason': six.text_type(self.status_reason)}
+                      'status_reason': str(self.status_reason)}
             self._send_notification_and_add_event()
             stack.persist_state_and_release_lock(self.context, self.id,
                                                  engine_id, values)
@@ -1095,7 +1093,7 @@ class Stack(collections.Mapping):
     def preview_resources(self):
         """Preview the stack with all of the resources."""
         return [resource.preview()
-                for resource in six.itervalues(self.resources)]
+                for resource in self.resources.values()]
 
     def get_nested_parameters(self, filter_func):
         """Return nested parameters schema, if any.
@@ -1105,7 +1103,7 @@ class Stack(collections.Mapping):
         stack.
         """
         result = {}
-        for name, rsrc in six.iteritems(self.resources):
+        for name, rsrc in self.resources.items():
             nested = rsrc.get_nested_parameters_stack()
             if nested is None:
                 continue
@@ -1182,7 +1180,7 @@ class Stack(collections.Mapping):
                                               None, action)
         except Exception as e:
             self.state_set(action, self.FAILED, e.args[0] if e.args else
-                           'Failed stack pre-ops: %s' % six.text_type(e))
+                           'Failed stack pre-ops: %s' % str(e))
             if callable(post_func):
                 post_func()
             if notify is not None:
@@ -1238,7 +1236,7 @@ class Stack(collections.Mapping):
             # ExceptionGroup, but the raw exception.
             # see scheduler.py line 395-399
             stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
+            reason = 'Resource %s failed: %s' % (action, str(ex))
 
         if pre_completion_func:
             pre_completion_func(self, action, stack_status, reason)
@@ -1272,7 +1270,7 @@ class Stack(collections.Mapping):
                 return hasattr(res, 'handle_%s' % res.CHECK.lower())
 
         all_supported = all(is_supported(res)
-                            for res in six.itervalues(self.resources))
+                            for res in self.resources.values())
 
         if not all_supported:
             msg = ". '%s' not fully supported (see resources)" % self.CHECK
@@ -1316,7 +1314,7 @@ class Stack(collections.Mapping):
             if not self.disable_rollback and self.state == (self.ADOPT,
                                                             self.FAILED):
                 # enter the same flow as abandon and just delete the stack
-                for res in six.itervalues(self.resources):
+                for res in self.resources.values():
                     res.abandon_in_progress = True
                 self.delete(action=self.ROLLBACK, abandon=True)
 
@@ -1426,7 +1424,7 @@ class Stack(collections.Mapping):
             try:
                 self.delete_all_snapshots()
             except Exception as exc:
-                self.state_set(self.action, self.FAILED, six.text_type(exc))
+                self.state_set(self.action, self.FAILED, str(exc))
                 self.purge_db()
                 return
 
@@ -1576,11 +1574,11 @@ class Stack(collections.Mapping):
         return set(n.rsrc_id for n in dep_nodes if not n.is_update)
 
     def reset_stack_and_resources_in_progress(self, reason):
-        for name, rsrc in six.iteritems(self.resources):
+        for name, rsrc in self.resources.items():
             if rsrc.status == rsrc.IN_PROGRESS:
                 rsrc.state_set(rsrc.action,
                                rsrc.FAILED,
-                               six.text_type(reason))
+                               str(reason))
         if self.action == self.UPDATE and not self.convergence:
             backup_stack = self._backup_stack(False)
             existing_params = environment.Environment({env_fmt.PARAMETERS:
@@ -1591,7 +1589,7 @@ class Stack(collections.Mapping):
             self._merge_user_param_template(existing_params, template,
                                             bkp_stack_template)
 
-        self.state_set(self.action, self.FAILED, six.text_type(reason))
+        self.state_set(self.action, self.FAILED, str(reason))
 
     @scheduler.wrappertask
     def update_task(self, newstack, action=UPDATE,
@@ -1609,7 +1607,7 @@ class Stack(collections.Mapping):
                                               newstack, action)
         except Exception as e:
             self.state_set(action, self.FAILED, e.args[0] if e.args else
-                           'Failed stack pre-ops: %s' % six.text_type(e))
+                           'Failed stack pre-ops: %s' % str(e))
             if notify is not None:
                 notify.signal()
             return
@@ -1756,7 +1754,7 @@ class Stack(collections.Mapping):
 
         :returns: a boolean for require rollback flag.
         """
-        self.status_reason = six.text_type(exc)
+        self.status_reason = str(exc)
         self.status = self.FAILED
         if action != self.UPDATE:
             return False
@@ -1800,7 +1798,7 @@ class Stack(collections.Mapping):
 
         def copy_data(source_res, destination_res):
             if source_res.data():
-                for key, val in six.iteritems(source_res.data()):
+                for key, val in source_res.data().items():
                     destination_res.data_set(key, val)
 
         for key, backup_res in stack.resources.items():
@@ -1905,7 +1903,7 @@ class Stack(collections.Mapping):
             except Exception as ex:
                 LOG.exception("Error deleting project")
                 stack_status = self.FAILED
-                reason = "Error deleting project: %s" % six.text_type(ex)
+                reason = "Error deleting project: %s" % str(ex)
 
         return stack_status, reason
 
@@ -1957,7 +1955,7 @@ class Stack(collections.Mapping):
             except Exception as e:
                 self.state_set(action, self.FAILED,
                                e.args[0] if e.args else
-                               'Failed stack pre-ops: %s' % six.text_type(e))
+                               'Failed stack pre-ops: %s' % str(e))
                 return
 
         action_task = scheduler.DependencyTaskGroup(self.dependencies,
@@ -1967,7 +1965,7 @@ class Stack(collections.Mapping):
             scheduler.TaskRunner(action_task)(timeout=self.timeout_secs())
         except exception.ResourceFailure as ex:
             stack_status = self.FAILED
-            reason = 'Resource %s failed: %s' % (action, six.text_type(ex))
+            reason = 'Resource %s failed: %s' % (action, str(ex))
         except scheduler.Timeout:
             stack_status = self.FAILED
             reason = '%s timed out' % action.title()
@@ -2092,7 +2090,7 @@ class Stack(collections.Mapping):
             ss_defn = self.defn.clone_with_new_template(template,
                                                         self.identifier())
             resources = self._resources_for_defn(ss_defn)
-            for name, rsrc in six.iteritems(resources):
+            for name, rsrc in resources.items():
                 data = snapshot.data['resources'].get(name)
                 if data:
                     scheduler.TaskRunner(rsrc.delete_snapshot, data)()
@@ -2159,7 +2157,7 @@ class Stack(collections.Mapping):
             'status': self.status,
             'template': self.t.t,
             'resources': dict((res.name, res.prepare_abandon())
-                              for res in six.itervalues(self.resources)),
+                              for res in self.resources.values()),
             'project_id': self.tenant_id,
             'stack_user_project_id': self.stack_user_project_id,
             'tags': self.tags,

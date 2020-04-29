@@ -15,8 +15,6 @@ import collections
 import functools
 import weakref
 
-import six
-
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import conditions
@@ -77,7 +75,7 @@ class CommonTemplate(template.Template):
 
         yield ('resource_type',
                self._parse_resource_field(self.RES_TYPE,
-                                          six.string_types, 'string',
+                                          str, 'string',
                                           name, data, parse))
 
         yield ('properties',
@@ -96,11 +94,11 @@ class CommonTemplate(template.Template):
                                              collections.Sequence,
                                              'list or string',
                                              name, data, no_parse)
-        if isinstance(depends, six.string_types):
+        if isinstance(depends, str):
             depends = [depends]
         elif depends:
             for dep in depends:
-                if not isinstance(dep, six.string_types):
+                if not isinstance(dep, str):
                     msg = _('Resource %(name)s %(key)s '
                             'must be a list of strings') % {
                                 'name': name, 'key': self.RES_DEPENDS_ON}
@@ -109,7 +107,7 @@ class CommonTemplate(template.Template):
         yield 'depends', depends
 
         del_policy = self._parse_resource_field(self.RES_DELETION_POLICY,
-                                                (six.string_types,
+                                                (str,
                                                  function.Function),
                                                 'string',
                                                 name, data, parse)
@@ -130,7 +128,7 @@ class CommonTemplate(template.Template):
 
         yield ('description',
                self._parse_resource_field(self.RES_DESCRIPTION,
-                                          six.string_types, 'string',
+                                          str, 'string',
                                           name, data, no_parse))
 
     def _get_condition_definitions(self):
@@ -195,7 +193,7 @@ class CommonTemplate(template.Template):
                         enabled = conds.is_enabled(function.resolve(cond))
                     except ValueError as exc:
                         path = [self.OUTPUTS, key, self.OUTPUT_CONDITION]
-                        message = six.text_type(exc)
+                        message = str(exc)
                         raise exception.StackValidationFailed(path=path,
                                                               message=message)
 

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import ast
-import six
 import tenacity
 
 from oslo_log import log as logging
@@ -84,7 +83,7 @@ def _str_unpack_tuple(s):
 def _deserialize(d):
     d2 = {}
     for k, v in d.items():
-        if isinstance(k, six.string_types) and k.startswith(u'tuple:('):
+        if isinstance(k, str) and k.startswith(u'tuple:('):
             k = _str_unpack_tuple(k)
         if isinstance(v, dict):
             v = _deserialize(v)

@@ -12,10 +12,9 @@
 
 import collections
 import copy
+import functools
 import itertools
 import operator
-
-import six
 
 from heat.common import exception
 from heat.engine import function
@@ -111,7 +110,7 @@ class ResourceDefinition(object):
         self._dep_names = None
         self._all_dep_attrs = None
 
-        assert isinstance(self.description, six.string_types)
+        assert isinstance(self.description, str)
 
         if properties is not None:
             assert isinstance(properties, (collections.Mapping,
@@ -126,7 +125,7 @@ class ResourceDefinition(object):
         if depends is not None:
             assert isinstance(depends, (collections.Sequence,
                                         function.Function))
-            assert not isinstance(depends, six.string_types)
+            assert not isinstance(depends, str)
             self._hash ^= _hash_data(depends)
 
         if deletion_policy is not None:
@@ -139,13 +138,13 @@ class ResourceDefinition(object):
             self._hash ^= _hash_data(update_policy)
 
         if external_id is not None:
-            assert isinstance(external_id, (six.string_types,
+            assert isinstance(external_id, (str,
                                             function.Function))
             self._hash ^= _hash_data(external_id)
             self._deletion_policy = self.RETAIN
 
         if condition is not None:
-            assert isinstance(condition, (six.string_types, bool,
+            assert isinstance(condition, (str, bool,
                                           function.Function))
             self._hash ^= _hash_data(condition)
 
@@ -255,9 +254,9 @@ class ResourceDefinition(object):
                                               path(PROPERTIES))
             metadata_deps = function.dependencies(self._metadata,
                                                   path(METADATA))
-            implicit_depends = six.moves.map(lambda rp: rp.name,
-                                             itertools.chain(prop_deps,
-                                                             metadata_deps))
+            implicit_depends = map(lambda rp: rp.name,
+                                   itertools.chain(prop_deps,
+                                                   metadata_deps))
 
             # (ricolin) External resource should not depend on any other
             # resources. This operation is not allowed for now.
@@ -287,9 +286,7 @@ class ResourceDefinition(object):
             if getattr(res, 'strict_dependency', True):
                 return res
 
-        return six.moves.filter(None,
-                                six.moves.map(get_resource,
-                                              self.required_resource_names()))
+        return filter(None, map(get_resource, self.required_resource_names()))
 
     def set_translation_rules(self, rules=None, client_resolve=True):
         """Helper method to update properties with translation rules."""
@@ -434,12 +431,12 @@ def _hash_data(data):
     if isinstance(data, function.Function):
         data = copy.deepcopy(data)
 
-    if not isinstance(data, six.string_types):
+    if not isinstance(data, str):
         if isinstance(data, collections.Sequence):
             return hash(tuple(_hash_data(d) for d in data))
 
         if isinstance(data, collections.Mapping):
             item_hashes = (hash(k) ^ _hash_data(v) for k, v in data.items())
-            return six.moves.reduce(operator.xor, item_hashes, 0)
+            return functools.reduce(operator.xor, item_hashes, 0)
 
     return hash(data)
