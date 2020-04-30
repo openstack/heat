@@ -111,7 +111,7 @@ outputs:
         # send scale up signals and ensure that asg honors max_size
         asg = self.client.resources.get(stack_id, 'random_group')
         max_size = 5
-        for num in range(asg_size+1, max_size+2):
+        for num in range(asg_size + 1, max_size + 2):
             expected_resources = num if num <= max_size else max_size
             self.client.resources.signal(stack_id, 'scale_up_policy')
             self.assertTrue(
@@ -133,7 +133,7 @@ outputs:
         # send scale down signals and ensure that asg honors min_size
         asg = self.client.resources.get(stack_id, 'random_group')
         min_size = 2
-        for num in range(asg_size-1, 0, -1):
+        for num in range(asg_size - 1, 0, -1):
             expected_resources = num if num >= min_size else min_size
             self.client.resources.signal(stack_id, 'scale_down_policy')
             self.assertTrue(

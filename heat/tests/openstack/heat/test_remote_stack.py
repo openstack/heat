@@ -351,13 +351,13 @@ class RemoteStackTest(tests_common.HeatTestCase):
             ks_loading, 'get_plugin_loader', return_value=self.m_plugin)
         self._create_with_remote_credential('cred_2')
         self.assertEqual(
-            [mock.call(secret_ref='secrets/cred_2')]*2,
+            [mock.call(secret_ref='secrets/cred_2')] * 2,
             m_gsbr.call_args_list)
         expected_load_options = [
             mock.call(
                 application_credential_id='9dfa187e5a354484bf9c49a2b674333a',
                 application_credential_secret='sec',
-                auth_url='http://192.168.1.101/identity/v3')]*2
+                auth_url='http://192.168.1.101/identity/v3')] * 2
 
         self.assertEqual(expected_load_options,
                          self.m_plugin.load_from_options.call_args_list)

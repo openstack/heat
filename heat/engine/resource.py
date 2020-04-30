@@ -2036,7 +2036,7 @@ class Resource(status.ResourceStatus):
                 while True:
                     count += 1
                     LOG.info('delete %(name)s attempt %(attempt)d' %
-                             {'name': str(self), 'attempt': count+1})
+                             {'name': str(self), 'attempt': count + 1})
                     if count:
                         delay = timeutils.retry_backoff_delay(count,
                                                               jitter_max=2.0)
