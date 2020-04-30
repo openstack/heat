@@ -111,7 +111,7 @@ class QoSRule(neutron.NeutronResource):
     support_status = support.SupportStatus(version='6.0.0')
 
     PROPERTIES = (
-        POLICY,  TENANT_ID,
+        POLICY, TENANT_ID,
     ) = (
         'policy', 'tenant_id',
     )

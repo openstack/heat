@@ -41,7 +41,7 @@ class FloatingIP(neutron.NeutronResource):
     entity = 'floatingip'
 
     PROPERTIES = (
-        FLOATING_NETWORK_ID, FLOATING_NETWORK,  FLOATING_SUBNET,
+        FLOATING_NETWORK_ID, FLOATING_NETWORK, FLOATING_SUBNET,
         VALUE_SPECS, PORT_ID, FIXED_IP_ADDRESS, FLOATING_IP_ADDRESS,
         DNS_NAME, DNS_DOMAIN,
     ) = (

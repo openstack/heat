@@ -21,7 +21,7 @@ from heat.tests import utils
 
 AGGREGATE_TEMPLATE = {
     'heat_template_version': '2013-05-23',
-    'description':  'Heat Aggregate creation example',
+    'description': 'Heat Aggregate creation example',
     'resources': {
         'my_aggregate': {
             'type': 'OS::Nova::HostAggregate',

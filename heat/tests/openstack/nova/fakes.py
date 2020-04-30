@@ -45,7 +45,7 @@ class FakeClient(fakes.FakeClient, Client):
 
 class FakeSessionClient(base_client.SessionClient):
 
-    def __init__(self,  *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(FakeSessionClient, self).__init__(*args, **kwargs)
         self.callstack = []
 

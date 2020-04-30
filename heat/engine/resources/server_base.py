@@ -98,7 +98,7 @@ class BaseServer(stack_user.StackUser):
             occ.update({'zaqar': {
                 'user_id': self._get_user_id(),
                 'password': self.password,
-                'auth_url':  self.keystone().server_keystone_endpoint_url(
+                'auth_url': self.keystone().server_keystone_endpoint_url(
                     fallback_endpoint=self.context.auth_url),
                 'project_id': self.stack.stack_user_project_id,
                 'queue_id': queue_id,

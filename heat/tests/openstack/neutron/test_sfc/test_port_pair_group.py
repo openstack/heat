@@ -28,7 +28,7 @@ sample_template = {
             'properties': {
                 'name': 'test_port_pair_group',
                 'description': 'desc',
-                'port_pairs':  ['port1']
+                'port_pairs': ['port1']
                 }
             }
         }
@@ -155,7 +155,7 @@ class PortPairGroupTest(common.HeatTestCase):
             {
                 'name': 'name-updated',
                 'description': 'description-updated',
-            },  self.test_resource.resource_id)
+            }, self.test_resource.resource_id)
 
     def test_resource_handle_update_port_pairs(self):
         self.patchobject(self.test_client_plugin,
@@ -181,4 +181,4 @@ class PortPairGroupTest(common.HeatTestCase):
                 'name': 'name',
                 'description': 'description',
                 'port_pairs': ['port2'],
-            },  self.test_resource.resource_id)
+            }, self.test_resource.resource_id)

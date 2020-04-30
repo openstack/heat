@@ -146,7 +146,7 @@ class ResourceEnforcer(Enforcer):
             result = super(ResourceEnforcer, self).enforce(
                 context, res_type,
                 scope=scope or 'resource_types',
-                target=target,  is_registered_policy=is_registered_policy)
+                target=target, is_registered_policy=is_registered_policy)
         except policy.PolicyNotRegistered:
             result = True
         except self.exc as ex:

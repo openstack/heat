@@ -168,4 +168,4 @@ class PortChainTest(common.HeatTestCase):
                 'description': 'description-updated',
                 'port_pair_groups': ['port_pair_group_2'],
                 'flow_classifiers': ['flow_classifier2'],
-            },  self.test_resource.resource_id)
+            }, self.test_resource.resource_id)

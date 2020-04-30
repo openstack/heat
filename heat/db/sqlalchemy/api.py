@@ -693,7 +693,7 @@ def _paginate_query(context, query, model, limit=None, sort_keys=None,
     return query
 
 
-def _query_stack_get_all(context,  show_deleted=False,
+def _query_stack_get_all(context, show_deleted=False,
                          show_nested=False, show_hidden=False, tags=None,
                          tags_any=None, not_tags=None, not_tags_any=None):
     if show_nested:

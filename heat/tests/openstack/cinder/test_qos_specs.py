@@ -22,7 +22,7 @@ from heat.tests import utils
 
 QOS_SPECS_TEMPLATE = {
     'heat_template_version': '2015-10-15',
-    'description':  'Cinder QoS specs creation example',
+    'description': 'Cinder QoS specs creation example',
     'resources': {
         'my_qos_specs': {
             'type': 'OS::Cinder::QoSSpecs',
@@ -36,7 +36,7 @@ QOS_SPECS_TEMPLATE = {
 
 QOS_ASSOCIATE_TEMPLATE = {
     'heat_template_version': '2015-10-15',
-    'description':  'Cinder QoS specs association example',
+    'description': 'Cinder QoS specs association example',
     'resources': {
         'my_qos_associate': {
             'type': 'OS::Cinder::QoSAssociation',

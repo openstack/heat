@@ -106,7 +106,7 @@ class SignalResponder(stack_user.StackUser):
             if self.password is None:
                 self.password = password_gen.generate_openstack_password()
             self._create_user()
-        return {'auth_url':  self.keystone().server_keystone_endpoint_url(
+        return {'auth_url': self.keystone().server_keystone_endpoint_url(
                 fallback_endpoint=self.keystone().v3_endpoint),
                 'username': self.physical_resource_name(),
                 'user_id': self._get_user_id(),

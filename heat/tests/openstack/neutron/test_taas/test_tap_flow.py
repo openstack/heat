@@ -27,8 +27,8 @@ sample_template = {
             'properties': {
                 'name': 'test_tap_flow',
                 'description': 'desc',
-                'port':  '6af055d3-26f6-48dd-a597-7611d7e58d35',
-                'tap_service':  '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'port': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'tap_service': '6af055d3-26f6-48dd-a597-7611d7e58d35',
                 'direction': 'BOTH',
                 'vlan_filter': '1-5,9,18,27-30,99-108,4000-4095'
             }
@@ -177,4 +177,4 @@ class TapFlowTest(common.HeatTestCase):
                 'tap_service': '6af055d3-26f6-48dd-a597-7611d7e58d35',
                 'direction': 'BOTH',
                 'vlan_filter': '1-5,9,18,27-30,99-108,4000-4095',
-            },  self.test_resource.resource_id)
+            }, self.test_resource.resource_id)

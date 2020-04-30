@@ -201,4 +201,4 @@ class FlowClassifierTest(common.HeatTestCase):
             {
                 'name': 'name-updated',
                 'description': 'description-updated',
-            },  self.test_resource.resource_id)
+            }, self.test_resource.resource_id)
