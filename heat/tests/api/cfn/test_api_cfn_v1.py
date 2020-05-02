@@ -16,7 +16,6 @@ import os
 
 import mock
 from oslo_config import fixture as config_fixture
-import six
 
 from heat.api.aws import exception
 import heat.api.cfn.v1.stacks as stacks
@@ -1210,7 +1209,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStackEventsResponse':
                     {'DescribeStackEventsResult':
                      {'StackEvents':
-                      [{'EventId': six.text_type(event_id),
+                      [{'EventId': str(event_id),
                         'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
                         'ResourceStatus': u'TEST_IN_PROGRESS',
                         'ResourceType': u'AWS::EC2::Instance',

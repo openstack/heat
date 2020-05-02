@@ -14,7 +14,6 @@
 import functools
 
 from oslo_log import log as logging
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -354,6 +353,6 @@ def resolve_and_find(value, cplugin, finder, entity=None,
         except Exception as ex:
             if ignore_resolve_error:
                 LOG.info("Ignoring error in RESOLVE translation: %s",
-                         six.text_type(ex))
+                         str(ex))
                 return value
             raise
