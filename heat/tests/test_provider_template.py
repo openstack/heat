@@ -17,7 +17,6 @@ import os
 import uuid
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -441,7 +440,7 @@ class ProviderTemplateTest(common.HeatTestCase):
                                temp_res.validate)
         self.assertEqual("Property Foo type mismatch between facade "
                          "DummyResource (Map) and provider (String)",
-                         six.text_type(ex))
+                         str(ex))
 
     def test_properties_list_with_none(self):
         provider = {
@@ -626,7 +625,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         ex = self.assertRaises(exception.NotFound, env.get_class,
                                'OS::ResourceType', 'fred')
         self.assertIn('Could not fetch remote template "some_magic.yaml"',
-                      six.text_type(ex))
+                      str(ex))
 
     def test_metadata_update_called(self):
         provider = {
@@ -892,7 +891,7 @@ class ProviderTemplateTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 temp_res.validate)
         self.assertIn('Error parsing template http://heatr/bad_tmpl.yaml',
-                      six.text_type(err))
+                      str(err))
         mock_get.assert_called_once_with(test_templ_name,
                                          allowed_schemes=('http', 'https',))
 
@@ -1002,8 +1001,8 @@ class TemplateResourceCrudTest(common.HeatTestCase):
     def test_handle_delete(self):
         self.res.rpc_client = mock.MagicMock()
         self.res.id = 55
-        self.res.uuid = six.text_type(uuid.uuid4())
-        self.res.resource_id = six.text_type(uuid.uuid4())
+        self.res.uuid = str(uuid.uuid4())
+        self.res.resource_id = str(uuid.uuid4())
         self.res.action = self.res.CREATE
         self.res.nested = mock.MagicMock()
         ident = identifier.HeatIdentifier(self.ctx.tenant_id,

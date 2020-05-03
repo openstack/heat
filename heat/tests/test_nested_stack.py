@@ -15,7 +15,6 @@
 import mock
 from oslo_config import cfg
 from requests import exceptions
-import six
 import yaml
 
 from heat.common import exception
@@ -164,7 +163,7 @@ Resources:
 
         res = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
-        self.assertIn('Recursion depth exceeds', six.text_type(res))
+        self.assertIn('Recursion depth exceeds', str(res))
 
         calls = [mock.call('https://server.test/depth1.template'),
                  mock.call('https://server.test/depth2.template'),
@@ -229,7 +228,7 @@ Resources:
         tr.return_value = 2
         res = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
-        self.assertIn('Recursion depth exceeds', six.text_type(res))
+        self.assertIn('Recursion depth exceeds', str(res))
         expected_count = cfg.CONF.get('max_nested_stack_depth') + 1
         self.assertEqual(expected_count, urlfetch.get.call_count)
 

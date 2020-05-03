@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 
 from heat.common import exception
 from heat.engine import properties_group as pg
@@ -86,7 +85,7 @@ class TestSchemaSimpleValidation(common.HeatTestCase):
         if self.message is not None:
             ex = self.assertRaises(exception.InvalidSchemaError,
                                    pg.PropertiesGroup, self.schema)
-            self.assertEqual(self.message, six.text_type(ex))
+            self.assertEqual(self.message, str(ex))
         else:
             self.assertIsInstance(pg.PropertiesGroup(self.schema),
                                   pg.PropertiesGroup)
