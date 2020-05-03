@@ -13,7 +13,6 @@
 
 import copy
 import mock
-import six
 
 from heat.common import exception
 from heat.engine.cfn import functions as cfn_funcs
@@ -94,7 +93,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 mock.ANY)
         self.assertEqual('There is no rule EatTheCookie. List of allowed '
                          'rules is: Add, Replace, Delete, Resolve.',
-                         six.text_type(exc))
+                         str(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -104,7 +103,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 'value')
         self.assertEqual('"translation_path" should be non-empty list '
                          'with path to translate.',
-                         six.text_type(exc))
+                         str(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -114,7 +113,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 mock.ANY)
         self.assertEqual('"translation_path" should be non-empty list '
                          'with path to translate.',
-                         six.text_type(exc))
+                         str(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -126,7 +125,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 'some_path')
         self.assertEqual('"value_path", "value" and "value_name" are '
                          'mutually exclusive and cannot be specified '
-                         'at the same time.', six.text_type(exc))
+                         'at the same time.', str(exc))
 
         exc = self.assertRaises(ValueError,
                                 translation.TranslationRule,
@@ -135,7 +134,7 @@ class TestTranslationRule(common.HeatTestCase):
                                 ['any'],
                                 'value')
         self.assertEqual('"value" must be list type when rule is Add.',
-                         six.text_type(exc))
+                         str(exc))
 
     def test_add_rule_exist(self):
         schema = {
@@ -246,7 +245,7 @@ class TestTranslationRule(common.HeatTestCase):
         ex = self.assertRaises(ValueError, tran.translate, 'far', 'tran')
         self.assertEqual('Incorrect translation rule using - cannot '
                          'resolve Add rule for non-list translation '
-                         'value "far".', six.text_type(ex))
+                         'value "far".', str(ex))
 
     def test_replace_rule_map_exist(self):
         schema = {
@@ -446,7 +445,7 @@ class TestTranslationRule(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                tran.translate, 'bar', data['bar'])
         self.assertEqual('Cannot define the following properties at '
-                         'the same time: bar, far', six.text_type(ex))
+                         'the same time: bar, far', str(ex))
 
     def test_replace_rule_str_value_path(self):
         schema = {
@@ -491,7 +490,7 @@ class TestTranslationRule(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 props.validate)
         self.assertEqual("Property error: bar: Value 'one' is not an integer",
-                         six.text_type(exc))
+                         str(exc))
 
     def test_delete_rule_list(self):
         schema = {

@@ -13,7 +13,6 @@
 
 from keystoneauth1 import exceptions as kc_exceptions
 import mock
-import six
 
 from heat.common import exception
 from heat.common import short_id
@@ -378,7 +377,7 @@ class StackUserTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         ex = self.assertRaises(ValueError, rsrc._user_token)
         expected = "Can't get user token without password"
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
         self.fc.stack_domain_user_token.assert_not_called()
 
     def test_user_token_err_noproject(self):
@@ -390,4 +389,4 @@ class StackUserTest(common.HeatTestCase):
 
         ex = self.assertRaises(ValueError, rsrc._user_token)
         expected = "Can't get user token, user not yet created"
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
