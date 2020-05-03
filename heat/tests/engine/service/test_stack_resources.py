@@ -13,7 +13,6 @@
 import mock
 from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
-import six
 
 from heat.common import exception
 from heat.common import identifier
@@ -244,7 +243,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @tools.stack_context('service_resources_list_test_stack_with_depth')
     def test_stack_resources_list_with_depth(self, mock_load):
         mock_load.return_value = self.stack
-        resources = six.itervalues(self.stack)
+        resources = self.stack.values()
         self.stack.iter_resources = mock.Mock(return_value=resources)
         self.eng.list_stack_resources(self.ctx,
                                       self.stack.identifier(),
@@ -256,7 +255,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @tools.stack_context('service_resources_list_test_stack_with_max_depth')
     def test_stack_resources_list_with_max_depth(self, mock_load):
         mock_load.return_value = self.stack
-        resources = six.itervalues(self.stack)
+        resources = self.stack.values()
         self.stack.iter_resources = mock.Mock(return_value=resources)
         self.eng.list_stack_resources(self.ctx,
                                       self.stack.identifier(),
@@ -269,7 +268,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @tools.stack_context('service_resources_list_test_stack')
     def test_stack_resources_filter_type(self, mock_load):
         mock_load.return_value = self.stack
-        resources = six.itervalues(self.stack)
+        resources = self.stack.values()
         self.stack.iter_resources = mock.Mock(return_value=resources)
         filters = {'type': 'AWS::EC2::Instance'}
         resources = self.eng.list_stack_resources(self.ctx,
@@ -283,7 +282,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @tools.stack_context('service_resources_list_test_stack')
     def test_stack_resources_filter_type_not_found(self, mock_load):
         mock_load.return_value = self.stack
-        resources = six.itervalues(self.stack)
+        resources = self.stack.values()
         self.stack.iter_resources = mock.Mock(return_value=resources)
         filters = {'type': 'NonExisted'}
         resources = self.eng.list_stack_resources(self.ctx,
@@ -432,7 +431,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
                                'WebServerScaleDownPolicy',
                                details)
         msg = 'Invalid hook type "invalid_hook"'
-        self.assertIn(msg, six.text_type(ex.exc_info[1]))
+        self.assertIn(msg, str(ex.exc_info[1]))
         self.assertEqual(exception.InvalidBreakPointHook,
                          ex.exc_info[0])
 
@@ -447,7 +446,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
                                details)
         msg = ('The "pre-update" hook is not defined on '
                'AWSScalingPolicy "WebServerScaleDownPolicy"')
-        self.assertIn(msg, six.text_type(ex.exc_info[1]))
+        self.assertIn(msg, str(ex.exc_info[1]))
         self.assertEqual(exception.InvalidBreakPointHook,
                          ex.exc_info[0])
 

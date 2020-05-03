@@ -17,7 +17,6 @@ import mock
 from oslo_config import cfg
 from oslo_messaging import conffixture
 from oslo_messaging.rpc import dispatcher
-import six
 
 from heat.common import environment_util as env_util
 from heat.common import exception
@@ -644,7 +643,7 @@ resources:
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
         self.assertIn("Cancelling update when stack is "
                       "UPDATE_COMPLETE",
-                      six.text_type(ex.exc_info[1]))
+                      str(ex.exc_info[1]))
 
     @mock.patch.object(stack_object.Stack, 'count_total_resources')
     def test_stack_update_equals(self, ctr):
@@ -775,7 +774,7 @@ resources:
                                None, {rpc_api.PARAM_CONVERGE: False})
         self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
         self.assertIn(exception.StackResourceLimitExceeded.msg_fmt,
-                      six.text_type(ex.exc_info[1]))
+                      str(ex.exc_info[1]))
 
     def test_stack_update_verify_err(self):
         stack_name = 'service_update_verify_err_test_stack'
@@ -869,7 +868,7 @@ resources:
                                template, params, None, api_args)
         self.assertEqual(exception.MissingCredentialError, ex.exc_info[0])
         self.assertEqual('Missing required credential: X-Auth-Key',
-                         six.text_type(ex.exc_info[1]))
+                         str(ex.exc_info[1]))
 
         mock_get.assert_called_once_with(self.ctx, stk.identifier())
 
@@ -950,7 +949,7 @@ resources:
 
         self.assertEqual(exception.NotSupported, ex.exc_info[0])
         self.assertIn("PATCH update to non-COMPLETE stack",
-                      six.text_type(ex.exc_info[1]))
+                      str(ex.exc_info[1]))
 
     def test_update_immutable_parameter_disallowed(self):
 

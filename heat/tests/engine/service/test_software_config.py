@@ -18,7 +18,6 @@ import mock
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
-import six
 
 from heat.common import crypt
 from heat.common import exception
@@ -202,7 +201,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         try:
             stack.validate()
         except exception.StackValidationFailed as exc:
-            self.fail("Validation should have passed: %s" % six.text_type(exc))
+            self.fail("Validation should have passed: %s" % str(exc))
 
     def _create_software_deployment(self, config_id=None, input_values=None,
                                     action='INIT',
@@ -600,7 +599,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             values.update(kwargs)
             updated = self.engine.update_software_deployment(
                 self.ctx, deployment_id, updated_at=None, **values)
-            for key, value in six.iteritems(kwargs):
+            for key, value in kwargs.items():
                 self.assertEqual(value, updated[key])
 
         check_software_deployment_updated(config_id=config_id)
@@ -822,7 +821,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         deployment = self._create_software_deployment(
             status='IN_PROGRESS', config_id=config['id'])
 
-        deployment_id = six.text_type(deployment['id'])
+        deployment_id = str(deployment['id'])
         sd = software_deployment_object.SoftwareDeployment.get_by_id(
             self.ctx, deployment_id)
 

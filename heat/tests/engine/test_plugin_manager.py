@@ -14,8 +14,6 @@
 import sys
 import types
 
-import six
-
 from heat.engine import plugin_manager
 from heat.tests import common
 
@@ -122,7 +120,7 @@ class TestPluginManager(common.HeatTestCase):
 
         all_items = pm.load_all(mgr)
 
-        for item in six.iteritems(current_test_mapping()):
+        for item in current_test_mapping().items():
             self.assertNotIn(item, all_items)
 
     def test_load_all(self):
@@ -138,5 +136,5 @@ class TestPluginManager(common.HeatTestCase):
 
         all_items = pm.load_all(mgr)
 
-        for item in six.iteritems(current_test_mapping()):
+        for item in current_test_mapping().items():
             self.assertIn(item, all_items)

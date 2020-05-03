@@ -16,7 +16,6 @@ import itertools
 
 import eventlet
 import mock
-import six
 
 from heat.common import timeutils
 from heat.engine import dependencies
@@ -67,7 +66,7 @@ class ExceptionGroupTest(common.HeatTestCase):
         ex2 = Exception("ex 2")
 
         exception_group = scheduler.ExceptionGroup([ex1, ex2])
-        self.assertEqual("['ex 1', 'ex 2']", six.text_type(exception_group))
+        self.assertEqual("['ex 1', 'ex 2']", str(exception_group))
 
 
 class StepTracker(object):
@@ -1272,7 +1271,6 @@ class DescriptionTest(common.HeatTestCase):
         self.assertEqual('o', scheduler.task_description(C()))
 
     def test_unicode(self):
-        @six.python_2_unicode_compatible
         class C(object):
             def __str__(self):
                 return u'C "\u2665"'
