@@ -13,7 +13,6 @@
 import json
 
 from heatclient import exc as heat_exceptions
-import six
 import yaml
 
 from heat_integrationtests.common import test
@@ -804,7 +803,7 @@ outputs:
         except heat_exceptions.HTTPBadRequest as exc:
             exp = ('ERROR: Required property two for facade '
                    'OS::Thingy missing in provider')
-            self.assertEqual(exp, six.text_type(exc))
+            self.assertEqual(exp, str(exc))
 
     def test_missing_output(self):
         templ_missing_output = '''
@@ -828,7 +827,7 @@ resources:
         except heat_exceptions.HTTPBadRequest as exc:
             exp = ('ERROR: Attribute here-it-is for facade '
                    'OS::Thingy missing in provider')
-            self.assertEqual(exp, six.text_type(exc))
+            self.assertEqual(exp, str(exc))
 
 
 class TemplateResourceNewParamTest(functional_base.FunctionalTestsBase):

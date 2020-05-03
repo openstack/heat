@@ -13,8 +13,8 @@
 import hashlib
 import json
 import random
+from urllib import parse
 
-from six.moves.urllib import parse
 from swiftclient import utils as swiftclient_utils
 import yaml
 

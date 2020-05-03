@@ -16,7 +16,6 @@ import re
 import sys
 
 from oslo_log import log
-import six
 
 from heat.common.i18n import _
 from heat.engine import constraints
@@ -101,7 +100,7 @@ class HeatCustomGuidelines(object):
 
     def _check_resource_schemas(self, resource, schema, schema_name,
                                 error_path=None):
-        for key, value in six.iteritems(schema):
+        for key, value in schema.items():
             if error_path is None:
                 error_path = [resource.__name__, key]
             else:
@@ -129,7 +128,7 @@ class HeatCustomGuidelines(object):
             error_path.pop()
 
     def _check_resource_methods(self, resource):
-        for method in six.itervalues(resource.__dict__):
+        for method in resource.__dict__.values():
             # need to skip non-functions attributes
             if not callable(method):
                 continue
@@ -159,7 +158,7 @@ class HeatCustomGuidelines(object):
                 cls_file = open(cls.__module__.replace('.', '/') + '.py')
             except IOError as ex:
                 LOG.warning('Cannot perform trailing spaces check on '
-                            'resource module: %s', six.text_type(ex))
+                            'resource module: %s', str(ex))
                 continue
             lines = [line.strip() for line in cls_file.readlines()]
             idx = 0
