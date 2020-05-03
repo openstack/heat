@@ -17,7 +17,6 @@
 
 import fixtures
 import mock
-import six
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -39,7 +38,7 @@ class TestHeatException(common.HeatTestCase):
     def test_format_string_error_message(self):
         message = "This format %(message)s should work"
         err = exception.Error(message)
-        self.assertEqual(message, six.text_type(err))
+        self.assertEqual(message, str(err))
 
 
 class TestStackValidationFailed(common.HeatTestCase):
@@ -135,7 +134,7 @@ class TestStackValidationFailed(common.HeatTestCase):
         try:
             raise exception.StackValidationFailed(**self.kwargs)
         except exception.StackValidationFailed as ex:
-            self.assertIn(self.expected, six.text_type(ex))
+            self.assertIn(self.expected, str(ex))
             self.assertIn(self.called_error, ex.error)
             self.assertEqual(self.called_path, ex.path)
             self.assertEqual(self.called_msg, ex.error_message)

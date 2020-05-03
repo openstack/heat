@@ -19,7 +19,6 @@ import datetime
 
 from lxml import etree
 from oslo_serialization import jsonutils as json
-import six
 import webob
 
 from heat.common import serializers
@@ -111,9 +110,9 @@ class XMLResponseSerializerTest(common.HeatTestCase):
                 ])])
             ]))
         ])
-        expected = six.b('<aresponse><is_public>True</is_public>'
-                         '<name><member><name1>test</name1></member></name>'
-                         '</aresponse>')
+        expected = '<aresponse><is_public>True</is_public>' \
+                   '<name><member><name1>test</name1></member></name>' \
+                   '</aresponse>'.encode('latin-1')
         actual = serializers.XMLResponseSerializer().to_xml(fixture)
         actual_xml_tree = etree.XML(actual)
         actual_xml_dict = self._recursive_dict(actual_xml_tree)
@@ -132,9 +131,11 @@ class XMLResponseSerializerTest(common.HeatTestCase):
                 ('Metadata', {"name2": "test2"}),
             ]))
         ])
-        expected = six.b('<aresponse><is_public>True</is_public>'
-                         '<TemplateBody>{"name1": "test"}</TemplateBody>'
-                         '<Metadata>{"name2": "test2"}</Metadata></aresponse>')
+        expected = '<aresponse>' \
+                   '<is_public>True</is_public>' \
+                   '<TemplateBody>{"name1": "test"}</TemplateBody>' \
+                   '<Metadata>{"name2": "test2"}</Metadata>' \
+                   '</aresponse>'.encode('latin-1')
         actual = serializers.XMLResponseSerializer().to_xml(fixture)
         actual_xml_tree = etree.XML(actual)
         actual_xml_dict = self._recursive_dict(actual_xml_tree)

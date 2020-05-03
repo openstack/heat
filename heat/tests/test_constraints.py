@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import six
 
 from heat.common import exception
 from heat.engine import constraints
@@ -125,7 +124,7 @@ class SchemaTest(common.HeatTestCase):
         r = constraints.Modulo(step=2, offset=1)
         err = self.assertRaises(ValueError, r.validate, 4)
         self.assertIn('4 is not a multiple of 2 with an offset of 1',
-                      six.text_type(err))
+                      str(err))
 
         self.assertRaises(ValueError, r.validate, 0)
         self.assertRaises(ValueError, r.validate, 2)
@@ -140,26 +139,26 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.InvalidSchemaError,
                                 constraints.Modulo, step=111, offset=111)
         self.assertIn('offset must be smaller (by absolute value) than step',
-                      six.text_type(err))
+                      str(err))
 
         err = self.assertRaises(exception.InvalidSchemaError,
                                 constraints.Modulo, step=111, offset=112)
         self.assertIn('offset must be smaller (by absolute value) than step',
-                      six.text_type(err))
+                      str(err))
 
         err = self.assertRaises(exception.InvalidSchemaError,
                                 constraints.Modulo, step=0, offset=1)
-        self.assertIn('step cannot be 0', six.text_type(err))
+        self.assertIn('step cannot be 0', str(err))
 
         err = self.assertRaises(exception.InvalidSchemaError,
                                 constraints.Modulo, step=-2, offset=1)
         self.assertIn('step and offset must be both positive or both negative',
-                      six.text_type(err))
+                      str(err))
 
         err = self.assertRaises(exception.InvalidSchemaError,
                                 constraints.Modulo, step=2, offset=-1)
         self.assertIn('step and offset must be both positive or both negative',
-                      six.text_type(err))
+                      str(err))
 
     def test_schema_all(self):
         d = {
@@ -271,7 +270,7 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.InvalidSchemaError,
                                 schema.validate)
         self.assertIn('Range constraint invalid for String',
-                      six.text_type(err))
+                      str(err))
 
     def test_length_invalid_type(self):
         schema = constraints.Schema('Integer',
@@ -279,7 +278,7 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.InvalidSchemaError,
                                 schema.validate)
         self.assertIn('Length constraint invalid for Integer',
-                      six.text_type(err))
+                      str(err))
 
     def test_modulo_invalid_type(self):
         schema = constraints.Schema('String',
@@ -287,7 +286,7 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.InvalidSchemaError,
                                 schema.validate)
         self.assertIn('Modulo constraint invalid for String',
-                      six.text_type(err))
+                      str(err))
 
     def test_allowed_pattern_invalid_type(self):
         schema = constraints.Schema(
@@ -297,7 +296,7 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.InvalidSchemaError,
                                 schema.validate)
         self.assertIn('AllowedPattern constraint invalid for Integer',
-                      six.text_type(err))
+                      str(err))
 
     def test_range_vals_invalid_type(self):
         self.assertRaises(exception.InvalidSchemaError,
@@ -329,7 +328,7 @@ class SchemaTest(common.HeatTestCase):
                                constraints=[constraints.Range(max=4)])
         err = self.assertRaises(exception.InvalidSchemaError, s.validate)
         self.assertIn('Range constraint invalid for String',
-                      six.text_type(err))
+                      str(err))
 
     def test_schema_nested_validate_good(self):
         nested = constraints.Schema(constraints.Schema.STRING, 'A string',
@@ -347,7 +346,7 @@ class SchemaTest(common.HeatTestCase):
                                schema={'Foo': nested})
         err = self.assertRaises(exception.InvalidSchemaError, s.validate)
         self.assertIn('Range constraint invalid for String',
-                      six.text_type(err))
+                      str(err))
 
     def test_allowed_values_numeric_int(self):
         """Test AllowedValues constraint for numeric integer values.
@@ -367,12 +366,12 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3)
         self.assertEqual('3 is not an allowed value [1, 2, 4]',
-                         six.text_type(err))
+                         str(err))
         self.assertIsNone(schema.validate_constraints('1'))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, '3')
         self.assertEqual('"3" is not an allowed value [1, 2, 4]',
-                         six.text_type(err))
+                         str(err))
 
         # Allowed values defined as integer strings
         schema = constraints.Schema(
@@ -384,12 +383,12 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3)
         self.assertEqual('3 is not an allowed value ["1", "2", "4"]',
-                         six.text_type(err))
+                         str(err))
         self.assertIsNone(schema.validate_constraints('1'))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, '3')
         self.assertEqual('"3" is not an allowed value ["1", "2", "4"]',
-                         six.text_type(err))
+                         str(err))
 
     def test_allowed_values_numeric_float(self):
         """Test AllowedValues constraint for numeric floating point values.
@@ -409,12 +408,12 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3.3)
         self.assertEqual('3.3 is not an allowed value [1.1, 2.2, 4.4]',
-                         six.text_type(err))
+                         str(err))
         self.assertIsNone(schema.validate_constraints('1.1'))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, '3.3')
         self.assertEqual('"3.3" is not an allowed value [1.1, 2.2, 4.4]',
-                         six.text_type(err))
+                         str(err))
 
         # Allowed values defined as strings
         schema = constraints.Schema(
@@ -426,12 +425,12 @@ class SchemaTest(common.HeatTestCase):
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, 3.3)
         self.assertEqual('3.3 is not an allowed value ["1.1", "2.2", "4.4"]',
-                         six.text_type(err))
+                         str(err))
         self.assertIsNone(schema.validate_constraints('1.1'))
         err = self.assertRaises(exception.StackValidationFailed,
                                 schema.validate_constraints, '3.3')
         self.assertEqual('"3.3" is not an allowed value ["1.1", "2.2", "4.4"]',
-                         six.text_type(err))
+                         str(err))
 
     def test_to_schema_type_int(self):
         """Test Schema.to_schema_type method for type Integer."""
@@ -444,14 +443,14 @@ class SchemaTest(common.HeatTestCase):
         # test invalid numeric values, i.e. floating point numbers
         err = self.assertRaises(ValueError, schema.to_schema_type, 1.5)
         self.assertEqual('Value "1.5" is invalid for data type "Integer".',
-                         six.text_type(err))
+                         str(err))
         err = self.assertRaises(ValueError, schema.to_schema_type, '1.5')
         self.assertEqual('Value "1.5" is invalid for data type "Integer".',
-                         six.text_type(err))
+                         str(err))
         # test invalid string values
         err = self.assertRaises(ValueError, schema.to_schema_type, 'foo')
         self.assertEqual('Value "foo" is invalid for data type "Integer".',
-                         six.text_type(err))
+                         str(err))
 
     def test_to_schema_type_num(self):
         """Test Schema.to_schema_type method for type Number."""
@@ -467,21 +466,21 @@ class SchemaTest(common.HeatTestCase):
         self.assertEqual(1.5, res)
         err = self.assertRaises(ValueError, schema.to_schema_type, 'foo')
         self.assertEqual('Value "foo" is invalid for data type "Number".',
-                         six.text_type(err))
+                         str(err))
 
     def test_to_schema_type_string(self):
         """Test Schema.to_schema_type method for type String."""
         schema = constraints.Schema('String')
         res = schema.to_schema_type('one')
-        self.assertIsInstance(res, six.string_types)
+        self.assertIsInstance(res, str)
         res = schema.to_schema_type('1')
-        self.assertIsInstance(res, six.string_types)
+        self.assertIsInstance(res, str)
         res = schema.to_schema_type(1)
-        self.assertIsInstance(res, six.string_types)
+        self.assertIsInstance(res, str)
         res = schema.to_schema_type(True)
-        self.assertIsInstance(res, six.string_types)
+        self.assertIsInstance(res, str)
         res = schema.to_schema_type(None)
-        self.assertIsInstance(res, six.string_types)
+        self.assertIsInstance(res, str)
 
     def test_to_schema_type_boolean(self):
         """Test Schema.to_schema_type method for type Boolean."""
@@ -501,7 +500,7 @@ class SchemaTest(common.HeatTestCase):
 
         err = self.assertRaises(ValueError, schema.to_schema_type, 'foo')
         self.assertEqual('Value "foo" is invalid for data type "Boolean".',
-                         six.text_type(err))
+                         str(err))
 
     def test_to_schema_type_map(self):
         """Test Schema.to_schema_type method for type Map."""
@@ -533,11 +532,11 @@ class CustomConstraintTest(common.HeatTestCase):
 
         constraint = constraints.CustomConstraint("zero", environment=self.env)
         self.assertEqual("Value must be of type zero",
-                         six.text_type(constraint))
+                         str(constraint))
         self.assertIsNone(constraint.validate(0))
         error = self.assertRaises(ValueError, constraint.validate, 1)
         self.assertEqual('"1" does not validate zero',
-                         six.text_type(error))
+                         str(error))
 
     def test_custom_error(self):
         class ZeroConstraint(object):
@@ -552,7 +551,7 @@ class CustomConstraintTest(common.HeatTestCase):
 
         constraint = constraints.CustomConstraint("zero", environment=self.env)
         error = self.assertRaises(ValueError, constraint.validate, 1)
-        self.assertEqual("1 is not 0", six.text_type(error))
+        self.assertEqual("1 is not 0", str(error))
 
     def test_custom_message(self):
         class ZeroConstraint(object):
@@ -564,13 +563,13 @@ class CustomConstraintTest(common.HeatTestCase):
         self.env.register_constraint("zero", ZeroConstraint)
 
         constraint = constraints.CustomConstraint("zero", environment=self.env)
-        self.assertEqual("Only zero!", six.text_type(constraint))
+        self.assertEqual("Only zero!", str(constraint))
 
     def test_unknown_constraint(self):
         constraint = constraints.CustomConstraint("zero", environment=self.env)
         error = self.assertRaises(ValueError, constraint.validate, 1)
         self.assertEqual('"1" does not validate zero (constraint not found)',
-                         six.text_type(error))
+                         str(error))
 
     def test_constraints(self):
         class ZeroConstraint(object):

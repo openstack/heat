@@ -15,7 +15,6 @@ import json
 from keystoneauth1 import loading as ks_loading
 from keystoneauth1 import session
 import mock
-import six
 
 from heat.common import auth_plugin
 from heat.common import config
@@ -80,7 +79,7 @@ class TestAuthPlugin(common.HeatTestCase):
             ValueError, auth_plugin.parse_auth_credential_to_dict, credential)
         self.assertEqual("Missing key in auth information, the correct "
                          "format contains [\'auth_type\', \'auth\'].",
-                         six.text_type(error))
+                         str(error))
 
     def test_parse_auth_credential_to_dict_with_json_error(self):
         credential = (
@@ -93,4 +92,4 @@ class TestAuthPlugin(common.HeatTestCase):
             ValueError, auth_plugin.parse_auth_credential_to_dict, credential)
         error_msg = ('Failed to parse credential, please check your Stack '
                      'Credential format.')
-        self.assertEqual(error_msg, six.text_type(error))
+        self.assertEqual(error_msg, str(error))

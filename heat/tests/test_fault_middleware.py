@@ -17,7 +17,6 @@ import re
 from oslo_config import cfg
 from oslo_log import log
 from oslo_messaging._drivers import common as rpc_common
-import six
 import webob
 
 import heat.api.middleware.fault as fault
@@ -123,7 +122,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
             serialized, ["heat.common.exception"])
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message, expected_traceback = six.text_type(
+        expected_message, expected_traceback = str(
             remote_error).split('\n', 1)
         expected = {'code': 404,
                     'error': {'message': expected_message,
@@ -134,8 +133,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
         self.assertEqual(expected, msg)
 
     def remote_exception_helper(self, name, error):
-        if six.PY3:
-            error.args = ()
+        error.args = ()
         exc_info = (type(error), error, None)
 
         serialized = rpc_common.serialize_remote_exception(exc_info)
@@ -230,7 +228,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
 
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(remote_error)
-        expected_message, expected_traceback = six.text_type(
+        expected_message, expected_traceback = str(
             remote_error).split('\n', 1)
         expected = {'code': 404,
                     'error': {'message': expected_message,
