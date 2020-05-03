@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import short_id
@@ -111,7 +110,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                               rsrc.validate)
         ex_msg = ('If without InstanceId, '
                   'ImageId and InstanceType are required.')
-        self.assertIn(ex_msg, six.text_type(e))
+        self.assertIn(ex_msg, str(e))
 
     def test_lc_validate_without_InstanceId_and_InstanceType(self):
         t = template_format.parse(inline_templates.as_template)
@@ -126,7 +125,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                               rsrc.validate)
         ex_msg = ('If without InstanceId, '
                   'ImageId and InstanceType are required.')
-        self.assertIn(ex_msg, six.text_type(e))
+        self.assertIn(ex_msg, str(e))
 
     def test_launch_config_create_with_instanceid_not_found(self):
         t = template_format.parse(inline_templates.as_template)
@@ -148,7 +147,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
 
         exc = self.assertRaises(exception.StackValidationFailed,
                                 rsrc.validate)
-        self.assertIn(msg, six.text_type(exc))
+        self.assertIn(msg, str(exc))
 
     def test_validate_BlockDeviceMappings_without_Ebs_property(self):
         t = template_format.parse(inline_templates.as_template)
@@ -164,7 +163,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                               self.validate_launch_config, stack)
 
         self.assertIn("Ebs is missing, this is required",
-                      six.text_type(e))
+                      str(e))
 
     def test_validate_BlockDeviceMappings_without_SnapshotId_property(self):
         t = template_format.parse(inline_templates.as_template)
@@ -181,7 +180,7 @@ class LaunchConfigurationTest(common.HeatTestCase):
                               self.validate_launch_config, stack)
 
         self.assertIn("SnapshotId is missing, this is required",
-                      six.text_type(e))
+                      str(e))
 
     def test_validate_BlockDeviceMappings_without_DeviceName_property(self):
         t = template_format.parse(inline_templates.as_template)
@@ -201,4 +200,4 @@ class LaunchConfigurationTest(common.HeatTestCase):
             'Property error: '
             'Resources.LaunchConfig.Properties.BlockDeviceMappings[0]: '
             'Property DeviceName not assigned')
-        self.assertIn(excepted_error, six.text_type(e))
+        self.assertIn(excepted_error, str(e))

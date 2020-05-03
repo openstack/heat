@@ -15,7 +15,6 @@ import json
 
 import mock
 from oslo_config import cfg
-import six
 import webob.exc
 
 import heat.api.middleware.fault as fault
@@ -61,7 +60,7 @@ parameters:
                 template_format.parse(bad_temp)
 
         parse_ex = self.assertRaises(webob.exc.HTTPBadRequest, generate_error)
-        self.assertIn('foo', six.text_type(parse_ex))
+        self.assertIn('foo', str(parse_ex))
 
     def test_stack_name(self):
         body = {'stack_name': 'wibble'}
@@ -148,7 +147,7 @@ blarg: wibble
                'bytes) exceeds maximum allowed size (%(limit)s bytes).') % {
                    'actual_len': len(str(template)),
                    'limit': cfg.CONF.max_template_size}
-        self.assertEqual(msg, six.text_type(error))
+        self.assertEqual(msg, str(error))
 
     def test_parameters(self):
         params = {'foo': 'bar', 'blarg': 'wibble'}
@@ -348,7 +347,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                self.controller.index, req,
                                tenant_id=self.tenant)
         self.assertEqual("Only integer is acceptable by 'limit'.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
@@ -444,7 +443,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                 req, tenant_id=self.tenant)
         excepted = ('Unrecognized value "invalid_value" for "with_count", '
                     'acceptable values are: true, false')
-        self.assertIn(excepted, six.text_type(exc))
+        self.assertIn(excepted, str(exc))
 
     @mock.patch.object(rpc_client.EngineClient, 'count_stacks')
     def test_index_doesnt_break_with_old_engine(self, mock_count_stacks,
@@ -701,7 +700,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              req, tenant_id=self.tenant)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_rmt_interr(self, mock_call, mock_enforce):
@@ -900,7 +899,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                tenant_id=self.tenant, body=body)
 
         self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
-                         six.text_type(ex))
+                         str(ex))
         mock_call.assert_not_called()
 
     def test_adopt_error(self, mock_enforce):
@@ -1106,7 +1105,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                tenant_id=self.tenant, body=body)
 
         self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
-                         six.text_type(ex))
+                         str(ex))
         mock_call.assert_not_called()
 
     def test_create_err_denied_policy(self, mock_enforce):
@@ -1127,7 +1126,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_create_err_engine(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
@@ -1365,7 +1364,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual('ImmutableParameterModified',
                          resp.json['error']['type'])
         self.assertIn("The following parameters are immutable",
-                      six.text_type(resp.json['error']['message']))
+                      str(resp.json['error']['message']))
 
         mock_call.assert_called_once_with(
             req.context,
@@ -1452,7 +1451,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_name=stack_name)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_lookup_resource(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'lookup', True)
@@ -1514,7 +1513,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              path='resources')
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_show(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', True)
@@ -1688,7 +1687,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_show_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show', False)
@@ -1703,7 +1702,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_get_template(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'template', True)
@@ -1780,7 +1779,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_get_template_err_notfound(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'template', True)
@@ -1954,7 +1953,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                stack_id=identity.stack_id,
                                body=body)
         self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_call.called)
 
     def test_update_err_denied_policy(self, mock_enforce):
@@ -1978,7 +1977,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_update_with_existing_template(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
@@ -2167,7 +2166,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                stack_id=identity.stack_id,
                                body=body)
         self.assertEqual("Only integer is acceptable by 'timeout_mins'.",
-                         six.text_type(ex))
+                         str(ex))
         self.assertFalse(mock_call.called)
 
     def test_update_with_existing_and_default_parameters(
@@ -2295,7 +2294,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_export(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'export', True)
@@ -2354,7 +2353,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              stack_id=identity.stack_id)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_delete_bad_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'delete', True)
@@ -2468,7 +2467,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             req, tenant_id=self.tenant, body=body)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_list_resource_types(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'list_resource_types', True)
@@ -2534,7 +2533,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             req, tenant_id=self.tenant)
 
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_list_outputs(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'list_outputs', True)
@@ -2732,7 +2731,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              req, tenant_id=self.tenant,
                                              type_name=type_name)
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
     def test_generate_template(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'generate_template', True)
@@ -2766,7 +2765,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                type_name='TEST_TYPE')
         self.assertIn('Template type is not supported: Invalid template '
                       'type "invalid", valid types are: cfn, hot.',
-                      six.text_type(ex))
+                      str(ex))
         self.assertFalse(mock_call.called)
 
     def test_generate_template_not_found(self, mock_enforce):
@@ -2800,7 +2799,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                              req, tenant_id=self.tenant,
                                              type_name='blah')
         self.assertEqual(403, resp.status_int)
-        self.assertIn('403 Forbidden', six.text_type(resp))
+        self.assertIn('403 Forbidden', str(resp))
 
 
 class StackSerializerTest(common.HeatTestCase):

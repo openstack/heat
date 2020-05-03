@@ -15,7 +15,6 @@ import json
 
 import mock
 from oslo_utils import timeutils
-import six
 
 from heat.common import exception
 from heat.common import grouputils
@@ -499,7 +498,7 @@ class HeatScalingGroupAttrFallbackTest(common.HeatTestCase):
         mock_members = self.patchobject(grouputils, 'get_members')
         members = []
         output = []
-        for ip_ex in six.moves.range(1, 4):
+        for ip_ex in range(1, 4):
             inst = mock.Mock()
             inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
             output.append('2.1.3.%d' % ip_ex)
@@ -543,7 +542,7 @@ class HeatScalingGroupAttrFallbackTest(common.HeatTestCase):
         mock_members = self.patchobject(grouputils, 'get_members')
         members = []
         output = {}
-        for ip_ex in six.moves.range(1, 4):
+        for ip_ex in range(1, 4):
             inst = mock.Mock()
             inst.name = str(ip_ex)
             inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
@@ -559,7 +558,7 @@ class HeatScalingGroupAttrFallbackTest(common.HeatTestCase):
         self.group.nested = mock.Mock()
         members = []
         output = []
-        for ip_ex in six.moves.range(0, 2):
+        for ip_ex in range(0, 2):
             inst = mock.Mock()
             inst.name = 'ab'[ip_ex]
             inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
@@ -644,7 +643,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         error = self.assertRaises(
             exception.StackValidationFailed, stack.validate)
-        self.assertIn("foo", six.text_type(error))
+        self.assertIn("foo", str(error))
 
     def test_parse_with_bad_pausetime_in_update_policy(self):
         tmpl = template_format.parse(asg_tmpl_with_default_updt_policy())
@@ -654,7 +653,7 @@ class RollingUpdatePolicyTest(common.HeatTestCase):
         error = self.assertRaises(
             exception.StackValidationFailed, stack.validate)
         self.assertIn("could not convert string to float",
-                      six.text_type(error))
+                      str(error))
 
 
 class RollingUpdatePolicyDiffTest(common.HeatTestCase):
@@ -736,7 +735,7 @@ class IncorrectUpdatePolicyTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
         self.assertIn('Unknown Property AutoScalingRollingUpdate',
-                      six.text_type(exc))
+                      str(exc))
 
     def test_with_update_policy_inst_group(self):
         t = template_format.parse(inline_templates.as_heat_template)
@@ -750,7 +749,7 @@ class IncorrectUpdatePolicyTest(common.HeatTestCase):
         stack = utils.parse_stack(tmpl)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 stack.validate)
-        self.assertIn('Unknown Property RollingUpdate', six.text_type(exc))
+        self.assertIn('Unknown Property RollingUpdate', str(exc))
 
 
 class TestCooldownMixin(common.HeatTestCase):

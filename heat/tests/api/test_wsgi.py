@@ -18,7 +18,6 @@
 import fixtures
 import json
 import mock
-import six
 import socket
 import webob
 
@@ -214,7 +213,7 @@ class ResourceTest(common.HeatTestCase):
                                  None)
         e = self.assertRaises(exception.HTTPExceptionDisguise,
                               resource, request)
-        self.assertEqual(message_es, six.text_type(e.exc))
+        self.assertEqual(message_es, str(e.exc))
 
 
 class ResourceExceptionHandlingTest(common.HeatTestCase):
@@ -250,7 +249,7 @@ class ResourceExceptionHandlingTest(common.HeatTestCase):
                                  None)
         e = self.assertRaises(self.exception_catch, resource, request)
         e = e.exc if hasattr(e, 'exc') else e
-        self.assertNotIn(six.text_type(e), self.LOG.output)
+        self.assertNotIn(str(e), self.LOG.output)
 
 
 class JSONRequestDeserializerTest(common.HeatTestCase):
@@ -387,7 +386,7 @@ class JSONRequestDeserializerTest(common.HeatTestCase):
         msg = ('Request limit exceeded: JSON body size '
                '(%s bytes) exceeds maximum allowed size (%s bytes).' % (
                    len(body), cfg.CONF.max_json_body_size))
-        self.assertEqual(msg, six.text_type(error))
+        self.assertEqual(msg, str(error))
 
 
 class GetSocketTestCase(common.HeatTestCase):
