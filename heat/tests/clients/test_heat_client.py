@@ -25,7 +25,6 @@ from keystoneauth1 import token_endpoint as ks_token_endpoint
 from keystoneclient.v3 import client as kc_v3
 from keystoneclient.v3 import domains as kc_v3_domains
 from oslo_config import cfg
-import six
 
 from heat.common import config
 from heat.common import exception
@@ -234,7 +233,7 @@ class KeystoneClientTest(common.HeatTestCase):
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_user,
                                 'auser', password='password')
-        self.assertIn("Can't find role heat_stack_user", six.text_type(err))
+        self.assertIn("Can't find role heat_stack_user", str(err))
         self.mock_ks_v3_client.roles.list.assert_called_once_with(
             name='heat_stack_user')
         self._validate_stub_auth()
@@ -327,7 +326,7 @@ class KeystoneClientTest(common.HeatTestCase):
         err = self.assertRaises(exception.Error,
                                 heat_ks_client.create_stack_domain_user,
                                 username='duser', project_id='aproject')
-        self.assertIn("Can't find role heat_stack_user", six.text_type(err))
+        self.assertIn("Can't find role heat_stack_user", str(err))
         self._validate_stub_domain_admin_client()
         self.mock_ks_v3_client.roles.list.assert_called_once_with(
             name='heat_stack_user')
@@ -643,7 +642,7 @@ class KeystoneClientTest(common.HeatTestCase):
                                 heat_ks_client.create_trust_context)
         expected = "Missing required credential: roles "
         "{'role_names': ['heat_stack_owner']}"
-        self.assertIn(expected, six.text_type(exc))
+        self.assertIn(expected, str(exc))
         self.m_load_auth.assert_called_with(
             cfg.CONF, 'trustee', trust_id=None)
         self.mock_ks_v3_client.trusts.create.assert_called_once_with(
@@ -681,7 +680,7 @@ class KeystoneClientTest(common.HeatTestCase):
                    '"stack_user_domain_id" or "stack_user_domain_name" '
                    'without "stack_domain_admin" and '
                    '"stack_domain_admin_password"')
-        self.assertIn(exp_msg, six.text_type(err))
+        self.assertIn(exp_msg, str(err))
 
     def test_trust_init(self):
 

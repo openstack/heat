@@ -25,7 +25,6 @@ from neutronclient.common import exceptions as neutron_exc
 from openstack import exceptions
 from oslo_config import cfg
 from saharaclient.api import base as sahara_base
-import six
 from swiftclient import exceptions as swift_exc
 from testtools import testcase
 from troveclient import client as troveclient
@@ -48,12 +47,12 @@ class ClientsTest(common.HeatTestCase):
         cfg.CONF.set_override('cloud_backend', 'some.weird.object')
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
         self.assertIn('Invalid cloud_backend setting in heat.conf detected',
-                      six.text_type(exc))
+                      str(exc))
 
         cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients')
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
         self.assertIn('Invalid cloud_backend setting in heat.conf detected',
-                      six.text_type(exc))
+                      str(exc))
 
     def test_clients_get_heat_url(self):
         con = mock.Mock()
