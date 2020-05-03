@@ -16,7 +16,6 @@ from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
 from oslo_serialization import jsonutils
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -1078,7 +1077,7 @@ class UpdatePortTest(common.HeatTestCase):
 
         value_specs = update_dict.pop('value_specs')
         if value_specs:
-            for value_spec in six.iteritems(value_specs):
+            for value_spec in value_specs.items():
                 update_dict[value_spec[0]] = value_spec[1]
 
         tags = update_dict.pop('tags')

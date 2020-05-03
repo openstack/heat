@@ -15,7 +15,6 @@
 #    limitations under the License.
 
 import mock
-import six
 
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
@@ -472,7 +471,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         self.assertEqual(
             'NeutronClientException: resources.network_gateway: '
             'An unknown exception occurred.',
-            six.text_type(error))
+            str(error))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
@@ -502,7 +501,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
         self.assertEqual(
             'segmentation_id must be specified for using vlan',
-            six.text_type(error))
+            str(error))
 
     def test_gateway_validate_failed_with_flat(self):
         t = template_format.parse(gw_template)
@@ -520,7 +519,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
         self.assertEqual(
             'segmentation_id cannot be specified except 0 for using flat',
-            six.text_type(error))
+            str(error))
 
     def test_network_gateway_attribute(self):
         rsrc = self.prepare_create_network_gateway()
@@ -535,7 +534,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                                   rsrc.FnGetAtt, 'hoge')
         self.assertEqual(
             'The Referenced Attribute (test_network_gateway hoge) is '
-            'incorrect.', six.text_type(error))
+            'incorrect.', str(error))
 
         self.mockclient.create_network_gateway.assert_called_once_with({
             'network_gateway': {

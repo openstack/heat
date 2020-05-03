@@ -13,7 +13,6 @@
 #    under the License.
 
 import copy
-import six
 
 from oslo_log import log as logging
 
@@ -261,7 +260,7 @@ class NeutronTrunkTest(common.HeatTestCase):
 
         self.assertIn(
             'Went to status DEGRADED due to',
-            six.text_type(e))
+            str(e))
 
     def test_create_parent_port_by_name(self):
         t = template_format.parse(create_template)
