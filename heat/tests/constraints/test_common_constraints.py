@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.engine.constraint import common_constraints as cc
 from heat.tests import common
@@ -257,7 +256,7 @@ class CRONExpressionConstraint(common.HeatTestCase):
                   "is not acceptable, out of range") % cron_expression
         self.assertFalse(self.constraint.validate(cron_expression, self.ctx))
         self.assertEqual(expect,
-                         six.text_type(self.constraint._error_message))
+                         str(self.constraint._error_message))
 
     def test_validation_columns_length_error(self):
         cron_expression = "* *"
@@ -266,7 +265,7 @@ class CRONExpressionConstraint(common.HeatTestCase):
                   "iteratorexpression.")
         self.assertFalse(self.constraint.validate(cron_expression, self.ctx))
         self.assertEqual(expect,
-                         six.text_type(self.constraint._error_message))
+                         str(self.constraint._error_message))
 
 
 class TimezoneConstraintTest(common.HeatTestCase):
@@ -286,7 +285,7 @@ class TimezoneConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(timezone, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_none(self):
@@ -312,7 +311,7 @@ class DNSNameConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(dns_name, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_error_empty_component(self):
@@ -323,7 +322,7 @@ class DNSNameConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(dns_name, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_error_special_char(self):
@@ -336,7 +335,7 @@ class DNSNameConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(dns_name, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_error_tld_allnumeric(self):
@@ -348,7 +347,7 @@ class DNSNameConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(dns_name, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_none(self):
@@ -372,7 +371,7 @@ class DNSDomainConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(dns_domain, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_none(self):
@@ -396,7 +395,7 @@ class FIPDNSNameConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(dns_name, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_none(self):
@@ -422,7 +421,7 @@ class ExpirationConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(expiration, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_before_current_time(self):
@@ -433,7 +432,7 @@ class ExpirationConstraintTest(common.HeatTestCase):
         self.assertFalse(self.constraint.validate(expiration, self.ctx))
         self.assertEqual(
             expected,
-            six.text_type(self.constraint._error_message)
+            str(self.constraint._error_message)
         )
 
     def test_validation_none(self):

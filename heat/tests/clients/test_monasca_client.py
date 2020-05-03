@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception as heat_exception
 from heat.engine.clients.os import monasca as client_plugin
@@ -94,6 +93,6 @@ class MonascaClientPluginNotificationTest(common.HeatTestCase):
                                self.sample_uuid)
         msg = ("The Monasca Notification (%(name)s) could not be found." %
                {'name': self.sample_uuid})
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
         self._client.notifications.get.assert_called_once_with(
             notification_id=self.sample_uuid)

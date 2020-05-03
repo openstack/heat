@@ -21,7 +21,6 @@ from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
 from oslo_serialization import jsonutils as json
 import requests
-import six
 
 from heat.common import exception
 from heat.engine.clients.os import nova
@@ -474,7 +473,7 @@ class NovaClientPluginMetadataTest(NovaClientPluginTestCase):
         """Prove that the user can only pass in a dict to nova metadata."""
         excp = self.assertRaises(exception.StackValidationFailed,
                                  self.nova_plugin.meta_serialize, "foo")
-        self.assertIn('metadata needs to be a Map', six.text_type(excp))
+        self.assertIn('metadata needs to be a Map', str(excp))
 
     def test_serialize_combined(self):
         original = {
