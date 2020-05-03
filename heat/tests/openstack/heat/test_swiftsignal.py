@@ -17,7 +17,6 @@ import uuid
 
 import mock
 from oslo_utils import timeutils
-import six
 from swiftclient import client as swiftclient_client
 from swiftclient import exceptions as swiftclient_exceptions
 from testtools import matchers
@@ -201,7 +200,7 @@ class SwiftSignalHandleTest(common.HeatTestCase):
                                 scheduler.TaskRunner(rsrc.delete))
         self.assertEqual('ClientException: '
                          'resources.test_wait_condition_handle: '
-                         'Overlimit: 413', six.text_type(exc))
+                         'Overlimit: 413', str(exc))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -232,7 +231,7 @@ class SwiftSignalHandleTest(common.HeatTestCase):
                                 scheduler.TaskRunner(rsrc.delete))
         self.assertEqual('ClientException: '
                          'resources.test_wait_condition_handle: '
-                         'Overlimit: 413', six.text_type(exc))
+                         'Overlimit: 413', str(exc))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -328,7 +327,7 @@ class SwiftSignalTest(common.HeatTestCase):
 
         st.create()
         self.assertIn('not a valid SwiftSignalHandle.  The Swift TempURL path',
-                      six.text_type(st.status_reason))
+                      str(st.status_reason))
 
     @mock.patch.object(swift.SwiftClientPlugin, 'get_signal_url')
     def test_validate_handle_url_bad_container_name(self, mock_handle_url):
@@ -341,7 +340,7 @@ class SwiftSignalTest(common.HeatTestCase):
 
         st.create()
         self.assertIn('not a valid SwiftSignalHandle.  The container name',
-                      six.text_type(st.status_reason))
+                      str(st.status_reason))
 
     @mock.patch.object(swift.SwiftClientPlugin, '_create')
     @mock.patch.object(resource.Resource, 'physical_resource_name')
@@ -391,7 +390,7 @@ class SwiftSignalTest(common.HeatTestCase):
 
         time_now = timeutils.utcnow()
         time_series = [datetime.timedelta(0, t) + time_now
-                       for t in six.moves.xrange(1, 100)]
+                       for t in range(1, 100)]
         timeutils.set_time_override(time_series)
         self.addCleanup(timeutils.clear_time_override)
 

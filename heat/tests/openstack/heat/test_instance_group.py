@@ -14,7 +14,6 @@
 import copy
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import grouputils
@@ -86,14 +85,14 @@ class TestInstanceGroup(common.HeatTestCase):
         props['LaunchConfigurationName'] = 'JobServerConfig'
         error = self.assertRaises(ValueError, self.instance_group.validate)
         self.assertIn('(JobServerConfig) reference can not be found',
-                      six.text_type(error))
+                      str(error))
         # test resource name of instance group not WebServerGroup, so no ref
         props['LaunchConfigurationName'] = 'LaunchConfig'
         error = self.assertRaises(ValueError, self.instance_group.validate)
         self.assertIn('LaunchConfigurationName (LaunchConfig) requires a '
                       'reference to the configuration not just the '
                       'name of the resource.',
-                      six.text_type(error))
+                      str(error))
         # test validate ok if change instance_group name to 'WebServerGroup'
         self.instance_group.name = 'WebServerGroup'
         self.instance_group.validate()
@@ -150,7 +149,7 @@ class TestInstanceGroup(common.HeatTestCase):
                                                                  '2.1.3.3'])
         mock_members = self.patchobject(grouputils, 'get_members')
         instances = []
-        for ip_ex in six.moves.range(1, 4):
+        for ip_ex in range(1, 4):
             inst = mock.Mock()
             inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
             instances.append(inst)
@@ -163,7 +162,7 @@ class TestInstanceGroup(common.HeatTestCase):
             side_effect=exception.NotFound)
         mock_members = self.patchobject(grouputils, 'get_members')
         instances = []
-        for ip_ex in six.moves.range(1, 4):
+        for ip_ex in range(1, 4):
             inst = mock.Mock()
             inst.FnGetAtt.return_value = '2.1.3.%d' % ip_ex
             instances.append(inst)
@@ -332,7 +331,7 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         self.assertEqual(
             "Unsupported resource 'ElasticLoadBalancer' in "
             "LoadBalancerNames",
-            six.text_type(error))
+            str(error))
 
     def test_lb_reload_static_resolve(self):
         t = template_format.parse(inline_templates.as_template)

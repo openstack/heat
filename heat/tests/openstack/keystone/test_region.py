@@ -12,7 +12,7 @@
 #    under the License.
 
 import mock
-from six.moves.urllib import parse
+from urllib import parse
 
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine import resource
