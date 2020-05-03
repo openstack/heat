@@ -17,7 +17,6 @@
 from keystoneauth1 import exceptions as keystone_exc
 import mock
 from oslo_config import cfg
-import six
 import webob
 
 from heat.common import auth_password
@@ -82,7 +81,7 @@ class FakeApp(object):
             if env[k] != v:
                 raise AssertionError('%s != %s' % (env[k], v))
         resp = webob.Response()
-        resp.body = six.b('SUCCESS')
+        resp.body = 'SUCCESS'.encode('latin-1')
         return resp(env, start_response)
 
 

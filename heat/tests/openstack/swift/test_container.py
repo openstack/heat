@@ -13,7 +13,6 @@
 
 
 import mock
-import six
 import swiftclient.client as sc
 
 from heat.common import exception
@@ -304,7 +303,7 @@ class SwiftTest(common.HeatTestCase):
                          container.state)
         self.assertIn('ResourceActionNotSupported: resources.test_resource: '
                       'Deleting non-empty container',
-                      six.text_type(ex))
+                      str(ex))
         mock_put.assert_called_once_with(container_name, {})
         mock_get.assert_called_once_with(container_name)
 
@@ -453,7 +452,7 @@ class SwiftTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, runner)
 
         # Verify
-        self.assertIn('boom', six.text_type(ex))
+        self.assertIn('boom', str(ex))
         self.assertEqual((container.CHECK, container.FAILED),
                          container.state)
 

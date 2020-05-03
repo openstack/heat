@@ -12,9 +12,8 @@
 #    under the License.
 
 import mock
-import six
 
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from heat.common import template_format
 from heat.engine.clients import client_plugin
@@ -214,7 +213,7 @@ class ZaqarMessageQueueTest(common.HeatTestCase):
                                 scheduler.TaskRunner(queue.update,
                                                      new_queue))
         msg = 'The Resource MyQueue2 requires replacement.'
-        self.assertEqual(msg, six.text_type(err))
+        self.assertEqual(msg, str(err))
 
     def test_show_resource(self):
         t = template_format.parse(wp_template)
