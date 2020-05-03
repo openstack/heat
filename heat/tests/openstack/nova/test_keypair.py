@@ -14,7 +14,6 @@
 import copy
 
 import mock
-import six
 
 from heat.common import exception
 from heat.engine.clients.os import keystone
@@ -155,9 +154,9 @@ class NovaKeyPairTest(common.HeatTestCase):
         kp_res = keypair.KeyPair('kp', definition, stack)
         error = self.assertRaises(exception.StackValidationFailed,
                                   kp_res.validate)
-        self.assertIn("Property error", six.text_type(error))
+        self.assertIn("Property error", str(error))
         self.assertIn("kp.properties.name: length (0) is out of "
-                      "range (min: 1, max: 255)", six.text_type(error))
+                      "range (min: 1, max: 255)", str(error))
 
     def test_create_key_excess_name_length(self):
         """Test creation of a keypair whose name is of excess length."""
@@ -169,9 +168,9 @@ class NovaKeyPairTest(common.HeatTestCase):
         kp_res = keypair.KeyPair('kp', definition, stack)
         error = self.assertRaises(exception.StackValidationFailed,
                                   kp_res.validate)
-        self.assertIn("Property error", six.text_type(error))
+        self.assertIn("Property error", str(error))
         self.assertIn("kp.properties.name: length (256) is out of "
-                      "range (min: 1, max: 255)", six.text_type(error))
+                      "range (min: 1, max: 255)", str(error))
 
     def _test_validate(self, key_type=None, user=None):
         template = copy.deepcopy(self.kp_template)
@@ -189,7 +188,7 @@ class NovaKeyPairTest(common.HeatTestCase):
                                   kp_res.validate)
         msg = (('Cannot use "%s" properties - nova does not support '
                 'required api microversion.') % validate_props)
-        self.assertIn(msg, six.text_type(error))
+        self.assertIn(msg, str(error))
 
     def test_validate_key_type(self):
         self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
@@ -217,7 +216,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         res.client().keypairs.get.side_effect = Exception("boom")
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.check))
-        self.assertIn("boom", six.text_type(exc))
+        self.assertIn("boom", str(exc))
         self.assertEqual((res.CHECK, res.FAILED), res.state)
 
     def test_update_replace(self):

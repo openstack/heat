@@ -15,7 +15,6 @@
 
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -147,7 +146,7 @@ class SaharaClusterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, create_task)
         expected = ('ResourceInError: resources.super-cluster: '
                     'Went to status Error due to "Unknown"')
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
 
     def test_cluster_check_delete_complete_error(self):
         cluster = self._create_cluster(self.t)
@@ -158,7 +157,7 @@ class SaharaClusterTest(common.HeatTestCase):
         delete_task = scheduler.TaskRunner(cluster.delete)
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
         expected = "APIException: resources.super-cluster: None"
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
         self.assertEqual(2, self.cl_mgr.get.call_count)
 
@@ -172,7 +171,7 @@ class SaharaClusterTest(common.HeatTestCase):
         ex = self.assertRaises(exception.ResourceFailure, delete_task)
         expected = ('ResourceInError: resources.super-cluster: '
                     'Went to status Error due to "Unknown"')
-        self.assertEqual(expected, six.text_type(ex))
+        self.assertEqual(expected, str(ex))
         self.cl_mgr.delete.assert_called_once_with(self.fake_cl.id)
         self.assertEqual(2, self.cl_mgr.get.call_count)
 
@@ -198,7 +197,7 @@ class SaharaClusterTest(common.HeatTestCase):
         self.assertIn("default_image_id must be provided: "
                       "Referenced cluster template some_cluster_template_id "
                       "has no default_image_id defined.",
-                      six.text_type(ex.message))
+                      str(ex.message))
 
     def test_cluster_validate_no_network_on_neutron_fails(self):
         self.t['resources']['super-cluster']['properties'].pop(
@@ -208,7 +207,7 @@ class SaharaClusterTest(common.HeatTestCase):
                                cluster.validate)
         error_msg = ('Property error: resources.super-cluster.properties: '
                      'Property neutron_management_network not assigned')
-        self.assertEqual(error_msg, six.text_type(ex))
+        self.assertEqual(error_msg, str(ex))
 
     def test_deprecated_properties_correctly_translates(self):
         tmpl = '''

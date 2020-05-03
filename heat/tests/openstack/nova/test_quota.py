@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -82,7 +81,7 @@ class NovaQuotaTest(common.HeatTestCase):
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resource.validate)
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn(error_msg, str(exc))
 
     def _test_invalid_property(self, prop_name):
         my_quota = self.stack['my_quota']

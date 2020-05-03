@@ -22,8 +22,7 @@ from novaclient import exceptions as nova_exceptions
 from oslo_serialization import jsonutils
 from oslo_utils import uuidutils
 import requests
-import six
-from six.moves.urllib import parse as urlparse
+from urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -319,14 +318,14 @@ class ServersTest(common.HeatTestCase):
 
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.check))
-        self.assertIn('boom', six.text_type(exc))
+        self.assertIn('boom', str(exc))
         self.assertEqual((res.CHECK, res.FAILED), res.state)
 
     def test_check_not_active(self):
         res = self._prepare_server_check(status='FOO')
         exc = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(res.check))
-        self.assertIn('FOO', six.text_type(exc))
+        self.assertIn('FOO', str(exc))
 
     def _get_test_template(self, stack_name, server_name=None,
                            image_id=None):
@@ -688,7 +687,7 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(server.create))
         self.assertIn("No image matching {'name': 'Slackware'}.",
-                      six.text_type(error))
+                      str(error))
 
     def test_server_duplicate_image_name_err(self):
         stack_name = 'img_dup_err'
@@ -707,7 +706,7 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure,
                                   scheduler.TaskRunner(server.create))
         self.assertIn('No image unique match found for CentOS 5.2.',
-                      six.text_type(error))
+                      str(error))
 
     def test_server_create_unexpected_status(self):
         # NOTE(pshchelo) checking is done only on check_create_complete
@@ -723,7 +722,7 @@ class ServersTest(common.HeatTestCase):
                               server.check_create_complete,
                               server.resource_id)
         self.assertEqual('Server is not active - Unknown status BOGUS due to '
-                         '"Unknown"', six.text_type(e))
+                         '"Unknown"', str(e))
 
     def test_server_create_error_status(self):
         # NOTE(pshchelo) checking is done only on check_create_complete
@@ -745,7 +744,7 @@ class ServersTest(common.HeatTestCase):
                               server.resource_id)
         self.assertEqual(
             'Went to status ERROR due to "Message: NoValidHost, Code: 500"',
-            six.text_type(e))
+            str(e))
 
     def test_server_create_raw_userdata(self):
         self.patchobject(nova.NovaClientPlugin, 'client',
@@ -1272,7 +1271,7 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.StackValidationFailed,
                                   servers.Server._check_maximum,
                                   2, 1, msg)
-        self.assertEqual(msg, six.text_type(error))
+        self.assertEqual(msg, str(error))
 
     def test_server_validate(self):
         stack_name = 'srv_val'
@@ -1318,7 +1317,7 @@ class ServersTest(common.HeatTestCase):
                                server.validate)
         self.assertEqual('Neither image nor bootable volume is specified for '
                          'instance server_with_bootable_volume',
-                         six.text_type(ex))
+                         str(ex))
 
         web_server['Properties']['image'] = ''
         server = create_server('vdb')
@@ -1385,7 +1384,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(
             "Property error: Resources.WebServer.Properties.key_name: "
             "Error validating value 'test2': The Key (test2) could not "
-            "be found.", six.text_type(error))
+            "be found.", str(error))
 
     def test_server_validate_software_config_invalid_meta(self):
         stack_name = 'srv_val_test'
@@ -1407,7 +1406,7 @@ class ServersTest(common.HeatTestCase):
                                   server.validate)
         self.assertEqual(
             "deployments key not allowed in resource metadata "
-            "with user_data_format of SOFTWARE_CONFIG", six.text_type(error))
+            "with user_data_format of SOFTWARE_CONFIG", str(error))
 
     def test_server_validate_with_networks(self):
         stack_name = 'srv_net'
@@ -1429,7 +1428,7 @@ class ServersTest(common.HeatTestCase):
 
         self.assertIn("Cannot define the following properties at "
                       "the same time: networks.network, networks.uuid",
-                      six.text_type(ex))
+                      str(ex))
 
     def test_server_validate_with_network_empty_ref(self):
         stack_name = 'srv_net'
@@ -1473,7 +1472,7 @@ class ServersTest(common.HeatTestCase):
                         '"allocate_network" or "subnet" should be set '
                         'for the specified network of '
                         'server "%s".') % server.name,
-                      six.text_type(ex))
+                      str(ex))
 
     def test_server_validate_with_network_floating_ip(self):
         stack_name = 'srv_net_floating_ip'
@@ -1498,7 +1497,7 @@ class ServersTest(common.HeatTestCase):
         self.assertIn(_('Property "floating_ip" is not supported if '
                         'only "network" is specified, because the '
                         'corresponding port can not be retrieved.'),
-                      six.text_type(ex))
+                      str(ex))
 
     def test_server_validate_with_networks_str_net(self):
         stack_name = 'srv_networks_str_nets'
@@ -1522,7 +1521,7 @@ class ServersTest(common.HeatTestCase):
                                server.validate)
         self.assertIn(_('Can not specify "allocate_network" with '
                         'other keys of networks at the same time.'),
-                      six.text_type(ex))
+                      str(ex))
 
     def test_server_validate_port_fixed_ip(self):
         stack_name = 'port_with_fixed_ip'
@@ -1543,7 +1542,7 @@ class ServersTest(common.HeatTestCase):
                                   server.validate)
         self.assertEqual("Cannot define the following properties at the same "
                          "time: networks/fixed_ip, networks/port.",
-                         six.text_type(error))
+                         str(error))
         # test if the 'port' doesn't reference with non-created resource
         tmpl['Resources']['server']['Properties']['networks'] = (
             [{'port': 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
@@ -1557,7 +1556,7 @@ class ServersTest(common.HeatTestCase):
                                   server.validate)
         self.assertEqual("Cannot define the following properties at the same "
                          "time: networks/fixed_ip, networks/port.",
-                         six.text_type(error))
+                         str(error))
 
     def test_server_validate_with_uuid_fixed_ip(self):
         stack_name = 'srv_net'
@@ -1622,7 +1621,7 @@ class ServersTest(common.HeatTestCase):
                                   server.validate)
         self.assertEqual("Cannot define the following properties at the same "
                          "time: security_groups, networks/port.",
-                         six.text_type(error))
+                         str(error))
 
     def test_server_delete(self):
         return_server = self.fc.servers.list()[1]
@@ -1671,7 +1670,7 @@ class ServersTest(common.HeatTestCase):
         resf = self.assertRaises(exception.ResourceFailure,
                                  scheduler.TaskRunner(server.delete))
         self.assertIn("Server %s delete failed" % return_server.name,
-                      six.text_type(resf))
+                      str(resf))
 
     def test_server_delete_error_task_in_progress(self):
         # test server in 'ERROR', but task state in nova is 'deleting'
@@ -1696,7 +1695,7 @@ class ServersTest(common.HeatTestCase):
         resf = self.assertRaises(exception.ResourceFailure,
                                  scheduler.TaskRunner(server.delete))
         self.assertIn("Server %s delete failed" % return_server.name,
-                      six.text_type(resf))
+                      str(resf))
 
     def test_server_soft_delete(self):
         return_server = self.fc.servers.list()[1]
@@ -2084,7 +2083,7 @@ class ServersTest(common.HeatTestCase):
                         self.assertEqual(exp_net[key], net[key])
                     break
 
-        for key in six.iterkeys(reality):
+        for key in reality.keys():
             self.assertEqual(expected[key], reality[key])
 
     def test_server_update_server_flavor(self):
@@ -2142,7 +2141,7 @@ class ServersTest(common.HeatTestCase):
         error = self.assertRaises(exception.ResourceFailure, updater)
         self.assertEqual(
             "Error: resources.srv_update2: Resizing to '2' failed, "
-            "status 'ERROR'", six.text_type(error))
+            "status 'ERROR'", str(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         mock_post.assert_called_once_with(body={'resize': {'flavorRef': '2'}})
 
@@ -2397,7 +2396,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(
             "Error: resources.srv_updrbldfail: "
             "Rebuilding server failed, status 'ERROR'",
-            six.text_type(error))
+            str(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
         mock_rebuild.assert_called_once_with(
             return_server, '2', password=None, preserve_ephemeral=False,
@@ -2440,7 +2439,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual('Error: resources.srv_sus1: '
                          'Cannot suspend srv_sus1, '
                          'resource_id not set',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
     def test_server_status_suspend_not_found(self):
@@ -2454,7 +2453,7 @@ class ServersTest(common.HeatTestCase):
                                scheduler.TaskRunner(server.suspend))
         self.assertEqual('NotFound: resources.srv_sus2: '
                          'Failed to find server 1234',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
     def _test_server_status_suspend(self, name, state=('CREATE', 'COMPLETE')):
@@ -2505,7 +2504,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual('Suspend of server %s failed - '
                          'Unknown status TRANSMOGRIFIED '
                          'due to "Unknown"' % return_server.name,
-                         six.text_type(ex.exc.message))
+                         str(ex.exc.message))
         self.assertEqual((server.SUSPEND, server.FAILED), server.state)
 
     def _test_server_status_resume(self, name, state=('SUSPEND', 'COMPLETE')):
@@ -2551,7 +2550,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual('Error: resources.srv_susp_norid: '
                          'Cannot resume srv_susp_norid, '
                          'resource_id not set',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual((server.RESUME, server.FAILED), server.state)
 
     def test_server_status_resume_not_found(self):
@@ -2569,7 +2568,7 @@ class ServersTest(common.HeatTestCase):
                                scheduler.TaskRunner(server.resume))
         self.assertEqual('NotFound: resources.srv_res_nf: '
                          'Failed to find server 1234',
-                         six.text_type(ex))
+                         str(ex))
         self.assertEqual((server.RESUME, server.FAILED), server.state)
 
     def test_server_status_build_spawning(self):
@@ -2665,7 +2664,7 @@ class ServersTest(common.HeatTestCase):
         resolver.side_effect = neutron.exceptions.NeutronClientNoUniqueMatch()
         ex = self.assertRaises(exception.ResourceFailure,
                                scheduler.TaskRunner(server.create))
-        self.assertIn('use an ID to be more specific.', six.text_type(ex))
+        self.assertIn('use an ID to be more specific.', str(ex))
 
     def test_server_without_ip_address(self):
         return_server = self.fc.servers.list()[3]
@@ -2765,7 +2764,7 @@ class ServersTest(common.HeatTestCase):
         self.stub_VolumeConstraint_validate()
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
-        self.assertIn("Value '10a' is not an integer", six.text_type(exc))
+        self.assertIn("Value '10a' is not an integer", str(exc))
 
     @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_conflict_block_device_mapping_props(self, mock_create):
@@ -2798,7 +2797,7 @@ class ServersTest(common.HeatTestCase):
                                server.validate)
         msg = ("Either volume_id or snapshot_id must be specified "
                "for device mapping vdb")
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_block_device_mapping_with_empty_ref(self, mock_create):
@@ -2836,7 +2835,7 @@ class ServersTest(common.HeatTestCase):
                                server.validate)
         msg = ('Neither image nor bootable volume is specified '
                'for instance %s' % server.name)
-        self.assertEqual(msg, six.text_type(ex))
+        self.assertEqual(msg, str(ex))
 
     @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_invalid_image_status(self, mock_create):
@@ -2854,7 +2853,7 @@ class ServersTest(common.HeatTestCase):
                                   server.validate)
         self.assertEqual(
             'Image status is required to be active not sdfsdf.',
-            six.text_type(error))
+            str(error))
 
     @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_insufficient_ram_flavor(self, mock_create):
@@ -2875,7 +2874,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(
             'Image F18-x86_64-gold requires 100 minimum ram. Flavor m1.large '
             'has only 4.',
-            six.text_type(error))
+            str(error))
 
     @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_image_flavor_not_found(self, mock_create):
@@ -2913,7 +2912,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual(
             'Image F18-x86_64-gold requires 100 GB minimum disk space. '
             'Flavor m1.large has only 4 GB.',
-            six.text_type(error))
+            str(error))
 
     def test_build_block_device_mapping_v2(self):
         self.assertIsNone(servers.Server._build_block_device_mapping_v2([]))
@@ -2989,7 +2988,7 @@ class ServersTest(common.HeatTestCase):
         server = servers.Server('server', resource_defns['server'], stack)
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
-        self.assertIn(msg, six.text_type(exc))
+        self.assertIn(msg, str(exc))
 
     @mock.patch.object(nova.NovaClientPlugin, 'client')
     def test_validate_with_both_blk_dev_map_and_blk_dev_map_v2(self,
@@ -3011,7 +3010,7 @@ class ServersTest(common.HeatTestCase):
                                 server.validate)
         msg = ('Cannot define the following properties at the same time: '
                'block_device_mapping, block_device_mapping_v2.')
-        self.assertEqual(msg, six.text_type(exc))
+        self.assertEqual(msg, str(exc))
 
     def _test_validate_bdm_v2(self, stack_name, bdm_v2, with_image=True,
                               error_msg=None, raise_exc=None):
@@ -3031,7 +3030,7 @@ class ServersTest(common.HeatTestCase):
         self.stub_VolumeConstraint_validate()
         if raise_exc:
             ex = self.assertRaises(raise_exc, server.validate)
-            self.assertIn(error_msg, six.text_type(ex))
+            self.assertIn(error_msg, str(ex))
         else:
             self.assertIsNone(server.validate())
 
@@ -3112,7 +3111,7 @@ class ServersTest(common.HeatTestCase):
         ex = self.assertRaises(exception.StackValidationFailed,
                                server.validate)
         self.assertIn('Instance metadata must not contain greater than 3 '
-                      'entries', six.text_type(ex))
+                      'entries', str(ex))
 
     def test_validate_metadata_okay(self):
         stack_name = 'srv_val_metadata'
@@ -3154,7 +3153,7 @@ class ServersTest(common.HeatTestCase):
                                 server.validate)
         self.assertEqual('Cannot use "tags" property - nova does not support '
                          'required api microversion.',
-                         six.text_type(exc))
+                         str(exc))
 
     def test_server_validate_too_many_personality(self):
         stack_name = 'srv_val'
@@ -3178,7 +3177,7 @@ class ServersTest(common.HeatTestCase):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 server.validate)
         self.assertEqual("The personality property may not contain "
-                         "greater than 5 entries.", six.text_type(exc))
+                         "greater than 5 entries.", str(exc))
 
     def test_server_validate_personality_okay(self):
         stack_name = 'srv_val'
@@ -3234,7 +3233,7 @@ class ServersTest(common.HeatTestCase):
                                 server.validate)
         self.assertEqual('The contents of personality file "/fake/path1" '
                          'is larger than the maximum allowed personality '
-                         'file size (10240 bytes).', six.text_type(exc))
+                         'file size (10240 bytes).', str(exc))
 
     def test_server_validate_personality_get_attr_return_none(self):
         stack_name = 'srv_val'
@@ -4166,7 +4165,7 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual("StackValidationFailed: resources.my_server: "
                          "Property error: Properties.image: Error validating "
                          "value '1': No image matching Update Image.",
-                         six.text_type(err))
+                         str(err))
 
     def test_server_snapshot(self):
         return_server = self.fc.servers.list()[1]
@@ -4585,7 +4584,7 @@ class ServerInternalPortTest(ServersTest):
         ex = self.assertRaises(exception.StackValidationFailed,
                                server._build_nics, networks)
         self.assertEqual('Specified subnet 1234 does not belongs to '
-                         'network 4321.', six.text_type(ex))
+                         'network 4321.', str(ex))
 
     def test_build_nics_create_internal_port_all_props_without_extras(self):
         tmpl = """
@@ -4986,7 +4985,7 @@ class ServerInternalPortTest(ServersTest):
                                 server.prepare_for_replace)
         self.assertIn('Failed to detach interface (1122) from server '
                       '(ser-11)',
-                      six.text_type(exc))
+                      str(exc))
 
     def test_prepare_ports_for_replace(self):
         t, stack, server = self._return_template_stack_and_rsrc_defn(
@@ -5161,7 +5160,7 @@ class ServerInternalPortTest(ServersTest):
                                 server.restore_prev_rsrc)
         self.assertIn('Failed to attach interface (3344) to server '
                       '(old_server)',
-                      six.text_type(exc))
+                      str(exc))
 
     @mock.patch.object(server_network_mixin.ServerNetworkMixin,
                        'store_external_ports')
