@@ -13,7 +13,6 @@
 
 from cinderclient.v2 import client as cinderclient
 import mock
-import six
 
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import nova
@@ -122,7 +121,7 @@ class FakeVolume(object):
 
     def __init__(self, status, **attrs):
         self.status = status
-        for key, value in six.iteritems(attrs):
+        for key, value in attrs.items():
             setattr(self, key, value)
         if 'id' not in attrs:
             self.id = self._ID

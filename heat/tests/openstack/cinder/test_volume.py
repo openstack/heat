@@ -18,7 +18,6 @@ import json
 from cinderclient import exceptions as cinder_exp
 import mock
 from oslo_config import cfg
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -119,7 +118,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
                                   self.t, stack, 'volume')
         self.assertEqual(
             "Property error: resources.volume.properties.size: "
-            "0 is out of range (min: 1, max: None)", six.text_type(error))
+            "0 is out of range (min: 1, max: None)", str(error))
 
     def test_cinder_create(self):
         fv = vt_base.FakeVolume('creating')
@@ -272,7 +271,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
                                   rsrc.FnGetAtt, 'unknown')
         self.assertEqual(
             'The Referenced Attribute (volume unknown) is incorrect.',
-            six.text_type(error))
+            str(error))
 
         self.cinder_fc.volumes.get.assert_called_with('vol-123')
 
@@ -358,7 +357,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         ex = self.assertRaises(exception.ResourceFailure, update_task)
         self.assertEqual('NotSupported: resources.volume: '
                          'Shrinking volume is not supported.',
-                         six.text_type(ex))
+                         str(ex))
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
 
@@ -408,7 +407,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
 
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
-        self.assertIn('Over limit', six.text_type(ex))
+        self.assertIn('Over limit', str(ex))
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.cinder_fc.volumes.extend.assert_called_once_with(fv.id, 2)
@@ -436,7 +435,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         update_task = scheduler.TaskRunner(rsrc.update, after)
         ex = self.assertRaises(exception.ResourceFailure, update_task)
         self.assertIn("Volume resize failed - Unknown status error_extending",
-                      six.text_type(ex))
+                      str(ex))
 
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.cinder_fc.volumes.extend.assert_called_once_with(fv.id, 2)
@@ -598,7 +597,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         ex = self.assertRaises(exception.ResourceFailure, update_task)
         self.assertEqual((rsrc.UPDATE, rsrc.FAILED), rsrc.state)
         self.assertIn("NotSupported: resources.volume2: Shrinking volume is "
-                      "not supported", six.text_type(ex))
+                      "not supported", str(ex))
 
         props = copy.deepcopy(rsrc.properties.data)
         props['size'] = 3
@@ -1006,7 +1005,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         vp.update(combinations)
         rsrc = stack['volume2']
         ex = self.assertRaises(exc, rsrc.validate)
-        self.assertEqual(err_msg, six.text_type(ex))
+        self.assertEqual(err_msg, str(ex))
 
     def test_cinder_create_with_image_and_imageRef(self):
         self.stack_name = 'test_create_with_image_and_imageRef'
@@ -1020,7 +1019,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         vp.update(combinations)
         rsrc = stack.get('volume2')
         ex = self.assertRaises(exception.StackValidationFailed, rsrc.validate)
-        self.assertIn(err_msg, six.text_type(ex))
+        self.assertIn(err_msg, str(ex))
 
     def test_cinder_create_with_image_and_size(self):
         self.stack_name = 'test_create_with_image_and_size'

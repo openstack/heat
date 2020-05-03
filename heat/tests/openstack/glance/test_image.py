@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from glanceclient import exc
 from heat.common import exception
@@ -116,7 +115,7 @@ class GlanceImageTest(common.HeatTestCase):
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resource.validate)
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn(error_msg, str(exc))
 
     def test_invalid_min_disk(self):
         # invalid 'min_disk'
@@ -482,7 +481,7 @@ class GlanceWebImageTest(common.HeatTestCase):
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
                                 resource.validate)
-        self.assertIn(error_msg, six.text_type(exc))
+        self.assertIn(error_msg, str(exc))
 
     def test_invalid_min_disk(self):
         # invalid 'min_disk'
