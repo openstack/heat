@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 
 from heat.common import exception
 from heat.common import template_format
@@ -112,7 +111,7 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
         expected_state = (ss.CREATE, ss.FAILED)
         self.assertEqual(expected_state, ss.state)
         self.assertIn('Exception: resources.security_service: error',
-                      six.text_type(exc))
+                      str(exc))
 
     def test_update(self):
         ss = self._create_resource('security_service', self.rsrc_defn,
@@ -142,4 +141,4 @@ class ManilaSecurityServiceTest(common.HeatTestCase):
         err = self.assertRaises(resource.UpdateReplace,
                                 scheduler.TaskRunner(ss.update, new_ss))
         msg = 'The Resource security_service requires replacement.'
-        self.assertEqual(msg, six.text_type(err))
+        self.assertEqual(msg, str(err))

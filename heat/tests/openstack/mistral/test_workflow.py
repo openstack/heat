@@ -12,7 +12,6 @@
 #    under the License.
 
 import mock
-import six
 import yaml
 
 from mistralclient.api import base as mistral_base
@@ -516,7 +515,7 @@ class TestMistralWorkflow(common.HeatTestCase):
             error_cls = exception.StackValidationFailed
 
         exc = self.assertRaises(error_cls, wf.validate)
-        self.assertEqual(error_msg, six.text_type(exc))
+        self.assertEqual(error_msg, str(exc))
 
     def test_create_wrong_definition(self):
         tmpl = template_format.parse(workflow_template)
@@ -533,7 +532,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         expected_state = (wf.CREATE, wf.FAILED)
         self.assertEqual(expected_state, wf.state)
         self.assertIn('Exception: resources.workflow: boom!',
-                      six.text_type(exc))
+                      str(exc))
 
     def test_update_replace(self):
         wf = self._create_resource('workflow')
@@ -550,7 +549,7 @@ class TestMistralWorkflow(common.HeatTestCase):
                                 scheduler.TaskRunner(wf.update,
                                                      new_workflow))
         msg = 'The Resource workflow requires replacement.'
-        self.assertEqual(msg, six.text_type(err))
+        self.assertEqual(msg, str(err))
 
     def test_update(self):
         wf = self._create_resource('workflow')
@@ -667,7 +666,7 @@ class TestMistralWorkflow(common.HeatTestCase):
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
         self.assertEqual('Exception: resources.create_vm: boom!',
-                         six.text_type(err))
+                         str(err))
 
     def test_signal_wrong_input_and_params_type(self):
         tmpl = template_format.parse(workflow_template_full)
@@ -680,22 +679,17 @@ class TestMistralWorkflow(common.HeatTestCase):
         details = {'input': '3'}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
-        if six.PY3:
-            entity = 'class'
-        else:
-            entity = 'type'
-        error_message = ("StackValidationFailed: resources.create_vm: "
-                         "Signal data error: Input in"
-                         " signal data must be a map, find a <%s 'str'>" %
-                         entity)
-        self.assertEqual(error_message, six.text_type(err))
+        error_message = "StackValidationFailed: resources.create_vm: " \
+                        "Signal data error: Input in" \
+                        " signal data must be a map, find a <class 'str'>"
+        self.assertEqual(error_message, str(err))
         details = {'params': '3'}
         err = self.assertRaises(exception.ResourceFailure,
                                 scheduler.TaskRunner(wf.signal, details))
         error_message = ("StackValidationFailed: resources.create_vm: "
                          "Signal data error: Params "
-                         "must be a map, find a <%s 'str'>" % entity)
-        self.assertEqual(error_message, six.text_type(err))
+                         "must be a map, find a <class 'str'>")
+        self.assertEqual(error_message, str(err))
 
     def test_signal_wrong_input_key(self):
         tmpl = template_format.parse(workflow_template_full)
@@ -710,7 +704,7 @@ class TestMistralWorkflow(common.HeatTestCase):
                                 scheduler.TaskRunner(wf.signal, details))
         error_message = ("StackValidationFailed: resources.create_vm: "
                          "Signal data error: Unknown input 1")
-        self.assertEqual(error_message, six.text_type(err))
+        self.assertEqual(error_message, str(err))
 
     def test_signal_with_body_as_input_and_delete_with_executions(self):
         tmpl = template_format.parse(workflow_template_full)
@@ -862,7 +856,7 @@ class TestMistralWorkflow(common.HeatTestCase):
                                workflow_rsrc.validate)
         error_msg = ("Cannot define the following properties at "
                      "the same time: tasks.retry, tasks.policies.retry")
-        self.assertIn(error_msg, six.text_type(ex))
+        self.assertIn(error_msg, str(ex))
 
     def validate_json_inputs(self, actual_input, expected_input):
         actual_json_input = jsonutils.loads(actual_input)

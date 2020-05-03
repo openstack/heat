@@ -15,7 +15,6 @@
 import mock
 from neutronclient.common import exceptions
 from neutronclient.v2_0 import client as neutronclient
-import six
 
 from heat.common import template_format
 from heat.engine.clients.os import neutron
@@ -294,10 +293,10 @@ class NeutronL2GatewayTest(common.HeatTestCase):
         self.l2gw_resource = self.stack['l2gw']
         self.assertIsNone(self.l2gw_resource.validate())
         self.assertEqual(
-            six.text_type('Resource CREATE failed: '
-                          'L2GatewaySegmentationRequired: resources.l2gw: '
-                          'L2 gateway segmentation id must be consistent for '
-                          'all the interfaces'),
+            'Resource CREATE failed: '
+            'L2GatewaySegmentationRequired: resources.l2gw: '
+            'L2 gateway segmentation id must be consistent for '
+            'all the interfaces',
             self.stack.status_reason)
         self.assertEqual((self.l2gw_resource.CREATE,
                          self.l2gw_resource.FAILED),
