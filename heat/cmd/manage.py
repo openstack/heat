@@ -185,7 +185,7 @@ def add_command_parsers(subparsers):
     parser.add_argument(
         '-b', '--batch_size', default='20',
         help=_('Number of stacks to delete at a time (per transaction). '
-               'Note that a single stack may have many db rows '
+               'Note that a single stack may have many DB rows '
                '(events, etc.) associated with it.'))
 
     # update_params parser

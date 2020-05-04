@@ -301,7 +301,7 @@ class StackTest(common.HeatTestCase):
 
         all_resources = list(self.stack.iter_resources())
 
-        # Verify, the db query is called with expected filter
+        # Verify, the DB query is called with expected filter
         mock_db_call.assert_called_once_with(self.ctx, self.stack.id)
 
         # And returns the resources
@@ -367,7 +367,7 @@ class StackTest(common.HeatTestCase):
             filters=dict(name=['A'])
         ))
 
-        # Verify, the db query is called with expected filter
+        # Verify, the DB query is called with expected filter
         mock_db_call.assert_has_calls([
             mock.call(self.ctx, self.stack.id, dict(name=['A'])),
             mock.call(self.ctx, self.stack.id),
@@ -438,7 +438,7 @@ class StackTest(common.HeatTestCase):
             filters=dict(name=['A'])
         ))
 
-        # Verify, the db query is called with expected filter
+        # Verify, the DB query is called with expected filter
         mock_db_call.assert_has_calls([
             mock.call(self.ctx, self.stack.id, dict(name=['A'])),
             mock.call(self.ctx, self.stack.id),

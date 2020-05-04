@@ -46,7 +46,7 @@ class SymmetricCrypto(object):
 
     Note: This is a reimplementation of the decryption algorithm from
     oslo-incubator, and is provided for backward compatibility. Once we have a
-    db migration script available to re-encrypt using new encryption method as
+    DB migration script available to re-encrypt using new encryption method as
     part of upgrade, this can be removed.
 
     :param enctype: Encryption Cipher name (default: AES)

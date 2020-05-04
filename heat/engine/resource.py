@@ -2062,7 +2062,7 @@ class Resource(status.ResourceStatus):
         try:
             resource_objects.Resource.delete(self.context, self.id)
         except exception.NotFound:
-            # Don't fail on delete if the db entry has
+            # Don't fail on delete if the DB entry has
             # not been created yet.
             pass
 
@@ -2077,7 +2077,7 @@ class Resource(status.ResourceStatus):
                     self.id,
                     {'physical_resource_id': self.resource_id})
             except Exception as ex:
-                LOG.warning('db error %s', ex)
+                LOG.warning('DB error %s', ex)
 
     def store(self, set_metadata=False, lock=LOCK_NONE):
         """Create the resource in the database.

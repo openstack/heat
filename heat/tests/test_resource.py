@@ -991,7 +991,7 @@ class ResourceTest(common.HeatTestCase):
         res.state_set(res.CREATE, res.IN_PROGRESS, 'test_store')
 
         # Modernity, the data is where it belongs
-        # The db object data is encrypted
+        # The DB object data is encrypted
         rsrc_prop_data_db_obj = db_api.resource_prop_data_get(
             self.stack.context, res._rsrc_prop_data_id)
         self.assertNotEqual(rsrc_prop_data_db_obj['data'], {'Foo': 'lucky'})
@@ -1970,7 +1970,7 @@ class ResourceTest(common.HeatTestCase):
                                   'prop4': ['a', 'list'],
                                   'prop5': True}
 
-        # The db data should be encrypted when _store() is called
+        # The DB data should be encrypted when _store() is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
         res._rsrc_prop_data = None
@@ -1979,7 +1979,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertNotEqual('string',
                             db_res.rsrc_prop_data.data['prop1'])
 
-        # The db data should be encrypted when state_set is called
+        # The DB data should be encrypted when state_set is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
         res.state_set(res.CREATE, res.IN_PROGRESS, 'test_store')
@@ -2015,7 +2015,7 @@ class ResourceTest(common.HeatTestCase):
                                   'prop4': ['a', 'list'],
                                   'prop5': True}
 
-        # The db data should not be encrypted when state_set()
+        # The DB data should not be encrypted when state_set()
         # is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
@@ -2024,7 +2024,7 @@ class ResourceTest(common.HeatTestCase):
         db_res = db_api.resource_get(res.context, res.id)
         self.assertEqual('string', db_res.rsrc_prop_data.data['prop1'])
 
-        # The db data should not be encrypted when _store() is called
+        # The DB data should not be encrypted when _store() is called
         res = generic_rsrc.GenericResource('test_res_enc', tmpl, self.stack)
         res._stored_properties_data = stored_properties_data
         db_res = db_api.resource_get(res.context, res.id)

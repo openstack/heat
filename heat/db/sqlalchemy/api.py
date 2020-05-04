@@ -340,7 +340,7 @@ def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
         else:
             # Someone else set the attr_id first and/or we have a stale
             # view of the resource based on atomic_key, so delete the
-            # resource_properties_data (attr) db row.
+            # resource_properties_data (attr) DB row.
             LOG.debug('Not updating res_id %(rid)s with attr_id %(aid)s',
                       {'rid': resource_id, 'aid': attr_id})
             session.query(
@@ -974,7 +974,7 @@ def user_creds_get(context, user_creds_id):
     db_result = context.session.query(models.UserCreds).get(user_creds_id)
     if db_result is None:
         return None
-    # Return a dict copy of db results, do not decrypt details into db_result
+    # Return a dict copy of DB results, do not decrypt details into db_result
     # or it can be committed back to the DB in decrypted form
     result = dict(db_result)
     del result['decrypt_method']
@@ -1808,7 +1808,7 @@ def db_encrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
     :param ctxt: RPC context
     :param encryption_key: key that will be used for parameter and property
                            encryption
-    :param batch_size: number of templates requested from db in each iteration.
+    :param batch_size: number of templates requested from DB in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
     :param verbose: log an INFO message when processing of each raw_template or
@@ -1832,7 +1832,7 @@ def db_decrypt_parameters_and_properties(ctxt, encryption_key, batch_size=50,
     :param ctxt: RPC context
     :param encryption_key: key that will be used for parameter and property
                            decryption
-    :param batch_size: number of templates requested from db in each iteration.
+    :param batch_size: number of templates requested from DB in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
     :param verbose: log an INFO message when processing of each raw_template or
@@ -1853,7 +1853,7 @@ def db_properties_data_migrate(ctxt, batch_size=50):
     """Migrate properties data from legacy columns to new location in db.
 
     :param ctxt: RPC context
-    :param batch_size: number of templates requested from db in each iteration.
+    :param batch_size: number of templates requested from DB in each iteration.
                        50 means that heat requests 50 templates, encrypt them
                        and proceed with next 50 items.
     """
