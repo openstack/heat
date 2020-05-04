@@ -1731,6 +1731,7 @@ class Resource(status.ResourceStatus):
         """
         pass
 
+    @scheduler.wrappertask
     def check(self):
         """Checks that the physical resource is in its expected state.
 
@@ -1752,7 +1753,7 @@ class Resource(status.ResourceStatus):
                 raise failure
 
             with self.frozen_properties():
-                return self._do_action(action)
+                yield self._do_action(action)
         else:
             if self.state == (self.INIT, self.COMPLETE):
                 # No need to store status; better to leave the resource in
@@ -1777,6 +1778,7 @@ class Resource(status.ResourceStatus):
         if invalid_checks:
             raise exception.Error('; '.join(invalid_checks))
 
+    @scheduler.wrappertask
     def suspend(self):
         """Return a task to suspend the resource.
 
@@ -1796,8 +1798,9 @@ class Resource(status.ResourceStatus):
 
         LOG.info('suspending %s', self)
         with self.frozen_properties():
-            return self._do_action(action)
+            yield self._do_action(action)
 
+    @scheduler.wrappertask
     def resume(self):
         """Return a task to resume the resource.
 
@@ -1817,13 +1820,14 @@ class Resource(status.ResourceStatus):
 
         LOG.info('resuming %s', self)
         with self.frozen_properties():
-            return self._do_action(action)
+            yield self._do_action(action)
 
+    @scheduler.wrappertask
     def snapshot(self):
         """Snapshot the resource and return the created data, if any."""
         LOG.info('snapshotting %s', self)
         with self.frozen_properties():
-            return self._do_action(self.SNAPSHOT)
+            yield self._do_action(self.SNAPSHOT)
 
     @scheduler.wrappertask
     def delete_snapshot(self, data):
