@@ -37,11 +37,11 @@ class ProviderNet(net.Net):
     PROPERTIES = (
         NAME, PROVIDER_NETWORK_TYPE, PROVIDER_PHYSICAL_NETWORK,
         PROVIDER_SEGMENTATION_ID, ADMIN_STATE_UP, SHARED,
-        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL, TAGS,
+        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL, DNS_DOMAIN, TAGS,
     ) = (
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
-        'port_security_enabled', 'router_external', 'tags',
+        'port_security_enabled', 'router_external', 'dns_domain', 'tags',
 
     )
 
@@ -109,6 +109,15 @@ class ProviderNet(net.Net):
             schema=properties.Schema(properties.Schema.STRING),
             update_allowed=True,
             support_status=support.SupportStatus(version='12.0.0')
+        ),
+        DNS_DOMAIN: properties.Schema(
+            properties.Schema.STRING,
+            _('DNS domain associated with this network.'),
+            constraints=[
+                constraints.CustomConstraint('dns_domain')
+            ],
+            update_allowed=True,
+            support_status=support.SupportStatus(version='14.0.0')
         ),
     }
 
