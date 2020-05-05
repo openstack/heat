@@ -352,7 +352,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                              self.stack.current_traversal,
                                              self.is_update, self.resource,
                                              self.stack)
-        mock_rcr.assert_called_once_with(self.ctx, self.is_update,
+        mock_rcr.assert_called_once_with(self.ctx,
                                          self.resource.id, updated_stack)
 
     def test_check_stack_complete_is_invoked_for_replaced_resource(
@@ -385,8 +385,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         # A, B are predecessors to C when is_update is True
         expected_predecessors = {(self.stack['A'].id, True),
                                  (self.stack['B'].id, True)}
-        self.cr.retrigger_check_resource(self.ctx, self.is_update,
-                                         resC.id, self.stack)
+        self.cr.retrigger_check_resource(self.ctx, resC.id, self.stack)
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, resC.id,
                                          self.stack.current_traversal,
                                          mock.ANY, (resC.id, True), None,
@@ -403,7 +402,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             [(1, False), (1, True)], [(2, False), None]])
         # simulate rsrc 2 completing its update for old traversal
         # and calling rcr
-        self.cr.retrigger_check_resource(self.ctx, True, 2, self.stack)
+        self.cr.retrigger_check_resource(self.ctx, 2, self.stack)
         # Ensure that pcr was called with proper delete traversal
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
@@ -418,7 +417,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
             [(1, False), (1, True)], [(2, False), (2, True)]])
         # simulate rsrc 2 completing its delete for old traversal
         # and calling rcr
-        self.cr.retrigger_check_resource(self.ctx, False, 2, self.stack)
+        self.cr.retrigger_check_resource(self.ctx, 2, self.stack)
         # Ensure that pcr was called with proper delete traversal
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
