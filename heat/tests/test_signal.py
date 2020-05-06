@@ -12,10 +12,10 @@
 #    under the License.
 
 import datetime
+from unittest import mock
+from urllib import parse as urlparse
 
 from keystoneauth1 import exceptions as kc_exceptions
-import mock
-from urllib import parse as urlparse
 
 from heat.common import exception
 from heat.common import template_format

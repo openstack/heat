@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from heat.engine.clients.os import neutron
 from heat.engine.resources.openstack.neutron.sfc import port_chain

@@ -12,7 +12,7 @@
 #    under the License.
 
 
-import mock
+from unittest import mock
 import yaml
 
 from neutronclient.common import exceptions

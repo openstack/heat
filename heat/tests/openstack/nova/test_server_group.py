@@ -12,8 +12,7 @@
 #    under the License.
 
 import json
-
-import mock
+from unittest import mock
 
 from heat.common import template_format
 from heat.engine import scheduler

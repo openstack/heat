@@ -12,9 +12,9 @@
 #    under the License.
 
 import collections
+from unittest import mock
 
 from barbicanclient import exceptions
-import mock
 
 from heat.common import exception
 from heat.engine.clients.os import barbican

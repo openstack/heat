@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from heat.common import lifecycle_plugin_utils
 from heat.engine import lifecycle_plugin

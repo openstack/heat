@@ -13,9 +13,9 @@
 
 import contextlib
 import itertools
+from unittest import mock
 
 import eventlet
-import mock
 
 from heat.common import timeutils
 from heat.engine import dependencies

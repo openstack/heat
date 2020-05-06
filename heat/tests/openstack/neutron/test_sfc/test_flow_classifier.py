@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import mock
+from unittest import mock
 
 from heat.engine.resources.openstack.neutron.sfc import flow_classifier
 from heat.engine import stack

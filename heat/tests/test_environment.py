@@ -13,9 +13,9 @@
 
 import os.path
 import sys
+from unittest import mock
 
 import fixtures
-import mock
 from oslo_config import cfg
 
 from heat.common import environment_format

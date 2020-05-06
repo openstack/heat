@@ -14,9 +14,9 @@
 import copy
 import datetime
 import json
+from unittest import mock
 import uuid
 
-import mock
 from oslo_utils import timeutils
 from urllib import parse
 

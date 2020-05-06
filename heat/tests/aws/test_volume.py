@@ -12,9 +12,9 @@
 #    under the License.
 
 import copy
+from unittest import mock
 
 from cinderclient import exceptions as cinder_exp
-import mock
 from oslo_config import cfg
 
 from heat.common import exception

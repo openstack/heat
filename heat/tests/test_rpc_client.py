@@ -18,8 +18,8 @@ Unit Tests for heat.rpc.client
 """
 
 import copy
+from unittest import mock
 
-import mock
 from oslo_messaging._drivers import common as rpc_common
 from oslo_utils import reflection
 

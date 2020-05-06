@@ -12,9 +12,9 @@
 #    under the License.
 
 import datetime
+from unittest import mock
 import uuid
 
-import mock
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
 

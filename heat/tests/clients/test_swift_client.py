@@ -12,8 +12,8 @@
 #    under the License.
 
 import datetime
+from unittest import mock
 
-import mock
 import pytz
 from testtools import matchers
 

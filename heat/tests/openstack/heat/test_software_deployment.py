@@ -14,9 +14,8 @@
 import contextlib
 import copy
 import re
+from unittest import mock
 import uuid
-
-import mock
 
 from oslo_serialization import jsonutils
 

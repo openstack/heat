@@ -13,8 +13,8 @@
 
 import collections
 import copy
+from unittest import mock
 
-import mock
 from neutronclient.common import exceptions as neutron_exc
 from neutronclient.v2_0 import client as neutronclient
 

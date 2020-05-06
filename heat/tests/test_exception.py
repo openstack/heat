@@ -15,8 +15,9 @@
 #    under the License.
 
 
+from unittest import mock
+
 import fixtures
-import mock
 
 from heat.common import exception
 from heat.common.i18n import _

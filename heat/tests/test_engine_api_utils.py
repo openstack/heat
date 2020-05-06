@@ -13,9 +13,9 @@
 
 import datetime as dt
 import json
+from unittest import mock
 import uuid
 
-import mock
 from oslo_utils import timeutils
 
 from heat.common import exception

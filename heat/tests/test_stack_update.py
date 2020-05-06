@@ -12,8 +12,8 @@
 #    under the License.
 
 import copy
+from unittest import mock
 
-import mock
 
 from heat.common import exception
 from heat.common import template_format

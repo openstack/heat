@@ -14,9 +14,8 @@
 import collections
 import json
 import os
+from unittest import mock
 import uuid
-
-import mock
 
 from heat.common import exception
 from heat.common.i18n import _

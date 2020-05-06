@@ -12,11 +12,11 @@
 #    under the License.
 """Tests for :module:'heat.engine.clients.os.cinder'."""
 
+from unittest import mock
 import uuid
 
 from cinderclient import exceptions as cinder_exc
 from keystoneauth1 import exceptions as ks_exceptions
-import mock
 
 from heat.common import exception
 from heat.engine.clients.os import cinder

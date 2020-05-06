@@ -12,8 +12,7 @@
 #    under the License.
 
 import copy
-
-import mock
+from unittest import mock
 
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine import properties

@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
 import uuid
 
-import mock
 from saharaclient.api import base as sahara_base
 
 from heat.common import exception

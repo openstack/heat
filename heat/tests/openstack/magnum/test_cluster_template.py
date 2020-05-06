@@ -12,7 +12,8 @@
 #    under the License.
 
 import copy
-import mock
+from unittest import mock
+
 from neutronclient.neutron import v2_0 as neutronV20
 
 from heat.common import exception

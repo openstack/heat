@@ -11,8 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from unittest import mock
+
 from cinderclient.v2 import client as cinderclient
-import mock
 
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import nova

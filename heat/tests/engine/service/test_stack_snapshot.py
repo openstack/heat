@@ -10,9 +10,9 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from unittest import mock
 import uuid
 
-import mock
 from oslo_messaging.rpc import dispatcher
 
 from heat.common import exception
