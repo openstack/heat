@@ -220,7 +220,7 @@ def format_stack(stack, preview=False, resolve_outputs=True):
         rpc_api.STACK_OWNER: stack.username,
         rpc_api.STACK_PARENT: stack.owner_id,
         rpc_api.STACK_USER_PROJECT_ID: stack.stack_user_project_id,
-        rpc_api.STACK_TAGS: stack.tags or None,
+        rpc_api.STACK_TAGS: stack.tags,
     }
 
     if not preview:

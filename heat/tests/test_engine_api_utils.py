@@ -397,7 +397,7 @@ class FormatTest(common.HeatTestCase):
             'outputs': [],
             'template_description': 'No description',
             'timeout_mins': None,
-            'tags': None,
+            'tags': [],
             'parameters': {
                 'AWS::Region': 'ap-southeast-1',
                 'AWS::StackId': aws_id,
