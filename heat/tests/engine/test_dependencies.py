@@ -30,8 +30,8 @@ class dependenciesTest(common.HeatTestCase):
 
         self.assertEqual(len(nodes), len(order))
 
-        for l, f in deps:
-            checkorder(order.index(f), order.index(l))
+        for lr, fr in deps:
+            checkorder(order.index(fr), order.index(lr))
 
     def _dep_test_fwd(self, *deps):
         def assertLess(a, b):

@@ -482,7 +482,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
 
     def _get_nested_identifier(self, stack_identifier, res_name):
         rsrc = self.client.resources.get(stack_identifier, res_name)
-        nested_link = [l for l in rsrc.links if l['rel'] == 'nested']
+        nested_link = [lk for lk in rsrc.links if lk['rel'] == 'nested']
         nested_href = nested_link[0]['href']
         nested_id = nested_href.split('/')[-1]
         nested_identifier = '/'.join(nested_href.split('/')[-2:])
@@ -524,7 +524,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                     if (filter_func(r) if callable(filter_func) else True))
 
     def get_resource_stack_id(self, r):
-        stack_link = [l for l in r.links if l.get('rel') == 'stack'][0]
+        stack_link = [lk for lk in r.links if lk.get('rel') == 'stack'][0]
         return stack_link['href'].split("/")[-1]
 
     def get_physical_resource_id(self, stack_identifier, resource_name):

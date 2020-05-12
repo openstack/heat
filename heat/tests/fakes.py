@@ -58,7 +58,7 @@ class FakeClient(object):
                 break
 
         if not found:
-            raise AssertionError('Expected %s %s; got %s' %
+            raise AssertionError('Expected %s; got %s' %
                                  (expected, self.client.callstack))
         if body is not None:
             if entry[2] != body:
