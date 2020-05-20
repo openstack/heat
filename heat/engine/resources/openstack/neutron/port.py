@@ -53,11 +53,11 @@ class Port(neutron.NeutronResource):
     EXTRA_PROPERTIES = (
         VALUE_SPECS, ADMIN_STATE_UP, MAC_ADDRESS,
         ALLOWED_ADDRESS_PAIRS, VNIC_TYPE, QOS_POLICY,
-        PORT_SECURITY_ENABLED,
+        PORT_SECURITY_ENABLED, PROPAGATE_UPLINK_STATUS,
     ) = (
         'value_specs', 'admin_state_up', 'mac_address',
         'allowed_address_pairs', 'binding:vnic_type', 'qos_policy',
-        'port_security_enabled',
+        'port_security_enabled', 'propagate_uplink_status',
     )
 
     _FIXED_IP_KEYS = (
@@ -77,12 +77,13 @@ class Port(neutron.NeutronResource):
         MAC_ADDRESS_ATTR, NAME_ATTR, NETWORK_ID_ATTR, SECURITY_GROUPS_ATTR,
         STATUS, TENANT_ID, ALLOWED_ADDRESS_PAIRS_ATTR, SUBNETS_ATTR,
         PORT_SECURITY_ENABLED_ATTR, QOS_POLICY_ATTR, DNS_ASSIGNMENT,
-        NETWORK_ATTR,
+        NETWORK_ATTR, PROPAGATE_UPLINK_STATUS_ATTR,
     ) = (
         'admin_state_up', 'device_id', 'device_owner', 'fixed_ips',
         'mac_address', 'name', 'network_id', 'security_groups',
         'status', 'tenant_id', 'allowed_address_pairs', 'subnets',
         'port_security_enabled', 'qos_policy_id', 'dns_assignment', 'network',
+        'propagate_uplink_status',
     )
 
     properties_schema = {
@@ -305,6 +306,12 @@ class Port(neutron.NeutronResource):
             update_allowed=True,
             support_status=support.SupportStatus(version='6.0.0')
         ),
+        PROPAGATE_UPLINK_STATUS: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Flag to enable/disable propagate uplink status on the port.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='15.0.0')
+        ),
     }
 
     # Need to update properties_schema with other properties before
@@ -393,6 +400,11 @@ class Port(neutron.NeutronResource):
               "``{get_attr: [<port>, network, l2_adjacency]}``."),
             type=attributes.Schema.MAP,
             support_status=support.SupportStatus(version='11.0.0'),
+        ),
+        PROPAGATE_UPLINK_STATUS_ATTR: attributes.Schema(
+            _("Enable/Disable propagate uplink status for the port."),
+            support_status=support.SupportStatus(version='15.0.0'),
+            type=attributes.Schema.BOOLEAN
         ),
     }
 

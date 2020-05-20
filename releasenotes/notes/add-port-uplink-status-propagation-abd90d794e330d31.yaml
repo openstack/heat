@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added ``propagate_uplink_status`` property to resource type
+    ``OS::Neutron::Port``. This resource depends on Neutron API
+    extension ``uplink-status-propagation`` and the default is
+    ``False``. If this property is set to ``True``, the VF link
+    state can follow that of PF.

@@ -68,6 +68,18 @@ resources:
 '''
 
 
+neutron_port_propagate_ul_status_template = '''
+heat_template_version: 2015-04-30
+description: Template to test port Neutron resource
+resources:
+  port:
+    type: OS::Neutron::Port
+    properties:
+      network: abcd1234
+      propagate_uplink_status: True
+'''
+
+
 class NeutronPortTest(common.HeatTestCase):
 
     def setUp(self):
@@ -233,6 +245,34 @@ class NeutronPortTest(common.HeatTestCase):
         self.create_mock.assert_called_once_with({'port': {
             'network_id': u'abcd1234',
             'port_security_enabled': False,
+            'name': utils.PhysName(stack.name, 'port'),
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_id': '',
+            'device_owner': ''
+            }})
+
+    def test_port_propagate_uplink_status(self):
+        t = template_format.parse(neutron_port_propagate_ul_status_template)
+        stack = utils.parse_stack(t)
+
+        self.find_mock.return_value = 'abcd1234'
+
+        self.create_mock.return_value = {'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }}
+
+        self.port_show_mock.return_value = {'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+        }}
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.create_mock.assert_called_once_with({'port': {
+            'network_id': u'abcd1234',
+            'propagate_uplink_status': True,
             'name': utils.PhysName(stack.name, 'port'),
             'admin_state_up': True,
             'binding:vnic_type': 'normal',
@@ -580,6 +620,7 @@ class NeutronPortTest(common.HeatTestCase):
                         'ipv4_address_scope': None, 'description': '',
                         'subnets': [subnet_dict['id']],
                         'port_security_enabled': True,
+                        'propagate_uplink_status': True,
                         'tenant_id': '58a61fc3992944ce971404a2ece6ff98',
                         'tags': [], 'ipv6_address_scope': None,
                         'project_id': '58a61fc3992944ce971404a2ece6ff98',
@@ -883,6 +924,7 @@ class NeutronPortTest(common.HeatTestCase):
             'tenant_id': '30f466e3d14b4251853899f9c26e2b66',
             'binding:profile': {},
             'port_security_enabled': True,
+            'propagate_uplink_status': True,
             'binding:vnic_type': 'normal',
             'fixed_ips': [
                 {'subnet_id': '02d9608f-8f30-4611-ad02-69855c82457f',
@@ -902,6 +944,7 @@ class NeutronPortTest(common.HeatTestCase):
             'admin_state_up': True,
             'device_owner': '',
             'port_security_enabled': True,
+            'propagate_uplink_status': True,
             'binding:vnic_type': 'normal',
             'fixed_ips': [
                 {'subnet': '02d9608f-8f30-4611-ad02-69855c82457f',
