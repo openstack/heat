@@ -94,14 +94,14 @@ config_generator_config_file = '../../config-generator.conf'
 sample_config_basename = '_static/heat'
 
 # openstackdocstheme options
-repository_name = 'openstack/heat'
-bug_project = '989'
-bug_tag = 'docs'
+openstackdocs_repo_name = 'openstack/heat'
+openstackdocs_pdf_link = True
+openstackdocs_use_storyboard = True
 
 todo_include_todos = True
 
 # openstackdocstheme external link helper projects
-openstack_projects = [
+openstackdocs_projects = [
     'devstack',
     'diskimage-builder',
     'keystone',
@@ -158,7 +158,7 @@ exclude_patterns = ['**/#*', '**~', '**/#*#']
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'native'
 
 # A list of ignored prefixes for module index sorting.
 modindex_common_prefix = ['heat.']
