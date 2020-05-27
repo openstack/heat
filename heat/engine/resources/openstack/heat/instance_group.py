@@ -140,6 +140,10 @@ class InstanceGroup(stack_resource.StackResource):
                                           schema=rolling_update_schema)
     }
 
+    def get_size(self):
+        """Get desired size."""
+        return self.properties[self.SIZE]
+
     def validate(self):
         """Add validation for update_policy."""
         self.validate_launchconfig()
@@ -335,7 +339,12 @@ class InstanceGroup(stack_resource.StackResource):
         old_template = group_data.template()
 
         capacity = group_data.size(include_failed=True)
-        batches = list(self._get_batches(capacity, batch_size, min_in_service))
+
+        target_capacity = min(self.get_size() or capacity, capacity)
+
+        batches = list(self._get_batches(target_capacity,
+                                         capacity, batch_size,
+                                         min_in_service))
 
         update_timeout = self._update_timeout(len(batches), pause_sec)
 
@@ -359,7 +368,7 @@ class InstanceGroup(stack_resource.StackResource):
             self._lb_reload()
 
     @staticmethod
-    def _get_batches(capacity, batch_size, min_in_service):
+    def _get_batches(target_capacity, capacity, batch_size, min_in_service):
         """Return an iterator over the batches in a batched update.
 
         Each batch is a tuple comprising the total size of the group after
@@ -368,15 +377,14 @@ class InstanceGroup(stack_resource.StackResource):
         updating an existing one).
         """
 
-        efft_capacity = capacity
         updated = 0
 
-        while rolling_update.needs_update(capacity, efft_capacity, updated):
-            batch = rolling_update.next_batch(capacity, efft_capacity,
+        while rolling_update.needs_update(target_capacity, capacity, updated):
+            batch = rolling_update.next_batch(target_capacity, capacity,
                                               updated, batch_size,
                                               min_in_service)
             yield batch
-            efft_capacity, num_updates = batch
+            capacity, num_updates = batch
             updated += num_updates
 
     def _check_for_completion(self, updater):
