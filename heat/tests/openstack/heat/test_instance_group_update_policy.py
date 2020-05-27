@@ -298,5 +298,6 @@ class InstanceGroupReplaceTest(common.HeatTestCase):
 
         group = instgrp.InstanceGroup('asg', defn, stack)
         group._group_data().size = mock.Mock(return_value=12)
+        group.get_size = mock.Mock(return_value=12)
         self.assertRaises(ValueError,
                           group._replace, 10, 1, 14 * 60)
