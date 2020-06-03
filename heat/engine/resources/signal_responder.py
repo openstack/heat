@@ -15,6 +15,7 @@ from keystoneclient.contrib.ec2 import utils as ec2_utils
 from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
+from oslo_utils import timeutils
 from six.moves.urllib import parse as urlparse
 
 from heat.common import exception
@@ -124,10 +125,6 @@ class SignalResponder(stack_user.StackUser):
 
         :param signal_type: either WAITCONDITION or SIGNAL.
         """
-        stored = self.data().get('ec2_signed_url')
-        if stored is not None:
-            return stored
-
         access_key = self.data().get('access_key')
         secret_key = self.data().get('secret_key')
 
@@ -170,7 +167,7 @@ class SignalResponder(stack_user.StackUser):
                               'SignatureVersion': '2',
                               'AWSAccessKeyId': access_key,
                               'Timestamp':
-                              self.created_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+                              timeutils.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
                               }}
         # Sign the request
         signer = ec2_utils.Ec2Signer(secret_key)
@@ -180,7 +177,6 @@ class SignalResponder(stack_user.StackUser):
         url = "%s%s?%s" % (signal_url.lower(),
                            path, qs)
 
-        self.data_set('ec2_signed_url', url)
         return url
 
     def _delete_ec2_signed_url(self):
