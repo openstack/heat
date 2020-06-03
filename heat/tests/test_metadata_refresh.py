@@ -16,6 +16,7 @@ from oslo_serialization import jsonutils
 from heat.common import identifier
 from heat.common import template_format
 from heat.engine.clients.os import glance
+from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import nova
 from heat.engine import environment
 from heat.engine.resources.aws.cfn.wait_condition_handle import (
@@ -222,14 +223,16 @@ class WaitConditionMetadataUpdateTest(common.HeatTestCase):
 
     @mock.patch.object(nova.NovaClientPlugin, 'find_flavor_by_name_or_id')
     @mock.patch.object(glance.GlanceClientPlugin, 'find_image_by_name_or_id')
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_cfn_url')
     @mock.patch.object(instance.Instance, 'handle_create')
     @mock.patch.object(instance.Instance, 'check_create_complete')
     @mock.patch.object(scheduler.TaskRunner, '_sleep')
     @mock.patch.object(WaitConditionHandle, 'identifier')
     def test_wait_metadata(self, mock_identifier, mock_sleep,
-                           mock_check, mock_handle, *args):
+                           mock_check, mock_handle, mock_get, *args):
         """Tests a wait condition metadata update after a signal call."""
 
+        mock_get.return_value = 'http://server.test:8000/v1'
         # Setup Stack
         temp = template_format.parse(TEST_TEMPLATE_WAIT_CONDITION)
         template = tmpl.Template(temp)
