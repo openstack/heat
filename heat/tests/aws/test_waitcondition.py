@@ -374,7 +374,9 @@ class WaitConditionHandleTest(common.HeatTestCase):
     def test_handle(self):
         stack_id = 'STACKABCD1234'
         stack_name = 'test_stack2'
-        created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
+        now = datetime.datetime(2012, 11, 29, 13, 49, 37)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
         self.stack = self.create_stack(stack_id=stack_id,
                                        stack_name=stack_name)
 
@@ -386,7 +388,6 @@ class WaitConditionHandleTest(common.HeatTestCase):
         # clear the url
         rsrc.data_set('ec2_signed_url', None, False)
 
-        rsrc.created_time = created_time
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         connection_url = "".join([
             'http://server.test:8000/v1/waitcondition/',

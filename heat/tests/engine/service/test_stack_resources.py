@@ -17,6 +17,7 @@ from oslo_messaging.rpc import dispatcher
 
 from heat.common import exception
 from heat.common import identifier
+from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine import dependencies
@@ -451,11 +452,13 @@ class StackResourcesServiceTest(common.HeatTestCase):
         self.assertEqual(exception.InvalidBreakPointHook,
                          ex.exc_info[0])
 
+    @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_cfn_url')
     @mock.patch.object(res.Resource, 'metadata_update')
     @mock.patch.object(res.Resource, 'signal')
     @mock.patch.object(service.EngineService, '_get_stack')
     def test_signal_calls_metadata_update(self, mock_get, mock_signal,
-                                          mock_update):
+                                          mock_update, mock_get_cfn):
+        mock_get_cfn.return_value = 'http://server.test:8000/v1'
         # fake keystone client
         self.patchobject(keystone.KeystoneClientPlugin, '_create',
                          return_value=fake_ks.FakeKeystoneClient())

@@ -40,6 +40,15 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         'SUCCESS',
     )
 
+    def _get_ec2_signed_url(self, signal_type=signal_responder.WAITCONDITION):
+        stored = self.data().get('ec2_signed_url')
+        if stored is not None:
+            return stored
+        url = super(BaseWaitConditionHandle,
+                    self)._get_ec2_signed_url(signal_type)
+        self.data_set('ec2_signed_url', url)
+        return url
+
     def handle_create(self):
         super(BaseWaitConditionHandle, self).handle_create()
         self.resource_id_set(self._get_user_id())
