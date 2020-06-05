@@ -375,7 +375,8 @@ class Workflow(signal_responder.SignalResponder,
         ALARM_URL: attributes.Schema(
             _("A signed url to create executions for workflows specified in "
               "Workflow resource."),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         EXECUTIONS: attributes.Schema(
             _("List of workflows' executions, each of them is a dictionary "
@@ -660,7 +661,7 @@ class Workflow(signal_responder.SignalResponder,
                     self.INPUT: self.properties.get(self.INPUT)}
 
         elif name == self.ALARM_URL and self.resource_id is not None:
-            return str(self._get_ec2_signed_url())
+            return str(self._get_ec2_signed_url(never_expire=True))
 
 
 def resource_mapping():

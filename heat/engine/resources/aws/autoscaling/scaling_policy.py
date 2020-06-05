@@ -83,7 +83,8 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
     attributes_schema = {
         ALARM_URL: attributes.Schema(
             _("A signed url to handle the alarm. (Heat extension)."),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
     }
 
@@ -99,7 +100,7 @@ class AWSScalingPolicy(heat_sp.AutoScalingPolicy):
 
     def get_reference_id(self):
         if self.resource_id is not None:
-            return str(self._get_ec2_signed_url())
+            return str(self._get_ec2_signed_url(never_expire=True))
         else:
             return str(self.name)
 

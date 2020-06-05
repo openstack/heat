@@ -180,7 +180,8 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
         DEFAULT_EXECUTION_URL: attributes.Schema(
             _("A signed url to create execution specified in "
               "default_execution_data property."),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         EXECUTIONS: attributes.Schema(
             _("List of the job executions."),
@@ -296,7 +297,7 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
 
     def _resolve_attribute(self, name):
         if name == self.DEFAULT_EXECUTION_URL:
-            return str(self._get_ec2_signed_url())
+            return str(self._get_ec2_signed_url(never_expire=True))
         elif name == self.EXECUTIONS:
             try:
                 job_execs = self.client().job_executions.find(

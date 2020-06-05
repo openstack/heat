@@ -182,7 +182,6 @@ class ScalingPolicyAttrTest(common.HeatTestCase):
         self.assertEqual('Signature', args[1].split('=')[0])
         self.assertEqual('SignatureMethod', args[2].split('=')[0])
         self.assertEqual('SignatureVersion', args[3].split('=')[0])
-        self.assertEqual('Timestamp', args[4].split('=')[0])
 
     def test_signal_attribute(self):
         heat_plugin = self.stack.clients.client_plugin('heat')
