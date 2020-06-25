@@ -31,6 +31,7 @@
           [[local|localrc]]
           enable_plugin heat https://opendev.org/openstack/heat
           TEMPEST_PLUGINS+=' ../heat-tempest-plugin'
+          NOVA_ALLOW_MOVE_TO_SAME_HOST=True
           EOF
         executable: /bin/bash
         chdir: '{{ ansible_user_dir }}/workspace'
