@@ -508,17 +508,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     def _detach_volume_to_complete(self, prg_detach):
         if not prg_detach.called:
-            # Waiting OS-EXT-STS:task_state in server to become available for
-            # detach
-            task_state = self.client_plugin('nova').fetch_server_attr(
-                prg_detach.srv_id, 'OS-EXT-STS:task_state')
-            # Wait till out of any resize steps (including resize_finish)
-            if task_state is not None and 'resize' in task_state:
-                prg_detach.called = False
-            else:
-                self.client_plugin('nova').detach_volume(prg_detach.srv_id,
-                                                         prg_detach.attach_id)
-                prg_detach.called = True
+            prg_detach.called = self.client_plugin(
+                'nova').detach_volume(prg_detach.srv_id,
+                                      prg_detach.attach_id)
             return False
         if not prg_detach.cinder_complete:
             prg_detach.cinder_complete = self.client_plugin(
@@ -533,16 +525,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     def _attach_volume_to_complete(self, prg_attach):
         if not prg_attach.called:
-            # Waiting OS-EXT-STS:task_state in server to become available for
-            # attach
-            task_state = self.client_plugin('nova').fetch_server_attr(
-                prg_attach.srv_id, 'OS-EXT-STS:task_state')
-            # Wait till out of any resize steps (including resize_finish)
-            if task_state is not None and 'resize' in task_state:
-                prg_attach.called = False
-            else:
-                prg_attach.called = self.client_plugin('nova').attach_volume(
-                    prg_attach.srv_id, prg_attach.vol_id, prg_attach.device)
+            prg_attach.called = self.client_plugin('nova').attach_volume(
+                prg_attach.srv_id, prg_attach.vol_id, prg_attach.device)
             return False
         if not prg_attach.complete:
             prg_attach.complete = self.client_plugin(
@@ -768,17 +752,8 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
             prg_detach = progress.VolumeDetachProgress(
                 server_id, volume_id, self.resource_id)
 
-            # Waiting OS-EXT-STS:task_state in server to become available for
-            # detach
-            server = self.client_plugin('nova').fetch_server(server_id)
-            task_state = getattr(server, 'OS-EXT-STS:task_state', None)
-            # Wait till out of any resize steps (including resize_finish)
-            if task_state is not None and 'resize' in task_state:
-                prg_detach.called = False
-            else:
-                self.client_plugin('nova').detach_volume(server_id,
-                                                         self.resource_id)
-                prg_detach.called = True
+            prg_detach.called = self.client_plugin(
+                'nova').detach_volume(server_id, self.resource_id)
 
             if self.VOLUME_ID in prop_diff:
                 volume_id = prop_diff.get(self.VOLUME_ID)
@@ -811,16 +786,8 @@ class CinderVolumeAttachment(vb.BaseVolumeAttachment):
                                                      self.resource_id)
             return False
         if not prg_attach.called:
-            # Waiting OS-EXT-STS:task_state in server to become available for
-            # attach
-            server = self.client_plugin('nova').fetch_server(prg_attach.srv_id)
-            task_state = getattr(server, 'OS-EXT-STS:task_state', None)
-            # Wait till out of any resize steps (including resize_finish)
-            if task_state is not None and 'resize' in task_state:
-                prg_attach.called = False
-            else:
-                prg_attach.called = self.client_plugin('nova').attach_volume(
-                    prg_attach.srv_id, prg_attach.vol_id, prg_attach.device)
+            prg_attach.called = self.client_plugin('nova').attach_volume(
+                prg_attach.srv_id, prg_attach.vol_id, prg_attach.device)
             return False
         if not prg_attach.complete:
             prg_attach.complete = self.client_plugin(
