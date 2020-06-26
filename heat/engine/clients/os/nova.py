@@ -696,7 +696,9 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
                 volume_id=volume_id,
                 device=device)
         except Exception as ex:
-            if self.is_client_exception(ex):
+            if self.is_conflict(ex):
+                return False
+            elif self.is_client_exception(ex):
                 raise exception.Error(_(
                     "Failed to attach volume %(vol)s to server %(srv)s "
                     "- %(err)s") % {'vol': volume_id,
@@ -711,12 +713,15 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         try:
             self.client().volumes.delete_server_volume(server_id, attach_id)
         except Exception as ex:
-            if not (self.is_not_found(ex)
-                    or self.is_bad_request(ex)):
+            if self.is_conflict(ex):
+                return False
+            elif not (self.is_not_found(ex)
+                      or self.is_bad_request(ex)):
                 raise exception.Error(
                     _("Could not detach attachment %(att)s "
                       "from server %(srv)s.") % {'srv': server_id,
                                                  'att': attach_id})
+        return True
 
     def check_detach_volume_complete(self, server_id, attach_id):
         """Check that nova server lost attachment.
