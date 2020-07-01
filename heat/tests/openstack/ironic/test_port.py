@@ -12,8 +12,9 @@
 #    under the License.
 
 import copy
+from unittest import mock
+
 from ironicclient.common.apiclient import exceptions as ic_exc
-import mock
 from oslo_config import cfg
 
 from heat.common import exception
