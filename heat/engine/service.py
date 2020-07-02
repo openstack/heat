@@ -2296,14 +2296,14 @@ class EngineService(service.ServiceBase):
             msg = _("Migration of nested stack %s") % stack_id
             raise exception.NotSupported(feature=msg)
 
-        if parent_stack.status != parent_stack.COMPLETE:
-            raise exception.ActionNotComplete(stack_name=parent_stack.name,
-                                              action=parent_stack.action)
-
         if parent_stack.convergence:
             LOG.info("Convergence was already enabled for stack %s",
                      stack_id)
             return
+
+        if parent_stack.status != parent_stack.COMPLETE:
+            raise exception.ActionNotComplete(stack_name=parent_stack.name,
+                                              action=parent_stack.action)
 
         db_stacks = stack_object.Stack.get_all_by_root_owner_id(
             ctxt, parent_stack.id)
