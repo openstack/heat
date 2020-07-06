@@ -2110,6 +2110,7 @@ class StackUpdateTest(common.HeatTestCase):
 
             def update(self, after, before=None, prev_resource=None):
                 ResourceTypeB.count_b += 1
+                yield
 
         resource._register_class('ResourceTypeB', ResourceTypeB)
 
@@ -2124,6 +2125,7 @@ class StackUpdateTest(common.HeatTestCase):
 
             def update(self, after, before=None, prev_resource=None):
                 ResourceTypeA.count_a += 1
+                yield
 
         resource._register_class('ResourceTypeA', ResourceTypeA)
 

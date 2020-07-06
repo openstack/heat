@@ -45,7 +45,6 @@ class StackUpdate(object):
         else:
             return '%s Update' % str(self.existing_stack)
 
-    @scheduler.wrappertask
     def __call__(self):
         """Return a co-routine that updates the stack."""
 
@@ -63,10 +62,10 @@ class StackUpdate(object):
             error_wait_time=get_error_wait_time)
 
         if not self.rollback:
-            yield cleanup_prev()
+            yield from cleanup_prev()
 
         try:
-            yield updater()
+            yield from updater()
         finally:
             self.previous_stack.reset_dependencies()
 
@@ -76,12 +75,11 @@ class StackUpdate(object):
         else:
             return self._process_existing_resource_update(res)
 
-    @scheduler.wrappertask
     def _remove_backup_resource(self, prev_res):
         if prev_res.state not in ((prev_res.INIT, prev_res.COMPLETE),
                                   (prev_res.DELETE, prev_res.COMPLETE)):
             LOG.debug("Deleting backup resource %s", prev_res.name)
-            yield prev_res.destroy()
+            yield from prev_res.destroy()
 
     @staticmethod
     def _exchange_stacks(existing_res, prev_res):
@@ -91,7 +89,6 @@ class StackUpdate(object):
         prev_stack.add_resource(existing_res)
         existing_stack.add_resource(prev_res)
 
-    @scheduler.wrappertask
     def _create_resource(self, new_res):
         res_name = new_res.name
 
@@ -110,7 +107,7 @@ class StackUpdate(object):
                     return
 
                 LOG.debug("Deleting backup Resource %s", res_name)
-                yield prev_res.destroy()
+                yield from prev_res.destroy()
 
         # Back up existing resource
         if res_name in self.existing_stack:
@@ -131,7 +128,7 @@ class StackUpdate(object):
             self.previous_stack.t.add_resource(new_res.t)
             self.previous_stack.t.store(self.previous_stack.context)
 
-        yield new_res.create()
+        yield from new_res.create()
 
         self._update_resource_data(new_res)
 
@@ -160,7 +157,6 @@ class StackUpdate(object):
         stk_defn.update_resource_data(self.new_stack.defn,
                                       resource.name, node_data)
 
-    @scheduler.wrappertask
     def _process_new_resource_update(self, new_res):
         res_name = new_res.name
 
@@ -169,9 +165,9 @@ class StackUpdate(object):
             is_substituted = existing_res.check_is_substituted(type(new_res))
             if type(existing_res) is type(new_res) or is_substituted:
                 try:
-                    yield self._update_in_place(existing_res,
-                                                new_res,
-                                                is_substituted)
+                    yield from self._update_in_place(existing_res,
+                                                     new_res,
+                                                     is_substituted)
                 except resource.UpdateReplace:
                     pass
                 else:
@@ -195,7 +191,7 @@ class StackUpdate(object):
             else:
                 self._check_replace_restricted(new_res)
 
-        yield self._create_resource(new_res)
+        yield from self._create_resource(new_res)
 
     def _update_in_place(self, existing_res, new_res, is_substituted=False):
         existing_snippet = self.existing_snippets[existing_res.name]
@@ -214,15 +210,15 @@ class StackUpdate(object):
             existing_res.stack.resources[existing_res.name] = substitute
             existing_res = substitute
         existing_res.converge = self.new_stack.converge
-        return existing_res.update(new_snippet, existing_snippet,
-                                   prev_resource=prev_res)
+        yield from existing_res.update(new_snippet, existing_snippet,
+                                       prev_resource=prev_res)
 
-    @scheduler.wrappertask
     def _process_existing_resource_update(self, existing_res):
         res_name = existing_res.name
 
         if res_name in self.previous_stack:
-            yield self._remove_backup_resource(self.previous_stack[res_name])
+            backup_res = self.previous_stack[res_name]
+            yield from self._remove_backup_resource(backup_res)
 
         if res_name in self.new_stack:
             new_res = self.new_stack[res_name]
@@ -231,7 +227,7 @@ class StackUpdate(object):
                 return
 
         if existing_res.stack is not self.previous_stack:
-            yield existing_res.destroy()
+            yield from existing_res.destroy()
 
         if res_name not in self.new_stack:
             self.existing_stack.remove_resource(res_name)
