@@ -348,7 +348,7 @@ class KeystoneRoleAssignmentMixinTest(common.HeatTestCase):
             ({'role': 'role_1', 'user': 'user_1', 'domain': 'domain_1'},)
         ]
 
-        self.assertItemsEqual(expected, self.roles.revoke.call_args_list)
+        self.assertCountEqual(expected, self.roles.revoke.call_args_list)
 
     def test_validate_1(self):
         self.test_role_assignment.properties = mock.MagicMock()
