@@ -658,7 +658,7 @@ def stack_get_all_by_root_owner_id(context, owner_id):
 
 
 def _get_sort_keys(sort_keys, mapping):
-    """Returns an array containing only whitelisted keys
+    """Returns an array containing only allowed keys
 
     :param sort_keys: an array of strings
     :param mapping: a mapping from keys to DB column names
@@ -770,11 +770,11 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
                     rpc_api.STACK_STATUS: models.Stack.status.key,
                     rpc_api.STACK_CREATION_TIME: models.Stack.created_at.key,
                     rpc_api.STACK_UPDATED_TIME: models.Stack.updated_at.key}
-    whitelisted_sort_keys = _get_sort_keys(sort_keys, sort_key_map)
+    valid_sort_keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Stack, filters)
     return _paginate_query(context, query, models.Stack, limit,
-                           whitelisted_sort_keys, marker, sort_dir)
+                           valid_sort_keys, marker, sort_dir)
 
 
 def stack_count_all(context, filters=None,
@@ -1059,12 +1059,12 @@ def _events_filter_and_page_query(context, query,
 
     sort_key_map = {rpc_api.EVENT_TIMESTAMP: models.Event.created_at.key,
                     rpc_api.EVENT_RES_TYPE: models.Event.resource_type.key}
-    whitelisted_sort_keys = _get_sort_keys(sort_keys, sort_key_map)
+    valid_sort_keys = _get_sort_keys(sort_keys, sort_key_map)
 
     query = db_filters.exact_filter(query, models.Event, filters)
 
     return _events_paginate_query(context, query, models.Event, limit,
-                                  whitelisted_sort_keys, marker, sort_dir)
+                                  valid_sort_keys, marker, sort_dir)
 
 
 def event_count_all_by_stack(context, stack_id):
