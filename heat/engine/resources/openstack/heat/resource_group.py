@@ -322,24 +322,24 @@ class ResourceGroup(stack_resource.StackResource):
             raise exception.StackValidationFailed(
                 ex, path=[self.stack.t.RESOURCES, path])
 
-    def _current_blacklist(self):
+    def _current_skiplist(self):
         db_rsrc_names = self.data().get('name_blacklist')
         if db_rsrc_names:
             return db_rsrc_names.split(',')
         else:
             return []
 
-    def _get_new_blacklist_entries(self, properties, current_blacklist):
+    def _get_new_skiplist_entries(self, properties, current_skiplist):
         insp = grouputils.GroupInspector.from_parent_resource(self)
 
-        # Now we iterate over the removal policies, and update the blacklist
+        # Now we iterate over the removal policies, and update the skiplist
         # with any additional names
         for r in properties.get(self.REMOVAL_POLICIES, []):
             if self.REMOVAL_RSRC_LIST in r:
                 # Tolerate string or int list values
                 for n in r[self.REMOVAL_RSRC_LIST]:
                     str_n = str(n)
-                    if (str_n in current_blacklist or
+                    if (str_n in current_skiplist or
                             self.resource_id is None or
                             str_n in insp.member_names(include_failed=True)):
                         yield str_n
@@ -364,52 +364,52 @@ class ResourceGroup(stack_resource.StackResource):
         # outdated values after stack update.
         self._outputs = None
 
-    def _update_name_blacklist(self, properties):
+    def _update_name_skiplist(self, properties):
         """Resolve the remove_policies to names for removal."""
         # To avoid reusing names after removal, we store a comma-separated
-        # blacklist in the resource data - in cases where you want to
+        # skiplist in the resource data - in cases where you want to
         # overwrite the stored data, removal_policies_mode: update can be used
-        curr_bl = set(self._current_blacklist())
+        curr_sl = set(self._current_skiplist())
         p_mode = properties.get(self.REMOVAL_POLICIES_MODE,
                                 self.REMOVAL_POLICY_APPEND)
         if p_mode == self.REMOVAL_POLICY_UPDATE:
-            init_bl = set()
+            init_sl = set()
         else:
-            init_bl = curr_bl
-        updated_bl = init_bl | set(self._get_new_blacklist_entries(properties,
-                                                                   curr_bl))
+            init_sl = curr_sl
+        updated_sl = init_sl | set(self._get_new_skiplist_entries(properties,
+                                                                  curr_sl))
 
-        # If the blacklist has changed, update the resource data
-        if updated_bl != curr_bl:
-            self.data_set('name_blacklist', ','.join(sorted(updated_bl)))
+        # If the skiplist has changed, update the resource data
+        if updated_sl != curr_sl:
+            self.data_set('name_blacklist', ','.join(sorted(updated_sl)))
 
-    def _name_blacklist(self):
-        """Get the list of resource names to blacklist."""
-        bl = set(self._current_blacklist())
+    def _name_skiplist(self):
+        """Get the list of resource names to skiplist."""
+        sl = set(self._current_skiplist())
         if self.resource_id is None:
-            bl |= set(self._get_new_blacklist_entries(self.properties, bl))
-        return bl
+            sl |= set(self._get_new_skiplist_entries(self.properties, sl))
+        return sl
 
     def _resource_names(self, size=None):
-        name_blacklist = self._name_blacklist()
+        name_skiplist = self._name_skiplist()
         if size is None:
             size = self.get_size()
 
-        def is_blacklisted(name):
-            return name in name_blacklist
+        def is_skipped(name):
+            return name in name_skiplist
 
         candidates = map(str, itertools.count())
 
-        return itertools.islice(itertools.filterfalse(is_blacklisted,
+        return itertools.islice(itertools.filterfalse(is_skipped,
                                                       candidates),
                                 size)
 
-    def _count_black_listed(self, existing_members):
-        """Return the number of current resource names that are blacklisted."""
-        return len(self._name_blacklist() & set(existing_members))
+    def _count_skipped(self, existing_members):
+        """Return the number of current resource names that are skipped."""
+        return len(self._name_skiplist() & set(existing_members))
 
     def handle_create(self):
-        self._update_name_blacklist(self.properties)
+        self._update_name_skiplist(self.properties)
         if self.update_policy.get(self.BATCH_CREATE) and self.get_size():
             batch_create = self.update_policy[self.BATCH_CREATE]
             max_batch_size = batch_create[self.MAX_BATCH_SIZE]
@@ -468,7 +468,7 @@ class ResourceGroup(stack_resource.StackResource):
         checkers = []
         self.properties = json_snippet.properties(self.properties_schema,
                                                   self.context)
-        self._update_name_blacklist(self.properties)
+        self._update_name_skiplist(self.properties)
         if prop_diff and self.res_def_changed(prop_diff):
             updaters = self._try_rolling_update()
             if updaters:
@@ -491,7 +491,7 @@ class ResourceGroup(stack_resource.StackResource):
 
     def get_attribute(self, key, *path):
         if key == self.REMOVED_RSRC_LIST:
-            return self._current_blacklist()
+            return self._current_skiplist()
         if key == self.ATTR_ATTRIBUTES and not path:
             raise exception.InvalidTemplateAttribute(resource=self.name,
                                                      key=key)
@@ -680,11 +680,11 @@ class ResourceGroup(stack_resource.StackResource):
                                      template_version=('heat_template_version',
                                                        '2015-04-30')):
         names = list(self._resource_names(total_capacity))
-        name_blacklist = self._name_blacklist()
+        name_skiplist = self._name_skiplist()
 
         valid_resources = [(n, d) for n, d in
                            grouputils.get_member_definitions(self)
-                           if n not in name_blacklist]
+                           if n not in name_skiplist]
 
         targ_cap = self.get_size()
 
@@ -728,7 +728,7 @@ class ResourceGroup(stack_resource.StackResource):
 
     def _resolve_attribute(self, name):
         if name == self.REMOVED_RSRC_LIST:
-            return self._current_blacklist()
+            return self._current_skiplist()
 
     def _update_timeout(self, batch_cnt, pause_sec):
         total_pause_time = pause_sec * max(batch_cnt - 1, 0)
@@ -761,12 +761,12 @@ class ResourceGroup(stack_resource.StackResource):
             while not duration.expired():
                 yield
 
-        # current capacity not including existing blacklisted
+        # current capacity not including existing skiplisted
         inspector = grouputils.GroupInspector.from_parent_resource(self)
-        num_blacklist = self._count_black_listed(
+        num_skiplist = self._count_skipped(
             inspector.member_names(include_failed=False))
         num_resources = inspector.size(include_failed=True)
-        curr_cap = num_resources - num_blacklist
+        curr_cap = num_resources - num_skiplist
 
         batches = list(self._get_batches(self.get_size(), curr_cap, batch_size,
                                          min_in_service))
