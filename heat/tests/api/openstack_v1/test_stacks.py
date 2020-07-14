@@ -313,7 +313,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             req.context, ('list_stacks', default_args), version='1.33')
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
+    def test_index_bogus_pagination_param(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'limit': 10,
@@ -351,7 +351,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
+    def test_index_bogus_filter_param(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'id': 'fake id',
@@ -381,7 +381,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             'parent': 'fake parent',
             'stack_user_project_id': 'fake project id',
             'tags': 'fake tags',
-            'barlog': 'you shall not pass!'
+            'balrog': 'you shall not pass!'
         }
         req = self._get('/stacks', params=params)
         mock_call.return_value = []
@@ -403,7 +403,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         for key in ('stack_identity', 'creation_time', 'updated_time',
                     'deletion_time', 'notification_topics', 'description',
                     'template_description', 'parameters', 'outputs',
-                    'capabilities', 'tags', 'barlog'):
+                    'capabilities', 'tags', 'balrog'):
             self.assertNotIn(key, filters)
 
     def test_index_returns_stack_count_if_with_count_is_true(

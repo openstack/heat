@@ -204,7 +204,7 @@ class StackController(object):
             raise exc.HTTPBadRequest(str(e))
 
     def _index(self, req, use_admin_cnxt=False):
-        filter_whitelist = {
+        filter_param_types = {
             # usage of keys in this list are not encouraged, please use
             # rpc_api.STACK_KEYS instead
             'id': util.PARAM_TYPE_MIXED,
@@ -215,7 +215,7 @@ class StackController(object):
             'username': util.PARAM_TYPE_MIXED,
             'owner_id': util.PARAM_TYPE_MIXED,
         }
-        whitelist = {
+        param_types = {
             'limit': util.PARAM_TYPE_SINGLE,
             'marker': util.PARAM_TYPE_SINGLE,
             'sort_dir': util.PARAM_TYPE_SINGLE,
@@ -228,7 +228,7 @@ class StackController(object):
             'not_tags': util.PARAM_TYPE_SINGLE,
             'not_tags_any': util.PARAM_TYPE_SINGLE,
         }
-        params = util.get_allowed_params(req.params, whitelist)
+        params = util.get_allowed_params(req.params, param_types)
         stack_keys = dict.fromkeys(rpc_api.STACK_KEYS, util.PARAM_TYPE_MIXED)
         unsupported = (
             rpc_api.STACK_ID,  # not user visible
@@ -246,7 +246,7 @@ class StackController(object):
         for key in unsupported:
             stack_keys.pop(key)
         # downward compatibility
-        stack_keys.update(filter_whitelist)
+        stack_keys.update(filter_param_types)
         filter_params = util.get_allowed_params(req.params, stack_keys)
 
         show_deleted = False
@@ -519,8 +519,8 @@ class StackController(object):
         raise exc.HTTPAccepted()
 
     def _param_show_nested(self, req):
-        whitelist = {'show_nested': 'single'}
-        params = util.get_allowed_params(req.params, whitelist)
+        param_types = {'show_nested': util.PARAM_TYPE_SINGLE}
+        params = util.get_allowed_params(req.params, param_types)
 
         p_name = 'show_nested'
         if p_name in params:
@@ -604,9 +604,9 @@ class StackController(object):
 
         data = InstantiationData(body)
 
-        whitelist = {'show_nested': util.PARAM_TYPE_SINGLE,
-                     'ignore_errors': util.PARAM_TYPE_SINGLE}
-        params = util.get_allowed_params(req.params, whitelist)
+        param_types = {'show_nested': util.PARAM_TYPE_SINGLE,
+                       'ignore_errors': util.PARAM_TYPE_SINGLE}
+        params = util.get_allowed_params(req.params, param_types)
 
         show_nested = False
         p_name = rpc_api.PARAM_SHOW_NESTED

@@ -374,7 +374,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         )
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_index_whitelists_pagination_params(self, mock_call, mock_enforce):
+    def test_index_bogus_pagination_param(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'limit': 10,
@@ -428,7 +428,7 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertFalse(mock_call.called)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
-    def test_index_whitelist_filter_params(self, mock_call, mock_enforce):
+    def test_index_bogus_filter_param(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {
             'resource_status': 'COMPLETE',
