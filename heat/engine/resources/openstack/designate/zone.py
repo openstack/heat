@@ -18,6 +18,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
+from heat.engine import translation
 
 
 class DesignateZone(resource.Resource):
@@ -31,9 +32,9 @@ class DesignateZone(resource.Resource):
         version='8.0.0')
 
     PROPERTIES = (
-        NAME, TTL, DESCRIPTION, EMAIL, TYPE, MASTERS
+        NAME, TTL, DESCRIPTION, EMAIL, TYPE, PRIMARIES, MASTERS
     ) = (
-        'name', 'ttl', 'description', 'email', 'type', 'masters'
+        'name', 'ttl', 'description', 'email', 'type', 'primaries', 'masters'
     )
 
     ATTRIBUTES = (
@@ -80,17 +81,28 @@ class DesignateZone(resource.Resource):
         TYPE: properties.Schema(
             properties.Schema.STRING,
             _('Type of zone. PRIMARY is controlled by Designate, SECONDARY '
-              'zones are slaved from another DNS Server.'),
+              'zones are transferred from another DNS Server.'),
             default=PRIMARY,
             constraints=[constraints.AllowedValues(
                 allowed=TYPES)]
         ),
         MASTERS: properties.Schema(
             properties.Schema.LIST,
-            _('The servers to slave from to get DNS information and is '
-              'mandatory for zone type SECONDARY, otherwise ignored.'),
+            _('The primary servers to transfer DNS zone information from. '
+              'Mandatory for zone type SECONDARY, otherwise ignored.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(
+                status=support.DEPRECATED,
+                version='15.0.0',
+                message=_('Use ``primaries`` instead.')
+            )
+        ),
+        PRIMARIES: properties.Schema(
+            properties.Schema.LIST,
+            _('The primary servers to transfer DNS zone information from. '
+              'Mandatory for zone type SECONDARY, otherwise ignored.'),
             update_allowed=True
-        )
+        ),
     }
 
     attributes_schema = {
@@ -119,6 +131,17 @@ class DesignateZone(resource.Resource):
 
         raise_invalid_exception(self.PRIMARY, self.EMAIL)
         raise_invalid_exception(self.SECONDARY, self.MASTERS)
+
+    def translation_rules(self, props):
+        return [
+            # Translate to "masters" as that is what the Designate API uses,
+            # even though we have deprecated that name for the property
+            # in favour of "primaries".
+            translation.TranslationRule(props,
+                                        translation.TranslationRule.REPLACE,
+                                        translation_path=[self.MASTERS],
+                                        value_name=self.PRIMARIES)
+        ]
 
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items() if v)

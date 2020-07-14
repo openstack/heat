@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ``OS::Designate::Zone`` resource type's ``masters`` property is now
+    known as ``primaries``. Existing templates will continue to work.
