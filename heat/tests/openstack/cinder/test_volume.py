@@ -17,6 +17,7 @@ import json
 
 from cinderclient import exceptions as cinder_exp
 import mock
+from novaclient import exceptions as nova_exp
 from oslo_config import cfg
 import six
 
@@ -907,7 +908,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
                                      fv1, fva,
                                      vt_base.FakeVolume('available'), fv2])
         self.stub_VolumeConstraint_validate()
-
         # delete script
         self.fc.volumes.get_server_volume.side_effect = [
             fva, fva, fakes_nova.fake_exception()]
@@ -916,10 +916,12 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         stack = utils.parse_stack(self.t, stack_name=self.stack_name)
 
         self.create_volume(self.t, stack, 'volume')
-
         rsrc = self.create_attachment(self.t, stack, 'attachment')
         prg_detach = mock.MagicMock(cinder_complete=True, nova_complete=True)
         prg_attach = mock.MagicMock(called=False, srv_id='InstanceInResize')
+        self.fc.volumes.create_server_volume.side_effect = [
+            nova_exp.Conflict('409')]
+
         self.assertEqual(False,
                          rsrc.check_update_complete((prg_detach, prg_attach)))
         self.assertEqual(False, prg_attach.called)
@@ -1276,7 +1278,8 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.cinder_fc.volumes.create.return_value = fv
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
-
+        self.fc.volumes.delete_server_volume.side_effect = [
+            nova_exp.Conflict('409')]
         self.t['resources']['volume']['properties'].update({
             'volume_type': 'lvm',
         })
@@ -1316,7 +1319,8 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.cinder_fc.volumes.create.return_value = fv
         fv_ready = vt_base.FakeVolume('available', id=fv.id)
         self.cinder_fc.volumes.get.side_effect = [fv, fv_ready]
-
+        self.fc.volumes.create_server_volume.side_effect = [
+            nova_exp.Conflict('409')]
         self.t['resources']['volume']['properties'].update({
             'volume_type': 'lvm',
         })
