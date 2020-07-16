@@ -139,7 +139,7 @@ SQLAlchemy==1.0.10
 sqlparse==0.2.4
 statsd==3.2.2
 stestr==2.0.0
-stevedore==1.20.0
+stevedore==3.1.0
 tempest==17.1.0
 Tempita==0.5.2
 tenacity==4.4.0
