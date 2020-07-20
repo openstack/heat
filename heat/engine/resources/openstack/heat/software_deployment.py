@@ -709,10 +709,10 @@ class SoftwareDeploymentGroup(resource_group.ResourceGroup):
     def res_def_changed(self, prop_diff):
         return True
 
-    def _update_name_blacklist(self, properties):
+    def _update_name_skiplist(self, properties):
         pass
 
-    def _name_blacklist(self):
+    def _name_skiplist(self):
         return set()
 
     def get_resource_def(self, include_all=False):
