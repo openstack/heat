@@ -96,18 +96,18 @@ class ResourceController(object):
     def index(self, req, identity):
         """Lists information for all resources."""
 
-        whitelist = {
-            'type': 'mixed',
-            'status': 'mixed',
-            'name': 'mixed',
-            'action': 'mixed',
-            'id': 'mixed',
-            'physical_resource_id': 'mixed'
+        param_types = {
+            'type': util.PARAM_TYPE_MIXED,
+            'status': util.PARAM_TYPE_MIXED,
+            'name': util.PARAM_TYPE_MIXED,
+            'action': util.PARAM_TYPE_MIXED,
+            'id': util.PARAM_TYPE_MIXED,
+            'physical_resource_id': util.PARAM_TYPE_MIXED,
         }
 
         invalid_keys = (set(req.params.keys()) -
-                        set(list(whitelist) + [rpc_api.PARAM_NESTED_DEPTH,
-                                               rpc_api.PARAM_WITH_DETAIL]))
+                        set(list(param_types) + [rpc_api.PARAM_NESTED_DEPTH,
+                                                 rpc_api.PARAM_WITH_DETAIL]))
         if invalid_keys:
             raise exc.HTTPBadRequest(_('Invalid filter parameters %s') %
                                      str(list(invalid_keys)))
@@ -121,7 +121,7 @@ class ResourceController(object):
                                              param_utils.extract_bool,
                                              default=False)
 
-        params = util.get_allowed_params(req.params, whitelist)
+        params = util.get_allowed_params(req.params, param_types)
 
         res_list = self.rpc_client.list_stack_resources(req.context,
                                                         identity,
@@ -135,8 +135,8 @@ class ResourceController(object):
     def show(self, req, identity, resource_name):
         """Gets detailed information for a resource."""
 
-        whitelist = {'with_attr': util.PARAM_TYPE_MULTI}
-        params = util.get_allowed_params(req.params, whitelist)
+        param_types = {'with_attr': util.PARAM_TYPE_MULTI}
+        params = util.get_allowed_params(req.params, param_types)
         if 'with_attr' not in params:
             params['with_attr'] = None
         res = self.rpc_client.describe_stack_resource(req.context,

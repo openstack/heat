@@ -86,22 +86,22 @@ PARAM_TYPES = (
 )
 
 
-def get_allowed_params(params, whitelist):
-    """Extract from ``params`` all entries listed in ``whitelist``.
+def get_allowed_params(params, param_types):
+    """Extract from ``params`` all entries listed in ``param_types``.
 
     The returning dict will contain an entry for a key if, and only if,
-    there's an entry in ``whitelist`` for that key and at least one entry in
+    there's an entry in ``param_types`` for that key and at least one entry in
     ``params``. If ``params`` contains multiple entries for the same key, it
     will yield an array of values: ``{key: [v1, v2,...]}``
 
     :param params: a NestedMultiDict from webob.Request.params
-    :param whitelist: an array of strings to whitelist
+    :param param_types: an dict of allowed parameters and their types
 
     :returns: a dict with {key: value} pairs
     """
     allowed_params = {}
 
-    for key, get_type in whitelist.items():
+    for key, get_type in param_types.items():
         assert get_type in PARAM_TYPES
 
         value = None

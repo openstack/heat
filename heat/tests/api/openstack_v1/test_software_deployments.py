@@ -48,8 +48,8 @@ class SoftwareDeploymentControllerTest(tools.ControllerTest,
             resp = self.controller.index(req, tenant_id=self.tenant)
             self.assertEqual(
                 {'software_deployments': []}, resp)
-            whitelist = mock_call.call_args[1]
-            self.assertEqual({}, whitelist)
+            params = mock_call.call_args[1]
+            self.assertEqual({}, params)
         server_id = 'fb322564-7927-473d-8aad-68ae7fbf2abf'
         req = self._get('/software_deployments', {'server_id': server_id})
         with mock.patch.object(
@@ -59,8 +59,8 @@ class SoftwareDeploymentControllerTest(tools.ControllerTest,
             resp = self.controller.index(req, tenant_id=self.tenant)
             self.assertEqual(
                 {'software_deployments': []}, resp)
-            whitelist = mock_call.call_args[1]
-            self.assertEqual({'server_id': server_id}, whitelist)
+            params = mock_call.call_args[1]
+            self.assertEqual({'server_id': server_id}, params)
 
     @mock.patch.object(policy.Enforcer, 'enforce')
     def test_show(self, mock_enforce):

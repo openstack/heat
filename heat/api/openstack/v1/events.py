@@ -109,21 +109,21 @@ class EventController(object):
     @util.registered_identified_stack
     def index(self, req, identity, resource_name=None):
         """Lists summary information for all events."""
-        whitelist = {
+        param_types = {
             'limit': util.PARAM_TYPE_SINGLE,
             'marker': util.PARAM_TYPE_SINGLE,
             'sort_dir': util.PARAM_TYPE_SINGLE,
             'sort_keys': util.PARAM_TYPE_MULTI,
             'nested_depth': util.PARAM_TYPE_SINGLE,
         }
-        filter_whitelist = {
+        filter_param_types = {
             'resource_status': util.PARAM_TYPE_MIXED,
             'resource_action': util.PARAM_TYPE_MIXED,
             'resource_name': util.PARAM_TYPE_MIXED,
             'resource_type': util.PARAM_TYPE_MIXED,
         }
-        params = util.get_allowed_params(req.params, whitelist)
-        filter_params = util.get_allowed_params(req.params, filter_whitelist)
+        params = util.get_allowed_params(req.params, param_types)
+        filter_params = util.get_allowed_params(req.params, filter_param_types)
 
         int_params = (rpc_api.PARAM_LIMIT, rpc_api.PARAM_NESTED_DEPTH)
         try:
