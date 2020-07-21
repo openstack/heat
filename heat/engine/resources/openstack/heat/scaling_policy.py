@@ -99,7 +99,8 @@ class AutoScalingPolicy(signal_responder.SignalResponder):
     attributes_schema = {
         ALARM_URL: attributes.Schema(
             _("A signed url to handle the alarm."),
-            type=attributes.Schema.STRING
+            type=attributes.Schema.STRING,
+            cache_mode=attributes.Schema.CACHE_NONE
         ),
         SIGNAL_URL: attributes.Schema(
             _("A url to handle the alarm using native API."),
@@ -186,7 +187,7 @@ class AutoScalingPolicy(signal_responder.SignalResponder):
         if self.resource_id is None:
             return
         if name == self.ALARM_URL:
-            return six.text_type(self._get_ec2_signed_url())
+            return six.text_type(self._get_ec2_signed_url(never_expire=True))
         elif name == self.SIGNAL_URL:
             return six.text_type(self._get_heat_signal_url())
 
