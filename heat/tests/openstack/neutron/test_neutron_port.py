@@ -978,6 +978,11 @@ class UpdatePortTest(common.HeatTestCase):
                                 fixed_ips=None,
                                 addr_pair=None,
                                 vnic_type='baremetal')),
+        ('virtio_forwarder_vnic', dict(secgrp=None,
+                                       value_specs={},
+                                       fixed_ips=None,
+                                       addr_pair=None,
+                                       vnic_type='virtio-forwarder')),
         ('with_all', dict(secgrp=['8a2f582a-e1cd-480f-b85d-b02631c10656'],
                           value_specs={},
                           fixed_ips=[
