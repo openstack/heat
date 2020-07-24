@@ -284,7 +284,7 @@ class Port(neutron.NeutronResource):
             constraints=[
                 constraints.AllowedValues(['normal', 'direct', 'macvtap',
                                            'direct-physical', 'baremetal',
-                                           'virtio-forwarder']),
+                                           'virtio-forwarder', 'smart-nic']),
             ],
             support_status=support.SupportStatus(version='2015.1'),
             update_allowed=True,
