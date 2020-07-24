@@ -50,6 +50,9 @@ else
 fi
 
 echo "CEILOMETER_PIPELINE_INTERVAL=60" >> $localconf
+# Workaround gnocchi setuptools issue https://storyboard.openstack.org/#!/story/2007956
+echo "GNOCCHI_GIT_PATH=git+https://github.com/gnocchixyz/gnocchi.git@4.2.6#egg=gnocchi" >> $localconf
+
 echo "HEAT_ENABLE_ADOPT_ABANDON=True" >> $localconf
 # Use the lbaas v2 namespace driver for devstack integration testing since
 # octavia uses nested vms.
