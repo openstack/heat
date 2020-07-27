@@ -15,6 +15,7 @@ import datetime
 
 from keystoneauth1 import exceptions as kc_exceptions
 import mock
+from oslo_utils import timeutils
 import six
 from six.moves.urllib import parse as urlparse
 
@@ -151,6 +152,10 @@ class SignalTest(common.HeatTestCase):
 
     @mock.patch.object(heat_plugin.HeatClientPlugin, 'get_heat_cfn_url')
     def test_FnGetAtt_alarm_url(self, mock_get):
+        now = datetime.datetime(2012, 11, 29, 13, 49, 37)
+        timeutils.set_time_override(now)
+        self.addCleanup(timeutils.clear_time_override)
+
         # Setup
         stack_id = stack_name = 'FnGetAtt-alarm-url'
         stack = self._create_stack(TEMPLATE_CFN_SIGNAL,
@@ -160,8 +165,6 @@ class SignalTest(common.HeatTestCase):
         mock_get.return_value = 'http://server.test:8000/v1'
 
         rsrc = stack['signal_handler']
-        created_time = datetime.datetime(2012, 11, 29, 13, 49, 37)
-        rsrc.created_time = created_time
 
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
