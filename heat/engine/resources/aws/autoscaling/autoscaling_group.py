@@ -186,6 +186,10 @@ class AutoScalingGroup(cooldown.CooldownMixin, instgrp.InstanceGroup):
                                           schema=rolling_update_schema)
     }
 
+    def get_size(self):
+        """Get desired capacity."""
+        return self.properties[self.DESIRED_CAPACITY]
+
     def handle_create(self):
         return self.create_with_template(self.child_template())
 
