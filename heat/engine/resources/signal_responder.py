@@ -114,7 +114,8 @@ class SignalResponder(stack_user.StackUser):
                 'region_name': (self.context.region_name or
                                 cfg.CONF.region_name_for_services)}
 
-    def _get_ec2_signed_url(self, signal_type=SIGNAL):
+    def _get_ec2_signed_url(self, signal_type=SIGNAL,
+                            never_expire=False):
         """Create properly formatted and pre-signed URL.
 
         This uses the created user for the credentials.
@@ -158,15 +159,16 @@ class SignalResponder(stack_user.StackUser):
         # need to calculate the signature with the path component unquoted, but
         # ensure the actual URL contains the quoted version...
         unquoted_path = urlparse.unquote(host_url.path + path)
+        params = {'SignatureMethod': 'HmacSHA256',
+                  'SignatureVersion': '2',
+                  'AWSAccessKeyId': access_key}
+        if not never_expire:
+            params['Timestamp'] = timeutils.utcnow().strftime(
+                "%Y-%m-%dT%H:%M:%SZ")
         request = {'host': host_url.netloc.lower(),
                    'verb': SIGNAL_VERB[signal_type],
                    'path': unquoted_path,
-                   'params': {'SignatureMethod': 'HmacSHA256',
-                              'SignatureVersion': '2',
-                              'AWSAccessKeyId': access_key,
-                              'Timestamp':
-                              timeutils.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-                              }}
+                   'params': params}
         # Sign the request
         signer = ec2_utils.Ec2Signer(secret_key)
         request['params']['Signature'] = signer.generate(request)
