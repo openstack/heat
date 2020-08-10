@@ -1,0 +1,8 @@
+---
+upgrade:
+  - |
+    Manila resources now use the 'sharev2' endpoint and API version '2.13'.
+fixes:
+  - |
+    OS::Manila::Share now properly supports 'cephx' as a value for property
+    '{"access_rules": [{"access_type": ""}]}'.

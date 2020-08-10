@@ -46,11 +46,20 @@ class DummyShare(object):
     def __init__(self):
         self.availability_zone = 'az'
         self.host = 'host'
-        self.export_locations = 'el'
         self.share_server_id = 'id'
         self.created_at = 'ca'
         self.status = 's'
         self.project_id = 'p_id'
+
+
+class DummyShareExportLocation(object):
+    def __init__(self):
+        self.export_location = {
+            'path': 'el'
+        }
+
+    def to_dict(self):
+        return self.export_location
 
 
 class ManilaShareTest(common.HeatTestCase):
@@ -212,9 +221,11 @@ class ManilaShareTest(common.HeatTestCase):
     def test_attributes(self):
         share = self._create_share("share")
         share.client().shares.get.return_value = DummyShare()
+        share.client().share_export_locations.list.return_value = [
+            DummyShareExportLocation()]
         self.assertEqual('az', share.FnGetAtt('availability_zone'))
         self.assertEqual('host', share.FnGetAtt('host'))
-        self.assertEqual('el', share.FnGetAtt('export_locations'))
+        self.assertEqual("['el']", share.FnGetAtt('export_locations'))
         self.assertEqual('id', share.FnGetAtt('share_server_id'))
         self.assertEqual('ca', share.FnGetAtt('created_at'))
         self.assertEqual('s', share.FnGetAtt('status'))
