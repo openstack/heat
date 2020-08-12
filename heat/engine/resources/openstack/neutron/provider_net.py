@@ -117,7 +117,7 @@ class ProviderNet(net.Net):
                 constraints.CustomConstraint('dns_domain')
             ],
             update_allowed=True,
-            support_status=support.SupportStatus(version='14.0.0')
+            support_status=support.SupportStatus(version='15.0.0')
         ),
     }
 
