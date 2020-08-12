@@ -26,20 +26,24 @@ from heat.engine import plugin_manager
 from heat.engine import properties
 from heat.engine import support
 
-_CODE_NAMES = {'2013.1': 'Grizzly',
-               '2013.2': 'Havana',
-               '2014.1': 'Icehouse',
-               '2014.2': 'Juno',
-               '2015.1': 'Kilo',
-               '5.0.0': 'Liberty',
-               '6.0.0': 'Mitaka',
-               '7.0.0': 'Newton',
-               '8.0.0': 'Ocata',
-               '9.0.0': 'Pike',
-               '10.0.0': 'Queens',
-               '11.0.0': 'Rocky',
-               '12.0.0': 'Stein',
-               '13.0.0': 'Train'}
+_CODE_NAMES = {
+    '2013.1': 'Grizzly',
+    '2013.2': 'Havana',
+    '2014.1': 'Icehouse',
+    '2014.2': 'Juno',
+    '2015.1': 'Kilo',
+    '5.0.0': 'Liberty',
+    '6.0.0': 'Mitaka',
+    '7.0.0': 'Newton',
+    '8.0.0': 'Ocata',
+    '9.0.0': 'Pike',
+    '10.0.0': 'Queens',
+    '11.0.0': 'Rocky',
+    '12.0.0': 'Stein',
+    '13.0.0': 'Train',
+    '14.0.0': 'Ussuri',
+    '15.0.0': 'Victoria',
+}
 
 all_resources = {}
 
