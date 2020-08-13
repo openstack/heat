@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    The ``OS::Heat::Delay`` resource type is now usable.
