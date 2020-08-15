@@ -283,7 +283,8 @@ class Port(neutron.NeutronResource):
               'the bindings extension.'),
             constraints=[
                 constraints.AllowedValues(['normal', 'direct', 'macvtap',
-                                           'direct-physical', 'baremetal']),
+                                           'direct-physical', 'baremetal',
+                                           'virtio-forwarder']),
             ],
             support_status=support.SupportStatus(version='2015.1'),
             update_allowed=True,
