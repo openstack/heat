@@ -1026,6 +1026,11 @@ class UpdatePortTest(common.HeatTestCase):
                                        fixed_ips=None,
                                        addr_pair=None,
                                        vnic_type='virtio-forwarder')),
+        ('smart_nic_vnic', dict(secgrp=None,
+                                value_specs={},
+                                fixed_ips=None,
+                                addr_pair=None,
+                                vnic_type='smart-nic')),
         ('with_all', dict(secgrp=['8a2f582a-e1cd-480f-b85d-b02631c10656'],
                           value_specs={},
                           fixed_ips=[
