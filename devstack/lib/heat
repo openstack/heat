@@ -447,7 +447,7 @@ function create_heat_accounts {
 function configure_tempest_for_heat {
     # Skip SoftwareConfigIntegrationTest because it requires a custom image
     # Skip AutoscalingLoadBalancerTest and AutoscalingLoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
-    iniset $TEMPEST_CONFIG heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, SoftwareConfigIntegrationTest'
+    iniset $TEMPEST_CONFIG heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, SoftwareConfigIntegrationTest, AodhAlarmTest'
     # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
     iniset $TEMPEST_CONFIG heat_plugin skip_functional_test_list 'LoadBalancerv2Test, NotificationTest'
 

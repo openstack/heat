@@ -11,9 +11,7 @@
       - zuul: opendev.org/openstack/tempest
     required-projects:
       - openstack/devstack-gate
-      - openstack/aodh
       - openstack/barbican
-      - openstack/ceilometer
       - openstack/heat
       - openstack/heat-templates
       - openstack/heat-tempest-plugin
@@ -43,8 +41,6 @@
         tempest: true
       devstack_plugins:
         barbican: https://opendev.org/openstack/barbican
-        ceilometer: https://opendev.org/openstack/ceilometer
-        aodh: https://opendev.org/openstack/aodh
         zaqar: https://opendev.org/openstack/zaqar
         heat: https://opendev.org/openstack/heat
         octavia: https://opendev.org/openstack/octavia
