@@ -161,6 +161,7 @@ class QoSAssociation(resource.Resource):
         for vt in self.properties[self.VOLUME_TYPES]:
             self.client().qos_specs.associate(self.properties[self.QOS_SPECS],
                                               vt)
+        self.resource_id_set(self.uuid)
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         """Associate volume types to QoS."""
