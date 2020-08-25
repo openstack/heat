@@ -192,11 +192,21 @@ class ManilaShare(resource.Resource):
     def _request_share(self):
         return self.client().shares.get(self.resource_id)
 
+    def _request_export_locations(self):
+        # Only return the "path" response parameter, because that is what was
+        # returned before API version "2.9" by the shares endpoint
+        return [export_location.to_dict()['path']
+                for export_location in
+                self.client().share_export_locations.list(self.resource_id)]
+
     def _resolve_attribute(self, name):
         if self.resource_id is None:
             return
-        share = self._request_share()
-        return str(getattr(share, name))
+        if name == self.EXPORT_LOCATIONS_ATTR:
+            attr = self._request_export_locations()
+        else:
+            attr = getattr(self._request_share(), name)
+        return str(attr)
 
     def handle_create(self):
         # Request IDs of entities from manila

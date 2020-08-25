@@ -18,7 +18,7 @@ from manilaclient import client as manila_client
 from manilaclient import exceptions
 from oslo_config import cfg
 
-MANILACLIENT_VERSION = "2"
+MANILACLIENT_VERSION = "2.13"
 CLIENT_NAME = 'manila'
 
 
@@ -26,7 +26,7 @@ class ManilaClientPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
-    service_types = [SHARE] = ['share']
+    service_types = [SHARE] = ['sharev2']
 
     def _create(self):
         endpoint_type = self._get_client_option(CLIENT_NAME, 'endpoint_type')
