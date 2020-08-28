@@ -17,6 +17,7 @@ from heat.common.i18n import _
 from heatclient import client as heat_client
 from keystoneauth1.identity.generic import password
 from keystoneauth1 import session
+from keystoneclient.v3 import client as kc_v3
 from neutronclient.v2_0 import client as neutron_client
 from novaclient import client as nova_client
 from swiftclient import client as swift_client
@@ -79,6 +80,7 @@ class ClientManager(object):
         self.ca_file = self.conf.ca_file
 
         self.identity_client = self._get_identity_client()
+        self.keystone_client = self._get_keystone_client()
         self.orchestration_client = self._get_orchestration_client()
         self.compute_client = self._get_compute_client()
         self.network_client = self._get_network_client()
@@ -142,6 +144,12 @@ class ClientManager(object):
             verify_cert = self.ca_file or True
 
         return KeystoneWrapperClient(auth, verify_cert)
+
+    def _get_keystone_client(self):
+        # Create our default Keystone client to use in testing
+        return kc_v3.Client(
+            session=self.identity_client.session,
+            region_name=self.conf.region)
 
     def _get_compute_client(self):
         # Create our default Nova client to use in testing

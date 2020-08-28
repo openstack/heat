@@ -100,6 +100,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     def setup_clients(self, conf, admin_credentials=False):
         self.manager = clients.ClientManager(conf, admin_credentials)
         self.identity_client = self.manager.identity_client
+        self.keystone_client = self.manager.keystone_client
         self.orchestration_client = self.manager.orchestration_client
         self.compute_client = self.manager.compute_client
         self.network_client = self.manager.network_client
