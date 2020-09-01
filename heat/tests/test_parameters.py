@@ -379,7 +379,7 @@ class ParameterTestSpecific(common.HeatTestCase):
         schema = {'Type': 'Json',
                   'ConstraintDescription': 'wibble'}
         val = {"foo": "bar", "not_json": len}
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 new_parameter, 'p', schema, val)
         self.assertIn('Value must be valid JSON', str(err))
 
@@ -397,7 +397,7 @@ class ParameterTestSpecific(common.HeatTestCase):
         schema = {'Type': 'Json',
                   'ConstraintDescription': 'wibble'}
         val = "I am not a map"
-        err = self.assertRaises(ValueError,
+        err = self.assertRaises(exception.StackValidationFailed,
                                 new_parameter, 'p', schema, val)
         self.assertIn('Value must be valid JSON', str(err))
 
