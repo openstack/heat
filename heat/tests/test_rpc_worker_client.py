@@ -97,3 +97,34 @@ class WorkerClientTest(common.HeatTestCase):
                 version='1.3')
             # ensure correct rpc method is called
             mock_cast.cast.assert_called_with(mock_cnxt, method, **kwargs)
+
+    def test_check_resource_delete_snapshot(self):
+        snapshot_id = 'dummy-snapshot-id'
+        resource_name = 'dummy-resource-name'
+        start_time = 'dummy-start-time'
+        mock_cnxt = mock.Mock()
+        method = 'check_resource_delete_snapshot'
+
+        kwargs = {
+            'snapshot_id': snapshot_id, 'resource_name': resource_name,
+            'start_time': start_time, 'current_traversal': 'fct',
+            'is_stack_delete': True,
+        }
+        mock_rpc_client = mock.MagicMock()
+        mock_cast = mock.MagicMock()
+        with mock.patch('heat.common.messaging.get_rpc_client') as mock_grc:
+            mock_grc.return_value = mock_rpc_client
+            mock_rpc_client.prepare.return_value = mock_cast
+            wc = rpc_client.WorkerClient()
+            ret_val = wc.check_resource_delete_snapshot(
+                mock_cnxt, snapshot_id, resource_name, start_time,
+                is_stack_delete=True, current_traversal='fct')
+            # ensure called with fanout=True
+            mock_grc.assert_called_with(
+                version=wc.BASE_RPC_API_VERSION,
+                topic=rpc_api.TOPIC)
+            self.assertIsNone(ret_val)
+            mock_rpc_client.prepare.assert_called_with(
+                version='1.7')
+            # ensure correct rpc method is called
+            mock_cast.cast.assert_called_with(mock_cnxt, method, **kwargs)

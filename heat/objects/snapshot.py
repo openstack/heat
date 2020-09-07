@@ -19,8 +19,10 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.db import api as db_api
+from heat.engine import api as engine_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
+from heat.objects import resource_snapshot as rsrc_snapshot_objects
 
 
 class Snapshot(
@@ -55,10 +57,26 @@ class Snapshot(
             context, cls(), db_api.snapshot_create(context, values))
 
     @classmethod
-    def get_snapshot_by_stack(cls, context, snapshot_id, stack):
-        return cls._from_db_object(
+    def get_snapshot_by_stack(cls, context, snapshot_id, stack,
+                              load_rsrc_snapshot=False):
+        snapshot = cls._from_db_object(
             context, cls(), db_api.snapshot_get_by_stack(
                 context, snapshot_id, stack))
+        if load_rsrc_snapshot:
+            resource_snapshots = cls.load_rsrc_snapshots(context, snapshot.id)
+            if resource_snapshots:
+                snapshot.data['resources'] = resource_snapshots
+        return snapshot
+
+    @classmethod
+    def get_snapshot(cls, context, snapshot_id, load_rsrc_snapshot=False):
+        snapshot = cls._from_db_object(
+            context, cls(), db_api.snapshot_get(context, snapshot_id))
+        if load_rsrc_snapshot:
+            resource_snapshots = cls.load_rsrc_snapshots(context, snapshot.id)
+            if resource_snapshots:
+                snapshot.data['resources'] = resource_snapshots
+        return snapshot
 
     @classmethod
     def update(cls, context, snapshot_id, values):
@@ -78,3 +96,30 @@ class Snapshot(
     @classmethod
     def count_all_by_stack(cls, context, stack_id):
         return db_api.snapshot_count_all_by_stack(context, stack_id)
+
+    @classmethod
+    def get_all(cls, context, stack_id, load_rsrc_snapshot=False):
+        snapshots = []
+        for db_snapshot in db_api.snapshot_get_all_by_stack(context, stack_id):
+            snapshot = cls._from_db_object(context, cls(), db_snapshot)
+            if load_rsrc_snapshot:
+                resource_snapshots = cls.load_rsrc_snapshots(
+                    context, snapshot.id)
+                if resource_snapshots:
+                    snapshot.data['resources'] = resource_snapshots
+            snapshots.append(snapshot)
+        return snapshots
+
+    @classmethod
+    def load_rsrc_snapshots(cls, context, snapshot_id, show_meta=False):
+        r_snapshots = rsrc_snapshot_objects.ResourceSnapshot.get_all(
+            context, snapshot_id)
+
+        def _format_rsrc_snapshot(rsrc_snapshot_obj):
+            r_s = engine_api.format_resource_snapshot(rsrc_snapshot_obj)
+            if show_meta:
+                return r_s
+            return r_s['data']
+        if r_snapshots is not None:
+            return dict((r_s.resource_name, _format_rsrc_snapshot(
+                r_s)) for r_s in r_snapshots)

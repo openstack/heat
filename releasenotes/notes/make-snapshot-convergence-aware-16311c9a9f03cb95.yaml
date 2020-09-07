@@ -1,0 +1,14 @@
+---
+features:
+  - |
+    Stack snapshot and restore actions are now convergence aware. Snapshots
+    are integrated into the convergence dependency graph, enabling non-blocking
+    snapshot deletion during stack delete operations. This improves performance
+    by allowing snapshot cleanup to be processed in parallel with the
+    convergence workflow rather than blocking the entire operation.
+
+upgrade:
+  - |
+    A new database table ``resource_snapshot`` has been introduced to store
+    per-resource snapshot data for convergence mode. This table is
+    automatically created during database migration.

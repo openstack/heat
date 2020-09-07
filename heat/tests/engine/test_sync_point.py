@@ -16,6 +16,7 @@ from unittest import mock
 
 from oslo_db import exception
 
+from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.tests import common
 from heat.tests.engine import tools
@@ -37,10 +38,11 @@ class SyncPointTestCase(common.HeatTestCase):
         resource = stack['C']
         graph = stack.convergence_dependencies.graph()
 
-        sender = (4, True)
+        sender = parser.ConvergenceNode(4, True)
+        resource_key = parser.ConvergenceNode(resource.id, True)
         mock_callback = mock.Mock()
         sync_point.sync(ctx, resource.id, stack.current_traversal, True,
-                        mock_callback, set(graph[(resource.id, True)]),
+                        mock_callback, set(graph[resource_key]),
                         {sender: None})
         updated_sync_point = sync_point.get(ctx, resource.id,
                                             stack.current_traversal, True)
@@ -58,10 +60,11 @@ class SyncPointTestCase(common.HeatTestCase):
         resource = stack['A']
         graph = stack.convergence_dependencies.graph()
 
-        sender = (3, True)
+        sender = parser.ConvergenceNode(3, True)
+        resource_key = parser.ConvergenceNode(resource.id, True)
         mock_callback = mock.Mock()
         sync_point.sync(ctx, resource.id, stack.current_traversal, True,
-                        mock_callback, set(graph[(resource.id, True)]),
+                        mock_callback, set(graph[resource_key]),
                         {sender: None})
         updated_sync_point = sync_point.get(ctx, resource.id,
                                             stack.current_traversal, True)
@@ -81,10 +84,11 @@ class SyncPointTestCase(common.HeatTestCase):
         graph = stack.convergence_dependencies.graph()
 
         mock_callback = mock.Mock()
-        sender = (3, True)
+        sender = parser.ConvergenceNode(3, True)
+        resource_key = parser.ConvergenceNode(resource.id, True)
         self.assertRaises(exception.DBError, sync_point.sync, ctx, resource.id,
                           stack.current_traversal, True, mock_callback,
-                          set(graph[(resource.id, True)]), {sender: None})
+                          set(graph[resource_key]), {sender: None})
         return mock_sleep_time
 
     def test_sync_with_time_throttle(self):
@@ -162,7 +166,8 @@ class SyncPointTestCase(common.HeatTestCase):
         resource = stack['A']  # A has no predecessors (leaf)
         graph = stack.convergence_dependencies.graph()
 
-        sender = (3, True)
+        sender = parser.ConvergenceNode(3, True)
+        resource_key = parser.ConvergenceNode(resource.id, True)
         captured_args = {}
 
         def callback(entity_id, data, rsrc_failures, skip_propagate):
@@ -171,7 +176,7 @@ class SyncPointTestCase(common.HeatTestCase):
             captured_args['skip_propagate'] = skip_propagate
 
         sync_point.sync(ctx, resource.id, stack.current_traversal, True,
-                        callback, set(graph[(resource.id, True)]),
+                        callback, set(graph[resource_key]),
                         {sender: None},
                         new_resource_failures={'B': 'failed'},
                         is_skip=True)

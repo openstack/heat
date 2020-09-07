@@ -31,6 +31,8 @@ class WorkerClient(object):
         1.4 - Add converge argument to check_resource
         1.5 - Add skip_propagate argument to check_resource for CHECK action
         1.6 - Add accumulated_failures argument to check_resource for CHECK
+        1.7 - Added check_resource_delete_snapshot
+        1.8 - Add node_type argument to check_resource for snapshot deletion
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -52,19 +54,35 @@ class WorkerClient(object):
             client = self._client
         client.cast(ctxt, method, **kwargs)
 
+    def check_resource_delete_snapshot(
+        self, ctxt, snapshot_id, resource_name, start_time,
+        is_stack_delete=False, current_traversal=None
+    ):
+        self.cast(ctxt,
+                  self.make_msg(
+                      'check_resource_delete_snapshot',
+                      snapshot_id=snapshot_id,
+                      resource_name=resource_name,
+                      start_time=start_time,
+                      is_stack_delete=is_stack_delete,
+                      current_traversal=current_traversal
+                  ),
+                  version='1.7')
+
     def check_resource(self, ctxt, resource_id,
                        current_traversal, data, is_update, adopt_stack_data,
                        converge=False, skip_propagate=False,
-                       accumulated_failures=None):
+                       accumulated_failures=None, node_type='resource'):
         self.cast(ctxt,
                   self.make_msg(
                       'check_resource', resource_id=resource_id,
                       current_traversal=current_traversal, data=data,
                       is_update=is_update, adopt_stack_data=adopt_stack_data,
                       converge=converge, skip_propagate=skip_propagate,
-                      accumulated_failures=accumulated_failures
+                      accumulated_failures=accumulated_failures,
+                      node_type=node_type
                   ),
-                  version='1.6')
+                  version='1.8')
 
     def cancel_check_resource(self, ctxt, stack_id, engine_id):
         """Send check-resource cancel message.

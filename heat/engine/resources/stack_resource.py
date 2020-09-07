@@ -435,9 +435,9 @@ class StackResource(resource.Resource):
             # For operations where we do not take a resource lock
             # (i.e. legacy-style), check that the stack lock has been
             # released before reporting completeness.
-            done = (self._should_lock_on_action(expected_action) or
+            done = (self.stack.convergence or
                     stack_lock.StackLock.get_engine_id(
-                self.context, self.resource_id) is None)
+                        self.context, self.resource_id) is None)
             if done:
                 # Reset nested, to indicate we changed status
                 self._nested = None

@@ -50,6 +50,7 @@ from heat.engine import template
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_objects
 from heat.objects import resource_properties_data as rpd_objects
+from heat.objects import resource_snapshot as rsrc_s_objects
 from heat.rpc import client as rpc_client
 
 cfg.CONF.import_opt('action_retry_limit', 'heat.common.config')
@@ -856,25 +857,6 @@ class Resource(status.ResourceStatus):
         else:
             self._atomic_key = last_key + 1
 
-    def _should_lock_on_action(self, action):
-        """Return whether we should take a resource-level lock for an action.
-
-        In the legacy path, we always took a lock at the Stack level and never
-        at the Resource level. In convergence, we lock at the Resource level
-        for most operations. However, there are currently some exceptions:
-        the SNAPSHOT actions, and stack abandon.
-        """
-        return (self.stack.convergence and
-                not self.abandon_in_progress and
-                action in {self.ADOPT,
-                           self.CHECK,
-                           self.CREATE,
-                           self.UPDATE,
-                           self.RESUME,
-                           self.ROLLBACK,
-                           self.SUSPEND,
-                           self.DELETE})
-
     @contextlib.contextmanager
     def _action_recorder(self, action, expected_exceptions=tuple()):
         """Return a context manager to record the progress of an action.
@@ -890,11 +872,8 @@ class Resource(status.ResourceStatus):
         attempts = 1
         first_iter = [True]  # work around no nonlocal in py27
         if self.stack.convergence:
-            if self._should_lock_on_action(action):
-                lock_acquire = self.LOCK_ACQUIRE
-                lock_release = self.LOCK_RELEASE
-            else:
-                lock_acquire = lock_release = self.LOCK_RESPECT
+            lock_acquire = self.LOCK_ACQUIRE
+            lock_release = self.LOCK_RELEASE
 
             if action != self.CREATE:
                 attempts += max(cfg.CONF.client_retry_limit, 0)
@@ -1429,6 +1408,21 @@ class Resource(status.ResourceStatus):
         runner = scheduler.TaskRunner(self.check)
         runner(timeout=timeout, progress_callback=progress_callback)
 
+    def snapshot_convergence(self, engine_id, timeout, progress_callback=None):
+        """snapshot the resource synchronously."""
+        self._calling_engine_id = engine_id
+        runner = scheduler.TaskRunner(self.snapshot)
+        runner(timeout=timeout, progress_callback=progress_callback,
+               post_func=self.resource_snapshot_set)
+
+    def delete_snapshot_convergence(self, engine_id, timeout,
+                                    progress_callback=None):
+        """delete snapshot for the resource synchronously."""
+        self._calling_engine_id = engine_id
+        snapshot = {'resource_data': self.data()}
+        runner = scheduler.TaskRunner(self.delete_snapshot, data=snapshot)
+        runner(timeout=timeout, progress_callback=progress_callback)
+
     def suspend_convergence(self, engine_id, timeout, progress_callback=None):
         """suspend the resource synchronously."""
         self._calling_engine_id = engine_id
@@ -1847,6 +1841,25 @@ class Resource(status.ResourceStatus):
 
     def delete_snapshot(self, data):
         yield from self.action_handler_task('delete_snapshot', args=[data])
+
+    def resource_snapshot_set(self, snapshot_id=None):
+        if not self.stack.convergence:
+            return
+        value = {
+            "snapshot_id": snapshot_id if (
+                snapshot_id is not None) else self.stack.current_traversal,
+            "resource_name": self.name,
+            "data": {
+                'name': self.name,
+                'resource_id': self.resource_id,
+                'type': self.type(),
+                'action': self.action,
+                'status': self.status,
+                'metadata': self.metadata_get(),
+                'resource_data': self.data()}}
+        rsrc_snapshot = rsrc_s_objects.ResourceSnapshot.create(self.context,
+                                                               value)
+        return rsrc_snapshot
 
     def physical_resource_name(self):
         if self.id is None or self.action == self.INIT:

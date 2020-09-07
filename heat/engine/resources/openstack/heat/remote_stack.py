@@ -337,6 +337,7 @@ class RemoteStack(resource.Resource):
             snapshot = self.heat(
                 cacert_path).stacks.snapshot(stack_id=self.resource_id)
         self.data_set('snapshot_id', snapshot['id'])
+        return snapshot['id']
 
     def handle_restore(self, defn, restore_data):
         snapshot_id = restore_data['resource_data']['snapshot_id']

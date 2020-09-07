@@ -42,6 +42,7 @@ from heat.engine import parent_rsrc
 from heat.engine import resource
 from heat.engine import resources
 from heat.engine import scheduler
+from heat.engine import snapshots
 from heat.engine import status
 from heat.engine import stk_defn
 from heat.engine import sync_point
@@ -59,8 +60,37 @@ from heat.rpc import worker_client as rpc_worker_client
 LOG = logging.getLogger(__name__)
 
 
-ConvergenceNode = collections.namedtuple('ConvergenceNode',
-                                         ['rsrc_id', 'is_update'])
+# Node types for convergence graph
+NODE_TYPE_RESOURCE = 'resource'
+NODE_TYPE_SNAPSHOT = 'snapshot'
+
+
+class ConvergenceNode(collections.namedtuple('ConvergenceNode',
+                                             ['rsrc_id', 'is_update',
+                                              'node_type'])):
+    """Represents a node in the convergence dependency graph.
+
+    rsrc_id: Resource ID or Snapshot ID
+    is_update: True for create/update, False for cleanup/delete
+    node_type: 'resource' (default) or 'snapshot'
+    """
+    __slots__ = ()
+
+    def __new__(cls, rsrc_id, is_update, node_type=NODE_TYPE_RESOURCE):
+        return super().__new__(cls, rsrc_id, is_update, node_type)
+
+    @classmethod
+    def from_tuple(cls, t):
+        """Create ConvergenceNode from a tuple (2 or 3 elements)."""
+        if len(t) == 2:
+            return cls(t[0], t[1], NODE_TYPE_RESOURCE)
+        return cls(*t)
+
+    def to_tuple(self):
+        """Convert to tuple for serialization."""
+        if self.node_type == NODE_TYPE_RESOURCE:
+            return (self.rsrc_id, self.is_update)
+        return (self.rsrc_id, self.is_update, self.node_type)
 
 
 class ForcedCancel(Exception):
@@ -1057,11 +1087,8 @@ class Stack(collections.abc.Mapping):
             # Always persist IN_PROGRESS immediately
             return False
 
-        if (self.convergence and
-            self.action in {self.UPDATE, self.DELETE, self.CREATE,
-                            self.ADOPT, self.ROLLBACK, self.RESTORE,
-                            self.CHECK, self.SUSPEND, self.RESUME}):
-            # These operations do not use the stack lock in convergence, so
+        if self.convergence:
+            # Operations do not use the stack lock in convergence, so
             # never defer.
             return False
 
@@ -1417,9 +1444,10 @@ class Stack(collections.abc.Mapping):
     @profiler.trace('Stack.converge_stack', hide_args=False)
     @reset_state_on_error
     def converge_stack(self, template, action=UPDATE, new_stack=None,
-                       pre_converge=None):
+                       pre_converge=None, new_traversal_id=None):
         """Update the stack template and trigger convergence for resources."""
-        if action not in [self.CHECK, self.SUSPEND, self.RESUME]:
+        if action not in [self.CHECK, self.SUSPEND, self.RESUME,
+                          self.SNAPSHOT]:
             if action not in [self.CREATE, self.ADOPT]:
                 # no back-up template for create action
                 self.prev_raw_template_id = getattr(self.t, 'id', None)
@@ -1450,9 +1478,11 @@ class Stack(collections.abc.Mapping):
         self.status = self.IN_PROGRESS
         self.status_reason = 'Stack %s started' % self.action
 
-        # generate new traversal and store
+        # generate new traversal and store. If new_traversal_id provided,
+        # use it as current_traversal
         previous_traversal = self.current_traversal
-        self.current_traversal = uuidutils.generate_uuid()
+        self.current_traversal = uuidutils.generate_uuid(
+            ) if new_traversal_id is None else new_traversal_id
         # we expect to update the stack having previous traversal ID
         stack_id = self.store(exp_trvsl=previous_traversal)
         if stack_id is None:
@@ -1480,7 +1510,8 @@ class Stack(collections.abc.Mapping):
                                          current_resources)
         # Store list of edges
         self.current_deps = {
-            'edges': [[rqr, rqd] for rqr, rqd in
+            'edges': [[rqr.to_tuple(), rqd.to_tuple() if rqd else None]
+                      for rqr, rqd in
                       self.convergence_dependencies.graph().edges()]}
         stack_id = self.store()
         if stack_id is None:
@@ -1493,21 +1524,16 @@ class Stack(collections.abc.Mapping):
 
         if callable(pre_converge):
             pre_converge()
-        if self.action == self.DELETE:
-            try:
-                self.delete_all_snapshots()
-            except Exception as exc:
-                self.state_set(self.action, self.FAILED, str(exc))
-                self.purge_db()
-                return
+        # Note: For DELETE, snapshots are now part of the dependency graph
+        # and will be handled by workers, no blocking call needed here.
 
         LOG.debug('Starting traversal %s with dependencies: %s',
                   self.current_traversal, self.convergence_dependencies)
 
-        # create sync_points for resources in DB
-        for rsrc_id, is_update in self.convergence_dependencies:
-            sync_point.create(self.context, rsrc_id,
-                              self.current_traversal, is_update,
+        # create sync_points for all nodes (resources and snapshots) in DB
+        for node in self.convergence_dependencies:
+            sync_point.create(self.context, node.rsrc_id,
+                              self.current_traversal, node.is_update,
                               self.id)
         # create sync_point entry for stack
         sync_point.create(
@@ -1517,19 +1543,23 @@ class Stack(collections.abc.Mapping):
         if not leaves:
             self.mark_complete()
         else:
-            for rsrc_id, is_update in sorted(leaves,
-                                             key=lambda n: n.is_update):
-                if is_update:
-                    LOG.info("Triggering resource %s for update", rsrc_id)
+            for node in sorted(leaves, key=lambda n: n.is_update):
+                if node.node_type == NODE_TYPE_SNAPSHOT:
+                    LOG.info("Triggering snapshot %s for deletion",
+                             node.rsrc_id)
+                elif node.is_update:
+                    LOG.info("Triggering resource %s for update",
+                             node.rsrc_id)
                 else:
                     LOG.info("Triggering resource %s for cleanup",
-                             rsrc_id)
+                             node.rsrc_id)
                 input_data = sync_point.serialize_input_data({})
-                self.worker_client.check_resource(self.context, rsrc_id,
+                self.worker_client.check_resource(self.context, node.rsrc_id,
                                                   self.current_traversal,
-                                                  input_data, is_update,
+                                                  input_data, node.is_update,
                                                   self.adopt_stack_data,
-                                                  self.converge)
+                                                  self.converge,
+                                                  node_type=node.node_type)
                 if scheduler.ENABLE_SLEEP:
                     time.sleep(1)
 
@@ -1620,13 +1650,32 @@ class Stack(collections.abc.Mapping):
                 if ConvergenceNode(rsrc.id, True) in dep:
                     dep += (ConvergenceNode(rsrc_id, False),
                             ConvergenceNode(rsrc_id, True))
+
+        # For DELETE action, add snapshot nodes as independent leaves
+        # for parallel processing with resource cleanup
+        if self.action == self.DELETE:
+            snapshot_ids = self._get_convergence_snapshot_ids()
+            for snap_id in snapshot_ids:
+                snap_node = ConvergenceNode(snap_id, False, NODE_TYPE_SNAPSHOT)
+                # Snapshot node is independent - no dependencies or dependents
+                # This allows parallel processing with resource cleanup
+                dep += snap_node, None
+
         self._convg_deps = dep
+
+    def _get_convergence_snapshot_ids(self):
+        """Get snapshot IDs for convergence delete operation."""
+        from heat.objects import snapshot as snapshot_object
+        snapshots = snapshot_object.Snapshot.get_all(
+            self.context, self.id, load_rsrc_snapshot=True)
+        return [s.id for s in snapshots]
 
     @property
     def convergence_dependencies(self):
         if self._convg_deps is None:
-            current_deps = ((ConvergenceNode(*i),
-                             ConvergenceNode(*j) if j is not None else None)
+            current_deps = ((ConvergenceNode.from_tuple(i),
+                             ConvergenceNode.from_tuple(j) if j is not None
+                             else None)
                             for i, j in self.current_deps['edges'])
             self._convg_deps = dependencies.Dependencies(edges=current_deps)
 
@@ -2156,13 +2205,29 @@ class Stack(collections.abc.Mapping):
             pre_completion_func=save_snapshot_func)
         sus_task(timeout=self.timeout_secs())
 
-    def delete_all_snapshots(self):
+    def delete_all_snapshots(self, run_till_success=True):
         """Remove all snapshots for this stack."""
-        snapshots = snapshot_object.Snapshot.get_all_by_stack(
+        snapshot_objs = snapshot_object.Snapshot.get_all(
             self.context, self.id)
-        for snapshot in snapshots:
-            self.delete_snapshot(snapshot)
-            snapshot_object.Snapshot.delete(self.context, snapshot.id)
+        if self.convergence:
+            snapshot_ids = [s.id for s in snapshot_objs]
+            start_time = self.updated_time or self.created_time
+            failure_reason = snapshots.delete_snapshots(
+                self.context, snapshot_ids, self.id,
+                current_traversal=self.current_traversal,
+                start_time=start_time,
+                run_till_success=run_till_success,
+                thread_group_mgr=self.thread_group_mgr)
+            if failure_reason is not None:
+                raise exception.Error(
+                    _("Stack %(stack_id)s failed "
+                      "when delete all snapshots: %(failure_reason)s.") % {
+                          "stack_id": self.id,
+                          "failure_reason": failure_reason})
+        else:
+            for snapshot in snapshot_objs:
+                self.delete_snapshot(snapshot)
+                snapshot_object.Snapshot.delete(self.context, snapshot.id)
 
     @staticmethod
     def _template_from_snapshot_data(snapshot_data):
@@ -2189,7 +2254,6 @@ class Stack(collections.abc.Mapping):
         newstack = self.__class__(self.context, self.name, template,
                                   timeout_mins=self.timeout_mins,
                                   disable_rollback=self.disable_rollback)
-
         for name in newstack.defn.enabled_rsrc_names():
             defn = newstack.defn.resource_definition(name)
             rsrc = resource.Resource(name, defn, self)
@@ -2197,6 +2261,7 @@ class Stack(collections.abc.Mapping):
             handle_restore = getattr(rsrc, 'handle_restore', None)
             if callable(handle_restore):
                 defn = handle_restore(defn, data)
+
             template.add_resource(defn, name)
 
         newstack.parameters.set_stack_id(self.identifier())
@@ -2236,7 +2301,7 @@ class Stack(collections.abc.Mapping):
         self.set_stack_user_project_id(project_id)
 
     @profiler.trace('Stack.prepare_abandon', hide_args=False)
-    def prepare_abandon(self):
+    def prepare_abandon(self, no_resources=False):
         return {
             'name': self.name,
             'id': self.id,
@@ -2245,8 +2310,10 @@ class Stack(collections.abc.Mapping):
             'files': self.t.files,
             'status': self.status,
             'template': self.t.t,
-            'resources': dict((res.name, res.prepare_abandon())
-                              for res in self.resources.values()),
+            'resources': {
+                } if no_resources else dict(
+                    (res.name, res.prepare_abandon(
+                        )) for res in self.resources.values()),
             'project_id': self.tenant_id,
             'stack_user_project_id': self.stack_user_project_id,
             'tags': self.tags,
@@ -2285,6 +2352,8 @@ class Stack(collections.abc.Mapping):
                      {'action': self.action, 'stack_name': self.name})
             self.rollback()
         else:
+            if self.action == self.SNAPSHOT:
+                self.update_snapshot(failure_reason, self.FAILED)
             self.purge_db()
         return True
 
@@ -2301,8 +2370,20 @@ class Stack(collections.abc.Mapping):
         updated = self.state_set(self.action, self.COMPLETE, reason)
         if not updated:
             return
+        if self.action == self.SNAPSHOT:
+            self.update_snapshot(reason, self.COMPLETE)
 
         self.purge_db()
+
+    def update_snapshot(self, reason, status):
+        # update snapshot object
+        data = self.prepare_abandon(True if self.convergence else False)
+        data["status"] = status
+        snapshot_object.Snapshot.update(
+            # We use current_traversal to store snapshot id.
+            self.context, self.current_traversal,
+            {'data': data, 'status': status,
+             'status_reason': reason})
 
     def purge_db(self):
         """Cleanup database after stack has completed/failed.

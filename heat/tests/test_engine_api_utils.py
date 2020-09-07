@@ -543,6 +543,34 @@ class FormatTest(common.HeatTestCase):
         # Should be '{"bar": "baz"}' NOT "{'bar': 'baz'}"
         self.assertEqual('{"bar": "baz"}', info['parameters']['foo'])
 
+    def test_format_resource_snapshot(self):
+        def _dummy_resource_snapshot():
+            rsrc_snap = mock.Mock()
+            rsrc_snap.id = 'foo'
+            rsrc_snap.snapshot_id = 'bar'
+            rsrc_snap.resource_name = 'fake_name'
+            rsrc_snap.data = {
+                'name': 'fake_name',
+                'resource_id': 'foo',
+                'type': 'OS::Nova::Server',
+                'action': 'CREATE',
+                'status': 'COMPLETE',
+                'metadata': {},
+                'resource_data': {}}
+            rsrc_snap.created_at = timeutils.utcnow()
+            return rsrc_snap
+        resource_snapshot = _dummy_resource_snapshot()
+        result = api.format_resource_snapshot(resource_snapshot)
+        self.assertIsNotNone(result)
+        self.assertEqual(resource_snapshot.id, result['id'])
+        self.assertEqual(
+            resource_snapshot.snapshot_id, result['snapshot_id'])
+        self.assertEqual(
+            resource_snapshot.resource_name, result['resource_name'])
+        self.assertEqual(resource_snapshot.data, result['data'])
+        self.assertEqual(heat_timeutils.isotime(resource_snapshot.created_at),
+                         result['creation_time'])
+
 
 class FormatValidateParameterTest(common.HeatTestCase):
 

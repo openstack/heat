@@ -1485,6 +1485,115 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(1, db_api.snapshot_count_all_by_stack(self.ctx,
                                                                stack2.id))
 
+    def test_resource_snapshot_create(self):
+        self._resource_snapshot_create()
+
+    def _resource_snapshot_create(self):
+        snapshot = self._create_snapshot()
+        values = {'snapshot_id': snapshot.id, 'resource_name': 'foo',
+                  'data': {}}
+        resource_snapshot = db_api.resource_snapshot_create(self.ctx, values)
+        self.assertIsNotNone(resource_snapshot)
+        self.assertEqual(values['snapshot_id'], resource_snapshot.snapshot_id)
+        return resource_snapshot
+
+    def test_resource_snapshot_get(self):
+        resource_snapshot = self._resource_snapshot_create()
+        resource_snapshot_id = resource_snapshot.id
+        rsrc_snap = db_api.resource_snapshot_get(
+            self.ctx, resource_snapshot_id)
+        self.assertIsNotNone(rsrc_snap)
+        self.assertEqual(resource_snapshot.snapshot_id, rsrc_snap.snapshot_id)
+        self.assertEqual(
+            resource_snapshot.resource_name, rsrc_snap.resource_name)
+        self.assertIsNotNone(rsrc_snap.created_at)
+
+    def test_resource_snapshot_get_not_found(self):
+        resource_snapshot_id = 'foobar'
+        self.assertRaises(
+            exception.NotFound,
+            db_api.resource_snapshot_get,
+            self.ctx,
+            resource_snapshot_id)
+
+    def test_resource_snapshot_get_by_snapshot_and_rsrc_not_found(self):
+        resource_snapshot_name = 'foo'
+        resource_snapshot_snapshot_id = 'bar'
+        self.assertRaises(
+            exception.NotFound,
+            db_api.resource_snapshot_get_by_snapshot_and_rsrc,
+            self.ctx,
+            resource_snapshot_snapshot_id, resource_snapshot_name)
+
+    def test_resource_snapshot_get_by_snapshot_and_rsrc(self):
+        resource_snapshot = self._resource_snapshot_create()
+        resource_name = resource_snapshot.resource_name
+        snapshot_id = resource_snapshot.snapshot_id
+        rsrc_snap = db_api.resource_snapshot_get_by_snapshot_and_rsrc(
+            self.ctx, snapshot_id=snapshot_id, resource_name=resource_name)
+        self.assertIsNotNone(rsrc_snap)
+        self.assertEqual(resource_snapshot.snapshot_id, rsrc_snap.snapshot_id)
+        self.assertEqual(
+            resource_snapshot.resource_name, rsrc_snap.resource_name)
+        self.assertIsNotNone(rsrc_snap.created_at)
+
+    def test_resource_snapshot_update_not_found(self):
+        resource_snapshot_id = 'foobar'
+        err = self.assertRaises(exception.NotFound,
+                                db_api.resource_snapshot_update,
+                                self.ctx, resource_snapshot_id, values={})
+        self.assertIn(resource_snapshot_id, str(err))
+
+    def test_resource_snapshot_update(self):
+        resource_snapshot = self._resource_snapshot_create()
+        snapshot_id = resource_snapshot.snapshot_id
+        resource_snapshot_id = resource_snapshot.id
+        values = {'snapshot_id': snapshot_id,
+                  'resource_name': resource_snapshot.resource_name,
+                  'data': {
+                      'name': resource_snapshot.resource_name,
+                      'resource_id': 'foo',
+                      'type': 'OS::Nova::Server',
+                      'action': 'CREATE',
+                      'status': 'COMPLETE',
+                      'metadata': {},
+                      'resource_data': {}
+                      }}
+        rsrc_snap = db_api.resource_snapshot_update(
+            self.ctx, resource_snapshot_id, values)
+        self.assertIsNotNone(rsrc_snap)
+        self.assertEqual(values['data'], rsrc_snap.data)
+
+    def test_resource_snapshot_delete_not_found(self):
+        resource_snapshot_id = str(uuid.uuid4())
+        err = self.assertRaises(exception.NotFound,
+                                db_api.resource_snapshot_delete,
+                                self.ctx, resource_snapshot_id)
+        self.assertIn(resource_snapshot_id, str(err))
+
+    def test_resource_snapshot_delete(self):
+        rsrc_snap = self._resource_snapshot_create()
+        db_api.resource_snapshot_delete(self.ctx, rsrc_snap.id)
+
+        err = self.assertRaises(
+            exception.NotFound,
+            db_api.resource_snapshot_get,
+            self.ctx,
+            rsrc_snap.id)
+
+        self.assertIn(rsrc_snap.id, str(err))
+
+    def _create_snapshot(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        snapshot = db_api.snapshot_create(self.ctx, values)
+        self.assertIsNotNone(snapshot)
+        self.assertEqual(values['tenant'], snapshot.tenant)
+        return snapshot
+
 
 def create_raw_template(context, **kwargs):
     t = template_format.parse(wp_template)

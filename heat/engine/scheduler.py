@@ -146,7 +146,8 @@ class TaskRunner(object):
             LOG.debug('%s sleeping', str(self))
             time.sleep(wait_time)
 
-    def __call__(self, wait_time=1, timeout=None, progress_callback=None):
+    def __call__(self, wait_time=1, timeout=None, progress_callback=None,
+                 post_func=None):
         """Start and run the task to completion.
 
         The task will first sleep for zero seconds, then sleep for `wait_time`
@@ -156,7 +157,8 @@ class TaskRunner(object):
 
         started = False
         for step in self.as_task(timeout=timeout,
-                                 progress_callback=progress_callback):
+                                 progress_callback=progress_callback,
+                                 post_func=post_func):
             self._sleep(wait_time if (started or wait_time is None) else 0)
             started = True
 
@@ -228,7 +230,8 @@ class TaskRunner(object):
         for step in self.as_task(progress_callback=progress_callback):
             self._sleep(wait_time)
 
-    def as_task(self, timeout=None, progress_callback=None):
+    def as_task(self, timeout=None, progress_callback=None,
+                post_func=None):
         """Return a task that drives the TaskRunner."""
         resuming = self.started()
         if not resuming:
@@ -259,6 +262,13 @@ class TaskRunner(object):
                     self._done = False
             else:
                 done = self.step()
+
+        # run post_func
+        if callable(post_func):
+            try:
+                post_func()
+            except StopIteration:
+                return
 
     def cancel(self, grace_period=None):
         """Cancel the task and mark it as done."""

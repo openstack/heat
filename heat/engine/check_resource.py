@@ -20,11 +20,14 @@ from oslo_log import log as logging
 from oslo_utils import excutils
 
 from heat.common import exception
+from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import snapshots
 from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.objects import resource as resource_objects
+from heat.objects import snapshot as snapshot_objects
 from heat.rpc import api as rpc_api
 from heat.rpc import listener_client
 
@@ -281,7 +284,7 @@ class CheckResource(object):
                     rsrc.store_attributes()
             check_stack_complete(cnxt, stack, current_traversal,
                                  graph_key.rsrc_id, deps, graph_key.is_update,
-                                 rsrc_failure)
+                                 rsrc_failure, graph_key.node_type)
         except exception.EntityNotFound as e:
             if e.entity == "Sync Point":
                 # Reload the stack to determine the current traversal, and
@@ -298,6 +301,28 @@ class CheckResource(object):
                 self.retrigger_check_resource(cnxt, resource_id, stack)
             else:
                 raise
+
+    def check_delete_snapshot(self, cnxt, rsrc, snapshot):
+
+        try:
+            done = do_snapshot_delete(
+                rsrc=rsrc, snapshot=snapshot, msg_queue=self.msg_queue,
+                engine_id=self.engine_id)
+            # TODO(ricolin) Allow running resources in batch_size.
+            # Current delete snapshot runs all resources without
+            # dependencies (every resources is root) because snapshot does
+            # not depend on each other. Therefore, there are no next set.
+            if done:
+                deps = dependencies.Dependencies(
+                    [(parser.ConvergenceNode(rsrc_name, True),
+                        None) for rsrc_name in snapshot.resources])
+                check_snapshot_complete(cnxt, snapshot, rsrc.name, deps, True)
+        except BaseException as exc:
+            with excutils.save_and_reraise_exception():
+                msg = str(exc)
+                LOG.exception("Unexpected exception in resource check delete "
+                              "snapshot.")
+                snapshot.mark_failed(rsrc.name, msg)
 
     def check(self, cnxt, resource_id, current_traversal,
               resource_data, is_update, adopt_stack_data,
@@ -354,16 +379,84 @@ def load_resource(cnxt, resource_id, resource_data,
         return None, None, None
 
 
+def load_resource_from_snapshot(cnxt, rsrc_name, snapshot_id,
+                                thread_group_mgr, is_stack_delete,
+                                current_traversal, start_time):
+    try:
+        snapshot_obj = snapshot_objects.Snapshot.get_snapshot(
+            cnxt, snapshot_id, load_rsrc_snapshot=True)
+        # Using stack_id from snapshot to load stack
+        stack = parser.Stack.load(cnxt, stack_id=snapshot_obj.stack_id,
+                                  force_reload=True)
+
+        new_stack, tmpl = stack.restore_data(snapshot_obj)
+        rsrc = new_stack.resources.get(rsrc_name)
+        snapshot = snapshots.Snapshot(
+            context=cnxt,
+            snapshot_id=snapshot_id,
+            stack_id=stack.id,
+            action=snapshots.Snapshot.DELETE_SNAPSHOT,
+            resources=snapshot_obj.data['resources'],
+            thread_group_mgr=thread_group_mgr,
+            is_stack_delete=is_stack_delete,
+            current_traversal=current_traversal,
+            start_time=start_time)
+
+        # provide resource_data that contains resource snapshot information.
+        rsrc._data = snapshot.resources.get(rsrc.name).get('resource_data')
+        rsrc.converge = True
+
+        return rsrc, stack, snapshot
+    except exception.NotFound:
+        # can be ignored
+        return None, None, None
+
+
+def check_snapshot_complete(cnxt, snapshot, sender_id, deps, is_update):
+    """Mark the snapshot complete if the update is complete."""
+
+    roots = set(deps.roots())
+
+    if (sender_id, is_update) not in roots:
+        return
+
+    def check_complete(snapshot_id, data, rsrc_failures):
+        if rsrc_failures:
+            msg = (
+                "Snapshot %(snapshot_id)s %(action)s failed: "
+                "%(rsrc_failures)s"
+            ) % {
+                'snapshot_id': snapshot_id,
+                'action': snapshot.action,
+                'rsrc_failures': rsrc_failures
+            }
+            snapshot.mark_failed(snapshot_id, msg)
+        else:
+            snapshot.mark_complete(predecessors=roots)
+
+    sender_key = parser.ConvergenceNode(sender_id, is_update)
+    try:
+        sync_point.sync(cnxt, snapshot.id, snapshot.current_traversal, True,
+                        check_complete, roots, {sender_key: None})
+    except exception.EntityNotFound:
+        LOG.debug("Ignore EntityNotFound: Snapshot sync_point entity %s "
+                  "already deleted. This might because other resource "
+                  "snapshot actions already failed.",
+                  (snapshot.id, snapshot.current_traversal, True))
+
+
 def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
-                         is_update, rsrc_failure=None):
+                         is_update, rsrc_failure=None,
+                         node_type=parser.NODE_TYPE_RESOURCE):
     """Mark the stack complete if the update is complete.
 
     Complete is currently in the sense that all desired resources are in
     service, not that superfluous ones have been cleaned up.
     """
     roots = set(deps.roots())
+    sender_key = parser.ConvergenceNode(sender_id, is_update, node_type)
 
-    if (sender_id, is_update) not in roots:
+    if sender_key not in roots:
         return
 
     def check_complete(stack_id, data, rsrc_failures, skip_propagate):
@@ -379,7 +472,6 @@ def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
                 return
         stack.mark_complete()
 
-    sender_key = parser.ConvergenceNode(sender_id, is_update)
     sync_point.sync(cnxt, stack.id, current_traversal, True,
                     check_complete, roots, {sender_key: None},
                     new_resource_failures=rsrc_failure)
@@ -388,7 +480,8 @@ def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
 def propagate_check_resource(cnxt, rpc_client, next_res_id,
                              current_traversal, predecessors, sender_key,
                              sender_data, is_update, adopt_stack_data,
-                             is_skip=False, rsrc_failure=None, converge=False):
+                             is_skip=False, rsrc_failure=None, converge=False,
+                             node_type=parser.NODE_TYPE_RESOURCE):
     """Trigger processing of node if all of its dependencies are satisfied."""
     def do_check(entity_id, data, rsrc_failures, skip_propagate):
         # Pass accumulated failures through RPC so they propagate to dependents
@@ -396,7 +489,8 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
                                   data, is_update, adopt_stack_data,
                                   converge=converge,
                                   skip_propagate=skip_propagate,
-                                  accumulated_failures=rsrc_failures or None)
+                                  accumulated_failures=rsrc_failures or None,
+                                  node_type=node_type)
 
     sync_point.sync(cnxt, next_res_id, current_traversal,
                     is_update, do_check, predecessors,
@@ -425,7 +519,7 @@ def check_resource_update(rsrc, template_id, requires, engine_id,
     if stack.action == stack.SUSPEND:
         return
     check_message = functools.partial(_check_for_message, msg_queue)
-    if stack.action in [stack.CHECK, stack.RESUME]:
+    if stack.action in [stack.CHECK, stack.RESUME, stack.SNAPSHOT]:
         do_convergence = getattr(rsrc, stack.action.lower() + "_convergence")
         do_convergence(engine_id, stack.time_remaining(), check_message)
     elif rsrc.action == resource.Resource.INIT:
@@ -439,7 +533,7 @@ def check_resource_update(rsrc, template_id, requires, engine_id,
 
 def check_resource_cleanup(rsrc, template_id, engine_id, stack, msg_queue):
     """Delete the Resource if appropriate."""
-    if stack.action in [stack.CHECK, stack.RESUME]:
+    if stack.action in [stack.CHECK, stack.RESUME, stack.SNAPSHOT]:
         return
     check_message = functools.partial(_check_for_message, msg_queue)
     if stack.action == stack.SUSPEND:
@@ -448,3 +542,23 @@ def check_resource_cleanup(rsrc, template_id, engine_id, stack, msg_queue):
     else:
         rsrc.delete_convergence(template_id, engine_id,
                                 stack.time_remaining(), check_message)
+
+
+def do_snapshot_delete(rsrc, snapshot, msg_queue, engine_id):
+    try:
+        check_message = functools.partial(
+            _check_for_message, msg_queue)
+        do_convergence = getattr(
+            rsrc, snapshot.action.lower() + "_convergence")
+        do_convergence(
+            engine_id, snapshot.time_remaining(), check_message)
+    except exception.ResourceFailure as ex:
+        action = ex.action or rsrc.action
+        reason = 'Resource %s failed: %s' % (action,
+                                             str(ex))
+        snapshot.mark_failed(rsrc.name, reason)
+        return False
+    except scheduler.Timeout:
+        snapshot.mark_failed(rsrc.name, u'Timed out')
+        return False
+    return True

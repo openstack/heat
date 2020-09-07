@@ -632,3 +632,17 @@ def format_snapshot(snapshot):
             heat_timeutils.isotime(snapshot.created_at),
     }
     return result
+
+
+def format_resource_snapshot(rsrc_snapshot):
+    if rsrc_snapshot is None:
+        return
+    result = {
+        rpc_api.RESOURCE_SNAPSHOT_ID: rsrc_snapshot.id,
+        rpc_api.RESOURCE_SNAPSHOT_SNAPSHOT_ID: rsrc_snapshot.snapshot_id,
+        rpc_api.RESOURCE_SNAPSHOT_RESOURCE_NAME: rsrc_snapshot.resource_name,
+        rpc_api.RESOURCE_SNAPSHOT_DATA: rsrc_snapshot.data,
+        rpc_api.RESOURCE_SNAPSHOT_CREATION_TIME:
+            heat_timeutils.isotime(rsrc_snapshot.created_at),
+    }
+    return result

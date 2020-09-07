@@ -18,20 +18,168 @@ from unittest import mock
 import uuid
 
 from oslo_config import cfg
+from oslo_utils import excutils
 
 from heat.common import exception
+from heat.common import timeutils as heat_timeutils
 from heat.engine import check_resource
 from heat.engine import dependencies
 from heat.engine import resource
 from heat.engine import scheduler
+from heat.engine import snapshots
 from heat.engine import stack
 from heat.engine import sync_point
 from heat.engine import worker
+from heat.objects import snapshot as snapshot_object
 from heat.rpc import api as rpc_api
 from heat.rpc import worker_client
 from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests import utils
+
+
+class CheckDeleteSnapshotWorkflowTest(common.HeatTestCase):
+    def setUp(self):
+        super(CheckDeleteSnapshotWorkflowTest, self).setUp()
+        thread_group_mgr = mock.Mock()
+        cfg.CONF.set_default('convergence_engine', True)
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           thread_group_mgr)
+        self.cr = check_resource.CheckResource(self.worker.engine_id,
+                                               self.worker._rpc_client,
+                                               self.worker.thread_group_mgr,
+                                               mock.Mock(), {})
+        self.worker._rpc_client = worker_client.WorkerClient()
+        self.ctx = utils.dummy_context()
+        self.stack = tools.get_stack(
+            'check_workflow_delete_resource_snapshot', self.ctx,
+            template=tools.string_template_five, convergence=True)
+        self.stack.converge_stack(self.stack.t)
+        self.stack_load_patcher = mock.patch.object(
+            stack.Stack, 'load', return_value=self.stack)
+        self.stack_load_patcher.start()
+        self.addCleanup(self.stack_load_patcher.stop)
+        self.resource = self.stack['A']
+        data = self.stack.prepare_abandon(no_resources=True)
+        self.snapshot = snapshot_object.Snapshot.create(
+            self.ctx, {
+                'tenant': self.ctx.project_id, 'data': data,
+                'name': 'snapshot1', 'stack_id': self.stack.id,
+                'status': 'COMPLETE'})
+        self.resource_snapshot = self.resource.resource_snapshot_set(
+            snapshot_id=self.snapshot.id)
+        self.start_time_date_time = (
+            self.stack.updated_time or self.stack.created_time)
+        self.start_time = self.start_time_date_time.strftime(
+            heat_timeutils.str_duration_format)
+
+    def tearDown(self):
+        super(CheckDeleteSnapshotWorkflowTest, self).tearDown()
+
+    @mock.patch.object(check_resource, 'check_snapshot_complete')
+    @mock.patch.object(check_resource, 'do_snapshot_delete')
+    def test_resource_not_available(self, mock_dsd, mock_csc):
+        self.worker.check_resource_delete_snapshot(
+            self.ctx, snapshot_id='non-existant-id', resource_name='A',
+            start_time=self.start_time, is_stack_delete=False,
+            current_traversal=self.stack.current_traversal)
+        self.assertFalse(mock_csc.called)
+        self.assertFalse(mock_dsd.called)
+
+    @mock.patch.object(check_resource, 'check_snapshot_complete')
+    @mock.patch.object(check_resource, 'do_snapshot_delete')
+    def test_resource_available(self, mock_dsd, mock_csc):
+        self.worker.check_resource_delete_snapshot(
+            self.ctx, snapshot_id=self.snapshot.id, resource_name='A',
+            start_time=self.start_time, is_stack_delete=False,
+            current_traversal=self.stack.current_traversal)
+        mock_dsd.assert_called_once_with(
+            engine_id='engine_id', msg_queue=mock.ANY,
+            rsrc=mock.ANY, snapshot=mock.ANY)
+        mock_csc.assert_called_once_with(
+            mock.ANY, mock.ANY, self.resource.name, mock.ANY, True)
+
+    @mock.patch.object(check_resource, 'check_snapshot_complete')
+    @mock.patch.object(check_resource, 'do_snapshot_delete')
+    @mock.patch.object(excutils, 'save_and_reraise_exception')
+    @mock.patch.object(snapshots.Snapshot, 'mark_failed')
+    def test_resource_with_error(self, mock_mf, mock_sre, mock_dsd, mock_csc):
+        mock_dsd.side_effect = exception.Error("Some error")
+        self.worker.check_resource_delete_snapshot(
+            self.ctx, snapshot_id=self.snapshot.id, resource_name='A',
+            start_time=self.start_time, is_stack_delete=False,
+            current_traversal=self.stack.current_traversal)
+        mock_dsd.assert_called_once_with(
+            engine_id='engine_id', msg_queue=mock.ANY,
+            rsrc=mock.ANY, snapshot=mock.ANY)
+        mock_mf.assert_called_once_with('A', 'Some error')
+        self.assertTrue(mock_sre.called)
+        self.assertFalse(mock_csc.called)
+
+    @mock.patch.object(resource.Resource, 'delete_snapshot_convergence')
+    def test_do_snapshot_delete(self, mock_dsc):
+        rsrc, stack, snap = check_resource.load_resource_from_snapshot(
+            self.ctx, rsrc_name=self.resource.name,
+            snapshot_id=self.snapshot.id,
+            thread_group_mgr=mock.Mock(),
+            is_stack_delete=False,
+            current_traversal=self.stack.current_traversal,
+            start_time=self.start_time_date_time)
+
+        result = check_resource.do_snapshot_delete(
+            self.resource, snap,
+            self.cr.msg_queue,
+            self.cr.engine_id)
+        self.assertTrue(mock_dsc.called)
+        self.assertTrue(result)
+
+    @mock.patch.object(resource.Resource, 'delete_snapshot_convergence')
+    @mock.patch.object(snapshots.Snapshot, 'mark_failed')
+    def test_do_snapshot_delete_with_resource_failure(self, mock_mf, mock_dsc):
+        dummy_ex = exception.ResourceNotAvailable(
+            resource_name=self.resource.name)
+        mock_dsc.side_effect = exception.ResourceFailure(
+            dummy_ex, self.resource, action='DELETE_SNAPSHOT')
+        rsrc, stack, snap = check_resource.load_resource_from_snapshot(
+            self.ctx, rsrc_name=self.resource.name,
+            snapshot_id=self.snapshot.id,
+            thread_group_mgr=mock.Mock(),
+            is_stack_delete=False,
+            current_traversal=self.stack.current_traversal,
+            start_time=self.start_time_date_time)
+
+        result = check_resource.do_snapshot_delete(
+            self.resource, snap,
+            self.cr.msg_queue,
+            self.cr.engine_id)
+        self.assertFalse(result)
+        self.assertTrue(mock_dsc.called)
+        err_msg = ("Resource DELETE_SNAPSHOT failed: ResourceNotAvailable: "
+                   "resources.A: The Resource (A) is not available.")
+        mock_mf.assert_called_once_with('A', err_msg)
+
+    @mock.patch.object(resource.Resource, 'delete_snapshot_convergence')
+    @mock.patch.object(snapshots.Snapshot, 'mark_failed')
+    def test_do_snapshot_delete_with_timeout(self, mock_mf, mock_dsc):
+        mock_dsc.side_effect = scheduler.Timeout(None, 60)
+        rsrc, stack, snap = check_resource.load_resource_from_snapshot(
+            self.ctx, rsrc_name=self.resource.name,
+            snapshot_id=self.snapshot.id,
+            thread_group_mgr=mock.Mock(),
+            is_stack_delete=False,
+            current_traversal=self.stack.current_traversal,
+            start_time=self.start_time_date_time)
+
+        result = check_resource.do_snapshot_delete(
+            self.resource, snap,
+            self.cr.msg_queue,
+            self.cr.engine_id)
+        self.assertFalse(result)
+        self.assertTrue(mock_dsc.called)
+        err_msg = ("Timed out")
+        mock_mf.assert_called_once_with('A', err_msg)
 
 
 @mock.patch.object(check_resource, 'check_stack_complete')
@@ -40,7 +188,7 @@ from heat.tests import utils
 @mock.patch.object(check_resource, 'check_resource_update')
 class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(worker_client.WorkerClient, 'check_resource',
-                       lambda *_: None)
+                       lambda *args, **kwargs: None)
     def setUp(self):
         super(CheckWorkflowUpdateTest, self).setUp()
         thread_group_mgr = mock.Mock()
@@ -62,12 +210,13 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.resource = self.stack['A']
         self.is_update = True
         self.graph_key = (self.resource.id, self.is_update)
-        self.orig_load_method = stack.Stack.load
-        stack.Stack.load = mock.Mock(return_value=self.stack)
+        self.stack_load_patcher = mock.patch.object(
+            stack.Stack, 'load', return_value=self.stack)
+        self.stack_load_patcher.start()
+        self.addCleanup(self.stack_load_patcher.stop)
 
     def tearDown(self):
         super(CheckWorkflowUpdateTest, self).tearDown()
-        stack.Stack.load = self.orig_load_method
 
     def test_resource_not_available(
             self, mock_cru, mock_crc, mock_pcr, mock_csc):
@@ -96,7 +245,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.assertFalse(mock_crc.called)
 
         expected_calls = []
-        for req, fwd in self.stack.convergence_dependencies.leaves():
+        for node in self.stack.convergence_dependencies.leaves():
             expected_calls.append(
                 (mock.call.worker.propagate_check_resource.
                     assert_called_once_with(
@@ -106,7 +255,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_csc.assert_called_once_with(
             self.ctx, mock.ANY, self.stack.current_traversal,
             self.resource.id,
-            mock.ANY, True, None)
+            mock.ANY, True, None, stack.NODE_TYPE_RESOURCE)
 
     @mock.patch.object(resource.Resource, 'load')
     @mock.patch.object(resource.Resource, 'make_replacement')
@@ -376,20 +525,22 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_csc.assert_called_once_with(self.ctx, self.stack,
                                          trav_id,
                                          resC.id, mock.ANY,
-                                         is_update, None)
+                                         is_update, None, 'resource')
 
     @mock.patch.object(sync_point, 'sync')
     def test_retrigger_check_resource(self, mock_sync, mock_cru, mock_crc,
                                       mock_pcr, mock_csc):
         resC = self.stack['C']
         # A, B are predecessors to C when is_update is True
-        expected_predecessors = {(self.stack['A'].id, True),
-                                 (self.stack['B'].id, True)}
+        expected_predecessors = {
+            stack.ConvergenceNode(self.stack['A'].id, True),
+            stack.ConvergenceNode(self.stack['B'].id, True)}
         self.cr.retrigger_check_resource(self.ctx, resC.id, self.stack)
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, resC.id,
                                          self.stack.current_traversal,
-                                         mock.ANY, (resC.id, True), None,
-                                         True, None,
+                                         mock.ANY,
+                                         stack.ConvergenceNode(resC.id, True),
+                                         None, True, None,
                                          converge=self.stack.converge)
         call_args, call_kwargs = mock_pcr.call_args
         actual_predecessors = call_args[4]
@@ -400,14 +551,16 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         # mock dependencies to indicate a rsrc with id 2 is not present
         # in latest traversal
         self.stack._convg_deps = dependencies.Dependencies([
-            [(1, False), (1, True)], [(2, False), None]])
+            [stack.ConvergenceNode(1, False), stack.ConvergenceNode(1, True)],
+            [stack.ConvergenceNode(2, False), None]])
         # simulate rsrc 2 completing its update for old traversal
         # and calling rcr
         self.cr.retrigger_check_resource(self.ctx, 2, self.stack)
         # Ensure that pcr was called with proper delete traversal
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
-                                         mock.ANY, (2, False), None,
+                                         mock.ANY,
+                                         stack.ConvergenceNode(2, False), None,
                                          False, None,
                                          converge=self.stack.converge)
 
@@ -416,14 +569,16 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         # mock dependencies to indicate a rsrc with id 2 has an update
         # in latest traversal
         self.stack._convg_deps = dependencies.Dependencies([
-            [(1, False), (1, True)], [(2, False), (2, True)]])
+            [stack.ConvergenceNode(1, False), stack.ConvergenceNode(1, True)],
+            [stack.ConvergenceNode(2, False), stack.ConvergenceNode(2, True)]])
         # simulate rsrc 2 completing its delete for old traversal
         # and calling rcr
         self.cr.retrigger_check_resource(self.ctx, 2, self.stack)
         # Ensure that pcr was called with proper delete traversal
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
-                                         mock.ANY, (2, True), None,
+                                         mock.ANY,
+                                         stack.ConvergenceNode(2, True), None,
                                          True, None,
                                          converge=self.stack.converge)
 
@@ -476,7 +631,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                     template=tools.string_template_five,
                                     convergence=True)
         new_stack.current_traversal = 'new_traversal'
-        stack.Stack.load = mock.Mock(return_value=new_stack)
+        stack.Stack.load.return_value = new_stack
 
         self.cr._handle_resource_failure(self.ctx, self.is_update,
                                          self.resource.id,
@@ -561,7 +716,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
 @mock.patch.object(check_resource, 'check_resource_update')
 class CheckWorkflowCleanupTest(common.HeatTestCase):
     @mock.patch.object(worker_client.WorkerClient, 'check_resource',
-                       lambda *_: None)
+                       lambda *args, **kwargs: None)
     def setUp(self):
         super(CheckWorkflowCleanupTest, self).setUp()
         thread_group_mgr = mock.Mock()
@@ -670,7 +825,8 @@ class MiscMethodsTest(common.HeatTestCase):
             True)
         mock_sync.assert_called_once_with(
             self.ctx, self.stack.id, self.stack.current_traversal, True,
-            mock.ANY, mock.ANY, {(self.stack['E'].id, True): None},
+            mock.ANY, mock.ANY,
+            {stack.ConvergenceNode(self.stack['E'].id, True): None},
             new_resource_failures=None)
 
     @mock.patch.object(sync_point, 'sync')
@@ -685,7 +841,7 @@ class MiscMethodsTest(common.HeatTestCase):
     @mock.patch.object(stack.Stack, '_persist_state')
     def test_check_stack_complete_persist_called(self, mock_persist_state,
                                                  mock_dep_roots):
-        mock_dep_roots.return_value = [(1, True)]
+        mock_dep_roots.return_value = [stack.ConvergenceNode(1, True)]
         check_resource.check_stack_complete(
             self.ctx, self.stack, self.stack.current_traversal,
             1, self.stack.convergence_dependencies,
@@ -782,7 +938,7 @@ class CheckWorkflowCheckActionTest(common.HeatTestCase):
     """Tests for CHECK action in convergence mode."""
 
     @mock.patch.object(worker_client.WorkerClient, 'check_resource',
-                       lambda *_: None)
+                       lambda *args, **kwargs: None)
     def setUp(self):
         super(CheckWorkflowCheckActionTest, self).setUp()
         thread_group_mgr = mock.Mock()
@@ -806,12 +962,13 @@ class CheckWorkflowCheckActionTest(common.HeatTestCase):
         self.stack.status = self.stack.IN_PROGRESS
         self.resource = self.stack['A']
         self.is_update = True
-        self.orig_load_method = stack.Stack.load
-        stack.Stack.load = mock.Mock(return_value=self.stack)
+        self.stack_load_patcher = mock.patch.object(
+            stack.Stack, 'load', return_value=self.stack)
+        self.stack_load_patcher.start()
+        self.addCleanup(self.stack_load_patcher.stop)
 
     def tearDown(self):
         super(CheckWorkflowCheckActionTest, self).tearDown()
-        stack.Stack.load = self.orig_load_method
 
     def test_handle_resource_failure_returns_failure_for_check(
             self, mock_cru, mock_crc, mock_pcr, mock_csc):

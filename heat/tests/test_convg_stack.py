@@ -31,6 +31,16 @@ from heat.tests.engine import tools
 from heat.tests import utils
 
 
+def _edges_to_tuples(edges):
+    """Convert graph edges from ConvergenceNode to tuples for comparison."""
+    result = []
+    for n1, n2 in edges:
+        t1 = n1.to_tuple() if n1 else None
+        t2 = n2.to_tuple() if n2 else None
+        result.append((t1, t2))
+    return result
+
+
 @mock.patch.object(worker_client.WorkerClient, 'check_resource')
 class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
     def setUp(self):
@@ -57,7 +67,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         stack.converge_stack(template=stack.t, action=stack.CREATE)
         self.assertIsNone(stack.ext_rsrcs_db)
         self.assertEqual([((1, True), None)],
-                         list(stack.convergence_dependencies._graph.edges()))
+                         _edges_to_tuples(
+                             stack.convergence_dependencies._graph.edges()))
 
         stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
         self.assertIsNotNone(stack_db.current_traversal)
@@ -69,12 +80,12 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual({'edges': [[[1, True], None]]}, stack_db.current_deps)
         leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
-        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
+        for node in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
-                    stack.context, rsrc_id, stack.current_traversal,
+                    stack.context, node.rsrc_id, stack.current_traversal,
                     {'input_data': {}},
-                    is_update, None, False))
+                    node.is_update, None, False, node_type=node.node_type))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def test_conv_string_five_instance_stack_create(self, mock_cr):
@@ -88,7 +99,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                           ((2, True), (3, True)),
                           ((3, True), (4, True)),
                           ((3, True), (5, True))],
-                         sorted(stack.convergence_dependencies._graph.edges()))
+                         sorted(_edges_to_tuples(
+                             stack.convergence_dependencies._graph.edges())))
 
         stack_db = stack_object.Stack.get_by_id(stack.context, stack.id)
         self.assertIsNotNone(stack_db.current_traversal)
@@ -111,12 +123,12 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
-        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
+        for node in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
-                    stack.context, rsrc_id, stack.current_traversal,
+                    stack.context, node.rsrc_id, stack.current_traversal,
                     {'input_data': {}},
-                    is_update, None, False))
+                    node.is_update, None, False, node_type=node.node_type))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def _mock_convg_db_update_requires(self):
@@ -126,11 +138,10 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         on an update.
         """
         requires = dict()
-        for rsrc_id, is_update in self.stack.convergence_dependencies:
-            if is_update:
-                reqs = self.stack.convergence_dependencies.requires((
-                    rsrc_id, is_update))
-                requires[rsrc_id] = list({id for id, is_update in reqs})
+        for node in self.stack.convergence_dependencies:
+            if node.is_update:
+                reqs = self.stack.convergence_dependencies.requires(node)
+                requires[node.rsrc_id] = list({r.rsrc_id for r in reqs})
 
         rsrcs_db = resource_objects.Resource.get_all_active_by_stack(
             self.stack.context, self.stack.id)
@@ -177,7 +188,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                           ((7, True), (8, True)),
                           ((8, True), (4, True)),
                           ((8, True), (5, True))],
-                         sorted(deps._graph.edges()))
+                         sorted(_edges_to_tuples(deps._graph.edges())))
 
         stack_db = stack_object.Stack.get_by_id(curr_stack.context,
                                                 curr_stack.id)
@@ -234,20 +245,20 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
-        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
+        for node in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
-                    stack.context, rsrc_id, stack.current_traversal,
+                    stack.context, node.rsrc_id, stack.current_traversal,
                     {'input_data': {}},
-                    is_update, None, False))
+                    node.is_update, None, False, node_type=node.node_type))
 
         leaves = set(curr_stack.convergence_dependencies.leaves())
-        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
+        for node in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
-                    curr_stack.context, rsrc_id, curr_stack.current_traversal,
-                    {'input_data': {}},
-                    is_update, None, False))
+                    curr_stack.context, node.rsrc_id,
+                    curr_stack.current_traversal, {'input_data': {}},
+                    node.is_update, None, False, node_type=node.node_type))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def test_conv_empty_template_stack_update_delete(self, mock_cr):
@@ -280,7 +291,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
                           ((3, False), (2, False)),
                           ((4, False), (3, False)),
                           ((5, False), (3, False))],
-                         sorted(deps._graph.edges()))
+                         sorted(_edges_to_tuples(deps._graph.edges())))
 
         stack_db = stack_object.Stack.get_by_id(curr_stack.context,
                                                 curr_stack.id)
@@ -306,20 +317,20 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         leaves = set(stack.convergence_dependencies.leaves())
         expected_calls = []
-        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
+        for node in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
-                    stack.context, rsrc_id, stack.current_traversal,
+                    stack.context, node.rsrc_id, stack.current_traversal,
                     {'input_data': {}},
-                    is_update, None, False))
+                    node.is_update, None, False, node_type=node.node_type))
 
         leaves = set(curr_stack.convergence_dependencies.leaves())
-        for rsrc_id, is_update in sorted(leaves, key=lambda n: n.is_update):
+        for node in sorted(leaves, key=lambda n: n.is_update):
             expected_calls.append(
                 mock.call.worker_client.WorkerClient.check_resource(
-                    curr_stack.context, rsrc_id, curr_stack.current_traversal,
-                    {'input_data': {}},
-                    is_update, None, False))
+                    curr_stack.context, node.rsrc_id,
+                    curr_stack.current_traversal, {'input_data': {}},
+                    node.is_update, None, False, node_type=node.node_type))
         self.assertEqual(expected_calls, mock_cr.mock_calls)
 
     def test_mark_complete_purges_db(self, mock_cr):
@@ -529,7 +540,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertTrue(mock_syncpoint_del.called)
         self.assertTrue(mock_ccu.called)
 
-    def test_snapshot_delete(self, mock_cr):
+    def test_snapshot_delete_adds_snapshot_to_graph(self, mock_cr):
+        """Test that snapshots are added to the dependency graph on DELETE."""
         tmpl = {'HeatTemplateFormatVersion': '2012-12-12',
                 'Resources': {'R1': {'Type': 'GenericResourceType'}}}
         stack = parser.Stack(utils.dummy_context(), 'updated_time_test',
@@ -545,7 +557,8 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             'status': 'COMPLETE',
             'data': None
         }
-        snapshot_objects.Snapshot.create(stack.context, snapshot_values)
+        snapshot_obj = snapshot_objects.Snapshot.create(
+            stack.context, snapshot_values)
 
         # Ensure that snapshot is not deleted on stack update
         stack.converge_stack(template=stack.t, action=stack.UPDATE)
@@ -554,11 +567,23 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         self.assertEqual('fake_snapshot', db_snapshot_obj[0].name)
         self.assertEqual(stack.id, db_snapshot_obj[0].stack_id)
 
-        # Ensure that snapshot is deleted on stack delete
-        stack.converge_stack(template=stack.t, action=stack.DELETE)
-        self.assertEqual([], snapshot_objects.Snapshot.get_all_by_stack(
-            stack.context, stack.id))
-        self.assertTrue(mock_cr.called)
+        # Ensure that snapshot is added to dependency graph on stack delete
+        # For DELETE, use an empty template to remove all resources
+        empty_template = templatem.Template.create_empty_template(
+            version=stack.t.version)
+        stack.converge_stack(template=empty_template, action=stack.DELETE)
+
+        # Verify check_resource was called with snapshot node
+        # The snapshot should be triggered as a leaf node in the graph
+        snapshot_call_found = False
+        for call in mock_cr.call_args_list:
+            # mock.call has .args and .kwargs attributes
+            if call.kwargs.get('node_type') == 'snapshot':
+                snapshot_call_found = True
+                self.assertEqual(snapshot_obj.id, call.args[1])  # resource_id
+                break
+        self.assertTrue(snapshot_call_found,
+                        "Snapshot node not triggered in check_resource calls")
 
 
 @mock.patch.object(parser.Stack, '_persist_state')
@@ -629,7 +654,7 @@ class TestConvgStackStateSet(common.HeatTestCase):
         mock_ps.reset_mock()
         self.stack.state_set(self.stack.SNAPSHOT, self.stack.COMPLETE,
                              'Snapshot complete')
-        self.assertFalse(mock_ps.called)
+        self.assertTrue(mock_ps.called)
 
     def test_state_set_stack_restore(self, mock_ps):
         mock_ps.return_value = 'updated'
@@ -727,7 +752,8 @@ class TestConvgComputeDependencies(common.HeatTestCase):
                           ((2, True), (3, True)),
                           ((3, True), (4, True)),
                           ((3, True), (5, True))],
-                         sorted(self.stack._convg_deps._graph.edges()))
+                         sorted(_edges_to_tuples(
+                             self.stack._convg_deps._graph.edges())))
 
     def test_dependencies_update_same_template(self):
         t = template_format.parse(tools.string_template_five)
@@ -753,7 +779,8 @@ class TestConvgComputeDependencies(common.HeatTestCase):
                           ((4, False), (4, True)),
                           ((5, False), (3, False)),
                           ((5, False), (5, True))],
-                         sorted(self.stack._convg_deps._graph.edges()))
+                         sorted(_edges_to_tuples(
+                             self.stack._convg_deps._graph.edges())))
 
     def test_dependencies_update_new_template(self):
         t = template_format.parse(tools.string_template_five_update)
@@ -786,7 +813,8 @@ class TestConvgComputeDependencies(common.HeatTestCase):
                           ((7, True), (8, True)),
                           ((8, True), (4, True)),
                           ((8, True), (5, True))],
-                         sorted(self.stack._convg_deps._graph.edges()))
+                         sorted(_edges_to_tuples(
+                             self.stack._convg_deps._graph.edges())))
 
     def test_dependencies_update_replace_rollback(self):
         t = template_format.parse(tools.string_template_five)
@@ -828,7 +856,8 @@ class TestConvgComputeDependencies(common.HeatTestCase):
                           ((4, False), (4, True)),
                           ((5, False), (3, False)),
                           ((5, False), (5, True))],
-                         sorted(self.stack._convg_deps._graph.edges()))
+                         sorted(_edges_to_tuples(
+                             self.stack._convg_deps._graph.edges())))
 
     def test_dependencies_update_delete(self):
         tmpl = templatem.Template.create_empty_template(
@@ -845,7 +874,67 @@ class TestConvgComputeDependencies(common.HeatTestCase):
                           ((3, False), (2, False)),
                           ((4, False), (3, False)),
                           ((5, False), (3, False))],
-                         sorted(self.stack._convg_deps._graph.edges()))
+                         sorted(_edges_to_tuples(
+                             self.stack._convg_deps._graph.edges())))
+
+
+class TestConvergenceNode(common.HeatTestCase):
+    """Tests for the ConvergenceNode class with node_type support."""
+
+    def test_convergence_node_default_type(self):
+        """Test ConvergenceNode defaults to resource type."""
+        node = parser.ConvergenceNode('rsrc-1', True)
+        self.assertEqual('rsrc-1', node.rsrc_id)
+        self.assertTrue(node.is_update)
+        self.assertEqual(parser.NODE_TYPE_RESOURCE, node.node_type)
+
+    def test_convergence_node_snapshot_type(self):
+        """Test ConvergenceNode with snapshot type."""
+        node = parser.ConvergenceNode(
+            'snap-1', False, parser.NODE_TYPE_SNAPSHOT)
+        self.assertEqual('snap-1', node.rsrc_id)
+        self.assertFalse(node.is_update)
+        self.assertEqual(parser.NODE_TYPE_SNAPSHOT, node.node_type)
+
+    def test_convergence_node_from_tuple_2_elements(self):
+        """Test from_tuple handles legacy 2-element tuples."""
+        node = parser.ConvergenceNode.from_tuple(('rsrc-1', True))
+        self.assertEqual('rsrc-1', node.rsrc_id)
+        self.assertTrue(node.is_update)
+        self.assertEqual(parser.NODE_TYPE_RESOURCE, node.node_type)
+
+    def test_convergence_node_from_tuple_3_elements(self):
+        """Test from_tuple handles 3-element tuples."""
+        node = parser.ConvergenceNode.from_tuple(
+            ('snap-1', False, parser.NODE_TYPE_SNAPSHOT))
+        self.assertEqual('snap-1', node.rsrc_id)
+        self.assertFalse(node.is_update)
+        self.assertEqual(parser.NODE_TYPE_SNAPSHOT, node.node_type)
+
+    def test_convergence_node_to_tuple_resource(self):
+        """Test to_tuple serializes resource nodes as 2-tuple."""
+        node = parser.ConvergenceNode('rsrc-1', True)
+        self.assertEqual(('rsrc-1', True), node.to_tuple())
+
+    def test_convergence_node_to_tuple_snapshot(self):
+        """Test to_tuple serializes snapshot nodes as 3-tuple."""
+        node = parser.ConvergenceNode(
+            'snap-1', False, parser.NODE_TYPE_SNAPSHOT)
+        self.assertEqual(('snap-1', False, parser.NODE_TYPE_SNAPSHOT),
+                         node.to_tuple())
+
+    def test_convergence_node_equality(self):
+        """Test ConvergenceNode equality comparison."""
+        node1 = parser.ConvergenceNode('rsrc-1', True)
+        node2 = parser.ConvergenceNode(
+            'rsrc-1', True, parser.NODE_TYPE_RESOURCE)
+        node3 = parser.ConvergenceNode(
+            'rsrc-1', True, parser.NODE_TYPE_SNAPSHOT)
+
+        # Same resource type should be equal
+        self.assertEqual(node1, node2)
+        # Different node types should NOT be equal
+        self.assertNotEqual(node1, node3)
 
 
 class TestConvergenceMigration(common.HeatTestCase):

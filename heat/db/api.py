@@ -1613,6 +1613,58 @@ def snapshot_count_all_by_stack(context, stack_id):
         stack_id=stack_id, tenant=context.project_id).count()
 
 
+# resource_snapshot
+
+
+@context_manager.writer
+def resource_snapshot_create(context, values):
+    obj_ref = models.ResourceSnapshot()
+    obj_ref.update(values)
+    obj_ref.save(context.session)
+    return obj_ref
+
+
+@context_manager.reader
+def resource_snapshot_get(context, resource_snapshot_id):
+    result = context.session.get(models.ResourceSnapshot, resource_snapshot_id)
+    if not result:
+        raise exception.NotFound(_(
+            "Resource Snapshot with id %s not found.") % resource_snapshot_id)
+    return result
+
+
+@context_manager.reader
+def resource_snapshot_get_by_snapshot_and_rsrc(context,
+                                               snapshot_id, resource_name):
+    result = context.session.query(models.ResourceSnapshot).filter_by(
+        snapshot_id=snapshot_id, resource_name=resource_name).first()
+    if not result:
+        raise exception.NotFound(_(
+            "Resource Snapshot not found: snapshot_id: %s, resource_name: %s ."
+        ) % (snapshot_id, resource_name))
+    return result
+
+
+@context_manager.writer
+def resource_snapshot_update(context, resource_snapshot_id, values):
+    resource_snapshot = resource_snapshot_get(context, resource_snapshot_id)
+    resource_snapshot.update(values)
+    resource_snapshot.save(context.session)
+    return resource_snapshot
+
+
+@context_manager.writer
+def resource_snapshot_delete(context, resource_snapshot_id):
+    resource_snapshot = resource_snapshot_get(context, resource_snapshot_id)
+    context.session.delete(resource_snapshot)
+
+
+@context_manager.reader
+def resource_snapshot_get_all(context, snapshot_id):
+    return context.session.query(models.ResourceSnapshot).filter_by(
+        snapshot_id=snapshot_id)
+
+
 # service
 
 
