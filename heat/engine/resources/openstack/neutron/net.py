@@ -284,8 +284,13 @@ class Net(neutron.NeutronResource):
         if self.resource_id is None:
             return
         if name == self.SEGMENTS:
-            return [segment.to_dict() for segment in list(self.client(
+            segments = [segment.to_dict() for segment in list(self.client(
                 'openstack').network.segments(network_id=self.resource_id))]
+            # Sort segments without name attribute first.
+            # See bug: https://bugs.launchpad.net/tripleo/+bug/1894920
+            segments.sort(key=lambda s: s['name'] is not None)
+            return segments
+
         attributes = self._show_resource()
         return attributes[name]
 
