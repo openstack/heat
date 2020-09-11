@@ -366,6 +366,15 @@ class ResourceTest(common.HeatTestCase):
         self.assertEqual((res.CHECK, res.COMPLETE), res.state)
         self.assertEqual('f00d', res.resource_id)
 
+    def test_create_from_external_with_check(self):
+        tmpl = rsrc_defn.ResourceDefinition(
+            'test_resource', 'GenericResourceType',
+            external_id='f00d')
+        res = generic_rsrc.CheckableResource('test_resource', tmpl, self.stack)
+        scheduler.TaskRunner(res.create)()
+        self.assertEqual((res.CHECK, res.COMPLETE), res.state)
+        self.assertEqual('f00d', res.resource_id)
+
     def test_create_from_external_not_found(self):
         external_id = 'f00d'
         tmpl = rsrc_defn.ResourceDefinition(
