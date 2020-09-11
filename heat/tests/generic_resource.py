@@ -60,6 +60,12 @@ class GenericResource(resource.Resource):
                     self.type())
 
 
+class CheckableResource(GenericResource):
+    def handle_check(self):
+        LOG.warning(('Checking generic resource (Type "%s")'),
+                    self.type())
+
+
 class CancellableResource(GenericResource):
     def check_create_complete(self, cookie):
         return True
