@@ -106,6 +106,8 @@ class RequestContext(context.RequestContext):
 
         self.username = username
         self.password = password
+        if username is None and password is None:
+            self.username = self.user_name
         self.region_name = region_name
         self.aws_creds = aws_creds
         self.project_name = project_name
