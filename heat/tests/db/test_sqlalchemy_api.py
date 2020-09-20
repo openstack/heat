@@ -1835,7 +1835,7 @@ class DBAPIStackTest(common.HeatTestCase):
                         side_effect=db_exception.DBDeadlock) as mock_update:
             self.assertRaises(db_exception.DBDeadlock,
                               db_api.stack_update, self.ctx, stack.id, {})
-            self.assertEqual(4, mock_update.call_count)
+            self.assertEqual(21, mock_update.call_count)
 
     def test_stack_set_status_release_lock(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
@@ -2619,7 +2619,7 @@ class DBAPIResourceTest(common.HeatTestCase):
             self.assertRaises(db_exception.DBDeadlock,
                               db_api.resource_purge_deleted,
                               self.ctx, self.stack.id)
-            self.assertEqual(4, mock_delete.call_count)
+            self.assertEqual(21, mock_delete.call_count)
 
     def test_engine_get_all_locked_by_stack(self):
         values = [
@@ -3380,7 +3380,7 @@ class DBAPISyncPointTest(common.HeatTestCase):
                                   self.ctx, entity_id=str(res.id),
                                   stack_id=self.stack.id,
                                   traversal_id=self.stack.current_traversal)
-            self.assertEqual(len(self.resources) * 4, add.call_count)
+            self.assertEqual(len(self.resources) * 21, add.call_count)
 
 
 class DBAPIMigratePropertiesDataTest(common.HeatTestCase):

@@ -49,6 +49,12 @@ CONF = cfg.CONF
 CONF.import_opt('hidden_stack_tags', 'heat.common.config')
 CONF.import_opt('max_events_per_stack', 'heat.common.config')
 CONF.import_group('profiler', 'heat.common.config')
+CONF.import_opt('db_max_retries', 'oslo_db.options', group='database')
+CONF.import_opt('db_retry_interval', 'oslo_db.options', group='database')
+CONF.import_opt(
+    'db_inc_retry_interval', 'oslo_db.options', group='database')
+CONF.import_opt(
+    'db_max_retry_interval', 'oslo_db.options', group='database')
 
 options.set_defaults(CONF)
 
@@ -94,11 +100,13 @@ def retry_on_db_error(func):
     def try_func(context, *args, **kwargs):
         if (context.session.transaction is None or
                 not context.session.autocommit):
-            wrapped = oslo_db_api.wrap_db_retry(max_retries=3,
-                                                retry_on_deadlock=True,
-                                                retry_on_disconnect=True,
-                                                retry_interval=0.5,
-                                                inc_retry_interval=True)(func)
+            wrapped = oslo_db_api.wrap_db_retry(
+                max_retries=CONF.database.db_max_retries,
+                retry_on_deadlock=True,
+                retry_on_disconnect=True,
+                retry_interval=CONF.database.db_retry_interval,
+                inc_retry_interval=CONF.database.db_inc_retry_interval,
+                max_retry_interval=CONF.database.db_max_retry_interval)(func)
             return wrapped(context, *args, **kwargs)
         else:
             try:

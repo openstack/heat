@@ -16,6 +16,7 @@ import os
 
 from eventlet.green import socket
 from oslo_config import cfg
+from oslo_db import options as oslo_db_ops
 from oslo_log import log as logging
 from oslo_middleware import cors
 from osprofiler import opts as profiler
@@ -469,6 +470,7 @@ def list_opts():
     yield 'clients_keystone', keystone_client_opts
     yield 'clients_nova', client_http_log_debug_opts
     yield 'clients_cinder', client_http_log_debug_opts
+    yield oslo_db_ops.list_opts()[0]
 
 
 cfg.CONF.register_group(paste_deploy_group)

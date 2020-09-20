@@ -1,0 +1,13 @@
+---
+fixes:
+  - |
+    Oslo db config is able to control wrap_db_retry call in heat.
+    We remove hard coded settings for wrap_db_retry and use following
+    configs from oslo_db instead.
+    * database.db_max_retries
+    * database.db_retry_interval
+    * database.db_inc_retry_interval
+    * database.db_max_retry_interval
+    So database cofig can now control db retries.
+    Please reference [1] for what each config options can do.
+    [1] https://opendev.org/openstack/oslo.db/src/branch/master/oslo_db/options.py
