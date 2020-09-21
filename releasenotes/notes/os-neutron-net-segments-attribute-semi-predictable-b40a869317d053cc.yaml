@@ -1,0 +1,16 @@
+---
+fixes:
+  - |
+    The ordering in the list of segments returned by ``OS::Neutron::Net``
+    resources is not predictable. Stack updates changeing attributes
+    of the network can cause the list of segments to shift.
+
+    The ordering is now slightly more predictable, segments with name=``None``
+    are now placed first in the list. This doesn't guarantee the order, but
+    typically only the segment implicitly created by neutron has no name
+    attribute set. The template author should ensure other segments on the
+    network does have a name set, so that the implicit segment will always be
+    index 0. Resolving attributes of the implcitly created segment on the
+    network resource can then predictibly happen using index 0. See `bug:
+    1894920 <https://bugs.launchpad.net/tripleo/+bug/1894920>`_.
+
