@@ -263,7 +263,7 @@ def get_socket(conf, default_port):
                                    backlog=conf.backlog,
                                    family=address_family)
         except socket.error as err:
-            if err.args[0] != errno.EADDRINUSE:
+            if err.errno != errno.EADDRINUSE:
                 raise
             eventlet.sleep(0.1)
     if not sock:
@@ -584,7 +584,7 @@ class Server(object):
                 keepalive=cfg.CONF.eventlet_opts.wsgi_keep_alive,
                 socket_timeout=socket_timeout)
         except socket.error as err:
-            if err[0] != errno.EINVAL:
+            if err.errno != errno.EINVAL:
                 raise
         self.pool.waitall()
 

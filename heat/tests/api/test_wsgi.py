@@ -441,10 +441,12 @@ class GetSocketTestCase(common.HeatTestCase):
                           wsgi.cfg.CONF.heat_api, 1234)
 
     def test_get_socket_with_bind_problems(self):
+        err = wsgi.socket.error(
+            socket.errno.EADDRINUSE, 'Address already in use')
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.wsgi.eventlet.listen',
             mock.Mock(side_effect=(
-                [wsgi.socket.error(socket.errno.EADDRINUSE)] * 3 + [None]))))
+                [err] * 3 + [None]))))
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.wsgi.ssl.wrap_socket',
             lambda *x, **y: None))
