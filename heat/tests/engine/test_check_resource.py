@@ -392,7 +392,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                          True, None)
         call_args, call_kwargs = mock_pcr.call_args
         actual_predecessors = call_args[4]
-        self.assertItemsEqual(expected_predecessors, actual_predecessors)
+        self.assertCountEqual(expected_predecessors, actual_predecessors)
 
     def test_update_retrigger_check_resource_new_traversal_deletes_rsrc(
             self, mock_cru, mock_crc, mock_pcr, mock_csc):

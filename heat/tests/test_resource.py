@@ -2064,7 +2064,7 @@ class ResourceTest(common.HeatTestCase):
                                    -1, pcb)
             self.assertTrue(mock_create.called)
 
-        self.assertItemsEqual([1, 3], res.requires)
+        self.assertCountEqual([1, 3], res.requires)
         self._assert_resource_lock(res.id, None, None)
 
     def test_create_convergence_throws_timeout(self):
@@ -2094,7 +2094,7 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(exception.ResourceNotAvailable,
                           res.create_convergence, self.stack.t.id, {5, 3},
                           'engine-007', self.dummy_timeout, self.dummy_event)
-        self.assertItemsEqual([5, 3], res.requires)
+        self.assertCountEqual([5, 3], res.requires)
         # The locking happens in create which we mocked out
         self._assert_resource_lock(res.id, None, None)
 
@@ -2114,7 +2114,7 @@ class ResourceTest(common.HeatTestCase):
         tr()
         mock_adopt.assert_called_once_with(
             resource_data={'resource_id': 'fluffy'})
-        self.assertItemsEqual([5, 3], res.requires)
+        self.assertCountEqual([5, 3], res.requires)
         self._assert_resource_lock(res.id, None, None)
 
     def test_adopt_convergence_bad_data(self):
@@ -2164,7 +2164,7 @@ class ResourceTest(common.HeatTestCase):
                                   {4, 3}, 'engine-007', 120, new_stack)
         tr()
 
-        self.assertItemsEqual([3, 4], res.requires)
+        self.assertCountEqual([3, 4], res.requires)
         self.assertEqual(res.action, resource.Resource.UPDATE)
         self.assertEqual(res.status, resource.Resource.COMPLETE)
         self._assert_resource_lock(res.id, None, 2)
@@ -2317,7 +2317,7 @@ class ResourceTest(common.HeatTestCase):
 
         self.assertEqual(new_temp.id, res.current_template_id)
         # check if requires was updated
-        self.assertItemsEqual([2, 3, 4], res.requires)
+        self.assertCountEqual([2, 3, 4], res.requires)
         self.assertEqual(res.action, resource.Resource.UPDATE)
         self.assertEqual(res.status, resource.Resource.FAILED)
         self._assert_resource_lock(res.id, None, 2)
@@ -2357,7 +2357,7 @@ class ResourceTest(common.HeatTestCase):
         # ensure that current_template_id was not updated
         self.assertEqual(stack.t.id, res.current_template_id)
         # ensure that requires was not updated
-        self.assertItemsEqual([2], res.requires)
+        self.assertCountEqual([2], res.requires)
         self._assert_resource_lock(res.id, None, 2)
 
     def test_convergence_update_replace_rollback(self):
