@@ -192,6 +192,24 @@ class KeystoneProject(resource.Resource):
         result[self.DOMAIN] = resource_data.get('domain_id')
         return result
 
+    def handle_delete(self):
+        if self.resource_id:
+            # find and delete the default security group Neutron has created
+            default_sec_group_name = "default"
+            nclient = self.client_plugin("neutron").client()
+            default_sec_groups = nclient.list_security_groups(
+                project_id=self.resource_id,
+                name=default_sec_group_name)["security_groups"]
+            # NOTE(pas-ha) this should always contain a single security group
+            # (if any) as Netron enforces uniqueness of 'default' security
+            # group in a project.
+            # However leaving orphans is bad enough, so we are deleting
+            # any security group with such name w/o uniqueness check.
+            for secgroup in default_sec_groups:
+                with self.client_plugin("neutron").ignore_not_found:
+                    nclient.delete_security_group(secgroup["id"])
+        super(KeystoneProject, self).handle_delete()
+
 
 def resource_mapping():
     return {
