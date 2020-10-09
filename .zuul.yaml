@@ -29,6 +29,7 @@
       - ^heat/tests/.*$
       - ^releasenotes/.*$
     vars:
+      configure_swap_size: 8192
       disable_convergence: 'false'
       sql: mysql
       use_amqp1: 0
@@ -88,6 +89,7 @@
       - ^releasenotes/.*$
       - ^setup.cfg$
     vars:
+      configure_swap_size: 8192
       topology: aio
       branch_override: default
 
