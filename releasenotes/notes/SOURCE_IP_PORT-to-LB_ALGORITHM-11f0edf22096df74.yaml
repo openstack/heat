@@ -1,0 +1,4 @@
+---
+features:
+  - The ``lb_algorithm`` property of ``OS::Octavia::Pool`` resource now supports
+    SOURCE_IP_PORT option required for Octavia OVN provider driver.
