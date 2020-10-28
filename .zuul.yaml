@@ -134,8 +134,9 @@
         HEAT_USE_MOD_WSGI: False
 
 - job:
-    name: grenade-heat
+    name: grenade-heat-multinode
     parent: grenade
+    nodeset: openstack-two-node-bionic
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin
@@ -155,11 +156,6 @@
       tempest_plugins:
         - heat-tempest-plugin
 
-- job:
-    name: grenade-heat-multinode
-    parent: grenade-heat
-    nodeset: openstack-two-node-bionic
-
 - project:
     templates:
       - openstack-cover-jobs
@@ -171,15 +167,12 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - grenade-heat
         - grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
-        - heat-functional-non-apache
     gate:
       queue: heat
       jobs:
-        - grenade-heat
         - grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
