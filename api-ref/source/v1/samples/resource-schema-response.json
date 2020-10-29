@@ -1,7 +1,8 @@
 {
     "attributes": {
         "an_attribute": {
-            "description": "A runtime value of the resource."
+            "description": "A runtime value of the resource.",
+            "type": "string"
         }
     },
     "properties": {
@@ -15,16 +16,17 @@
                     }
                 }
             ],
-            "description": "A resource description.",
+            "description": "A resource property description.",
             "required": true,
             "type": "string",
-            "update_allowed": false
+            "update_allowed": false,
+            "immutable": false
         }
     },
     "resource_type": "OS::Heat::AResourceName",
     "support_status": {
         "message": "A status message",
         "status": "SUPPORTED",
-        "version": "2014.1"
+        "version": "10.0.0"
     }
 }
