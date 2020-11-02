@@ -372,9 +372,14 @@ class Property(object):
         return _value
 
 
+def _default_resolver(d, nullable=False):
+    return d
+
+
 class Properties(collections.Mapping):
 
-    def __init__(self, schema, data, resolver=lambda d: d, parent_name=None,
+    def __init__(self, schema, data, resolver=_default_resolver,
+                 parent_name=None,
                  context=None, section=None, translation=None,
                  rsrc_description=None):
         self.props = dict((k, Property(s, k, context, path=parent_name))
@@ -464,6 +469,11 @@ class Properties(collections.Mapping):
     def _resolve_user_value(self, key, prop, validate):
         """Return the user-supplied value (or None), and whether it was found.
 
+        This allows us to distinguish between, on the one hand, either a
+        Function that returns None or an explicit null value passed and, on the
+        other hand, either no value passed or a Macro that returns Ellipsis,
+        meaning that the result should be treated the same as if no value were
+        passed.
         """
         if key not in self.data:
             return None, False
@@ -478,7 +488,10 @@ class Properties(collections.Mapping):
                 if self._find_deps_any_in_init(unresolved_value):
                     validate = False
 
-            value = self.resolve(unresolved_value)
+            value = self.resolve(unresolved_value, nullable=True)
+            if value is Ellipsis:
+                # Treat as if the property value were not specified at all
+                return None, False
 
             if self.translation.has_translation(prop.path):
                 value = self.translation.translate(prop.path,

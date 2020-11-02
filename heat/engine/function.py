@@ -195,7 +195,7 @@ class Macro(Function, metaclass=abc.ABCMeta):
 
     def result(self):
         """Return the resolved result of the macro contents."""
-        return resolve(self.parsed)
+        return resolve(self.parsed, nullable=True)
 
     def dependencies(self, path):
         return dependencies(self.parsed, '.'.join([path, self.fn_name]))
@@ -250,15 +250,30 @@ class Macro(Function, metaclass=abc.ABCMeta):
         return repr(self.parsed)
 
 
-def resolve(snippet):
+def _non_null_item(i):
+    k, v = i
+    return v is not Ellipsis
+
+
+def _non_null_value(v):
+    return v is not Ellipsis
+
+
+def resolve(snippet, nullable=False):
     if isinstance(snippet, Function):
-        return snippet.result()
+        result = snippet.result()
+        if not (nullable or _non_null_value(result)):
+            result = None
+        return result
 
     if isinstance(snippet, collections.Mapping):
-        return dict((k, resolve(v)) for k, v in snippet.items())
+        return dict(filter(_non_null_item,
+                           ((k, resolve(v, nullable=True))
+                            for k, v in snippet.items())))
     elif (not isinstance(snippet, str) and
           isinstance(snippet, collections.Iterable)):
-        return [resolve(v) for v in snippet]
+        return list(filter(_non_null_value,
+                           (resolve(v, nullable=True) for v in snippet)))
 
     return snippet
 
