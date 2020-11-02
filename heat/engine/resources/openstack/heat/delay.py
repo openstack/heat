@@ -51,7 +51,7 @@ class Delay(resource.Resource):
     )
 
     PROPERTIES = (
-        MIN_WAIT_SECS, MAX_JITTER, JITTER_MULTIPLIER_SECS, ACTIONS,
+        MIN_WAIT_SECS, MAX_JITTER, JITTER_MULTIPLIER_SECS, DELAY_ACTIONS,
     ) = (
         'min_wait', 'max_jitter', 'jitter_multiplier', 'actions',
     )
@@ -84,7 +84,7 @@ class Delay(resource.Resource):
                 constraints.Range(min=0),
             ]
         ),
-        ACTIONS: properties.Schema(
+        DELAY_ACTIONS: properties.Schema(
             properties.Schema.LIST,
             _('Actions during which the delay will occur.'),
             update_allowed=True,
@@ -119,7 +119,7 @@ class Delay(resource.Resource):
 
     def _wait_secs(self, action):
         """Return a (randomised) wait time for the specified action."""
-        if action not in self.properties[self.ACTIONS]:
+        if action not in self.properties[self.DELAY_ACTIONS]:
             return 0
 
         min_wait_secs, max_jitter_secs = self._delay_parameters()
