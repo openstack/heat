@@ -71,6 +71,10 @@ hot_pike_tpl_empty = template_format.parse('''
 heat_template_version: 2017-09-01
 ''')
 
+hot_wallaby_tpl_empty = template_format.parse('''
+heat_template_version: 2021-04-16
+''')
+
 hot_tpl_empty_sections = template_format.parse('''
 heat_template_version: 2013-05-23
 parameters:
@@ -1506,13 +1510,42 @@ resources:
         self.assertEqual('', self.stack['AResource'].properties['Foo'])
 
     def test_if_invalid_args(self):
-        snippet = {'if': ['create_prod', 'one_value']}
+        snippets = [
+            {'if': ['create_prod', 'one_value']},
+            {'if': ['create_prod', 'one_value', 'two_values', 'three_values']},
+        ]
         tmpl = template.Template(hot_newton_tpl_empty)
-        exc = self.assertRaises(exception.StackValidationFailed,
-                                self.resolve, snippet, tmpl)
-        self.assertIn('Arguments to "if" must be of the form: '
-                      '[condition_name, value_if_true, value_if_false]',
-                      str(exc))
+        for snippet in snippets:
+            exc = self.assertRaises(exception.StackValidationFailed,
+                                    self.resolve, snippet, tmpl)
+            self.assertIn('Arguments to "if" must be of the form: '
+                          '[condition_name, value_if_true, value_if_false]',
+                          str(exc))
+
+    def test_if_nullable_invalid_args(self):
+        snippets = [
+            {'if': ['create_prod']},
+            {'if': ['create_prod', 'one_value', 'two_values', 'three_values']},
+        ]
+        tmpl = template.Template(hot_wallaby_tpl_empty)
+        for snippet in snippets:
+            exc = self.assertRaises(exception.StackValidationFailed,
+                                    self.resolve, snippet, tmpl)
+            self.assertIn('Arguments to "if" must be of the form: '
+                          '[condition_name, value_if_true, value_if_false]',
+                          str(exc))
+
+    def test_if_nullable(self):
+        snippet = {
+            'single': {'if': [False, 'value_if_true']},
+            'nested_true': {'if': [True, {'if': [False, 'foo']}, 'bar']},
+            'nested_false': {'if': [False, 'baz', {'if': [False, 'quux']}]},
+            'control': {'if': [False, True, None]},
+        }
+
+        tmpl = template.Template(hot_wallaby_tpl_empty)
+        resolved = self.resolve(snippet, tmpl, None)
+        self.assertEqual({'control': None}, resolved)
 
     def test_if_condition_name_non_existing(self):
         snippet = {'if': ['cd_not_existing', 'value_true', 'value_false']}

@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    The ``wallaby`` template version introduces a new 2-argument form of the
+    ``if`` function. This allows users to specify optional property values, so
+    that when the condition is false Heat treats it the same as if no value
+    were specified for the property at all. The behaviour of existing templates
+    is unchanged, even after updating the template version to ``wallaby``.
