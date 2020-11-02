@@ -103,7 +103,8 @@ class Value(resource.Resource):
                 _('The expression to generate the "value" attribute.'),
                 required=True,
                 update_allowed=True,
-            ))
+            ),
+            self.VALUE)
 
 
 def resource_mapping():
