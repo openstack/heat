@@ -26,7 +26,6 @@
       - openstack/tempest
     vars:
       configure_swap_size: 8192
-      gabbi_tempest_path: heat_tempest_plugin.tests.api.gabbits
       tempest_plugins:
         - heat-tempest-plugin
       devstack_localrc:

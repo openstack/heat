@@ -3,11 +3,6 @@
     - orchestrate-devstack
 
 - hosts: tempest
-  environment:
-    # This enviroment variable is used by the optional tempest-gabbi
-    # job provided by the gabbi-tempest plugin. It can be safely ignored
-    # if that plugin is not being used.
-    GABBI_TEMPEST_PATH: "{{ gabbi_tempest_path | default('') }}"
   roles:
     - setup-tempest-run-dir
     - setup-tempest-data-dir
