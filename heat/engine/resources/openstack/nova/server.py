@@ -39,7 +39,8 @@ cfg.CONF.import_opt('default_user_data_format', 'heat.common.config')
 LOG = logging.getLogger(__name__)
 
 NOVA_MICROVERSIONS = (MICROVERSION_TAGS, MICROVERSION_STR_NETWORK,
-                      MICROVERSION_NIC_TAGS) = ('2.26', '2.37', '2.42')
+                      MICROVERSION_NIC_TAGS, MICROVERSION_PERSONALITY_REMOVED
+                      ) = ('2.26', '2.37', '2.42', '2.57')
 
 
 class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
@@ -1593,6 +1594,14 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         # retrieve provider's absolute limits if it will be needed
         metadata = self.properties[self.METADATA]
         personality = self.properties[self.PERSONALITY]
+
+        if personality:
+            if self.client_plugin().is_version_supported(
+                    MICROVERSION_PERSONALITY_REMOVED):
+                msg = (_('Cannot use the personality parameter as nova no '
+                         'longer supports it. Use user_data instead.'))
+                raise exception.StackValidationFailed(message=msg)
+
         if metadata or personality:
             limits = self.client_plugin().absolute_limits()
 

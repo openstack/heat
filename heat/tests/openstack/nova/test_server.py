@@ -3161,6 +3161,8 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "fake contents1",
                               "/fake/path2": "fake_contents2",
@@ -3180,11 +3182,39 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual("The personality property may not contain "
                          "greater than 5 entries.", six.text_type(exc))
 
+    def test_server_validate_personality_unsupported(self):
+        stack_name = 'srv_val'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.patchobject(nova.NovaClientPlugin, 'client',
+                         return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=True)
+        tmpl.t['Resources']['WebServer']['Properties'][
+            'personality'] = {"/fake/path1": "fake contents1",
+                              "/fake/path2": "fake_contents2",
+                              "/fake/path3": "fake_contents3",
+                              "/fake/path4": "fake_contents4",
+                              "/fake/path5": "fake_contents5"}
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_create_image_err',
+                                resource_defns['WebServer'], stack)
+
+        self.patchobject(self.fc.limits, 'get', return_value=self.limits)
+        self.patchobject(glance.GlanceClientPlugin, 'get_image',
+                         return_value=self.mock_image)
+        exc = self.assertRaises(exception.StackValidationFailed,
+                                server.validate)
+        self.assertEqual("Cannot use the personality parameter as nova "
+                         "no longer supports it. Use user_data instead.",
+                         str(exc))
+
     def test_server_validate_personality_okay(self):
         stack_name = 'srv_val'
         (tmpl, stack) = self._setup_test_stack(stack_name)
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "fake contents1",
                               "/fake/path2": "fake_contents2",
@@ -3205,6 +3235,8 @@ class ServersTest(common.HeatTestCase):
         (tmpl, stack) = self._setup_test_stack(stack_name)
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "a" * 10240}
         resource_defns = tmpl.resource_definitions(stack)
@@ -3221,6 +3253,8 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
 
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         tmpl.t['Resources']['WebServer']['Properties'][
             'personality'] = {"/fake/path1": "a" * 10241}
         resource_defns = tmpl.resource_definitions(stack)
@@ -3242,6 +3276,8 @@ class ServersTest(common.HeatTestCase):
             stack_name, server_with_sw_config_personality)
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['server'], stack)
@@ -4268,6 +4304,8 @@ class ServersTest(common.HeatTestCase):
             'personality'] = {"/fake/path1": "a" * 10}
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
@@ -4285,6 +4323,8 @@ class ServersTest(common.HeatTestCase):
             'personality'] = {"/fake/path1": "a" * 10}
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
         resource_defns = tmpl.resource_definitions(stack)
         server = servers.Server('server_create_image_err',
                                 resource_defns['WebServer'], stack)
