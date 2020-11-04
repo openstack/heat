@@ -51,9 +51,8 @@ class KeystoneRole(resource.Resource):
         DOMAIN: properties.Schema(
             properties.Schema.STRING,
             _('Name or id of keystone domain.'),
-            default='default',
             constraints=[constraints.CustomConstraint('keystone.domain')],
-            support_status=support.SupportStatus(version='10.0.0')
+            support_status=support.SupportStatus(version='16.0.0')
         )
     }
 
