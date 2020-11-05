@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Adding REBUILD option for user_data_update_policy so that
+    changes to user_data can be updated instead of a new create.

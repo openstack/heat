@@ -548,11 +548,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         ),
         USER_DATA_UPDATE_POLICY: properties.Schema(
             properties.Schema.STRING,
-            _('Policy on how to apply a user_data update; either by '
-              'ignoring it or by replacing the entire server.'),
+            _('Policy on how to apply a user_data update; by '
+              'ignoring it, by replacing the entire server, '
+              'or rebuild the server.'),
             default='REPLACE',
             constraints=[
-                constraints.AllowedValues(['REPLACE', 'IGNORE']),
+                constraints.AllowedValues(['REPLACE', 'IGNORE', 'REBUILD']),
             ],
             support_status=support.SupportStatus(version='6.0.0'),
             update_allowed=True
@@ -1313,6 +1314,14 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                                                            'kwargs': kwargs})
         return prg
 
+    def _update_user_data_rebuild(self, after_props):
+        user_data = after_props[self.USER_DATA]
+        prg = progress.ServerUpdateProgress(
+            self.resource_id,
+            'rebuild',
+            handler_extra={'args': (user_data,)})
+        return prg
+
     def _update_networks(self, server, after_props):
         updaters = []
         new_networks = after_props[self.NETWORKS]
@@ -1403,6 +1412,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
         if self.FLAVOR in prop_diff:
             updaters.extend(self._update_flavor(after_props))
+
+        if self.USER_DATA in prop_diff:
+            # We only care about rebuild here. The standard replace is
+            # dealt elsewere
+            if after_props[self.USER_DATA_UPDATE_POLICY] == 'REBUILD':
+                updaters.append(self._update_user_data_rebuild(after_props))
 
         if self.IMAGE in prop_diff:
             updaters.append(self._update_image(after_props))
