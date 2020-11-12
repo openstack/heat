@@ -164,9 +164,15 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             self.keypair = self.create_keypair()
             self.keypair_name = self.keypair.id
 
-    @classmethod
-    def _stack_rand_name(cls):
-        return rand_name(cls.__name__)
+    def _stack_rand_name(self):
+        test_name = self.id()
+        if test_name and '.' in test_name:
+            name = '-'.join(test_name.split('.')[-2:])
+            # remove 'testname(...)' cases
+            name = name.split('(')[0]
+        else:
+            name = self.__name__
+        return rand_name(name)
 
     def _get_network(self, net_name=None):
         if net_name is None:
@@ -228,7 +234,7 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         fail_regexp = re.compile(failure_pattern)
         build_timeout = self.conf.build_timeout
         build_interval = self.conf.build_interval
-
+        res = None
         start = timeutils.utcnow()
         while timeutils.delta_seconds(start,
                                       timeutils.utcnow()) < build_timeout:
@@ -254,9 +260,11 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
                         resource_status_reason=res.resource_status_reason)
             time.sleep(build_interval)
 
-        message = ('Resource %s failed to reach %s status within '
-                   'the required time (%s s).' %
-                   (resource_name, status, build_timeout))
+        message = ('Resource %s from stack %s failed to reach %s status '
+                   'within the required time (%s s). Current resource '
+                   'status: %s.' %
+                   (resource_name, stack_identifier, status, build_timeout,
+                    res.resource_status))
         raise exceptions.TimeoutException(message)
 
     def verify_resource_status(self, stack_identifier, resource_name,
@@ -352,8 +360,9 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             time.sleep(build_interval)
 
         message = ('Stack %s failed to reach %s status within '
-                   'the required time (%s s).' %
-                   (stack_identifier, status, build_timeout))
+                   'the required time (%s s). Current stack state: %s.' %
+                   (stack_identifier, status, build_timeout,
+                    stack.stack_status))
         raise exceptions.TimeoutException(message)
 
     def _stack_delete(self, stack_identifier):
