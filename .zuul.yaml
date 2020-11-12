@@ -66,6 +66,7 @@
                 client_socket_timeout: 120
               oslo_messaging_notifications:
                 driver: messagingv2
+              max_stacks_per_tenant: 256
         test-config:
           $TEMPEST_CONFIG:
             service_available:
