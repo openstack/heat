@@ -122,6 +122,8 @@ class FakeVolume(object):
 
     def __init__(self, status, **attrs):
         self.status = status
+        self.multiattach = True
+
         for key, value in attrs.items():
             setattr(self, key, value)
         if 'id' not in attrs:

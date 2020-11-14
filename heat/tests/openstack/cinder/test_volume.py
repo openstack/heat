@@ -93,9 +93,13 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.t = template_format.parse(cinder_volume_template)
         self.use_cinder = True
 
-    def create_volume(self, t, stack, resource_name):
-        return super(CinderVolumeTest, self).create_volume(
+    def create_volume(self, t, stack, resource_name,
+                      mock_check_extend_ready=True):
+        rsrc = super(CinderVolumeTest, self).create_volume(
             t, stack, resource_name, validate=False)
+        if mock_check_extend_ready:
+            rsrc._ready_to_extend_volume = mock.Mock(return_value=True)
+        return rsrc
 
     def _mock_create_volume(self, fv, stack_name, size=1,
                             final_status='available', extra_get_mocks=[],
@@ -1375,3 +1379,28 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             name=vol_name,
             metadata={}
         )
+
+    def test_ready_to_extend_volume(self):
+        self.stack_name = 'test_ready_to_extend_volume'
+
+        self._mock_create_volume(vt_base.FakeVolume('creating'),
+                                 self.stack_name,
+                                 extra_get_mocks=[
+                                     vt_base.FakeVolume('extending'),
+                                     vt_base.FakeVolume('reserved'),
+                                     vt_base.FakeVolume('in-use',
+                                                        multiattach=True),
+                                     vt_base.FakeVolume('in-use',
+                                                        multiattach=False),
+                                     vt_base.FakeVolume('available')])
+
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+
+        rsrc = self.create_volume(self.t, stack, 'volume',
+                                  mock_check_extend_ready=False)
+
+        self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(True, rsrc._ready_to_extend_volume())
+        self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(True, rsrc._ready_to_extend_volume())
