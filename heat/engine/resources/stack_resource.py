@@ -424,26 +424,6 @@ class StackResource(resource.Resource):
         if action != expected_action:
             return False
 
-        # Has the action really started?
-        #
-        # The rpc call to update does not guarantee that the stack will be
-        # placed into IN_PROGRESS by the time it returns (it runs stack.update
-        # in a thread) so you could also have a situation where we get into
-        # this method and the update hasn't even started.
-        #
-        # So we are using a mixture of state (action+status) and updated_at
-        # to see if the action has actually progressed.
-        # - very fast updates (like something with one RandomString) we will
-        #   probably miss the state change, but we should catch the updated_at.
-        # - very slow updates we won't see the updated_at for quite a while,
-        #   but should see the state change.
-        if cookie is not None:
-            prev_state = cookie['previous']['state']
-            prev_updated_at = cookie['previous']['updated_at']
-            if (prev_updated_at == updated_time and
-                    prev_state == (action, status)):
-                return False
-
         if status == self.IN_PROGRESS:
             return False
         elif status == self.COMPLETE:
@@ -533,9 +513,6 @@ class StackResource(resource.Resource):
         action, status, status_reason, updated_time = status_data
 
         kwargs = self._stack_kwargs(user_params, child_template)
-        cookie = {'previous': {
-            'updated_at': updated_time,
-            'state': (action, status)}}
 
         kwargs.update({
             'stack_identity': dict(self.nested_identifier()),
@@ -549,7 +526,6 @@ class StackResource(resource.Resource):
                 with excutils.save_and_reraise_exception():
                     raw_template.RawTemplate.delete(self.context,
                                                     kwargs['template_id'])
-        return cookie
 
     def check_update_complete(self, cookie=None):
         if cookie is not None and 'target_action' in cookie:

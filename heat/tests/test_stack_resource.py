@@ -840,23 +840,6 @@ class StackResourceCheckCompleteTest(StackResourceBaseTest):
         self.mock_status.assert_called_once_with(
             self.parent_resource.context, self.parent_resource.resource_id)
 
-    def test_update_not_started(self):
-        if self.action != 'update':
-            # only valid for updates at the moment.
-            return
-
-        self.status[1] = 'COMPLETE'
-        self.status[3] = 'test'
-        cookie = {'previous': {'state': ('UPDATE', 'COMPLETE'),
-                               'updated_at': 'test'}}
-
-        complete = getattr(self.parent_resource,
-                           'check_%s_complete' % self.action)
-
-        self.assertFalse(complete(cookie=cookie))
-        self.mock_status.assert_called_once_with(
-            self.parent_resource.context, self.parent_resource.resource_id)
-
     def test_wrong_action(self):
         self.status[0] = 'COMPLETE'
         complete = getattr(self.parent_resource,
