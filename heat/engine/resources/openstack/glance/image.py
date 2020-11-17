@@ -31,12 +31,12 @@ class GlanceWebImage(resource.Resource):
         NAME, IMAGE_ID, MIN_DISK, MIN_RAM, PROTECTED,
         DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS,
         ARCHITECTURE, KERNEL_ID, OS_DISTRO, OS_VERSION, OWNER,
-        VISIBILITY, RAMDISK_ID
+        VISIBILITY, RAMDISK_ID, ACTIVE, MEMBERS
     ) = (
         'name', 'id', 'min_disk', 'min_ram', 'protected',
         'disk_format', 'container_format', 'location', 'tags',
-        'architecture', 'kernel_id', 'os_distro', 'os_version', 'owner',
-        'visibility', 'ramdisk_id'
+        'architecture', 'kernel_id', 'os_distro', 'os_version',
+        'owner', 'visibility', 'ramdisk_id', 'active', 'members'
     )
 
     glance_id_pattern = ('^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}'
@@ -75,6 +75,7 @@ class GlanceWebImage(resource.Resource):
             properties.Schema.BOOLEAN,
             _('Whether the image can be deleted. If the value is True, '
               'the image is protected and cannot be deleted.'),
+            update_allowed=True,
             default=False
         ),
         DISK_FORMAT: properties.Schema(
@@ -156,6 +157,28 @@ class GlanceWebImage(resource.Resource):
             constraints=[
                 constraints.AllowedPattern(glance_id_pattern)
             ]
+        ),
+        ACTIVE: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Activate or deactivate the image. Requires Admin Access.'),
+            default=True,
+            update_allowed=True,
+            support_status=support.SupportStatus(version='16.0.0')
+        ),
+        MEMBERS: properties.Schema(
+            properties.Schema.LIST,
+            _('List of additional members that are permitted '
+              'to read the image. This may be a Keystone Project '
+              'IDs or User IDs, depending on the Glance configuration '
+              'in use.'),
+            schema=properties.Schema(
+                properties.Schema.STRING,
+                _('A member ID. This may be a Keystone Project ID '
+                  'or User ID, depending on the Glance configuration '
+                  'in use.')
+            ),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='16.0.0')
         )
     }
 
@@ -166,42 +189,78 @@ class GlanceWebImage(resource.Resource):
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
                     if v is not None)
-
+        members = args.pop(self.MEMBERS, [])
+        active = args.pop(self.ACTIVE)
         location = args.pop(self.LOCATION)
         images = self.client().images
-        image_id = images.create(
-            **args).id
+        image = images.create(**args)
+        image_id = image.id
         self.resource_id_set(image_id)
-
         images.image_import(image_id, method='web-download', uri=location)
+        for member in members:
+            self.client().image_members.create(image_id, member)
+        return active
 
-        return image_id
-
-    def check_create_complete(self, image_id):
-        image = self.client().images.get(image_id)
-        return image.status == 'active'
+    def check_create_complete(self, active):
+        image = self.client().images.get(self.resource_id)
+        if image.status == 'killed':
+            raise exception.ResourceInError(
+                resource_status=image.status,
+            )
+        if not active:
+            if image.status == 'active':
+                self.client().images.deactivate(self.resource_id)
+                return True
+            elif image.status == 'deactivated':
+                return True
+            else:
+                return False
+        else:
+            return image.status == 'active'
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff and self.TAGS in prop_diff:
-            existing_tags = self.properties.get(self.TAGS) or []
-            diff_tags = prop_diff.pop(self.TAGS) or []
+        if prop_diff:
+            active = prop_diff.pop(self.ACTIVE, None)
+            if active is False:
+                self.client().images.deactivate(self.resource_id)
 
-            new_tags = set(diff_tags) - set(existing_tags)
-            for tag in new_tags:
-                self.client().image_tags.update(
-                    self.resource_id,
-                    tag)
+            if self.TAGS in prop_diff:
+                existing_tags = self.properties.get(self.TAGS) or []
+                diff_tags = prop_diff.pop(self.TAGS) or []
 
-            removed_tags = set(existing_tags) - set(diff_tags)
-            for tag in removed_tags:
-                with self.client_plugin().ignore_not_found:
-                    self.client().image_tags.delete(
+                new_tags = set(diff_tags) - set(existing_tags)
+                for tag in new_tags:
+                    self.client().image_tags.update(
                         self.resource_id,
                         tag)
 
-        images = self.client().images
+                removed_tags = set(existing_tags) - set(diff_tags)
+                for tag in removed_tags:
+                    with self.client_plugin().ignore_not_found:
+                        self.client().image_tags.delete(
+                            self.resource_id,
+                            tag)
 
-        images.update(self.resource_id, **prop_diff)
+            if self.MEMBERS in prop_diff:
+                existing_members = self.properties.get(self.MEMBERS) or []
+                diff_members = prop_diff.pop(self.MEMBERS) or []
+
+                new_members = set(diff_members) - set(existing_members)
+                for _member in new_members:
+                    self.glance().image_members.create(
+                        self.resource_id, _member)
+                removed_members = set(existing_members) - set(diff_members)
+                for _member in removed_members:
+                    self.glance().image_members.delete(
+                        self.resource_id, _member)
+
+        self.client().images.update(self.resource_id, **prop_diff)
+        return active
+
+    def check_update_complete(self, active):
+        if active:
+            self.client().images.reactivate(self.resource_id)
+        return True
 
     def validate(self):
         super(GlanceWebImage, self).validate()
@@ -213,6 +272,13 @@ class GlanceWebImage(resource.Resource):
                     "'ari', or 'ami', the container and disk formats must "
                     "match.")
             raise exception.StackValidationFailed(message=msg)
+
+        if (self.properties[self.MEMBERS]
+                and self.properties[self.VISIBILITY] != 'shared'):
+            raise exception.ResourcePropertyValueDependency(
+                prop1=self.MEMBERS,
+                prop2=self.VISIBILITY,
+                value='shared')
 
     def get_live_resource_data(self):
         image_data = super(GlanceWebImage, self).get_live_resource_data()
