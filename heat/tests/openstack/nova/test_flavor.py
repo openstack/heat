@@ -151,7 +151,7 @@ class NovaFlavorTest(common.HeatTestCase):
         test_tenants_add = [mock.call(value, 'new_foo'),
                             mock.call(value, 'new_bar')]
         test_add = self.my_flavor.client().flavor_access.add_tenant_access
-        self.assertItemsEqual(test_tenants_add,
+        self.assertCountEqual(test_tenants_add,
                               test_add.call_args_list)
 
     def test_flavor_handle_update_remove_tenants(self):
@@ -174,7 +174,7 @@ class NovaFlavorTest(common.HeatTestCase):
         test_tenants_remove = [mock.call(value, 'foo'),
                                mock.call(value, 'bar')]
         test_rem = self.my_flavor.client().flavor_access.remove_tenant_access
-        self.assertItemsEqual(test_tenants_remove,
+        self.assertCountEqual(test_tenants_remove,
                               test_rem.call_args_list)
 
     def test_flavor_show_resource(self):
