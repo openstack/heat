@@ -887,7 +887,7 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
                           self._client.client.users.get,
                           self.sample_name)
         self._client.client.users.find.assert_called_once_with(
-            domain=None, name=self.sample_name)
+            domain_id=None, name=self.sample_name)
 
     @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_user_id_with_name_and_domain(self, client_keystone):
@@ -905,7 +905,7 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
                           self._client.client.users.get,
                           self.sample_name)
         self._client.client.users.find.assert_called_once_with(
-            domain=client_plugin.get_domain_id(self.sample_domain_uuid),
+            domain_id=client_plugin.get_domain_id(self.sample_domain_uuid),
             name=self.sample_name)
 
     @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
@@ -929,7 +929,7 @@ class KeystoneClientPluginUserTest(common.HeatTestCase):
                           self._client.client.users.get,
                           self.sample_name)
         self._client.client.users.find.assert_called_once_with(
-            domain=None, name=self.sample_name)
+            domain_id=None, name=self.sample_name)
 
     @mock.patch.object(keystone.KeystoneClientPlugin, 'client')
     def test_get_user_id_with_name_and_domain_invalid_input(self,
