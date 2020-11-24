@@ -298,10 +298,6 @@ function start_heat {
             enable_apache_site heat-api
             enable_apache_site heat-api-cfn
             restart_apache_server
-            tail_log heat-api /var/log/$APACHE_NAME/heat_api.log
-            tail_log heat-api-access /var/log/$APACHE_NAME/heat_api_access.log
-            tail_log heat-api-cfn /var/log/$APACHE_NAME/heat_api_cfn.log
-            tail_log heat-api-cfn-access /var/log/$APACHE_NAME/heat_api_cfn_access.log
         else
             run_process h-api "$HEAT_BIN_DIR/uwsgi --ini $HEAT_API_UWSGI_CONF" ""
             run_process h-api-cfn "$HEAT_BIN_DIR/uwsgi --ini $HEAT_CFN_API_UWSGI_CONF" ""
