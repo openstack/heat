@@ -10,6 +10,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
 from heat.policies import base
@@ -17,48 +18,170 @@ from heat.policies import base
 # These policies are for AWS CloudFormation-like APIs, so we won't list out
 # the URI paths in rules.
 
+DEPRECATED_REASON = """
+The cloud formation API now supports system scope and default roles.
+"""
+
 POLICY_ROOT = 'cloudformation:%s'
+
+deprecated_list_stacks = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'ListStacks',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_create_stack = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'CreateStack',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_describe_stacks = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'DescribeStacks',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_delete_stack = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'DeleteStack',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_update_stack = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'UpdateStack',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_cancel_update_stack = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'CancelUpdateStack',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_describe_stack_events = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'DescribeStackEvents',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_validate_template = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'ValidateTemplate',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_get_template = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'GetTemplate',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_estimate_template_cost = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'EstimateTemplateCost',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_describe_stack_resource = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'DescribeStackResource',
+    check_str=base.RULE_ALLOW_EVERYBODY
+)
+deprecated_describe_stack_resources = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'DescribeStackResources',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_list_stack_resources = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'ListStackResources',
+    check_str=base.RULE_DENY_STACK_USER
+)
 
 cloudformation_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'ListStacks',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_list_stacks,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'CreateStack',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_create_stack,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStacks',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_describe_stacks,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DeleteStack',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_delete_stack,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'UpdateStack',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_update_stack,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'CancelUpdateStack',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_cancel_update_stack,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStackEvents',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_describe_stack_events,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'ValidateTemplate',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_validate_template,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'GetTemplate',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_get_template,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'EstimateTemplateCost',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_estimate_template_cost,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStackResource',
-        check_str=base.RULE_ALLOW_EVERYBODY),
+        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_describe_stack_resource,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStackResources',
-        check_str=base.RULE_DENY_STACK_USER),
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_describe_stack_resources,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'ListStackResources',
-        check_str=base.RULE_DENY_STACK_USER)
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
+        deprecated_rule=deprecated_list_stack_resources,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    )
 ]
 
 

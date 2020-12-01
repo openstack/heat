@@ -90,6 +90,32 @@ def dummy_context(user='test_username', tenant_id='test_tenant_id',
     })
 
 
+def dummy_system_admin_context():
+    """Return a heat.common.context.RequestContext for system-admin.
+
+    :returns: an instance of heat.common.context.RequestContext
+
+    """
+    ctx = dummy_context(roles=['admin', 'member', 'reader'])
+    ctx.system_scope = 'all'
+    ctx.project_id = None
+    ctx.tenant_id = None
+    return ctx
+
+
+def dummy_system_reader_context():
+    """Return a heat.common.context.RequestContext for system-reader.
+
+    :returns: an instance of heat.common.context.RequestContext
+
+    """
+    ctx = dummy_context(roles=['reader'])
+    ctx.system_scope = 'all'
+    ctx.project_id = None
+    ctx.tenant_id = None
+    return ctx
+
+
 def parse_stack(t, params=None, files=None, stack_name=None,
                 stack_id=None, timeout_mins=None,
                 cache_data=None, tags=None):

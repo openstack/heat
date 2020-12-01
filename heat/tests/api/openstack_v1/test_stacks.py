@@ -471,7 +471,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         mock_enforce.assert_called_with(action='global_index',
                                         scope=self.controller.REQUEST_SCOPE,
                                         is_registered_policy=True,
-                                        context=self.context)
+                                        context=self.context,
+                                        target={"project_id": self.tenant}
+                                        )
 
     def test_global_index_uses_admin_context(self, mock_enforce):
         rpc_client = self.controller.rpc_client
@@ -1675,7 +1677,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             version='1.20'
         )
 
-    def test_show_invalidtenant(self, mock_enforce):
+    # the test_show_invalidtenant for stacks is now dealt with srbac
+    #  more generic approach
+    def test_deprecated_show_invalidtenant(self, mock_enforce):
         identity = identifier.HeatIdentifier('wibble', 'wordpress', '6')
 
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)

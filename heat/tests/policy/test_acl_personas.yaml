@@ -1,0 +1,241 @@
+actions_most_restricted:
+  scope: "actions"
+  actions:
+    - "snapshot"
+    - "suspend"
+    - "resume"
+    - "cancel_update"
+    - "cancel_without_rollback"
+  allowed:
+    - "system_admin"
+    - "project_member"
+  denied:
+    - "stack_user"
+
+actions_restricted:
+  scope: "actions"
+  actions:
+    - "check"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+cloud_formation_most_restricted:
+  scope: "cloudformation"
+  actions:
+    - "ListStacks"
+    - "CreateStack"
+    - "DescribeStacks"
+    - "DeleteStack"
+    - "UpdateStack"
+    - "DescribeStackEvents"
+    - "ValidateTemplate"
+    - "GetTemplate"
+    - "EstimateTemplateCost"
+    - "DescribeStackResources"
+  allowed:
+    - "system_admin"
+    - "project_member"
+  denied:
+    - "stack_user"
+
+cloud_formation_restricted:
+  scope: "cloudformation"
+  actions:
+    - "DescribeStackResource"
+  allowed:
+    - "system_admin"
+    - "project_member"
+
+build_info_acl:
+  scope: "build_info"
+  actions:
+    - "build_info"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+events_acl:
+  scope: "events"
+  actions:
+    - "index"
+    - "show"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+resource_least_restricted:
+  scope: "resource"
+  actions:
+    - "metadata"
+    - "signal"
+  allowed:
+    - "system_reader"
+    - "system_reader"
+    - "stack_user"
+
+resource_restricted:
+  scope: "resource"
+  actions:
+    - "index"
+    - "show"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+resource_most_restricted:
+  scope: "resource"
+  actions:
+    - "mark_unhealthy"
+  allowed:
+    - "system_admin"
+    - "project_member"
+  denied:
+    - "stack_user"
+
+service_acl:
+  scope: "service"
+  actions:
+    - "index"
+  allowed:
+    - "system_reader"
+
+software_configs_least_restricted:
+  scope: "software_configs"
+  actions:
+    - "global_index"
+  allowed:
+    - "system_reader"
+
+software_configs_most_restricted:
+  scope: "software_configs"
+  actions:
+    - "create"
+    - "delete"
+  allowed:
+    - "system_admin"
+    - "project_member"
+  denied:
+    - "stack_user"
+
+software_configs_restricted:
+  scope: "software_configs"
+  actions:
+    - "index"
+    - "create"
+    - "show"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+software_deployments_most_restricted:
+  scope: "software_deployments"
+  actions:
+    - "create"
+    - "update"
+    - "delete"
+  allowed:
+    - "system_admin"
+    - "project_member"
+  denied:
+    - "stack_user"
+
+software_deployments_restricted:
+  scope: "software_deployments"
+  actions:
+    - "index"
+    - "show"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+
+software_deployments_least_restricted:
+  scope: "software_deployments"
+  actions:
+    - "metadata"
+  allowed:
+    - "stack_user"
+
+stacks_most_restricted:
+  scope: "stacks"
+  actions:
+    - "abandon"
+    - "create"
+    - "delete"
+    - "export"
+    - "generate_template"
+    - "update"
+    - "update_patch"
+    - "preview_update"
+    - "preview_update_patch"
+    - "validate_template"
+    - "snapshot"
+    - "delete_snapshot"
+    - "restore_snapshot"
+  allowed:
+    - "system_admin"
+    - "project_member"
+  denied:
+    - "stack_user"
+
+stacks_restricted:
+  scope: "stacks"
+  actions:
+    - "detail"
+    - "index"
+    - "list_resource_types"
+    - "list_template_versions"
+    - "list_template_functions"
+    - "preview"
+    - "resource_schema"
+    - "show"
+    - "template"
+    - "environment"
+    - "files"
+    - "show_snapshot"
+    - "list_snapshots"
+    - "list_outputs"
+    - "show_output"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+  denied:
+    - "stack_user"
+
+stacks_restricted_index:
+  scope: "stacks"
+  actions:
+    - "global_index"
+  allowed:
+    - "system_admin"
+
+stacks_open:
+  scope: "stacks"
+  actions:
+    - "lookup"
+  allowed:
+    - "system_reader"
+    - "project_reader"
+    - "stack_user"
+
+create_stacks:
+  scope: "stacks"
+  actions:
+    - "create"
+  allowed:
+    - "system_admin"
+    - "project_admin"
+    - "project_member"

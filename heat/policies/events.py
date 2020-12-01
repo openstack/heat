@@ -10,16 +10,32 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
 from heat.policies import base
 
 POLICY_ROOT = 'events:%s'
 
+DEPRECATED_REASON = """
+The events API now supports system scope and default roles.
+"""
+
+deprecated_index = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'index',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_show = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'show',
+    check_str=base.RULE_DENY_STACK_USER
+)
+
+
 events_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.RULE_DENY_STACK_USER,
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
         description='List events.',
         operations=[
             {
@@ -27,11 +43,15 @@ events_policies = [
                 'events',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_index,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
-        check_str=base.RULE_DENY_STACK_USER,
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
         description='Show event.',
         operations=[
             {
@@ -39,7 +59,10 @@ events_policies = [
                 'resources/{resource_name}/events/{event_id}',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_show,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     )
 ]
 

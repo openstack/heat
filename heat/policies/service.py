@@ -10,16 +10,30 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
 from heat.policies import base
 
+DEPRECATED_REASON = """
+The service API now supports system scope and default roles.
+"""
+
 POLICY_ROOT = 'service:%s'
+
+deprecated_index = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'index',
+    check_str=base.RULE_CONTEXT_IS_ADMIN
+)
 
 service_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.RULE_CONTEXT_IS_ADMIN)
+        check_str=base.SYSTEM_READER,
+        deprecated_rule=deprecated_index,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
+    )
 ]
 
 

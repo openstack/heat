@@ -1,0 +1,22 @@
+cloud_formation_restricted:
+  scope: "cloudformation"
+  actions:
+    - "DescribeStackResource"
+  allowed:
+    - "stack_user"
+    - "anyone"
+
+stacks_open:
+  scope: "stacks"
+  actions:
+    - "lookup"
+  allowed:
+    - "anyone"
+
+create_stacks:
+  scope: "stacks"
+  actions:
+    - "create"
+  allowed:
+    - "system_reader"
+    - "project_reader"

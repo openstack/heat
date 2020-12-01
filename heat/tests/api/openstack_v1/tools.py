@@ -119,6 +119,7 @@ class ControllerTest(object):
                 action=self.action,
                 context=self.context,
                 scope=self.controller.REQUEST_SCOPE,
+                target={'project_id': self.tenant},
                 is_registered_policy=mock.ANY
             )
             self.assertEqual(self.expected_request_count,

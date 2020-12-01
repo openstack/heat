@@ -10,23 +10,38 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
 from heat.policies import base
 
+DEPRECATED_REASON = """
+The build API now supports system scope and default roles.
+"""
+
 POLICY_ROOT = 'build_info:%s'
+
+deprecated_build_info = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'build_info',
+    check_str=base.RULE_DENY_STACK_USER
+)
+
 
 build_info_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'build_info',
-        check_str=base.RULE_DENY_STACK_USER,
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
         description='Show build information.',
         operations=[
             {
                 'path': '/v1/{tenant_id}/build_info',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_build_info,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     )
 ]
 

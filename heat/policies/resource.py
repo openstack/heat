@@ -10,16 +10,43 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_log import versionutils
 from oslo_policy import policy
 
 from heat.policies import base
 
 POLICY_ROOT = 'resource:%s'
 
+DEPRECATED_REASON = """
+The resources API now supports system scope and default roles.
+"""
+
+deprecated_list_resources = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'index',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_mark_unhealthy = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'mark_unhealthy',
+    check_str=base.RULE_DENY_STACK_USER
+)
+deprecated_show_resource = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'show',
+    check_str=base.RULE_DENY_STACK_USER,
+)
+deprecated_metadata = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'metadata',
+    check_str=base.RULE_ALLOW_EVERYBODY,
+)
+deprecated_signal = policy.DeprecatedRule(
+    name=POLICY_ROOT % 'signal',
+    check_str=base.RULE_ALLOW_EVERYBODY,
+)
+
 resource_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.RULE_DENY_STACK_USER,
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
         description='List resources.',
         operations=[
             {
@@ -27,11 +54,15 @@ resource_policies = [
                 'resources',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_list_resources,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'metadata',
-        check_str=base.RULE_ALLOW_EVERYBODY,
+        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
+        scope_types=['system', 'project'],
         description='Show resource metadata.',
         operations=[
             {
@@ -39,11 +70,15 @@ resource_policies = [
                 'resources/{resource_name}/metadata',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_metadata,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'signal',
-        check_str=base.RULE_ALLOW_EVERYBODY,
+        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
+        scope_types=['system', 'project'],
         description='Signal resource.',
         operations=[
             {
@@ -51,11 +86,15 @@ resource_policies = [
                 'resources/{resource_name}/signal',
                 'method': 'POST'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_signal,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'mark_unhealthy',
-        check_str=base.RULE_DENY_STACK_USER,
+        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
+        scope_types=['system', 'project'],
         description='Mark resource as unhealthy.',
         operations=[
             {
@@ -63,11 +102,15 @@ resource_policies = [
                 'resources/{resource_name_or_physical_id}',
                 'method': 'PATCH'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_mark_unhealthy,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
-        check_str=base.RULE_DENY_STACK_USER,
+        check_str=base.SYSTEM_OR_PROJECT_READER,
+        scope_types=['system', 'project'],
         description='Show resource.',
         operations=[
             {
@@ -75,7 +118,10 @@ resource_policies = [
                 'resources/{resource_name}',
                 'method': 'GET'
             }
-        ]
+        ],
+        deprecated_rule=deprecated_show_resource,
+        deprecated_reason=DEPRECATED_REASON,
+        deprecated_since=versionutils.deprecated.WALLABY
     )
 ]
 

@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    The default policies provided by heat api have been updated to add support
+    for default roles and system scope. This is part of a broader community
+    effort to support read-only roles and implement secure, consistent default
+    policies.
+    
+    Refer to `the Keystone documentation`__ for more information on the reason
+    for these changes.
+
+    __ https://docs.openstack.org/keystone/latest/admin/service-api-protection.html
+deprecations:
+  - |
+    The old default policy rules have been deprecated for removal in Xena cycle.
