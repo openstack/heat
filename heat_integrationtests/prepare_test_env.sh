@@ -46,7 +46,7 @@ function _config_iniset {
     iniset $conf_file heat_plugin instance_type m1.heat_int
     iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 
-    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-31-1.9.x86_64
+    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-32-1.6.x86_64
     iniset $conf_file heat_plugin minimal_image_ref $default_image_name
     iniset $conf_file heat_plugin hidden_stack_tag hidden
 
@@ -91,7 +91,7 @@ function _config_tempest_plugin
     # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
     # Skip AutoscalingLoadBalancerTest and AutoscalingLoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
     iniset $conf_file heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, \
-        SoftwareConfigIntegrationTest'
+        SoftwareConfigIntegrationTest, CfnInitIntegrationTest'
 
     # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
     iniset $conf_file heat_plugin skip_functional_test_list 'LoadBalancerv2Test'

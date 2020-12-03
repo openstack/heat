@@ -15,7 +15,7 @@ cmd2==0.8.1
 contextlib2==0.5.5
 coverage==4.0
 croniter==0.3.4
-cryptography==2.1
+cryptography==2.1.4
 debtcollector==1.19.0
 decorator==4.2.1
 deprecation==2.0
@@ -95,6 +95,7 @@ pyasn1==0.4.2
 pycadf==2.7.0
 pycparser==2.18
 pyflakes==0.8.1
+Pygments==2.2.0
 pyinotify==0.9.6
 PyMySQL==0.7.6
 PyNaCl==1.2.1
