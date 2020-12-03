@@ -15,7 +15,7 @@ cmd2==0.8.1
 contextlib2==0.5.5
 coverage==4.0
 croniter==0.3.4
-cryptography==2.1
+cryptography==2.1.4
 debtcollector==1.19.0
 decorator==4.2.1
 deprecation==2.0
@@ -47,7 +47,7 @@ linecache2==1.0.0
 lxml==3.4.1
 Mako==1.0.7
 MarkupSafe==1.0
-mccabe==0.2.1
+mccabe==0.6.0
 mock==2.0.0
 monotonic==1.4
 msgpack==0.5.6
