@@ -37,7 +37,7 @@ class TroveClientPlugin(client_plugin.ClientPlugin):
             'endpoint_type': endpoint_type,
             'service_type': self.DATABASE,
             'session': con.keystone_session,
-            'connect_retries': cfg.CONF.client_retry_limit,
+            'retries': cfg.CONF.client_retry_limit,
             'region_name': self._get_region_name()
         }
 
