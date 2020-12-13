@@ -33,7 +33,8 @@ policy_path = os.path.dirname(os.path.realpath(__file__)) + "/policy/"
 class TestPolicyEnforcer(common.HeatTestCase):
 
     def setUp(self):
-        super(TestPolicyEnforcer, self).setUp(mock_resource_policy=False)
+        super(TestPolicyEnforcer, self).setUp(
+            mock_resource_policy=False, mock_find_file=False)
         self.fixture = self.useFixture(config_fixture.Config())
         self.fixture.conf(args=['--config-dir', policy_path])
 

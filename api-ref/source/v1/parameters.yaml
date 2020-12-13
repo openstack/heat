@@ -115,7 +115,7 @@ deployment_server_id_query:
 global_tenant:
   description: |
     Set to ``true`` to include stacks from all tenants (projects) in the stack
-    list. Specify policy requirements in the Orchestration ``policy.json``
+    list. Specify policy requirements in the Orchestration ``policy.yaml``
     file.
   in: query
   required: false

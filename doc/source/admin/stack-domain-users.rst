@@ -124,7 +124,7 @@ The following steps are run during stack creation:
    perspective) to the stack owners project. The users who are created
    in the stack domain are still assigned the ``heat_stack_user`` role, so
    the API surface they can access is limited through
-   the :file:`policy.json` file.
+   the :file:`policy.yaml` file.
    For more  information, see :keystone-doc:`OpenStack Identity documentation
    <>`.
 
@@ -133,7 +133,7 @@ The following steps are run during stack creation:
    retrieved. Details are retrieved from the database for
    both the stack owner's project (the default
    API path to the stack) and the stack domain project, subject to the
-   :file:`policy.json` restrictions.
+   :file:`policy.yaml` restrictions.
 
 This means there are now two paths that
 can result in the same data being retrieved through the Orchestration API.

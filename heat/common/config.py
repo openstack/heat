@@ -19,6 +19,7 @@ from oslo_config import cfg
 from oslo_db import options as oslo_db_ops
 from oslo_log import log as logging
 from oslo_middleware import cors
+from oslo_policy import opts as policy_opts
 from osprofiler import opts as profiler
 
 from heat.common import exception
@@ -596,3 +597,7 @@ def set_config_defaults():
                        'DELETE',
                        'PATCH']
     )
+    # TODO(gmann): Remove setting the default value of config policy_file
+    # once oslo_policy change the default value to 'policy.yaml'.
+    # https://github.com/openstack/oslo.policy/blob/a626ad12fe5a3abd49d70e3e5b95589d279ab578/oslo_policy/opts.py#L49
+    policy_opts.set_defaults(cfg.CONF, 'policy.yaml')

@@ -74,7 +74,7 @@ class ResourceController(object):
 
     Implements the API actions.
     """
-    # Define request scope (must match what is in policy.json or policies in
+    # Define request scope (must match what is in policy.yaml or policies in
     # code)
     REQUEST_SCOPE = 'resource'
 

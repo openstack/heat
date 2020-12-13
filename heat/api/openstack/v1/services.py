@@ -25,7 +25,7 @@ from heat.rpc import client as rpc_client
 
 class ServiceController(object):
     """WSGI controller for reporting the heat engine status in Heat v1 API."""
-    # Define request scope (must match what is in policy.json or policies in
+    # Define request scope (must match what is in policy.yaml or policies in
     # code)
     REQUEST_SCOPE = 'service'
 
