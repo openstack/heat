@@ -1,6 +1,6 @@
-=================
-Adminstering Heat
-=================
+==================
+Administering Heat
+==================
 
 .. toctree::
    :maxdepth: 2
