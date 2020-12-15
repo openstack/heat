@@ -16,8 +16,17 @@
 # but pkg_resources can't be imported.
 echo "import pkg_resources" | python3 2>/dev/null
 has_py3=$?
+echo "import pkg_resources" | python2 2>/dev/null
+has_py2=$?
+echo "import pkg_resources" | /usr/libexec/platform-python 2>/dev/null
+has_platform-py=$?
+
 if [ $has_py3 = 0 ]; then
     interpreter="python3"
+elif [ $has_py2 = 0 ]; then
+    interpreter="python"
+elif [ $has_platform-py = 0 ]; then
+    interpreter="/usr/libexec/platform-python"
 else
     interpreter="python"
 fi
