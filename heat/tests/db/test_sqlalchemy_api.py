@@ -3110,7 +3110,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, None)
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual('CREATE', db_res.action)
         self.assertEqual('IN_PROGRESS', db_res.status)
@@ -3124,7 +3124,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, None)
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual(1, db_res.atomic_key)
         values = {'engine_id': 'engine-1',
@@ -3133,7 +3133,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, 'engine-1')
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual('CREATE', db_res.action)
         self.assertEqual('FAILED', db_res.status)
@@ -3147,7 +3147,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, None)
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual(1, db_res.atomic_key)
         values = {'engine_id': 'engine-2',
@@ -3165,7 +3165,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, None)
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual(1, db_res.atomic_key)
         # Set engine id as None to release the lock
@@ -3175,7 +3175,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, 'engine-1')
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertIsNone(db_res.engine_id)
         self.assertEqual('CREATE', db_res.action)
         self.assertEqual('COMPLETE', db_res.status)
@@ -3189,7 +3189,8 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, None)
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-1', db_res.engine_id)
         self.assertEqual(1, db_res.atomic_key)
         # Set engine id as engine-2 and pass expected engine id as old engine
@@ -3200,7 +3201,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         ret = db_api.resource_update(self.ctx, self.resource.id,
                                      values, db_res.atomic_key, 'engine-1')
         self.assertTrue(ret)
-        db_res = db_api.resource_get(self.ctx, self.resource.id)
+        db_res = db_api.resource_get(self.ctx, self.resource.id, refresh=True)
         self.assertEqual('engine-2', db_res.engine_id)
         self.assertEqual('DELETE', db_res.action)
         self.assertEqual(2, db_res.atomic_key)
