@@ -56,6 +56,17 @@ resources:
 '''
 
 
+neutron_port_with_no_fixed_ips_template = '''
+heat_template_version: 2015-04-30
+description: Template to test port Neutron resource
+resources:
+  port:
+    type: OS::Neutron::Port
+    properties:
+      network: abcd1234
+      no_fixed_ips: true
+'''
+
 neutron_port_security_template = '''
 heat_template_version: 2015-04-30
 description: Template to test port Neutron resource
@@ -218,6 +229,34 @@ class NeutronPortTest(common.HeatTestCase):
                 'mac_address': u'00-B0-D0-86-BB-F7'
             }],
             'name': utils.PhysName(stack.name, 'port'),
+            'admin_state_up': True,
+            'binding:vnic_type': 'normal',
+            'device_id': '',
+            'device_owner': ''
+        }})
+
+    def test_no_fixed_ips(self):
+        t = template_format.parse(neutron_port_with_no_fixed_ips_template)
+        stack = utils.parse_stack(t)
+
+        self.find_mock.return_value = 'abcd1234'
+
+        self.create_mock.return_value = {'port': {
+            "status": "BUILD",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766"
+        }}
+
+        self.port_show_mock.return_value = {'port': {
+            "status": "ACTIVE",
+            "id": "fc68ea2c-b60b-4b4f-bd82-94ec81110766",
+        }}
+
+        port = stack['port']
+        scheduler.TaskRunner(port.create)()
+        self.create_mock.assert_called_once_with({'port': {
+            'network_id': u'abcd1234',
+            'name': utils.PhysName(stack.name, 'port'),
+            'fixed_ips': [],
             'admin_state_up': True,
             'binding:vnic_type': 'normal',
             'device_id': '',
