@@ -248,7 +248,7 @@ the end user.
 
 *AllowedValues(allowed, description)*:
   Lists the allowed values.  ``allowed`` must be a
-  ``collections.abc.Sequence`` or ``basestring``.  Applicable to all types
+  ``collections.abc.Sequence`` or ``string``.  Applicable to all types
   of value except MAP.
 
 *Length(min, max, description)*:
