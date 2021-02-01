@@ -166,7 +166,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
             input_key,
             check_input_val=check_input_val)
 
-        if isinstance(snippet, collections.Mapping):
+        if isinstance(snippet, collections.abc.Mapping):
             fn_arg = StructuredDeployment.get_input_key_arg(snippet, input_key)
             if fn_arg is not None:
                 return StructuredDeployment.get_input_key_value(fn_arg, inputs,
@@ -175,7 +175,7 @@ class StructuredDeployment(sd.SoftwareDeployment):
 
             return dict((k, parse(v)) for k, v in snippet.items())
         elif (not isinstance(snippet, str) and
-              isinstance(snippet, collections.Iterable)):
+              isinstance(snippet, collections.abc.Iterable)):
             return [parse(v) for v in snippet]
         else:
             return snippet

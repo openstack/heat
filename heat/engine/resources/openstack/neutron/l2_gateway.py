@@ -106,10 +106,10 @@ class L2Gateway(neutron.NeutronResource):
 
     @staticmethod
     def _remove_none_value_props(props):
-        if isinstance(props, collections.Mapping):
+        if isinstance(props, collections.abc.Mapping):
             return dict((k, L2Gateway._remove_none_value_props(v)) for k, v
                         in props.items() if v is not None)
-        elif (isinstance(props, collections.Sequence) and
+        elif (isinstance(props, collections.abc.Sequence) and
               not isinstance(props, str)):
             return list(L2Gateway._remove_none_value_props(p) for p in props
                         if p is not None)

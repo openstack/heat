@@ -3305,7 +3305,7 @@ class ServersTest(common.HeatTestCase):
         ws.resource_id = server.id
         self.patchobject(self.fc.servers, 'get', return_value=server)
         console_urls = ws._resolve_any_attribute('console_urls')
-        self.assertIsInstance(console_urls, collections.Mapping)
+        self.assertIsInstance(console_urls, collections.abc.Mapping)
         supported_consoles = ('novnc', 'xvpvnc', 'spice-html5', 'rdp-html5',
                               'serial', 'webmks')
         self.assertEqual(set(supported_consoles),

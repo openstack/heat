@@ -300,14 +300,14 @@ class Property(object):
     def _get_map(self, value, validate=False, translation=None):
         if value is None:
             value = self.default() if self.has_default() else {}
-        if not isinstance(value, collections.Mapping):
+        if not isinstance(value, collections.abc.Mapping):
             # This is to handle passing Lists via Json parameters exposed
             # via a provider resource, in particular lists-of-dicts which
             # cannot be handled correctly via comma_delimited_list
             if self.schema.allow_conversion:
                 if isinstance(value, str):
                     return value
-                elif isinstance(value, collections.Sequence):
+                elif isinstance(value, collections.abc.Sequence):
                     return jsonutils.dumps(value)
             raise TypeError(_('"%s" is not a map') % value)
 
@@ -320,7 +320,7 @@ class Property(object):
             value = self.has_default() and self.default() or []
         if self.schema.allow_conversion and isinstance(value, str):
             value = param_utils.delim_string_to_list(value)
-        if (not isinstance(value, collections.Sequence) or
+        if (not isinstance(value, collections.abc.Sequence) or
                 isinstance(value, str)):
             raise TypeError(_('"%s" is not a list') % repr(value))
 
@@ -376,7 +376,7 @@ def _default_resolver(d, nullable=False):
     return d
 
 
-class Properties(collections.Mapping):
+class Properties(collections.abc.Mapping):
 
     def __init__(self, schema, data, resolver=_default_resolver,
                  parent_name=None,

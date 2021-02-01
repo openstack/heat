@@ -596,7 +596,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
 
     def meta_serialize(self, metadata):
         """Serialize non-string metadata values before sending them to Nova."""
-        if not isinstance(metadata, collections.Mapping):
+        if not isinstance(metadata, collections.abc.Mapping):
             raise exception.StackValidationFailed(message=_(
                 "nova server metadata needs to be a Map."))
 
@@ -647,7 +647,7 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         """
         nc = self.client
 
-        class ConsoleUrls(collections.Mapping):
+        class ConsoleUrls(collections.abc.Mapping):
             def __init__(self, server):
                 self.console_method = server.get_console_url
                 self.support_console_types = ['novnc', 'xvpvnc',

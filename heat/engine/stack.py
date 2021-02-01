@@ -100,7 +100,7 @@ def reset_state_on_error(func):
     return handle_exceptions
 
 
-class Stack(collections.Mapping):
+class Stack(collections.abc.Mapping):
 
     ACTIONS = (
         CREATE, DELETE, UPDATE, ROLLBACK, SUSPEND, RESUME, ADOPT,

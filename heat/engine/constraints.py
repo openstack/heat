@@ -36,7 +36,7 @@ MEMOIZE = core.get_memoization_decorator(conf=cfg.CONF,
 LOG = log.getLogger(__name__)
 
 
-class Schema(collections.Mapping):
+class Schema(collections.abc.Mapping):
     """Schema base class for validating properties or parameters.
 
     Schema objects are serializable to dictionaries following a superset of
@@ -251,7 +251,7 @@ class Schema(collections.Mapping):
         return self._len
 
 
-class AnyIndexDict(collections.Mapping):
+class AnyIndexDict(collections.abc.Mapping):
     """A Mapping that returns the same value for any integer index.
 
     Used for storing the schema for a list. When converted to a dictionary,
@@ -276,7 +276,7 @@ class AnyIndexDict(collections.Mapping):
         return 1
 
 
-class Constraint(collections.Mapping):
+class Constraint(collections.abc.Mapping):
     """Parent class for constraints on allowable values for a Property.
 
     Constraints are serializable to dictionaries following the HOT input
@@ -540,7 +540,7 @@ class AllowedValues(Constraint):
 
     def __init__(self, allowed, description=None):
         super(AllowedValues, self).__init__(description)
-        if (not isinstance(allowed, collections.Sequence) or
+        if (not isinstance(allowed, collections.abc.Sequence) or
                 isinstance(allowed, str)):
             raise exception.InvalidSchemaError(
                 message=_('AllowedValues must be a list'))

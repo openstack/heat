@@ -24,7 +24,7 @@ _in_progress = object()
 
 class Conditions(object):
     def __init__(self, conditions_dict):
-        assert isinstance(conditions_dict, collections.Mapping)
+        assert isinstance(conditions_dict, collections.abc.Mapping)
         self._conditions = conditions_dict
         self._resolved = {}
 

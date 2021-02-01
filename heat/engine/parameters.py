@@ -388,7 +388,7 @@ class ParsedParameter(Parameter):
         return self._parsed
 
 
-class CommaDelimitedListParam(ParsedParameter, collections.Sequence):
+class CommaDelimitedListParam(ParsedParameter, collections.abc.Sequence):
     """A template parameter of type "CommaDelimitedList"."""
 
     __slots__ = tuple()
@@ -481,7 +481,7 @@ class JsonParam(ParsedParameter):
         self.schema.validate_value(parsed, context)
 
 
-class Parameters(collections.Mapping, metaclass=abc.ABCMeta):
+class Parameters(collections.abc.Mapping, metaclass=abc.ABCMeta):
     """Parameters of a stack.
 
     The parameters of a stack, with type checking, defaults, etc. specified by

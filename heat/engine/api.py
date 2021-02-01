@@ -292,7 +292,7 @@ def format_resource_attributes(resource, with_attr=None):
     if 'show' in resolver:
         show_attr = resolve('show', resolver)
         # check if 'show' resolved to dictionary. so it's not None
-        if isinstance(show_attr, collections.Mapping):
+        if isinstance(show_attr, collections.abc.Mapping):
             for a in with_attr:
                 if a not in show_attr:
                     show_attr[a] = resolve(a, resolver)

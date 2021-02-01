@@ -4433,7 +4433,7 @@ class TestResourceMapping(common.HeatTestCase):
     def _check_mapping_func(self, func, module):
         self.assertTrue(callable(func))
         res = func()
-        self.assertIsInstance(res, collections.Mapping)
+        self.assertIsInstance(res, collections.abc.Mapping)
         for r_type, r_class in res.items():
             self.assertIsInstance(r_type, str)
             type_elements = r_type.split('::')

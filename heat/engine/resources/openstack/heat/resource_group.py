@@ -610,12 +610,12 @@ class ResourceGroup(stack_resource.StackResource):
                     result = None
                 return result
 
-            if isinstance(snippet, collections.Mapping):
+            if isinstance(snippet, collections.abc.Mapping):
                 return dict(filter(function._non_null_item,
                                    ((k, ignore_param_resolve(v, nullable=True))
                                     for k, v in snippet.items())))
             elif (not isinstance(snippet, str) and
-                  isinstance(snippet, collections.Iterable)):
+                  isinstance(snippet, collections.abc.Iterable)):
                 return list(filter(function._non_null_value,
                                    (ignore_param_resolve(v, nullable=True)
                                     for v in snippet)))
@@ -646,9 +646,9 @@ class ResourceGroup(stack_resource.StackResource):
 
         if isinstance(val, str):
             return val.replace(repl_var, res_name)
-        elif isinstance(val, collections.Mapping):
+        elif isinstance(val, collections.abc.Mapping):
             return {k: recurse(v) for k, v in val.items()}
-        elif isinstance(val, collections.Sequence):
+        elif isinstance(val, collections.abc.Sequence):
             return [recurse(v) for v in val]
         return val
 

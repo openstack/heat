@@ -57,7 +57,7 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
         return status in self.WAIT_STATUSES
 
     def _metadata_format_ok(self, metadata):
-        if not isinstance(metadata, collections.Mapping):
+        if not isinstance(metadata, collections.abc.Mapping):
             return False
         if set(metadata) != set(self.METADATA_KEYS):
             return False
