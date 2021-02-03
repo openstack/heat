@@ -240,29 +240,14 @@ class BaseServer(stack_user.StackUser):
         if not self.user_data_software_config():
             return
         try:
-            metadata = self.metadata_get(True) or {}
-            self._create_transport_credentials(prop_diff)
-            self._populate_deployments_metadata(metadata, prop_diff)
-            # push new metadata to all sources by creating a dummy
-            # deployment
-            sc = self.rpc_client().create_software_config(
-                self.context, 'ignored', 'ignored', '')
-            sd = self.rpc_client().create_software_deployment(
-                self.context, self.resource_id, sc['id'])
-            self.rpc_client().delete_software_deployment(
-                self.context, sd['id'])
-            self.rpc_client().delete_software_config(
-                self.context, sc['id'])
+            self._delete_queue()
+            self._delete_temp_url()
         except Exception:
-            # Updating the software config transport is on a best-effort
-            # basis as any raised exception here would result in the resource
-            # going into an ERROR state, which will be replaced on the next
-            # stack update. This is not desirable for a server. The old
-            # transport will continue to work, and the new transport may work
-            # despite exceptions in the above block.
-            LOG.exception(
-                'Error while updating software config transport'
-            )
+            pass
+
+        metadata = self.metadata_get(True) or {}
+        self._create_transport_credentials(prop_diff)
+        self._populate_deployments_metadata(metadata, prop_diff)
 
     def metadata_update(self, new_metadata=None):
         """Refresh the metadata if new_metadata is None."""
@@ -299,6 +284,8 @@ class BaseServer(stack_user.StackUser):
             headers = swift.head_container(container)
             if int(headers['x-container-object-count']) == 0:
                 swift.delete_container(container)
+        self.data_delete('metadata_object_name')
+        self.data_delete('metadata_put_url')
 
     def _delete_queue(self):
         queue_id = self.data().get('metadata_queue_id')
