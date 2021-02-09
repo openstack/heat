@@ -53,7 +53,7 @@ def clone_table(name, parent, meta, newcols=None, ignorecols=None,
 
         return False
 
-    constraints = [c.copy() for c in parent.constraints
+    constraints = [c.copy(target_table=new_table) for c in parent.constraints
                    if c.name not in ignorecons
                    if not _is_ignorable(c)]
 
