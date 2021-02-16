@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import ipaddress
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -956,8 +957,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         return result
 
     def _get_live_networks(self, server, props):
-        reality_nets = self._add_attrs_for_address(server,
-                                                   extend_networks=False)
+        reality_nets = self._get_server_addresses(server,
+                                                  extend_networks=False)
         reality_net_ids = {}
         client_plugin = self.client_plugin('neutron')
         for net_key in reality_nets:
@@ -1125,7 +1126,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             LOG.warning("Failed to fetch resource attributes: %s", ex)
             return
 
-    def _add_attrs_for_address(self, server, extend_networks=True):
+    def _get_server_addresses(self, server, extend_networks=True):
         """Adds port id, subnets and network attributes to addresses list.
 
         This method is used only for resolving attributes.
@@ -1134,30 +1135,47 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                                 the net is returned without replacing name on
                                 id.
         """
-        nets = copy.deepcopy(server.addresses) or {}
-        ifaces = server.interface_list()
-        ip_mac_mapping_on_port_id = dict(((iface.fixed_ips[0]['ip_address'],
-                                           iface.mac_addr), iface.port_id)
-                                         for iface in ifaces)
-        for net_name in nets:
-            for addr in nets[net_name]:
-                addr['port'] = ip_mac_mapping_on_port_id.get(
-                    (addr['addr'], addr['OS-EXT-IPS-MAC:mac_addr']))
+        nets = {}
+        ifaces = self.client('neutron').list_ports(device_id=server.id)
+        for port in ifaces['ports']:
+            net_label = self.client('neutron').list_networks(
+                id=port['network_id'])['networks'][0]['name']
+            net = nets.setdefault(net_label, [])
+            for fixed_ip in port['fixed_ips']:
+                addr = {'addr': fixed_ip.get('ip_address'),
+                        'OS-EXT-IPS-MAC:mac_addr': port['mac_address'],
+                        'OS-EXT-IPS:type': 'fixed',
+                        'port': port['id']}
+
+                try:
+                    addr['version'] = ipaddress.ip_address(
+                        addr['addr']).version,
+                except ValueError:
+                    addr['version'] = None
+
+                if addr['addr']:
+                    fips = self.client('neutron').list_floatingips(
+                        fixed_ip_address=addr['addr'])
+                    for fip in fips['floatingips']:
+                        net.append({
+                            'addr': fip['floating_ip_address'],
+                            'version': addr['version'],
+                            'OS-EXT-IPS-MAC:mac_addr': port['mac_address'],
+                            'OS-EXT-IPS:type': 'floating',
+                            'port': None})
+
                 # _get_live_networks() uses this method to get reality_nets.
                 # We don't need to get subnets and network in that case. Only
                 # do the external calls if extend_networks is true, i.e called
                 # from _resolve_attribute()
                 if not extend_networks:
+                    net.append(addr)
                     continue
-                try:
-                    port = self.client('neutron').show_port(
-                        addr['port'])['port']
-                except Exception as ex:
-                    addr['subnets'], addr['network'] = None, None
-                    LOG.warning("Failed to fetch resource attributes: %s", ex)
-                    continue
+
                 addr['subnets'] = self._get_subnets_attr(port['fixed_ips'])
                 addr['network'] = self._get_network_attr(port['network_id'])
+
+                net.append(addr)
 
         if extend_networks:
             return self._extend_networks(nets)
@@ -1202,7 +1220,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             self.client_plugin().ignore_not_found(e)
             return ''
         if name == self.ADDRESSES:
-            return self._add_attrs_for_address(server)
+            return self._get_server_addresses(server)
         if name == self.NETWORKS_ATTR:
             return self._extend_networks(server.networks)
         if name == self.INSTANCE_NAME:
