@@ -447,42 +447,48 @@ class ServersTest(common.HeatTestCase):
                                         ip='5.6.9.8'),
                       create_fake_iface(port='1013',
                                         mac='fa:16:3e:8c:44:cc',
-                                        ip='10.13.12.13')]
+                                        ip='10.13.12.13',
+                                        subnet='private_subnet_id')]
+        ports = [dict(id=interfaces[0].port_id,
+                      mac_address=interfaces[0].mac_addr,
+                      fixed_ips=interfaces[0].fixed_ips,
+                      network_id='public_id'),
+                 dict(id=interfaces[1].port_id,
+                      mac_address=interfaces[1].mac_addr,
+                      fixed_ips=interfaces[1].fixed_ips,
+                      network_id='public_id'),
+                 dict(id=interfaces[2].port_id,
+                      mac_address=interfaces[2].mac_addr,
+                      fixed_ips=interfaces[2].fixed_ips,
+                      network_id='private_id')]
+        public_net = dict(id='public_id',
+                          name='public',
+                          mtu=1500,
+                          subnets=['public_subnet_id'])
+        private_net = dict(id='private_id',
+                           name='private',
+                           mtu=1500,
+                           subnets=['private_subnet_id'])
+        private_subnet = dict(id='private_subnet_id',
+                              name='private_subnet',
+                              cidr='private_cidr',
+                              allocation_pools=[{'start': 'start_addr',
+                                                 'end': 'end_addr'}],
+                              gateway_ip='private_gateway',
+                              network_id='private_id')
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
-        self.patchobject(return_server, 'interface_list',
-                         return_value=interfaces)
+        self.patchobject(neutronclient.Client, 'list_ports',
+                         return_value={'ports': ports})
+        self.patchobject(neutronclient.Client, 'list_networks',
+                         side_effect=[{'networks': [public_net]},
+                                      {'networks': [public_net]},
+                                      {'networks': [private_net]}])
+        self.patchobject(neutronclient.Client, 'list_floatingips',
+                         return_value={'floatingips': []})
         self.patchobject(self.fc.servers, 'tag_list', return_value=['test'])
-
-        self.port_show.return_value = {
-            'port': {'id': '1234',
-                     'network_id': 'the_network',
-                     'fixed_ips': [{
-                         'ip_address': '4.5.6.7',
-                         'subnet_id': 'the_subnet'}]
-                     }
-        }
-        subnet_dict = {
-            'subnet': {
-                'name': 'subnet_name',
-                'cidr': '10.0.0.0/24',
-                'allocation_pools': [{'start': '10.0.0.2',
-                                      'end': u'10.0.0.254'}],
-                'gateway_ip': '10.0.0.1',
-                'id': 'the_subnet',
-                'network_id': 'the_network'
-            }
-        }
-        network_dict = {
-            'network': {
-                'name': 'network_name',
-                'mtu': 1500,
-                'subnets': [subnet_dict['subnet']['id']],
-                'id': 'the_network'
-            }
-        }
-        self.subnet_show.return_value = subnet_dict
-        self.network_show.return_value = network_dict
+        self.subnet_show.return_value = {'subnet': private_subnet}
+        self.network_show.return_value = {'network': private_net}
 
         public_ip = return_server.networks['public'][0]
         self.assertEqual('1234',
@@ -499,9 +505,9 @@ class ServersTest(common.HeatTestCase):
                          server.FnGetAtt('addresses')['private'][0]['port'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('addresses')['private'][0]['addr'])
-        self.assertEqual([subnet_dict['subnet']],
+        self.assertEqual([private_subnet],
                          server.FnGetAtt('addresses')['private'][0]['subnets'])
-        self.assertEqual(network_dict['network'],
+        self.assertEqual(private_net,
                          server.FnGetAtt('addresses')['private'][0]['network'])
         self.assertEqual(private_ip,
                          server.FnGetAtt('networks')['private'][0])
@@ -521,21 +527,6 @@ class ServersTest(common.HeatTestCase):
             del server.attributes._resolved_values['tags']
         self.assertIsNone(server.FnGetAtt('tags'))
         self.assertEqual({}, server.FnGetAtt('os_collect_config'))
-
-    def test_server_network_subnet_address_attr_port_not_found(self):
-        return_server = self.fc.servers.list()[1]
-        server_name = 'network-subnet-attr-server'
-        server = self._create_test_server(return_server, server_name)
-        interfaces = [create_fake_iface(port='1234',
-                                        mac='fa:16:3e:8c:22:aa',
-                                        ip='4.5.6.7')]
-        self.patchobject(return_server, 'interface_list',
-                         return_value=interfaces)
-        self.port_show.side_effect = neutron.exceptions.NotFound()
-        self.assertEqual(None,
-                         server.FnGetAtt('addresses')['private'][0]['subnets'])
-        self.assertEqual(None,
-                         server.FnGetAtt('addresses')['private'][0]['network'])
 
     def test_server_create_metadata(self):
         stack_name = 'create_metadata_test_stack'
@@ -643,10 +634,30 @@ class ServersTest(common.HeatTestCase):
                       create_fake_iface(port='1013',
                                         mac='fa:16:3e:8c:44:cc',
                                         ip='10.13.12.13')]
+        ports = [dict(id=interfaces[0].port_id,
+                      mac_address=interfaces[0].mac_addr,
+                      fixed_ips=interfaces[0].fixed_ips,
+                      network_id='public_id'),
+                 dict(id=interfaces[1].port_id,
+                      mac_address=interfaces[1].mac_addr,
+                      fixed_ips=interfaces[1].fixed_ips,
+                      network_id='public_id'),
+                 dict(id=interfaces[2].port_id,
+                      mac_address=interfaces[2].mac_addr,
+                      fixed_ips=interfaces[2].fixed_ips,
+                      network_id='private_id')]
+        public_net = dict(id='public_id', name='public')
+        private_net = dict(id='private_id', name='private')
 
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
-        self.patchobject(return_server, 'interface_list',
-                         return_value=interfaces)
+        self.patchobject(neutronclient.Client, 'list_ports',
+                         return_value={'ports': ports})
+        self.patchobject(neutronclient.Client, 'list_networks',
+                         side_effect=[{'networks': [public_net]},
+                                      {'networks': [public_net]},
+                                      {'networks': [private_net]}])
+        self.patchobject(neutronclient.Client, 'list_floatingips',
+                         return_value={'floatingips': []})
         self.patchobject(return_server, 'interface_detach')
         self.patchobject(return_server, 'interface_attach')
 
@@ -2041,20 +2052,42 @@ class ServersTest(common.HeatTestCase):
         server.properties.data['networks'] = [{'network': 'public_id',
                                                'fixed_ip': '5.6.9.8'}]
 
+        public_net = dict(id='public_id', name='public')
+        private_net = dict(id='private_id', name='private')
         iface0 = create_fake_iface(port='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
                                    net='public',
                                    ip='5.6.9.8',
                                    mac='fa:16:3e:8c:33:aa')
+        port0 = dict(id=iface0.port_id,
+                     network_id=iface0.net_id,
+                     mac_address=iface0.mac_addr,
+                     fixed_ips=iface0.fixed_ips)
         iface1 = create_fake_iface(port='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
                                    net='public',
                                    ip='4.5.6.7',
                                    mac='fa:16:3e:8c:22:aa')
+        port1 = dict(id=iface1.port_id,
+                     network_id=iface1.net_id,
+                     mac_address=iface1.mac_addr,
+                     fixed_ips=iface1.fixed_ips)
         iface2 = create_fake_iface(port='cccccccc-cccc-cccc-cccc-cccccccccccc',
                                    net='private',
                                    ip='10.13.12.13',
                                    mac='fa:16:3e:8c:44:cc')
+        port2 = dict(id=iface2.port_id,
+                     network_id=iface2.net_id,
+                     mac_address=iface2.mac_addr,
+                     fixed_ips=iface2.fixed_ips)
         self.patchobject(return_server, 'interface_list',
                          return_value=[iface0, iface1, iface2])
+        self.patchobject(neutronclient.Client, 'list_ports',
+                         return_value={'ports': [port0, port1, port2]})
+        self.patchobject(neutronclient.Client, 'list_networks',
+                         side_effect=[{'networks': [public_net]},
+                                      {'networks': [public_net]},
+                                      {'networks': [private_net]}])
+        self.patchobject(neutronclient.Client, 'list_floatingips',
+                         return_value={'floatingips': []})
 
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
@@ -2677,6 +2710,14 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(neutron.NeutronClientPlugin,
                          'find_resourceid_by_name_or_id',
                          return_value=None)
+        self.patchobject(neutronclient.Client, 'list_ports',
+                         return_value={'ports': [{'id': 'p_id',
+                                                  'name': 'p_name',
+                                                  'fixed_ips': [],
+                                                  'network_id': 'n_id'}]})
+        self.patchobject(neutronclient.Client, 'list_networks',
+                         return_value={'networks': [{'id': 'n_id',
+                                                     'name': 'empty_net'}]})
         self.patchobject(self.fc.servers, 'get', return_value=return_server)
         self.patchobject(return_server, 'interface_list', return_value=[])
         mock_detach = self.patchobject(return_server, 'interface_detach')
