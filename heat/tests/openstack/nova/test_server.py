@@ -1073,6 +1073,43 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
+    def test_delete_swift_service_removed(self):
+        self.patchobject(nova.NovaClientPlugin, 'client',
+                         return_value=self.fc)
+        return_server = self.fc.servers.list()[1]
+        stack_name = 'software_config_s'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+
+        props = tmpl.t['Resources']['WebServer']['Properties']
+        props['user_data_format'] = 'SOFTWARE_CONFIG'
+        props['software_config_transport'] = 'POLL_TEMP_URL'
+        self.server_props = props
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('WebServer',
+                                resource_defns['WebServer'], stack)
+        self.patchobject(server, 'store_external_ports')
+
+        sc = mock.Mock()
+        sc.head_account.return_value = {
+            'x-account-meta-temp-url-key': 'secrit'
+        }
+        sc.url = 'http://192.0.2.2'
+
+        self.patchobject(swift.SwiftClientPlugin, '_create',
+                         return_value=sc)
+        self.patchobject(self.fc.servers, 'create',
+                         return_value=return_server)
+        scheduler.TaskRunner(server.create)()
+        self.assertEqual((server.CREATE, server.COMPLETE), server.state)
+        self.patchobject(server.client_plugin(),
+                         'does_endpoint_exist',
+                         return_value=False)
+        side_effect = [server, fakes_nova.fake_exception()]
+        self.patchobject(self.fc.servers, 'get', side_effect=side_effect)
+        scheduler.TaskRunner(server.delete)()
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
+
     def _prepare_for_server_create(self, md=None):
         self.patchobject(nova.NovaClientPlugin, 'client',
                          return_value=self.fc)
@@ -1162,6 +1199,20 @@ class ServersTest(common.HeatTestCase):
             'deployments': []
         }, server.metadata_get())
 
+        scheduler.TaskRunner(server.delete)()
+        self.assertEqual((server.DELETE, server.COMPLETE), server.state)
+
+    def test_delete_zaqar_service_removed(self):
+        zcc = self.patchobject(zaqar.ZaqarClientPlugin, 'create_for_tenant')
+        zcc.return_value = mock.Mock()
+        server, stack = self._prepare_for_server_create()
+        scheduler.TaskRunner(server.create)()
+        self.assertEqual((server.CREATE, server.COMPLETE), server.state)
+        self.patchobject(server.client_plugin(),
+                         'does_endpoint_exist',
+                         return_value=False)
+        side_effect = [server, fakes_nova.fake_exception()]
+        self.patchobject(self.fc.servers, 'get', side_effect=side_effect)
         scheduler.TaskRunner(server.delete)()
         self.assertEqual((server.DELETE, server.COMPLETE), server.state)
 

@@ -321,6 +321,9 @@ class FakeSessionClient(base_client.SessionClient):
     def delete_servers_1234(self, **kw):
         return (202, None)
 
+    def delete_servers_5678(self, **kw):
+        return (202, None)
+
     def get_servers_9999(self, **kw):
         r = {'server': self.get_servers_detail()[1]['servers'][4]}
         return (200, r)
