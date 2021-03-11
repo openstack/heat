@@ -30,7 +30,7 @@ def get_plug_point_class_instances():
 
     The list of class instances is sorted using get_ordinal methods
     on the plug point classes. If class1.ordinal() < class2.ordinal(),
-    then class1 will be before before class2 in the list.
+    then class1 will be before class2 in the list.
     """
     global pp_class_instances
     if pp_class_instances is None:

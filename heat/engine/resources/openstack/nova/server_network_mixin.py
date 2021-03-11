@@ -65,7 +65,7 @@ class ServerNetworkMixin(object):
                 "/".join([self.NETWORKS, self.NETWORK_PORT]))
 
         # if user only specifies network and floating ip, floating ip
-        # can't be associated as the the neutron port isn't created/managed
+        # can't be associated as the neutron port isn't created/managed
         # by heat
         if floating_ip is not None:
             if net_id is not None and port is None and subnet is None:

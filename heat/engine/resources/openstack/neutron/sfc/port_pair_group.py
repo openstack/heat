@@ -24,7 +24,7 @@ class PortPairGroup(neutron.NeutronResource):
 
     Multiple port-pairs may be included in a port-pair-group to allow the
     specification of a set of functionally equivalent Service Functions that
-    can be be used for load distribution.
+    can be used for load distribution.
     """
 
     support_status = support.SupportStatus(
