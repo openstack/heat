@@ -590,52 +590,60 @@ class ResourceRegistry(object):
                    str(support.SUPPORT_STATUSES))
             raise exception.Invalid(reason=msg)
 
-        def is_resource(key):
-            return isinstance(self._registry[key], (ClassResourceInfo,
-                                                    TemplateResourceInfo))
-
-        def status_matches(cls):
-            return (support_status is None or
-                    cls.get_class().support_status.status ==
-                    support_status)
-
-        def is_available(cls):
-            if cnxt is None:
-                return True
-
-            try:
-                return cls.get_class().is_service_available(cnxt)[0]
-            except Exception:
-                return False
-
-        def not_hidden_matches(cls):
-            return cls.get_class().support_status.status != support.HIDDEN
-
-        def is_allowed(enforcer, name):
-            if cnxt is None:
-                return True
-            try:
-                enforcer.enforce(cnxt, name, is_registered_policy=True)
-            except enforcer.exc:
-                return False
-            else:
-                return True
-
         enforcer = policy.ResourceEnforcer()
-
-        def name_matches(name):
+        if type_name is not None:
             try:
-                return type_name is None or re.match(type_name, name)
-            except:  # noqa
+                name_exp = re.compile(type_name)
+            except Exception:
+                return []
+        else:
+            name_exp = None
+
+        def matches(name, info):
+            # Only return actual plugins or template resources, not aliases
+            if not isinstance(info, (ClassResourceInfo, TemplateResourceInfo)):
                 return False
 
-        def version_matches(cls):
-            return (version is None or
-                    cls.get_class().support_status.version == version)
+            # If filtering by name, check for match
+            if name_exp is not None and not name_exp.match(name):
+                return False
+
+            rsrc_cls = info.get_class_to_instantiate()
+
+            # Never match hidden resource types
+            if rsrc_cls.support_status.status == support.HIDDEN:
+                return False
+
+            # If filtering by version, check for match
+            if (version is not None and
+                    rsrc_cls.support_status.version != version):
+                return False
+
+            # If filtering by support status, check for match
+            if (support_status is not None and
+                    rsrc_cls.support_status.status != support_status):
+                return False
+
+            if cnxt is not None:
+                # Check for resource policy
+                try:
+                    enforcer.enforce(cnxt, name, is_registered_policy=True)
+                except enforcer.exc:
+                    return False
+
+                # Check for service availability
+                try:
+                    avail, err = rsrc_cls.is_service_available(cnxt)
+                except Exception:
+                    avail = False
+                if not avail:
+                    return False
+
+            return True
 
         import heat.engine.resource
 
-        def resource_description(name, info, with_description):
+        def resource_description(name, info):
             if not with_description:
                 return name
             rsrc_cls = info.get_class()
@@ -646,15 +654,9 @@ class ResourceRegistry(object):
                 'description': rsrc_cls.getdoc(),
             }
 
-        return [resource_description(name, cls, with_description)
-                for name, cls in self._registry.items()
-                if (is_resource(name) and
-                    name_matches(name) and
-                    status_matches(cls) and
-                    is_available(cls) and
-                    is_allowed(enforcer, name) and
-                    not_hidden_matches(cls) and
-                    version_matches(cls))]
+        return [resource_description(name, info)
+                for name, info in self._registry.items()
+                if matches(name, info)]
 
 
 class Environment(object):
