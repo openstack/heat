@@ -1022,9 +1022,11 @@ class EngineService(service.ServiceBase):
         LOG.info('Updating stack %s', db_stack.name)
         if cfg.CONF.reauthentication_auth_method == 'trusts':
             current_stack = parser.Stack.load(
-                cnxt, stack=db_stack, use_stored_context=True)
+                cnxt, stack=db_stack, use_stored_context=True,
+                check_refresh_cred=True)
         else:
-            current_stack = parser.Stack.load(cnxt, stack=db_stack)
+            current_stack = parser.Stack.load(cnxt, stack=db_stack,
+                                              check_refresh_cred=True)
         self.resource_enforcer.enforce_stack(current_stack,
                                              is_registered_policy=True)
 

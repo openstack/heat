@@ -188,19 +188,7 @@ class KsClientWrapper(object):
 
         return client
 
-    def create_trust_context(self):
-        """Create a trust using the trustor identity in the current context.
-
-        The trust is created with the trustee as the heat service user.
-
-        If the current context already contains a trust_id, we do nothing
-        and return the current context.
-
-        Returns a context containing the new trust_id.
-        """
-        if self.context.trust_id:
-            return self.context
-
+    def _create_trust_context(self, trustor_user_id, trustor_proj_id):
         # We need the service admin user ID (not name), as the trustor user
         # can't lookup the ID in keystoneclient unless they're admin
         # workaround this by getting the user_id from admin_client
@@ -210,9 +198,6 @@ class KsClientWrapper(object):
         except ks_exception.Unauthorized:
             LOG.error("Domain admin client authentication failed")
             raise exception.AuthorizationFailure()
-
-        trustor_user_id = self.context.auth_plugin.get_user_id(self.session)
-        trustor_proj_id = self.context.auth_plugin.get_project_id(self.session)
 
         role_kw = {}
         # inherit the roles of the trustor, unless set trusts_delegated_roles
@@ -245,12 +230,46 @@ class KsClientWrapper(object):
         trust_context.trustor_user_id = trustor_user_id
         return trust_context
 
+    def create_trust_context(self):
+        """Create a trust using the trustor identity in the current context.
+
+        The trust is created with the trustee as the heat service user.
+
+        If the current context already contains a trust_id, we do nothing
+        and return the current context.
+
+        Returns a context containing the new trust_id.
+        """
+        if self.context.trust_id:
+            return self.context
+
+        trustor_user_id = self.context.auth_plugin.get_user_id(self.session)
+        trustor_proj_id = self.context.auth_plugin.get_project_id(self.session)
+        return self._create_trust_context(trustor_user_id, trustor_proj_id)
+
     def delete_trust(self, trust_id):
         """Delete the specified trust."""
         try:
             self.client.trusts.delete(trust_id)
         except (ks_exception.NotFound, ks_exception.Unauthorized):
             pass
+
+    def regenerate_trust_context(self):
+        """Regenerate a trust using the trustor identity of current user_id.
+
+        The trust is created with the trustee as the heat service user.
+
+        Returns a context containing the new trust_id.
+        """
+        old_trust_id = self.context.trust_id
+        trustor_user_id = self.context.auth_plugin.get_user_id(self.session)
+        trustor_proj_id = self.context.auth_plugin.get_project_id(self.session)
+        trust_context = self._create_trust_context(trustor_user_id,
+                                                   trustor_proj_id)
+
+        if old_trust_id:
+            self.delete_trust(old_trust_id)
+        return trust_context
 
     def _get_username(self, username):
         if(len(username) > 255):

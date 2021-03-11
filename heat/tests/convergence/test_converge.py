@@ -11,13 +11,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_config import cfg
+
+from heat.common import context
 from heat.engine import resource
 from heat.tests import common
 from heat.tests.convergence.framework import fake_resource
 from heat.tests.convergence.framework import processes
 from heat.tests.convergence.framework import scenario
 from heat.tests.convergence.framework import testutils
-from oslo_config import cfg
 
 
 class ScenarioTest(common.HeatTestCase):
@@ -27,6 +29,7 @@ class ScenarioTest(common.HeatTestCase):
 
     def setUp(self):
         super(ScenarioTest, self).setUp()
+        self.patchobject(context, 'StoredContext')
         resource._register_class('OS::Heat::TestResource',
                                  fake_resource.TestResource)
         self.procs = processes.Processes()
