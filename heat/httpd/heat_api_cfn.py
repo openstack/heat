@@ -33,6 +33,9 @@ CONF = cfg.CONF
 def init_application():
     i18n.enable_lazy()
 
+    # NOTE(hberaud): Call reset to ensure the ConfigOpts object doesn't
+    # already contain registered options if the app is reloaded.
+    CONF.reset()
     logging.register_options(CONF)
     CONF(project='heat',
          prog='heat-api-cfn',
