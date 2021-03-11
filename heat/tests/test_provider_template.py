@@ -32,6 +32,7 @@ from heat.engine import rsrc_defn
 from heat.engine import stack as parser
 from heat.engine import support
 from heat.engine import template
+from heat.objects import stack as stack_object
 from heat.tests import common
 from heat.tests import generic_resource as generic_rsrc
 from heat.tests import utils
@@ -971,6 +972,10 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res = template_resource.TemplateResource('test_t_res',
                                                       self.defn, self.stack)
         self.assertIsNone(self.res.validate())
+
+        self.patchobject(stack_object.Stack, 'get_status',
+                         return_value=('CREATE', 'COMPLETE',
+                                       'Created', 'Sometime'))
 
     def test_handle_create(self):
         self.res.create_with_template = mock.Mock(return_value=None)

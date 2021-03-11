@@ -425,6 +425,11 @@ class StackResource(resource.Resource):
             return False
 
         if status == self.IN_PROGRESS:
+            if cookie is not None and 'fail_count' in cookie:
+                prev_status_reason = cookie['previous']['status_reason']
+                if status_reason != prev_status_reason:
+                    # State has changed, so fail on the next failure
+                    cookie['fail_count'] = 1
             return False
         elif status == self.COMPLETE:
             # For operations where we do not take a resource lock
@@ -438,6 +443,10 @@ class StackResource(resource.Resource):
                 self._nested = None
             return done
         elif status == self.FAILED:
+            if cookie is not None and 'fail_count' in cookie:
+                cookie['fail_count'] -= 1
+                if cookie['fail_count'] > 0:
+                    raise resource.PollDelay(10)
             raise exception.ResourceFailure(status_reason, self,
                                             action=action)
         else:
@@ -564,12 +573,33 @@ class StackResource(resource.Resource):
         if stack_identity is None:
             return
 
+        cookie = None
+        if not self.stack.convergence:
+            try:
+                status_data = stack_object.Stack.get_status(self.context,
+                                                            self.resource_id)
+            except exception.NotFound:
+                return
+
+            action, status, status_reason, updated_time = status_data
+            if (action, status) == (self.stack.DELETE,
+                                    self.stack.IN_PROGRESS):
+                cookie = {
+                    'previous': {
+                        'state': (action, status),
+                        'status_reason': status_reason,
+                        'updated_at': None,
+                    },
+                    'fail_count': 2,
+                }
+
         with self.rpc_client().ignore_error_by_name('EntityNotFound'):
             if self.abandon_in_progress:
                 self.rpc_client().abandon_stack(self.context, stack_identity)
             else:
                 self.rpc_client().delete_stack(self.context, stack_identity,
                                                cast=False)
+            return cookie
 
     def handle_delete(self):
         return self.delete_nested()
