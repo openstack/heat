@@ -35,6 +35,7 @@ doc/source/_static/heat.policy.yaml.sample
 
 # Files created by releasenotes build
 releasenotes/build
+releasenotes/notes/reno.cache
 
 # sample config included in docs
 doc/source/_static/heat.conf.sample
