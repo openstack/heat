@@ -57,10 +57,10 @@ def merge_map(old, new, deep_merge=False):
         if v is not None:
             if not deep_merge:
                 old[k] = v
-            elif isinstance(v, collections.Mapping):
+            elif isinstance(v, collections.abc.Mapping):
                 old_v = old.get(k)
                 old[k] = merge_map(old_v, v, deep_merge) if old_v else v
-            elif (isinstance(v, collections.Sequence) and
+            elif (isinstance(v, collections.abc.Sequence) and
                     not isinstance(v, str)):
                 old_v = old.get(k)
                 old[k] = merge_list(old_v, v) if old_v else v
@@ -79,7 +79,7 @@ def parse_param(p_val, p_schema):
                 p_val = jsonutils.dumps(p_val)
             if p_val:
                 return jsonutils.loads(p_val)
-        elif not isinstance(p_val, collections.Sequence):
+        elif not isinstance(p_val, collections.abc.Sequence):
             raise ValueError()
     except (ValueError, TypeError) as err:
         msg = _("Invalid parameter in environment %s.") % str(err)

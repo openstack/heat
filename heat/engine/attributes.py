@@ -138,7 +138,7 @@ BASE_ATTRIBUTES = (SHOW_ATTR, ) = ('show', )
 ALL_ATTRIBUTES = '*'
 
 
-class Attributes(collections.Mapping):
+class Attributes(collections.abc.Mapping):
     """Models a collection of Resource Attributes."""
 
     def __init__(self, res_name, schema, resolver):
@@ -212,14 +212,14 @@ class Attributes(collections.Mapping):
                             {'name': attrib.name,
                              'att_type': attrib.schema.STRING})
         elif attrib.schema.type == attrib.schema.LIST:
-            if (not isinstance(value, collections.Sequence)
+            if (not isinstance(value, collections.abc.Sequence)
                     or isinstance(value, str)):
                 LOG.warning("Attribute %(name)s is not of type "
                             "%(att_type)s",
                             {'name': attrib.name,
                              'att_type': attrib.schema.LIST})
         elif attrib.schema.type == attrib.schema.MAP:
-            if not isinstance(value, collections.Mapping):
+            if not isinstance(value, collections.abc.Mapping):
                 LOG.warning("Attribute %(name)s is not of type "
                             "%(att_type)s",
                             {'name': attrib.name,
@@ -307,8 +307,8 @@ def select_from_attribute(attribute_value, path):
     :returns: the selected attribute component value.
     """
     def get_path_component(collection, key):
-        if not isinstance(collection, (collections.Mapping,
-                                       collections.Sequence)):
+        if not isinstance(collection, (collections.abc.Mapping,
+                                       collections.abc.Sequence)):
             raise TypeError(_("Can't traverse attribute path"))
 
         if not isinstance(key, (str, int)):

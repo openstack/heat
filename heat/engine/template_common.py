@@ -80,18 +80,18 @@ class CommonTemplate(template.Template):
 
         yield ('properties',
                self._parse_resource_field(self.RES_PROPERTIES,
-                                          (collections.Mapping,
+                                          (collections.abc.Mapping,
                                            function.Function), 'object',
                                           name, data, parse))
 
         yield ('metadata',
                self._parse_resource_field(self.RES_METADATA,
-                                          (collections.Mapping,
+                                          (collections.abc.Mapping,
                                            function.Function), 'object',
                                           name, data, parse))
 
         depends = self._parse_resource_field(self.RES_DEPENDS_ON,
-                                             collections.Sequence,
+                                             collections.abc.Sequence,
                                              'list or string',
                                              name, data, no_parse)
         if isinstance(depends, str):
@@ -122,7 +122,7 @@ class CommonTemplate(template.Template):
 
         yield ('update_policy',
                self._parse_resource_field(self.RES_UPDATE_POLICY,
-                                          (collections.Mapping,
+                                          (collections.abc.Mapping,
                                            function.Function), 'object',
                                           name, data, parse))
 
@@ -143,7 +143,7 @@ class CommonTemplate(template.Template):
             return cached_conds
 
         raw_defs = self._get_condition_definitions()
-        if not isinstance(raw_defs, collections.Mapping):
+        if not isinstance(raw_defs, collections.abc.Mapping):
             message = _('Condition definitions must be a map. Found a '
                         '%s instead') % type(raw_defs).__name__
             raise exception.StackValidationFailed(
@@ -166,7 +166,7 @@ class CommonTemplate(template.Template):
 
         def get_outputs():
             for key, val in outputs.items():
-                if not isinstance(val, collections.Mapping):
+                if not isinstance(val, collections.abc.Mapping):
                     message = _('Output definitions must be a map. Found a '
                                 '%s instead') % type(val).__name__
                     raise exception.StackValidationFailed(

@@ -55,7 +55,7 @@ def is_hook_definition(key, value):
     if key == 'hooks':
         if isinstance(value, str):
             is_valid_hook = valid_hook_type(value)
-        elif isinstance(value, collections.Sequence):
+        elif isinstance(value, collections.abc.Sequence):
             is_valid_hook = all(valid_hook_type(hook) for hook in value)
 
         if not is_valid_hook:
@@ -72,7 +72,7 @@ def is_valid_restricted_action(key, value):
     if key == 'restricted_actions':
         if isinstance(value, str):
             valid_action = valid_restricted_actions(value)
-        elif isinstance(value, collections.Sequence):
+        elif isinstance(value, collections.abc.Sequence):
             valid_action = all(valid_restricted_actions(
                 action) for action in value)
 
@@ -397,7 +397,7 @@ class ResourceRegistry(object):
                     actions = resource['restricted_actions']
                     if isinstance(actions, str):
                         restricted_actions.add(actions)
-                    elif isinstance(actions, collections.Sequence):
+                    elif isinstance(actions, collections.abc.Sequence):
                         restricted_actions |= set(actions)
         return restricted_actions
 
@@ -433,7 +433,7 @@ class ResourceRegistry(object):
                     if isinstance(hooks, str):
                         if hook == hooks:
                             return True
-                    elif isinstance(hooks, collections.Sequence):
+                    elif isinstance(hooks, collections.abc.Sequence):
                         if hook in hooks:
                             return True
         return False

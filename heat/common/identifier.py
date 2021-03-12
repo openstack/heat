@@ -20,7 +20,7 @@ from urllib import parse as urlparse
 from heat.common.i18n import _
 
 
-class HeatIdentifier(collections.Mapping):
+class HeatIdentifier(collections.abc.Mapping):
 
     FIELDS = (
         TENANT, STACK_NAME, STACK_ID, PATH

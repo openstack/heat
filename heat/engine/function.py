@@ -266,12 +266,12 @@ def resolve(snippet, nullable=False):
             result = None
         return result
 
-    if isinstance(snippet, collections.Mapping):
+    if isinstance(snippet, collections.abc.Mapping):
         return dict(filter(_non_null_item,
                            ((k, resolve(v, nullable=True))
                             for k, v in snippet.items())))
     elif (not isinstance(snippet, str) and
-          isinstance(snippet, collections.Iterable)):
+          isinstance(snippet, collections.abc.Iterable)):
         return list(filter(_non_null_value,
                            (resolve(v, nullable=True) for v in snippet)))
 
@@ -293,11 +293,11 @@ def validate(snippet, path=None):
             raise exception.StackValidationFailed(
                 path=path + [snippet.fn_name],
                 message=str(e))
-    elif isinstance(snippet, collections.Mapping):
+    elif isinstance(snippet, collections.abc.Mapping):
         for k, v in snippet.items():
             validate(v, path + [k])
     elif (not isinstance(snippet, str) and
-          isinstance(snippet, collections.Iterable)):
+          isinstance(snippet, collections.abc.Iterable)):
         basepath = list(path)
         parent = basepath.pop() if basepath else ''
         for i, v in enumerate(snippet):
@@ -314,7 +314,7 @@ def dependencies(snippet, path=''):
     if isinstance(snippet, Function):
         return snippet.dependencies(path)
 
-    elif isinstance(snippet, collections.Mapping):
+    elif isinstance(snippet, collections.abc.Mapping):
         def mkpath(key):
             return '.'.join([path, str(key)])
 
@@ -323,7 +323,7 @@ def dependencies(snippet, path=''):
         return itertools.chain.from_iterable(deps)
 
     elif (not isinstance(snippet, str) and
-          isinstance(snippet, collections.Iterable)):
+          isinstance(snippet, collections.abc.Iterable)):
         def mkpath(idx):
             return ''.join([path, '[%d]' % idx])
 
@@ -348,11 +348,11 @@ def dep_attrs(snippet, resource_name):
     if isinstance(snippet, Function):
         return snippet.dep_attrs(resource_name)
 
-    elif isinstance(snippet, collections.Mapping):
+    elif isinstance(snippet, collections.abc.Mapping):
         attrs = (dep_attrs(val, resource_name) for val in snippet.values())
         return itertools.chain.from_iterable(attrs)
     elif (not isinstance(snippet, str) and
-          isinstance(snippet, collections.Iterable)):
+          isinstance(snippet, collections.abc.Iterable)):
         attrs = (dep_attrs(value, resource_name) for value in snippet)
         return itertools.chain.from_iterable(attrs)
     return []
@@ -371,11 +371,11 @@ def all_dep_attrs(snippet):
     if isinstance(snippet, Function):
         return snippet.all_dep_attrs()
 
-    elif isinstance(snippet, collections.Mapping):
+    elif isinstance(snippet, collections.abc.Mapping):
         res_attrs = (all_dep_attrs(value) for value in snippet.values())
         return itertools.chain.from_iterable(res_attrs)
     elif (not isinstance(snippet, str) and
-          isinstance(snippet, collections.Iterable)):
+          isinstance(snippet, collections.abc.Iterable)):
         res_attrs = (all_dep_attrs(value) for value in snippet)
         return itertools.chain.from_iterable(res_attrs)
     return []

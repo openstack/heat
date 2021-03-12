@@ -178,10 +178,14 @@ def check_io_schema_list(io_configs):
     Raises TypeError if the list itself is not a list, or if any of the
     members are not dicts.
     """
-    if (not isinstance(io_configs, collections.Sequence) or
-            isinstance(io_configs, collections.Mapping) or
-            isinstance(io_configs, str)):
+    if (
+        not isinstance(io_configs, collections.abc.Sequence) or
+        isinstance(io_configs, collections.abc.Mapping) or
+        isinstance(io_configs, str)
+    ):
         raise TypeError('Software Config I/O Schema must be in a list')
 
-    if not all(isinstance(conf, collections.Mapping) for conf in io_configs):
+    if not all(
+        isinstance(conf, collections.abc.Mapping) for conf in io_configs
+    ):
         raise TypeError('Software Config I/O Schema must be a dict')

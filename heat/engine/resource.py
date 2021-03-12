@@ -1066,7 +1066,7 @@ class Resource(status.ResourceStatus):
             refd_attrs |= get_dep_attrs(stk_defn.resource_definition(r_name)
                                         for r_name in enabled_resources)
 
-        subset_outputs = isinstance(in_outputs, collections.Iterable)
+        subset_outputs = isinstance(in_outputs, collections.abc.Iterable)
         if subset_outputs or in_outputs:
             if not subset_outputs:
                 in_outputs = stk_defn.enabled_output_names()

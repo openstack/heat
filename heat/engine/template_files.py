@@ -28,7 +28,7 @@ class ReadOnlyDict(dict):
         raise ValueError("Attempted to write to internal TemplateFiles cache")
 
 
-class TemplateFiles(collections.Mapping):
+class TemplateFiles(collections.abc.Mapping):
 
     def __init__(self, files):
         self.files = None

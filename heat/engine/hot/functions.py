@@ -79,7 +79,7 @@ class GetParam(function.Function):
         if isinstance(args, str):
             param_name = args
             path_components = []
-        elif isinstance(args, collections.Sequence):
+        elif isinstance(args, collections.abc.Sequence):
             param_name = args[0]
             path_components = args[1:]
         else:
@@ -96,15 +96,15 @@ class GetParam(function.Function):
             raise exception.UserParameterMissing(key=param_name)
 
         def get_path_component(collection, key):
-            if not isinstance(collection, (collections.Mapping,
-                                           collections.Sequence)):
+            if not isinstance(collection, (collections.abc.Mapping,
+                                           collections.abc.Sequence)):
                 raise TypeError(_('"%s" can\'t traverse path') % self.fn_name)
 
             if not isinstance(key, (str, int)):
                 raise TypeError(_('Path components in "%s" '
                                   'must be strings') % self.fn_name)
 
-            if isinstance(collection, collections.Sequence
+            if isinstance(collection, collections.abc.Sequence
                           ) and isinstance(key, str):
                 try:
                     key = int(key)
@@ -167,7 +167,7 @@ class GetAttThenSelect(function.Function):
          self._path_components) = self._parse_args()
 
     def _parse_args(self):
-        if (not isinstance(self.args, collections.Sequence) or
+        if (not isinstance(self.args, collections.abc.Sequence) or
                 isinstance(self.args, str)):
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
@@ -314,7 +314,7 @@ class GetAttAllAttributes(GetAtt):
                                'forms: [resource_name] or '
                                '[resource_name, attribute, (path), ...]'
                                ) % self.fn_name)
-        elif isinstance(self.args, collections.Sequence):
+        elif isinstance(self.args, collections.abc.Sequence):
             if len(self.args) > 1:
                 return super(GetAttAllAttributes, self)._parse_args()
             else:
@@ -372,12 +372,12 @@ class Replace(function.Function):
 
         self._mapping, self._string = self._parse_args()
         if not isinstance(self._mapping,
-                          (collections.Mapping, function.Function)):
+                          (collections.abc.Mapping, function.Function)):
             raise TypeError(_('"%s" parameters must be a mapping') %
                             self.fn_name)
 
     def _parse_args(self):
-        if not isinstance(self.args, collections.Mapping):
+        if not isinstance(self.args, collections.abc.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map') %
                             self.fn_name)
 
@@ -418,7 +418,7 @@ class Replace(function.Function):
         if not isinstance(template, str):
             raise TypeError(_('"%s" template must be a string') % self.fn_name)
 
-        if not isinstance(mapping, collections.Mapping):
+        if not isinstance(mapping, collections.abc.Mapping):
             raise TypeError(_('"%s" params must be a map') % self.fn_name)
 
         def replace(strings, keys):
@@ -490,9 +490,10 @@ class ReplaceJson(Replace):
             else:
                 _raise_empty_param_value_error()
 
-        if not isinstance(value, (str, int,
-                                  float, bool)):
-            if isinstance(value, (collections.Mapping, collections.Sequence)):
+        if not isinstance(value, (str, int, float, bool)):
+            if isinstance(
+                value, (collections.abc.Mapping, collections.abc.Sequence)
+            ):
                 if not self._allow_empty_value and len(value) == 0:
                     _raise_empty_param_value_error()
                 try:
@@ -604,7 +605,7 @@ class Join(function.Function):
         if strings is None:
             strings = []
         if (isinstance(strings, str) or
-                not isinstance(strings, collections.Sequence)):
+                not isinstance(strings, collections.abc.Sequence)):
             raise TypeError(_('"%s" must operate on a list') % self.fn_name)
 
         delim = function.resolve(self._delim)
@@ -669,7 +670,7 @@ class JoinMultiple(function.Function):
         for jl in r_joinlists:
             if jl:
                 if (isinstance(jl, str) or
-                        not isinstance(jl, collections.Sequence)):
+                        not isinstance(jl, collections.abc.Sequence)):
                     raise TypeError(_('"%s" must operate on '
                                       'a list') % self.fn_name)
 
@@ -687,7 +688,9 @@ class JoinMultiple(function.Function):
                 return ''
             elif isinstance(s, str):
                 return s
-            elif isinstance(s, (collections.Mapping, collections.Sequence)):
+            elif isinstance(
+                s, (collections.abc.Mapping, collections.abc.Sequence)
+            ):
                 try:
                     return jsonutils.dumps(s, default=None, sort_keys=True)
                 except TypeError:
@@ -725,14 +728,14 @@ class MapMerge(function.Function):
     def result(self):
         args = function.resolve(self.args)
 
-        if not isinstance(args, collections.Sequence):
+        if not isinstance(args, collections.abc.Sequence):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % self.fmt_data)
 
         def ensure_map(m):
             if m is None:
                 return {}
-            elif isinstance(m, collections.Mapping):
+            elif isinstance(m, collections.abc.Mapping):
                 return m
             else:
                 msg = _('Incorrect arguments: Items to merge must be maps.')
@@ -776,7 +779,7 @@ class MapReplace(function.Function):
         def ensure_map(m):
             if m is None:
                 return {}
-            elif isinstance(m, collections.Mapping):
+            elif isinstance(m, collections.abc.Mapping):
                 return m
             else:
                 msg = (_('Incorrect arguments: to "%(fn_name)s", arguments '
@@ -901,7 +904,7 @@ class Repeat(function.Function):
         self._parse_args()
 
     def _parse_args(self):
-        if not isinstance(self.args, collections.Mapping):
+        if not isinstance(self.args, collections.abc.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map') %
                             self.fn_name)
 
@@ -923,12 +926,12 @@ class Repeat(function.Function):
         super(Repeat, self).validate()
 
         if not isinstance(self._for_each, function.Function):
-            if not isinstance(self._for_each, collections.Mapping):
+            if not isinstance(self._for_each, collections.abc.Mapping):
                 raise TypeError(_('The "for_each" argument to "%s" must '
                                   'contain a map') % self.fn_name)
 
     def _valid_arg(self, arg):
-        if not (isinstance(arg, (collections.Sequence,
+        if not (isinstance(arg, (collections.abc.Sequence,
                                  function.Function)) and
                 not isinstance(arg, str)):
             raise TypeError(_('The values of the "for_each" argument to '
@@ -939,10 +942,10 @@ class Repeat(function.Function):
             for (key, value) in zip(keys, values):
                 template = template.replace(key, value)
             return template
-        elif isinstance(template, collections.Sequence):
+        elif isinstance(template, collections.abc.Sequence):
             return [self._do_replacement(keys, values, elem)
                     for elem in template]
-        elif isinstance(template, collections.Mapping):
+        elif isinstance(template, collections.abc.Mapping):
             return dict((self._do_replacement(keys, values, k),
                          self._do_replacement(keys, values, v))
                         for (k, v) in template.items())
@@ -993,8 +996,8 @@ class RepeatWithMap(Repeat):
     """
 
     def _valid_arg(self, arg):
-        if not (isinstance(arg, (collections.Sequence,
-                                 collections.Mapping,
+        if not (isinstance(arg, (collections.abc.Sequence,
+                                 collections.abc.Mapping,
                                  function.Function)) and
                 not isinstance(arg, str)):
             raise TypeError(_('The values of the "for_each" argument to '
@@ -1118,7 +1121,7 @@ class StrSplit(function.Function):
                          'example': example}
         self.fn_name = fn_name
 
-        if isinstance(args, (str, collections.Mapping)):
+        if isinstance(args, (str, collections.abc.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % self.fmt_data)
 
@@ -1188,7 +1191,7 @@ class Yaql(function.Function):
     def __init__(self, stack, fn_name, args):
         super(Yaql, self).__init__(stack, fn_name, args)
 
-        if not isinstance(self.args, collections.Mapping):
+        if not isinstance(self.args, collections.abc.Mapping):
             raise TypeError(_('Arguments to "%s" must be a map.') %
                             self.fn_name)
 
@@ -1281,7 +1284,7 @@ class If(function.Macro):
     def parse_args(self, parse_func):
         try:
             if (not self.args or
-                    not isinstance(self.args, collections.Sequence) or
+                    not isinstance(self.args, collections.abc.Sequence) or
                     isinstance(self.args, str)):
                 raise ValueError()
             condition, value_if_true, value_if_false = self._read_args()
@@ -1344,7 +1347,7 @@ class ConditionBoolean(function.Function):
         self._check_args()
 
     def _check_args(self):
-        if not (isinstance(self.args, collections.Sequence) and
+        if not (isinstance(self.args, collections.abc.Sequence) and
                 not isinstance(self.args, str)):
             msg = _('Arguments to "%s" must be a list of conditions')
             raise ValueError(msg % self.fn_name)
@@ -1439,7 +1442,7 @@ class Filter(function.Function):
         self._values, self._sequence = self._parse_args()
 
     def _parse_args(self):
-        if (not isinstance(self.args, collections.Sequence) or
+        if (not isinstance(self.args, collections.abc.Sequence) or
                 isinstance(self.args, str)):
             raise TypeError(_('Argument to "%s" must be a list') %
                             self.fn_name)
@@ -1501,7 +1504,7 @@ class MakeURL(function.Function):
             if arg in args:
                 if arg == self.QUERY:
                     if not isinstance(args[arg], (function.Function,
-                                                  collections.Mapping)):
+                                                  collections.abc.Mapping)):
                         raise TypeError(_('The "%(arg)s" argument to '
                                           '"%(fn_name)s" must be a map') %
                                         {'arg': arg,
@@ -1536,7 +1539,7 @@ class MakeURL(function.Function):
     def validate(self):
         super(MakeURL, self).validate()
 
-        if not isinstance(self.args, collections.Mapping):
+        if not isinstance(self.args, collections.abc.Mapping):
             raise TypeError(_('The arguments to "%s" must '
                               'be a map') % self.fn_name)
 
@@ -1619,14 +1622,14 @@ class ListConcat(function.Function):
         args = function.resolve(self.args)
 
         if (isinstance(args, str) or
-                not isinstance(args, collections.Sequence)):
+                not isinstance(args, collections.abc.Sequence)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % self.fmt_data)
 
         def ensure_list(m):
             if m is None:
                 return []
-            elif (isinstance(m, collections.Sequence) and
+            elif (isinstance(m, collections.abc.Sequence) and
                   not isinstance(m, str)):
                 return m
             else:
@@ -1691,7 +1694,7 @@ class Contains(function.Function):
         resolved_value = function.resolve(self.value)
         resolved_sequence = function.resolve(self.sequence)
 
-        if not isinstance(resolved_sequence, collections.Sequence):
+        if not isinstance(resolved_sequence, collections.abc.Sequence):
             raise TypeError(_('Second argument to "%s" should be '
                               'a sequence.') % self.fn_name)
 

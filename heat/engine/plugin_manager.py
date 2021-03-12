@@ -93,7 +93,7 @@ class PluginMapping(object):
                               'from %(module)s', fmt_data)
                     raise
                 else:
-                    if isinstance(mapping_dict, collections.Mapping):
+                    if isinstance(mapping_dict, collections.abc.Mapping):
                         return mapping_dict
                     elif mapping_dict is not None:
                         LOG.error('Invalid type for %(mapping_name)s '

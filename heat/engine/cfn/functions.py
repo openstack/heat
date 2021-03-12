@@ -168,7 +168,7 @@ class Select(function.Function):
                             'err': json_ex}
                 raise ValueError(_('"%(fn_name)s": %(err)s') % fmt_data)
 
-        if isinstance(strings, collections.Mapping):
+        if isinstance(strings, collections.abc.Mapping):
             if not isinstance(index, str):
                 raise TypeError(_('Index to "%s" must be a string') %
                                 self.fn_name)
@@ -179,7 +179,7 @@ class Select(function.Function):
         except (ValueError, TypeError):
             pass
 
-        if (isinstance(strings, collections.Sequence) and
+        if (isinstance(strings, collections.abc.Sequence) and
                 not isinstance(strings, str)):
             if not isinstance(index, int):
                 raise TypeError(_('Index to "%s" must be an integer') %
@@ -229,7 +229,7 @@ class Split(function.Function):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (str, collections.Mapping)):
+        if isinstance(self.args, (str, collections.abc.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -278,7 +278,7 @@ class Replace(hot_funcs.Replace):
         fmt_data = {'fn_name': self.fn_name,
                     'example': example}
 
-        if isinstance(self.args, (str, collections.Mapping)):
+        if isinstance(self.args, (str, collections.abc.Mapping)):
             raise TypeError(_('Incorrect arguments to "%(fn_name)s" '
                               'should be: %(example)s') % fmt_data)
 
@@ -350,7 +350,7 @@ class MemberListToMap(function.Function):
     def result(self):
         member_list = function.resolve(self._list)
 
-        if not isinstance(member_list, collections.Iterable):
+        if not isinstance(member_list, collections.abc.Iterable):
             raise TypeError(_('Member list must be a list'))
 
         def item(s):
@@ -428,7 +428,7 @@ class Not(hot_funcs.Not):
         msg = _('Arguments to "%s" must be of the form: '
                 '[condition]') % self.fn_name
         if (not self.args or
-                not isinstance(self.args, collections.Sequence) or
+                not isinstance(self.args, collections.abc.Sequence) or
                 isinstance(self.args, str)):
             raise ValueError(msg)
         if len(self.args) != 1:

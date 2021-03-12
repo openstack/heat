@@ -113,17 +113,17 @@ class ResourceDefinition(object):
         assert isinstance(self.description, str)
 
         if properties is not None:
-            assert isinstance(properties, (collections.Mapping,
+            assert isinstance(properties, (collections.abc.Mapping,
                                            function.Function))
             self._hash ^= _hash_data(properties)
 
         if metadata is not None:
-            assert isinstance(metadata, (collections.Mapping,
+            assert isinstance(metadata, (collections.abc.Mapping,
                                          function.Function))
             self._hash ^= _hash_data(metadata)
 
         if depends is not None:
-            assert isinstance(depends, (collections.Sequence,
+            assert isinstance(depends, (collections.abc.Sequence,
                                         function.Function))
             assert not isinstance(depends, str)
             self._hash ^= _hash_data(depends)
@@ -133,7 +133,7 @@ class ResourceDefinition(object):
             self._hash ^= _hash_data(deletion_policy)
 
         if update_policy is not None:
-            assert isinstance(update_policy, (collections.Mapping,
+            assert isinstance(update_policy, (collections.abc.Mapping,
                                               function.Function))
             self._hash ^= _hash_data(update_policy)
 
@@ -432,10 +432,10 @@ def _hash_data(data):
         data = copy.deepcopy(data)
 
     if not isinstance(data, str):
-        if isinstance(data, collections.Sequence):
+        if isinstance(data, collections.abc.Sequence):
             return hash(tuple(_hash_data(d) for d in data))
 
-        if isinstance(data, collections.Mapping):
+        if isinstance(data, collections.abc.Mapping):
             item_hashes = (hash(k) ^ _hash_data(v) for k, v in data.items())
             return functools.reduce(operator.xor, item_hashes, 0)
 
