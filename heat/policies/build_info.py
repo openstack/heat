@@ -23,7 +23,9 @@ POLICY_ROOT = 'build_info:%s'
 
 deprecated_build_info = policy.DeprecatedRule(
     name=POLICY_ROOT % 'build_info',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 
 
@@ -39,9 +41,7 @@ build_info_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_build_info,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_build_info
     )
 ]
 

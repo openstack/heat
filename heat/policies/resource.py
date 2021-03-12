@@ -23,23 +23,33 @@ The resources API now supports system scope and default roles.
 
 deprecated_list_resources = policy.DeprecatedRule(
     name=POLICY_ROOT % 'index',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_mark_unhealthy = policy.DeprecatedRule(
     name=POLICY_ROOT % 'mark_unhealthy',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_show_resource = policy.DeprecatedRule(
     name=POLICY_ROOT % 'show',
     check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY,
 )
 deprecated_metadata = policy.DeprecatedRule(
     name=POLICY_ROOT % 'metadata',
     check_str=base.RULE_ALLOW_EVERYBODY,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY,
 )
 deprecated_signal = policy.DeprecatedRule(
     name=POLICY_ROOT % 'signal',
     check_str=base.RULE_ALLOW_EVERYBODY,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY,
 )
 
 resource_policies = [
@@ -55,9 +65,7 @@ resource_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_list_resources,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_list_resources
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'metadata',
@@ -71,9 +79,7 @@ resource_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_metadata,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_metadata
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'signal',
@@ -87,9 +93,7 @@ resource_policies = [
                 'method': 'POST'
             }
         ],
-        deprecated_rule=deprecated_signal,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_signal
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'mark_unhealthy',
@@ -103,9 +107,7 @@ resource_policies = [
                 'method': 'PATCH'
             }
         ],
-        deprecated_rule=deprecated_mark_unhealthy,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_mark_unhealthy
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
@@ -119,9 +121,7 @@ resource_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_show_resource,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_show_resource
     )
 ]
 
