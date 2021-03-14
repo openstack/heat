@@ -23,16 +23,16 @@ POLICY_ROOT = 'service:%s'
 
 deprecated_index = policy.DeprecatedRule(
     name=POLICY_ROOT % 'index',
-    check_str=base.RULE_CONTEXT_IS_ADMIN
+    check_str=base.RULE_CONTEXT_IS_ADMIN,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 
 service_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'index',
         check_str=base.SYSTEM_READER,
-        deprecated_rule=deprecated_index,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_index
     )
 ]
 

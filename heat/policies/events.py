@@ -23,11 +23,15 @@ The events API now supports system scope and default roles.
 
 deprecated_index = policy.DeprecatedRule(
     name=POLICY_ROOT % 'index',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_show = policy.DeprecatedRule(
     name=POLICY_ROOT % 'show',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 
 
@@ -44,9 +48,7 @@ events_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_index,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_index
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
@@ -60,9 +62,7 @@ events_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_show,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_show
     )
 ]
 

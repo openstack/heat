@@ -23,123 +23,183 @@ POLICY_ROOT = 'stacks:%s'
 
 deprecated_abandon = policy.DeprecatedRule(
     name=POLICY_ROOT % 'abandon',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_create = policy.DeprecatedRule(
     name=POLICY_ROOT % 'create',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_delete = policy.DeprecatedRule(
     name=POLICY_ROOT % 'delete',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_detail = policy.DeprecatedRule(
     name=POLICY_ROOT % 'detail',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_export = policy.DeprecatedRule(
     name=POLICY_ROOT % 'export',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_generate_template = policy.DeprecatedRule(
     name=POLICY_ROOT % 'generate_template',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_global_index = policy.DeprecatedRule(
     name=POLICY_ROOT % 'global_index',
-    check_str=base.RULE_DENY_EVERYBODY
+    check_str=base.RULE_DENY_EVERYBODY,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_index = policy.DeprecatedRule(
     name=POLICY_ROOT % 'index',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_list_resource_types = policy.DeprecatedRule(
     name=POLICY_ROOT % 'list_resource_types',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_list_template_versions = policy.DeprecatedRule(
     name=POLICY_ROOT % 'list_template_versions',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_list_template_functions = policy.DeprecatedRule(
     name=POLICY_ROOT % 'list_template_functions',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_preview = policy.DeprecatedRule(
     name=POLICY_ROOT % 'preview',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_resource_schema = policy.DeprecatedRule(
     name=POLICY_ROOT % 'resource_schema',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_show = policy.DeprecatedRule(
     name=POLICY_ROOT % 'show',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_template = policy.DeprecatedRule(
     name=POLICY_ROOT % 'template',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_environment = policy.DeprecatedRule(
     name=POLICY_ROOT % 'environment',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_files = policy.DeprecatedRule(
     name=POLICY_ROOT % 'files',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_update = policy.DeprecatedRule(
     name=POLICY_ROOT % 'update',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_update_patch = policy.DeprecatedRule(
     name=POLICY_ROOT % 'update_patch',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_preview_update = policy.DeprecatedRule(
     name=POLICY_ROOT % 'preview_update',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_preview_update_patch = policy.DeprecatedRule(
     name=POLICY_ROOT % 'preview_update_patch',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_validate_template = policy.DeprecatedRule(
     name=POLICY_ROOT % 'validate_template',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_snapshot = policy.DeprecatedRule(
     name=POLICY_ROOT % 'snapshot',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_show_snapshot = policy.DeprecatedRule(
     name=POLICY_ROOT % 'show_snapshot',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_delete_snapshot = policy.DeprecatedRule(
     name=POLICY_ROOT % 'delete_snapshot',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_list_snapshots = policy.DeprecatedRule(
     name=POLICY_ROOT % 'list_snapshots',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_restore_snapshot = policy.DeprecatedRule(
     name=POLICY_ROOT % 'restore_snapshot',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_list_outputs = policy.DeprecatedRule(
     name=POLICY_ROOT % 'list_outputs',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_show_output = policy.DeprecatedRule(
     name=POLICY_ROOT % 'show_output',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_lookup = policy.DeprecatedRule(
     name=POLICY_ROOT % 'lookup',
-    check_str=base.RULE_ALLOW_EVERYBODY
+    check_str=base.RULE_ALLOW_EVERYBODY,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 
 
@@ -156,9 +216,7 @@ stacks_policies = [
                 'method': 'DELETE'
             }
         ],
-        deprecated_rule=deprecated_abandon,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_abandon
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'create',
@@ -171,9 +229,7 @@ stacks_policies = [
                 'method': 'POST'
             }
         ],
-        deprecated_rule=deprecated_create,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_create
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'delete',
@@ -186,9 +242,7 @@ stacks_policies = [
                 'method': 'DELETE'
             }
         ],
-        deprecated_rule=deprecated_delete,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_delete
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'detail',
@@ -201,9 +255,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_detail,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_detail
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'export',
@@ -217,9 +269,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_export,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_export
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'generate_template',
@@ -233,9 +283,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_generate_template,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_generate_template
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'global_index',
@@ -248,9 +296,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_global_index,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_global_index
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
@@ -263,9 +309,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_index,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_index
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_resource_types',
@@ -278,9 +322,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_list_resource_types,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_list_resource_types
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_template_versions',
@@ -293,9 +335,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_list_template_versions,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_list_template_versions
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_template_functions',
@@ -309,9 +349,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_list_template_functions,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_list_template_functions
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'lookup',
@@ -324,9 +362,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_lookup,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_lookup
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview',
@@ -339,9 +375,7 @@ stacks_policies = [
                 'method': 'POST'
             }
         ],
-        deprecated_rule=deprecated_preview,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_preview
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'resource_schema',
@@ -354,9 +388,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_resource_schema,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_resource_schema
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
@@ -369,9 +401,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_show,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_show
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'template',
@@ -385,9 +415,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_template,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_template
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'environment',
@@ -401,9 +429,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_environment,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_environment
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'files',
@@ -417,9 +443,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_files,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_files
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'update',
@@ -432,9 +456,7 @@ stacks_policies = [
                 'method': 'PUT'
             }
         ],
-        deprecated_rule=deprecated_update,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_update
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'update_patch',
@@ -447,9 +469,7 @@ stacks_policies = [
                 'method': 'PATCH'
             }
         ],
-        deprecated_rule=deprecated_update_patch,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_update_patch
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview_update',
@@ -463,9 +483,7 @@ stacks_policies = [
                 'method': 'PUT'
             }
         ],
-        deprecated_rule=deprecated_preview_update,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_preview_update
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview_update_patch',
@@ -479,9 +497,7 @@ stacks_policies = [
                 'method': 'PATCH'
             }
         ],
-        deprecated_rule=deprecated_preview_update_patch,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_preview_update_patch
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'validate_template',
@@ -494,9 +510,7 @@ stacks_policies = [
                 'method': 'POST'
             }
         ],
-        deprecated_rule=deprecated_validate_template,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_validate_template
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'snapshot',
@@ -510,9 +524,7 @@ stacks_policies = [
                 'method': 'POST'
             }
         ],
-        deprecated_rule=deprecated_snapshot,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_snapshot
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show_snapshot',
@@ -526,9 +538,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_show_snapshot,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_show_snapshot
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'delete_snapshot',
@@ -542,9 +552,7 @@ stacks_policies = [
                 'method': 'DELETE'
             }
         ],
-        deprecated_rule=deprecated_delete_snapshot,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_delete_snapshot
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_snapshots',
@@ -558,9 +566,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_list_snapshots,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_list_snapshots
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'restore_snapshot',
@@ -574,9 +580,7 @@ stacks_policies = [
                 'method': 'POST'
             }
         ],
-        deprecated_rule=deprecated_restore_snapshot,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_restore_snapshot
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_outputs',
@@ -590,9 +594,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_list_outputs,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_list_outputs
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show_output',
@@ -606,9 +608,7 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_show_output,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_show_output
     )
 ]
 

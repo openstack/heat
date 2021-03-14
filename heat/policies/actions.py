@@ -23,31 +23,45 @@ The actions API now supports system scope and default roles.
 
 deprecated_action = policy.DeprecatedRule(
     name=POLICY_ROOT % 'action',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_snapshot = policy.DeprecatedRule(
     name=POLICY_ROOT % 'snapshot',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_suspend = policy.DeprecatedRule(
     name=POLICY_ROOT % 'suspend',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_resume = policy.DeprecatedRule(
     name=POLICY_ROOT % 'resume',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_check = policy.DeprecatedRule(
     name=POLICY_ROOT % 'check',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_cancel_update = policy.DeprecatedRule(
     name=POLICY_ROOT % 'cancel_update',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 deprecated_cancel_without_rollback = policy.DeprecatedRule(
     name=POLICY_ROOT % 'cancel_without_rollback',
-    check_str=base.RULE_DENY_STACK_USER
+    check_str=base.RULE_DENY_STACK_USER,
+    deprecated_reason=DEPRECATED_REASON,
+    deprecated_since=versionutils.deprecated.WALLABY
 )
 
 
@@ -63,9 +77,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_action,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_action
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'snapshot',
@@ -76,9 +88,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_snapshot,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_snapshot
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'suspend',
@@ -89,9 +99,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_suspend,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_suspend
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'resume',
@@ -102,9 +110,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_resume,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_resume
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'check',
@@ -115,9 +121,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_check,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_check
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'cancel_update',
@@ -128,9 +132,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_cancel_update,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_cancel_update
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'cancel_without_rollback',
@@ -141,9 +143,7 @@ actions_policies = [
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
             'method': 'POST',
         }],
-        deprecated_rule=deprecated_cancel_without_rollback,
-        deprecated_reason=DEPRECATED_REASON,
-        deprecated_since=versionutils.deprecated.WALLABY
+        deprecated_rule=deprecated_cancel_without_rollback
     )
 ]
 
