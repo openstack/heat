@@ -41,8 +41,11 @@ class CinderQuota(resource.Resource):
 
     required_service_extension = 'os-quota-sets'
 
-    PROPERTIES = (PROJECT, GIGABYTES, VOLUMES, SNAPSHOTS) = (
-        'project', 'gigabytes', 'volumes', 'snapshots'
+    PROPERTIES = (PROJECT, GIGABYTES, VOLUMES, BACKUPS,
+                  BACKUPS_GIGABYTES, SNAPSHOTS) = (
+        'project', 'gigabytes', 'volumes',
+        'backups', 'backup_gigabytes',
+        'snapshots'
     )
 
     properties_schema = {
@@ -67,6 +70,26 @@ class CinderQuota(resource.Resource):
             properties.Schema.INTEGER,
             _('Quota for the number of volumes. '
               'Setting the value to -1 removes the limit.'),
+            constraints=[
+                constraints.Range(min=-1),
+            ],
+            update_allowed=True
+        ),
+        BACKUPS: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Quota for the number of backups. '
+              'Setting the value to -1 removes the limit.'),
+            support_status=support.SupportStatus(version='16.0.0'),
+            constraints=[
+                constraints.Range(min=-1),
+            ],
+            update_allowed=True
+        ),
+        BACKUPS_GIGABYTES: properties.Schema(
+            properties.Schema.INTEGER,
+            _('Quota for the amount of backups disk space (in Gigabytes). '
+              'Setting the value to -1 removes the limit.'),
+            support_status=support.SupportStatus(version='16.0.0'),
             constraints=[
                 constraints.Range(min=-1),
             ],
@@ -114,6 +137,7 @@ class CinderQuota(resource.Resource):
     def validate_quotas(self, project, **kwargs):
         search_opts = {'all_tenants': True, 'project_id': project}
         volume_list = None
+        backup_list = None
         snapshot_list = None
         for key, value in kwargs.copy().items():
             if value == -1:
@@ -135,6 +159,21 @@ class CinderQuota(resource.Resource):
                     search_opts=search_opts)
             total_size = len(volume_list)
             self._validate_quota(self.VOLUMES, quota_size, total_size)
+
+        if self.BACKUPS in kwargs:
+            quota_size = kwargs[self.BACKUPS]
+            if backup_list is None:
+                backup_list = self.client().backups.list(
+                    search_opts=search_opts)
+            total_size = len(backup_list)
+            self._validate_quota(self.BACKUPS, quota_size, total_size)
+
+        if self.BACKUPS_GIGABYTES in kwargs:
+            quota_size = kwargs[self.BACKUPS_GIGABYTES]
+            backup_list = self.client().backups.list(search_opts=search_opts)
+            total_size = sum(item.size for item in (backup_list))
+            self._validate_quota(self.BACKUPS_GIGABYTES,
+                                 quota_size, total_size)
 
         if self.SNAPSHOTS in kwargs:
             quota_size = kwargs[self.SNAPSHOTS]
@@ -164,7 +203,9 @@ class CinderQuota(resource.Resource):
         if sum(1 for p in self.properties.values() if p is not None) <= 1:
             raise exception.PropertyUnspecifiedError(self.GIGABYTES,
                                                      self.SNAPSHOTS,
-                                                     self.VOLUMES)
+                                                     self.VOLUMES,
+                                                     self.BACKUPS,
+                                                     self.BACKUPS_GIGABYTES)
 
 
 def resource_mapping():
