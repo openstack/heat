@@ -154,9 +154,9 @@ engine_opts = [
                help=_('Maximum resources allowed per top-level stack. '
                       '-1 stands for unlimited.')),
     cfg.IntOpt('max_stacks_per_tenant',
-               default=100,
-               help=_('Maximum number of stacks any one tenant may have'
-                      ' active at one time.')),
+               default=512,
+               help=_('Maximum number of stacks any one tenant may have '
+                      'active at one time. -1 stands for unlimited.')),
     cfg.IntOpt('action_retry_limit',
                default=5,
                help=_('Number of times to retry to bring a '
