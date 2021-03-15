@@ -14,6 +14,7 @@
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
+from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
@@ -53,11 +54,11 @@ class Port(neutron.NeutronResource):
     EXTRA_PROPERTIES = (
         VALUE_SPECS, ADMIN_STATE_UP, MAC_ADDRESS,
         ALLOWED_ADDRESS_PAIRS, VNIC_TYPE, QOS_POLICY,
-        PORT_SECURITY_ENABLED, PROPAGATE_UPLINK_STATUS,
+        PORT_SECURITY_ENABLED, PROPAGATE_UPLINK_STATUS, NO_FIXED_IPS,
     ) = (
         'value_specs', 'admin_state_up', 'mac_address',
         'allowed_address_pairs', 'binding:vnic_type', 'qos_policy',
-        'port_security_enabled', 'propagate_uplink_status',
+        'port_security_enabled', 'propagate_uplink_status', 'no_fixed_ips',
     )
 
     _FIXED_IP_KEYS = (
@@ -313,6 +314,13 @@ class Port(neutron.NeutronResource):
             update_allowed=True,
             support_status=support.SupportStatus(version='15.0.0')
         ),
+        NO_FIXED_IPS: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Flag to disable all fixed ips on the port.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='16.0.0'),
+            default=False
+        ),
     }
 
     # Need to update properties_schema with other properties before
@@ -442,6 +450,14 @@ class Port(neutron.NeutronResource):
             )
         ]
 
+    def validate(self):
+        super(Port, self).validate()
+        fixed_ips = self.properties.get(self.FIXED_IPS)
+        no_fixed_ips = self.properties.get(self.NO_FIXED_IPS, False)
+        if fixed_ips and no_fixed_ips:
+            raise exception.ResourcePropertyConflict(self.FIXED_IPS,
+                                                     self.NO_FIXED_IPS)
+
     def add_dependencies(self, deps):
         super(Port, self).add_dependencies(deps)
         # Depend on any Subnet in this template with the same
@@ -480,24 +496,28 @@ class Port(neutron.NeutronResource):
             self.set_tags(tags)
 
     def _prepare_port_properties(self, props, prepare_for_update=False):
-        if self.FIXED_IPS in props:
-            fixed_ips = props[self.FIXED_IPS]
-            if fixed_ips:
-                for fixed_ip in fixed_ips:
-                    for key, value in list(fixed_ip.items()):
-                        if value is None:
-                            fixed_ip.pop(key)
-                    if self.FIXED_IP_SUBNET in fixed_ip:
-                        fixed_ip[
-                            'subnet_id'] = fixed_ip.pop(self.FIXED_IP_SUBNET)
-            else:
-                # Passing empty list would have created a port without
-                # fixed_ips during CREATE and released the existing
-                # fixed_ips during UPDATE (default neutron behaviour).
-                # However, for backward compatibility we will let neutron
-                # assign ip for CREATE and leave the assigned ips during
-                # UPDATE by not passing it. ref bug #1538473.
-                del props[self.FIXED_IPS]
+        if not props.pop(self.NO_FIXED_IPS, False):
+            if self.FIXED_IPS in props:
+                fixed_ips = props[self.FIXED_IPS]
+                if fixed_ips:
+                    for fixed_ip in fixed_ips:
+                        for key, value in list(fixed_ip.items()):
+                            if value is None:
+                                fixed_ip.pop(key)
+                        if self.FIXED_IP_SUBNET in fixed_ip:
+                            fixed_ip['subnet_id'] = \
+                                fixed_ip.pop(self.FIXED_IP_SUBNET)
+                else:
+                    # Passing empty list would have created a port without
+                    # fixed_ips during CREATE and released the existing
+                    # fixed_ips during UPDATE (default neutron behaviour).
+                    # However, for backward compatibility we will let neutron
+                    # assign ip for CREATE and leave the assigned ips during
+                    # UPDATE by not passing it. ref bug #1538473.
+                    del props[self.FIXED_IPS]
+        else:
+            props[self.FIXED_IPS] = []
+
         # delete empty MAC addresses so that Neutron validation code
         # wouldn't fail as it not accepts Nones
         if self.ALLOWED_ADDRESS_PAIRS in props:
