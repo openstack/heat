@@ -429,9 +429,6 @@ class InstanceGroup(stack_resource.StackResource):
             lbs = [self.stack[name] for name in lb_names]
             lbutils.reconfigure_loadbalancers(lbs, id_list)
 
-    def get_reference_id(self):
-        return self.physical_resource_name_or_FnGetRefId()
-
     def _group_data(self, refresh=False):
         """Return a cached GroupInspector object for the nested stack."""
         if refresh or getattr(self, '_group_inspector', None) is None:
