@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Operators can now set a separate ``stacks:update_no_change`` policy for
+    PATCH updates that don't modify the stack, independently of the existing
+    ``stacks:update_patch`` policy.
