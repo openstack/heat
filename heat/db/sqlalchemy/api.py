@@ -377,9 +377,14 @@ def resource_data_get_all(context, resource_id, data=None):
 
     for res in data:
         if res.redact:
-            ret[res.key] = crypt.decrypt(res.decrypt_method, res.value)
-        else:
-            ret[res.key] = res.value
+            try:
+                ret[res.key] = crypt.decrypt(res.decrypt_method, res.value)
+                continue
+            except exception.InvalidEncryptionKey:
+                LOG.exception('Failed to decrypt resource data %(rkey)s '
+                              'for %(rid)s, ignoring.',
+                              {'rkey': res.key, 'rid': resource_id})
+        ret[res.key] = res.value
     return ret
 
 
