@@ -102,6 +102,13 @@ class StackDefinition(object):
         else:
             return self.enabled_rsrc_names()
 
+    def all_resource_types(self):
+        """Return the set of types of all resources in the template."""
+        if self._resource_defns is None:
+            self._load_rsrc_defns()
+        return set(self._resource_defns[res].resource_type
+                   for res in self._resource_defns)
+
     def get_availability_zones(self):
         """Return the list of Nova availability zones."""
         if self._zones is None:

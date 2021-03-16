@@ -188,6 +188,6 @@ class ResourceEnforcer(Enforcer):
 
     def enforce_stack(self, stack, scope=None, target=None,
                       is_registered_policy=False):
-        for res in stack.resources.values():
-            self.enforce(stack.context, res.type(), scope=scope, target=target,
+        for res_type in stack.defn.all_resource_types():
+            self.enforce(stack.context, res_type, scope=scope, target=target,
                          is_registered_policy=is_registered_policy)
