@@ -1840,11 +1840,13 @@ class Stack(collections.Mapping):
     def _try_get_user_creds(self):
         # There are cases where the user_creds cannot be returned
         # due to credentials truncated when being saved to DB.
-        # Ignore this error instead of blocking stack deletion.
+        # Also, there are cases where auth_encryption_key has
+        # changed for some reason.
+        # Ignore these errors instead of blocking stack deletion.
         try:
             return ucreds_object.UserCreds.get_by_id(self.context,
                                                      self.user_creds_id)
-        except exception.Error:
+        except (exception.Error, exception.InvalidEncryptionKey):
             LOG.exception("Failed to retrieve user_creds")
             return None
 
