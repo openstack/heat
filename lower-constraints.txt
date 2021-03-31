@@ -47,7 +47,7 @@ keystoneauth1==3.18.0
 keystonemiddleware==5.1.0
 kombu==5.0.1
 linecache2==1.0.0
-lxml==4.5.0
+lxml==4.6.3
 Mako==1.0.7
 MarkupSafe==1.1.1
 mccabe==0.6.0
