@@ -2670,7 +2670,6 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
         repl = db_api.resource_create_replacement(
             self.ctx,
             orig.id,
-            {'status_reason': 'test replacement'},
             {'name': orig.name, 'replaces': orig.id,
              'stack_id': orig.stack_id, 'current_template_id': tmpl_id},
             1, None)
@@ -2690,7 +2689,6 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
         repl = db_api.resource_create_replacement(
             self.ctx,
             orig.id,
-            {'status_reason': 'test replacement'},
             {'name': orig.name, 'replaces': orig.id,
              'stack_id': orig.stack_id, 'current_template_id': tmpl_id},
             1, None)
@@ -2708,7 +2706,6 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
                           db_api.resource_create_replacement,
                           self.ctx,
                           orig.id,
-                          {'status_reason': 'test replacement'},
                           {'name': orig.name, 'replaces': orig.id,
                            'stack_id': orig.stack_id,
                            'current_template_id': tmpl_id},
@@ -2732,7 +2729,6 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
                           db_api.resource_create_replacement,
                           self.ctx,
                           orig.id,
-                          {'status_reason': 'test replacement'},
                           {'name': orig.name, 'replaces': orig.id,
                            'stack_id': orig.stack_id,
                            'current_template_id': tmpl_id},
@@ -2750,7 +2746,6 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
                           db_api.resource_create_replacement,
                           self.ctx,
                           orig.id,
-                          {'status_reason': 'test replacement'},
                           {'name': orig.name, 'replaces': orig.id,
                            'stack_id': orig.stack_id,
                            'current_template_id': tmpl_id},
@@ -2775,7 +2770,6 @@ class DBAPIResourceReplacementTest(common.HeatTestCase):
                           db_api.resource_create_replacement,
                           self.ctx,
                           orig.id,
-                          {'status_reason': 'test replacement'},
                           {'name': orig.name, 'replaces': orig.id,
                            'stack_id': orig.stack_id,
                            'current_template_id': tmpl_id},
