@@ -457,7 +457,7 @@ def resource_create(context, values):
 @oslo_db_api.wrap_db_retry(max_retries=3, retry_on_deadlock=True,
                            retry_interval=0.5, inc_retry_interval=True)
 def resource_create_replacement(context,
-                                existing_res_id, existing_res_values,
+                                existing_res_id,
                                 new_res_values,
                                 atomic_key, expected_engine_id=None):
     session = context.session
@@ -465,7 +465,6 @@ def resource_create_replacement(context,
         with session.begin(subtransactions=True):
             new_res = resource_create(context, new_res_values)
             update_data = {'replaced_by': new_res.id}
-            update_data.update(existing_res_values)
             if not _try_resource_update(context,
                                         existing_res_id, update_data,
                                         atomic_key,

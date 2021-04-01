@@ -405,7 +405,6 @@ class Resource(status.ResourceStatus):
               'current_template_id': new_tmpl_id,
               'stack_name': self.stack.name,
               'root_stack_id': self.root_stack_id}
-        update_data = {'status': self.COMPLETE}
 
         # Retry in case a signal has updated the atomic_key
         attempts = max(cfg.CONF.client_retry_limit, 0) + 1
@@ -429,7 +428,6 @@ class Resource(status.ResourceStatus):
         def create_replacement():
             return resource_objects.Resource.replacement(self.context,
                                                          self.id,
-                                                         update_data,
                                                          rs,
                                                          self._atomic_key)
 
