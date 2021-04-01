@@ -494,7 +494,7 @@ def resource_create(context, values):
 
 @retry_on_db_error
 def resource_create_replacement(context,
-                                existing_res_id, existing_res_values,
+                                existing_res_id,
                                 new_res_values,
                                 atomic_key, expected_engine_id=None):
     session = context.session
@@ -502,7 +502,6 @@ def resource_create_replacement(context,
         with session.begin():
             new_res = resource_create(context, new_res_values)
             update_data = {'replaced_by': new_res.id}
-            update_data.update(existing_res_values)
             if not _try_resource_update(context,
                                         existing_res_id, update_data,
                                         atomic_key,

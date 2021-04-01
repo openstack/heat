@@ -200,12 +200,11 @@ class Resource(
 
     @classmethod
     def replacement(cls, context,
-                    existing_res_id, existing_res_values,
+                    existing_res_id,
                     new_res_values,
                     atomic_key=0, expected_engine_id=None):
         replacement = db_api.resource_create_replacement(context,
                                                          existing_res_id,
-                                                         existing_res_values,
                                                          new_res_values,
                                                          atomic_key,
                                                          expected_engine_id)
