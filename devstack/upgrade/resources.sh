@@ -55,6 +55,7 @@ EOF
 
 function _run_heat_integrationtests {
     local devstack_dir=$1
+    local use_stable_constraints=$2
 
     pushd $devstack_dir/../tempest
     export DEST=$(dirname $devstack_dir)
@@ -65,6 +66,25 @@ function _run_heat_integrationtests {
     UPGRADE_TESTS=upgrade_tests.list
     _write_heat_integrationtests $UPGRADE_TESTS
 
+    # NOTE(gmann): If devstack is pinned to use the non master
+    # Tempest and constraints for Tempest venv then use the same
+    # while running the tests too otherwise, it will recreate
+    # the Tempest venv due to constraints mismatch.
+    # recreation of Tempest venv can flush the initially installed
+    # tempest plugins and their deps.
+    if [[ $use_stable_constraints == "True" ]]; then
+        echo "Using $DEST/requirements/upper-constraints.txt constraints in Tempest venv."
+        # NOTE: setting both tox env var and once Tempest start using new var
+        # TOX_CONSTRAINTS_FILE then we can remove the old one.
+        export UPPER_CONSTRAINTS_FILE=$DEST/requirements/upper-constraints.txt
+        export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
+    else
+        echo "Using master constraints in Tempest venv."
+        # NOTE: setting both tox env var and once Tempest start using new var
+        # TOX_CONSTRAINTS_FILE then we can remove the old one.
+        export UPPER_CONSTRAINTS_FILE=https://releases.openstack.org/constraints/upper/master
+        export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
+    fi
     tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
         --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
         run --whitelist-file $UPGRADE_TESTS
@@ -75,7 +95,7 @@ function _run_heat_integrationtests {
 function create {
     if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
         # run heat integration tests instead of tempest smoke before create
-        _run_heat_integrationtests $BASE_DEVSTACK_DIR
+        _run_heat_integrationtests $BASE_DEVSTACK_DIR "True"
     fi
 
     source $TOP_DIR/openrc admin admin
@@ -113,7 +133,7 @@ function verify {
     local side="$1"
     if [[ "$side" = "post-upgrade" ]]; then
         if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
-            _run_heat_integrationtests $TARGET_DEVSTACK_DIR
+            _run_heat_integrationtests $TARGET_DEVSTACK_DIR "False"
         fi
     fi
     stack_name=$(resource_get heat stack_name)

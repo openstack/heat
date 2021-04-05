@@ -82,7 +82,6 @@
       - ^heat/tests/.*$
       - ^releasenotes/.*$
       - ^setup.cfg$
-    voting: false
     vars:
       configure_swap_size: 8192
       topology: aio
@@ -95,7 +94,6 @@
     roles:
       - zuul: zuul/zuul-jobs
     pre-run: playbooks/devstack/multinode-networking/pre.yaml
-    voting: false
     vars:
       topology: multinode
 
