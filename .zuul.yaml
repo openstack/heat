@@ -40,20 +40,14 @@
 - job:
     name: heat-functional-orig-mysql-lbaasv2
     parent: heat-functional-devstack-base
+    voting: false
     vars:
       disable_convergence: 'true'
 
 - job:
     name: heat-functional-convg-mysql-lbaasv2
     parent: heat-functional-devstack-base
-
-- job:
-    name: heat-functional-convg-mysql-lbaasv2-amqp1
-    parent: heat-functional-devstack-base
     voting: false
-    branches: master
-    vars:
-      use_amqp1: 1
 
 - job:
     name: heat-functional-convg-mysql-lbaasv2-non-apache
@@ -88,6 +82,7 @@
       - ^heat/tests/.*$
       - ^releasenotes/.*$
       - ^setup.cfg$
+    voting: false
     vars:
       configure_swap_size: 8192
       topology: aio
@@ -100,6 +95,7 @@
     roles:
       - zuul: zuul/zuul-jobs
     pre-run: playbooks/devstack/multinode-networking/pre.yaml
+    voting: false
     vars:
       topology: multinode
 
@@ -113,13 +109,14 @@
       - publish-openstack-docs-pti
       - check-requirements
       - release-notes-jobs-python3
+    # All py2 functional and grenade jobs are set to non-voting
+    # until bug #1922597 and devstack py2 issues are fixed.
     check:
       jobs:
         - grenade-heat
         - grenade-heat-multinode
         - heat-functional-orig-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2-amqp1
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py3
     gate:
