@@ -366,6 +366,16 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
         return True
 
+    def _ready_to_extend_volume(self):
+        vol = self.client().volumes.get(self.resource_id)
+        expected_status = (
+            'available', 'in-use') if vol.multiattach else ('available',)
+
+        if vol.status in expected_status:
+            LOG.debug("Volume %s is ready to extend.", vol.id)
+            return True
+        return False
+
     def _check_extend_volume_complete(self):
         vol = self.client().volumes.get(self.resource_id)
         if vol.status == 'extending':
@@ -551,6 +561,13 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
                 return prg_restore.complete and not prg_resize
         # resize volume
         if prg_resize:
+            # Make sure volume status ready for resize.
+            if not prg_resize.pre_check:
+                prg_resize.pre_check = self._ready_to_extend_volume()
+                # allow directly extend volume if it's ready
+                if not prg_resize.pre_check:
+                    return False
+
             if not prg_resize.called:
                 prg_resize.called = self._extend_volume(prg_resize.size)
                 return False
