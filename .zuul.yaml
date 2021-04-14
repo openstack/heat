@@ -136,7 +136,6 @@
 - job:
     name: grenade-heat
     parent: grenade
-    voting: false
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin
@@ -160,7 +159,6 @@
     name: grenade-heat-multinode
     parent: grenade-heat
     nodeset: openstack-two-node-bionic
-    voting: false
 
 - project:
     templates:
