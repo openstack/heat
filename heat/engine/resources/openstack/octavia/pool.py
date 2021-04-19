@@ -97,8 +97,8 @@ class Pool(octavia_base.OctaviaBase):
               'the pool.'),
             required=True,
             constraints=[
-                constraints.AllowedValues(['ROUND_ROBIN',
-                                           'LEAST_CONNECTIONS', 'SOURCE_IP']),
+                constraints.AllowedValues(['ROUND_ROBIN', 'LEAST_CONNECTIONS',
+                                           'SOURCE_IP', 'SOURCE_IP_PORT']),
             ],
             update_allowed=True,
         ),
