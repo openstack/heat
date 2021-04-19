@@ -5073,7 +5073,7 @@ class ServerInternalPortTest(ServersTest):
         server.client().servers.get.return_value = nova_server
 
         server.prepare_for_replace()
-        check_detach.assert_not_called()
+        self.assertEqual(3, check_detach.call_count)
         self.assertEqual(0, self.port_delete.call_count)
 
     def test_prepare_ports_for_replace_error_state(self):
