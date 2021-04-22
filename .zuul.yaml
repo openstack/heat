@@ -64,38 +64,30 @@
 
 - job:
     name: grenade-heat
-    parent: legacy-dsvm-base
-    run: playbooks/devstack/grenade/run.yaml
-    post-run: playbooks/devstack/functional/post.yaml
-    timeout: 7800
+    parent: grenade
     required-projects:
-      - openstack/grenade
-      - openstack/devstack-gate
-      - openstack/heat
-      - openstack/heat-tempest-plugin
-    irrelevant-files:
-      - ^(test-|)requirements.txt$
-      - ^.*\.rst$
-      - ^api-ref/.*$
-      - ^doc/.*$
-      - ^heat/locale/.*$
-      - ^heat/tests/.*$
-      - ^releasenotes/.*$
-      - ^setup.cfg$
+      - opendev.org/openstack/heat
+      - opendev.org/openstack/heat-tempest-plugin
+      - opendev.org/openstack/python-heatclient
     vars:
       configure_swap_size: 8192
-      topology: aio
-      branch_override: default
+      devstack_services:
+        h-api: true
+        h-api-cfn: true
+        h-eng: true
+        heat: true
+      # We do run a list of tests after upgrade. This is just to bypass the req from parent.
+      tempest_test_regex: ^heat_tempest_plugin\.tests\.functional\.test_nova_server_networks
+      tox_envlist: all
+      devstack_plugins:
+        heat: https://opendev.org/openstack/heat
+      tempest_plugins:
+        - heat-tempest-plugin
 
 - job:
     name: grenade-heat-multinode
     parent: grenade-heat
-    nodeset: ubuntu-bionic-2-node
-    roles:
-      - zuul: zuul/zuul-jobs
-    pre-run: playbooks/devstack/multinode-networking/pre.yaml
-    vars:
-      topology: multinode
+    nodeset: openstack-two-node-bionic
 
 - project:
     templates:
