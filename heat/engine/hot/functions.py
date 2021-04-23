@@ -1606,12 +1606,14 @@ class ListConcat(function.Function):
         for m in args:
             ret_list.extend(ensure_list(m))
 
-        if self._unique:
-            for i in ret_list:
-                while ret_list.count(i) > 1:
-                    del ret_list[ret_list.index(i)]
+        if not self._unique:
+            return ret_list
 
-        return ret_list
+        unique_list = []
+        for item in ret_list:
+            if item not in unique_list:
+                unique_list.append(item)
+        return unique_list
 
 
 class ListConcatUnique(ListConcat):
