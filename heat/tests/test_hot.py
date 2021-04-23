@@ -2399,7 +2399,7 @@ resources:
         self.assertEqual(snippet_resolved, resolved)
 
     def test_list_concat_unique(self):
-        snippet = {'list_concat_unique': [['v1', 'v2'], ['v2', 'v3']]}
+        snippet = {'list_concat_unique': [['v1', 'v2'], ['v1', 'v3']]}
         snippet_resolved = ['v1', 'v2', 'v3']
         tmpl = template.Template(hot_pike_tpl_empty)
         resolved = self.resolve(snippet, tmpl)
