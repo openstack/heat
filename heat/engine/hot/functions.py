@@ -31,7 +31,8 @@ from heat.engine import function
 
 LOG = logging.getLogger(__name__)
 
-opts = [
+yaql_group = cfg.OptGroup('yaql')
+yaql_opts = [
     cfg.IntOpt('limit_iterators',
                default=200,
                help=_('The maximum number of elements in collection '
@@ -41,7 +42,11 @@ opts = [
                help=_('The maximum size of memory in bytes that '
                       'expression can take for its evaluation.'))
 ]
-cfg.CONF.register_opts(opts, group='yaql')
+cfg.CONF.register_opts(yaql_opts, group=yaql_group)
+
+
+def list_opts():
+    yield yaql_group.name, yaql_opts
 
 
 class GetParam(function.Function):
