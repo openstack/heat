@@ -80,6 +80,9 @@ parameters:
 resources:
   my_instance:
     type: OS::Nova::Server
+    # BUG We add dependency to avoid bug in story/2008936.
+    # And should remove this after bug fixed.
+    depends_on: data_volume
     properties:
       image:  {get_param: image}
       flavor: {get_param: flavor}
