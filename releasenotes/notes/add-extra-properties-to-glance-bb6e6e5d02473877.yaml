@@ -1,0 +1,10 @@
+---
+prelude: >
+    Add the ability to specify extra_properties for Glance images. This is useful
+    for example when using secure boot and are required to have specific properties
+    defined on the Glance images.
+features:
+  - |
+    extra_properties key added to the OS::Glance::WebImage type. This parameter
+    takes a map value such as '{"hw_firmware_type": "uefi", "os_secure_boot": "required"}'
+
