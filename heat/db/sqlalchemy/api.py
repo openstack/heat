@@ -1139,7 +1139,7 @@ def _delete_event_rows(context, stack_id, limit):
         (ids, rsrc_prop_ids) = zip(*id_pairs)
         max_id = ids[-1]
         # delete the events
-        retval = session.query(models.Event.id).filter(
+        retval = session.query(models.Event).filter(
             models.Event.id <= max_id).filter(
                 models.Event.stack_id == stack_id).delete()
 
