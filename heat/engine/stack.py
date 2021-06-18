@@ -1387,6 +1387,11 @@ class Stack(collections.abc.Mapping):
         Update will fail if it exceeds the specified timeout. The default is
         60 minutes, set in the constructor
         """
+        # Populate resource data needed for calulating frozen definitions
+        # (particularly for metadata, which doesn't get stored separately).
+        self._update_all_resource_data(for_resources=True,
+                                       for_outputs=False)
+
         self.updated_time = oslo_timeutils.utcnow()
         updater = scheduler.TaskRunner(self.update_task, newstack,
                                        msg_queue=msg_queue, notify=notify)
