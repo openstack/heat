@@ -24,7 +24,7 @@ class BuildInfoController(object):
 
     Returns build information for current app.
     """
-    # Define request scope (must match what is in policy.json or policies in
+    # Define request scope (must match what is in policy.yaml or policies in
     # code)
     REQUEST_SCOPE = 'build_info'
 

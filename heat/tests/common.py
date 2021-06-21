@@ -81,7 +81,7 @@ class HeatTestCase(testscenarios.WithScenarios,
                    testtools.TestCase, FakeLogMixin):
 
     def setUp(self, mock_keystone=True, mock_resource_policy=True,
-              quieten_logging=True):
+              quieten_logging=True, mock_find_file=True):
         super(HeatTestCase, self).setUp()
         self.setup_logging(quieten=quieten_logging)
         self.warnings = self.useFixture(fixtures.WarningsCapture())
@@ -126,6 +126,9 @@ class HeatTestCase(testscenarios.WithScenarios,
                         '/etc/heat/templates',
                         templ_path)
 
+        if mock_find_file:
+            self.mock_find_file = self.patchobject(
+                cfg.ConfigOpts, 'find_file')
         if mock_keystone:
             self.stub_keystoneclient()
         if mock_resource_policy:

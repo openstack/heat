@@ -391,7 +391,7 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
     )]
 
     def setUp(self):
-        super(RequestContextMiddlewareTest, self).setUp()
+        super(RequestContextMiddlewareTest, self).setUp(mock_find_file=False)
         self.fixture = self.useFixture(config_fixture.Config())
         self.fixture.conf(args=['--config-dir', policy_path])
         policy_opts.set_defaults(cfg.CONF, 'check_admin.json')
