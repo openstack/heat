@@ -33,6 +33,7 @@ EXPECTED_ENV_RESPONSE = {
     'HTTP_X_PROJECT_ID': 'tenant_id1',
     'HTTP_X_PROJECT_NAME': 'tenant_name1',
     'HTTP_X_USER_ID': 'user_id1',
+    'HTTP_X_USER_DOMAIN_ID': 'domain1',
     'HTTP_X_USER_NAME': 'user_name1',
     'HTTP_X_ROLES': 'role1,role2',
     'HTTP_X_AUTH_TOKEN': 'lalalalalala',
