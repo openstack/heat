@@ -29,10 +29,10 @@ class LoadBalancer(octavia_base.OctaviaBase):
 
     PROPERTIES = (
         DESCRIPTION, NAME, PROVIDER, VIP_ADDRESS, VIP_SUBNET,
-        ADMIN_STATE_UP, TENANT_ID, FLAVOR
+        ADMIN_STATE_UP, TENANT_ID, FLAVOR, AVAILABILITY_ZONE
     ) = (
         'description', 'name', 'provider', 'vip_address', 'vip_subnet',
-        'admin_state_up', 'tenant_id', 'flavor'
+        'admin_state_up', 'tenant_id', 'flavor', 'availability_zone'
     )
 
     ATTRIBUTES = (
@@ -96,7 +96,13 @@ class LoadBalancer(octavia_base.OctaviaBase):
             constraints=[
                 constraints.CustomConstraint('octavia.flavor')
             ]
+        ),
+        AVAILABILITY_ZONE: properties.Schema(
+            properties.Schema.STRING,
+            _('The availability zone of the Load Balancer.'),
+            support_status=support.SupportStatus(version='17.0.0'),
         )
+
     }
 
     attributes_schema = {

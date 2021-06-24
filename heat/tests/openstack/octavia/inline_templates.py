@@ -26,6 +26,7 @@ resources:
       tenant_id: 1234
       admin_state_up: True
       flavor: f123
+      availability_zone: nova
 '''
 
 LISTENER_TEMPLATE = '''
