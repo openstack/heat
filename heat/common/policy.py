@@ -55,6 +55,9 @@ class Enforcer(object):
             CONF, default_rule=default_rule, policy_file=policy_file)
         self.log_not_registered = True
 
+        # TODO(ramishra) Remove this once remove the deprecated rules.
+        self.enforcer.suppress_deprecation_warnings = True
+
         # register rules
         self.enforcer.register_defaults(policies.list_rules())
         self.file_rules = self.enforcer.file_rules
