@@ -537,7 +537,7 @@ def resource_get_all_active_by_stack(context, stack_id):
 
     results = context.session.query(models.Resource).filter_by(
         stack_id=stack_id).filter(
-        models.Resource.id.notin_(subquery.as_scalar())
+        models.Resource.id.notin_(subquery.scalar_subquery())
     ).options(orm.joinedload("data")).all()
 
     return dict((res.id, res) for res in results)
