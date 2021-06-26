@@ -170,10 +170,10 @@ identifier, and must reference either another resource's ID or the URL of an
 existing template file.
 
 The following example maps a new ``OS::Networking::FloatingIP``
-resource to an existing ``OS::Nova::FloatingIP`` resource::
+resource to an existing ``OS::Neutron::FloatingIP`` resource::
 
   resource_registry:
-    "OS::Networking::FloatingIP": "OS::Nova::FloatingIP"
+    "OS::Networking::FloatingIP": "OS::Neutron::FloatingIP"
 
 You can use wildcards to map multiple resources, for example to map all
 ``OS::Neutron`` resources to ``OS::Network``::
