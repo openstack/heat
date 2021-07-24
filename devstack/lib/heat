@@ -478,9 +478,9 @@ function configure_tempest_for_heat {
     if [[ -e /etc/ci/mirror_info.sh ]]; then
         source /etc/ci/mirror_info.sh
     fi
-    export HEAT_TEST_FEDORA_IMAGE=${NODEPOOL_FEDORA_MIRROR:-https://download.fedoraproject.org/pub/fedora/linux}/releases/32/Cloud/x86_64/images/Fedora-Cloud-Base-32-1.6.x86_64.qcow2
+    export HEAT_TEST_FEDORA_IMAGE=${NODEPOOL_FEDORA_MIRROR:-https://download.fedoraproject.org/pub/fedora/linux}/releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2
     TOKEN=$(openstack token issue -c id -f value)
-    local image_exists=$( openstack image list | grep "Fedora-Cloud-Base-32-1.6.x86_64" )
+    local image_exists=$( openstack image list | grep "Fedora-Cloud-Base-33-1.2.x86_64" )
     if [[ -z $image_exists ]]; then
         if is_service_enabled g-api; then
             upload_image $HEAT_TEST_FEDORA_IMAGE $TOKEN
