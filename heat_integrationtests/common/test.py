@@ -103,8 +103,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
         self.identity_client = self.manager.identity_client
         self.orchestration_client = self.manager.orchestration_client
         self.compute_client = self.manager.compute_client
-        self.network_client = self.manager.network_client
-        self.volume_client = self.manager.volume_client
         self.object_client = self.manager.object_client
 
         self.client = self.orchestration_client
@@ -167,14 +165,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
     @classmethod
     def _stack_rand_name(cls):
         return rand_name(cls.__name__)
-
-    def _get_network(self, net_name=None):
-        if net_name is None:
-            net_name = self.conf.fixed_network_name
-        networks = self.network_client.list_networks()
-        for net in networks['networks']:
-            if net['name'] == net_name:
-                return net
 
     def is_service_available(self, service_type):
         try:

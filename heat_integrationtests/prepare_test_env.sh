@@ -46,7 +46,7 @@ function _config_iniset {
     iniset $conf_file heat_plugin instance_type m1.heat_int
     iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 
-    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-32-1.6.x86_64
+    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-33-1.2.x86_64
     iniset $conf_file heat_plugin minimal_image_ref $default_image_name
     iniset $conf_file heat_plugin hidden_stack_tag hidden
 

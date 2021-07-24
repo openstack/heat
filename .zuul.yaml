@@ -75,7 +75,7 @@
               minimal_image_ref: ${DEFAULT_IMAGE_NAME:-cirros-0.3.6-x86_64-disk}
               instance_type: m1.heat_int
               minimal_instance_type: m1.heat_micro
-              image_ref: Fedora-Cloud-Base-32-1.6.x86_64
+              image_ref: Fedora-Cloud-Base-33-1.2.x86_64
               hidden_stack_tag: hidden
               heat_config_notify_script: /opt/stack/heat-agents/heat-config/bin/heat-config-notify
               boot_config_env: /opt/stack/heat-templates/hot/software-config/boot-config/test_image_env.yaml
@@ -136,6 +136,7 @@
 - job:
     name: grenade-heat
     parent: grenade
+    voting: false
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin

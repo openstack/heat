@@ -92,7 +92,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         self._test_handle_create(is_public=False)
 
     def test_volume_type_with_projects(self):
-        self.cinderclient.volume_api_version = 2
+        self.cinderclient.volume_api_version = 3
         self._test_handle_create(projects=['id1', 'id2'])
 
     def _test_update(self, update_args, is_update_metadata=False):
@@ -178,7 +178,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         props['projects'] = ['id1']
         self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
         self.my_volume_type.reparse()
-        self.cinderclient.volume_api_version = 2
+        self.cinderclient.volume_api_version = 3
         self.stub_KeystoneProjectConstraint()
         ex = self.assertRaises(exception.StackValidationFailed,
                                self.my_volume_type.validate)
@@ -193,7 +193,7 @@ class CinderVolumeTypeTest(common.HeatTestCase):
         props['projects'] = ['id1']
         self.my_volume_type.t = self.my_volume_type.t.freeze(properties=props)
         self.my_volume_type.reparse()
-        self.cinderclient.volume_api_version = 2
+        self.cinderclient.volume_api_version = 3
         self.stub_KeystoneProjectConstraint()
         self.assertIsNone(self.my_volume_type.validate())
 
