@@ -1,0 +1,5 @@
+---
+fixes:
+  - |
+    Now the ``[DEFAULT] shared_services_types`` option includes ``volumev3``
+    service type by default.
