@@ -34,7 +34,7 @@ class CinderClientPlugin(os_client.ExtensionMixin,
 
     exceptions_module = exceptions
 
-    service_types = [VOLUME_V2, VOLUME_V3] = ['volumev2', 'volumev3']
+    service_types = [VOLUME_V3] = ['volumev3']
 
     def get_volume_api_version(self):
         '''Returns the most recent API version.'''
@@ -46,14 +46,7 @@ class CinderClientPlugin(os_client.ExtensionMixin,
             self.service_type = self.VOLUME_V3
             self.client_version = '3'
         except ks_exceptions.EndpointNotFound:
-            try:
-                self.context.keystone_session.get_endpoint(
-                    service_type=self.VOLUME_V2,
-                    interface=self.interface)
-                self.service_type = self.VOLUME_V2
-                self.client_version = '2'
-            except ks_exceptions.EndpointNotFound:
-                raise exception.Error(_('No volume service available.'))
+            raise exception.Error(_('No volume service available.'))
 
     def _create(self):
         self.get_volume_api_version()
