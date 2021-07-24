@@ -65,7 +65,7 @@ service_opts = [
     cfg.StrOpt('region_name_for_shared_services',
                help=_('Region name for shared services endpoints.')),
     cfg.ListOpt('shared_services_types',
-                default=['image', 'volume', 'volumev2'],
+                default=['image', 'volume', 'volumev2', 'volumev3'],
                 help=_('The shared services located in the other region.'
                        'Needs region_name_for_shared_services option to '
                        'be set for this to take effect.')),
