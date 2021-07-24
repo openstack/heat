@@ -1252,7 +1252,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         vol.to_dict.return_value = vol_resp
         rsrc.client().volumes = mock.MagicMock()
         rsrc.client().volumes.get = mock.MagicMock(return_value=vol)
-        rsrc.client().volume_api_version = 2
+        rsrc.client().volume_api_version = 3
         rsrc.data = mock.MagicMock(return_value={'volume_type': 'lvmdriver-1'})
 
         reality = rsrc.get_live_state(rsrc.properties)
