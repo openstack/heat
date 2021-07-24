@@ -51,8 +51,8 @@ a VM image that heat can launch. To do that add the following to
 `[[local|localrc]]` section of `local.conf`::
 
     IMAGE_URL_SITE="https://download.fedoraproject.org"
-    IMAGE_URL_PATH="/pub/fedora/linux/releases/32/Cloud/x86_64/images/"
-    IMAGE_URL_FILE="Fedora-Cloud-Base-32-1.6.x86_64.qcow2"
+    IMAGE_URL_PATH="/pub/fedora/linux/releases/33/Cloud/x86_64/images/"
+    IMAGE_URL_FILE="Fedora-Cloud-Base-33-1.2.x86_64.qcow2"
     IMAGE_URLS+=","$IMAGE_URL_SITE$IMAGE_URL_PATH$IMAGE_URL_FILE
 
 URLs for any cloud image may be specified, but fedora images from F20 contain

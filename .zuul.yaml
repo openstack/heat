@@ -65,6 +65,7 @@
 - job:
     name: grenade-heat
     parent: grenade
+    voting: false
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin

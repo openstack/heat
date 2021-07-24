@@ -30,4 +30,4 @@ openstack flavor delete m1.heat_int
 openstack flavor delete m1.heat_micro
 
 # delete the image created
-openstack image delete Fedora-Cloud-Base-32-1.6.x86_64
+openstack image delete Fedora-Cloud-Base-33-1.2.x86_64

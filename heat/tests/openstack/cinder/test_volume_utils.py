@@ -10,10 +10,11 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-
-from cinderclient.v2 import client as cinderclient
 import mock
 import six
+
+
+from cinderclient.v3 import client as cinderclient
 
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import nova
@@ -31,7 +32,7 @@ class VolumeTestCase(common.HeatTestCase):
         super(VolumeTestCase, self).setUp()
         self.fc = fakes_nova.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
-        self.cinder_fc.volume_api_version = 2
+        self.cinder_fc.volume_api_version = 3
         self.patchobject(cinder.CinderClientPlugin, '_create',
                          return_value=self.cinder_fc)
         self.patchobject(nova.NovaClientPlugin, 'client',
