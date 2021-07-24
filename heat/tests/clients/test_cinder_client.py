@@ -163,14 +163,6 @@ class CinderClientAPIVersionTest(common.HeatTestCase):
         client = ctx.clients.client('cinder')
         self.assertEqual('3.0', client.version)
 
-    def test_cinder_api_v2(self):
-        ctx = utils.dummy_context()
-        self.patchobject(ctx.keystone_session, 'get_endpoint',
-                         side_effect=[ks_exceptions.EndpointNotFound,
-                                      None])
-        client = ctx.clients.client('cinder')
-        self.assertEqual('2.0', client.version)
-
     def test_cinder_api_not_supported(self):
         ctx = utils.dummy_context()
         self.patchobject(ctx.keystone_session, 'get_endpoint',

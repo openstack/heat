@@ -136,8 +136,7 @@
 - job:
     name: grenade-heat-multinode
     parent: grenade-multinode
-    # FIXME(ramishra): Make it voting once stable/victoria
-    # starts using available images from mirror.
+    voting: false
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin

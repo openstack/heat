@@ -12,13 +12,11 @@
 
 import os
 
-from cinderclient import client as cinder_client
 from heat.common.i18n import _
 from heatclient import client as heat_client
 from keystoneauth1.identity.generic import password
 from keystoneauth1 import session
 from keystoneclient.v3 import client as kc_v3
-from neutronclient.v2_0 import client as neutron_client
 from novaclient import client as nova_client
 from swiftclient import client as swift_client
 
@@ -61,7 +59,6 @@ class ClientManager(object):
     calling various OpenStack APIs.
     """
 
-    CINDERCLIENT_VERSION = '2'
     HEATCLIENT_VERSION = '1'
     NOVA_API_VERSION = '2.1'
 
@@ -83,8 +80,6 @@ class ClientManager(object):
         self.keystone_client = self._get_keystone_client()
         self.orchestration_client = self._get_orchestration_client()
         self.compute_client = self._get_compute_client()
-        self.network_client = self._get_network_client()
-        self.volume_client = self._get_volume_client()
         self.object_client = self._get_object_client()
 
     def _username(self):
@@ -160,22 +155,6 @@ class ClientManager(object):
             endpoint_type='publicURL',
             region_name=self.conf.region,
             os_cache=False,
-            http_log_debug=True)
-
-    def _get_network_client(self):
-
-        return neutron_client.Client(
-            session=self.identity_client.session,
-            service_type='network',
-            region_name=self.conf.region,
-            endpoint_type='publicURL')
-
-    def _get_volume_client(self):
-        return cinder_client.Client(
-            self.CINDERCLIENT_VERSION,
-            session=self.identity_client.session,
-            endpoint_type='publicURL',
-            region_name=self.conf.region,
             http_log_debug=True)
 
     def _get_object_client(self):
