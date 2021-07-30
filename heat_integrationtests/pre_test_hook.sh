@@ -46,7 +46,7 @@ if [[ -e /etc/ci/mirror_info.sh ]]; then
     source /etc/ci/mirror_info.sh
 fi
 HEAT_TEST_FEDORA_IMAGE_UPSTREAM=https://download.fedoraproject.org/pub/fedora/linux
-HEAT_TEST_FEDORA_IMAGE_PATH=releases/33/Cloud/x86_64/images/Fedora-Cloud-Base-33-1.2.x86_64.qcow2
+HEAT_TEST_FEDORA_IMAGE_PATH=releases/36/Cloud/x86_64/images/Fedora-Cloud-Base-36-1.5.x86_64.qcow2
 if curl --output /dev/null --silent --head --fail "${NODEPOOL_FEDORA_MIRROR}/${HEAT_TEST_FEDORA_IMAGE_PATH}"; then
     echo "IMAGE_URLS+=${NODEPOOL_FEDORA_MIRROR}/${HEAT_TEST_FEDORA_IMAGE_PATH}" >> $localconf
 else

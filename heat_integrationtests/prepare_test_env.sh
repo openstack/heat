@@ -46,7 +46,7 @@ function _config_iniset {
     iniset $conf_file heat_plugin instance_type m1.heat_int
     iniset $conf_file heat_plugin minimal_instance_type m1.heat_micro
 
-    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-33-1.2.x86_64
+    iniset $conf_file heat_plugin image_ref Fedora-Cloud-Base-36-1.5.x86_64
     iniset $conf_file heat_plugin minimal_image_ref $default_image_name
     iniset $conf_file heat_plugin hidden_stack_tag hidden
 
@@ -110,5 +110,5 @@ _config_tempest_plugin
 openstack flavor show m1.heat_int && openstack flavor delete m1.heat_int
 openstack flavor show m1.heat_micro && openstack flavor delete m1.heat_micro
 
-openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512 --disk 4
+openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512 --disk 10
 openstack flavor show m1.heat_micro || openstack flavor create m1.heat_micro --ram 128 --disk 1
