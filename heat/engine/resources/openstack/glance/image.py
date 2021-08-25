@@ -31,12 +31,13 @@ class GlanceWebImage(resource.Resource):
         NAME, IMAGE_ID, MIN_DISK, MIN_RAM, PROTECTED,
         DISK_FORMAT, CONTAINER_FORMAT, LOCATION, TAGS,
         ARCHITECTURE, KERNEL_ID, OS_DISTRO, OS_VERSION, OWNER,
-        VISIBILITY, RAMDISK_ID, ACTIVE, MEMBERS
+        EXTRA_PROPERTIES, VISIBILITY, RAMDISK_ID, ACTIVE, MEMBERS
     ) = (
         'name', 'id', 'min_disk', 'min_ram', 'protected',
         'disk_format', 'container_format', 'location', 'tags',
         'architecture', 'kernel_id', 'os_distro', 'os_version',
-        'owner', 'visibility', 'ramdisk_id', 'active', 'members'
+        'owner', 'extra_properties', 'visibility', 'ramdisk_id',
+        'active', 'members'
     )
 
     glance_id_pattern = ('^([0-9a-fA-F]){8}-([0-9a-fA-F]){4}-([0-9a-fA-F]){4}'
@@ -139,6 +140,13 @@ class GlanceWebImage(resource.Resource):
             _('Owner of the image.'),
             update_allowed=True,
         ),
+        EXTRA_PROPERTIES: properties.Schema(
+            properties.Schema.MAP,
+            _('Arbitrary properties to associate with the image.'),
+            update_allowed=True,
+            default={},
+            support_status=support.SupportStatus(version='17.0.0')
+        ),
         VISIBILITY: properties.Schema(
             properties.Schema.STRING,
             _('Scope of image accessibility.'),
@@ -188,7 +196,7 @@ class GlanceWebImage(resource.Resource):
 
     def handle_create(self):
         args = dict((k, v) for k, v in self.properties.items()
-                    if v is not None)
+                    if v is not None and k is not self.EXTRA_PROPERTIES)
         members = args.pop(self.MEMBERS, [])
         active = args.pop(self.ACTIVE)
         location = args.pop(self.LOCATION)
@@ -199,6 +207,8 @@ class GlanceWebImage(resource.Resource):
         images.image_import(image_id, method='web-download', uri=location)
         for member in members:
             self.client().image_members.create(image_id, member)
+        props = self.properties.get(self.EXTRA_PROPERTIES)
+        images.update(image.id, **props)
         return active
 
     def check_create_complete(self, active):
@@ -219,10 +229,11 @@ class GlanceWebImage(resource.Resource):
             return image.status == 'active'
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        images = self.client().images
         if prop_diff:
             active = prop_diff.pop(self.ACTIVE, None)
             if active is False:
-                self.client().images.deactivate(self.resource_id)
+                images.deactivate(self.resource_id)
 
             if self.TAGS in prop_diff:
                 existing_tags = self.properties.get(self.TAGS) or []
@@ -241,6 +252,19 @@ class GlanceWebImage(resource.Resource):
                             self.resource_id,
                             tag)
 
+        if self.EXTRA_PROPERTIES in prop_diff:
+            old_properties = self.properties.get(self.EXTRA_PROPERTIES)
+            new_properties = prop_diff.pop(self.EXTRA_PROPERTIES)
+            prop_diff.update(new_properties)
+            remove_props = list(set(old_properties) - set(new_properties))
+
+            # Though remove_props defaults to None within the glanceclient,
+            # setting it to a list (possibly []) every time ensures only one
+            # calling format to images.update
+            images.update(self.resource_id, remove_props, **prop_diff)
+        else:
+            images.update(self.resource_id, **prop_diff)
+
             if self.MEMBERS in prop_diff:
                 existing_members = self.properties.get(self.MEMBERS) or []
                 diff_members = prop_diff.pop(self.MEMBERS) or []
@@ -254,7 +278,6 @@ class GlanceWebImage(resource.Resource):
                     self.glance().image_members.delete(
                         self.resource_id, _member)
 
-        self.client().images.update(self.resource_id, **prop_diff)
         return active
 
     def check_update_complete(self, active):
@@ -300,8 +323,17 @@ class GlanceWebImage(resource.Resource):
                         self.IMAGE_ID)})
                 else:
                     image_reality.update({self.IMAGE_ID: None})
+
+            if key == self.EXTRA_PROPERTIES:
+                continue
             else:
                 image_reality.update({key: resource_data.get(key)})
+
+        if resource_properties.get(self.EXTRA_PROPERTIES):
+            extra_properties = {}
+            for key in resource_properties.get(self.EXTRA_PROPERTIES):
+                extra_properties[key] = resource_data.get(key)
+            image_reality.update({self.EXTRA_PROPERTIES: extra_properties})
 
         return image_reality
 

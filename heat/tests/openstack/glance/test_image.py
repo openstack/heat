@@ -479,6 +479,7 @@ class GlanceWebImageTest(common.HeatTestCase):
         self.images = self.glanceclient.images
         self.image_tags = self.glanceclient.image_tags
         self.image_members = self.glanceclient.image_members
+        self.update = self.glanceclient.update
 
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -622,6 +623,7 @@ class GlanceWebImageTest(common.HeatTestCase):
         self.image_tags.update.return_value = None
         props = self.stack.t.t['resources']['my_image']['properties'].copy()
         props['tags'] = ['tag1']
+        props['extra_properties'] = {"hw_firmware_type": "uefi"}
         self.my_image.t = self.my_image.t.freeze(properties=props)
         self.my_image.reparse()
         self.my_image.handle_create()
@@ -644,6 +646,8 @@ class GlanceWebImageTest(common.HeatTestCase):
             owner=u'test_owner',
             tags=['tag1']
         )
+        self.images.update.assert_called_once_with(
+            image_id, hw_firmware_type='uefi')
 
     def test_image_active_property_image_not_active(self):
         self.images.reactivate.return_value = None
@@ -685,6 +689,16 @@ class GlanceWebImageTest(common.HeatTestCase):
                                self.my_image.check_create_complete, False)
         self.assertIn('killed', ex.message)
 
+    def _handle_update_image_props(self, prop_diff):
+        self.my_image.handle_update(json_snippet=None,
+                                    tmpl_diff=None,
+                                    prop_diff=prop_diff)
+        self.images.update.assert_called_once_with(
+            self.my_image.resource_id,
+            ['hw_firmware_type'],
+            os_secure_boot='required'
+        )
+
     def _handle_update_tags(self, prop_diff):
         self.my_image.handle_update(json_snippet=None,
                                     tmpl_diff=None,
@@ -711,7 +725,7 @@ class GlanceWebImageTest(common.HeatTestCase):
         self.my_image.handle_update(json_snippet=None,
                                     tmpl_diff=None,
                                     prop_diff=prop_diff)
-        self.images.update.assert_called_once_with(
+        self.images.update.assert_called_with(
             self.my_image.resource_id,
             architecture='test_architecture',
             kernel_id='12345678-1234-1234-1234-123456789012',
@@ -762,6 +776,17 @@ class GlanceWebImageTest(common.HeatTestCase):
         self.my_image.check_update_complete(True)
         self.images.reactivate.assert_called_once_with(
             self.my_image.resource_id)
+
+    def test_image_handle_update_image_props(self):
+        self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
+
+        props = self.stack.t.t['resources']['my_image']['properties'].copy()
+        props['extra_properties'] = {"hw_firmware_type": "uefi"}
+        self.my_image.t = self.my_image.t.freeze(properties=props)
+        self.my_image.reparse()
+        prop_diff = {'extra_properties': {"os_secure_boot": "required"}}
+
+        self._handle_update_image_props(prop_diff)
 
     def test_image_handle_update_tags(self):
         self.my_image.resource_id = '477e8273-60a7-4c41-b683-fdb0bc7cd151'
@@ -929,3 +954,67 @@ class GlanceWebImageTest(common.HeatTestCase):
         self.assertRaises(exception.EntityNotFound,
                           self.my_image.get_live_state,
                           self.my_image.properties)
+
+    def test_parse_live_resource_data(self):
+        resource_data = {
+            'name': 'test',
+            'disk_format': 'qcow2',
+            'container_format': 'bare',
+            'active': None,
+            'protected': False,
+            'is_public': False,
+            'min_disk': 0,
+            'min_ram': 0,
+            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+            'tags': [],
+            'architecture': 'test_architecture',
+            'kernel_id': '12345678-1234-1234-1234-123456789012',
+            'os_distro': 'new_distro',
+            'os_version': '1.0',
+            'os_secure_boot': 'False',
+            'owner': 'new_owner',
+            'hw_firmware_type': 'uefi',
+            'ramdisk_id': '12345678-1234-1234-1234-123456789012',
+            'members': None,
+            'visibility': 'private'
+        }
+
+        resource_properties = self.stack.t.t['resources'][
+            'my_image']['properties'].copy()
+        resource_properties['extra_properties'] = {
+            'hw_firmware_type': 'uefi',
+            'os_secure_boot': 'required',
+            }
+
+        reality = self.my_image.parse_live_resource_data(resource_properties,
+                                                         resource_data)
+        expected = {
+            'name': 'test',
+            'disk_format': 'qcow2',
+            'container_format': 'bare',
+            'active': None,
+            'protected': False,
+            'min_disk': 0,
+            'min_ram': 0,
+            'id': '41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+            'tags': [],
+            'architecture': 'test_architecture',
+            'kernel_id': '12345678-1234-1234-1234-123456789012',
+            'os_distro': 'new_distro',
+            'os_version': '1.0',
+            'owner': 'new_owner',
+            'ramdisk_id': '12345678-1234-1234-1234-123456789012',
+            'members': None,
+            'visibility': 'private',
+            'extra_properties': {
+                'hw_firmware_type': 'uefi',
+                'os_secure_boot': 'False',
+            }
+        }
+
+        self.assertEqual(set(expected.keys()), set(reality.keys()))
+        for key in expected:
+            self.assertEqual(expected[key], reality[key])
+        for key in expected['extra_properties']:
+            self.assertEqual(expected['extra_properties'][key],
+                             reality['extra_properties'][key])
