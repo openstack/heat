@@ -49,7 +49,8 @@ class StackDeleteTest(common.HeatTestCase):
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
         self.man.thread_group_mgr.groups[sid].wait()
-        mock_load.assert_called_once_with(self.ctx, stack=s)
+        mock_load.assert_called_once_with(self.ctx, stack=s,
+                                          check_refresh_cred=True)
 
     def test_stack_delete_nonexist(self):
         stack_name = 'service_delete_nonexist_test_stack'
@@ -75,7 +76,8 @@ class StackDeleteTest(common.HeatTestCase):
         self.man.thread_group_mgr.groups[sid].wait()
 
         mock_acquire.assert_called_once_with()
-        mock_load.assert_called_once_with(self.ctx, stack=st)
+        mock_load.assert_called_once_with(self.ctx, stack=st,
+                                          check_refresh_cred=True)
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
@@ -97,7 +99,8 @@ class StackDeleteTest(common.HeatTestCase):
         self.man.thread_group_mgr.groups[sid].wait()
 
         mock_acquire.assert_called_once_with()
-        mock_load.assert_called_once_with(self.ctx, stack=st)
+        mock_load.assert_called_once_with(self.ctx, stack=st,
+                                          check_refresh_cred=True)
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
@@ -172,7 +175,8 @@ class StackDeleteTest(common.HeatTestCase):
                                self.ctx, stack.identifier())
         self.assertEqual(exception.EventSendFailed, ex.exc_info[0])
 
-        mock_load.assert_called_once_with(self.ctx, stack=st)
+        mock_load.assert_called_once_with(self.ctx, stack=st,
+                                          check_refresh_cred=True)
         mock_try.assert_called_once_with()
         mock_alive.assert_called_once_with(self.ctx, OTHER_ENGINE)
         mock_call.assert_called_once_with(self.ctx, OTHER_ENGINE, mock.ANY,
