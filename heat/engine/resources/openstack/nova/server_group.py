@@ -17,7 +17,8 @@ from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
 
-NOVA_MICROVERSIONS = (MICROVERSION_SOFT_POLICIES) = ('2.15')
+NOVA_MICROVERSIONS = (MICROVERSION_SOFT_POLICIES, MICROVERSION_RULE) = ('2.15',
+                                                                        '2.64')
 
 
 class ServerGroup(resource.Resource):
@@ -34,9 +35,9 @@ class ServerGroup(resource.Resource):
     entity = 'server_groups'
 
     PROPERTIES = (
-        NAME, POLICIES
+        NAME, POLICIES, RULE
     ) = (
-        'name', 'policies'
+        'name', 'policies', 'rule'
     )
 
     properties_schema = {
@@ -56,7 +57,13 @@ class ServerGroup(resource.Resource):
             ],
             schema=properties.Schema(
                 properties.Schema.STRING,
-            )
+            ),
+        ),
+        RULE: properties.Schema(
+            properties.Schema.MAP,
+            _('A rule for the policy. Currently, only the '
+              '"max_server_per_host" rule is supported for the '
+              '"anti-affinity" policy.'),
         ),
     }
 
@@ -70,12 +77,26 @@ class ServerGroup(resource.Resource):
             msg = _('Required microversion for soft policies not supported.')
             raise exception.StackValidationFailed(message=msg)
 
+        if self.properties[self.RULE]:
+            is_supported = self.client_plugin().is_version_supported(
+                MICROVERSION_RULE)
+            if not is_supported:
+                msg = _('Required microversion for rule not supported.')
+                raise exception.StackValidationFailed(message=msg)
+
     def handle_create(self):
         name = self.physical_resource_name()
         policies = self.properties[self.POLICIES]
-        client = self.client(version=MICROVERSION_SOFT_POLICIES)
-        server_group = client.server_groups.create(name=name,
-                                                   policies=policies)
+        if self.properties[self.RULE] and 'soft-affinity' in policies:
+            rule = self.properties[self.RULE]
+            client = self.client()
+            server_group = client.server_groups.create(name=name,
+                                                       policies=policies,
+                                                       rule=rule)
+        else:
+            client = self.client()
+            server_group = client.server_groups.create(name=name,
+                                                       policies=policies)
         self.resource_id_set(server_group.id)
 
     def physical_resource_name(self):
