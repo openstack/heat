@@ -112,7 +112,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertEqual((tp_test.CREATE, tp_test.COMPLETE), tp_test.state)
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.fake_keypairs.create.assert_called_once_with(
-            name=key_name, public_key=None, type='ssh')
+            name=key_name, public_key=None, key_type='ssh')
         self.cp_mock.assert_called_once_with()
 
     def test_create_key_with_user_id(self):
@@ -140,7 +140,7 @@ class NovaKeyPairTest(common.HeatTestCase):
         self.assertEqual(tp_test.resource_id, created_key.name)
         self.fake_keypairs.create.assert_called_once_with(
             name=key_name, public_key=None, user_id='userA_ID',
-            type='x509')
+            key_type='x509')
         self.cp_mock.assert_called_once_with()
 
     def test_create_key_empty_name(self):

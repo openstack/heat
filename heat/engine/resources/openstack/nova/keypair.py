@@ -172,7 +172,7 @@ class KeyPair(resource.Resource):
         }
 
         if key_type:
-            create_kwargs[self.KEY_TYPE] = key_type
+            create_kwargs['key_type'] = key_type
         if user_id:
             create_kwargs['user_id'] = user_id
 
