@@ -206,4 +206,4 @@
         - heat-functional-legacy
     experimental:
       jobs:
-        - tripleo-ci-centos-7-scenario002-standalone
+        - tripleo-ci-centos-8-scenario002-standalone
