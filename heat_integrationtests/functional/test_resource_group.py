@@ -181,15 +181,7 @@ resources:
                 nested_stack = self.client.stacks.get(res.physical_resource_id)
                 timeouts.add(nested_stack.timeout_mins)
 
-        # FIXME(gibi): This is bug story/2009237 as the timeout calculation of
-        # nested resource groups are broken. It is using seconds for the
-        # calculation but then pass that to functions expecting timeouts in
-        # minutes leading to increasing timeout value with each nesting level.
-        self.assertEqual({35939, 599}, timeouts)
-        # After the bug is fixed we expect timeouts less than the overall
-        # timeout requested for the whole stack.
-
-        # self.assertEqual({10}, timeouts)
+        self.assertEqual({10}, timeouts)
 
     def test_update_increase_decrease_count(self):
         # create stack with resource group count 2
