@@ -13,7 +13,6 @@
 # under the License.
 
 from operator import itemgetter
-import six
 
 from oslo_log import log as logging
 
@@ -113,7 +112,7 @@ class ExtraRouteSet(neutron.NeutronResource):
 
     def add_dependencies(self, deps):
         super(ExtraRouteSet, self).add_dependencies(deps)
-        for resource in six.itervalues(self.stack):
+        for resource in self.stack.items():
             # depend on any RouterInterface in this template with the same
             # router as this router
             if resource.has_interface('OS::Neutron::RouterInterface'):

@@ -137,7 +137,6 @@ requestsexceptions==1.4.0
 rfc3986==1.2.0
 Routes==2.3.1
 simplejson==3.13.2
-six==1.10.0
 smmap2==2.0.3
 sqlalchemy-migrate==0.13.0
 SQLAlchemy==1.0.10

@@ -13,8 +13,6 @@
 
 import abc
 
-import six
-
 from oslo_cache import core
 from oslo_config import cfg
 
@@ -31,8 +29,7 @@ MEMOIZE_FINDER = core.get_memoization_decorator(
     group="resource_finder_cache")
 
 
-@six.add_metaclass(abc.ABCMeta)
-class ExtensionMixin(object):
+class ExtensionMixin(object, metaclass=abc.ABCMeta):
     def __init__(self, *args, **kwargs):
         super(ExtensionMixin, self).__init__(*args, **kwargs)
         self._extensions = None
