@@ -1,0 +1,7 @@
+---
+features:
+  - |
+    Added ``OS::Neutron::QoSMinimumPacketRateRule`` resource to support
+    ``minimum_packet_rate_rule`` in Neutron QoS. This resource depends
+    on Neutron API extension ``qos-pps-minimum`` and according
+    to the default policy it is admin-only.
