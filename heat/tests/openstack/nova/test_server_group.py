@@ -26,7 +26,9 @@ sg_template = {
             "type": "OS::Nova::ServerGroup",
             "properties": {
                 "name": "test",
-                "policies": ["anti-affinity"]
+                "policies": ["anti-affinity"],
+                "rules": {
+                    "max_server_per_host": 8}
             }
         }
     }
@@ -68,7 +70,7 @@ class NovaServerGroupTest(common.HeatTestCase):
             name = 'test'
             n = name
 
-            def fake_create(name, policies):
+            def fake_create(name, policy, rules):
                 self.assertGreater(len(name), 1)
                 return FakeGroup(n)
             self.sg_mgr.create = fake_create
@@ -81,7 +83,9 @@ class NovaServerGroupTest(common.HeatTestCase):
         self._create_sg('test')
         expected_args = ()
         expected_kwargs = {'name': 'test',
-                           'policies': ["anti-affinity"],
+                           'policy': "anti-affinity",
+                           'rules': {
+                               'max_server_per_host': 8}
                            }
         self.sg_mgr.create.assert_called_once_with(*expected_args,
                                                    **expected_kwargs)
