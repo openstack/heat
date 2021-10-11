@@ -1,8 +1,8 @@
-Heat Deloper Guidelines
-=======================
+Heat Developer Guidelines
+=========================
 
-In the deloper guide, you will find documented policies for
-developing with heat. This includes the processes we use for
+In the developer guide, you will find documented policies for
+developing heat. This includes the processes we use for
 stories (for bugs and features), contributor onboarding, core reviewer
 memberships, and other procedural items.
 
