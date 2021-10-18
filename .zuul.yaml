@@ -134,8 +134,8 @@
         HEAT_USE_MOD_WSGI: False
 
 - job:
-    name: grenade-heat-multinode
-    parent: grenade-multinode
+    name: grenade-heat
+    parent: grenade
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin
