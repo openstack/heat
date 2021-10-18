@@ -52,6 +52,12 @@ class NovaServerGroupTest(common.HeatTestCase):
         # create mock clients and objects
         nova = mock.MagicMock()
         self.sg.client = mock.MagicMock(return_value=nova)
+        mock_plugin = mock.MagicMock()
+        self.patchobject(mock_plugin,
+                         'is_version_supported',
+                         return_value=True)
+        self.patchobject(self.sg, 'client_plugin',
+                         return_value=mock_plugin)
         self.sg_mgr = nova.server_groups
 
     def _create_sg(self, name):
