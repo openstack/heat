@@ -3,7 +3,7 @@ amqp==2.6.0
 aodhclient==0.9.0
 appdirs==1.4.3
 asn1crypto==0.24.0
-Babel==2.3.4
+Babel==2.9.1
 bandit==1.1.0
 bcrypt==3.1.4
 cachetools==2.0.1
