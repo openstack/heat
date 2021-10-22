@@ -835,6 +835,10 @@ class EngineService(service.ServiceBase):
                 except exception.AuthorizationFailure as ex:
                     stack.state_set(stack.action, stack.FAILED,
                                     str(ex))
+                except Exception:
+                    LOG.exception('Failed to create stack user project')
+                    stack.state_set(stack.action, stack.FAILED,
+                                    'Failed to create stack user project')
 
         def _stack_create(stack, msg_queue=None):
             # Create/Adopt a stack, and create the periodic task if successful
