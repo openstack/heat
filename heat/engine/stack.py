@@ -1544,7 +1544,10 @@ class Stack(collections.abc.Mapping):
                     # Rolling back to previous resource
                     score += 10
 
-                return score, ext_rsrc.updated_at
+                last_changed_at = ext_rsrc.updated_at
+                if last_changed_at is None:
+                    last_changed_at = ext_rsrc.created_at
+                return score, last_changed_at
 
             candidates = sorted((r for r in self.ext_rsrcs_db.values()
                                  if r.name == rsrc_name),
