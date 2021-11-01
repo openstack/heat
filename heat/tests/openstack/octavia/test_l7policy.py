@@ -145,7 +145,7 @@ class L7PolicyTest(common.HeatTestCase):
 
     def test_create_missing_properties(self):
         for prop in ('action', 'listener'):
-            tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+            tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
             del tmpl['resources']['l7policy']['properties'][prop]
             self._create_stack(tmpl=yaml.dump(tmpl))
 

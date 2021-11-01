@@ -53,7 +53,7 @@ class L7PolicyTest(common.HeatTestCase):
         ]
 
     def test_validate_reject_action_with_conflicting_props(self):
-        tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
         props = tmpl['resources']['l7policy']['properties']
         props['action'] = 'REJECT'
         self._create_stack(tmpl=yaml.dump(tmpl))
@@ -66,7 +66,7 @@ class L7PolicyTest(common.HeatTestCase):
                                    msg, self.l7policy.validate)
 
     def test_validate_redirect_pool_action_with_url(self):
-        tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
         props = tmpl['resources']['l7policy']['properties']
         props['action'] = 'REDIRECT_TO_POOL'
         props['redirect_pool'] = '123'
@@ -80,7 +80,7 @@ class L7PolicyTest(common.HeatTestCase):
                                    msg, self.l7policy.validate)
 
     def test_validate_redirect_pool_action_without_pool(self):
-        tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
         props = tmpl['resources']['l7policy']['properties']
         props['action'] = 'REDIRECT_TO_POOL'
         del props['redirect_url']
@@ -94,7 +94,7 @@ class L7PolicyTest(common.HeatTestCase):
                                    msg, self.l7policy.validate)
 
     def test_validate_redirect_url_action_with_pool(self):
-        tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
         props = tmpl['resources']['l7policy']['properties']
         props['redirect_pool'] = '123'
         self._create_stack(tmpl=yaml.dump(tmpl))
@@ -107,7 +107,7 @@ class L7PolicyTest(common.HeatTestCase):
                                    msg, self.l7policy.validate)
 
     def test_validate_redirect_url_action_without_url(self):
-        tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
         props = tmpl['resources']['l7policy']['properties']
         del props['redirect_url']
         self._create_stack(tmpl=yaml.dump(tmpl))
@@ -151,7 +151,7 @@ class L7PolicyTest(common.HeatTestCase):
                          return_value=(True, None))
 
         for prop in ('action', 'listener'):
-            tmpl = yaml.load(inline_templates.L7POLICY_TEMPLATE)
+            tmpl = yaml.safe_load(inline_templates.L7POLICY_TEMPLATE)
             del tmpl['resources']['l7policy']['properties'][prop]
             self._create_stack(tmpl=yaml.dump(tmpl))
 

@@ -53,7 +53,7 @@ class L7RuleTest(common.HeatTestCase):
         ]
 
     def test_validate_when_key_required(self):
-        tmpl = yaml.load(inline_templates.L7RULE_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.L7RULE_TEMPLATE)
         props = tmpl['resources']['l7rule']['properties']
         del props['key']
         self._create_stack(tmpl=yaml.dump(tmpl))
@@ -100,7 +100,7 @@ class L7RuleTest(common.HeatTestCase):
                          return_value=(True, None))
 
         for prop in ('l7policy', 'type', 'compare_type', 'value'):
-            tmpl = yaml.load(inline_templates.L7RULE_TEMPLATE)
+            tmpl = yaml.safe_load(inline_templates.L7RULE_TEMPLATE)
             del tmpl['resources']['l7rule']['properties'][prop]
             self._create_stack(tmpl=yaml.dump(tmpl))
 

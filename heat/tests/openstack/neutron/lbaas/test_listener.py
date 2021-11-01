@@ -53,7 +53,7 @@ class ListenerTest(common.HeatTestCase):
         self.patchobject(listener.Listener, 'is_service_available',
                          return_value=(True, None))
 
-        tmpl = yaml.load(inline_templates.LISTENER_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.LISTENER_TEMPLATE)
         props = tmpl['resources']['listener']['properties']
         props['protocol'] = 'TERMINATED_HTTPS'
         del props['default_tls_container_ref']
@@ -102,7 +102,7 @@ class ListenerTest(common.HeatTestCase):
                 'NeutronClientPlugin.has_extension', return_value=True)
     def test_create_missing_properties(self, ext_func):
         for prop in ('protocol', 'protocol_port', 'loadbalancer'):
-            tmpl = yaml.load(inline_templates.LISTENER_TEMPLATE)
+            tmpl = yaml.safe_load(inline_templates.LISTENER_TEMPLATE)
             del tmpl['resources']['listener']['properties'][prop]
             del tmpl['resources']['listener']['properties']['default_pool']
             self._create_stack(tmpl=yaml.dump(tmpl))

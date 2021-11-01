@@ -51,7 +51,7 @@ class PoolTest(common.HeatTestCase):
             return_value=self.neutron_client)
 
     def test_validate_no_cookie_name(self):
-        tmpl = yaml.load(inline_templates.POOL_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.POOL_TEMPLATE)
         sp = tmpl['resources']['pool']['properties']['session_persistence']
         sp['type'] = 'APP_COOKIE'
         self._create_stack(tmpl=yaml.dump(tmpl))
@@ -64,7 +64,7 @@ class PoolTest(common.HeatTestCase):
                                    msg, self.pool.validate)
 
     def test_validate_source_ip_cookie_name(self):
-        tmpl = yaml.load(inline_templates.POOL_TEMPLATE)
+        tmpl = yaml.safe_load(inline_templates.POOL_TEMPLATE)
         sp = tmpl['resources']['pool']['properties']['session_persistence']
         sp['type'] = 'SOURCE_IP'
         sp['cookie_name'] = 'cookie'
@@ -117,7 +117,7 @@ class PoolTest(common.HeatTestCase):
                          return_value=(True, None))
 
         for prop in ('lb_algorithm', 'listener', 'protocol'):
-            tmpl = yaml.load(inline_templates.POOL_TEMPLATE)
+            tmpl = yaml.safe_load(inline_templates.POOL_TEMPLATE)
             del tmpl['resources']['pool']['properties']['loadbalancer']
             del tmpl['resources']['pool']['properties'][prop]
             self._create_stack(tmpl=yaml.dump(tmpl))
