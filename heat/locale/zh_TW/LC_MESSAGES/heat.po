@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2021-08-30 12:34+0000\n"
+"POT-Creation-Date: 2021-11-01 17:57+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -392,9 +392,6 @@ msgstr "埠的安全群組清單。"
 
 msgid "A list of security services IDs or names."
 msgstr "安全服務 ID 或名稱清單。"
-
-msgid "A list of string policies to apply. Defaults to anti-affinity."
-msgstr "要套用的字串原則清單。預設為反親緣性。"
 
 msgid "A login profile for the user."
 msgstr "使用者的登入設定檔。"
