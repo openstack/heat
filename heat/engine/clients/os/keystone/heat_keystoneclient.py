@@ -26,6 +26,7 @@ from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import importutils
 
+from heat.common import config
 from heat.common import context
 from heat.common import exception
 from heat.common.i18n import _
@@ -76,6 +77,8 @@ class KsClientWrapper(object):
         self._domain_admin_auth = None
         self._domain_admin_client = None
         self._region_name = region_name
+        self._interface = config.get_client_option('keystone',
+                                                   'endpoint_type')
 
         self.session = self.context.keystone_session
         self.v3_endpoint = self.context.keystone_v3_endpoint
@@ -158,6 +161,7 @@ class KsClientWrapper(object):
                 session=self.session,
                 auth=self.domain_admin_auth,
                 connect_retries=cfg.CONF.client_retry_limit,
+                interface=self._interface,
                 region_name=self.auth_region_name)
 
         return self._domain_admin_client
@@ -165,6 +169,7 @@ class KsClientWrapper(object):
     def _v3_client_init(self):
         client = kc_v3.Client(session=self.session,
                               connect_retries=cfg.CONF.client_retry_limit,
+                              interface=self._interface,
                               region_name=self.auth_region_name)
 
         if hasattr(self.context.auth_plugin, 'get_access'):

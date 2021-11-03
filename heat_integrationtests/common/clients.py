@@ -144,6 +144,7 @@ class ClientManager(object):
         # Create our default Keystone client to use in testing
         return kc_v3.Client(
             session=self.identity_client.session,
+            interface='publicURL',
             region_name=self.conf.region)
 
     def _get_compute_client(self):

@@ -21,6 +21,7 @@ loads = jsonutils.loads
 
 
 class LongText(types.TypeDecorator):
+
     impl = types.Text
 
     def load_dialect_impl(self, dialect):
@@ -42,6 +43,7 @@ class Json(LongText):
 
 
 class List(types.TypeDecorator):
+
     impl = types.Text
 
     def load_dialect_impl(self, dialect):
