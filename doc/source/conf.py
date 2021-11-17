@@ -73,7 +73,7 @@ extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'sphinx.ext.todo',
               'sphinx.ext.coverage',
-              'sphinx.ext.viewcode',
+              'sphinx.ext.intersphinx',
               'sphinx.ext.doctest',
               'sphinxcontrib.apidoc',
               'openstackdocstheme',
@@ -84,6 +84,10 @@ extensions = ['sphinx.ext.autodoc',
               'ext.resources',
               'ext.tablefromtext',
               'stevedore.sphinxext']
+
+intersphinx_mapping = {
+    'types_typedecorator': ('https://docs.sqlalchemy.org', None),
+}
 
 # policy sample file generation
 policy_generator_config_file = '../../etc/heat/heat-policy-generator.conf'
