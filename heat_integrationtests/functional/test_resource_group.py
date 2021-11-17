@@ -129,6 +129,68 @@ resources:
         outputs.append(validate_output(stack, 'random2', 30))
         self.assertEqual(outputs, self._stack_output(stack, 'all_values'))
 
+    def test_create_nested_groups_with_timeout(self):
+        parent_template = '''
+heat_template_version: rocky
+resources:
+  parent_group:
+    type: OS::Heat::ResourceGroup
+    update_policy:
+      batch_create: { max_batch_size: 1, pause_time: 1 }
+    properties:
+      count: 2
+      resource_def:
+        type: child.yaml
+'''
+        child_template = '''
+heat_template_version: rocky
+resources:
+  child_group:
+    type: OS::Heat::ResourceGroup
+    update_policy:
+      batch_create: { max_batch_size: 1, pause_time: 1 }
+    properties:
+      count: 2
+      resource_def:
+        type: value.yaml
+'''
+        value_template = '''
+heat_template_version: rocky
+resources:
+  value:
+    type: OS::Heat::Value
+    properties:
+      type: string
+      value: 'test'
+'''
+        files = {
+            'child.yaml': child_template,
+            'value.yaml': value_template,
+        }
+        stack_identifier = self.stack_create(
+            template=parent_template,
+            files=files,
+            timeout=10,  # in minutes
+        )
+
+        resources = self.client.resources.list(
+            stack_identifier, nested_depth=2, with_detail=True)
+        timeouts = set()
+        for res in resources:
+            if res.resource_type == "OS::Heat::ResourceGroup":
+                nested_stack = self.client.stacks.get(res.physical_resource_id)
+                timeouts.add(nested_stack.timeout_mins)
+
+        # FIXME(gibi): This is bug story/2009237 as the timeout calculation of
+        # nested resource groups are broken. It is using seconds for the
+        # calculation but then pass that to functions expecting timeouts in
+        # minutes leading to increasing timeout value with each nesting level.
+        self.assertEqual({35939, 599}, timeouts)
+        # After the bug is fixed we expect timeouts less than the overall
+        # timeout requested for the whole stack.
+
+        # self.assertEqual({10}, timeouts)
+
     def test_update_increase_decrease_count(self):
         # create stack with resource group count 2
         env = {'resource_registry':
