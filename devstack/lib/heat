@@ -452,25 +452,10 @@ function configure_tempest_for_heat {
     openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512 --disk 4
     openstack flavor show m1.heat_micro || openstack flavor create m1.heat_micro --ram 128 --disk 1
 
-    source $TOP_DIR/openrc demo demo
+    export OS_CLOUD=devstack
     openstack network show heat-net || openstack network create heat-net
     openstack subnet show heat-subnet || openstack subnet create heat-subnet --network heat-net --subnet-range 10.0.5.0/24
     openstack router add subnet router1 heat-subnet
-
-    iniset $TEMPEST_CONFIG heat_plugin username $OS_USERNAME
-    iniset $TEMPEST_CONFIG heat_plugin password $OS_PASSWORD
-    iniset $TEMPEST_CONFIG heat_plugin project_name $OS_PROJECT_NAME
-    iniset $TEMPEST_CONFIG heat_plugin auth_url $OS_AUTH_URL
-    iniset $TEMPEST_CONFIG heat_plugin user_domain_id $OS_USER_DOMAIN_ID
-    iniset $TEMPEST_CONFIG heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
-    iniset $TEMPEST_CONFIG heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
-    iniset $TEMPEST_CONFIG heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
-    iniset $TEMPEST_CONFIG heat_plugin region $OS_REGION_NAME
-    iniset $TEMPEST_CONFIG heat_plugin auth_version $OS_IDENTITY_API_VERSION
-
-    source $TOP_DIR/openrc admin admin
-    iniset $TEMPEST_CONFIG heat_plugin admin_username $OS_USERNAME
-    iniset $TEMPEST_CONFIG heat_plugin admin_password $OS_PASSWORD
 
     # NOTE(ianw) OpenDev infra only keeps the latest two Fedora's
     # around; prefer the mirror but allow fallback
@@ -501,6 +486,22 @@ function configure_tempest_for_heat {
     export OS_CREDENTIAL_SECRET_ID=$(openstack secret store -n heat-multi-cloud-test-cred --payload \
         '{"auth_type": "v3applicationcredential", "auth": {"auth_url": $OS_AUTH_URL, "application_credential_id": $app_cred_id, "application_credential_secret": "secret"}}'\
         -c "Secret href" -f value)
+    source $TOP_DIR/openrc demo demo
+    iniset $TEMPEST_CONFIG heat_plugin username $OS_USERNAME
+    iniset $TEMPEST_CONFIG heat_plugin password $OS_PASSWORD
+    iniset $TEMPEST_CONFIG heat_plugin project_name $OS_PROJECT_NAME
+    iniset $TEMPEST_CONFIG heat_plugin auth_url $OS_AUTH_URL
+    iniset $TEMPEST_CONFIG heat_plugin user_domain_id $OS_USER_DOMAIN_ID
+    iniset $TEMPEST_CONFIG heat_plugin project_domain_id $OS_PROJECT_DOMAIN_ID
+    iniset $TEMPEST_CONFIG heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
+    iniset $TEMPEST_CONFIG heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
+    iniset $TEMPEST_CONFIG heat_plugin region $OS_REGION_NAME
+    iniset $TEMPEST_CONFIG heat_plugin auth_version $OS_IDENTITY_API_VERSION
+
+    source $TOP_DIR/openrc admin admin
+    iniset $TEMPEST_CONFIG heat_plugin admin_username $OS_USERNAME
+    iniset $TEMPEST_CONFIG heat_plugin admin_password $OS_PASSWORD
+    export OS_CLOUD=devstack-admin
 }
 
 # Restore xtrace
