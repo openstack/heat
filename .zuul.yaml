@@ -21,8 +21,6 @@
       - openstack/python-barbicanclient
       - openstack/python-heatclient
       - openstack/heat-agents
-      - openstack/python-zaqarclient
-      - openstack/zaqar
       - openstack/tempest
     vars:
       configure_swap_size: 8192
@@ -41,7 +39,6 @@
         tempest: true
       devstack_plugins:
         barbican: https://opendev.org/openstack/barbican
-        zaqar: https://opendev.org/openstack/zaqar
         heat: https://opendev.org/openstack/heat
         octavia: https://opendev.org/openstack/octavia
       devstack_local_conf:
