@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2021-08-30 12:34+0000\n"
+"POT-Creation-Date: 2021-11-01 17:57+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -413,9 +413,6 @@ msgstr "포트의 보안 그룹 목록입니다."
 
 msgid "A list of security services IDs or names."
 msgstr "보안 서비스 ID 또는 이름 목록입니다."
-
-msgid "A list of string policies to apply. Defaults to anti-affinity."
-msgstr "적용할 문자열 정책 목록입니다. 기본값은 안티 선호도입니다."
 
 msgid "A login profile for the user."
 msgstr "사용자의 로그인 프로파일입니다."
