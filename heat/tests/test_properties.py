@@ -783,12 +783,12 @@ class PropertyTest(common.HeatTestCase):
     def test_int_bad(self):
         schema = {'Type': 'Integer'}
         p = properties.Property(schema)
-        # python 3.4.3 returns another error message
+        # python 3.4.3 and python3.10 return slightly different error messages
         # try to handle this by regexp
         self.assertRaisesRegex(
             TypeError, r"int\(\) argument must be a string"
                        "(, a bytes-like object)?"
-                       " or a number, not 'list'", p.get_value, [1])
+                       " or a (real )?number, not 'list'", p.get_value, [1])
 
     def test_str_from_int(self):
         schema = {'Type': 'String'}

@@ -391,12 +391,12 @@ class AodhAlarmTest(common.HeatTestCase):
             resource_defns = stack.t.resource_definitions(stack)
             rsrc = alarm.AodhAlarm(
                 'MEMAlarmHigh', resource_defns['MEMAlarmHigh'], stack)
-            # python 3.4.3 returns another error message
-            # so try to handle this by regexp
+            # python 3.4.3 and python3.10 return slightly different error
+            # messages, so try to handle this by regexp
             msg = ("Property error: Resources.MEMAlarmHigh.Properties.%s: "
                    r"int\(\) argument must be a string"
                    "(, a bytes-like object)?"
-                   " or a number, not 'list'" % p)
+                   " or a (real )?number, not 'list'" % p)
             self.assertRaisesRegex(exception.StackValidationFailed,
                                    msg, rsrc.validate)
 
