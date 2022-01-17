@@ -28,7 +28,7 @@ resources:
     type: OS::Mistral::CronTrigger
     properties:
       name: my_cron_trigger
-      pattern: "* * 0 * *"
+      pattern: "* * 1 * *"
       workflow: {'name': 'get_first_glance_image', 'input': {} }
       count: 3
       first_time: "2015-04-08 06:20"
@@ -77,7 +77,7 @@ class MistralCronTriggerTest(common.HeatTestCase):
         expected_state = (ct.CREATE, ct.COMPLETE)
         self.assertEqual(expected_state, ct.state)
         args, kwargs = self.client.cron_triggers.create.call_args
-        self.assertEqual('* * 0 * *', kwargs['pattern'])
+        self.assertEqual('* * 1 * *', kwargs['pattern'])
         self.assertEqual('get_first_glance_image', args[1])
         self.assertEqual({}, kwargs['workflow_input'])
         self.assertEqual('2015-04-08 06:20', kwargs['first_time'])
