@@ -40,6 +40,8 @@ resources:
         - 28c25a04-3f73-45a7-a2b4-59e183943ddc
       port_security_enabled: False
       dns_domain: openstack.org.
+      availability_zone_hints:
+        - az1
       value_specs: {'mtu': 1500}
       tags:
         - tag1
@@ -186,6 +188,7 @@ class NeutronNetTest(common.HeatTestCase):
                  'dns_domain': u'openstack.org.',
                  'shared': True,
                  'port_security_enabled': False,
+                 'availability_zone_hints': ['az1'],
                  'mtu': 1500}
              }
         )

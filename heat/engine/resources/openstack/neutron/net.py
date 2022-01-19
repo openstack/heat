@@ -33,11 +33,11 @@ class Net(neutron.NeutronResource):
     PROPERTIES = (
         NAME, VALUE_SPECS, ADMIN_STATE_UP, TENANT_ID, SHARED,
         DHCP_AGENT_IDS, PORT_SECURITY_ENABLED, QOS_POLICY,
-        DNS_DOMAIN, TAGS,
+        DNS_DOMAIN, AVAILABILITY_ZONE_HINTS, TAGS,
     ) = (
         'name', 'value_specs', 'admin_state_up', 'tenant_id', 'shared',
         'dhcp_agent_ids', 'port_security_enabled', 'qos_policy',
-        'dns_domain', 'tags',
+        'dns_domain', 'availability_zone_hints', 'tags',
     )
 
     ATTRIBUTES = (
@@ -117,6 +117,12 @@ class Net(neutron.NeutronResource):
             ],
             update_allowed=True,
             support_status=support.SupportStatus(version='7.0.0')
+        ),
+        AVAILABILITY_ZONE_HINTS: properties.Schema(
+            properties.Schema.LIST,
+            _('Availability zone candidates for the network. It requires the '
+              'availability_zone extension to be available.'),
+            support_status=support.SupportStatus(version='19.0.0')
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,

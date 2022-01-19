@@ -35,10 +35,12 @@ class Router(neutron.NeutronResource):
 
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
-        L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA, TAGS,
+        L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA, AVAILABILITY_ZONE_HINTS,
+        TAGS,
     ) = (
         'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
-        'l3_agent_id', 'l3_agent_ids', 'distributed', 'ha', 'tags',
+        'l3_agent_id', 'l3_agent_ids', 'distributed', 'ha',
+        'availability_zone_hints', 'tags',
     )
 
     _EXTERNAL_GATEWAY_KEYS = (
@@ -170,6 +172,13 @@ class Router(neutron.NeutronResource):
               'of this property to administrative users only. And now neutron '
               'do not support distributed and ha at the same time.'),
             support_status=support.SupportStatus(version='2015.1')
+        ),
+        AVAILABILITY_ZONE_HINTS: properties.Schema(
+            properties.Schema.LIST,
+            _('Availability zone candidates for the router. It requires the '
+              'availability_zone extension to be available.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='19.0.0')
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,
