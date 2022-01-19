@@ -195,6 +195,9 @@ function configure_heat {
         iniset $HEAT_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
         iniset $HEAT_CONF clients_nova ca_file $SSL_BUNDLE_FILE
         iniset $HEAT_CONF clients_cinder ca_file $SSL_BUNDLE_FILE
+        iniset $HEAT_CONF clients_neutron ca_file $SSL_BUNDLE_FILE
+        iniset $HEAT_CONF clients_glance ca_file $SSL_BUNDLE_FILE
+        iniset $HEAT_CONF clients_swift ca_file $SSL_BUNDLE_FILE
     fi
 
     if [[ "$HEAT_ENABLE_ADOPT_ABANDON" = "True" ]]; then
