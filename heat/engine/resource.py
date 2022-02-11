@@ -407,8 +407,8 @@ class Resource(status.ResourceStatus):
         # Retry in case a signal has updated the atomic_key
         attempts = max(cfg.CONF.client_retry_limit, 0) + 1
 
-        def prepare_attempt(fn, attempt):
-            if attempt > 1:
+        def prepare_attempt(retry_state):
+            if retry_state.attempt_number > 1:
                 res_obj = resource_objects.Resource.get_obj(
                     self.context, self.id)
                 if (res_obj.engine_id is not None or
