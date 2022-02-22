@@ -19,70 +19,96 @@ POLICY_ROOT = 'resource_types:%s'
 resource_types_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Nova::Flavor',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Cinder::EncryptedVolumeType',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Cinder::VolumeType',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Cinder::Quota',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::Quota',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Nova::Quota',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Octavia::Quota',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Manila::ShareType',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::ProviderNet',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::QoSPolicy',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::QoSBandwidthLimitRule',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::QoSDscpMarkingRule',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::QoSMinimumBandwidthRule',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::QoSMinimumPacketRateRule',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Neutron::Segment',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Nova::HostAggregate',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Cinder::QoSSpecs',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Cinder::QoSAssociation',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Keystone::*',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        # NOTE(tkajinam): Keystone does not yet support project scope SRBAC
+        #                 but we limit the scope to project one here to make
+        #                 this consistent with the scope enforcement in stack
+        #                 resources.
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Blazar::Host',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Octavia::Flavor',
-        check_str=base.RULE_PROJECT_ADMIN),
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Octavia::FlavorProfile',
-        check_str=base.RULE_PROJECT_ADMIN)
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project'])
 ]
 
 

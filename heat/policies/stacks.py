@@ -57,12 +57,6 @@ deprecated_generate_template = policy.DeprecatedRule(
     deprecated_reason=DEPRECATED_REASON,
     deprecated_since=versionutils.deprecated.WALLABY
 )
-deprecated_global_index = policy.DeprecatedRule(
-    name=POLICY_ROOT % 'global_index',
-    check_str=base.RULE_DENY_EVERYBODY,
-    deprecated_reason=DEPRECATED_REASON,
-    deprecated_since=versionutils.deprecated.WALLABY
-)
 deprecated_index = policy.DeprecatedRule(
     name=POLICY_ROOT % 'index',
     check_str=base.RULE_DENY_STACK_USER,
@@ -206,8 +200,8 @@ deprecated_lookup = policy.DeprecatedRule(
 stacks_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'abandon',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Abandon stack.',
         operations=[
             {
@@ -220,8 +214,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'create',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Create stack.',
         operations=[
             {
@@ -233,8 +227,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'delete',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Delete stack.',
         operations=[
             {
@@ -246,8 +240,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'detail',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List stacks in detail.',
         operations=[
             {
@@ -259,8 +253,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'export',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Export stack.',
         operations=[
             {
@@ -273,8 +267,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'generate_template',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Generate stack template.',
         operations=[
             {
@@ -287,8 +281,7 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'global_index',
-        check_str=base.SYSTEM_READER,
-        scope_types=['system', 'project'],
+        check_str=base.RULE_DENY_EVERYBODY,
         description='List stacks globally.',
         operations=[
             {
@@ -296,12 +289,11 @@ stacks_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_global_index
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List stacks.',
         operations=[
             {
@@ -313,8 +305,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_resource_types',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List resource types.',
         operations=[
             {
@@ -326,8 +318,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_template_versions',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List template versions.',
         operations=[
             {
@@ -339,8 +331,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_template_functions',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List template functions.',
         operations=[
             {
@@ -353,8 +345,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'lookup',
-        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER_OR_STACK_USER,
+        scope_types=['project'],
         description='Find stack.',
         operations=[
             {
@@ -366,8 +358,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Preview stack.',
         operations=[
             {
@@ -379,8 +371,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'resource_schema',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show resource type schema.',
         operations=[
             {
@@ -392,8 +384,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show stack.',
         operations=[
             {
@@ -405,8 +397,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'template',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Get stack template.',
         operations=[
             {
@@ -419,8 +411,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'environment',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Get stack environment.',
         operations=[
             {
@@ -433,8 +425,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'files',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Get stack files.',
         operations=[
             {
@@ -447,8 +439,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'update',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Update stack.',
         operations=[
             {
@@ -460,8 +452,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'update_patch',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Update stack (PATCH).',
         operations=[
             {
@@ -474,7 +466,7 @@ stacks_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'update_no_change',
         check_str='rule:%s' % (POLICY_ROOT % 'update_patch'),
-        scope_types=['system', 'project'],
+        scope_types=['project'],
         description='Update stack (PATCH) with no changes.',
         operations=[
             {
@@ -485,8 +477,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview_update',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Preview update stack.',
         operations=[
             {
@@ -499,8 +491,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'preview_update_patch',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Preview update stack (PATCH).',
         operations=[
             {
@@ -513,8 +505,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'validate_template',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Validate template.',
         operations=[
             {
@@ -526,8 +518,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'snapshot',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Snapshot Stack.',
         operations=[
             {
@@ -540,8 +532,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show_snapshot',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show snapshot.',
         operations=[
             {
@@ -554,8 +546,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'delete_snapshot',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Delete snapshot.',
         operations=[
             {
@@ -568,8 +560,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_snapshots',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List snapshots.',
         operations=[
             {
@@ -582,8 +574,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'restore_snapshot',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Restore snapshot.',
         operations=[
             {
@@ -596,8 +588,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'list_outputs',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List outputs.',
         operations=[
             {
@@ -610,8 +602,8 @@ stacks_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show_output',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show outputs.',
         operations=[
             {

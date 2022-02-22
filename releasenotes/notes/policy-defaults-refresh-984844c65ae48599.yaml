@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    Heat policies have been modified to isolate the system and project level
+    APIs policy. Because of this change, system users will not be allowed to
+    perform any operations on project level resources.

@@ -68,7 +68,8 @@ deprecated_cancel_without_rollback = policy.DeprecatedRule(
 actions_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'action',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Performs non-lifecycle operations on the stack '
         '(Snapshot, Resume, Cancel update, or check stack resources). '
         'This is the default for all actions but can be overridden by more '
@@ -81,8 +82,8 @@ actions_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'snapshot',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Create stack snapshot',
         operations=[{
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
@@ -92,8 +93,8 @@ actions_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'suspend',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Suspend a stack.',
         operations=[{
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
@@ -103,8 +104,8 @@ actions_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'resume',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Resume a suspended stack.',
         operations=[{
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
@@ -114,8 +115,8 @@ actions_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'check',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Check stack resources.',
         operations=[{
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
@@ -125,8 +126,8 @@ actions_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'cancel_update',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Cancel stack operation and roll back.',
         operations=[{
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',
@@ -136,8 +137,8 @@ actions_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'cancel_without_rollback',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Cancel stack operation without rolling back.',
         operations=[{
             'path': '/v1/{tenant_id}/stacks/{stack_name}/{stack_id}/actions',

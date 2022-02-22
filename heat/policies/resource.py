@@ -55,8 +55,8 @@ deprecated_signal = policy.DeprecatedRule(
 resource_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List resources.',
         operations=[
             {
@@ -69,8 +69,8 @@ resource_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'metadata',
-        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER_OR_STACK_USER,
+        scope_types=['project'],
         description='Show resource metadata.',
         operations=[
             {
@@ -83,8 +83,8 @@ resource_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'signal',
-        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER_OR_STACK_USER,
+        scope_types=['project'],
         description='Signal resource.',
         operations=[
             {
@@ -97,8 +97,8 @@ resource_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'mark_unhealthy',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Mark resource as unhealthy.',
         operations=[
             {
@@ -111,8 +111,8 @@ resource_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show resource.',
         operations=[
             {

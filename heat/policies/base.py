@@ -30,22 +30,12 @@ PROJECT_STACK_USER = 'role:heat_stack_user and project_id:%(project_id)s'
 
 # Composite check strings that are useful for policies that protect APIs that
 # operate at different scopes.
-SYSTEM_ADMIN_OR_PROJECT_MEMBER = (
-    '(' + SYSTEM_ADMIN + ')'
-    ' or (' + PROJECT_MEMBER + ')'
-)
-SYSTEM_OR_PROJECT_READER = (
-    '(' + SYSTEM_READER + ')'
-    ' or (' + PROJECT_READER + ')'
-)
-SYSTEM_ADMIN_OR_PROJECT_MEMBER_OR_STACK_USER = (
-    '(' + SYSTEM_ADMIN + ')'
-    ' or (' + PROJECT_MEMBER + ')'
+PROJECT_MEMBER_OR_STACK_USER = (
+    '(' + PROJECT_MEMBER + ')'
     ' or (' + PROJECT_STACK_USER + ')'
 )
-SYSTEM_OR_PROJECT_READER_OR_STACK_USER = (
-    '(' + SYSTEM_READER + ')'
-    ' or (' + PROJECT_READER + ')'
+PROJECT_READER_OR_STACK_USER = (
+    '(' + PROJECT_READER + ')'
     ' or (' + PROJECT_STACK_USER + ')'
 )
 

@@ -85,20 +85,29 @@ class Enforcer(object):
         """
         do_raise = False if not exc else True
         credentials = context.to_policy_values()
-        if is_registered_policy:
-            try:
-                return self.enforcer.authorize(rule, target, credentials,
-                                               do_raise=do_raise,
-                                               exc=exc, action=rule)
-            except policy.PolicyNotRegistered:
-                if self.log_not_registered:
-                    with excutils.save_and_reraise_exception():
-                        LOG.exception(_('Policy not registered.'))
-                else:
-                    raise
-        else:
-            return self.enforcer.enforce(rule, target, credentials,
-                                         do_raise, exc=exc, *args, **kwargs)
+
+        try:
+            if is_registered_policy:
+                try:
+                    return self.enforcer.authorize(rule, target, credentials,
+                                                   do_raise=do_raise,
+                                                   exc=exc, action=rule)
+                except policy.PolicyNotRegistered:
+                    if self.log_not_registered:
+                        with excutils.save_and_reraise_exception():
+                            LOG.exception(_('Policy not registered.'))
+                    else:
+                        raise
+            else:
+                return self.enforcer.enforce(rule, target, credentials,
+                                             do_raise, exc=exc, *args,
+                                             **kwargs)
+        except policy.InvalidScope:
+            LOG.debug('Policy check for %(action)s failed with scope check '
+                      '%(credentials)s',
+                      {'action': rule,
+                       'credentials': context.to_policy_values()})
+            raise exc(action=rule)
 
     def enforce(self, context, action, scope=None, target=None,
                 is_registered_policy=False):

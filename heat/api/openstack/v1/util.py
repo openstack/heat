@@ -31,9 +31,7 @@ def registered_policy_enforce(handler):
     def handle_stack_method(controller, req, tenant_id, **kwargs):
         _target = {"project_id": tenant_id}
 
-        if req.context.tenant_id != tenant_id and not (
-                req.context.is_admin or
-                req.context.system_scope == all):
+        if req.context.tenant_id != tenant_id and not req.context.is_admin:
             raise exc.HTTPForbidden()
         allowed = req.context.policy.enforce(
             context=req.context,
@@ -57,9 +55,7 @@ def no_policy_enforce(handler):
     """
     @functools.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
-        if req.context.tenant_id != tenant_id and not (
-                req.context.is_admin or
-                req.context.system_scope == all):
+        if req.context.tenant_id != tenant_id and not req.context.is_admin:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
 

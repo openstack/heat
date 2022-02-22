@@ -9,7 +9,9 @@ actions_most_restricted:
   allowed:
     - "project_member"
   denied:
+    - "project_reader"
     - "stack_user"
+    - "system_admin"
 
 actions_restricted:
   scope: "actions"
@@ -19,32 +21,46 @@ actions_restricted:
     - "project_reader"
   denied:
     - "stack_user"
+    - "system_admin"
 
 cloud_formation_most_restricted:
   scope: "cloudformation"
   actions:
-    - "ListStacks"
     - "CreateStack"
-    - "DescribeStacks"
     - "DeleteStack"
     - "UpdateStack"
-    - "DescribeStackEvents"
-    - "ValidateTemplate"
-    - "GetTemplate"
-    - "EstimateTemplateCost"
-    - "DescribeStackResources"
   allowed:
     - "project_member"
   denied:
+    - "project_reader"
     - "stack_user"
+    - "system_admin"
 
 cloud_formation_restricted:
   scope: "cloudformation"
   actions:
+    - "ListStacks"
+    - "DescribeStacks"
+    - "DescribeStackEvents"
+    - "GetTemplate"
+    - "EstimateTemplateCost"
+    - "DescribeStackResources"
+    - "ValidateTemplate"
+  allowed:
+    - "project_reader"
+  denied:
+    - "stack_user"
+    - "system_admin"
+
+cloud_formation_least_restricted:
+  scope: "cloudformation"
+  actions:
     - "DescribeStackResource"
   allowed:
-    - "project_member"
+    - "project_reader"
     - "stack_user"
+  denied:
+    - "system_admin"
 
 build_info_acl:
   scope: "build_info"
@@ -54,6 +70,7 @@ build_info_acl:
     - "project_reader"
   denied:
     - "stack_user"
+    - "system_admin"
 
 events_acl:
   scope: "events"
@@ -64,6 +81,7 @@ events_acl:
     - "project_reader"
   denied:
     - "stack_user"
+    - "system_admin"
 
 resource_least_restricted:
   scope: "resource"
@@ -73,6 +91,8 @@ resource_least_restricted:
   allowed:
     - "stack_user"
     - "project_reader"
+  denied:
+    - "system_admin"
 
 resource_restricted:
   scope: "resource"
@@ -83,6 +103,7 @@ resource_restricted:
     - "project_reader"
   denied:
     - "stack_user"
+    - "system_admin"
 
 resource_most_restricted:
   scope: "resource"
@@ -91,7 +112,9 @@ resource_most_restricted:
   allowed:
     - "project_member"
   denied:
+    - "project_reader"
     - "stack_user"
+    - "system_admin"
 
 service_acl:
   scope: "service"
@@ -100,6 +123,7 @@ service_acl:
   allowed:
     - "project_admin"
   denied:
+    - "system_admin"
     - "project_member"
     - "stack_user"
 
@@ -110,7 +134,6 @@ software_configs_restricted_index:
   denied:
     - "system_admin"
     - "project_admin"
-    - "stack_user"
 
 software_configs_most_restricted:
   scope: "software_configs"
@@ -152,6 +175,7 @@ software_deployments_restricted:
     - "project_reader"
   denied:
     - "stack_user"
+    - "system_admin"
 
 software_deployments_least_restricted:
   scope: "software_deployments"
@@ -160,6 +184,8 @@ software_deployments_least_restricted:
   allowed:
     - "project_reader"
     - "stack_user"
+  denied:
+    - "system_admin"
 
 stacks_most_restricted:
   scope: "stacks"
@@ -180,7 +206,9 @@ stacks_most_restricted:
   allowed:
     - "project_member"
   denied:
+    - "project_reader"
     - "stack_user"
+    - "system_admin"
 
 stacks_restricted:
   scope: "stacks"
@@ -204,6 +232,7 @@ stacks_restricted:
     - "project_reader"
   denied:
     - "stack_user"
+    - "system_admin"
 
 stacks_restricted_index:
   scope: "stacks"
@@ -220,6 +249,8 @@ stacks_open:
   allowed:
     - "project_reader"
     - "stack_user"
+  denied:
+    - "system_admin"
 
 create_stacks:
   scope: "stacks"
@@ -227,3 +258,6 @@ create_stacks:
     - "create"
   allowed:
     - "project_member"
+  denied:
+    - "project_reader"
+    - "system_admin"
