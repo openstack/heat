@@ -70,7 +70,7 @@ class StackTest(common.HeatTestCase):
         self.assertEqual('bar', self.stack.tenant_id)
 
     def test_stack_reads_tenant_from_context_if_empty(self):
-        self.ctx.tenant = 'foo'
+        self.ctx.project_id = 'foo'
         self.stack = stack.Stack(self.ctx, 'test_stack', self.tmpl,
                                  tenant_id=None)
         self.assertEqual('foo', self.stack.tenant_id)
@@ -580,11 +580,11 @@ class StackTest(common.HeatTestCase):
         self.assertEqual(identifier.arn(), newstack.parameters['AWS::StackId'])
 
     def test_load_reads_tenant_id(self):
-        self.ctx.tenant = 'foobar'
+        self.ctx.project_id = 'foobar'
         self.stack = stack.Stack(self.ctx, 'stack_name', self.tmpl)
         self.stack.store()
         stack_id = self.stack.id
-        self.ctx.tenant = None
+        self.ctx.project_id = None
         self.stack = stack.Stack.load(self.ctx, stack_id=stack_id)
         self.assertEqual('foobar', self.stack.tenant_id)
 

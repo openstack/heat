@@ -40,16 +40,16 @@ class KeystonePasswordAuthProtocol(object):
         """Authenticate incoming request."""
         username = env.get('HTTP_X_AUTH_USER')
         password = env.get('HTTP_X_AUTH_KEY')
-        # Determine tenant id from path.
-        tenant = env.get('PATH_INFO').split('/')[1]
+        # Determine project id from path.
+        project_id = env.get('PATH_INFO').split('/')[1]
         auth_url = env.get('HTTP_X_AUTH_URL')
         user_domain_id = env.get('HTTP_X_USER_DOMAIN_ID')
-        if not tenant:
+        if not project_id:
             return self._reject_request(env, start_response, auth_url)
         try:
             ctx = context.RequestContext(username=username,
                                          password=password,
-                                         tenant=tenant,
+                                         project_id=project_id,
                                          auth_url=auth_url,
                                          user_domain_id=user_domain_id,
                                          is_admin=False)
