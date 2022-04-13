@@ -16,6 +16,7 @@ import contextlib
 import datetime as dt
 import itertools
 import pydoc
+import re
 import tenacity
 import weakref
 
@@ -807,16 +808,21 @@ class Resource(status.ResourceStatus):
                 service_name=cls.default_client_name)
             if endpoint_exists:
                 req_extension = cls.required_service_extension
-                is_ext_available = (
-                    not req_extension or client_plugin.has_extension(
-                        req_extension))
+                if not req_extension:
+                    return(True, None)
+                if isinstance(req_extension, str):
+                    req_extension = re.split(' |,', req_extension)
+                for ext in req_extension:
+                    is_ext_available = (
+                        client_plugin.has_extension(ext))
+                    if not is_ext_available:
+                        reason = _('Required extension {0} in {1} service '
+                                   'is not available.')
+                        reason = reason.format(ext,
+                                               cls.default_client_name)
+                        break
                 if is_ext_available:
                     return (True, None)
-                else:
-                    reason = _('Required extension {0} in {1} service '
-                               'is not available.')
-                    reason = reason.format(req_extension,
-                                           cls.default_client_name)
             else:
                 reason = _('{0} {1} endpoint is not in service catalog.')
                 reason = reason.format(cls.default_client_name, service_type)

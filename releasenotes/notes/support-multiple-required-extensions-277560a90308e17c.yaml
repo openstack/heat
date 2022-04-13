@@ -1,0 +1,6 @@
+---
+other:
+  - |
+    Allow Heat resources to accept more than one required_service_extension.
+    For cases where a resource required multiple service extensions. A
+    developer can now provide a list of those extensions.

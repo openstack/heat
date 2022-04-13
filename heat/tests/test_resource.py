@@ -4064,6 +4064,84 @@ class ResourceAvailabilityTest(common.HeatTestCase):
 
         self.assertRaises(MyException, res.handle_delete)
 
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_service_deployed_required_extension_true_string(
+            self,
+            mock_client_plugin_method):
+        """Test availability of resource with a required extension. """
+
+        mock_service_types, mock_client_plugin = self._mock_client_plugin(
+            ['test_type']
+        )
+        mock_client_plugin.has_extension = mock.Mock(
+            side_effect=[True, True])
+        mock_client_plugin_method.return_value = mock_client_plugin
+
+        rsrc = generic_rsrc.ResourceWithDefaultClientNameMultiStrExt
+        rsrc.is_service_available(
+            context=mock.Mock())[0]
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+        mock_service_types.assert_called_once_with()
+        mock_client_plugin.does_endpoint_exist.assert_called_once_with(
+            service_type='test_type',
+            service_name=(generic_rsrc.ResourceWithDefaultClientName
+                          .default_client_name))
+        mock_client_plugin.has_extension.has_calls(
+            [('foo'), ('bar')])
+
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_service_deployed_required_extension_true_list(
+            self,
+            mock_client_plugin_method):
+        """Test availability of resource with a required extension. """
+
+        mock_service_types, mock_client_plugin = self._mock_client_plugin(
+            ['test_type']
+        )
+        mock_client_plugin.has_extension = mock.Mock(
+            side_effect=[True, True])
+        mock_client_plugin_method.return_value = mock_client_plugin
+
+        rsrc = generic_rsrc.ResourceWithDefaultClientNameMultiExt
+        rsrc.is_service_available(
+            context=mock.Mock())[0]
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+        mock_service_types.assert_called_once_with()
+        mock_client_plugin.does_endpoint_exist.assert_called_once_with(
+            service_type='test_type',
+            service_name=(generic_rsrc.ResourceWithDefaultClientName
+                          .default_client_name))
+        mock_client_plugin.has_extension.has_calls(
+            [('foo'), ('bar')])
+
+    @mock.patch.object(clients.OpenStackClients, 'client_plugin')
+    def test_service_deployed_required_extension_true_list_fail(
+            self,
+            mock_client_plugin_method):
+        """Test availability of resource with a required extension. """
+
+        mock_service_types, mock_client_plugin = self._mock_client_plugin(
+            ['test_type']
+        )
+        mock_client_plugin.has_extension = mock.Mock(
+            side_effect=[True, False])
+        mock_client_plugin_method.return_value = mock_client_plugin
+
+        rsrc = generic_rsrc.ResourceWithDefaultClientNameMultiExt
+        self.assertFalse(rsrc.is_service_available(
+            context=mock.Mock())[0])
+        mock_client_plugin_method.assert_called_once_with(
+            generic_rsrc.ResourceWithDefaultClientName.default_client_name)
+        mock_service_types.assert_called_once_with()
+        mock_client_plugin.does_endpoint_exist.assert_called_once_with(
+            service_type='test_type',
+            service_name=(generic_rsrc.ResourceWithDefaultClientName
+                          .default_client_name))
+        mock_client_plugin.has_extension.has_calls(
+            [('foo'), ('bar')])
+
 
 class TestLiveStateUpdate(common.HeatTestCase):
 

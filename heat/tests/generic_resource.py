@@ -317,6 +317,20 @@ class ResourceWithDefaultClientNameExt(resource.Resource):
     properties_schema = {}
 
 
+class ResourceWithDefaultClientNameMultiStrExt(resource.Resource):
+    default_client_name = 'sample'
+    required_service_extension = 'foo,bar'
+
+    properties_schema = {}
+
+
+class ResourceWithDefaultClientNameMultiExt(resource.Resource):
+    default_client_name = 'sample'
+    required_service_extension = ['foo', 'bar']
+
+    properties_schema = {}
+
+
 class ResourceWithFnGetAttType(GenericResource):
     def get_attribute(self, name):
         pass
