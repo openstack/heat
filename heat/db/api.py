@@ -1244,8 +1244,13 @@ def software_deployment_create(context, values):
     obj_ref = models.SoftwareDeployment()
     obj_ref.update(values)
 
-    with context.session.begin():
-        obj_ref.save(context.session)
+    try:
+        with context.session.begin():
+            obj_ref.save(context.session)
+    except db_exception.DBReferenceError:
+        # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
+        err_msg = _('Config with id %s not found') % values['config_id']
+        raise exception.Invalid(reason=err_msg)
 
     return obj_ref
 
@@ -1278,7 +1283,12 @@ def software_deployment_get_all(context, server_id=None):
 
 def software_deployment_update(context, deployment_id, values):
     deployment = software_deployment_get(context, deployment_id)
-    update_and_save(context, deployment, values)
+    try:
+        update_and_save(context, deployment, values)
+    except db_exception.DBReferenceError:
+        # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
+        err_msg = _('Config with id %s not found') % values['config_id']
+        raise exception.Invalid(reason=err_msg)
     return deployment
 
 
