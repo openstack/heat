@@ -12,6 +12,7 @@
 #    under the License.
 import collections
 
+from oslo_log import log as logging
 from oslo_serialization import jsonutils
 
 from heat.common import environment_format as env_fmt
@@ -20,6 +21,8 @@ from heat.common.i18n import _
 
 ALLOWED_PARAM_MERGE_STRATEGIES = (OVERWRITE, MERGE, DEEP_MERGE) = (
     'overwrite', 'merge', 'deep_merge')
+
+LOG = logging.getLogger(__name__)
 
 
 def get_param_merge_strategy(merge_strategies, param_key,
@@ -129,12 +132,15 @@ def merge_parameters(old, new, param_schemata, strategies_in_file,
                     param=key, env_file=env_file)
 
             if param_merge_strategy == DEEP_MERGE:
+                LOG.debug("Deep Merging Parameter: %s", key)
                 param_merge(key, value,
                             param_schemata[key],
                             deep_merge=True)
             elif param_merge_strategy == MERGE:
+                LOG.debug("Merging Parameter: %s", key)
                 param_merge(key, value, param_schemata[key])
             else:
+                LOG.debug("Overriding Parameter: %s", key)
                 old[key] = value
 
     return old, new_strategies
