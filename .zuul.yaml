@@ -188,6 +188,3 @@
         - grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
-    experimental:
-      jobs:
-        - tripleo-ci-centos-7-scenario002-standalone
