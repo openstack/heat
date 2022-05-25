@@ -338,6 +338,20 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertNotIn('balrog', engine_args)
 
     @mock.patch.object(rpc_client.EngineClient, 'call')
+    def test_index_limit_negative(self, mock_call, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index', True)
+        params = {'limit': -1}
+        req = self._get('/stacks', params=params)
+
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.controller.index, req,
+                               tenant_id=self.tenant)
+        self.assertEqual("Value '-1' is invalid for 'limit' which only "
+                         "accepts non-negative integer.",
+                         str(ex))
+        self.assertFalse(mock_call.called)
+
+    @mock.patch.object(rpc_client.EngineClient, 'call')
     def test_index_limit_not_int(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'index', True)
         params = {'limit': 'not-an-int'}
@@ -1932,6 +1946,31 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             version='1.36'
         )
 
+    def test_update_timeout_negative(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': -1}
+
+        req = self._put('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                        json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.controller.update, req,
+                               tenant_id=identity.tenant,
+                               stack_name=identity.stack_name,
+                               stack_id=identity.stack_id,
+                               body=body)
+        self.assertEqual("Value '-1' is invalid for 'timeout_mins' which only "
+                         "accepts non-negative integer.",
+                         str(ex))
+        self.assertFalse(mock_call.called)
+
     def test_update_timeout_not_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
@@ -2144,6 +2183,31 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
               'template_id': None}),
             version='1.36'
         )
+
+    def test_update_with_patch_timeout_negative(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'update_patch', True)
+        identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
+        template = {u'Foo': u'bar'}
+        parameters = {u'InstanceType': u'm1.xlarge'}
+        body = {'template': template,
+                'parameters': parameters,
+                'files': {},
+                'timeout_mins': -1}
+
+        req = self._patch('/stacks/%(stack_name)s/%(stack_id)s' % identity,
+                          json.dumps(body))
+
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call')
+        ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                               self.controller.update_patch, req,
+                               tenant_id=identity.tenant,
+                               stack_name=identity.stack_name,
+                               stack_id=identity.stack_id,
+                               body=body)
+        self.assertEqual("Value '-1' is invalid for 'timeout_mins' which only "
+                         "accepts non-negative integer.",
+                         str(ex))
+        self.assertFalse(mock_call.called)
 
     def test_update_with_patch_timeout_not_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
