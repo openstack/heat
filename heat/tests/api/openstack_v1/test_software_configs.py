@@ -47,6 +47,41 @@ class SoftwareConfigControllerTest(tools.ControllerTest, common.HeatTestCase):
                 {'software_configs': []}, resp)
 
     @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_index_limit_negative(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index')
+        params = {'limit': -1}
+
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'list_software_configs',
+                return_value=[]) as mock_call:
+            req = self._get('/software_configs', params=params)
+            ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                                   self.controller.index, req,
+                                   tenant_id=self.tenant)
+            self.assertEqual("Value '-1' is invalid for 'limit' which only "
+                             "accepts non-negative integer.",
+                             str(ex))
+            self.assertFalse(mock_call.called)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
+    def test_index_limit_not_int(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'index')
+        params = {'limit': 'not-an-int'}
+
+        with mock.patch.object(
+                self.controller.rpc_client,
+                'list_software_configs',
+                return_value=[]) as mock_call:
+            req = self._get('/software_configs', params=params)
+            ex = self.assertRaises(webob.exc.HTTPBadRequest,
+                                   self.controller.index, req,
+                                   tenant_id=self.tenant)
+            self.assertEqual("Only integer is acceptable by 'limit'.",
+                             str(ex))
+            self.assertFalse(mock_call.called)
+
+    @mock.patch.object(policy.Enforcer, 'enforce')
     def test_show(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'show')
         config_id = 'a45559cd-8736-4375-bc39-d6a7bb62ade2'
