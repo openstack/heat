@@ -137,7 +137,6 @@
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin
       - opendev.org/openstack/python-heatclient
-    voting: false
     vars:
       grenade_devstack_localrc:
         shared:
