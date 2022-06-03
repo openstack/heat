@@ -65,26 +65,11 @@ function _run_heat_integrationtests {
     # Run set of specified functional tests
     UPGRADE_TESTS=upgrade_tests.list
     _write_heat_integrationtests $UPGRADE_TESTS
-
-    # NOTE(gmann): If devstack is pinned to use the non master
-    # Tempest and constraints for Tempest venv then use the same
-    # while running the tests too otherwise, it will recreate
-    # the Tempest venv due to constraints mismatch.
-    # recreation of Tempest venv can flush the initially installed
-    # tempest plugins and their deps.
-    if [[ $use_stable_constraints == "True" ]]; then
-        echo "Using $DEST/requirements/upper-constraints.txt constraints in Tempest venv."
-        # NOTE: setting both tox env var and once Tempest start using new var
-        # TOX_CONSTRAINTS_FILE then we can remove the old one.
-        export UPPER_CONSTRAINTS_FILE=$DEST/requirements/upper-constraints.txt
-        export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
-    else
-        echo "Using master constraints in Tempest venv."
-        # NOTE: setting both tox env var and once Tempest start using new var
-        # TOX_CONSTRAINTS_FILE then we can remove the old one.
-        export UPPER_CONSTRAINTS_FILE=https://releases.openstack.org/constraints/upper/master
-        export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
-    fi
+    export UPPER_CONSTRAINTS_FILE=$DEST/requirements/upper-constraints.txt
+    export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
+    export HEAT_TEMPEST_PLUGIN=$DEST/heat-tempest-plugin
+    sudo git config --system --add safe.directory $HEAT_TEMPEST_PLUGIN
+    tox -evenv-tempest -- pip install -c$UPPER_CONSTRAINTS_FILE $HEAT_TEMPEST_PLUGIN
     tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
         --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
         run --whitelist-file $UPGRADE_TESTS
