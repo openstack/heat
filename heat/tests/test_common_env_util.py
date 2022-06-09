@@ -202,7 +202,13 @@ class TestMergeEnvironments(common.HeatTestCase):
             'lst_value1': "merge",
             'json_value1': "deep_merge"}
 
+        env3_merge_strategies = {
+            'default': "overwrite",
+            'lst_value1': "deep_merge",
+            'json_value1': "merge"}
+
         self.env_2['parameter_merge_strategies'] = merge_strategies
+        self.env_3['parameter_merge_strategies'] = env3_merge_strategies
 
         files = {'env_1': json.dumps(self.env_1),
                  'env_2': json.dumps(self.env_2),
@@ -221,7 +227,12 @@ class TestMergeEnvironments(common.HeatTestCase):
             'default': "overwrite",
             'lst_value2': "merge"}
 
+        env4_merge_strategies = {
+            'default': "overwrite",
+            'lst_value2': "overwrite"}
+
         self.env_2['parameter_merge_strategies'] = merge_strategies
+        self.env_4['parameter_merge_strategies'] = env4_merge_strategies
 
         files = {'env_1': json.dumps(self.env_1),
                  'env_2': json.dumps(self.env_2),
