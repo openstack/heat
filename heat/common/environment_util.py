@@ -22,14 +22,19 @@ ALLOWED_PARAM_MERGE_STRATEGIES = (OVERWRITE, MERGE, DEEP_MERGE) = (
     'overwrite', 'merge', 'deep_merge')
 
 
-def get_param_merge_strategy(merge_strategies, param_key):
+def get_param_merge_strategy(merge_strategies, param_key,
+                             available_strategies=None):
+    if not available_strategies:
+        available_strategies = {}
 
     if merge_strategies is None:
         return OVERWRITE
 
     env_default = merge_strategies.get('default', OVERWRITE)
+    merge_strategy = merge_strategies.get(
+        param_key, available_strategies.get(
+            param_key, env_default))
 
-    merge_strategy = merge_strategies.get(param_key, env_default)
     if merge_strategy in ALLOWED_PARAM_MERGE_STRATEGIES:
         return merge_strategy
 
@@ -114,7 +119,7 @@ def merge_parameters(old, new, param_schemata, strategies_in_file,
         # if key not in param_schemata ignore it
         if key in param_schemata and value is not None:
             param_merge_strategy = get_param_merge_strategy(
-                strategies_in_file, key)
+                strategies_in_file, key, available_strategies)
             if key not in available_strategies:
                 new_strategies[key] = param_merge_strategy
 
