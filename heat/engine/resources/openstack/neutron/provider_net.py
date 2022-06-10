@@ -37,11 +37,13 @@ class ProviderNet(net.Net):
     PROPERTIES = (
         NAME, PROVIDER_NETWORK_TYPE, PROVIDER_PHYSICAL_NETWORK,
         PROVIDER_SEGMENTATION_ID, ADMIN_STATE_UP, SHARED,
-        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL, DNS_DOMAIN, TAGS,
+        PORT_SECURITY_ENABLED, ROUTER_EXTERNAL, DNS_DOMAIN,
+        AVAILABILITY_ZONE_HINTS, TAGS,
     ) = (
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
-        'port_security_enabled', 'router_external', 'dns_domain', 'tags',
+        'port_security_enabled', 'router_external', 'dns_domain',
+        'availability_zone_hints', 'tags',
 
     )
 
@@ -118,6 +120,13 @@ class ProviderNet(net.Net):
             ],
             update_allowed=True,
             support_status=support.SupportStatus(version='15.0.0')
+        ),
+        AVAILABILITY_ZONE_HINTS: properties.Schema(
+            properties.Schema.LIST,
+            _('Availability zone candidates for the network. It requires the '
+              'availability_zone extension to be available.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='19.0.0')
         ),
     }
 

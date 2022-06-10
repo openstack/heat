@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Adds the 'availability_zone_hints' property for the OS::Neutron::Router,
+    OS::Neutron::Net and OS::Neutron::ProviderNet resources.
