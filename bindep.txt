@@ -6,7 +6,6 @@ mariadb-server [platform:redhat]
 postgresql
 
 build-essential [platform:dpkg]
-python-dev [platform:dpkg]
 python3-all-dev [platform:dpkg]
 libxml2-dev [platform:dpkg]
 libxslt1-dev [platform:dpkg]
@@ -19,7 +18,6 @@ mysql-client [platform:dpkg]
 postgresql-client [platform:dpkg]
 
 gcc [platform:rpm]
-python-devel [platform:rpm]
 python3-devel [platform:fedora platform:suse]
 python3 [platform:suse]
 libxml2-devel [platform:rpm]
