@@ -182,6 +182,7 @@
       - ^releasenotes/.*$
 
 - project:
+    queue: heat
     templates:
       - openstack-cover-jobs
       - openstack-lower-constraints-jobs
@@ -197,7 +198,6 @@
         - heat-functional
         - heat-functional-legacy
     gate:
-      queue: heat
       jobs:
         - grenade-heat-multinode
         - heat-functional
