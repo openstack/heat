@@ -165,6 +165,7 @@
     nodeset: openstack-two-node-bionic
 
 - project:
+    queue: heat
     templates:
       - openstack-cover-jobs
       - openstack-python3-ussuri-jobs
@@ -180,7 +181,6 @@
         - heat-functional-legacy
         - heat-functional-non-apache
     gate:
-      queue: heat
       jobs:
         - grenade-heat
         - grenade-heat-multinode
