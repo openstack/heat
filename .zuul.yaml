@@ -184,6 +184,7 @@
       - ^releasenotes/.*$
 
 - project:
+    queue: heat
     templates:
       - openstack-cover-jobs
       - openstack-python3-xena-jobs
@@ -198,7 +199,6 @@
         - heat-functional
         - heat-functional-legacy
     gate:
-      queue: heat
       jobs:
         - grenade-heat-multinode
         - heat-functional
