@@ -88,8 +88,10 @@
     name: grenade-heat-multinode
     parent: grenade-heat
     nodeset: openstack-two-node-bionic
+    voting: false
 
 - project:
+    queue: heat
     templates:
       - openstack-cover-jobs
       - openstack-python-jobs
@@ -109,12 +111,8 @@
         - heat-functional-convg-mysql-lbaasv2-non-apache
         - heat-functional-convg-mysql-lbaasv2-py3
     gate:
-      queue: heat
       jobs:
         - grenade-heat
-        - grenade-heat-multinode
-        - heat-functional-orig-mysql-lbaasv2
-        - heat-functional-convg-mysql-lbaasv2
         - heat-functional-convg-mysql-lbaasv2-py3
     experimental:
       jobs:
