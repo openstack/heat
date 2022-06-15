@@ -23,6 +23,7 @@ loads = jsonutils.loads
 class LongText(types.TypeDecorator):
 
     impl = types.Text
+    cache_ok = True
 
     def load_dialect_impl(self, dialect):
         if dialect.name == 'mysql':
@@ -45,6 +46,7 @@ class Json(LongText):
 class List(types.TypeDecorator):
 
     impl = types.Text
+    cache_ok = True
 
     def load_dialect_impl(self, dialect):
         if dialect.name == 'mysql':
