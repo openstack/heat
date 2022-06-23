@@ -2363,6 +2363,26 @@ class ServersTest(common.HeatTestCase):
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
 
     @mock.patch.object(servers.Server, 'prepare_for_replace')
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
+    def test_server_update_server_userdata_rebuild(self, mock_create,
+                                                   mock_replace):
+        stack_name = 'update_udreplace'
+        (tmpl, stack) = self._setup_test_stack(stack_name)
+        self.patchobject(servers.Server, 'check_update_complete',
+                         return_value=True)
+
+        resource_defns = tmpl.resource_definitions(stack)
+        server = servers.Server('server_update_userdata_ignore',
+                                resource_defns['WebServer'], stack)
+
+        update_props = tmpl.t['Resources']['WebServer']['Properties'].copy()
+        update_props['user_data'] = 'changed'
+        update_props['user_data_update_policy'] = 'REBUILD'
+        update_template = server.t.freeze(properties=update_props)
+        updater = scheduler.TaskRunner(server.update, update_template)
+        self.assertRaises(resource.UpdateReplace, updater)
+
+    @mock.patch.object(servers.Server, 'prepare_for_replace')
     def test_server_update_image_replace(self, mock_replace):
         stack_name = 'update_imgrep'
         (tmpl, stack) = self._setup_test_stack(stack_name)
