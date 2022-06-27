@@ -220,15 +220,19 @@ class JsonRepr(object):
 
 
 class ForeignKeyConstraintFixture(fixtures.Fixture):
-    def __init__(self, sqlite_fk=True):
-        self.enable_fkc = sqlite_fk
+
+    def __init__(self):
+        self.engine = get_engine()
 
     def _setUp(self):
-        new_context = db_api.db_context.make_new_manager()
-        new_context.configure(sqlite_fk=self.enable_fkc)
+        if self.engine.name == 'sqlite':
+            self.engine.execute("PRAGMA foreign_keys=ON")
 
-        self.useFixture(fixtures.MockPatchObject(db_api, '_facade', None))
-        self.addCleanup(db_api.db_context.patch_factory(new_context._factory))
+            def disable_fks():
+                with self.engine.connect() as conn:
+                    conn.connection.rollback()
+                    conn.execute("PRAGMA foreign_keys=OFF")
+            self.addCleanup(disable_fks)
 
 
 class AnyInstance(object):
