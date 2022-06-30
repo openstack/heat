@@ -153,7 +153,7 @@
         h-eng: true
         heat: true
       # We do run a list of tests after upgrade. This is just to bypass the req from parent.
-      tempest_test_regex: ^heat_tempest_plugin\.tests\.functional\.test_nova_server_networks
+      tempest_test_regex: ^tempest\.api\.identity\.v3\.test_tokens
       tox_envlist: all
       devstack_plugins:
         heat: https://opendev.org/openstack/heat
