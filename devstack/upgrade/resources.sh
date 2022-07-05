@@ -64,7 +64,11 @@ function _run_heat_integrationtests {
     # Run set of specified functional tests
     UPGRADE_TESTS=upgrade_tests.list
     _write_heat_integrationtests $UPGRADE_TESTS
-
+    export UPPER_CONSTRAINTS_FILE=$DEST/requirements/upper-constraints.txt
+    export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
+    export HEAT_TEMPEST_PLUGIN=$DEST/heat-tempest-plugin
+    sudo git config --system --add safe.directory $HEAT_TEMPEST_PLUGIN
+    tox -evenv-tempest -- pip install -c$UPPER_CONSTRAINTS_FILE $HEAT_TEMPEST_PLUGIN
     tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
         --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
         run --whitelist-file $UPGRADE_TESTS
