@@ -135,13 +135,17 @@
 
 - job:
     name: grenade-heat-multinode
-    parent: grenade
-    nodeset: openstack-two-node-bionic
+    parent: grenade-multinode
     required-projects:
       - opendev.org/openstack/heat
       - opendev.org/openstack/heat-tempest-plugin
       - opendev.org/openstack/python-heatclient
     vars:
+      grenade_devstack_localrc:
+        shared:
+          HOST_TOPOLOGY: multinode
+          HOST_TOPOLOGY_ROLE: primary
+          HOST_TOPOLOGY_SUBNODES: "{{ hostvars['compute1']['nodepool']['public_ipv4'] }}"
       configure_swap_size: 8192
       devstack_services:
         h-api: true
@@ -155,6 +159,29 @@
         heat: https://opendev.org/openstack/heat
       tempest_plugins:
         - heat-tempest-plugin
+    group-vars:
+      subnode:
+        grenade_devstack_localrc:
+          shared:
+            HOST_TOPOLOGY: multinode
+            HOST_TOPOLOGY_ROLE: subnode
+            HOST_TOPOLOGY_SUBNODES: "{{ hostvars['compute1']['nodepool']['public_ipv4'] }}"
+        configure_swap_size: 8192
+        devstack_services:
+          h-api: true
+          h-api-cfn: true
+          h-eng: true
+          heat: true
+        # We do run a list of tests after upgrade. This is just to bypass the req from parent.
+        devstack_plugins:
+          heat: https://opendev.org/openstack/heat
+    irrelevant-files:
+      - ^.*\.rst$
+      - ^api-ref/.*$
+      - ^doc/.*$
+      - ^heat/locale/.*$
+      - ^heat/tests/.*$
+      - ^releasenotes/.*$
 
 - project:
     templates:
