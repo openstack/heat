@@ -14,6 +14,9 @@
 import json
 from unittest import mock
 
+from novaclient import exceptions
+from oslo_utils import excutils
+
 from heat.common import template_format
 from heat.engine import scheduler
 from heat.tests import common
@@ -52,12 +55,23 @@ class NovaServerGroupTest(common.HeatTestCase):
         # create mock clients and objects
         nova = mock.MagicMock()
         self.sg.client = mock.MagicMock(return_value=nova)
-        mock_plugin = mock.MagicMock()
-        self.patchobject(mock_plugin,
-                         'is_version_supported',
-                         return_value=True)
+
+        class FakeNovaPlugin(object):
+
+            @excutils.exception_filter
+            def ignore_not_found(self, ex):
+                if not isinstance(ex, exceptions.NotFound):
+                    raise ex
+
+            def is_version_supported(self, version):
+                return True
+
+            def is_conflict(self, ex):
+                return False
+
+        self.patchobject(excutils.exception_filter, '__exit__')
         self.patchobject(self.sg, 'client_plugin',
-                         return_value=mock_plugin)
+                         return_value=FakeNovaPlugin())
         self.sg_mgr = nova.server_groups
 
     def _create_sg(self, name):
@@ -109,3 +123,21 @@ class NovaServerGroupTest(common.HeatTestCase):
         self.sg.client().server_groups = s_groups
         self.assertEqual({'server_gr': 'info'}, self.sg.FnGetAtt('show'))
         s_groups.get.assert_called_once_with('test')
+
+    def test_needs_replace_failed(self):
+        self._create_sg('test')
+        self.sg.state_set(self.sg.CREATE, self.sg.FAILED)
+        mock_show_resource = self.patchobject(self.sg, '_show_resource')
+        mock_show_resource.side_effect = [exceptions.NotFound(404), None]
+
+        self.sg.resource_id = None
+        self.assertTrue(self.sg.needs_replace_failed())
+        self.assertEqual(0, mock_show_resource.call_count)
+
+        self.sg.resource_id = 'sg_id'
+        self.assertTrue(self.sg.needs_replace_failed())
+        self.assertEqual(1, mock_show_resource.call_count)
+
+        mock_show_resource.return_value = None
+        self.assertFalse(self.sg.needs_replace_failed())
+        self.assertEqual(2, mock_show_resource.call_count)
