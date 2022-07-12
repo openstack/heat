@@ -109,7 +109,7 @@ function create {
     local stack_name='grenadine'
     resource_save heat stack_name $stack_name
     local loc=`dirname $BASH_SOURCE`
-    heat stack-create -f $loc/templates/random_string.yaml $stack_name
+    openstack stack create -t $loc/templates/random_string.yaml $stack_name
 }
 
 function verify {
@@ -121,7 +121,7 @@ function verify {
         fi
     fi
     stack_name=$(resource_get heat stack_name)
-    heat stack-show $stack_name
+    openstack stack show $stack_name
     # TODO(sirushtim): Create more granular checks for Heat.
 }
 
@@ -133,7 +133,7 @@ function verify_noapi {
 
 function destroy {
     _heat_set_user
-    heat stack-delete $(resource_get heat stack_name)
+    openstack stack delete -y $(resource_get heat stack_name)
 
     source $TOP_DIR/openrc admin admin
     local user_id=$(resource_get heat user_id)
