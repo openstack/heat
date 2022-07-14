@@ -106,6 +106,16 @@ class ServerGroup(resource.Resource):
                 name=name, policies=policies)
         self.resource_id_set(server_group.id)
 
+    def needs_replace_failed(self):
+        if not self.resource_id:
+            return True
+
+        with self.client_plugin().ignore_not_found:
+            self._show_resource()
+            return False
+
+        return True
+
     def physical_resource_name(self):
         name = self.properties[self.NAME]
         if name:
