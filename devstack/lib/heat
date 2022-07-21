@@ -333,14 +333,6 @@ function stop_heat {
     fi
 }
 
-# TODO(ramishra): Remove after Queens
-function stop_cw_service {
-    if $SYSTEMCTL is-enabled devstack@h-api-cw.service; then
-        $SYSTEMCTL stop devstack@h-api-cw.service
-        $SYSTEMCTL disable devstack@h-api-cw.service
-    fi
-}
-
 # _cleanup_heat_apache_wsgi() - Remove wsgi files, disable and remove apache vhost file
 function _cleanup_heat_apache_wsgi {
     if [[ "$WSGI_MODE" == "uwsgi" ]]; then
