@@ -22,7 +22,8 @@ from heat.engine import translation
 
 
 NOVA_MICROVERSIONS = (MICROVERSION_KEY_TYPE,
-                      MICROVERSION_USER) = ('2.2', '2.10')
+                      MICROVERSION_USER,
+                      MICROVERSION_PUBLIC_KEY) = ('2.2', '2.10', '2.92')
 
 
 class KeyPair(resource.Resource):
@@ -71,9 +72,10 @@ class KeyPair(resource.Resource):
         ),
         PUBLIC_KEY: properties.Schema(
             properties.Schema.STRING,
-            _('The optional public key. This allows users to supply the '
-              'public key from a pre-existing key pair. If not supplied, a '
-              'new key pair will be generated.')
+            _('The public key. This allows users to supply the public key '
+              'from a pre-existing key pair. In Nova api version < 2.92, '
+              'if not supplied, a new key pair will be generated. '
+              'This property is required since Nova api version 2.92.')
         ),
         KEY_TYPE: properties.Schema(
             properties.Schema.STRING,
@@ -148,6 +150,7 @@ class KeyPair(resource.Resource):
         # Check if key_type is allowed to use
         key_type = self.properties[self.KEY_TYPE]
         user = self.properties[self.USER]
+        public_key = self.properties[self.PUBLIC_KEY]
 
         validate_props = []
         c_plugin = self.client_plugin()
@@ -159,6 +162,12 @@ class KeyPair(resource.Resource):
         if validate_props:
             msg = (_('Cannot use "%s" properties - nova does not '
                      'support required api microversion.') % validate_props)
+            raise exception.StackValidationFailed(message=msg)
+
+        if not public_key and c_plugin.is_version_supported(
+                MICROVERSION_PUBLIC_KEY):
+            msg = _('The public_key property is required by the nova API '
+                    'version currently used.')
             raise exception.StackValidationFailed(message=msg)
 
     def handle_create(self):

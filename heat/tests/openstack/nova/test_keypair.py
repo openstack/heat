@@ -201,6 +201,29 @@ class NovaKeyPairTest(common.HeatTestCase):
                          return_value='2.1')
         self._test_validate(user='user_A')
 
+    def test_validate_public_key(self):
+        self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
+                         return_value='2.92')
+        template = copy.deepcopy(self.kp_template)
+        template['resources']['kp']['properties']['public_key'] = 'dummy'
+        stack = utils.parse_stack(template)
+        definition = stack.t.resource_definitions(stack)['kp']
+        kp_res = keypair.KeyPair('kp', definition, stack)
+        kp_res.validate()
+
+    def test_validate_public_key_fail(self):
+        self.patchobject(nova.NovaClientPlugin, 'get_max_microversion',
+                         return_value='2.92')
+        template = copy.deepcopy(self.kp_template)
+        stack = utils.parse_stack(template)
+        definition = stack.t.resource_definitions(stack)['kp']
+        kp_res = keypair.KeyPair('kp', definition, stack)
+        error = self.assertRaises(exception.StackValidationFailed,
+                                  kp_res.validate)
+        msg = ('The public_key property is required by the nova API version '
+               'currently used.')
+        self.assertIn(msg, str(error))
+
     def test_check_key(self):
         res = self._get_test_resource(self.kp_template)
         res.state_set(res.CREATE, res.COMPLETE, 'for test')
