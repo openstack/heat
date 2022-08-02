@@ -30,10 +30,6 @@ set -o xtrace
 
 stop_heat
 
-# stop cloudwatch service if running
-# TODO(ramishra): Remove it after Queens
-stop_cw_service
-
 SERVICES_DOWN="heat-api heat-engine heat-api-cfn"
 
 # sanity check that services are actually down
