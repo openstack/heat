@@ -17,6 +17,8 @@ from unittest import mock
 from neutronclient.common import exceptions as qe
 from neutronclient.neutron import v2_0 as neutronV20
 from neutronclient.v2_0 import client as neutronclient
+from openstack import exceptions
+from oslo_utils import excutils
 
 from heat.common import exception
 from heat.common import template_format
@@ -55,6 +57,16 @@ resources:
     properties:
       floatingip_id: { get_resource: floating_ip }
       port_id: { get_resource: port_floating }
+
+  port_forwarding:
+    type: OS::Neutron::FloatingIPPortForward
+    properties:
+      internal_ip_address: 10.0.0.10
+      internal_port_number: 8080
+      external_port: 80
+      protocol: tcp
+      internal_port: { get_resource: port_floating }
+      floating_ip: { get_resource: floating_ip }
 
   router:
     type: OS::Neutron::Router
@@ -135,6 +147,29 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
                          return_value=True)
+
+        class FakeOpenStackPlugin(object):
+
+            @excutils.exception_filter
+            def ignore_not_found(self, ex):
+                if not isinstance(ex, exceptions.ResourceNotFound):
+                    raise ex
+
+            def find_network_port(self, value):
+                return('9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151')
+
+            def find_network_ip(self, value):
+                return('477e8273-60a7-4c41-b683-1d497e53c384')
+
+        self.ctx = utils.dummy_context()
+        tpl = template_format.parse(neutron_floating_template)
+        self.stack = utils.parse_stack(tpl)
+        self.sdkclient = mock.Mock()
+        self.port_forward = self.stack['port_forwarding']
+        self.port_forward.client = mock.Mock(return_value=self.sdkclient)
+        self.port_forward.client_plugin = mock.Mock(
+            return_value=FakeOpenStackPlugin()
+        )
 
     def test_floating_ip_validate(self):
         t = template_format.parse(neutron_floating_no_assoc_template)
@@ -743,3 +778,230 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         deps.graph.return_value = {fipa: [port]}
         fipa.add_dependencies(deps)
         self.assertEqual([], dep_list)
+
+    def test_fip_port_forward_create(self):
+        pfid = mock.Mock(id='180941c5-9e82-41c7-b64d-6a57302ec211')
+
+        props = {'internal_ip_address': '10.0.0.10',
+                 'internal_port_number': 8080,
+                 'external_port': 80,
+                 'internal_port': '9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151',
+                 'protocol': 'tcp'}
+
+        mock_create = self.patchobject(self.sdkclient.network,
+                                       'create_floating_ip_port_forwarding',
+                                       return_value=pfid)
+
+        self.mockclient.create_port.return_value = {
+            'port': {
+                "status": "BUILD",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.show_port.return_value = {
+            'port': {
+                "status": "ACTIVE",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.create_floatingip.return_value = {
+            'floatingip': {
+                "status": "ACTIVE",
+                "id": "477e8273-60a7-4c41-b683-1d497e53c384"
+            }
+        }
+
+        p = self.stack['port_floating']
+        scheduler.TaskRunner(p.create)()
+        self.assertEqual((p.CREATE, p.COMPLETE), p.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      p.name,
+                                      p.node_data())
+
+        fip = self.stack['floating_ip']
+        scheduler.TaskRunner(fip.create)()
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      fip.name,
+                                      fip.node_data())
+
+        port_forward = self.stack['port_forwarding']
+        scheduler.TaskRunner(port_forward.create)()
+        self.assertEqual((port_forward.CREATE, port_forward.COMPLETE),
+                         port_forward.state)
+        mock_create.assert_called_once_with(
+            '477e8273-60a7-4c41-b683-1d497e53c384',
+            **props)
+
+    def test_fip_port_forward_update(self):
+        pfid = mock.Mock(id='180941c5-9e82-41c7-b64d-6a57302ec211')
+        fip_id = '477e8273-60a7-4c41-b683-1d497e53c384'
+
+        prop_diff = {'external_port': 8080}
+
+        mock_update = self.patchobject(self.sdkclient.network,
+                                       'update_floating_ip_port_forwarding',
+                                       return_value=pfid)
+        self.patchobject(self.sdkclient.network,
+                         'create_floating_ip_port_forwarding',
+                         return_value=pfid)
+        self.mockclient.create_port.return_value = {
+            'port': {
+                "status": "BUILD",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.show_port.return_value = {
+            'port': {
+                "status": "ACTIVE",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.create_floatingip.return_value = {
+            'floatingip': {
+                "status": "ACTIVE",
+                "id": "477e8273-60a7-4c41-b683-1d497e53c384"
+            }
+        }
+
+        p = self.stack['port_floating']
+        scheduler.TaskRunner(p.create)()
+        self.assertEqual((p.CREATE, p.COMPLETE), p.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      p.name,
+                                      p.node_data())
+
+        fip = self.stack['floating_ip']
+        scheduler.TaskRunner(fip.create)()
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      fip.name,
+                                      fip.node_data())
+
+        port_forward = self.stack['port_forwarding']
+        scheduler.TaskRunner(port_forward.create)()
+        self.port_forward.handle_update(prop_diff)
+
+        mock_update.assert_called_once_with(
+            fip_id,
+            '180941c5-9e82-41c7-b64d-6a57302ec211',
+            **prop_diff)
+
+    def test_fip_port_forward_delete(self):
+        pfid = mock.Mock(id='180941c5-9e82-41c7-b64d-6a57302ec211')
+        fip_id = '477e8273-60a7-4c41-b683-1d497e53c384'
+
+        self.patchobject(self.sdkclient.network,
+                         'create_floating_ip_port_forwarding',
+                         return_value=pfid)
+
+        mock_delete = self.patchobject(self.sdkclient.network,
+                                       'delete_floating_ip_port_forwarding',
+                                       return_value=None)
+
+        self.mockclient.create_port.return_value = {
+            'port': {
+                "status": "BUILD",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.show_port.return_value = {
+            'port': {
+                "status": "ACTIVE",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.create_floatingip.return_value = {
+            'floatingip': {
+                "status": "ACTIVE",
+                "id": "477e8273-60a7-4c41-b683-1d497e53c384"
+            }
+        }
+
+        p = self.stack['port_floating']
+        scheduler.TaskRunner(p.create)()
+        self.assertEqual((p.CREATE, p.COMPLETE), p.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      p.name,
+                                      p.node_data())
+
+        fip = self.stack['floating_ip']
+        scheduler.TaskRunner(fip.create)()
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      fip.name,
+                                      fip.node_data())
+
+        port_forward = self.stack['port_forwarding']
+        scheduler.TaskRunner(port_forward.create)()
+        self.port_forward.handle_delete()
+        mock_delete.assert_called_once_with(
+            fip_id,
+            '180941c5-9e82-41c7-b64d-6a57302ec211',
+            ignore_missing=True
+        )
+
+    def test_fip_port_forward_check(self):
+        pfid = mock.Mock(id='180941c5-9e82-41c7-b64d-6a57302ec211')
+        fip_id = '477e8273-60a7-4c41-b683-1d497e53c384'
+
+        self.patchobject(self.sdkclient.network,
+                         'create_floating_ip_port_forwarding',
+                         return_value=pfid)
+
+        self.mockclient.create_port.return_value = {
+            'port': {
+                "status": "BUILD",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.show_port.return_value = {
+            'port': {
+                "status": "ACTIVE",
+                "id": "9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151"
+            }
+        }
+        self.mockclient.create_floatingip.return_value = {
+            'floatingip': {
+                "status": "ACTIVE",
+                "id": "477e8273-60a7-4c41-b683-1d497e53c384"
+            }
+        }
+
+        p = self.stack['port_floating']
+        scheduler.TaskRunner(p.create)()
+        self.assertEqual((p.CREATE, p.COMPLETE), p.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      p.name,
+                                      p.node_data())
+
+        fip = self.stack['floating_ip']
+        scheduler.TaskRunner(fip.create)()
+        self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
+        stk_defn.update_resource_data(self.stack.defn,
+                                      fip.name,
+                                      fip.node_data())
+
+        port_forward = self.stack['port_forwarding']
+        scheduler.TaskRunner(port_forward.create)()
+        self.port_forward.handle_check()
+        mock_check = self.sdkclient.network.get_port_forwarding
+
+        mock_check.assert_called_once_with(
+            '180941c5-9e82-41c7-b64d-6a57302ec211',
+            fip_id
+        )
+
+    def test_pf_add_dependencies(self):
+        port = self.stack['port_floating']
+        r_int = self.stack['router_interface']
+        pf_port = self.stack['port_forwarding']
+        deps = mock.MagicMock()
+        dep_list = []
+
+        def iadd(obj):
+            dep_list.append(obj[1])
+        deps.__iadd__.side_effect = iadd
+        deps.graph.return_value = {pf_port: [port]}
+        pf_port.add_dependencies(deps)
+        self.assertEqual([r_int], dep_list)

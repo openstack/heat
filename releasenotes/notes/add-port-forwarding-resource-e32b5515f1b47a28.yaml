@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    OS::Neutron::FloatingIPPortForward added. This feature allows
+    an operator to create port-forwarding rules in Neutron for
+    their floating ips.

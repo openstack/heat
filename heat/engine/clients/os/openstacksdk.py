@@ -72,6 +72,12 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
     def find_network_segment(self, value):
         return self.client().network.find_segment(value).id
 
+    def find_network_port(self, value):
+        return self.client().network.find_port(value).id
+
+    def find_network_ip(self, value):
+        return self.client().network.find_ip(value).id
+
 
 class SegmentConstraint(constraints.BaseCustomConstraint):
 
