@@ -805,8 +805,7 @@ class AllocTest(common.HeatTestCase):
         before = self.create_association(t, stack, 'IPAssoc')
         after = rsrc_defn.ResourceDefinition(before.name, before.type(),
                                              after_props)
-        self.assertTrue(resource.UpdateReplace,
-                        before._needs_update(after, before, after_props,
+        self.assertTrue(before._needs_update(after, before, after_props,
                                              before_props, None))
 
     def test_update_association_needs_update_InstanceId_EIP(self):
