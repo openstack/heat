@@ -65,7 +65,9 @@ LOG = logging.getLogger(__name__)
 
 
 # TODO(sbaker): fix tests so that sqlite_fk=True can be passed to configure
-db_context.configure()
+# FIXME(stephenfin): we need to remove reliance on autocommit semantics ASAP
+# since it's not compatible with SQLAlchemy 2.0
+db_context.configure(__autocommit=True)
 
 
 def get_facade():
