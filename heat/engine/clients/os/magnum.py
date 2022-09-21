@@ -57,10 +57,6 @@ class MagnumClientPlugin(client_plugin.ClientPlugin):
             raise exception.EntityNotFound(entity=entity_msg,
                                            name=value)
 
-    def get_baymodel(self, value):
-        return self._get_rsrc_name_or_id(value, entity='baymodels',
-                                         entity_msg='BayModel')
-
     def get_cluster_template(self, value):
         return self._get_rsrc_name_or_id(value, entity='cluster_templates',
                                          entity_msg='ClusterTemplate')
@@ -70,9 +66,3 @@ class ClusterTemplateConstraint(constraints.BaseCustomConstraint):
 
     resource_client_name = CLIENT_NAME
     resource_getter_name = 'get_cluster_template'
-
-
-class BaymodelConstraint(constraints.BaseCustomConstraint):
-
-    resource_client_name = CLIENT_NAME
-    resource_getter_name = 'get_baymodel'

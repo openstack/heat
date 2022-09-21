@@ -56,22 +56,3 @@ class ClusterTemplateConstraintTest(common.HeatTestCase):
         self.mock_cluster_template_get.side_effect = mc_exc.NotFound()
         self.assertFalse(self.constraint.validate(
             "bad_cluster_template", self.ctx))
-
-
-class BaymodelConstraintTest(common.HeatTestCase):
-    def setUp(self):
-        super(BaymodelConstraintTest, self).setUp()
-        self.ctx = utils.dummy_context()
-        self.mock_baymodel_get = mock.Mock()
-        self.ctx.clients.client_plugin(
-            'magnum').client().baymodels.get = self.mock_baymodel_get
-        self.constraint = mc.BaymodelConstraint()
-
-    def test_validate(self):
-        self.mock_baymodel_get.return_value = fake_cluster_template(
-            id='badbaymodel')
-        self.assertTrue(self.constraint.validate("mybaymodel", self.ctx))
-
-    def test_validate_fail(self):
-        self.mock_baymodel_get.side_effect = mc_exc.NotFound()
-        self.assertFalse(self.constraint.validate("badbaymodel", self.ctx))
