@@ -146,7 +146,7 @@ accessible as follows
 
   outputs:
     test_out:
-      value: {get_attr: my_server, resource.server, first_address}
+      value: {get_attr: [my_server, resource.server, first_address]}
 
 Making your template resource more "transparent"
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
