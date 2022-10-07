@@ -1404,3 +1404,26 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.assertEqual(True, rsrc._ready_to_extend_volume())
         self.assertEqual(False, rsrc._ready_to_extend_volume())
         self.assertEqual(True, rsrc._ready_to_extend_volume())
+
+    def test_try_detach_volume_if_server_was_temporarily_in_error(self):
+        self.stack_name = 'test_cvolume_detach_server_in_error_stack'
+        fva = vt_base.FakeVolume('in-use')
+        m_v = self._mock_create_server_volume_script(
+            vt_base.FakeVolume('attaching'))
+        self._mock_create_volume(vt_base.FakeVolume('creating'),
+                                 self.stack_name,
+                                 extra_get_mocks=[
+                                     m_v, fva,
+                                     vt_base.FakeVolume('available')])
+        self.stub_VolumeConstraint_validate()
+        # delete script
+        self.fc.volumes.get_server_volume.side_effect = [
+            fva, fva, fakes_nova.fake_exception()]
+        nova_responses = [nova_exp.Conflict('409'), None]
+        self.fc.volumes.delete_server_volume.side_effect = nova_responses
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+        self.create_volume(self.t, stack, 'volume')
+        rsrc = self.create_attachment(self.t, stack, 'attachment')
+        scheduler.TaskRunner(rsrc.delete)()
+        self.assertEqual(self.fc.volumes.delete_server_volume.call_count,
+                         len(nova_responses))
