@@ -34,6 +34,8 @@ class LongText(types.TypeDecorator):
 
 class Json(LongText):
 
+    cache_ok = True
+
     def process_bind_param(self, value, dialect):
         return dumps(value)
 
