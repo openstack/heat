@@ -738,7 +738,9 @@ class MapMerge(function.Function):
             elif isinstance(m, collections.abc.Mapping):
                 return m
             else:
-                msg = _('Incorrect arguments: Items to merge must be maps.')
+                msg = _('Incorrect arguments: Items to merge must be maps. '
+                        '{} is type {} instead of a dict'.format(
+                            repr(m)[:200], type(m)))
                 raise TypeError(msg)
 
         ret_map = {}
