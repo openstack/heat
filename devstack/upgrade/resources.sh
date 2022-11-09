@@ -71,7 +71,7 @@ function _run_heat_integrationtests {
     tox -evenv-tempest -- pip install -c$UPPER_CONSTRAINTS_FILE $HEAT_TEMPEST_PLUGIN
     tox -evenv-tempest -- stestr --test-path=$DEST/heat/heat_integrationtests --top-dir=$DEST/heat \
         --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
-        run --whitelist-file $UPGRADE_TESTS
+        run --include-list $UPGRADE_TESTS
     _heat_set_user
     popd
 }
