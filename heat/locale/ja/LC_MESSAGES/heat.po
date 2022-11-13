@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2022-09-06 02:55+0000\n"
+"POT-Creation-Date: 2022-11-11 06:43+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1779,10 +1779,6 @@ msgid "Failed to attach volume %(vol)s to server %(srv)s - %(err)s"
 msgstr "サーバー %(srv)s へのボリューム %(vol)s の追加に失敗しました: %(err)s"
 
 #, python-format
-msgid "Failed to create Bay '%(name)s' - %(reason)s"
-msgstr "ベイ '%(name)s' の作成に失敗しました: %(reason)s"
-
-#, python-format
 msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr ""
 "サーバー (%(server)s) からインターフェース (%(port)s) を接続解除できませんで"
@@ -1846,10 +1842,6 @@ msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr ""
 "他のエンジン (%(engine_id)s) 上のスタック (%(stack_name)s) を停止できませんで"
 "した。"
-
-#, python-format
-msgid "Failed to update Bay '%(name)s' - %(reason)s"
-msgstr "ベイ '%(name)s' の更新に失敗しました: %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr "更新できませんでした。ポート情報が見つかりません。"
@@ -2371,9 +2363,6 @@ msgstr ""
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
 "\"%(fn_name)s\" に対する引数が正しくありません。正しい引数: %(example)s"
-
-msgid "Incorrect arguments: Items to merge must be maps."
-msgstr "不正確な引数: マージする項目はマップでなければなりません。"
 
 #, python-format
 msgid ""
@@ -5300,9 +5289,6 @@ msgstr "ボリュームが作成されるアベイラビリティーゾーン。
 msgid "The availability zone of shared filesystem."
 msgstr "共有ファイルシステムのアベイラビリティーゾーン。"
 
-msgid "The bay name."
-msgstr "ベイの名前。"
-
 msgid "The bit-length of the secret."
 msgstr "秘密のビット長。"
 
@@ -5763,9 +5749,6 @@ msgstr "階層内のこの keystone プロジェクトの親の名前または I
 msgid "The name or ID of target cluster."
 msgstr "ターゲットクラスターの名前または ID。"
 
-msgid "The name or ID of the bay model."
-msgstr "ベイモデルの名前または ID。"
-
 msgid "The name or ID of the subnet on which to allocate the VIP address."
 msgstr "VIP アドレスを割り当てる必要のあるサブネットの名前または ID。"
 
@@ -5780,9 +5763,6 @@ msgstr "IKE ポリシーのネゴシエーションモード。"
 
 msgid "The next hop for the destination."
 msgstr "宛先のネクストホップ。"
-
-msgid "The node count for this bay."
-msgstr "このベイのノード数。"
 
 msgid "The notification methods to use when an alarm state is ALARM."
 msgstr "アラームの状態が ALARM の場合に使用する通知方法。"
@@ -5812,9 +5792,6 @@ msgid ""
 msgstr ""
 "インスタンスを正常な状態に移行する前に、連続するヘルスプローブの成功数が必要"
 "です。"
-
-msgid "The number of master nodes for this bay."
-msgstr "このベイのマスターノードの数。"
 
 msgid "The number of objects stored in the container."
 msgstr "コンテナーに保管されたオブジェクトの数。"
@@ -6336,11 +6313,6 @@ msgstr ""
 "間アイドル状態にある場合、接続は終了します。値が '0' の場合、待機時間に制限が"
 "ないことを指します。"
 
-msgid "Timeout for creating the bay in minutes. Set to 0 for no timeout."
-msgstr ""
-"ベイを作成する際のタイムアウト時間 (分)。タイムアウト時間を設定しない場合は "
-"0 を設定します。"
-
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr "スタックアクション (作成または更新) のタイムアウト (秒)。"
 
@@ -6588,16 +6560,8 @@ msgstr "キー %s は不明です"
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr "シェア \"{0}\" の作成中の share_status が不明です。"
 
-#, python-format
-msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
-msgstr "ベイ '%(name)s' の作成状況が不明です:  %(reason)s"
-
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "シェア \"{0}\" の削除中の状態が不明です。"
-
-#, python-format
-msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
-msgstr "ベイ '%(name)s' の更新状況が不明です:  %(reason)s"
 
 #, python-format
 msgid "Unknown status: %s"

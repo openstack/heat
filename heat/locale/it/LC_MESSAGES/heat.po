@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2022-09-06 02:55+0000\n"
+"POT-Creation-Date: 2022-11-11 06:43+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1825,10 +1825,6 @@ msgstr ""
 "Collegamento del volume %(vol)s al server %(srv)snon riuscito  - %(err)s"
 
 #, python-format
-msgid "Failed to create Bay '%(name)s' - %(reason)s"
-msgstr "Impossibile creare l'alloggiamento '%(name)s' - %(reason)s"
-
-#, python-format
 msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr ""
 "Impossibile scollegare l'interfaccia (%(port)s) dal server (%(server)s)"
@@ -1886,10 +1882,6 @@ msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr ""
 "Impossibile arrestare lo stack (%(stack_name)s) su un altro motore "
 "(%(engine_id)s)"
-
-#, python-format
-msgid "Failed to update Bay '%(name)s' - %(reason)s"
-msgstr "Impossibile aggiornare l'alloggiamento '%(name)s' - %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr ""
@@ -2424,9 +2416,6 @@ msgstr ""
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr "Argomenti non corretti per \"%(fn_name)s\"; devono essere: %(example)s"
-
-msgid "Incorrect arguments: Items to merge must be maps."
-msgstr "Argomenti non corretti: gli elementi da unire devono essere mappe."
 
 #, python-format
 msgid ""
@@ -5400,9 +5389,6 @@ msgstr "La zona di disponibilità in cui il volume verrà creato."
 msgid "The availability zone of shared filesystem."
 msgstr "La zona di disponibilità per il filesystem condiviso."
 
-msgid "The bay name."
-msgstr "Il nome dell'alloggiamento."
-
 msgid "The bit-length of the secret."
 msgstr "La lunghezza in bit del segreto."
 
@@ -5896,9 +5882,6 @@ msgstr ""
 msgid "The name or ID of target cluster."
 msgstr "Il nome o l'ID del cluster di destinazione."
 
-msgid "The name or ID of the bay model."
-msgstr "Il nome o l'ID del modello di alloggiamento."
-
 msgid "The name or ID of the subnet on which to allocate the VIP address."
 msgstr "Il nome o l'ID della sottorete su cui allocare l'indirizzo VIP."
 
@@ -5913,9 +5896,6 @@ msgstr "La modalità di negoziazione della politica ike."
 
 msgid "The next hop for the destination."
 msgstr "L'hop successivo per la destinazione."
-
-msgid "The node count for this bay."
-msgstr "Il numero di nodi per questo alloggiamento."
 
 msgid "The notification methods to use when an alarm state is ALARM."
 msgstr ""
@@ -5949,9 +5929,6 @@ msgid ""
 msgstr ""
 "Il numero di probe di stato consecutivi con esito positivo richiesti prima "
 "di spostare l'istanza allo stato funzionante."
-
-msgid "The number of master nodes for this bay."
-msgstr "Il numero di nodi principali per questo alloggiamento."
 
 msgid "The number of objects stored in the container."
 msgstr "Il numero di oggetti memorizzati nel contenitore."
@@ -6498,11 +6475,6 @@ msgstr ""
 "connessione in entrata è inattiva per questo numero di secondi, verrà "
 "chiusa. Il valore 0 indica un'attesa illimitata."
 
-msgid "Timeout for creating the bay in minutes. Set to 0 for no timeout."
-msgstr ""
-"Timeout per la creazione dell'alloggiamento in minuti. Impostare su 0 per "
-"nessun timeout."
-
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr ""
 "Timeout in secondi per l'azione stack  (ad esempio creare o aggiornare)."
@@ -6767,20 +6739,8 @@ msgid "Unknown share_status during creation of share \"{0}\""
 msgstr ""
 "share_status sconosciuto durante la creazione della condivisione \"{0}\""
 
-#, python-format
-msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
-msgstr ""
-"Stato sconosciuto durante la creazione dell'alloggiamento '%(name)s' - "
-"%(reason)s"
-
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "Stato sconosciuto durante l'eliminazione della condivisione  \"{0}\""
-
-#, python-format
-msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
-msgstr ""
-"Stato sconosciuto durante l'aggiornamento dell'alloggiamento '%(name)s' - "
-"%(reason)s"
 
 #, python-format
 msgid "Unknown status: %s"

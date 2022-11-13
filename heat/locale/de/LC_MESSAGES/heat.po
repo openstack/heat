@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2022-09-06 02:55+0000\n"
+"POT-Creation-Date: 2022-11-11 06:43+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -2631,10 +2631,6 @@ msgstr ""
 "Fehler beim Verbinden von Datenträger %(vol)s mit Server %(srv)s - %(err)s"
 
 #, python-format
-msgid "Failed to create Bay '%(name)s' - %(reason)s"
-msgstr "Fehler beim Erstellen der Bay '%(name)s' - %(reason)s"
-
-#, python-format
 msgid "Failed to create Cluster '%(name)s' - %(reason)s"
 msgstr "Fehler beim Erstellen des Clusters '%(name)s' - %(reason)s"
 
@@ -2701,10 +2697,6 @@ msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr ""
 "Fehler beim Stoppen des Stapels (%(stack_name)s) auf einer anderen Engine "
 "(%(engine_id)s)"
-
-#, python-format
-msgid "Failed to update Bay '%(name)s' - %(reason)s"
-msgstr "Fehler beim Aktualisieren der Bay '%(name)s' - %(reason)s"
 
 #, python-format
 msgid "Failed to update Cluster '%(name)s' - %(reason)s"
@@ -3411,9 +3403,6 @@ msgstr ""
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr "Falsche Argumente zu \"%(fn_name)s\" sollten sein: %(example)s"
-
-msgid "Incorrect arguments: Items to merge must be maps."
-msgstr "Falsche Argumente: Zu vereinende Elemente müssen Maps sein."
 
 #, python-format
 msgid ""
@@ -7459,9 +7448,6 @@ msgstr "Die Verfügbarkeitszone, in der das Volume erstellt wird."
 msgid "The availability zone of shared filesystem."
 msgstr "Die Verfügbarkeitszone des freigegebenen Dateisystems."
 
-msgid "The bay name."
-msgstr "Der Name der Bay."
-
 msgid "The bit-length of the secret."
 msgstr "Die Bitlänge des Geheimnisses."
 
@@ -8117,9 +8103,6 @@ msgstr ""
 msgid "The name or ID of target cluster."
 msgstr "Der Name oder die ID des Zielclusters."
 
-msgid "The name or ID of the bay model."
-msgstr "Der Name oder die ID des Bay-Modells."
-
 msgid "The name or ID of the cluster template."
 msgstr "Der Name oder die ID der Clustervorlage."
 
@@ -8149,9 +8132,6 @@ msgstr "Der Verhandlungsmodus der IKE-Richtlinie."
 
 msgid "The next hop for the destination."
 msgstr "Der nächste Hop für das Ziel."
-
-msgid "The node count for this bay."
-msgstr "Die Anzahl der Knoten für diese Bay."
 
 msgid "The node count for this cluster."
 msgstr "Die Knotenzahl für diesen Cluster."
@@ -8203,9 +8183,6 @@ msgid ""
 msgstr ""
 "Die Anzahl aufeinanderfolgender Health Probe-Erfolge, die erforderlich sind, "
 "bevor die Instanz in den Status \"Healthy\" versetzt wird."
-
-msgid "The number of master nodes for this bay."
-msgstr "Die Anzahl der Master-Knoten für diese Bay."
 
 msgid "The number of master nodes for this cluster."
 msgstr "Die Anzahl der Master-Knoten für diesen Cluster."
@@ -8956,10 +8933,6 @@ msgstr ""
 "Verbindung für diese Anzahl von Sekunden inaktiv ist, wird sie geschlossen. "
 "Ein Wert von '0' bedeutet ewig warten."
 
-msgid "Timeout for creating the bay in minutes. Set to 0 for no timeout."
-msgstr ""
-"Timeout zum Erstellen der Bay in Minuten. Für kein Timeout auf 0 setzen."
-
 msgid "Timeout for creating the cluster in minutes. Set to 0 for no timeout."
 msgstr ""
 "Timeout zum Erstellen des Clusters in Minuten. Für kein Timeout auf 0 setzen."
@@ -9310,19 +9283,11 @@ msgid "Unknown status Container '%(name)s' - %(reason)s"
 msgstr "Unbekannter Status Container '%(name)s' - %(reason)s"
 
 #, python-format
-msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
-msgstr "Unbekannter Status beim Erstellen der Bay '%(name)s' - %(reason)s "
-
-#, python-format
 msgid "Unknown status creating Cluster '%(name)s' - %(reason)s"
 msgstr "Unbekannter Status beim Erstellen des Clusters '%(name)s' - %(reason)s"
 
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "Unbekannter Status beim Löschen der Freigabe \"{0}\""
-
-#, python-format
-msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
-msgstr "Unbekannter Bay-Status wird aktualisiert. '%(name)s' - %(reason)s"
 
 #, python-format
 msgid "Unknown status updating Cluster '%(name)s' - %(reason)s"

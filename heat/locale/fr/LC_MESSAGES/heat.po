@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2022-09-06 02:55+0000\n"
+"POT-Creation-Date: 2022-11-11 06:43+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1828,10 +1828,6 @@ msgid "Failed to attach volume %(vol)s to server %(srv)s - %(err)s"
 msgstr "Echec de connexion du volume %(vol)s au serveur %(srv)s - %(err)s"
 
 #, python-format
-msgid "Failed to create Bay '%(name)s' - %(reason)s"
-msgstr "Echec de la création de la baie '%(name)s' - %(reason)s"
-
-#, python-format
 msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr "Echec de déconnexion de l'interface (%(port)s) du serveur (%(server)s)"
 
@@ -1889,10 +1885,6 @@ msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr ""
 "Echec de l'arrêt de la pile (%(stack_name)s) sur l'autre moteur "
 "(%(engine_id)s)"
-
-#, python-format
-msgid "Failed to update Bay '%(name)s' - %(reason)s"
-msgstr "Echec de mise à jour de la baie '%(name)s' - %(reason)s"
 
 msgid "Failed to update, can not found port info."
 msgstr "Echec de la mise à jour, les informations de port sont introuvables."
@@ -2434,10 +2426,6 @@ msgstr ""
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr ""
 "Arguments incorrects pour \"%(fn_name)s\", devraient être : %(example)s"
-
-msgid "Incorrect arguments: Items to merge must be maps."
-msgstr ""
-"Arguments incorrects : les éléments à fusionner doivent être des mappes."
 
 #, python-format
 msgid ""
@@ -5435,9 +5423,6 @@ msgstr "Zone de disponibilité dans laquelle le volume sera créé."
 msgid "The availability zone of shared filesystem."
 msgstr "Zone de disponibilité du système de fichiers partagé."
 
-msgid "The bay name."
-msgstr "Nom de baie."
-
 msgid "The bit-length of the secret."
 msgstr "Longeur en bits du secret."
 
@@ -5918,9 +5903,6 @@ msgstr "Nom ou ID du parent de ce projet Keystone dans la hiérarchie."
 msgid "The name or ID of target cluster."
 msgstr "Nom ou ID du cluster cible."
 
-msgid "The name or ID of the bay model."
-msgstr "Nom ou ID du modèle de baie."
-
 msgid "The name or ID of the subnet on which to allocate the VIP address."
 msgstr "Nom ou ID du sous-réseau sur lequel allouer l'adresse VIP."
 
@@ -5935,9 +5917,6 @@ msgstr "Mode de négociation de la stratégie IKE."
 
 msgid "The next hop for the destination."
 msgstr "Prochain saut pour la destination."
-
-msgid "The node count for this bay."
-msgstr "Nombre de noeuds pour cette baie."
 
 msgid "The notification methods to use when an alarm state is ALARM."
 msgstr ""
@@ -5970,9 +5949,6 @@ msgid ""
 msgstr ""
 "Le nombre d'analyses d'intégrité consécutives réussies requises avant de "
 "faire passer l'instance à l'état sain."
-
-msgid "The number of master nodes for this bay."
-msgstr "Nombre de noeuds maître pour cette baie."
 
 msgid "The number of objects stored in the container."
 msgstr "Nombre d'objets stockés dans le conteneur."
@@ -6515,11 +6491,6 @@ msgstr ""
 "client. La connexion entrante est fermée si elle reste en veille pendant ce "
 "délai en nombre de secondes. La valeur '0' signifie une attente illimitée."
 
-msgid "Timeout for creating the bay in minutes. Set to 0 for no timeout."
-msgstr ""
-"Délai d'attente, en minutes, pour la création de la baie. Défini sur 0 quand "
-"il n'y a pas de délai d'attente."
-
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr ""
 "Délai d'attente en secondes pour l'action de pile (par ex. création ou mise "
@@ -6785,17 +6756,8 @@ msgstr "Clé(s) inconnue(s) %s"
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr "share_status inconnu lors de la création du partage \"{0}\""
 
-#, python-format
-msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
-msgstr "Statut inconnu lors de la création de la baie '%(name)s' - %(reason)s"
-
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "Statut inconnu lors de la suppression du partage \"{0}\""
-
-#, python-format
-msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
-msgstr ""
-"Statut inconnu lors de la mise à jour de la baie '%(name)s' - %(reason)s"
 
 #, python-format
 msgid "Unknown status: %s"

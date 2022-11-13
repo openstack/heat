@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2022-09-06 02:55+0000\n"
+"POT-Creation-Date: 2022-11-11 06:43+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1710,10 +1710,6 @@ msgid "Failed to attach volume %(vol)s to server %(srv)s - %(err)s"
 msgstr "볼륨 %(vol)s을(를) 서버 %(srv)s에 연결하는 데 실패 - %(err)s"
 
 #, python-format
-msgid "Failed to create Bay '%(name)s' - %(reason)s"
-msgstr "Bay '%(name)s' - %(reason)s 작성 실패"
-
-#, python-format
 msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr "서버((%(server)s)에서 인터페이스(%(port)s)의 연결을 해제하는 데 실패"
 
@@ -1766,10 +1762,6 @@ msgstr ""
 #, python-format
 msgid "Failed to stop stack (%(stack_name)s) on other engine (%(engine_id)s)"
 msgstr "다른 엔진(%(engine_id)s)에서 스택(%(stack_name)s) 중지 실패"
-
-#, python-format
-msgid "Failed to update Bay '%(name)s' - %(reason)s"
-msgstr "Bay '%(name)s' - %(reason)s 업데이트 실패"
 
 msgid "Failed to update, can not found port info."
 msgstr "업데이트에 실패했고 포트 정보를 찾을 수 없습니다."
@@ -2273,9 +2265,6 @@ msgstr ""
 #, python-format
 msgid "Incorrect arguments to \"%(fn_name)s\" should be: %(example)s"
 msgstr "\"%(fn_name)s\"에 대한 올바르지 않은 인수는 %(example)s이어야 함 "
-
-msgid "Incorrect arguments: Items to merge must be maps."
-msgstr "잘못된 인수: 병합할 항목은 맵이어야 합니다."
 
 #, python-format
 msgid ""
@@ -5077,9 +5066,6 @@ msgstr "볼륨이 작성되는 가용성 구역입니다."
 msgid "The availability zone of shared filesystem."
 msgstr "공유 파일 시스템의 가용 구역입니다."
 
-msgid "The bay name."
-msgstr "Bay 이름입니다."
-
 msgid "The bit-length of the secret."
 msgstr "시크릿의 비트 길이입니다."
 
@@ -5529,9 +5515,6 @@ msgstr "계층 구조에 있는 이 keystone 프로젝트의 상위 이름 또�
 msgid "The name or ID of target cluster."
 msgstr "대상 클러스터의 이름 또는 ID입니다."
 
-msgid "The name or ID of the bay model."
-msgstr "Bay 모델의 이름 또는 ID입니다."
-
 msgid "The name or ID of the subnet on which to allocate the VIP address."
 msgstr "VIP 주소를 할당할 서브넷의 이름 또는 ID입니다."
 
@@ -5546,9 +5529,6 @@ msgstr "ike 정책의 협상 모드입니다."
 
 msgid "The next hop for the destination."
 msgstr "대상의 다음 hop입니다."
-
-msgid "The node count for this bay."
-msgstr "이 Bay의 노드 수입니다."
 
 msgid "The notification methods to use when an alarm state is ALARM."
 msgstr "알람 상태가 ALARM이면 사용할 알림 방법입니다."
@@ -5576,9 +5556,6 @@ msgid ""
 "instance to the healthy state."
 msgstr ""
 "인스턴스를 양호 상태로 이동하기 전에 필요한 연속 상태 프로브 성공 수입니다."
-
-msgid "The number of master nodes for this bay."
-msgstr "Bay의 마스터 노드 수입니다."
 
 msgid "The number of objects stored in the container."
 msgstr "컨테이너에 저장된 오브젝트 수입니다."
@@ -6087,11 +6064,6 @@ msgstr ""
 "클라이언트 연결의 소켓 조작에 대한 제한시간입니다. 수신 연결이 이 기간(초) 동"
 "안 유휴 상태이면 연결이 닫힙니다. 값이 '0'이면 무기한 대기합니다."
 
-msgid "Timeout for creating the bay in minutes. Set to 0 for no timeout."
-msgstr ""
-"Bay를 작성하기 위한 제한시간(분)입니다. 제한시간이 없게 하려면 0으로 설정하십"
-"시오."
-
 msgid "Timeout in seconds for stack action (ie. create or update)."
 msgstr "스택 조치(즉, 작성 또는 업데이트)에 대한 제한시간(초)입니다."
 
@@ -6337,16 +6309,8 @@ msgstr "알 수 없는 키 %s"
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr "공유 \"{0}\" 작성 중에 알 수 없는 share_status"
 
-#, python-format
-msgid "Unknown status creating Bay '%(name)s' - %(reason)s"
-msgstr "알 수 없는 Bay '%(name)s' - %(reason)s 작성 상태"
-
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "공유 \"{0}\" 삭제 중에 알 수 없는 상태"
-
-#, python-format
-msgid "Unknown status updating Bay '%(name)s' - %(reason)s"
-msgstr "알 수 없는 Bay '%(name)s' - %(reason)s 업데이트 상태"
 
 #, python-format
 msgid "Unknown status: %s"
