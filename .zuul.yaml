@@ -114,6 +114,3 @@
       jobs:
         - grenade-heat
         - heat-functional-convg-mysql-lbaasv2-py3
-    experimental:
-      jobs:
-        - tripleo-ci-centos-7-scenario002-standalone
