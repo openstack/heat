@@ -1212,6 +1212,53 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertEqual('HTTPBadRequest', resp.json['error']['type'])
         self.assertIsNotNone(resp.json['error']['traceback'])
 
+    def test_create_err_circulardep(self, mock_enforce):
+        self._mock_enforce_setup(mock_enforce, 'create', True)
+        stack_name = "foobar"
+        template = {u'Foo': u'bar'}
+        body = {'template': template,
+                'stack_name': stack_name,
+                'parameters': {},
+                'timeout_mins': 30}
+
+        req = self._post('/stacks', json.dumps(body))
+
+        error = heat_exc.CircularDependencyException(cycle='some data')
+        mock_call = self.patchobject(rpc_client.EngineClient, 'call',
+                                     side_effect=tools.to_remote_error(error))
+
+        resp = tools.request_with_middleware(fault.FaultWrapper,
+                                             self.controller.create,
+                                             req, tenant_id=self.tenant,
+                                             body=body)
+
+        self.assertEqual(400, resp.json['code'])
+        self.assertEqual('CircularDependencyException',
+                         resp.json['error']['type'])
+
+        mock_call.assert_called_once_with(
+            req.context,
+            ('create_stack',
+             {'stack_name': stack_name,
+              'template': template,
+              'params': {'parameters': {},
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'event_sinks': [],
+                         'resource_registry': {}},
+              'files': {},
+              'environment_files': None,
+              'files_container': None,
+              'args': {'timeout_mins': 30},
+              'owner_id': None,
+              'nested_depth': 0,
+              'user_creds_id': None,
+              'parent_resource_name': None,
+              'stack_user_project_id': None,
+              'template_id': None}),
+            version='1.36'
+        )
+
     @mock.patch.object(rpc_client.EngineClient, 'call')
     @mock.patch.object(stacks.stacks_view, 'format_stack')
     def test_preview_stack(self, mock_format, mock_call, mock_enforce):
