@@ -10,6 +10,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import testtools
+
 from heat_integrationtests.functional import functional_base
 
 
@@ -46,6 +48,7 @@ resources:
         if not self.conf.minimal_instance_type:
             raise self.skipException("No minimal flavor configured to test.")
 
+    @testtools.skip('Bug 1998274')
     def test_cancel_update_server_with_port(self):
         parameters = {'InstanceType': self.conf.minimal_instance_type,
                       'ImageId': self.conf.minimal_image_ref,
