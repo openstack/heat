@@ -12,6 +12,7 @@
 #    under the License.
 
 import collections
+import copy
 import datetime
 import functools
 import itertools
@@ -1354,7 +1355,16 @@ class EngineService(service.ServiceBase):
         :rtype: dict
         """
         s = self._get_stack(cnxt, stack_identity, show_deleted=True)
-        return s.raw_template.environment
+        tmpl = templatem.Template.load(cnxt, s.raw_template_id, s.raw_template)
+        param_schemata = tmpl.all_param_schemata(tmpl.files)
+        env = copy.deepcopy(s.raw_template.environment)
+        for section in [env_fmt.PARAMETERS, env_fmt.PARAMETER_DEFAULTS]:
+            for param_name in env.get(section, {}).keys():
+                if (param_name not in param_schemata
+                        or not param_schemata[param_name].hidden):
+                    continue
+                env[section][param_name] = str('******')
+        return env
 
     @context.request_context
     def get_files(self, cnxt, stack_identity):

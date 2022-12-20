@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Honor ``hidden`` parameter in ``stack environment show`` command
