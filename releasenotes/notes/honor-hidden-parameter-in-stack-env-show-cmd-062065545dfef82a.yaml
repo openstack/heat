@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Honor ``hidden`` parameter in get stack environment API. Now values passed
+    to hidden parameters are replaced by '******', similarly to the other
+    APIs such as show stack details API.
