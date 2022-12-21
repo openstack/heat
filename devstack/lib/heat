@@ -438,8 +438,12 @@ function configure_tempest_for_heat {
     # Skip CfnInitIntegrationTest as latest fedora images don't have heat-cfntools
     iniset $TEMPEST_CONFIG heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, \
 	    SoftwareConfigIntegrationTest, AodhAlarmTest, CfnInitIntegrationTest'
-    # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
-    iniset $TEMPEST_CONFIG heat_plugin skip_functional_test_list 'LoadBalancerv2Test, NotificationTest'
+    # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled.
+    # Also Skip a few tests failing because of a known libvirt issue in Jammy
+    # https://bugs.launchpad.net/nova/+bug/1998274
+    iniset $TEMPEST_CONFIG heat_plugin skip_functional_test_list 'LoadBalancerv2Test, NotificationTest, \
+        UpdateStackTest.test_stack_update_with_replacing_userdata, \
+        CancelUpdateTest.test_cancel_update_server_with_port'
 
     openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512 --disk 10
     openstack flavor show m1.heat_micro || openstack flavor create m1.heat_micro --ram 128 --disk 1
