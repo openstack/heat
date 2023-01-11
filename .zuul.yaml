@@ -184,8 +184,8 @@
     queue: heat
     templates:
       - openstack-cover-jobs
-      - openstack-python3-zed-jobs
-      - openstack-python3-zed-jobs-arm64
+      - openstack-python3-jobs
+      - openstack-python3-jobs-arm64
       - periodic-stable-jobs
       - publish-openstack-docs-pti
       - check-requirements
