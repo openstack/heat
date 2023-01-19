@@ -267,6 +267,8 @@ class SwiftSignal(resource.Resource):
                 continue
 
             body = signal[1]
+            if isinstance(body, bytes):
+                body = body.decode()
             if body == swift.IN_PROGRESS:  # Ignore the initial object
                 continue
             if body == "":
