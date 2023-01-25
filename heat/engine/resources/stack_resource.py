@@ -78,7 +78,7 @@ class StackResource(resource.Resource):
         except Exception as ex:
             path = "%s<%s>" % (self.name, self.template_url)
             raise exception.StackValidationFailed(
-                ex, path=[self.stack.t.RESOURCES, path])
+                error=ex, path=[self.stack.t.RESOURCES, path])
 
     @property
     def template_url(self):
