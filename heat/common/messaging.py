@@ -136,8 +136,8 @@ def get_rpc_client(**kwargs):
     target = oslo_messaging.Target(**kwargs)
     serializer = RequestContextSerializer(
         oslo_messaging.JsonPayloadSerializer())
-    return oslo_messaging.RPCClient(TRANSPORT, target,
-                                    serializer=serializer)
+    return oslo_messaging.get_rpc_client(
+        TRANSPORT, target, serializer=serializer)
 
 
 def get_notifier(publisher_id):
