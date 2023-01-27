@@ -64,8 +64,34 @@ function _run_heat_integrationtests {
     # Run set of specified functional tests
     UPGRADE_TESTS=upgrade_tests.list
     _write_heat_integrationtests $UPGRADE_TESTS
-    export UPPER_CONSTRAINTS_FILE=$DEST/requirements/upper-constraints.txt
-    export TOX_CONSTRAINTS_FILE=$UPPER_CONSTRAINTS_FILE
+    # NOTE(gmann): heat script does not know about
+    # TEMPEST_VENV_UPPER_CONSTRAINTS, only DevStack does.
+    # This sources that one variable from it.
+    TEMPEST_VENV_UPPER_CONSTRAINTS=$(set +o xtrace &&
+        source $devstack_dir/stackrc &&
+        echo $TEMPEST_VENV_UPPER_CONSTRAINTS)
+    # NOTE(gmann): If gate explicitly set the non master
+    # constraints to use for Tempest venv then use the same
+    # while running the tests too otherwise, it will recreate
+    # the Tempest venv due to constraints mismatch.
+    # recreation of Tempest venv can flush the initially installed
+    # tempest plugins and their deps.
+    if [[ "$TEMPEST_VENV_UPPER_CONSTRAINTS" != "master" ]]; then
+        echo "Using $TEMPEST_VENV_UPPER_CONSTRAINTS constraints in Tempest virtual env."
+        # NOTE: setting both tox env var and once Tempest start using new var
+        # TOX_CONSTRAINTS_FILE then we can remove the old one.
+        export UPPER_CONSTRAINTS_FILE=$TEMPEST_VENV_UPPER_CONSTRAINTS
+        export TOX_CONSTRAINTS_FILE=$TEMPEST_VENV_UPPER_CONSTRAINTS
+    else
+        # NOTE(gmann): we need to set the below env var pointing to master
+        # constraints even that is what default in tox.ini. Otherwise it
+        # can create the issue for grenade run where old and new devstack
+        # can have different tempest (old and master) to install. For
+        # detail problem, refer to the
+        # https://bugs.launchpad.net/devstack/+bug/2003993
+        export UPPER_CONSTRAINTS_FILE=https://releases.openstack.org/constraints/upper/master
+        export TOX_CONSTRAINTS_FILE=https://releases.openstack.org/constraints/upper/master
+    fi
     export HEAT_TEMPEST_PLUGIN=$DEST/heat-tempest-plugin
     sudo git config --system --add safe.directory $HEAT_TEMPEST_PLUGIN
     tox -evenv-tempest -- pip install -c$UPPER_CONSTRAINTS_FILE $HEAT_TEMPEST_PLUGIN
