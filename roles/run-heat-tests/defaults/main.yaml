@@ -3,3 +3,4 @@ tempest_test_timeout: ''
 tempest_tox_environment: {}
 heat_tempest_plugin: /opt/stack/heat-tempest-plugin
 constraints_file: /opt/stack/requirements/upper-constraints.txt
+target_branch: "{{ zuul.branch }}"
