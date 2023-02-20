@@ -196,7 +196,7 @@ class SenlinClusterTest(common.HeatTestCase):
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_cluster = rsrc_defns['senlin-cluster']
         self.senlin_mock.update_cluster.return_value = mock.Mock(
-            location='/actions/fake-action')
+            cluster=new_cluster)
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='SUCCEEDED')
         scheduler.TaskRunner(cluster.update, new_cluster)()
@@ -207,7 +207,7 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.update_cluster.assert_called_once_with(
             cluster=self.fake_cl, **cluster_update_kwargs)
-        self.assertEqual(2, self.senlin_mock.get_action.call_count)
+        self.assertEqual(1, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_desire_capacity(self):
         cluster = self._create_cluster(self.t)
