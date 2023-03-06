@@ -322,11 +322,11 @@ class Cluster(res_base.BaseSenlinResource):
             params['cluster'] = cluster_obj
             if self.PROFILE in params:
                 params['profile_id'] = params.pop(self.PROFILE)
+
+            self.client().update_cluster(**params)
             action = {
-                'func': 'update_cluster',
-                'params': params,
-                'action_id': None,
-                'done': False,
+                'cluster_id': self.resource_id,
+                'done': False
             }
             actions.append(action)
         # Resize Cluster
