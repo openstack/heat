@@ -944,9 +944,19 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
 
     def parse_live_resource_data(self, resource_properties, resource_data):
         server, server_data = resource_data
+        flavor = server_data.get(self.FLAVOR)
+        # NOTE(pas-ha) since compute API 2.47 flavor in instance
+        # does not have "id" but "original_name" instead,
+        # check for both here, and fail if none of them are in flavor.
+        if "id" in flavor:
+            flavor_value = flavor["id"]
+        elif "original_name" in flavor:
+            flavor_value = flavor["original_name"]
+        else:
+            raise KeyError("Flavor does not contain id or original_name")
         result = {
             # there's a risk that flavor id will be int type, so cast to str
-            self.FLAVOR: str(server_data.get(self.FLAVOR)['id']),
+            self.FLAVOR: str(flavor_value),
             self.IMAGE: str(server_data.get(self.IMAGE)['id']),
             self.NAME: server_data.get(self.NAME),
             self.METADATA: server_data.get(self.METADATA),
