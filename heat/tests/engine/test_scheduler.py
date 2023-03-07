@@ -17,6 +17,7 @@ from unittest import mock
 
 import eventlet
 
+from heat.common import exception
 from heat.common import timeutils
 from heat.engine import dependencies
 from heat.engine import scheduler
@@ -259,7 +260,7 @@ class DependencyTaskGroupTest(common.HeatTestCase):
         d = dependencies.Dependencies([('first', 'second'),
                                        ('second', 'third'),
                                        ('third', 'first')])
-        self.assertRaises(dependencies.CircularDependencyException,
+        self.assertRaises(exception.CircularDependencyException,
                           scheduler.DependencyTaskGroup, d)
 
     def test_aggregate_exceptions_raises_all_at_the_end(self):

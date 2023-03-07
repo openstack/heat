@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
+from heat.common import exception
 from heat.engine import dependencies
 from heat.tests import common
 
@@ -124,7 +124,7 @@ class dependenciesTest(common.HeatTestCase):
         d = dependencies.Dependencies([('first', 'second'),
                                        ('second', 'third'),
                                        ('third', 'first')])
-        self.assertRaises(dependencies.CircularDependencyException,
+        self.assertRaises(exception.CircularDependencyException,
                           list,
                           iter(d))
 
@@ -132,13 +132,13 @@ class dependenciesTest(common.HeatTestCase):
         d = dependencies.Dependencies([('first', 'second'),
                                        ('second', 'third'),
                                        ('third', 'first')])
-        self.assertRaises(dependencies.CircularDependencyException,
+        self.assertRaises(exception.CircularDependencyException,
                           list,
                           reversed(d))
 
     def test_self_ref(self):
         d = dependencies.Dependencies([('node', 'node')])
-        self.assertRaises(dependencies.CircularDependencyException,
+        self.assertRaises(exception.CircularDependencyException,
                           list,
                           iter(d))
 
@@ -147,7 +147,7 @@ class dependenciesTest(common.HeatTestCase):
                                        ('last', 'mid2'), ('mid1', 'e2'),
                                        ('mid1', 'mid3'), ('mid2', 'mid3'),
                                        ('mid3', 'e3'), ('e3', 'mid1')])
-        self.assertRaises(dependencies.CircularDependencyException,
+        self.assertRaises(exception.CircularDependencyException,
                           list,
                           iter(d))
 
@@ -156,7 +156,7 @@ class dependenciesTest(common.HeatTestCase):
                                        ('last', 'mid2'), ('mid1', 'e2'),
                                        ('mid1', 'mid3'), ('mid2', 'mid3'),
                                        ('mid3', 'e3'), ('e3', 'mid1')])
-        self.assertRaises(dependencies.CircularDependencyException,
+        self.assertRaises(exception.CircularDependencyException,
                           list,
                           reversed(d))
 
