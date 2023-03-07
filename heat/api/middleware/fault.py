@@ -93,7 +93,8 @@ class FaultWrapper(wsgi.Middleware):
         'UnsupportedObjectError': webob.exc.HTTPBadRequest,
         'ResourceTypeUnavailable': webob.exc.HTTPBadRequest,
         'InvalidBreakPointHook': webob.exc.HTTPBadRequest,
-        'ImmutableParameterModified': webob.exc.HTTPBadRequest
+        'ImmutableParameterModified': webob.exc.HTTPBadRequest,
+        'CircularDependencyException': webob.exc.HTTPBadRequest
     }
 
     def _map_exception_to_error(self, class_exception):
