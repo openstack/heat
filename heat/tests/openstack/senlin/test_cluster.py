@@ -144,7 +144,7 @@ class SenlinClusterTest(common.HeatTestCase):
         }
         self.senlin_mock.create_cluster.assert_called_once_with(
             **create_cluster_kwargs)
-        self.senlin_mock.cluster_attach_policy.assert_called_once_with(
+        self.senlin_mock.attach_policy_to_cluster.assert_called_once_with(
             **attach_policy_kwargs)
 
     def test_cluster_create_error(self):
@@ -216,7 +216,7 @@ class SenlinClusterTest(common.HeatTestCase):
         props['desired_capacity'] = 10
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_cluster = rsrc_defns['senlin-cluster']
-        self.senlin_mock.cluster_resize.return_value = {
+        self.senlin_mock.resize_cluster.return_value = {
             'action': 'fake-action'}
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='SUCCEEDED')
@@ -226,7 +226,7 @@ class SenlinClusterTest(common.HeatTestCase):
             'adjustment_type': 'EXACT_CAPACITY',
             'number': 10
         }
-        self.senlin_mock.cluster_resize.assert_called_once_with(
+        self.senlin_mock.resize_cluster.assert_called_once_with(
             cluster=cluster.resource_id, **cluster_resize_kwargs)
         self.assertEqual(2, self.senlin_mock.get_action.call_count)
 
@@ -243,9 +243,9 @@ class SenlinClusterTest(common.HeatTestCase):
         props['policies'] = [{'policy': 'new_policy'}]
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_cluster = rsrc_defns['senlin-cluster']
-        self.senlin_mock.cluster_detach_policy.return_value = {
+        self.senlin_mock.detach_policy_from_cluster.return_value = {
             'action': 'fake-action'}
-        self.senlin_mock.cluster_attach_policy.return_value = {
+        self.senlin_mock.attach_policy_to_cluster.return_value = {
             'action': 'fake-action'}
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='SUCCEEDED')
@@ -257,10 +257,10 @@ class SenlinClusterTest(common.HeatTestCase):
             'enabled': True,
         }
         self.assertEqual(2,
-                         self.senlin_mock.cluster_attach_policy.call_count)
-        self.senlin_mock.cluster_detach_policy.assert_called_once_with(
+                         self.senlin_mock.attach_policy_to_cluster.call_count)
+        self.senlin_mock.detach_policy_from_cluster.assert_called_once_with(
             **detach_policy_kwargs)
-        self.assertEqual(0, self.senlin_mock.cluster_update_policy.call_count)
+        self.assertEqual(0, self.senlin_mock.update_cluster_policy.call_count)
         self.assertEqual(3, self.senlin_mock.get_action.call_count)
 
     def test_cluster_update_policy_exists(self):
@@ -270,7 +270,7 @@ class SenlinClusterTest(common.HeatTestCase):
         props['policies'] = [{'policy': 'fake_policy', 'enabled': False}]
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_cluster = rsrc_defns['senlin-cluster']
-        self.senlin_mock.cluster_update_policy.return_value = {
+        self.senlin_mock.update_cluster_policy.return_value = {
             'action': 'fake-action'}
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='SUCCEEDED')
@@ -281,10 +281,12 @@ class SenlinClusterTest(common.HeatTestCase):
             'cluster': cluster.resource_id,
             'enabled': False,
         }
-        self.senlin_mock.cluster_update_policy.assert_called_once_with(
+        self.senlin_mock.update_cluster_policy.assert_called_once_with(
             **update_policy_kwargs)
-        self.assertEqual(1, self.senlin_mock.cluster_attach_policy.call_count)
-        self.assertEqual(0, self.senlin_mock.cluster_detach_policy.call_count)
+        self.assertEqual(1, self.senlin_mock.
+                         attach_policy_to_cluster.call_count)
+        self.assertEqual(0, self.senlin_mock.
+                         detach_policy_from_cluster.call_count)
 
     def test_cluster_update_failed(self):
         cluster = self._create_cluster(self.t)
@@ -293,7 +295,7 @@ class SenlinClusterTest(common.HeatTestCase):
         props['desired_capacity'] = 3
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         update_snippet = rsrc_defns['senlin-cluster']
-        self.senlin_mock.cluster_resize.return_value = {
+        self.senlin_mock.resize_cluster.return_value = {
             'action': 'fake-action'}
         self.senlin_mock.get_action.return_value = mock.Mock(
             status='FAILED', status_reason='Unknown')

@@ -232,7 +232,7 @@ class Cluster(res_base.BaseSenlinResource):
                     'enabled': p[self.P_ENABLED],
                 }
                 action = {
-                    'func': 'cluster_attach_policy',
+                    'func': 'attach_policy_to_cluster',
                     'params': params,
                     'action_id': None,
                     'done': False,
@@ -283,7 +283,7 @@ class Cluster(res_base.BaseSenlinResource):
                     'enabled': p[self.P_ENABLED]
                 }
                 action = {
-                    'func': 'cluster_update_policy',
+                    'func': 'update_cluster_policy',
                     'params': params,
                     'action_id': None,
                     'done': False,
@@ -296,7 +296,7 @@ class Cluster(res_base.BaseSenlinResource):
                     'enabled': p[self.P_ENABLED]
                 }
                 action = {
-                    'func': 'cluster_detach_policy',
+                    'func': 'detach_policy_from_cluster',
                     'params': params,
                     'action_id': None,
                     'done': False,
@@ -309,7 +309,7 @@ class Cluster(res_base.BaseSenlinResource):
                     'enabled': p[self.P_ENABLED]
                 }
                 action = {
-                    'func': 'cluster_attach_policy',
+                    'func': 'attach_policy_to_cluster',
                     'params': params,
                     'action_id': None,
                     'done': False,
@@ -338,7 +338,7 @@ class Cluster(res_base.BaseSenlinResource):
                 params['number'] = params.pop(self.DESIRED_CAPACITY)
             params['cluster'] = self.resource_id
             action = {
-                'func': 'cluster_resize',
+                'func': 'resize_cluster',
                 'params': params,
                 'action_id': None,
                 'done': False,
