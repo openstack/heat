@@ -2437,16 +2437,33 @@ class ServersTest(common.HeatTestCase):
         scheduler.TaskRunner(server.update, update_template)()
         self.assertEqual((server.UPDATE, server.COMPLETE), server.state)
 
+        # NOTE(tkajinam): python-novaclient 18.3.0 removed usage of args/kwargs
+        #                 and now all arguments are defined. To make the test
+        #                 independent from the underlying inteface as much as
+        #                 possible we inspect kwargs and check what we intend
+        #                 to define in Heat's logic.
+        mock_rebuild.assert_called_once()
+        self.assertEqual((return_server, '2'), mock_rebuild.call_args.args)
         if 'REBUILD' == policy:
-            mock_rebuild.assert_called_once_with(
-                return_server, '2', password=password,
-                preserve_ephemeral=False,
-                meta={}, files={})
+            self.assertLessEqual(
+                {
+                    'password': password,
+                    'preserve_ephemeral': False,
+                    'meta': {},
+                    'files': {}
+                }.items(),
+                mock_rebuild.call_args.kwargs.items()
+            )
         else:
-            mock_rebuild.assert_called_once_with(
-                return_server, '2', password=password,
-                preserve_ephemeral=True,
-                meta={}, files={})
+            self.assertLessEqual(
+                {
+                    'password': password,
+                    'preserve_ephemeral': True,
+                    'meta': {},
+                    'files': {}
+                }.items(),
+                mock_rebuild.call_args.kwargs.items()
+            )
 
     def test_server_update_image_rebuild_status_rebuild(self):
         # Normally we will see 'REBUILD' first and then 'ACTIVE".
@@ -2502,9 +2519,22 @@ class ServersTest(common.HeatTestCase):
             "Rebuilding server failed, status 'ERROR'",
             str(error))
         self.assertEqual((server.UPDATE, server.FAILED), server.state)
-        mock_rebuild.assert_called_once_with(
-            return_server, '2', password=None, preserve_ephemeral=False,
-            meta={}, files={})
+        # NOTE(tkajinam): python-novaclient 18.3.0 removed usage of args/kwargs
+        #                 and now all arguments are defined. To make the test
+        #                 independent from the underlying inteface as much as
+        #                 possible we inspect kwargs and check what we intend
+        #                 to define in Heat's logic.
+        mock_rebuild.assert_called_once()
+        self.assertEqual((return_server, '2'), mock_rebuild.call_args.args)
+        self.assertLessEqual(
+            {
+                'password': None,
+                'preserve_ephemeral': False,
+                'meta': {},
+                'files': {}
+            }.items(),
+            mock_rebuild.call_args.kwargs.items()
+        )
 
     def test_server_update_properties(self):
         return_server = self.fc.servers.list()[1]
