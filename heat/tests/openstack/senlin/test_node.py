@@ -180,17 +180,17 @@ class SenlinNodeTest(common.HeatTestCase):
         props['cluster'] = 'new_cluster'
         rsrc_defns = template.Template(new_t).resource_definitions(self.stack)
         new_node = rsrc_defns['senlin-node']
-        self.senlin_mock.cluster_del_nodes.return_value = {
+        self.senlin_mock.remove_nodes_from_cluster.return_value = {
             'action': 'remove_node_from_cluster'
         }
-        self.senlin_mock.cluster_add_nodes.return_value = {
+        self.senlin_mock.add_nodes_to_cluster.return_value = {
             'action': 'add_node_to_cluster'
         }
         scheduler.TaskRunner(node.update, new_node)()
         self.assertEqual((node.UPDATE, node.COMPLETE), node.state)
-        self.senlin_mock.cluster_del_nodes.assert_called_once_with(
+        self.senlin_mock.remove_nodes_from_cluster.assert_called_once_with(
             cluster='fake_cluster_id', nodes=[node.resource_id])
-        self.senlin_mock.cluster_add_nodes.assert_called_once_with(
+        self.senlin_mock.add_nodes_to_cluster.assert_called_once_with(
             cluster='new_cluster_id', nodes=[node.resource_id])
 
     def test_node_update_failed(self):
