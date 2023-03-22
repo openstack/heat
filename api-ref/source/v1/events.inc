@@ -169,7 +169,7 @@ Shows details for an event.
 
 .. rest_status_code:: success status.yaml
 
-   - 200 
+   - 200
 
 .. rest_status_code:: error status.yaml
 

@@ -11,7 +11,7 @@ Show orchestration engine status
 
 Enables administrative users to view details for all orchestration engines.
 
-Orchestration engine details include engine id, binary, topic name, host, 
+Orchestration engine details include engine id, binary, topic name, host,
 report interval, last updated time, health status, and host name.
 
 Response Codes
