@@ -289,7 +289,7 @@ rm $log_conf
 
 # Do a final sanity check on the database.
 
-echo "SELECT * FROM migrate_version;" | mysql -u heat --password=${MYSQL_HEAT_PW} heat > /dev/null
+echo "SELECT * FROM alembic_version;" | mysql -u heat --password=${MYSQL_HEAT_PW} heat > /dev/null
 if ! [ $? -eq 0 ]
 then
 	echo "Final sanity check failed." >&2

@@ -39,7 +39,6 @@ from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
 from heat.db.sqlalchemy import filters as db_filters
-from heat.db.sqlalchemy import migration
 from heat.db.sqlalchemy import models
 from heat.db.sqlalchemy import utils as db_utils
 from heat.engine import environment as heat_environment
@@ -1620,19 +1619,6 @@ def sync_point_update_input_data(context, entity_id,
         atomic_key=atomic_key
     ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
     return rows_updated
-
-
-def db_sync(engine, version=None):
-    """Migrate the database to `version` or the most recent version."""
-    if version is not None and int(version) < db_version(engine):
-        raise exception.Error(_("Cannot migrate to lower schema version."))
-
-    return migration.db_sync(engine, version=version)
-
-
-def db_version(engine):
-    """Display the current database version."""
-    return migration.db_version(engine)
 
 
 def _crypt_action(encrypt):
