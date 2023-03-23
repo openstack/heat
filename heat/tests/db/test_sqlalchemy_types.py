@@ -15,7 +15,7 @@ from sqlalchemy.dialects.mysql import base as mysql_base
 from sqlalchemy.dialects.sqlite import base as sqlite_base
 from sqlalchemy import types
 
-from heat.db.sqlalchemy import types as db_types
+from heat.db import types as db_types
 from heat.tests import common
 
 

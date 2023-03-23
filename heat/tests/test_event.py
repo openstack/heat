@@ -16,7 +16,7 @@ from unittest import mock
 from oslo_config import cfg
 import uuid
 
-from heat.db.sqlalchemy import models
+from heat.db import models
 from heat.engine import event
 from heat.engine import stack
 from heat.engine import template

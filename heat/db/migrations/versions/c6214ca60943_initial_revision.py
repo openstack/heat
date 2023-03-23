@@ -20,7 +20,7 @@ Create Date: 2023-03-22 18:04:02.387269
 from alembic import op
 import sqlalchemy as sa
 
-import heat.db.sqlalchemy.types
+import heat.db.types
 
 # revision identifiers, used by Alembic.
 revision = 'c6214ca60943'
@@ -33,7 +33,7 @@ def upgrade() -> None:
     op.create_table(
         'raw_template_files',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('files', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('files', heat.db.types.Json(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
@@ -42,7 +42,7 @@ def upgrade() -> None:
     op.create_table(
         'resource_properties_data',
         sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('data', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('data', heat.db.types.Json(), nullable=True),
         sa.Column('encrypted', sa.Boolean(), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
@@ -71,7 +71,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('group', sa.String(length=255), nullable=True),
-        sa.Column('config', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('config', heat.db.types.Json(), nullable=True),
         sa.Column('tenant', sa.String(length=64), nullable=False),
         sa.PrimaryKeyConstraint('id'),
         mysql_engine='InnoDB',
@@ -104,10 +104,10 @@ def upgrade() -> None:
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('template', heat.db.sqlalchemy.types.Json(), nullable=True),
-        sa.Column('files', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('template', heat.db.types.Json(), nullable=True),
+        sa.Column('files', heat.db.types.Json(), nullable=True),
         sa.Column(
-            'environment', heat.db.sqlalchemy.types.Json(), nullable=True
+            'environment', heat.db.types.Json(), nullable=True
         ),
         sa.Column('files_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
@@ -126,10 +126,10 @@ def upgrade() -> None:
         sa.Column('server_id', sa.String(length=36), nullable=False),
         sa.Column('config_id', sa.String(length=36), nullable=False),
         sa.Column(
-            'input_values', heat.db.sqlalchemy.types.Json(), nullable=True
+            'input_values', heat.db.types.Json(), nullable=True
         ),
         sa.Column(
-            'output_values', heat.db.sqlalchemy.types.Json(), nullable=True
+            'output_values', heat.db.types.Json(), nullable=True
         ),
         sa.Column('action', sa.String(length=255), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
@@ -188,7 +188,7 @@ def upgrade() -> None:
         sa.Column('convergence', sa.Boolean(), nullable=True),
         sa.Column('current_traversal', sa.String(length=36), nullable=True),
         sa.Column(
-            'current_deps', heat.db.sqlalchemy.types.Json(), nullable=True
+            'current_deps', heat.db.types.Json(), nullable=True
         ),
         sa.Column(
             'parent_resource_name', sa.String(length=255), nullable=True
@@ -261,15 +261,15 @@ def upgrade() -> None:
         sa.Column('status_reason', sa.Text(), nullable=True),
         sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column(
-            'rsrc_metadata', heat.db.sqlalchemy.types.Json(), nullable=True
+            'rsrc_metadata', heat.db.types.Json(), nullable=True
         ),
         sa.Column(
-            'properties_data', heat.db.sqlalchemy.types.Json(), nullable=True
+            'properties_data', heat.db.types.Json(), nullable=True
         ),
         sa.Column('engine_id', sa.String(length=36), nullable=True),
         sa.Column('atomic_key', sa.Integer(), nullable=True),
-        sa.Column('needed_by', heat.db.sqlalchemy.types.List(), nullable=True),
-        sa.Column('requires', heat.db.sqlalchemy.types.List(), nullable=True),
+        sa.Column('needed_by', heat.db.types.List(), nullable=True),
+        sa.Column('requires', heat.db.types.List(), nullable=True),
         sa.Column('replaces', sa.Integer(), nullable=True),
         sa.Column('replaced_by', sa.Integer(), nullable=True),
         sa.Column('current_template_id', sa.Integer(), nullable=True),
@@ -314,7 +314,7 @@ def upgrade() -> None:
         sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('status_reason', sa.String(length=255), nullable=True),
-        sa.Column('data', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('data', heat.db.types.Json(), nullable=True),
         sa.Column('tenant', sa.String(length=64), nullable=False),
         sa.ForeignKeyConstraint(
             ['stack_id'],
@@ -361,7 +361,7 @@ def upgrade() -> None:
         sa.Column('atomic_key', sa.Integer(), nullable=False),
         sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column(
-            'input_data', heat.db.sqlalchemy.types.Json(), nullable=True
+            'input_data', heat.db.types.Json(), nullable=True
         ),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),

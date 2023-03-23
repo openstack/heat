@@ -13,7 +13,7 @@
 
 from oslo_config import cfg
 
-from heat.db.sqlalchemy import models
+from heat.db import models
 from heat.objects import resource_properties_data as rpd_object
 from heat.tests import common
 from heat.tests import utils

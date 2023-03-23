@@ -18,7 +18,7 @@ from alembic import migration as alembic_migration
 from oslo_log import log as logging
 import sqlalchemy as sa
 
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 
 LOG = logging.getLogger(__name__)
 

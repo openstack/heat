@@ -31,11 +31,10 @@ from heat.common import endpoint_utils
 from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine import clients
 
 LOG = logging.getLogger(__name__)
-
 
 cfg.CONF.import_opt('client_retry_limit', 'heat.common.config')
 

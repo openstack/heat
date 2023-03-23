@@ -15,7 +15,7 @@
 
 from unittest import mock
 
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import stack as parser
 from heat.engine import template as templatem

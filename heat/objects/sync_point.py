@@ -11,14 +11,12 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-
 """SyncPoint object."""
-
 
 from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import fields as heat_fields
 

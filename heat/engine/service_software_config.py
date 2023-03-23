@@ -23,7 +23,7 @@ from urllib import parse
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine import api
 from heat.engine import resource
 from heat.engine import scheduler

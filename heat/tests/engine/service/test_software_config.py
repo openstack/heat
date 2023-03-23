@@ -22,7 +22,7 @@ from oslo_utils import timeutils
 from heat.common import crypt
 from heat.common import exception
 from heat.common import template_format
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine.clients.os import swift
 from heat.engine.clients.os import zaqar
 from heat.engine import service

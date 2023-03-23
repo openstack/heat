@@ -30,8 +30,8 @@ from heat.common import context
 from heat.common import exception
 from heat.common import short_id
 from heat.common import template_format
-from heat.db.sqlalchemy import api as db_api
-from heat.db.sqlalchemy import models
+from heat.db import api as db_api
+from heat.db import models
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
 from heat.engine import environment
@@ -2308,7 +2308,7 @@ class DBAPIStackTest(common.HeatTestCase):
             create_stack(self.ctx, self.template, self.user_creds,
                          deleted_at=deleted)
 
-        with mock.patch('heat.db.sqlalchemy.api._purge_stacks') as mock_ps:
+        with mock.patch('heat.db.api._purge_stacks') as mock_ps:
             db_api.purge_deleted(age=0, batch_size=2)
             self.assertEqual(4, mock_ps.call_count)
 

@@ -27,7 +27,7 @@ from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os import nova

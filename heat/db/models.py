@@ -21,7 +21,7 @@ from sqlalchemy.ext import declarative
 from sqlalchemy.orm import backref
 from sqlalchemy.orm import relationship
 
-from heat.db.sqlalchemy import types
+from heat.db import types
 
 BASE = declarative.declarative_base()
 
