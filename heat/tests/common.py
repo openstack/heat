@@ -82,9 +82,11 @@ class HeatTestCase(testscenarios.WithScenarios,
 
     def setUp(self, mock_keystone=True, mock_resource_policy=True,
               quieten_logging=True, mock_find_file=True):
-        super(HeatTestCase, self).setUp()
+        super().setUp()
         self.setup_logging(quieten=quieten_logging)
-        self.warnings = self.useFixture(fixtures.WarningsCapture())
+
+        self.useFixture(utils.WarningsFixture())
+
         scheduler.ENABLE_SLEEP = False
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.exception._FATAL_EXCEPTION_FORMAT_ERRORS',

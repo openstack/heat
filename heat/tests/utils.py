@@ -14,12 +14,14 @@
 import random
 import string
 import uuid
+import warnings
 
 import fixtures
 from oslo_config import cfg
 from oslo_db import options
 from oslo_serialization import jsonutils
 import sqlalchemy
+from sqlalchemy import exc as sqla_exc
 
 from heat.common import context
 from heat.db.sqlalchemy import api as db_api
@@ -233,6 +235,112 @@ class ForeignKeyConstraintFixture(fixtures.Fixture):
                     conn.connection.rollback()
                     conn.execute("PRAGMA foreign_keys=OFF")
             self.addCleanup(disable_fks)
+
+
+class WarningsFixture(fixtures.Fixture):
+    """Filters out warnings during test runs."""
+
+    def setUp(self):
+        super().setUp()
+
+        self._original_warning_filters = warnings.filters[:]
+
+        warnings.simplefilter("once", DeprecationWarning)
+
+        # Enable deprecation warnings for heat itself to capture upcoming
+        # SQLAlchemy changes
+
+        warnings.filterwarnings(
+            'ignore',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'error',
+            module='heat',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        # ...but filter everything out until we get around to fixing them
+        # TODO(stephenfin): Fix all of these
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message=r'The Engine.execute\(\) method is considered legacy ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message='The current statement is being autocommitted using ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message='Using strings to indicate column or relationship paths ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message=r'The Query.get\(\) method is considered legacy ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message='The Session.transaction attribute is considered legacy ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message='The Session.begin.subtransactions flag is deprecated ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message='The autoload parameter is deprecated ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message='The ``bind`` argument for schema methods that invoke ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        warnings.filterwarnings(
+            'ignore',
+            module='heat',
+            message=r'The legacy calling style of select\(\) is deprecated ',
+            category=sqla_exc.SADeprecationWarning,
+        )
+
+        # Enable general SQLAlchemy warnings also to ensure we're not doing
+        # silly stuff. It's possible that we'll need to filter things out here
+        # with future SQLAlchemy versions, but that's a good thing
+
+        warnings.filterwarnings(
+            'error',
+            module='heat',
+            category=sqla_exc.SAWarning,
+        )
+
+        self.addCleanup(self._reset_warning_filters)
+
+    def _reset_warning_filters(self):
+        warnings.filters[:] = self._original_warning_filters
 
 
 class AnyInstance(object):
