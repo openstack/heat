@@ -30,8 +30,7 @@ def reconfigure_loadbalancers(load_balancers, id_list):
                                                    lb.context).data)
         if 'Instances' in lb.properties_schema:
             props['Instances'] = id_list
-        elif 'members' in lb.properties_schema:
-            props['members'] = id_list
+        # TODO(tkajinam): We need to add support for Octavia resources
         else:
             raise exception.Error(
                 _("Unsupported resource '%s' in LoadBalancerNames") % lb.name)

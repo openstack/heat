@@ -96,7 +96,9 @@ class InstanceGroup(stack_resource.StackResource):
         ),
         LOAD_BALANCER_NAMES: properties.Schema(
             properties.Schema.LIST,
-            _('List of LoadBalancer resources.')
+            _('List of LoadBalancer resources. Currently only '
+              'the AWS::ElasticLoadBalancing::LoadBalancer resource type is '
+              'supported.')
         ),
         TAGS: properties.Schema(
             properties.Schema.LIST,

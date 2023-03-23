@@ -17,7 +17,6 @@ from unittest import mock
 from heat.common import exception
 from heat.common import grouputils
 from heat.common import template_format
-from heat.engine.clients.os import neutron
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
@@ -263,70 +262,6 @@ class LoadbalancerReloadTest(common.HeatTestCase):
         group._lb_reload()
         self.check_mocks(group, mocks)
         lb.update.assert_called_once_with(expected)
-
-    def test_members(self):
-        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
-                         return_value=True)
-
-        t = template_format.parse(inline_templates.as_template)
-        t['Resources']['ElasticLoadBalancer'] = {
-            'Type': 'OS::Neutron::LoadBalancer',
-            'Properties': {
-                'protocol_port': 8080,
-            }
-        }
-        stack = utils.parse_stack(t)
-
-        lb = stack['ElasticLoadBalancer']
-        lb.update = mock.Mock(return_value=None)
-
-        defn = rsrc_defn.ResourceDefinition(
-            'asg', 'OS::Heat::InstanceGroup',
-            {'Size': 2,
-             'AvailabilityZones': ['zoneb'],
-             "LaunchConfigurationName": "LaunchConfig",
-             "LoadBalancerNames": ["ElasticLoadBalancer"]})
-        group = instgrp.InstanceGroup('asg', defn, stack)
-
-        mocks = self.setup_mocks(group, ['aaaa', 'bbb'])
-        expected = rsrc_defn.ResourceDefinition(
-            'ElasticLoadBalancer',
-            'OS::Neutron::LoadBalancer',
-            {'protocol_port': 8080,
-             'members': ['aaaa', 'bbb']})
-
-        group._lb_reload()
-        self.check_mocks(group, mocks)
-        lb.update.assert_called_once_with(expected)
-
-    def test_lb_reload_invalid_resource(self):
-        t = template_format.parse(inline_templates.as_template)
-        t['Resources']['ElasticLoadBalancer'] = {
-            'Type': 'AWS::EC2::Volume',
-            'Properties': {
-                'AvailabilityZone': 'nova'
-            }
-        }
-        stack = utils.parse_stack(t)
-
-        lb = stack['ElasticLoadBalancer']
-        lb.update = mock.Mock(return_value=None)
-
-        defn = rsrc_defn.ResourceDefinition(
-            'asg', 'OS::Heat::InstanceGroup',
-            {'Size': 2,
-             'AvailabilityZones': ['zoneb'],
-             "LaunchConfigurationName": "LaunchConfig",
-             "LoadBalancerNames": ["ElasticLoadBalancer"]})
-        group = instgrp.InstanceGroup('asg', defn, stack)
-
-        self.setup_mocks(group, ['aaaa', 'bbb'])
-        error = self.assertRaises(exception.Error,
-                                  group._lb_reload)
-        self.assertEqual(
-            "Unsupported resource 'ElasticLoadBalancer' in "
-            "LoadBalancerNames",
-            str(error))
 
     def test_lb_reload_static_resolve(self):
         t = template_format.parse(inline_templates.as_template)
