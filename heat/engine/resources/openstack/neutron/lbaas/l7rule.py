@@ -27,7 +27,12 @@ class L7Rule(neutron.NeutronResource):
     be matched and how it should be matched.
     """
 
-    support_status = support.SupportStatus(version='7.0.0')
+    support_status = support.SupportStatus(
+        status=support.HIDDEN,
+        version='21.0.0',
+        message=_('Use octavia instead.'),
+        previous_status=support.SupportStatus(version='7.0.0')
+    )
 
     required_service_extension = 'lbaasv2'
 
