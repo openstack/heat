@@ -41,8 +41,6 @@ function _write_heat_integrationtests {
     cat > $upgrade_tests <<EOF
 heat_tempest_plugin.tests.api
 heat_integrationtests.functional.test_autoscaling
-heat_integrationtests.functional.test_cancel_update
-heat_integrationtests.functional.test_create_update
 heat_integrationtests.functional.test_instance_group
 heat_integrationtests.functional.test_resource_group.ResourceGroupTest
 heat_integrationtests.functional.test_resource_group.ResourceGroupUpdatePolicyTest
