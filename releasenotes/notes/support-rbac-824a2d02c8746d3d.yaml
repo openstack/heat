@@ -5,7 +5,7 @@ features:
     for default roles and system scope. This is part of a broader community
     effort to support read-only roles and implement secure, consistent default
     policies.
-    
+
     Refer to `the Keystone documentation`__ for more information on the reason
     for these changes.
 
