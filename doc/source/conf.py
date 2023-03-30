@@ -178,6 +178,7 @@ apidoc_separate_modules = True
 apidoc_excluded_paths = [
     'cmd',
     'cloudinit',
+    'db/sqlalchemy/migrations/versions',
     'db/sqlalchemy/migrate_repo/versions',
     'engine/resources/aws',
     'engine/resources/openstack',
