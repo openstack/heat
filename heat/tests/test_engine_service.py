@@ -978,11 +978,12 @@ class StackServiceTest(common.HeatTestCase):
         env = {'parameters': {'KeyName': 'EnvKey'}}
         tmpl = templatem.Template(t)
         stack = parser.Stack(self.ctx, 'get_env_stack', tmpl)
+        stack.store()
 
         mock_get_stack = self.patchobject(self.eng, '_get_stack')
         mock_get_stack.return_value = mock.MagicMock()
         mock_get_stack.return_value.raw_template.environment = env
-        self.patchobject(parser.Stack, 'load', return_value=stack)
+        self.patchobject(templatem.Template, 'load', return_value=tmpl)
 
         # Test
         found = self.eng.get_environment(self.ctx, stack.identifier())
