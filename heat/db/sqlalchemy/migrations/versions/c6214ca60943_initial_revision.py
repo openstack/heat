@@ -32,28 +32,25 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         'raw_template_files',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('files', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         mysql_engine='InnoDB',
     )
     op.create_table(
         'resource_properties_data',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('data', heat.db.sqlalchemy.types.Json(), nullable=True),
         sa.Column('encrypted', sa.Boolean(), nullable=True),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         mysql_engine='InnoDB',
     )
     op.create_table(
         'service',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.String(length=36), nullable=False),
         sa.Column('engine_id', sa.String(length=36), nullable=False),
         sa.Column('host', sa.String(length=255), nullable=False),
@@ -61,14 +58,17 @@ def upgrade() -> None:
         sa.Column('binary', sa.String(length=255), nullable=False),
         sa.Column('topic', sa.String(length=255), nullable=False),
         sa.Column('report_interval', sa.Integer(), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.PrimaryKeyConstraint('id'),
         mysql_engine='InnoDB',
     )
     op.create_table(
         'software_config',
+        sa.Column('id', sa.String(length=36), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.String(length=36), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('group', sa.String(length=255), nullable=True),
         sa.Column('config', heat.db.sqlalchemy.types.Json(), nullable=True),
@@ -84,9 +84,9 @@ def upgrade() -> None:
     )
     op.create_table(
         'user_creds',
+        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('username', sa.String(length=255), nullable=True),
         sa.Column('password', sa.String(length=255), nullable=True),
         sa.Column('region_name', sa.String(length=255), nullable=True),
@@ -101,42 +101,43 @@ def upgrade() -> None:
     )
     op.create_table(
         'raw_template',
+        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('template', heat.db.sqlalchemy.types.Json(), nullable=True),
         sa.Column('files', heat.db.sqlalchemy.types.Json(), nullable=True),
-        sa.Column('files_id', sa.Integer(), nullable=True),
         sa.Column(
             'environment', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
+        sa.Column('files_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ['files_id'],
             ['raw_template_files.id'],
+            name='raw_tmpl_files_fkey_ref',
         ),
         sa.PrimaryKeyConstraint('id'),
         mysql_engine='InnoDB',
     )
     op.create_table(
         'software_deployment',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('action', sa.String(length=255), nullable=True),
-        sa.Column('status', sa.String(length=255), nullable=True),
-        sa.Column('status_reason', sa.Text(), nullable=True),
         sa.Column('id', sa.String(length=36), nullable=False),
-        sa.Column('config_id', sa.String(length=36), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('server_id', sa.String(length=36), nullable=False),
+        sa.Column('config_id', sa.String(length=36), nullable=False),
         sa.Column(
             'input_values', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
         sa.Column(
             'output_values', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
+        sa.Column('action', sa.String(length=255), nullable=True),
+        sa.Column('status', sa.String(length=255), nullable=True),
+        sa.Column('status_reason', sa.Text(), nullable=True),
         sa.Column('tenant', sa.String(length=64), nullable=False),
         sa.Column(
             'stack_user_project_id', sa.String(length=64), nullable=True
         ),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ['config_id'],
             ['software_config.id'],
@@ -163,23 +164,21 @@ def upgrade() -> None:
     )
     op.create_table(
         'stack',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('deleted_at', sa.DateTime(), nullable=True),
-        sa.Column('action', sa.String(length=255), nullable=True),
-        sa.Column('status', sa.String(length=255), nullable=True),
-        sa.Column('status_reason', sa.Text(), nullable=True),
         sa.Column('id', sa.String(length=36), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column('deleted_at', sa.DateTime(), nullable=True),
         sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('raw_template_id', sa.Integer(), nullable=False),
         sa.Column('prev_raw_template_id', sa.Integer(), nullable=True),
-        sa.Column('username', sa.String(length=256), nullable=True),
-        sa.Column('tenant', sa.String(length=256), nullable=True),
         sa.Column('user_creds_id', sa.Integer(), nullable=True),
+        sa.Column('username', sa.String(length=256), nullable=True),
         sa.Column('owner_id', sa.String(length=36), nullable=True),
-        sa.Column(
-            'parent_resource_name', sa.String(length=255), nullable=True
-        ),
+        sa.Column('action', sa.String(length=255), nullable=True),
+        sa.Column('status', sa.String(length=255), nullable=True),
+        sa.Column('status_reason', sa.Text(), nullable=True),
         sa.Column('timeout', sa.Integer(), nullable=True),
+        sa.Column('tenant', sa.String(length=256), nullable=True),
         sa.Column('disable_rollback', sa.Boolean(), nullable=False),
         sa.Column(
             'stack_user_project_id', sa.String(length=64), nullable=True
@@ -191,7 +190,9 @@ def upgrade() -> None:
         sa.Column(
             'current_deps', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
+        sa.Column(
+            'parent_resource_name', sa.String(length=255), nullable=True
+        ),
         sa.ForeignKeyConstraint(
             ['prev_raw_template_id'],
             ['raw_template.id'],
@@ -210,18 +211,18 @@ def upgrade() -> None:
         'ix_stack_name', 'stack', ['name'], unique=False, mysql_length=255
     )
     op.create_index(
-        op.f('ix_stack_owner_id'), 'stack', ['owner_id'], unique=False
+        'ix_stack_tenant', 'stack', ['tenant'], unique=False, mysql_length=255
     )
     op.create_index(
-        'ix_stack_tenant', 'stack', ['tenant'], unique=False, mysql_length=255
+        op.f('ix_stack_owner_id'), 'stack', ['owner_id'], unique=False
     )
     op.create_table(
         'event',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('stack_id', sa.String(length=36), nullable=False),
-        sa.Column('uuid', sa.String(length=36), nullable=True),
         sa.Column('resource_action', sa.String(length=255), nullable=True),
         sa.Column('resource_status', sa.String(length=255), nullable=True),
         sa.Column('resource_name', sa.String(length=255), nullable=True),
@@ -232,11 +233,12 @@ def upgrade() -> None:
             'resource_status_reason', sa.String(length=255), nullable=True
         ),
         sa.Column('resource_type', sa.String(length=255), nullable=True),
-        sa.Column('rsrc_prop_data_id', sa.Integer(), nullable=True),
         sa.Column('resource_properties', sa.PickleType(), nullable=True),
+        sa.Column('rsrc_prop_data_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ['rsrc_prop_data_id'],
             ['resource_properties_data.id'],
+            name='ev_rsrc_prop_data_ref',
         ),
         sa.ForeignKeyConstraint(
             ['stack_id'],
@@ -248,26 +250,22 @@ def upgrade() -> None:
     )
     op.create_table(
         'resource',
+        sa.Column('id', sa.Integer(), nullable=False),
+        sa.Column('uuid', sa.String(length=36), nullable=True),
+        sa.Column('nova_instance', sa.String(length=255), nullable=True),
+        sa.Column('name', sa.String(length=255), nullable=True),
         sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('action', sa.String(length=255), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('status_reason', sa.Text(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('uuid', sa.String(length=36), nullable=True),
-        sa.Column('name', sa.String(length=255), nullable=True),
-        sa.Column('nova_instance', sa.String(length=255), nullable=True),
+        sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column(
             'rsrc_metadata', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
-        sa.Column('stack_id', sa.String(length=36), nullable=False),
-        sa.Column('root_stack_id', sa.String(length=36), nullable=True),
-        sa.Column('rsrc_prop_data_id', sa.Integer(), nullable=True),
-        sa.Column('attr_data_id', sa.Integer(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column(
             'properties_data', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
-        sa.Column('properties_data_encrypted', sa.Boolean(), nullable=True),
         sa.Column('engine_id', sa.String(length=36), nullable=True),
         sa.Column('atomic_key', sa.Integer(), nullable=True),
         sa.Column('needed_by', heat.db.sqlalchemy.types.List(), nullable=True),
@@ -275,9 +273,14 @@ def upgrade() -> None:
         sa.Column('replaces', sa.Integer(), nullable=True),
         sa.Column('replaced_by', sa.Integer(), nullable=True),
         sa.Column('current_template_id', sa.Integer(), nullable=True),
+        sa.Column('properties_data_encrypted', sa.Boolean(), nullable=True),
+        sa.Column('root_stack_id', sa.String(length=36), nullable=True),
+        sa.Column('rsrc_prop_data_id', sa.Integer(), nullable=True),
+        sa.Column('attr_data_id', sa.Integer(), nullable=True),
         sa.ForeignKeyConstraint(
             ['attr_data_id'],
             ['resource_properties_data.id'],
+            name='rsrc_attr_data_ref',
         ),
         sa.ForeignKeyConstraint(
             ['current_template_id'],
@@ -286,6 +289,7 @@ def upgrade() -> None:
         sa.ForeignKeyConstraint(
             ['rsrc_prop_data_id'],
             ['resource_properties_data.id'],
+            name='rsrc_rsrc_prop_data_ref',
         ),
         sa.ForeignKeyConstraint(
             ['stack_id'],
@@ -303,15 +307,15 @@ def upgrade() -> None:
     )
     op.create_table(
         'snapshot',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('id', sa.String(length=36), nullable=False),
         sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column('name', sa.String(length=255), nullable=True),
-        sa.Column('data', heat.db.sqlalchemy.types.Json(), nullable=True),
-        sa.Column('tenant', sa.String(length=64), nullable=False),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('status', sa.String(length=255), nullable=True),
         sa.Column('status_reason', sa.String(length=255), nullable=True),
+        sa.Column('data', heat.db.sqlalchemy.types.Json(), nullable=True),
+        sa.Column('tenant', sa.String(length=64), nullable=False),
         sa.ForeignKeyConstraint(
             ['stack_id'],
             ['stack.id'],
@@ -324,9 +328,9 @@ def upgrade() -> None:
     )
     op.create_table(
         'stack_lock',
+        sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.Column('engine_id', sa.String(length=36), nullable=True),
         sa.ForeignKeyConstraint(
             ['stack_id'],
@@ -337,9 +341,9 @@ def upgrade() -> None:
     )
     op.create_table(
         'stack_tag',
+        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('tag', sa.Unicode(length=80), nullable=True),
         sa.Column('stack_id', sa.String(length=36), nullable=False),
         sa.ForeignKeyConstraint(
@@ -351,8 +355,6 @@ def upgrade() -> None:
     )
     op.create_table(
         'sync_point',
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.Column('entity_id', sa.String(length=36), nullable=False),
         sa.Column('traversal_id', sa.String(length=36), nullable=False),
         sa.Column('is_update', sa.Boolean(), nullable=False),
@@ -361,6 +363,8 @@ def upgrade() -> None:
         sa.Column(
             'input_data', heat.db.sqlalchemy.types.Json(), nullable=True
         ),
+        sa.Column('created_at', sa.DateTime(), nullable=True),
+        sa.Column('updated_at', sa.DateTime(), nullable=True),
         sa.ForeignKeyConstraint(
             ['stack_id'],
             ['stack.id'],
@@ -369,9 +373,9 @@ def upgrade() -> None:
     )
     op.create_table(
         'resource_data',
+        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=True),
         sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.Column('id', sa.Integer(), nullable=False),
         sa.Column('key', sa.String(length=255), nullable=True),
         sa.Column('value', sa.Text(), nullable=True),
         sa.Column('redact', sa.Boolean(), nullable=True),
