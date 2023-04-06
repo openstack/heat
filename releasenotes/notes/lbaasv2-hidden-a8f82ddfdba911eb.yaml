@@ -1,0 +1,13 @@
+---
+upgrade:
+  - |
+    The following resources types are now hidden. Neutron LBaaS v2 was already
+    retired thus these resource types can no longer be used.
+
+    - ``OS::Neutron::LBaaS::LoadBalancer``
+    - ``OS::Neutron::LBaaS::Listener``
+    - ``OS::Neutron::LBaaS::Pool``
+    - ``OS::Neutron::LBaaS::PoolMember``
+    - ``OS::Neutron::LBaaS::HealthMonitor``
+    - ``OS::Neutron::LBaaS::L7Policy``
+    - ``OS::Neutron::LBaaS::L7Rule``
