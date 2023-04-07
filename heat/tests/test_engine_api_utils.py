@@ -21,7 +21,7 @@ from oslo_utils import timeutils
 from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils as heat_timeutils
-from heat.db.sqlalchemy import models
+from heat.db import models
 from heat.engine import api
 from heat.engine.cfn import parameters as cfn_param
 from heat.engine import event

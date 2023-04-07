@@ -13,7 +13,7 @@
 
 from unittest import mock
 
-from heat.db.sqlalchemy import filters as db_filters
+from heat.db import filters as db_filters
 from heat.tests import common
 
 

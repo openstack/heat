@@ -22,8 +22,8 @@ from oslotest import base as test_base
 import sqlalchemy
 import testtools
 
-from heat.db.sqlalchemy import migration
-from heat.db.sqlalchemy import models
+from heat.db import migration
+from heat.db import models
 
 
 class DBNotAllowed(Exception):

@@ -18,7 +18,7 @@ from oslo_utils import timeutils
 import uuid
 
 from heat.common import service_utils
-from heat.db.sqlalchemy import models
+from heat.db import models
 from heat.tests import common
 
 

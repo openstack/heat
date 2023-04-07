@@ -19,7 +19,7 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.common import identifier
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.objects import base as heat_base
 from heat.objects import resource_properties_data as rpd
 

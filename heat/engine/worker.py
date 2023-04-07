@@ -24,7 +24,7 @@ from osprofiler import profiler
 
 from heat.common import context
 from heat.common import messaging as rpc_messaging
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import node_data
 from heat.engine import stack as parser

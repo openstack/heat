@@ -20,7 +20,7 @@ from oslo_utils import timeutils
 
 from heat.common import exception
 from heat.common import template_format
-from heat.db.sqlalchemy import models
+from heat.db import models
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os import swift

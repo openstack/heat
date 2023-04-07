@@ -14,7 +14,7 @@
 from unittest import mock
 
 from heat.common import exception
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.tests import utils
 
 

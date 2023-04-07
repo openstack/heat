@@ -17,7 +17,7 @@ from unittest import mock
 
 from heat.common import exception
 from heat.common import template_format
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine.clients.os.keystone import fake_keystoneclient
 from heat.engine import environment
 from heat.engine import resource

@@ -38,9 +38,9 @@ from sqlalchemy.orm import aliased as orm_aliased
 from heat.common import crypt
 from heat.common import exception
 from heat.common.i18n import _
-from heat.db.sqlalchemy import filters as db_filters
-from heat.db.sqlalchemy import models
-from heat.db.sqlalchemy import utils as db_utils
+from heat.db import filters as db_filters
+from heat.db import models
+from heat.db import utils as db_utils
 from heat.engine import environment as heat_environment
 from heat.rpc import api as rpc_api
 

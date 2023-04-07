@@ -11,7 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.engine import service
 from heat.engine import stack
 from heat.tests.convergence.framework import message_processor

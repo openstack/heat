@@ -19,7 +19,7 @@ from oslo_versionedobjects import base
 from oslo_versionedobjects import fields
 
 from heat.common import crypt
-from heat.db.sqlalchemy import api as db_api
+from heat.db import api as db_api
 from heat.objects import fields as heat_fields
 
 
