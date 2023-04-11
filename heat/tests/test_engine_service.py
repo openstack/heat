@@ -991,6 +991,56 @@ class StackServiceTest(common.HeatTestCase):
         # Verify
         self.assertEqual(env, found)
 
+    def test_get_environment_hidden_param(self):
+        # Setup
+        env = {
+            'parameters': {
+                'admin': 'testuser',
+                'pass': 'pa55w0rd'
+            },
+            'parameter_defaults': {
+                'secret': 'dummy'
+            },
+            'resource_registry': {
+                'res': 'resource.yaml'
+            }
+        }
+        t = {
+            'heat_template_version': '2018-08-31',
+            'parameters': {
+                'admin': {'type': 'string'},
+                'pass': {'type': 'string', 'hidden': True}
+            },
+            'resources': {
+                'res1': {'type': 'res'}
+            }
+        }
+        files = {
+            'resource.yaml': '''
+                heat_template_version: 2018-08-31
+                parameters:
+                    secret:
+                        type: string
+                        hidden: true
+            '''
+        }
+        tmpl = templatem.Template(t, files=files)
+        stack = parser.Stack(self.ctx, 'get_env_stack', tmpl)
+        stack.store()
+
+        mock_get_stack = self.patchobject(self.eng, '_get_stack')
+        mock_get_stack.return_value = mock.MagicMock()
+        mock_get_stack.return_value.raw_template.environment = env
+        self.patchobject(templatem.Template, 'load', return_value=tmpl)
+
+        # Test
+        found = self.eng.get_environment(self.ctx, stack.identifier())
+
+        # Verify
+        env['parameters']['pass'] = '******'
+        env['parameter_defaults']['secret'] = '******'
+        self.assertEqual(env, found)
+
     def test_get_environment_no_env(self):
         # Setup
         exc = exception.EntityNotFound(entity='stack', name='missing')
