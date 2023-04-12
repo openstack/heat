@@ -35,12 +35,12 @@ Preparing to create a stack
 
 Download and register the image::
 
-    $ wget http://cloud.fedoraproject.org/fedora-20.x86_64.qcow2
+    $ wget https://download.fedoraproject.org/pub/fedora/linux/releases/37/Cloud/x86_64/images/Fedora-Cloud-Base-37-1.7.x86_64.qcow2
     $ openstack image create \
                           --disk-format=qcow2 \
                           --container-format=bare \
-                          --file=fedora-20.x86_64.qcow2 \
-                          fedora-20.x86_64
+                          --file=Fedora-Cloud-Base-37-1.7.x86_64.qcow2 \
+                          my-fedora-image
 
 Your cloud will have different flavors and images available for
 launching instances, you can discover what is available by running::
@@ -59,7 +59,7 @@ Launching a stack
 -----------------
 Now lets launch a stack, using an example template from the heat-templates repository::
 
-    $ openstack stack create -t https://opendev.org/openstack/heat-templates/raw/src/branch/master/hot/F20/WordPress_Native.yaml --parameter key_name=heat_key --parameter image_id=my-fedora-image --parameter instance_type=m1.small teststack
+    $ openstack stack create -t https://opendev.org/openstack/heat-templates/src/branch/master/hot/F20/WordPress_Native.yaml --parameter key_name=heat_key --parameter image_id=my-fedora-image --parameter instance_type=m1.small teststack
 
 Which will respond::
 
