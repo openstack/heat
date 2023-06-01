@@ -9,11 +9,11 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openstack-heat\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-03-10 12:28+0000\n"
+"POT-Creation-Date: 2023-05-31 05:59+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2023-01-26 10:07+0000\n"
+"PO-Revision-Date: 2023-05-08 10:19+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -30,18 +30,6 @@ msgstr ""
 msgid "10.0.0"
 msgstr "10.0.0"
 
-msgid "10.0.0.0b1"
-msgstr "10.0.0.0b1"
-
-msgid "10.0.0.0b2"
-msgstr "10.0.0.0b2"
-
-msgid "10.0.0.0b3"
-msgstr "10.0.0.0b3"
-
-msgid "10.0.0.0rc1"
-msgstr "10.0.0.0rc1"
-
 msgid "10.0.1"
 msgstr "10.0.1"
 
@@ -54,15 +42,6 @@ msgstr "10.0.3-31"
 msgid "11.0.0"
 msgstr "11.0.0"
 
-msgid "11.0.0.0b1"
-msgstr "11.0.0.0b1"
-
-msgid "11.0.0.0b3"
-msgstr "11.0.0.0b3"
-
-msgid "11.0.0.0rc1"
-msgstr "11.0.0.0rc1"
-
 msgid "11.0.2"
 msgstr "11.0.2"
 
@@ -72,17 +51,11 @@ msgstr "11.0.3"
 msgid "12.0.0"
 msgstr "12.0.0"
 
-msgid "12.0.0.0rc1"
-msgstr "12.0.0.0rc1"
-
 msgid "12.1.0"
 msgstr "12.1.0"
 
 msgid "13.0.0"
 msgstr "13.0.0"
-
-msgid "13.0.0.0rc1"
-msgstr "13.0.0.0rc1"
 
 msgid "13.0.1"
 msgstr "13.0.1"
@@ -105,11 +78,11 @@ msgstr "15.1.0"
 msgid "16.0.0"
 msgstr "16.0.0"
 
+msgid "16.1.0-5"
+msgstr "16.1.0-5"
+
 msgid "17.0.0"
 msgstr "17.0.0"
-
-msgid "17.0.0.0rc1"
-msgstr "17.0.0.0rc1"
 
 msgid "18.0.0"
 msgstr "18.0.0"
@@ -117,8 +90,14 @@ msgstr "18.0.0"
 msgid "19.0.0"
 msgstr "19.0.0"
 
-msgid "19.0.0.0rc1"
-msgstr "19.0.0.0rc1"
+msgid "20.0.0"
+msgstr "20.0.0"
+
+msgid "20.0.0.0rc1"
+msgstr "20.0.0.0rc1"
+
+msgid "2023.1 Series Release Notes"
+msgstr "2023.1 Series Release Notes"
 
 msgid "5.0.1"
 msgstr "5.0.1"
@@ -129,47 +108,14 @@ msgstr "6.0.0"
 msgid "7.0.0"
 msgstr "7.0.0"
 
-msgid "7.0.0.0b1"
-msgstr "7.0.0.0b1"
-
-msgid "7.0.0.0b2"
-msgstr "7.0.0.0b2"
-
-msgid "7.0.0.0b3"
-msgstr "7.0.0.0b3"
-
-msgid "7.0.0.0rc1"
-msgstr "7.0.0.0rc1"
-
 msgid "8.0.0"
 msgstr "8.0.0"
-
-msgid "8.0.0.0b1"
-msgstr "8.0.0.0b1"
-
-msgid "8.0.0.0b2"
-msgstr "8.0.0.0b2"
-
-msgid "8.0.0.0b3"
-msgstr "8.0.0.0b3"
 
 msgid "8.0.7"
 msgstr "8.0.7"
 
 msgid "9.0.0"
 msgstr "9.0.0"
-
-msgid "9.0.0.0b1"
-msgstr "9.0.0.0b1"
-
-msgid "9.0.0.0b2"
-msgstr "9.0.0.0b2"
-
-msgid "9.0.0.0b3"
-msgstr "9.0.0.0b3"
-
-msgid "9.0.0.0rc1"
-msgstr "9.0.0.0rc1"
 
 msgid "9.0.3"
 msgstr "9.0.3"
@@ -880,6 +826,13 @@ msgid "Allow to set or update the tags for OS::Neutron::SubnetPool resource."
 msgstr "Allow to set or update the tags for OS::Neutron::SubnetPool resource."
 
 msgid ""
+"Attempting to specify an sqlalchemy-migrate-based version will result in an "
+"error."
+msgstr ""
+"Attempting to specify an sqlalchemy-migrate-based version will result in an "
+"error."
+
+msgid ""
 "Behaviour has been adjusted to bring this in line with the CLI and GUI, in "
 "which it is optional."
 msgstr ""
@@ -1064,6 +1017,15 @@ msgstr ""
 "RecordSet`` instead."
 
 msgid ""
+"Honor ``hidden`` parameter in get stack environment API. Now values passed "
+"to hidden parameters are replaced by '******', similarly to the other APIs "
+"such as show stack details API."
+msgstr ""
+"Honor ``hidden`` parameter in get stack environment API. Now values passed "
+"to hidden parameters are replaced by '******', similarly to the other APIs "
+"such as show stack details API."
+
+msgid ""
 "If upgrading with pre-icehouse stacks which contain resources that create "
 "users (such as OS::Nova::Server, OS::Heat::SoftwareDeployment, and OS::Heat::"
 "WaitConditionHandle), it is possible that the users will not be removed upon "
@@ -1187,17 +1149,6 @@ msgid ""
 "particular."
 msgstr ""
 "New ``OS::Zaqar::Notification`` and ``OS::Zaqar::MistralTrigger`` resource "
-"types allow users to attach to Zaqar queues (respectively) notifications in "
-"general, and notifications that trigger Mistral workflow executions in "
-"particular."
-
-msgid ""
-"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
-"types allow users to attach to Zaqar queues (respectively) notifications in "
-"general, and notifications that trigger Mistral workflow executions in "
-"particular."
-msgstr ""
-"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
 "types allow users to attach to Zaqar queues (respectively) notifications in "
 "general, and notifications that trigger Mistral workflow executions in "
 "particular."
@@ -2268,6 +2219,31 @@ msgstr ""
 "library being unmaintained."
 
 msgid ""
+"The database migration engine has changed from `sqlalchemy-migrate`__ to "
+"`alembic`__. For most deployments, this should have minimal to no impact and "
+"the switch should be mostly transparent. The main user-facing impact is the "
+"change in schema versioning. While sqlalchemy-migrate used a linear, integer-"
+"based versioning scheme, which required placeholder migrations to allow for "
+"potential migration backports, alembic uses a distributed version control-"
+"like schema where a migration's ancestor is encoded in the file and branches "
+"are possible. The alembic migration files therefore use a arbitrary UUID-"
+"like naming scheme and the ``heat-manage db_sync`` command now expects such "
+"an version when manually specifying the version that should be applied. For "
+"example::"
+msgstr ""
+"The database migration engine has changed from `sqlalchemy-migrate`__ to "
+"`alembic`__. For most deployments, this should have minimal to no impact and "
+"the switch should be mostly transparent. The main user-facing impact is the "
+"change in schema versioning. While sqlalchemy-migrate used a linear, integer-"
+"based versioning scheme, which required placeholder migrations to allow for "
+"potential migration backports, alembic uses a distributed version control-"
+"like schema where a migration's ancestor is encoded in the file and branches "
+"are possible. The alembic migration files, therefore, use an arbitrary UUID-"
+"like naming scheme and the ``heat-manage db_sync`` command now expects such "
+"a version when manually specifying the version that should be applied. For "
+"example::"
+
+msgid ""
 "The database upgrade for Heat Queens release drops 'watch_rule' and "
 "'watch_data' tables from the heat database."
 msgstr ""
@@ -2321,6 +2297,13 @@ msgstr ""
 "The event list GET REST API call now has a different behaviour when the "
 "'nested_depth' parameter is set to an integer greater than zero. The "
 "response will contain all events down to the requested nested depth."
+
+msgid ""
+"The following resources types are now hidden. Neutron LBaaS v2 was already "
+"retired thus these resource types can no longer be used."
+msgstr ""
+"The following resource types are now hidden. Neutron LBaaS v2 was already "
+"retired thus these resource types can no longer be used."
 
 msgid ""
 "The heat.resource_type custom constraint has been removed. This constraint "
@@ -2554,6 +2537,27 @@ msgstr "Yoga Series Release Notes"
 
 msgid "Zed Series Release Notes"
 msgstr "Zed Series Release Notes"
+
+msgid "``OS::Neutron::LBaaS::HealthMonitor``"
+msgstr "``OS::Neutron::LBaaS::HealthMonitor``"
+
+msgid "``OS::Neutron::LBaaS::L7Policy``"
+msgstr "``OS::Neutron::LBaaS::L7Policy``"
+
+msgid "``OS::Neutron::LBaaS::L7Rule``"
+msgstr "``OS::Neutron::LBaaS::L7Rule``"
+
+msgid "``OS::Neutron::LBaaS::Listener``"
+msgstr "``OS::Neutron::LBaaS::Listener``"
+
+msgid "``OS::Neutron::LBaaS::LoadBalancer``"
+msgstr "``OS::Neutron::LBaaS::LoadBalancer``"
+
+msgid "``OS::Neutron::LBaaS::PoolMember``"
+msgstr "``OS::Neutron::LBaaS::PoolMember``"
+
+msgid "``OS::Neutron::LBaaS::Pool``"
+msgstr "``OS::Neutron::LBaaS::Pool``"
 
 msgid ""
 "``OS::Neutron::Port`` resources will now be replaced when the "
