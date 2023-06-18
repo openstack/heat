@@ -1417,7 +1417,8 @@ def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
 
     # Purge deleted services
     srvc_del = service.delete().where(service.c.deleted_at < time_line)
-    engine.execute(srvc_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(srvc_del)
 
     # find the soft-deleted stacks that are past their expiry
     sel = sqlalchemy.select([stack.c.id, stack.c.raw_template_id,
@@ -1434,7 +1435,8 @@ def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
         stack_where = sel.where(
             stack.c.deleted_at < time_line)
 
-    stacks = engine.execute(stack_where)
+    with engine.connect() as conn, conn.begin():
+        stacks = conn.execute(stack_where)
 
     while True:
         next_stacks_to_purge = list(itertools.islice(stacks, batch_size))
@@ -1475,113 +1477,157 @@ def _purge_stacks(stack_infos, engine, meta):
     # reasonably sized transactions (good luck), or add
     # a cleanup for orphaned rows.
     stack_ids = [stack_info[0] for stack_info in stack_infos]
+
     # delete stack locks (just in case some got stuck)
     stack_lock_del = stack_lock.delete().where(
         stack_lock.c.stack_id.in_(stack_ids))
-    engine.execute(stack_lock_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(stack_lock_del)
+
     # delete stack tags
     stack_tag_del = stack_tag.delete().where(
         stack_tag.c.stack_id.in_(stack_ids))
-    engine.execute(stack_tag_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(stack_tag_del)
+
     # delete resource_data
     res_where = sqlalchemy.select([resource.c.id]).where(
         resource.c.stack_id.in_(stack_ids))
     res_data_del = resource_data.delete().where(
         resource_data.c.resource_id.in_(res_where))
-    engine.execute(res_data_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(res_data_del)
+
     # clean up any sync_points that may have lingered
     sync_del = syncpoint.delete().where(
         syncpoint.c.stack_id.in_(stack_ids))
-    engine.execute(sync_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(sync_del)
 
     # get rsrc_prop_data_ids to delete
     rsrc_prop_data_where = sqlalchemy.select(
         [resource.c.rsrc_prop_data_id]).where(
             resource.c.stack_id.in_(stack_ids))
-    rsrc_prop_data_ids = set(
-        [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
+    with engine.connect() as conn, conn.begin():
+        rsrc_prop_data_ids = set(
+            [i[0] for i in list(conn.execute(rsrc_prop_data_where))]
+        )
+
     rsrc_prop_data_where = sqlalchemy.select(
         [resource.c.attr_data_id]).where(
             resource.c.stack_id.in_(stack_ids))
-    rsrc_prop_data_ids.update(
-        [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
+    with engine.connect() as conn, conn.begin():
+        rsrc_prop_data_ids.update(
+            [i[0] for i in list(conn.execute(rsrc_prop_data_where))]
+        )
+
     rsrc_prop_data_where = sqlalchemy.select(
         [event.c.rsrc_prop_data_id]).where(
             event.c.stack_id.in_(stack_ids))
-    rsrc_prop_data_ids.update(
-        [i[0] for i in list(engine.execute(rsrc_prop_data_where))])
+    with engine.connect() as conn, conn.begin():
+        rsrc_prop_data_ids.update(
+            [i[0] for i in list(conn.execute(rsrc_prop_data_where))]
+        )
+
     # delete events
     event_del = event.delete().where(event.c.stack_id.in_(stack_ids))
-    engine.execute(event_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(event_del)
+
     # delete resources (normally there shouldn't be any)
     res_del = resource.delete().where(resource.c.stack_id.in_(stack_ids))
-    engine.execute(res_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(res_del)
+
     # delete resource_properties_data
     if rsrc_prop_data_ids:  # keep rpd's in events
         rsrc_prop_data_where = sqlalchemy.select(
             [event.c.rsrc_prop_data_id]).where(
                 event.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
-        ids = list(engine.execute(rsrc_prop_data_where))
+        with engine.connect() as conn, conn.begin():
+            ids = list(conn.execute(rsrc_prop_data_where))
         rsrc_prop_data_ids.difference_update([i[0] for i in ids])
+
     if rsrc_prop_data_ids:  # keep rpd's in resources
         rsrc_prop_data_where = sqlalchemy.select(
             [resource.c.rsrc_prop_data_id]).where(
                 resource.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
-        ids = list(engine.execute(rsrc_prop_data_where))
+        with engine.connect() as conn, conn.begin():
+            ids = list(conn.execute(rsrc_prop_data_where))
         rsrc_prop_data_ids.difference_update([i[0] for i in ids])
+
     if rsrc_prop_data_ids:  # delete if we have any
         rsrc_prop_data_del = resource_properties_data.delete().where(
             resource_properties_data.c.id.in_(rsrc_prop_data_ids))
-        engine.execute(rsrc_prop_data_del)
+        with engine.connect() as conn, conn.begin():
+            conn.execute(rsrc_prop_data_del)
+
     # delete the stacks
     stack_del = stack.delete().where(stack.c.id.in_(stack_ids))
-    engine.execute(stack_del)
+    with engine.connect() as conn, conn.begin():
+        conn.execute(stack_del)
+
     # delete orphaned raw templates
     raw_template_ids = [i[1] for i in stack_infos if i[1] is not None]
     raw_template_ids.extend(i[2] for i in stack_infos if i[2] is not None)
     if raw_template_ids:  # keep those still referenced
         raw_tmpl_sel = sqlalchemy.select([stack.c.raw_template_id]).where(
             stack.c.raw_template_id.in_(raw_template_ids))
-        raw_tmpl = [i[0] for i in engine.execute(raw_tmpl_sel)]
+        with engine.connect() as conn, conn.begin():
+            raw_tmpl = [i[0] for i in conn.execute(raw_tmpl_sel)]
         raw_template_ids = set(raw_template_ids) - set(raw_tmpl)
+
     if raw_template_ids:  # keep those still referenced (previous tmpl)
         raw_tmpl_sel = sqlalchemy.select(
             [stack.c.prev_raw_template_id]).where(
             stack.c.prev_raw_template_id.in_(raw_template_ids))
-        raw_tmpl = [i[0] for i in engine.execute(raw_tmpl_sel)]
+        with engine.connect() as conn, conn.begin():
+            raw_tmpl = [i[0] for i in conn.execute(raw_tmpl_sel)]
         raw_template_ids = raw_template_ids - set(raw_tmpl)
+
     if raw_template_ids:  # delete raw_templates if we have any
         raw_tmpl_file_sel = sqlalchemy.select(
             [raw_template.c.files_id]).where(
                 raw_template.c.id.in_(raw_template_ids))
-        raw_tmpl_file_ids = [i[0] for i in engine.execute(
-            raw_tmpl_file_sel)]
+        with engine.connect() as conn, conn.begin():
+            raw_tmpl_file_ids = [i[0] for i in conn.execute(
+                raw_tmpl_file_sel)]
+
         raw_templ_del = raw_template.delete().where(
             raw_template.c.id.in_(raw_template_ids))
-        engine.execute(raw_templ_del)
+        with engine.connect() as conn, conn.begin():
+            conn.execute(raw_templ_del)
+
         if raw_tmpl_file_ids:  # keep _files still referenced
             raw_tmpl_file_sel = sqlalchemy.select(
                 [raw_template.c.files_id]).where(
                     raw_template.c.files_id.in_(raw_tmpl_file_ids))
-            raw_tmpl_files = [i[0] for i in engine.execute(
-                raw_tmpl_file_sel)]
+            with engine.connect() as conn, conn.begin():
+                raw_tmpl_files = [i[0] for i in conn.execute(
+                    raw_tmpl_file_sel)]
             raw_tmpl_file_ids = set(raw_tmpl_file_ids) \
                 - set(raw_tmpl_files)
+
         if raw_tmpl_file_ids:  # delete _files if we have any
             raw_tmpl_file_del = raw_template_files.delete().where(
                 raw_template_files.c.id.in_(raw_tmpl_file_ids))
-            engine.execute(raw_tmpl_file_del)
+            with engine.connect() as conn, conn.begin():
+                conn.execute(raw_tmpl_file_del)
+
     # purge any user creds that are no longer referenced
     user_creds_ids = [i[3] for i in stack_infos if i[3] is not None]
     if user_creds_ids:  # keep those still referenced
         user_sel = sqlalchemy.select([stack.c.user_creds_id]).where(
             stack.c.user_creds_id.in_(user_creds_ids))
-        users = [i[0] for i in engine.execute(user_sel)]
+        with engine.connect() as conn, conn.begin():
+            users = [i[0] for i in conn.execute(user_sel)]
         user_creds_ids = set(user_creds_ids) - set(users)
+
     if user_creds_ids:  # delete if we have any
         usr_creds_del = user_creds.delete().where(
             user_creds.c.id.in_(user_creds_ids))
-        engine.execute(usr_creds_del)
+        with engine.connect() as conn, conn.begin():
+            conn.execute(usr_creds_del)
 
 
 def sync_point_delete_all_by_stack_and_traversal(context, stack_id,

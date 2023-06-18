@@ -70,7 +70,8 @@ def reset_dummy_db():
     for table in reversed(meta.sorted_tables):
         if table.name == 'migrate_version':
             continue
-        engine.execute(table.delete())
+        with engine.connect() as conn, conn.begin():
+            conn.execute(table.delete())
 
 
 def dummy_context(user='test_username', tenant_id='test_tenant_id',
@@ -266,13 +267,6 @@ class WarningsFixture(fixtures.Fixture):
 
         # ...but filter everything out until we get around to fixing them
         # TODO(stephenfin): Fix all of these
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
-            message=r'The Engine.execute\(\) method is considered legacy ',
-            category=sqla_exc.SADeprecationWarning,
-        )
 
         warnings.filterwarnings(
             'ignore',
