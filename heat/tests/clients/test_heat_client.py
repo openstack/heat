@@ -504,7 +504,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.auth_token = None
         ctx.password = 'password'
         ctx.trust_id = None
-        ctx.user_domain = 'adomain123'
+        ctx.user_domain_id = 'adomain123'
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
         client = heat_ks_client.client
         self.assertIsNotNone(client)

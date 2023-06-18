@@ -257,7 +257,7 @@ class RequestContext(context.RequestContext):
             return generic.Password(username=self.username,
                                     password=self.password,
                                     project_id=self.project_id,
-                                    user_domain_id=self.user_domain,
+                                    user_domain_id=self.user_domain_id,
                                     auth_url=self.keystone_v3_endpoint)
 
         if self.auth_token:
