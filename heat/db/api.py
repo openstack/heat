@@ -1409,8 +1409,9 @@ def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
     meta = sqlalchemy.MetaData()
     meta.bind = engine
 
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    service = sqlalchemy.Table('service', meta, autoload=True)
+    with engine.connect() as conn, conn.begin():
+        stack = sqlalchemy.Table('stack', meta, autoload_with=conn)
+        service = sqlalchemy.Table('service', meta, autoload_with=conn)
 
     # Purge deleted services
     srvc_del = service.delete().where(service.c.deleted_at < time_line)
@@ -1453,19 +1454,22 @@ def _purge_stacks(stack_infos, engine, meta):
       action, status, name], ...]
     """
 
-    stack = sqlalchemy.Table('stack', meta, autoload=True)
-    stack_lock = sqlalchemy.Table('stack_lock', meta, autoload=True)
-    stack_tag = sqlalchemy.Table('stack_tag', meta, autoload=True)
-    resource = sqlalchemy.Table('resource', meta, autoload=True)
-    resource_data = sqlalchemy.Table('resource_data', meta, autoload=True)
-    resource_properties_data = sqlalchemy.Table(
-        'resource_properties_data', meta, autoload=True)
-    event = sqlalchemy.Table('event', meta, autoload=True)
-    raw_template = sqlalchemy.Table('raw_template', meta, autoload=True)
-    raw_template_files = sqlalchemy.Table('raw_template_files', meta,
-                                          autoload=True)
-    user_creds = sqlalchemy.Table('user_creds', meta, autoload=True)
-    syncpoint = sqlalchemy.Table('sync_point', meta, autoload=True)
+    with engine.connect() as conn, conn.begin():
+        stack = sqlalchemy.Table('stack', meta, autoload_with=conn)
+        stack_lock = sqlalchemy.Table('stack_lock', meta, autoload_with=conn)
+        stack_tag = sqlalchemy.Table('stack_tag', meta, autoload_with=conn)
+        resource = sqlalchemy.Table('resource', meta, autoload_with=conn)
+        resource_data = sqlalchemy.Table(
+            'resource_data', meta, autoload_with=conn)
+        resource_properties_data = sqlalchemy.Table(
+            'resource_properties_data', meta, autoload_with=conn)
+        event = sqlalchemy.Table('event', meta, autoload_with=conn)
+        raw_template = sqlalchemy.Table(
+            'raw_template', meta, autoload_with=conn)
+        raw_template_files = sqlalchemy.Table(
+            'raw_template_files', meta, autoload_with=conn)
+        user_creds = sqlalchemy.Table('user_creds', meta, autoload_with=conn)
+        syncpoint = sqlalchemy.Table('sync_point', meta, autoload_with=conn)
 
     stack_info_str = ','.join([str(i) for i in stack_infos])
     LOG.info("Purging stacks %s", stack_info_str)
