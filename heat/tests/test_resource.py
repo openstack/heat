@@ -687,8 +687,8 @@ class ResourceTest(common.HeatTestCase):
                 'p2': 'good times, good times'}
         rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
             self.stack.context, data)
-        rpd_db_obj = self.stack.context.session.query(
-            models.ResourcePropertiesData).get(rpd_obj.id)
+        rpd_db_obj = self.stack.context.session.get(
+            models.ResourcePropertiesData, rpd_obj.id)
         res_obj1 = resource_objects.Resource().create(
             self.stack.context,
             {'stack_id': self.stack.id,
@@ -744,8 +744,7 @@ class ResourceTest(common.HeatTestCase):
         res.metadata_set(md)
         self.assertFalse(hasattr(res, '_db_res_is_deleted'))
 
-        res_obj = self.stack.context.session.query(
-            models.Resource).get(res.id)
+        res_obj = self.stack.context.session.get(models.Resource, res.id)
         res_obj.update({'action': 'DELETE'})
 
         self.assertRaises(exception.ResourceNotAvailable,

@@ -226,15 +226,14 @@ class SqlAlchemyTest(common.HeatTestCase):
         model = mock.Mock()
         marker = mock.Mock()
 
-        mock_query_object = mock.Mock()
-        mock_query_object.get.return_value = 'real_marker'
+        result = 'real_marker'
         ctx = mock.MagicMock()
-        ctx.session.query.return_value = mock_query_object
+        ctx.session.get.return_value = result
 
         db_api._paginate_query(ctx, query, model, marker=marker)
-        mock_query_object.get.assert_called_once_with(marker)
+        ctx.session.get.assert_called_once_with(model, marker)
         args, _ = mock_paginate_query.call_args
-        self.assertIn('real_marker', args)
+        self.assertIn(result, args)
 
     @mock.patch.object(db_api.utils, 'paginate_query')
     def test_paginate_query_raises_invalid_sort_key(self, mock_paginate_query):
@@ -2264,8 +2263,8 @@ class DBAPIStackTest(common.HeatTestCase):
                 ctx, tmpl_files[s].files_id))
             self.assertIsNotNone(db_api.resource_get(
                 ctx, resources[s].id))
-            self.assertIsNotNone(ctx.session.query(
-                models.Event).get(events[s].id))
+            self.assertIsNotNone(ctx.session.get(
+                models.Event, events[s].id))
             self.assertIsNotNone(ctx.session.query(
                 models.ResourcePropertiesData).filter_by(
                     id=resources[s].rsrc_prop_data.id).first())
@@ -2286,8 +2285,8 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
-            self.assertIsNone(ctx.session.query(
-                models.Event).get(events[s].id))
+            self.assertIsNone(ctx.session.get(
+                models.Event, events[s].id))
             self.assertIsNone(ctx.session.query(
                 models.ResourcePropertiesData).filter_by(
                     id=resources[s].rsrc_prop_data.id).first())
@@ -2926,7 +2925,7 @@ class DBAPIEventTest(common.HeatTestCase):
     def test_event_create(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         event = create_event(self.ctx, stack_id=stack.id)
-        ret_event = self.ctx.session.query(models.Event).get(event.id)
+        ret_event = self.ctx.session.get(models.Event, event.id)
         self.assertIsNotNone(ret_event)
         self.assertEqual(stack.id, ret_event.stack_id)
         self.assertEqual('create', ret_event.resource_action)
