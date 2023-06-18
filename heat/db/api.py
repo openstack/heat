@@ -1407,7 +1407,6 @@ def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
     time_line = timeutils.utcnow() - datetime.timedelta(seconds=age)
     engine = get_engine()
     meta = sqlalchemy.MetaData()
-    meta.bind = engine
 
     with engine.connect() as conn, conn.begin():
         stack = sqlalchemy.Table('stack', meta, autoload_with=conn)
