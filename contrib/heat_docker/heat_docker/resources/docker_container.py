@@ -14,9 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import distutils
-
 from oslo_log import log as logging
+import packaging.version
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -558,8 +557,8 @@ def available_resource_mapping():
 
 
 def compare_version(v1, v2):
-    s1 = distutils.version.StrictVersion(v1)
-    s2 = distutils.version.StrictVersion(v2)
+    s1 = packaging.version.Version(v1)
+    s2 = packaging.version.Version(v2)
     if s1 == s2:
         return 0
     elif s1 > s2:
