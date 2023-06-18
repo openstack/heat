@@ -218,14 +218,14 @@ def raw_template_files_get(context, files_id):
 
 def resource_get(context, resource_id, refresh=False, refresh_data=False,
                  eager=True):
-    options = [orm.joinedload("data")]
+    options = [orm.joinedload(models.Resource.data)]
     if eager:
-        options.append(orm.joinedload("rsrc_prop_data"))
+        options.append(orm.joinedload(models.Resource.rsrc_prop_data))
+
     result = context.session.get(
         models.Resource, resource_id,
         options=options,
     )
-
     if not result:
         raise exception.NotFound(_("resource with id %s not found") %
                                  resource_id)
@@ -245,7 +245,7 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
         name=resource_name
     ).filter_by(
         stack_id=stack_id
-    ).options(orm.joinedload("data")).first()
+    ).options(orm.joinedload(models.Resource.data)).first()
     return result
 
 
@@ -528,7 +528,10 @@ def resource_get_all_by_stack(context, stack_id, filters=None):
         models.Resource
     ).filter_by(
         stack_id=stack_id
-    ).options(orm.joinedload("data")).options(orm.joinedload("rsrc_prop_data"))
+    ).options(
+        orm.joinedload(models.Resource.data),
+        orm.joinedload(models.Resource.rsrc_prop_data),
+    )
 
     query = db_filters.exact_filter(query, models.Resource, filters)
     results = query.all()
@@ -543,7 +546,7 @@ def resource_get_all_active_by_stack(context, stack_id):
     results = context.session.query(models.Resource).filter_by(
         stack_id=stack_id).filter(
         models.Resource.id.notin_(subquery.scalar_subquery())
-    ).options(orm.joinedload("data")).all()
+    ).options(orm.joinedload(models.Resource.data)).all()
 
     return dict((res.id, res) for res in results)
 
@@ -557,10 +560,14 @@ def resource_get_all_by_root_stack(context, stack_id, filters=None,
     )
 
     if stack_id_only:
-        query = query.options(orm.load_only("id", "stack_id"))
+        query = query.options(
+            orm.load_only(models.Resource.id, models.Resource.stack_id)
+        )
     else:
-        query = query.options(orm.joinedload("data")).options(
-            orm.joinedload("rsrc_prop_data"))
+        query = query.options(
+            orm.joinedload(models.Resource.data),
+            orm.joinedload(models.Resource.rsrc_prop_data),
+        )
 
     query = db_filters.exact_filter(query, models.Resource, filters)
     results = query.all()
@@ -606,7 +613,7 @@ def resource_prop_data_get(context, resource_prop_data_id):
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = soft_delete_aware_query(
         context, models.Stack
-    ).options(orm.joinedload("raw_template")).filter(sqlalchemy.or_(
+    ).options(orm.joinedload(models.Stack.raw_template)).filter(sqlalchemy.or_(
         models.Stack.tenant == context.tenant_id,
         models.Stack.stack_user_project_id == context.tenant_id)
     ).filter_by(name=stack_name).filter_by(owner_id=owner_id)
@@ -624,9 +631,9 @@ def stack_get_by_name(context, stack_name):
 
 
 def stack_get(context, stack_id, show_deleted=False, eager_load=True):
-    options = ()
+    options = []
     if eager_load:
-        options = (orm.joinedload("raw_template"),)
+        options.append(orm.joinedload(models.Stack.raw_template))
     result = context.session.get(models.Stack, stack_id, options=options)
 
     deleted_ok = show_deleted or context.show_deleted
@@ -646,7 +653,13 @@ def stack_get(context, stack_id, show_deleted=False, eager_load=True):
 def stack_get_status(context, stack_id):
     query = context.session.query(models.Stack)
     query = query.options(
-        orm.load_only("action", "status", "status_reason", "updated_at"))
+        orm.load_only(
+            models.Stack.action,
+            models.Stack.status,
+            models.Stack.status_reason,
+            models.Stack.updated_at,
+        )
+    )
     result = query.filter_by(id=stack_id).first()
     if result is None:
         raise exception.NotFound(_('Stack with id %s not found') % stack_id)
@@ -720,7 +733,7 @@ def _query_stack_get_all(context, show_deleted=False,
     if not context.is_admin:
         query = query.filter_by(tenant=context.tenant_id)
 
-    query = query.options(orm.subqueryload("tags"))
+    query = query.options(orm.subqueryload(models.Stack.tags))
     if tags:
         for tag in tags:
             tag_alias = orm_aliased(models.StackTag)
@@ -768,7 +781,7 @@ def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                                  tags_any=tags_any, not_tags=not_tags,
                                  not_tags_any=not_tags_any)
     if eager_load:
-        query = query.options(orm.joinedload("raw_template"))
+        query = query.options(orm.joinedload(models.Stack.raw_template))
     return _filter_and_page_query(context, query, limit, sort_keys,
                                   marker, sort_dir, filters).all()
 
@@ -1029,7 +1042,7 @@ def event_get_all_by_stack(context, stack_id, limit=None, marker=None,
     query = _query_all_events_by_stack(context, stack_id)
     if filters and 'uuid' in filters:
         # retrieving a single event, so eager load its rsrc_prop_data detail
-        query = query.options(orm.joinedload("rsrc_prop_data"))
+        query = query.options(orm.joinedload(models.Event.rsrc_prop_data))
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
 

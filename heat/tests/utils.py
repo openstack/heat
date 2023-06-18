@@ -278,13 +278,6 @@ class WarningsFixture(fixtures.Fixture):
         warnings.filterwarnings(
             'ignore',
             module='heat',
-            message='Using strings to indicate column or relationship paths ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
             message='The Session.transaction attribute is considered legacy ',
             category=sqla_exc.SADeprecationWarning,
         )
