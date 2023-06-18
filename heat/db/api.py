@@ -1419,12 +1419,14 @@ def purge_deleted(age, granularity='days', project_id=None, batch_size=20):
         conn.execute(srvc_del)
 
     # find the soft-deleted stacks that are past their expiry
-    sel = sqlalchemy.select([stack.c.id, stack.c.raw_template_id,
-                             stack.c.prev_raw_template_id,
-                             stack.c.user_creds_id,
-                             stack.c.action,
-                             stack.c.status,
-                             stack.c.name])
+    sel = sqlalchemy.select(
+        stack.c.id,
+        stack.c.raw_template_id,
+        stack.c.prev_raw_template_id,
+        stack.c.user_creds_id,
+        stack.c.action,
+        stack.c.status,
+        stack.c.name)
     if project_id:
         stack_where = sel.where(and_(
             stack.c.tenant == project_id,
@@ -1492,7 +1494,7 @@ def _purge_stacks(stack_infos, engine, meta):
         conn.execute(stack_tag_del)
 
     # delete resource_data
-    res_where = sqlalchemy.select([resource.c.id]).where(
+    res_where = sqlalchemy.select(resource.c.id).where(
         resource.c.stack_id.in_(stack_ids))
     res_data_del = resource_data.delete().where(
         resource_data.c.resource_id.in_(res_where))
@@ -1507,24 +1509,27 @@ def _purge_stacks(stack_infos, engine, meta):
 
     # get rsrc_prop_data_ids to delete
     rsrc_prop_data_where = sqlalchemy.select(
-        [resource.c.rsrc_prop_data_id]).where(
-            resource.c.stack_id.in_(stack_ids))
+        resource.c.rsrc_prop_data_id,
+    ).where(
+        resource.c.stack_id.in_(stack_ids))
     with engine.connect() as conn, conn.begin():
         rsrc_prop_data_ids = set(
             [i[0] for i in list(conn.execute(rsrc_prop_data_where))]
         )
 
     rsrc_prop_data_where = sqlalchemy.select(
-        [resource.c.attr_data_id]).where(
-            resource.c.stack_id.in_(stack_ids))
+        resource.c.attr_data_id,
+    ).where(
+        resource.c.stack_id.in_(stack_ids))
     with engine.connect() as conn, conn.begin():
         rsrc_prop_data_ids.update(
             [i[0] for i in list(conn.execute(rsrc_prop_data_where))]
         )
 
     rsrc_prop_data_where = sqlalchemy.select(
-        [event.c.rsrc_prop_data_id]).where(
-            event.c.stack_id.in_(stack_ids))
+        event.c.rsrc_prop_data_id,
+    ).where(
+        event.c.stack_id.in_(stack_ids))
     with engine.connect() as conn, conn.begin():
         rsrc_prop_data_ids.update(
             [i[0] for i in list(conn.execute(rsrc_prop_data_where))]
@@ -1543,16 +1548,18 @@ def _purge_stacks(stack_infos, engine, meta):
     # delete resource_properties_data
     if rsrc_prop_data_ids:  # keep rpd's in events
         rsrc_prop_data_where = sqlalchemy.select(
-            [event.c.rsrc_prop_data_id]).where(
-                event.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
+            event.c.rsrc_prop_data_id,
+        ).where(
+            event.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
         with engine.connect() as conn, conn.begin():
             ids = list(conn.execute(rsrc_prop_data_where))
         rsrc_prop_data_ids.difference_update([i[0] for i in ids])
 
     if rsrc_prop_data_ids:  # keep rpd's in resources
         rsrc_prop_data_where = sqlalchemy.select(
-            [resource.c.rsrc_prop_data_id]).where(
-                resource.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
+            resource.c.rsrc_prop_data_id,
+        ).where(
+            resource.c.rsrc_prop_data_id.in_(rsrc_prop_data_ids))
         with engine.connect() as conn, conn.begin():
             ids = list(conn.execute(rsrc_prop_data_where))
         rsrc_prop_data_ids.difference_update([i[0] for i in ids])
@@ -1572,7 +1579,7 @@ def _purge_stacks(stack_infos, engine, meta):
     raw_template_ids = [i[1] for i in stack_infos if i[1] is not None]
     raw_template_ids.extend(i[2] for i in stack_infos if i[2] is not None)
     if raw_template_ids:  # keep those still referenced
-        raw_tmpl_sel = sqlalchemy.select([stack.c.raw_template_id]).where(
+        raw_tmpl_sel = sqlalchemy.select(stack.c.raw_template_id).where(
             stack.c.raw_template_id.in_(raw_template_ids))
         with engine.connect() as conn, conn.begin():
             raw_tmpl = [i[0] for i in conn.execute(raw_tmpl_sel)]
@@ -1580,7 +1587,8 @@ def _purge_stacks(stack_infos, engine, meta):
 
     if raw_template_ids:  # keep those still referenced (previous tmpl)
         raw_tmpl_sel = sqlalchemy.select(
-            [stack.c.prev_raw_template_id]).where(
+            stack.c.prev_raw_template_id,
+        ).where(
             stack.c.prev_raw_template_id.in_(raw_template_ids))
         with engine.connect() as conn, conn.begin():
             raw_tmpl = [i[0] for i in conn.execute(raw_tmpl_sel)]
@@ -1588,8 +1596,9 @@ def _purge_stacks(stack_infos, engine, meta):
 
     if raw_template_ids:  # delete raw_templates if we have any
         raw_tmpl_file_sel = sqlalchemy.select(
-            [raw_template.c.files_id]).where(
-                raw_template.c.id.in_(raw_template_ids))
+            raw_template.c.files_id,
+        ).where(
+            raw_template.c.id.in_(raw_template_ids))
         with engine.connect() as conn, conn.begin():
             raw_tmpl_file_ids = [i[0] for i in conn.execute(
                 raw_tmpl_file_sel)]
@@ -1601,8 +1610,9 @@ def _purge_stacks(stack_infos, engine, meta):
 
         if raw_tmpl_file_ids:  # keep _files still referenced
             raw_tmpl_file_sel = sqlalchemy.select(
-                [raw_template.c.files_id]).where(
-                    raw_template.c.files_id.in_(raw_tmpl_file_ids))
+                raw_template.c.files_id,
+            ).where(
+                raw_template.c.files_id.in_(raw_tmpl_file_ids))
             with engine.connect() as conn, conn.begin():
                 raw_tmpl_files = [i[0] for i in conn.execute(
                     raw_tmpl_file_sel)]
@@ -1618,7 +1628,7 @@ def _purge_stacks(stack_infos, engine, meta):
     # purge any user creds that are no longer referenced
     user_creds_ids = [i[3] for i in stack_infos if i[3] is not None]
     if user_creds_ids:  # keep those still referenced
-        user_sel = sqlalchemy.select([stack.c.user_creds_id]).where(
+        user_sel = sqlalchemy.select(stack.c.user_creds_id).where(
             stack.c.user_creds_id.in_(user_creds_ids))
         with engine.connect() as conn, conn.begin():
             users = [i[0] for i in conn.execute(user_sel)]

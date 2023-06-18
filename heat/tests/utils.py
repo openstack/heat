@@ -303,13 +303,6 @@ class WarningsFixture(fixtures.Fixture):
             category=sqla_exc.SADeprecationWarning,
         )
 
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
-            message=r'The legacy calling style of select\(\) is deprecated ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
         # Enable general SQLAlchemy warnings also to ensure we're not doing
         # silly stuff. It's possible that we'll need to filter things out here
         # with future SQLAlchemy versions, but that's a good thing
