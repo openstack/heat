@@ -271,13 +271,6 @@ class WarningsFixture(fixtures.Fixture):
         warnings.filterwarnings(
             'ignore',
             module='heat',
-            message='The current statement is being autocommitted using ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
             message='The Session.transaction attribute is considered legacy ',
             category=sqla_exc.SADeprecationWarning,
         )

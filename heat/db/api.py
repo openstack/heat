@@ -827,7 +827,10 @@ def stack_create(context, values):
     # some backup stacks may not be found, for reasons that are unclear.
     earliest = stack_get_by_name(context, stack_name)
     if earliest is not None and earliest.id != stack_ref.id:
-        context.session.query(models.Stack).filter_by(id=stack_ref.id).delete()
+        with context.session.begin():
+            context.session.query(models.Stack).filter_by(
+                id=stack_ref.id,
+            ).delete()
         raise exception.StackExists(stack_name=stack_name)
 
     return stack_ref
@@ -1655,8 +1658,9 @@ def _purge_stacks(stack_infos, engine, meta):
 
 def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
                                                  traversal_id):
-    rows_deleted = context.session.query(models.SyncPoint).filter_by(
-        stack_id=stack_id, traversal_id=traversal_id).delete()
+    with context.session.begin():
+        rows_deleted = context.session.query(models.SyncPoint).filter_by(
+            stack_id=stack_id, traversal_id=traversal_id).delete()
     return rows_deleted
 
 
@@ -1681,12 +1685,13 @@ def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
                                  input_data):
     entity_id = str(entity_id)
-    rows_updated = context.session.query(models.SyncPoint).filter_by(
-        entity_id=entity_id,
-        traversal_id=traversal_id,
-        is_update=is_update,
-        atomic_key=atomic_key
-    ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
+    with context.session.begin():
+        rows_updated = context.session.query(models.SyncPoint).filter_by(
+            entity_id=entity_id,
+            traversal_id=traversal_id,
+            is_update=is_update,
+            atomic_key=atomic_key
+        ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
     return rows_updated
 
 
