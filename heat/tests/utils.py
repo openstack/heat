@@ -299,13 +299,6 @@ class WarningsFixture(fixtures.Fixture):
         warnings.filterwarnings(
             'ignore',
             module='heat',
-            message='The autoload parameter is deprecated ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
             message='The ``bind`` argument for schema methods that invoke ',
             category=sqla_exc.SADeprecationWarning,
         )
