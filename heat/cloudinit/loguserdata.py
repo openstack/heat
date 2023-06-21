@@ -34,7 +34,6 @@ exec $interpreter "$0"
 '''
 
 import datetime
-from distutils import version
 import errno
 import logging
 import os
@@ -42,6 +41,7 @@ import re
 import subprocess
 import sys
 
+from packaging import version
 import pkg_resources
 
 
@@ -51,9 +51,9 @@ LOG = logging.getLogger('heat-provision')
 
 def chk_ci_version():
     try:
-        v = version.LooseVersion(
+        v = version.Version(
             pkg_resources.get_distribution('cloud-init').version)
-        return v >= version.LooseVersion('0.6.0')
+        return v >= version.Version('0.6.0')
     except Exception:
         pass
     data = subprocess.Popen(['cloud-init', '--version'],
