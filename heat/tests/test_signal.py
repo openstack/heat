@@ -517,8 +517,7 @@ class SignalTest(common.HeatTestCase):
         # db resource concurrently, deleting it
 
         # Test exception not re-raised in DELETE case
-        res_obj = stack.context.session.query(
-            models.Resource).get(rsrc.id)
+        res_obj = stack.context.session.get(models.Resource, rsrc.id)
         res_obj.update({'action': 'DELETE'})
         rsrc._db_res_is_deleted = True
         rsrc._handle_signal(details=test_d)

@@ -285,13 +285,6 @@ class WarningsFixture(fixtures.Fixture):
         warnings.filterwarnings(
             'ignore',
             module='heat',
-            message=r'The Query.get\(\) method is considered legacy ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
             message='The Session.transaction attribute is considered legacy ',
             category=sqla_exc.SADeprecationWarning,
         )

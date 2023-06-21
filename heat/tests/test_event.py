@@ -175,16 +175,16 @@ class EventTest(EventCommon):
         # rpd1 should still exist since that is still referred to by
         # the resource. rpd2 shoud have been deleted along with the
         # 2nd event.
-        self.assertIsNotNone(self.ctx.session.query(
-            models.ResourcePropertiesData).get(rpd1_id))
-        self.assertIsNone(self.ctx.session.query(
-            models.ResourcePropertiesData).get(rpd2_id))
+        self.assertIsNotNone(self.ctx.session.get(
+            models.ResourcePropertiesData, rpd1_id))
+        self.assertIsNone(self.ctx.session.get(
+            models.ResourcePropertiesData, rpd2_id))
         # We didn't purge the last two events, so we ought to have
         # kept rsrc_prop_data for both.
-        self.assertIsNotNone(self.ctx.session.query(
-            models.ResourcePropertiesData).get(rpd3_id))
-        self.assertIsNotNone(self.ctx.session.query(
-            models.ResourcePropertiesData).get(rpd4_id))
+        self.assertIsNotNone(self.ctx.session.get(
+            models.ResourcePropertiesData, rpd3_id))
+        self.assertIsNotNone(self.ctx.session.get(
+            models.ResourcePropertiesData, rpd4_id))
 
     def test_identifier(self):
         event_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
@@ -244,7 +244,7 @@ class EventTest(EventCommon):
 
         # for test purposes, dress up the event to have the deprecated
         # properties_data field populated
-        e_obj = self.ctx.session.query(models.Event).get(e.id)
+        e_obj = self.ctx.session.get(models.Event, e.id)
         with self.ctx.session.begin():
             e_obj['resource_properties'] = {'Time': 'not enough'}
             e_obj['rsrc_prop_data'] = None
