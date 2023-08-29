@@ -20,7 +20,22 @@ from heat.engine import support
 from heat.engine import translation
 
 
-class AodhAlarm(alarm_base.BaseAlarm):
+class AodhBaseActionsMixin:
+    def handle_create(self):
+        props = self.get_alarm_props(self.properties)
+        props['name'] = self.physical_resource_name()
+        alarm = self.client().alarm.create(props)
+        self.resource_id_set(alarm['alarm_id'])
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        if prop_diff:
+            new_props = json_snippet.properties(self.properties_schema,
+                                                self.context)
+            self.client().alarm.update(self.resource_id,
+                                       self.get_alarm_props(new_props))
+
+
+class AodhAlarm(AodhBaseActionsMixin, alarm_base.BaseAlarm):
     """A resource that implements alarming service of Aodh.
 
     A resource that allows for the setting alarms based on threshold evaluation
@@ -176,19 +191,6 @@ class AodhAlarm(alarm_base.BaseAlarm):
         kwargs['threshold_rule'] = rule
         return kwargs
 
-    def handle_create(self):
-        props = self.get_alarm_props(self.properties)
-        props['name'] = self.physical_resource_name()
-        alarm = self.client().alarm.create(props)
-        self.resource_id_set(alarm['alarm_id'])
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            new_props = json_snippet.properties(self.properties_schema,
-                                                self.context)
-            self.client().alarm.update(self.resource_id,
-                                       self.get_alarm_props(new_props))
-
     def parse_live_resource_data(self, resource_properties, resource_data):
         record_reality = {}
         threshold_data = resource_data.get('threshold_rule').copy()
@@ -232,7 +234,7 @@ class CombinationAlarm(none_resource.NoneResource):
     )
 
 
-class EventAlarm(alarm_base.BaseAlarm):
+class EventAlarm(AodhBaseActionsMixin, alarm_base.BaseAlarm):
     """A resource that implements event alarms.
 
     Allows users to define alarms which can be evaluated based on events
@@ -313,21 +315,8 @@ class EventAlarm(alarm_base.BaseAlarm):
         kwargs['event_rule'] = rule
         return kwargs
 
-    def handle_create(self):
-        props = self.get_alarm_props(self.properties)
-        props['name'] = self.physical_resource_name()
-        alarm = self.client().alarm.create(props)
-        self.resource_id_set(alarm['alarm_id'])
 
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            new_props = json_snippet.properties(self.properties_schema,
-                                                self.context)
-            self.client().alarm.update(self.resource_id,
-                                       self.get_alarm_props(new_props))
-
-
-class LBMemberHealthAlarm(alarm_base.BaseAlarm):
+class LBMemberHealthAlarm(AodhBaseActionsMixin, alarm_base.BaseAlarm):
     """A resource that implements a Loadbalancer Member Health Alarm.
 
     Allows setting alarms based on the health of load balancer pool members,
@@ -411,18 +400,65 @@ class LBMemberHealthAlarm(alarm_base.BaseAlarm):
         ]
         return translation_rules
 
-    def handle_create(self):
-        props = self.get_alarm_props(self.properties)
-        props['name'] = self.physical_resource_name()
-        alarm = self.client().alarm.create(props)
-        self.resource_id_set(alarm['alarm_id'])
 
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            new_props = json_snippet.properties(self.properties_schema,
-                                                self.context)
-            self.client().alarm.update(self.resource_id,
-                                       self.get_alarm_props(new_props))
+class PrometheusAlarm(AodhBaseActionsMixin,
+                      alarm_base.BaseAlarm):
+    """A resource that implements Aodh alarm of type prometheus.
+
+    An alarm that evaluates threshold based on metric data fetched from
+    Prometheus.
+    """
+
+    support_status = support.SupportStatus(version='22.0.0')
+
+    PROPERTIES = (
+        COMPARISON_OPERATOR, QUERY, THRESHOLD,
+    ) = (
+        'comparison_operator', 'query', 'threshold',
+    )
+
+    properties_schema = {
+        COMPARISON_OPERATOR: properties.Schema(
+            properties.Schema.STRING,
+            _('Operator used to compare specified statistic with threshold.'),
+            constraints=[alarm_base.BaseAlarm.QF_OP_VALS],
+            update_allowed=True
+        ),
+        QUERY: properties.Schema(
+            properties.Schema.STRING,
+            _('The PromQL query string to fetch metrics data '
+              'from Prometheus.'),
+            required=True,
+            update_allowed=True
+        ),
+        THRESHOLD: properties.Schema(
+            properties.Schema.NUMBER,
+            _('Threshold to evaluate against.'),
+            required=True,
+            update_allowed=True
+        ),
+    }
+    properties_schema.update(alarm_base.common_properties_schema)
+
+    alarm_type = 'prometheus'
+
+    def get_alarm_props(self, props):
+        kwargs = self.actions_to_urls(props)
+        kwargs['type'] = self.alarm_type
+        return self._reformat_properties(kwargs)
+
+    def parse_live_resource_data(self, resource_properties,
+                                 resource_data):
+        record_reality = {}
+        rule = self.alarm_type + '_rule'
+        data = resource_data.get(rule).copy()
+        data.update(resource_data)
+        for key in self.properties_schema.keys():
+            if key in alarm_base.INTERNAL_PROPERTIES:
+                continue
+            if self.properties_schema[key].update_allowed:
+                record_reality.update({key: data.get(key)})
+        return record_reality
 
 
 def resource_mapping():
@@ -431,4 +467,5 @@ def resource_mapping():
         'OS::Aodh::CombinationAlarm': CombinationAlarm,
         'OS::Aodh::EventAlarm': EventAlarm,
         'OS::Aodh::LBMemberHealthAlarm': LBMemberHealthAlarm,
+        'OS::Aodh::PrometheusAlarm': PrometheusAlarm,
     }
