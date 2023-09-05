@@ -297,8 +297,9 @@ class StoredContext(RequestContext):
 
     @property
     def roles(self):
-        if not getattr(self, '_keystone_loaded', False):
-            self._load_keystone_data()
+        if self._roles is None:
+            if not getattr(self, '_keystone_loaded', False):
+                self._load_keystone_data()
         return self._roles
 
     @roles.setter
@@ -307,8 +308,9 @@ class StoredContext(RequestContext):
 
     @property
     def user_domain_id(self):
-        if not getattr(self, '_keystone_loaded', False):
-            self._load_keystone_data()
+        if self._user_domain_id is None:
+            if not getattr(self, '_keystone_loaded', False):
+                self._load_keystone_data()
         return self._user_domain_id
 
     @user_domain_id.setter
@@ -317,8 +319,9 @@ class StoredContext(RequestContext):
 
     @property
     def project_domain_id(self):
-        if not getattr(self, '_keystone_loaded', False):
-            self._load_keystone_data()
+        if self._project_domain_id is None:
+            if not getattr(self, '_keystone_loaded', False):
+                self._load_keystone_data()
         return self._project_domain_id
 
     @project_domain_id.setter
