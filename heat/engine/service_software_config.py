@@ -268,7 +268,11 @@ class SoftwareConfigService(object):
                                    input_values, action, status,
                                    status_reason, stack_user_project_id,
                                    deployment_id=None):
-
+        if stack_user_project_id is not None:
+            if len(stack_user_project_id) > 64:
+                raise exception.Invalid(
+                    reason='"stack_user_project_id" '
+                           'should be no more than 64 characters')
         if deployment_id is None:
             deployment_id = str(uuid.uuid4())
         sd = software_deployment_object.SoftwareDeployment.create(cnxt, {

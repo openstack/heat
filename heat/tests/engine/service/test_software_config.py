@@ -504,6 +504,31 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         self.assertEqual(deployment_id, deployment['id'])
         self.assertEqual(kwargs['input_values'], deployment['input_values'])
 
+    def test_create_software_deployment_invalid_stack_user_project_id(self):
+        sc_kwargs = {
+            'group': 'Heat::Chef',
+            'name': 'config_heat',
+            'config': '...',
+            'inputs': [{'name': 'mode'}],
+            'outputs': [{'name': 'endpoint'}],
+            'options': {}
+        }
+        config = self._create_software_config(**sc_kwargs)
+        config_id = config['id']
+        sd_kwargs = {
+            'config_id': config_id,
+            'input_values': {'mode': 'standalone'},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': '',
+            # stack_user_project should be no more than 64 characters
+            'stack_user_project_id': 'a' * 65
+        }
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._create_software_deployment,
+                               **sd_kwargs)
+        self.assertEqual(exception.Invalid, ex.exc_info[0])
+
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        '_refresh_swift_software_deployment')
     def test_show_software_deployment_refresh(
@@ -1084,3 +1109,24 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
 
         self.assertEqual({'type': 'Number', 'name': 'baz', 'default': ''},
                          inp.as_dict())
+
+
+class SoftwareConfigServiceTestWithConstraint(SoftwareConfigServiceTest):
+    """Test cases which require FK constraints"""
+
+    def setUp(self):
+        self.useFixture(utils.ForeignKeyConstraintFixture())
+        super(SoftwareConfigServiceTestWithConstraint, self).setUp()
+
+    def test_create_software_deployment_invalid_config_id(self):
+        kwargs = {
+            'config_id': 'this_is_invalid',
+            'input_values': {'mode': 'standalone'},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': ''
+        }
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._create_software_deployment,
+                               **kwargs)
+        self.assertEqual(exception.Invalid, ex.exc_info[0])
