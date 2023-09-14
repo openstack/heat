@@ -12,6 +12,8 @@
 #    under the License.
 
 """Implementation of SQLAlchemy backend."""
+
+import contextlib
 import datetime
 import functools
 import itertools
@@ -25,7 +27,6 @@ from oslo_db.sqlalchemy import enginefacade
 from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 from oslo_utils import encodeutils
-from oslo_utils import excutils
 from oslo_utils import timeutils
 import osprofiler.sqlalchemy
 import sqlalchemy
@@ -72,7 +73,6 @@ db_context.configure(__autocommit=True)
 def get_facade():
     global _facade
     if _facade is None:
-
         # FIXME: get_facade() is called by the test suite startup,
         # but will not be called normally for API calls.
         # osprofiler / oslo_db / enginefacade currently don't have hooks
@@ -99,29 +99,30 @@ def get_session():
 def retry_on_db_error(func):
     @functools.wraps(func)
     def try_func(context, *args, **kwargs):
-        if (context.session.transaction is None or
-                not context.session.autocommit):
-            wrapped = oslo_db_api.wrap_db_retry(
-                max_retries=CONF.database.db_max_retries,
-                retry_on_deadlock=True,
-                retry_on_disconnect=True,
-                retry_interval=CONF.database.db_retry_interval,
-                inc_retry_interval=CONF.database.db_inc_retry_interval,
-                max_retry_interval=CONF.database.db_max_retry_interval)(func)
-            return wrapped(context, *args, **kwargs)
-        else:
-            try:
-                return func(context, *args, **kwargs)
-            except (db_exception.DBDeadlock, db_exception.DBConnectionError):
-                with excutils.save_and_reraise_exception():
-                    LOG.debug('Not retrying on DBDeadlock and '
-                              'DBConnectionError because '
-                              'transaction not closed')
+        wrapped = oslo_db_api.wrap_db_retry(
+            max_retries=CONF.database.db_max_retries,
+            retry_on_deadlock=True,
+            retry_on_disconnect=True,
+            retry_interval=CONF.database.db_retry_interval,
+            inc_retry_interval=CONF.database.db_inc_retry_interval,
+            max_retry_interval=CONF.database.db_max_retry_interval,
+        )(func)
+        return wrapped(context, *args, **kwargs)
     return try_func
 
 
+@contextlib.contextmanager
+def transaction(context):
+    # https://docs.sqlalchemy.org/en/20/changelog/migration_20.html#session-subtransaction-behavior-removed
+    if not context.session.in_transaction():
+        with context.session.begin():
+            yield
+    else:
+        yield
+
+
 def update_and_save(context, obj, values):
-    with context.session.begin(subtransactions=True):
+    with transaction(context):
         for k, v in values.items():
             setattr(obj, k, v)
 
@@ -180,7 +181,7 @@ def raw_template_delete(context, template_id):
         # Ignore not found
         return
     raw_tmpl_files_id = raw_template.files_id
-    with context.session.begin(subtransactions=True):
+    with transaction(context):
         context.session.delete(raw_template)
         if raw_tmpl_files_id is None:
             return
@@ -305,7 +306,7 @@ def resource_update(context, resource_id, values, atomic_key,
 
 def _try_resource_update(context, resource_id, values, atomic_key,
                          expected_engine_id=None):
-    with context.session.begin(subtransactions=True):
+    with transaction(context):
         _add_atomic_key_to_values(values, atomic_key)
         rows_updated = context.session.query(models.Resource).filter_by(
             id=resource_id, engine_id=expected_engine_id,
@@ -320,7 +321,7 @@ def resource_update_and_save(context, resource_id, values):
 
 
 def resource_delete(context, resource_id):
-    with context.session.begin(subtransactions=True):
+    with transaction(context):
         resource = context.session.get(models.Resource, resource_id)
         if resource:
             context.session.delete(resource)
@@ -420,7 +421,7 @@ def stack_tags_set(context, stack_id, tags):
 
 
 def stack_tags_delete(context, stack_id):
-    with context.session.begin(subtransactions=True):
+    with transaction(context):
         result = stack_tags_get(context, stack_id)
         if result:
             for tag in result:
@@ -828,7 +829,7 @@ def stack_create(context, values):
 
 @retry_on_db_error
 def stack_update(context, stack_id, values, exp_trvsl=None):
-    with context.session.begin(subtransactions=True):
+    with transaction(context):
         query = (context.session.query(models.Stack)
                  .filter(and_(models.Stack.id == stack_id),
                          (models.Stack.deleted_at.is_(None))))
@@ -1804,10 +1805,11 @@ def _db_encrypt_or_decrypt_resource_prop_data_legacy(
                     else:
                         result = crypt.decrypted_dict(resource.properties_data,
                                                       encryption_key)
-                    resource_update(context, resource.id,
-                                    {'properties_data': result,
-                                     'properties_data_encrypted': encrypt},
-                                    resource.atomic_key)
+                    _try_resource_update(
+                        context, resource.id,
+                        {'properties_data': result,
+                         'properties_data_encrypted': encrypt},
+                        resource.atomic_key)
                 except Exception as exc:
                     LOG.exception('Failed to %(crypt_action)s '
                                   'properties_data of resource %(id)d' %
