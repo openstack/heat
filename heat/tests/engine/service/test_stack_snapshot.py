@@ -13,6 +13,8 @@
 from unittest import mock
 import uuid
 
+from oslo_config import cfg
+from oslo_messaging import conffixture
 from oslo_messaging.rpc import dispatcher
 
 from heat.common import exception
@@ -34,6 +36,7 @@ class SnapshotServiceTest(common.HeatTestCase):
 
         self.engine = service.EngineService('a-host', 'a-topic')
         self.engine.thread_group_mgr = tools.DummyThreadGroupManager()
+        self.useFixture(conffixture.ConfFixture(cfg.CONF))
 
     def _create_stack(self, stack_name, files=None):
         t = template_format.parse(tools.wp_template)
