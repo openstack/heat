@@ -146,8 +146,10 @@ def do_crypt_parameters_and_properties():
 
 
 def do_properties_data_migrate():
-    ctxt = context.get_admin_context()
-    db_api.db_properties_data_migrate(ctxt)
+    print(
+        'This command has been deprecated and is now a no-op. '
+        'It will be removed in a future release.'
+    )
 
 
 def add_command_parsers(subparsers):

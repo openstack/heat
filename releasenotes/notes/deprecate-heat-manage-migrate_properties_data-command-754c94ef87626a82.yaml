@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``heat-manage migrate_properties_data`` command is deprecated and is
+    now a no-op. It will be removed in a future release.
