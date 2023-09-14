@@ -127,12 +127,12 @@ def update_and_save(context, obj, values):
             setattr(obj, k, v)
 
 
-def delete_softly(context, obj):
+def _soft_delete(context, obj):
     """Mark this object as deleted."""
     update_and_save(context, obj, {'deleted_at': timeutils.utcnow()})
 
 
-def soft_delete_aware_query(context, *args, **kwargs):
+def _soft_delete_aware_query(context, *args, **kwargs):
     """Stack query helper that accounts for context's `show_deleted` field.
 
     :param show_deleted: if True, overrides context's show_deleted field.
@@ -602,7 +602,7 @@ def resource_prop_data_get(context, resource_prop_data_id):
 
 
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
-    query = soft_delete_aware_query(
+    query = _soft_delete_aware_query(
         context, models.Stack
     ).options(orm.joinedload(models.Stack.raw_template)).filter(sqlalchemy.or_(
         models.Stack.tenant == context.tenant_id,
@@ -612,7 +612,7 @@ def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
 
 
 def stack_get_by_name(context, stack_name):
-    query = soft_delete_aware_query(
+    query = _soft_delete_aware_query(
         context, models.Stack
     ).filter(sqlalchemy.or_(
              models.Stack.tenant == context.tenant_id,
@@ -660,9 +660,11 @@ def stack_get_status(context, stack_id):
 
 
 def stack_get_all_by_owner_id(context, owner_id):
-    results = soft_delete_aware_query(
-        context, models.Stack).filter_by(owner_id=owner_id,
-                                         backup=False).all()
+    results = _soft_delete_aware_query(
+        context, models.Stack,
+    ).filter_by(
+        owner_id=owner_id, backup=False,
+    ).all()
     return results
 
 
@@ -713,11 +715,11 @@ def _query_stack_get_all(context, show_deleted=False,
                          show_nested=False, show_hidden=False, tags=None,
                          tags_any=None, not_tags=None, not_tags_any=None):
     if show_nested:
-        query = soft_delete_aware_query(
+        query = _soft_delete_aware_query(
             context, models.Stack, show_deleted=show_deleted
         ).filter_by(backup=False)
     else:
-        query = soft_delete_aware_query(
+        query = _soft_delete_aware_query(
             context, models.Stack, show_deleted=show_deleted
         ).filter_by(owner_id=None)
 
@@ -737,7 +739,7 @@ def _query_stack_get_all(context, show_deleted=False,
                 models.StackTag.tag.in_(tags_any)))
 
     if not_tags:
-        subquery = soft_delete_aware_query(
+        subquery = _soft_delete_aware_query(
             context, models.Stack, show_deleted=show_deleted
         )
         for tag in not_tags:
@@ -875,7 +877,7 @@ def stack_delete(context, stack_id):
                 models.ResourcePropertiesData.id).filter(
                     models.ResourcePropertiesData.id.in_(attr_ids)).delete(
                         synchronize_session=False)
-        delete_softly(context, s)
+        _soft_delete(context, s)
 
 
 def _is_duplicate_error(exc):
@@ -1366,7 +1368,7 @@ def service_delete(context, service_id, soft_delete=True):
     service = service_get(context, service_id)
     with context.session.begin():
         if soft_delete:
-            delete_softly(context, service)
+            _soft_delete(context, service)
         else:
             context.session.delete(service)
 
