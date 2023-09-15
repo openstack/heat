@@ -106,80 +106,80 @@ deprecated_list_stack_resources = policy.DeprecatedRule(
 cloudformation_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'ListStacks',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_list_stacks
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'CreateStack',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         deprecated_rule=deprecated_create_stack
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStacks',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_describe_stacks
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DeleteStack',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         deprecated_rule=deprecated_delete_stack
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'UpdateStack',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         deprecated_rule=deprecated_update_stack
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'CancelUpdateStack',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         deprecated_rule=deprecated_cancel_update_stack
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStackEvents',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_describe_stack_events
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'ValidateTemplate',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_validate_template
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'GetTemplate',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_get_template
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'EstimateTemplateCost',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_estimate_template_cost
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStackResource',
-        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER_OR_STACK_USER,
+        scope_types=['project'],
         deprecated_rule=deprecated_describe_stack_resource
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'DescribeStackResources',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_describe_stack_resources
     ),
     policy.RuleDefault(
         name=POLICY_ROOT % 'ListStackResources',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         deprecated_rule=deprecated_list_stack_resources
     )
 ]

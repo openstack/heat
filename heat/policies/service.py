@@ -31,7 +31,8 @@ deprecated_index = policy.DeprecatedRule(
 service_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.SYSTEM_READER,
+        check_str=base.PROJECT_ADMIN,
+        scope_types=['project'],
         deprecated_rule=deprecated_index
     )
 ]

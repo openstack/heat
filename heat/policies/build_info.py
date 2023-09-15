@@ -32,8 +32,8 @@ deprecated_build_info = policy.DeprecatedRule(
 build_info_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'build_info',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show build information.',
         operations=[
             {

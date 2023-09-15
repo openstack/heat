@@ -56,8 +56,8 @@ deprecated_delete = policy.DeprecatedRule(
 software_deployments_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List deployments.',
         operations=[
             {
@@ -69,8 +69,8 @@ software_deployments_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'create',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Create deployment.',
         operations=[
             {
@@ -82,8 +82,8 @@ software_deployments_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show deployment details.',
         operations=[
             {
@@ -95,8 +95,8 @@ software_deployments_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'update',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Update deployment.',
         operations=[
             {
@@ -108,8 +108,8 @@ software_deployments_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'delete',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Delete deployment.',
         operations=[
             {
@@ -121,8 +121,8 @@ software_deployments_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'metadata',
-        check_str=base.SYSTEM_OR_PROJECT_READER_OR_STACK_USER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER_OR_STACK_USER,
+        scope_types=['project'],
         description='Show server configuration metadata.',
         operations=[
             {

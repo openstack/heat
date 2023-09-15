@@ -21,12 +21,6 @@ The software configuration API now support system scope and default roles.
 
 POLICY_ROOT = 'software_configs:%s'
 
-deprecated_global_index = policy.DeprecatedRule(
-    name=POLICY_ROOT % 'global_index',
-    check_str=base.RULE_DENY_EVERYBODY,
-    deprecated_reason=DEPRECATED_REASON,
-    deprecated_since=versionutils.deprecated.WALLABY
-)
 deprecated_index = policy.DeprecatedRule(
     name=POLICY_ROOT % 'index',
     check_str=base.RULE_DENY_STACK_USER,
@@ -55,8 +49,7 @@ deprecated_delete = policy.DeprecatedRule(
 software_configs_policies = [
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'global_index',
-        check_str=base.SYSTEM_READER,
-        scope_types=['system', 'project'],
+        check_str=base.RULE_DENY_EVERYBODY,
         description='List configs globally.',
         operations=[
             {
@@ -64,12 +57,11 @@ software_configs_policies = [
                 'method': 'GET'
             }
         ],
-        deprecated_rule=deprecated_global_index
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'index',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='List configs.',
         operations=[
             {
@@ -81,8 +73,8 @@ software_configs_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'create',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Create config.',
         operations=[
             {
@@ -94,8 +86,8 @@ software_configs_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'show',
-        check_str=base.SYSTEM_OR_PROJECT_READER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_READER,
+        scope_types=['project'],
         description='Show config details.',
         operations=[
             {
@@ -107,8 +99,8 @@ software_configs_policies = [
     ),
     policy.DocumentedRuleDefault(
         name=POLICY_ROOT % 'delete',
-        check_str=base.SYSTEM_ADMIN_OR_PROJECT_MEMBER,
-        scope_types=['system', 'project'],
+        check_str=base.PROJECT_MEMBER,
+        scope_types=['project'],
         description='Delete config.',
         operations=[
             {
