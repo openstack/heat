@@ -27,7 +27,6 @@ from oslo_db.sqlalchemy import utils
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 from oslo_utils import timeutils
-import osprofiler.sqlalchemy
 import sqlalchemy
 from sqlalchemy import and_
 from sqlalchemy import func
@@ -57,44 +56,18 @@ CONF.import_opt(
 options.set_defaults(CONF)
 
 _facade = None
-db_context = enginefacade.transaction_context()
 
 LOG = logging.getLogger(__name__)
 
-
 # TODO(sbaker): fix tests so that sqlite_fk=True can be passed to configure
-# FIXME(stephenfin): we need to remove reliance on autocommit semantics ASAP
-# since it's not compatible with SQLAlchemy 2.0
-db_context.configure(__autocommit=True)
+context_manager = enginefacade.transaction_context()
 
 
 # utility methods
 
 
-def get_facade():
-    global _facade
-    if _facade is None:
-        # FIXME: get_facade() is called by the test suite startup,
-        # but will not be called normally for API calls.
-        # osprofiler / oslo_db / enginefacade currently don't have hooks
-        # to talk to each other, however one needs to be added to oslo.db
-        # to allow access to the Engine once constructed.
-        db_context.configure(**CONF.database)
-        _facade = db_context.get_legacy_facade()
-        if CONF.profiler.enabled:
-            if CONF.profiler.trace_sqlalchemy:
-                osprofiler.sqlalchemy.add_tracing(sqlalchemy,
-                                                  _facade.get_engine(),
-                                                  "db")
-    return _facade
-
-
 def get_engine():
-    return get_facade().get_engine()
-
-
-def get_session():
-    return get_facade().get_session()
+    return context_manager.writer.get_engine()
 
 
 def retry_on_db_error(func):
@@ -134,6 +107,7 @@ def _soft_delete_aware_query(context, *args, **kwargs):
 # raw template
 
 
+@context_manager.reader
 def raw_template_get(context, template_id):
     return _raw_template_get(context, template_id)
 
@@ -147,6 +121,7 @@ def _raw_template_get(context, template_id):
     return result
 
 
+@context_manager.writer
 def raw_template_create(context, values):
     raw_template_ref = models.RawTemplate()
     raw_template_ref.update(values)
@@ -154,6 +129,7 @@ def raw_template_create(context, values):
     return raw_template_ref
 
 
+@context_manager.writer
 def raw_template_update(context, template_id, values):
     raw_template_ref = _raw_template_get(context, template_id)
     # get only the changed values
@@ -161,13 +137,13 @@ def raw_template_update(context, template_id, values):
                   if getattr(raw_template_ref, k) != v)
 
     if values:
-        with context.session.begin():
-            for k, v in values.items():
-                setattr(raw_template_ref, k, v)
+        for k, v in values.items():
+            setattr(raw_template_ref, k, v)
 
     return raw_template_ref
 
 
+@context_manager.writer
 def raw_template_delete(context, template_id):
     try:
         raw_template = _raw_template_get(context, template_id)
@@ -175,34 +151,35 @@ def raw_template_delete(context, template_id):
         # Ignore not found
         return
     raw_tmpl_files_id = raw_template.files_id
-    with context.session.begin():
-        context.session.delete(raw_template)
-        if raw_tmpl_files_id is None:
+    context.session.delete(raw_template)
+    if raw_tmpl_files_id is None:
+        return
+
+    # If no other raw_template is referencing the same raw_template_files,
+    # delete that too
+    if context.session.query(models.RawTemplate).filter_by(
+            files_id=raw_tmpl_files_id).first() is None:
+        try:
+            raw_tmpl_files = _raw_template_files_get(
+                context, raw_tmpl_files_id)
+        except exception.NotFound:
+            # Ignore not found
             return
-        # If no other raw_template is referencing the same raw_template_files,
-        # delete that too
-        if context.session.query(models.RawTemplate).filter_by(
-                files_id=raw_tmpl_files_id).first() is None:
-            try:
-                raw_tmpl_files = _raw_template_files_get(
-                    context, raw_tmpl_files_id)
-            except exception.NotFound:
-                # Ignore not found
-                return
-            context.session.delete(raw_tmpl_files)
+        context.session.delete(raw_tmpl_files)
 
 
 # raw template files
 
 
+@context_manager.writer
 def raw_template_files_create(context, values):
     raw_templ_files_ref = models.RawTemplateFiles()
     raw_templ_files_ref.update(values)
-    with context.session.begin():
-        raw_templ_files_ref.save(context.session)
+    raw_templ_files_ref.save(context.session)
     return raw_templ_files_ref
 
 
+@context_manager.reader
 def raw_template_files_get(context, files_id):
     return _raw_template_files_get(context, files_id)
 
@@ -219,31 +196,35 @@ def _raw_template_files_get(context, files_id):
 # resource
 
 
+@context_manager.writer
 def resource_create(context, values):
     return _resource_create(context, values)
 
 
 def _resource_create(context, values):
     resource_ref = models.Resource()
+    resource_ref.data = []
+    resource_ref.attr_data = None
+    resource_ref.rsrc_attr_data = None
     resource_ref.update(values)
     resource_ref.save(context.session)
     return resource_ref
 
 
 @retry_on_db_error
+@context_manager.writer
 def resource_create_replacement(context,
                                 existing_res_id,
                                 new_res_values,
                                 atomic_key, expected_engine_id=None):
     try:
-        with context.session.begin():
+        with context_manager.writer.independent.using(context):
             new_res = _resource_create(context, new_res_values)
             update_data = {'replaced_by': new_res.id}
             rows_updated = _resource_update(
                 context, existing_res_id, update_data, atomic_key,
                 expected_engine_id=expected_engine_id,
             )
-
         if not bool(rows_updated):
             data = {}
             if 'name' in new_res_values:
@@ -257,12 +238,14 @@ def resource_create_replacement(context,
         return new_res
 
 
+@context_manager.reader
 def resource_get_all_by_stack(context, stack_id, filters=None):
     query = context.session.query(
         models.Resource
     ).filter_by(
         stack_id=stack_id
     ).options(
+        orm.joinedload(models.Resource.attr_data),
         orm.joinedload(models.Resource.data),
         orm.joinedload(models.Resource.rsrc_prop_data),
     )
@@ -273,6 +256,7 @@ def resource_get_all_by_stack(context, stack_id, filters=None):
     return dict((res.name, res) for res in results)
 
 
+@context_manager.reader
 def resource_get_all_active_by_stack(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
     subquery = context.session.query(models.Resource.id).filter_by(**filters)
@@ -280,11 +264,16 @@ def resource_get_all_active_by_stack(context, stack_id):
     results = context.session.query(models.Resource).filter_by(
         stack_id=stack_id).filter(
         models.Resource.id.notin_(subquery.scalar_subquery())
-    ).options(orm.joinedload(models.Resource.data)).all()
+    ).options(
+        orm.joinedload(models.Resource.attr_data),
+        orm.joinedload(models.Resource.data),
+        orm.joinedload(models.Resource.rsrc_prop_data),
+    ).all()
 
     return dict((res.id, res) for res in results)
 
 
+@context_manager.reader
 def resource_get_all_by_root_stack(context, stack_id, filters=None,
                                    stack_id_only=False):
     query = context.session.query(
@@ -299,6 +288,7 @@ def resource_get_all_by_root_stack(context, stack_id, filters=None,
         )
     else:
         query = query.options(
+            orm.joinedload(models.Resource.attr_data),
             orm.joinedload(models.Resource.data),
             orm.joinedload(models.Resource.rsrc_prop_data),
         )
@@ -309,6 +299,7 @@ def resource_get_all_by_root_stack(context, stack_id, filters=None,
     return dict((res.id, res) for res in results)
 
 
+@context_manager.reader
 def engine_get_all_locked_by_stack(context, stack_id):
     query = context.session.query(
         func.distinct(models.Resource.engine_id)
@@ -318,16 +309,22 @@ def engine_get_all_locked_by_stack(context, stack_id):
     return set(i[0] for i in query.all())
 
 
-def resource_get(context, resource_id, refresh=False, refresh_data=False,
-                 eager=True):
-    options = [orm.joinedload(models.Resource.data)]
-    if eager:
-        options.append(orm.joinedload(models.Resource.rsrc_prop_data))
+@context_manager.reader
+def resource_get(context, resource_id, refresh=False, refresh_data=False):
+    return _resource_get(context, resource_id, refresh=refresh,
+                         refresh_data=refresh_data)
 
-    result = context.session.get(
-        models.Resource, resource_id,
-        options=options,
-    )
+
+def _resource_get(context, resource_id, refresh=False, refresh_data=False):
+    result = context.session.query(
+        models.Resource
+    ).filter_by(
+        id=resource_id
+    ).options(
+        orm.joinedload(models.Resource.attr_data),
+        orm.joinedload(models.Resource.data),
+        orm.joinedload(models.Resource.rsrc_prop_data),
+    ).first()
     if not result:
         raise exception.NotFound(_("resource with id %s not found") %
                                  resource_id)
@@ -340,6 +337,7 @@ def resource_get(context, resource_id, refresh=False, refresh_data=False,
     return result
 
 
+@context_manager.reader
 def resource_get_by_name_and_stack(context, resource_name, stack_id):
     result = context.session.query(
         models.Resource
@@ -347,27 +345,42 @@ def resource_get_by_name_and_stack(context, resource_name, stack_id):
         name=resource_name
     ).filter_by(
         stack_id=stack_id
-    ).options(orm.joinedload(models.Resource.data)).first()
+    ).options(
+        orm.joinedload(models.Resource.attr_data),
+        orm.joinedload(models.Resource.data),
+        orm.joinedload(models.Resource.rsrc_prop_data),
+    ).first()
     return result
 
 
+@context_manager.reader
 def resource_get_all_by_physical_resource_id(context, physical_resource_id):
-    return _resource_get_all_by_physical_resource_id(
-        context, physical_resource_id,
+    return list(
+        _resource_get_all_by_physical_resource_id(
+            context, physical_resource_id,
+        )
     )
 
 
 def _resource_get_all_by_physical_resource_id(context, physical_resource_id):
-    results = (context.session.query(models.Resource)
-               .filter_by(physical_resource_id=physical_resource_id)
-               .all())
+    results = context.session.query(
+        models.Resource,
+    ).filter_by(
+        physical_resource_id=physical_resource_id,
+    ).options(
+        orm.joinedload(models.Resource.attr_data),
+        orm.joinedload(models.Resource.data),
+        orm.joinedload(models.Resource.rsrc_prop_data),
+    ).all()
 
     for result in results:
         if context is None or context.is_admin or context.tenant_id in (
-                result.stack.tenant, result.stack.stack_user_project_id):
+            result.stack.tenant, result.stack.stack_user_project_id,
+        ):
             yield result
 
 
+@context_manager.reader
 def resource_get_by_physical_resource_id(context, physical_resource_id):
     results = _resource_get_all_by_physical_resource_id(
         context, physical_resource_id,
@@ -378,8 +391,15 @@ def resource_get_by_physical_resource_id(context, physical_resource_id):
         return None
 
 
+@context_manager.reader
 def resource_get_all(context):
-    results = context.session.query(models.Resource).all()
+    results = context.session.query(
+        models.Resource,
+    ).options(
+        orm.joinedload(models.Resource.attr_data),
+        orm.joinedload(models.Resource.data),
+        orm.joinedload(models.Resource.rsrc_prop_data),
+    ).all()
 
     if not results:
         raise exception.NotFound(_('no resources were found'))
@@ -387,17 +407,17 @@ def resource_get_all(context):
 
 
 @retry_on_db_error
+@context_manager.writer
 def resource_purge_deleted(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
     query = context.session.query(models.Resource)
     result = query.filter_by(**filters)
     attr_ids = [r.attr_data_id for r in result if r.attr_data_id is not None]
-    with context.session.begin():
-        result.delete()
-        if attr_ids:
-            context.session.query(models.ResourcePropertiesData).filter(
-                models.ResourcePropertiesData.id.in_(attr_ids)).delete(
-                    synchronize_session=False)
+    result.delete()
+    if attr_ids:
+        context.session.query(models.ResourcePropertiesData).filter(
+            models.ResourcePropertiesData.id.in_(attr_ids)).delete(
+                synchronize_session=False)
 
 
 def _add_atomic_key_to_values(values, atomic_key):
@@ -408,13 +428,13 @@ def _add_atomic_key_to_values(values, atomic_key):
 
 
 @retry_on_db_error
+@context_manager.writer
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
-    with context.session.begin():
-        return _resource_update(
-            context, resource_id, values, atomic_key,
-            expected_engine_id=expected_engine_id,
-        )
+    return _resource_update(
+        context, resource_id, values, atomic_key,
+        expected_engine_id=expected_engine_id,
+    )
 
 
 def _resource_update(
@@ -428,71 +448,73 @@ def _resource_update(
     return bool(rows_updated)
 
 
+@context_manager.writer
 def resource_update_and_save(context, resource_id, values):
     resource = context.session.get(models.Resource, resource_id)
-    with context.session.begin():
-        for k, v in values.items():
-            setattr(resource, k, v)
+    resource.update(values)
+    resource.save(context.session)
+    return _resource_get(context, resource.id)
 
 
+@context_manager.writer
 def resource_delete(context, resource_id):
-    with context.session.begin():
-        resource = context.session.get(models.Resource, resource_id)
-        if resource:
-            context.session.delete(resource)
-            if resource.attr_data_id is not None:
-                attr_prop_data = context.session.get(
-                    models.ResourcePropertiesData, resource.attr_data_id)
-                context.session.delete(attr_prop_data)
-
-
-def resource_exchange_stacks(context, resource_id1, resource_id2):
-    with context.session.begin():
-        res1 = context.session.get(models.Resource, resource_id1)
-        res2 = context.session.get(models.Resource, resource_id2)
-
-        res1.stack, res2.stack = res2.stack, res1.stack
-
-
-def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
-    with context.session.begin():
-        values = {'attr_data_id': attr_id}
-        _add_atomic_key_to_values(values, atomic_key)
-        rows_updated = context.session.query(models.Resource).filter(and_(
-            models.Resource.id == resource_id,
-            models.Resource.atomic_key == atomic_key,
-            models.Resource.engine_id.is_(None),
-            or_(models.Resource.attr_data_id == attr_id,
-                models.Resource.attr_data_id.is_(None)))).update(
-                    values)
-        if rows_updated > 0:
-            return True
-        else:
-            # Someone else set the attr_id first and/or we have a stale
-            # view of the resource based on atomic_key, so delete the
-            # resource_properties_data (attr) DB row.
-            LOG.debug('Not updating res_id %(rid)s with attr_id %(aid)s',
-                      {'rid': resource_id, 'aid': attr_id})
-            context.session.query(
-                models.ResourcePropertiesData).filter(
-                    models.ResourcePropertiesData.id == attr_id).delete()
-            return False
-
-
-def resource_attr_data_delete(context, resource_id, attr_id):
-    with context.session.begin():
-        resource = context.session.get(models.Resource, resource_id)
-        attr_prop_data = context.session.get(
-            models.ResourcePropertiesData, attr_id)
-        if resource:
-            resource.update({'attr_data_id': None})
-        if attr_prop_data:
+    resource = context.session.get(models.Resource, resource_id)
+    if resource:
+        context.session.delete(resource)
+        if resource.attr_data_id is not None:
+            attr_prop_data = context.session.get(
+                models.ResourcePropertiesData, resource.attr_data_id)
             context.session.delete(attr_prop_data)
+
+
+@context_manager.writer
+def resource_exchange_stacks(context, resource_id1, resource_id2):
+    res1 = context.session.get(models.Resource, resource_id1)
+    res2 = context.session.get(models.Resource, resource_id2)
+
+    res1.stack, res2.stack = res2.stack, res1.stack
+
+
+@context_manager.writer
+def resource_attr_id_set(context, resource_id, atomic_key, attr_id):
+    values = {'attr_data_id': attr_id}
+    _add_atomic_key_to_values(values, atomic_key)
+    rows_updated = context.session.query(models.Resource).filter(and_(
+        models.Resource.id == resource_id,
+        models.Resource.atomic_key == atomic_key,
+        models.Resource.engine_id.is_(None),
+        or_(models.Resource.attr_data_id == attr_id,
+            models.Resource.attr_data_id.is_(None)))).update(
+                values)
+    if rows_updated > 0:
+        return True
+    else:
+        # Someone else set the attr_id first and/or we have a stale
+        # view of the resource based on atomic_key, so delete the
+        # resource_properties_data (attr) DB row.
+        LOG.debug('Not updating res_id %(rid)s with attr_id %(aid)s',
+                  {'rid': resource_id, 'aid': attr_id})
+        context.session.query(
+            models.ResourcePropertiesData).filter(
+                models.ResourcePropertiesData.id == attr_id).delete()
+        return False
+
+
+@context_manager.writer
+def resource_attr_data_delete(context, resource_id, attr_id):
+    resource = context.session.get(models.Resource, resource_id)
+    attr_prop_data = context.session.get(
+        models.ResourcePropertiesData, attr_id)
+    if resource:
+        resource.update({'attr_data_id': None})
+    if attr_prop_data:
+        context.session.delete(attr_prop_data)
 
 
 # resource data
 
 
+@context_manager.reader
 def resource_data_get_all(context, resource_id, data=None):
     """Looks up resource_data by resource.id.
 
@@ -520,6 +542,7 @@ def resource_data_get_all(context, resource_id, data=None):
     return ret
 
 
+@context_manager.reader
 def resource_data_get(context, resource_id, key):
     """Lookup value of resource's data by key.
 
@@ -531,6 +554,7 @@ def resource_data_get(context, resource_id, key):
     return result.value
 
 
+@context_manager.reader
 def resource_data_get_by_key(context, resource_id, key):
     return _resource_data_get_by_key(context, resource_id, key)
 
@@ -549,6 +573,7 @@ def _resource_data_get_by_key(context, resource_id, key):
     return result
 
 
+@context_manager.writer
 def resource_data_set(context, resource_id, key, value, redact=False):
     """Save resource's key/value pair to database."""
     if redact:
@@ -568,15 +593,16 @@ def resource_data_set(context, resource_id, key, value, redact=False):
     return current
 
 
+@context_manager.writer
 def resource_data_delete(context, resource_id, key):
     result = _resource_data_get_by_key(context, resource_id, key)
-    with context.session.begin():
-        context.session.delete(result)
+    context.session.delete(result)
 
 
 # resource properties data
 
 
+@context_manager.writer
 def resource_prop_data_create_or_update(context, values, rpd_id=None):
     return _resource_prop_data_create_or_update(context, values, rpd_id=rpd_id)
 
@@ -593,10 +619,12 @@ def _resource_prop_data_create_or_update(context, values, rpd_id=None):
     return obj_ref
 
 
+@context_manager.writer
 def resource_prop_data_create(context, values):
     return _resource_prop_data_create_or_update(context, values)
 
 
+@context_manager.reader
 def resource_prop_data_get(context, resource_prop_data_id):
     result = context.session.get(
         models.ResourcePropertiesData, resource_prop_data_id)
@@ -610,16 +638,22 @@ def resource_prop_data_get(context, resource_prop_data_id):
 # stack
 
 
+@context_manager.reader
 def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
     query = _soft_delete_aware_query(
         context, models.Stack
-    ).options(orm.joinedload(models.Stack.raw_template)).filter(sqlalchemy.or_(
-        models.Stack.tenant == context.tenant_id,
-        models.Stack.stack_user_project_id == context.tenant_id)
+    ).options(
+        orm.joinedload(models.Stack.raw_template),
+    ).filter(
+        sqlalchemy.or_(
+            models.Stack.tenant == context.tenant_id,
+            models.Stack.stack_user_project_id == context.tenant_id,
+        )
     ).filter_by(name=stack_name).filter_by(owner_id=owner_id)
     return query.first()
 
 
+@context_manager.reader
 def stack_get_by_name(context, stack_name):
     return _stack_get_by_name(context, stack_name)
 
@@ -627,13 +661,17 @@ def stack_get_by_name(context, stack_name):
 def _stack_get_by_name(context, stack_name):
     query = _soft_delete_aware_query(
         context, models.Stack
-    ).filter(sqlalchemy.or_(
-             models.Stack.tenant == context.tenant_id,
-             models.Stack.stack_user_project_id == context.tenant_id)
-             ).filter_by(name=stack_name)
+    ).options(
+        orm.joinedload(models.Stack.raw_template),
+    ).filter(
+        sqlalchemy.or_(
+            models.Stack.tenant == context.tenant_id,
+            models.Stack.stack_user_project_id == context.tenant_id),
+    ).filter_by(name=stack_name)
     return query.order_by(models.Stack.created_at).first()
 
 
+@context_manager.reader
 def stack_get(context, stack_id, show_deleted=False, eager_load=True):
     return _stack_get(
         context, stack_id, show_deleted=show_deleted, eager_load=eager_load
@@ -660,6 +698,7 @@ def _stack_get(context, stack_id, show_deleted=False, eager_load=True):
     return result
 
 
+@context_manager.reader
 def stack_get_status(context, stack_id):
     query = context.session.query(models.Stack)
     query = query.options(
@@ -678,6 +717,7 @@ def stack_get_status(context, stack_id):
             result.updated_at)
 
 
+@context_manager.reader
 def stack_get_all_by_owner_id(context, owner_id):
     return _stack_get_all_by_owner_id(context, owner_id)
 
@@ -691,8 +731,9 @@ def _stack_get_all_by_owner_id(context, owner_id):
     return results
 
 
+@context_manager.reader
 def stack_get_all_by_root_owner_id(context, owner_id):
-    return _stack_get_all_by_root_owner_id(context, owner_id)
+    return list(_stack_get_all_by_root_owner_id(context, owner_id))
 
 
 def _stack_get_all_by_root_owner_id(context, owner_id):
@@ -789,6 +830,7 @@ def _query_stack_get_all(context, show_deleted=False,
     return query
 
 
+@context_manager.reader
 def stack_get_all(context, limit=None, sort_keys=None, marker=None,
                   sort_dir=None, filters=None,
                   show_deleted=False, show_nested=False, show_hidden=False,
@@ -822,6 +864,7 @@ def _filter_and_page_query(context, query, limit=None, sort_keys=None,
                            valid_sort_keys, marker, sort_dir)
 
 
+@context_manager.reader
 def stack_count_all(context, filters=None,
                     show_deleted=False, show_nested=False, show_hidden=False,
                     tags=None, tags_any=None, not_tags=None,
@@ -836,6 +879,7 @@ def stack_count_all(context, filters=None,
     return query.count()
 
 
+@context_manager.writer
 def stack_create(context, values):
     stack_ref = models.Stack()
     stack_ref.update(values)
@@ -847,44 +891,43 @@ def stack_create(context, values):
     # some backup stacks may not be found, for reasons that are unclear.
     earliest = _stack_get_by_name(context, stack_name)
     if earliest is not None and earliest.id != stack_ref.id:
-        with context.session.begin():
-            context.session.query(models.Stack).filter_by(
-                id=stack_ref.id,
-            ).delete()
+        context.session.query(models.Stack).filter_by(
+            id=stack_ref.id,
+        ).delete()
         raise exception.StackExists(stack_name=stack_name)
 
     return stack_ref
 
 
 @retry_on_db_error
+@context_manager.writer
 def stack_update(context, stack_id, values, exp_trvsl=None):
-    with context.session.begin():
-        query = (context.session.query(models.Stack)
-                 .filter(and_(models.Stack.id == stack_id),
-                         (models.Stack.deleted_at.is_(None))))
-        if not context.is_admin:
-            query = query.filter(sqlalchemy.or_(
-                models.Stack.tenant == context.tenant_id,
-                models.Stack.stack_user_project_id == context.tenant_id))
-        if exp_trvsl is not None:
-            query = query.filter(models.Stack.current_traversal == exp_trvsl)
-        rows_updated = query.update(values, synchronize_session=False)
-        if not rows_updated:
-            LOG.debug('Did not set stack state with values '
-                      '%(vals)s, stack id: %(id)s with '
-                      'expected traversal: %(trav)s',
-                      {'id': stack_id, 'vals': str(values),
-                       'trav': str(exp_trvsl)})
-            if not _stack_get(context, stack_id, eager_load=False):
-                raise exception.NotFound(
-                    _('Attempt to update a stack with id: '
-                      '%(id)s %(msg)s') % {
-                          'id': stack_id,
-                          'msg': 'that does not exist'})
-    context.session.expire_all()
+    query = (context.session.query(models.Stack)
+             .filter(and_(models.Stack.id == stack_id),
+                     (models.Stack.deleted_at.is_(None))))
+    if not context.is_admin:
+        query = query.filter(sqlalchemy.or_(
+            models.Stack.tenant == context.tenant_id,
+            models.Stack.stack_user_project_id == context.tenant_id))
+    if exp_trvsl is not None:
+        query = query.filter(models.Stack.current_traversal == exp_trvsl)
+    rows_updated = query.update(values, synchronize_session=False)
+    if not rows_updated:
+        LOG.debug('Did not set stack state with values '
+                  '%(vals)s, stack id: %(id)s with '
+                  'expected traversal: %(trav)s',
+                  {'id': stack_id, 'vals': str(values),
+                   'trav': str(exp_trvsl)})
+        if not _stack_get(context, stack_id, eager_load=False):
+            raise exception.NotFound(
+                _('Attempt to update a stack with id: '
+                  '%(id)s %(msg)s') % {
+                      'id': stack_id,
+                      'msg': 'that does not exist'})
     return (rows_updated is not None and rows_updated > 0)
 
 
+@context_manager.writer
 def stack_delete(context, stack_id):
     s = _stack_get(context, stack_id, eager_load=False)
     if not s:
@@ -892,21 +935,21 @@ def stack_delete(context, stack_id):
                                  '%(id)s %(msg)s') % {
                                      'id': stack_id,
                                      'msg': 'that does not exist'})
-    with context.session.begin():
-        attr_ids = []
-        # normally the resources are deleted already by this point
-        for r in s.resources:
-            if r.attr_data_id is not None:
-                attr_ids.append(r.attr_data_id)
-            context.session.delete(r)
-        if attr_ids:
-            context.session.query(
-                models.ResourcePropertiesData.id).filter(
-                    models.ResourcePropertiesData.id.in_(attr_ids)).delete(
-                        synchronize_session=False)
-        _soft_delete(context, s)
+    attr_ids = []
+    # normally the resources are deleted already by this point
+    for r in s.resources:
+        if r.attr_data_id is not None:
+            attr_ids.append(r.attr_data_id)
+        context.session.delete(r)
+    if attr_ids:
+        context.session.query(
+            models.ResourcePropertiesData.id).filter(
+                models.ResourcePropertiesData.id.in_(attr_ids)).delete(
+                    synchronize_session=False)
+    _soft_delete(context, s)
 
 
+@context_manager.writer
 def reset_stack_status(context, stack_id):
     return _reset_stack_status(context, stack_id)
 
@@ -921,55 +964,56 @@ def _reset_stack_status(context, stack_id, stack=None):
     if stack is None:
         raise exception.NotFound(_('Stack with id %s not found') % stack_id)
 
-    with context.session.begin():
-        query = context.session.query(models.Resource).filter_by(
-            status='IN_PROGRESS', stack_id=stack_id)
-        query.update({'status': 'FAILED',
-                      'status_reason': 'Stack status manually reset',
-                      'engine_id': None})
+    query = context.session.query(models.Resource).filter_by(
+        status='IN_PROGRESS', stack_id=stack_id)
+    query.update({'status': 'FAILED',
+                  'status_reason': 'Stack status manually reset',
+                  'engine_id': None})
 
+    query = context.session.query(models.ResourceData)
+    query = query.join(models.Resource)
+    query = query.filter_by(stack_id=stack_id)
+    query = query.filter(
+        models.ResourceData.key.in_(heat_environment.HOOK_TYPES))
+    data_ids = [data.id for data in query]
+
+    if data_ids:
         query = context.session.query(models.ResourceData)
-        query = query.join(models.Resource)
-        query = query.filter_by(stack_id=stack_id)
-        query = query.filter(
-            models.ResourceData.key.in_(heat_environment.HOOK_TYPES))
-        data_ids = [data.id for data in query]
+        query = query.filter(models.ResourceData.id.in_(data_ids))
+        query.delete(synchronize_session='fetch')
 
-        if data_ids:
-            query = context.session.query(models.ResourceData)
-            query = query.filter(models.ResourceData.id.in_(data_ids))
-            query.delete(synchronize_session='fetch')
+    # commit what we've done already
+    context.session.commit()
 
     query = context.session.query(models.Stack).filter_by(owner_id=stack_id)
     for child in query:
         _reset_stack_status(context, child.id, child)
 
-    with context.session.begin():
-        if stack.status == 'IN_PROGRESS':
-            stack.status = 'FAILED'
-            stack.status_reason = 'Stack status manually reset'
+    if stack.status == 'IN_PROGRESS':
+        stack.status = 'FAILED'
+        stack.status_reason = 'Stack status manually reset'
 
-        context.session.query(
-            models.StackLock
-        ).filter_by(stack_id=stack_id).delete()
+    context.session.query(
+        models.StackLock
+    ).filter_by(stack_id=stack_id).delete()
 
 
+@context_manager.writer
 def stack_tags_set(context, stack_id, tags):
-    with context.session.begin():
-        _stack_tags_delete(context, stack_id)
-        result = []
-        for tag in tags:
-            stack_tag = models.StackTag()
-            stack_tag.tag = tag
-            stack_tag.stack_id = stack_id
-            stack_tag.save(session=context.session)
-            result.append(stack_tag)
-        return result or None
+    _stack_tags_delete(context, stack_id)
+    result = []
+    for tag in tags:
+        stack_tag = models.StackTag()
+        stack_tag.tag = tag
+        stack_tag.stack_id = stack_id
+        stack_tag.save(session=context.session)
+        result.append(stack_tag)
+    return result or None
 
 
+@context_manager.writer
 def stack_tags_delete(context, stack_id):
-    with context.session.begin():
-        return _stack_tags_delete(context, stack_id)
+    return _stack_tags_delete(context, stack_id)
 
 
 def _stack_tags_delete(context, stack_id):
@@ -979,6 +1023,7 @@ def _stack_tags_delete(context, stack_id):
             context.session.delete(tag)
 
 
+@context_manager.reader
 def stack_tags_get(context, stack_id):
     return _stack_tags_get(context, stack_id)
 
@@ -1003,7 +1048,7 @@ def _is_duplicate_error(exc):
                            inc_retry_interval=True,
                            exception_checker=_is_duplicate_error)
 def stack_lock_create(context, stack_id, engine_id):
-    with db_context.writer.independent.using(context) as session:
+    with context_manager.writer.independent.using(context) as session:
         lock = session.get(models.StackLock, stack_id)
         if lock is not None:
             return lock.engine_id
@@ -1011,29 +1056,28 @@ def stack_lock_create(context, stack_id, engine_id):
 
 
 def stack_lock_get_engine_id(context, stack_id):
-    with db_context.reader.independent.using(context) as session:
+    with context_manager.reader.independent.using(context) as session:
         lock = session.get(models.StackLock, stack_id)
         if lock is not None:
             return lock.engine_id
 
 
+@context_manager.writer
 def persist_state_and_release_lock(context, stack_id, engine_id, values):
-    with context.session.begin():
-        rows_updated = (context.session.query(models.Stack)
-                        .filter(models.Stack.id == stack_id)
-                        .update(values, synchronize_session=False))
-        rows_affected = None
-        if rows_updated is not None and rows_updated > 0:
-            rows_affected = context.session.query(
-                models.StackLock
-            ).filter_by(stack_id=stack_id, engine_id=engine_id).delete()
-    context.session.expire_all()
+    rows_updated = (context.session.query(models.Stack)
+                    .filter(models.Stack.id == stack_id)
+                    .update(values, synchronize_session=False))
+    rows_affected = None
+    if rows_updated is not None and rows_updated > 0:
+        rows_affected = context.session.query(
+            models.StackLock
+        ).filter_by(stack_id=stack_id, engine_id=engine_id).delete()
     if not rows_affected:
         return True
 
 
 def stack_lock_steal(context, stack_id, old_engine_id, new_engine_id):
-    with db_context.writer.independent.using(context) as session:
+    with context_manager.writer.independent.using(context) as session:
         lock = session.get(models.StackLock, stack_id)
         rows_affected = session.query(
             models.StackLock
@@ -1044,7 +1088,7 @@ def stack_lock_steal(context, stack_id, old_engine_id, new_engine_id):
 
 
 def stack_lock_release(context, stack_id, engine_id):
-    with db_context.writer.independent.using(context) as session:
+    with context_manager.writer.independent.using(context) as session:
         rows_affected = session.query(
             models.StackLock
         ).filter_by(stack_id=stack_id, engine_id=engine_id).delete()
@@ -1052,6 +1096,7 @@ def stack_lock_release(context, stack_id, engine_id):
         return True
 
 
+@context_manager.reader
 def stack_get_root_id(context, stack_id):
     s = _stack_get(context, stack_id, eager_load=False)
     if not s:
@@ -1061,6 +1106,7 @@ def stack_get_root_id(context, stack_id):
     return s.id
 
 
+@context_manager.reader
 def stack_count_total_resources(context, stack_id):
     # count all resources which belong to the root stack
     return context.session.query(
@@ -1071,6 +1117,7 @@ def stack_count_total_resources(context, stack_id):
 # user credentials
 
 
+@context_manager.writer
 def user_creds_create(context):
     values = context.to_dict()
     user_creds_ref = models.UserCreds()
@@ -1104,6 +1151,7 @@ def user_creds_create(context):
     return result
 
 
+@context_manager.reader
 def user_creds_get(context, user_creds_id):
     db_result = context.session.get(models.UserCreds, user_creds_id)
     if db_result is None:
@@ -1120,19 +1168,20 @@ def user_creds_get(context, user_creds_id):
 
 
 @db_utils.retry_on_stale_data_error
+@context_manager.writer
 def user_creds_delete(context, user_creds_id):
     creds = context.session.get(models.UserCreds, user_creds_id)
     if not creds:
         raise exception.NotFound(
             _('Attempt to delete user creds with id '
               '%(id)s that does not exist') % {'id': user_creds_id})
-    with context.session.begin():
-        context.session.delete(creds)
+    context.session.delete(creds)
 
 
 # event
 
 
+@context_manager.reader
 def event_get_all_by_tenant(context, limit=None, marker=None,
                             sort_keys=None, sort_dir=None, filters=None):
     query = context.session.query(models.Event)
@@ -1145,6 +1194,7 @@ def event_get_all_by_tenant(context, limit=None, marker=None,
                                          sort_keys, sort_dir, filters).all()
 
 
+@context_manager.reader
 def event_get_all_by_stack(context, stack_id, limit=None, marker=None,
                            sort_keys=None, sort_dir=None, filters=None):
     query = context.session.query(models.Event).filter_by(stack_id=stack_id)
@@ -1200,6 +1250,7 @@ def _events_filter_and_page_query(context, query,
                                   valid_sort_keys, marker, sort_dir)
 
 
+@context_manager.reader
 def event_count_all_by_stack(context, stack_id):
     return _event_count_all_by_stack(context, stack_id)
 
@@ -1310,6 +1361,7 @@ def _delete_event_rows(context, stack_id, limit):
 
 
 @retry_on_db_error
+@context_manager.writer
 def event_create(context, values):
     if 'stack_id' in values and cfg.CONF.max_events_per_stack:
         # only count events and purge on average
@@ -1322,22 +1374,30 @@ def event_create(context, values):
         ):
             # prune
             try:
-                with context.session.begin():
-                    _delete_event_rows(
-                        context, values['stack_id'],
-                        cfg.CONF.event_purge_batch_size,
-                    )
+                _delete_event_rows(
+                    context, values['stack_id'],
+                    cfg.CONF.event_purge_batch_size,
+                )
             except db_exception.DBError as exc:
                 LOG.error('Failed to purge events: %s', str(exc))
+
     event_ref = models.Event()
     event_ref.update(values)
     event_ref.save(context.session)
-    return event_ref
+
+    result = context.session.query(models.Event).filter_by(
+        id=event_ref.id,
+    ).options(
+        orm.joinedload(models.Event.rsrc_prop_data)
+    ).first()
+
+    return result
 
 
 # software config
 
 
+@context_manager.writer
 def software_config_create(context, values):
     obj_ref = models.SoftwareConfig()
     obj_ref.update(values)
@@ -1345,6 +1405,7 @@ def software_config_create(context, values):
     return obj_ref
 
 
+@context_manager.reader
 def software_config_get(context, config_id):
     return _software_config_get(context, config_id)
 
@@ -1361,6 +1422,7 @@ def _software_config_get(context, config_id):
     return result
 
 
+@context_manager.reader
 def software_config_get_all(context, limit=None, marker=None):
     query = context.session.query(models.SoftwareConfig)
     if not context.is_admin:
@@ -1369,6 +1431,7 @@ def software_config_get_all(context, limit=None, marker=None):
                            limit=limit, marker=marker).all()
 
 
+@context_manager.writer
 def software_config_delete(context, config_id):
     config = _software_config_get(context, config_id)
     # Query if the software config has been referenced by deployment.
@@ -1378,34 +1441,41 @@ def software_config_delete(context, config_id):
         msg = (_("Software config with id %s can not be deleted as "
                  "it is referenced.") % config_id)
         raise exception.InvalidRestrictedAction(message=msg)
-    with context.session.begin():
-        context.session.delete(config)
+    context.session.delete(config)
 
 
 # software deployment
 
 
+@context_manager.writer
 def software_deployment_create(context, values):
     obj_ref = models.SoftwareDeployment()
     obj_ref.update(values)
 
     try:
-        with context.session.begin():
-            obj_ref.save(context.session)
+        obj_ref.save(context.session)
     except db_exception.DBReferenceError:
         # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
         err_msg = _('Config with id %s not found') % values['config_id']
         raise exception.Invalid(reason=err_msg)
 
-    return obj_ref
+    return _software_deployment_get(context, obj_ref.id)
 
 
+@context_manager.reader
 def software_deployment_get(context, deployment_id):
     return _software_deployment_get(context, deployment_id)
 
 
 def _software_deployment_get(context, deployment_id):
-    result = context.session.get(models.SoftwareDeployment, deployment_id)
+    # TODO(stephenfin): Why doesn't options work with session.get?
+    result = context.session.query(
+        models.SoftwareDeployment,
+    ).filter_by(
+        id=deployment_id,
+    ).options(
+        orm.joinedload(models.SoftwareDeployment.config),
+    ).first()
     if (result is not None and context is not None and not context.is_admin and
         context.tenant_id not in (result.tenant,
                                   result.stack_user_project_id)):
@@ -1417,25 +1487,35 @@ def _software_deployment_get(context, deployment_id):
     return result
 
 
+@context_manager.reader
 def software_deployment_get_all(context, server_id=None):
     sd = models.SoftwareDeployment
     query = context.session.query(sd).order_by(sd.created_at)
     if not context.is_admin:
-        query = query.filter(sqlalchemy.or_(
-            sd.tenant == context.tenant_id,
-            sd.stack_user_project_id == context.tenant_id))
+        query = query.filter(
+            sqlalchemy.or_(
+                sd.tenant == context.tenant_id,
+                sd.stack_user_project_id == context.tenant_id,
+            )
+        )
     if server_id:
         query = query.filter_by(server_id=server_id)
+
+    query = query.join(
+        models.SoftwareDeployment.config,
+    ).options(
+        orm.contains_eager(models.SoftwareDeployment.config)
+    )
 
     return query.all()
 
 
+@context_manager.writer
 def software_deployment_update(context, deployment_id, values):
     deployment = _software_deployment_get(context, deployment_id)
     try:
-        with context.session.begin():
-            for k, v in values.items():
-                setattr(deployment, k, v)
+        for k, v in values.items():
+            setattr(deployment, k, v)
     except db_exception.DBReferenceError:
         # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
         err_msg = _('Config with id %s not found') % values['config_id']
@@ -1443,15 +1523,16 @@ def software_deployment_update(context, deployment_id, values):
     return deployment
 
 
+@context_manager.writer
 def software_deployment_delete(context, deployment_id):
     deployment = _software_deployment_get(context, deployment_id)
-    with context.session.begin():
-        context.session.delete(deployment)
+    context.session.delete(deployment)
 
 
 # snapshot
 
 
+@context_manager.writer
 def snapshot_create(context, values):
     obj_ref = models.Snapshot()
     obj_ref.update(values)
@@ -1459,6 +1540,7 @@ def snapshot_create(context, values):
     return obj_ref
 
 
+@context_manager.reader
 def snapshot_get(context, snapshot_id):
     return _snapshot_get(context, snapshot_id)
 
@@ -1475,6 +1557,7 @@ def _snapshot_get(context, snapshot_id):
     return result
 
 
+@context_manager.reader
 def snapshot_get_by_stack(context, snapshot_id, stack):
     snapshot = _snapshot_get(context, snapshot_id)
     if snapshot.stack_id != stack.id:
@@ -1484,6 +1567,7 @@ def snapshot_get_by_stack(context, snapshot_id, stack):
     return snapshot
 
 
+@context_manager.writer
 def snapshot_update(context, snapshot_id, values):
     snapshot = _snapshot_get(context, snapshot_id)
     snapshot.update(values)
@@ -1491,12 +1575,13 @@ def snapshot_update(context, snapshot_id, values):
     return snapshot
 
 
+@context_manager.writer
 def snapshot_delete(context, snapshot_id):
     snapshot = _snapshot_get(context, snapshot_id)
-    with context.session.begin():
-        context.session.delete(snapshot)
+    context.session.delete(snapshot)
 
 
+@context_manager.reader
 def snapshot_get_all(context, stack_id):
     return context.session.query(models.Snapshot).filter_by(
         stack_id=stack_id, tenant=context.tenant_id)
@@ -1505,6 +1590,7 @@ def snapshot_get_all(context, stack_id):
 # service
 
 
+@context_manager.writer
 def service_create(context, values):
     service = models.Service()
     service.update(values)
@@ -1512,6 +1598,7 @@ def service_create(context, values):
     return service
 
 
+@context_manager.writer
 def service_update(context, service_id, values):
     service = _service_get(context, service_id)
     values.update({'updated_at': timeutils.utcnow()})
@@ -1520,15 +1607,16 @@ def service_update(context, service_id, values):
     return service
 
 
+@context_manager.writer
 def service_delete(context, service_id, soft_delete=True):
     service = _service_get(context, service_id)
-    with context.session.begin():
-        if soft_delete:
-            _soft_delete(context, service)
-        else:
-            context.session.delete(service)
+    if soft_delete:
+        _soft_delete(context, service)
+    else:
+        context.session.delete(service)
 
 
+@context_manager.reader
 def service_get(context, service_id):
     return _service_get(context, service_id)
 
@@ -1540,12 +1628,14 @@ def _service_get(context, service_id):
     return result
 
 
+@context_manager.reader
 def service_get_all(context):
     return context.session.query(models.Service).filter_by(
         deleted_at=None,
     ).all()
 
 
+@context_manager.reader
 def service_get_all_by_args(context, host, binary, hostname):
     return (context.session.query(models.Service).
             filter_by(host=host).
@@ -1821,15 +1911,16 @@ def _purge_stacks(stack_infos, engine, meta):
 # sync point
 
 
+@context_manager.writer
 def sync_point_delete_all_by_stack_and_traversal(context, stack_id,
                                                  traversal_id):
-    with context.session.begin():
-        rows_deleted = context.session.query(models.SyncPoint).filter_by(
-            stack_id=stack_id, traversal_id=traversal_id).delete()
+    rows_deleted = context.session.query(models.SyncPoint).filter_by(
+        stack_id=stack_id, traversal_id=traversal_id).delete()
     return rows_deleted
 
 
 @retry_on_db_error
+@context_manager.writer
 def sync_point_create(context, values):
     values['entity_id'] = str(values['entity_id'])
     sync_point_ref = models.SyncPoint()
@@ -1838,6 +1929,7 @@ def sync_point_create(context, values):
     return sync_point_ref
 
 
+@context_manager.reader
 def sync_point_get(context, entity_id, traversal_id, is_update):
     entity_id = str(entity_id)
     return context.session.get(
@@ -1846,15 +1938,15 @@ def sync_point_get(context, entity_id, traversal_id, is_update):
 
 
 @retry_on_db_error
+@context_manager.writer
 def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
                                  input_data):
     entity_id = str(entity_id)
-    with context.session.begin():
-        rows_updated = context.session.query(models.SyncPoint).filter_by(
-            entity_id=entity_id,
-            traversal_id=traversal_id,
-            is_update=is_update,
-            atomic_key=atomic_key
-        ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
+    rows_updated = context.session.query(models.SyncPoint).filter_by(
+        entity_id=entity_id,
+        traversal_id=traversal_id,
+        is_update=is_update,
+        atomic_key=atomic_key
+    ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
     return rows_updated
