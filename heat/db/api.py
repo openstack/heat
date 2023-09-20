@@ -13,7 +13,6 @@
 
 """Implementation of SQLAlchemy backend."""
 
-import contextlib
 import datetime
 import functools
 import itertools
@@ -113,22 +112,6 @@ def retry_on_db_error(func):
     return try_func
 
 
-@contextlib.contextmanager
-def transaction(context):
-    # https://docs.sqlalchemy.org/en/20/changelog/migration_20.html#session-subtransaction-behavior-removed
-    if not context.session.in_transaction():
-        with context.session.begin():
-            yield
-    else:
-        yield
-
-
-def update_and_save(context, obj, values):
-    with transaction(context):
-        for k, v in values.items():
-            setattr(obj, k, v)
-
-
 def _soft_delete(context, obj):
     """Mark this object as deleted."""
     setattr(obj, 'deleted_at', timeutils.utcnow())
@@ -178,7 +161,7 @@ def raw_template_update(context, template_id, values):
                   if getattr(raw_template_ref, k) != v)
 
     if values:
-        with transaction(context):
+        with context.session.begin():
             for k, v in values.items():
                 setattr(raw_template_ref, k, v)
 
@@ -192,7 +175,7 @@ def raw_template_delete(context, template_id):
         # Ignore not found
         return
     raw_tmpl_files_id = raw_template.files_id
-    with transaction(context):
+    with context.session.begin():
         context.session.delete(raw_template)
         if raw_tmpl_files_id is None:
             return
@@ -256,14 +239,16 @@ def resource_create_replacement(context,
         with context.session.begin():
             new_res = _resource_create(context, new_res_values)
             update_data = {'replaced_by': new_res.id}
-            if not _try_resource_update(context,
-                                        existing_res_id, update_data,
-                                        atomic_key,
-                                        expected_engine_id=expected_engine_id):
-                data = {}
-                if 'name' in new_res_values:
-                    data['resource_name'] = new_res_values['name']
-                raise exception.UpdateInProgress(**data)
+            rows_updated = _resource_update(
+                context, existing_res_id, update_data, atomic_key,
+                expected_engine_id=expected_engine_id,
+            )
+
+        if not bool(rows_updated):
+            data = {}
+            if 'name' in new_res_values:
+                data['resource_name'] = new_res_values['name']
+            raise exception.UpdateInProgress(**data)
     except db_exception.DBReferenceError as exc:
         # New template_id no longer exists
         LOG.debug('Not creating replacement resource: %s', exc)
@@ -425,30 +410,33 @@ def _add_atomic_key_to_values(values, atomic_key):
 @retry_on_db_error
 def resource_update(context, resource_id, values, atomic_key,
                     expected_engine_id=None):
-    return _try_resource_update(context, resource_id, values, atomic_key,
-                                expected_engine_id)
+    with context.session.begin():
+        return _resource_update(
+            context, resource_id, values, atomic_key,
+            expected_engine_id=expected_engine_id,
+        )
 
 
-def _try_resource_update(context, resource_id, values, atomic_key,
-                         expected_engine_id=None):
-    with transaction(context):
-        _add_atomic_key_to_values(values, atomic_key)
-        rows_updated = context.session.query(models.Resource).filter_by(
-            id=resource_id, engine_id=expected_engine_id,
-            atomic_key=atomic_key).update(values)
+def _resource_update(
+    context, resource_id, values, atomic_key, expected_engine_id=None,
+):
+    _add_atomic_key_to_values(values, atomic_key)
+    rows_updated = context.session.query(models.Resource).filter_by(
+        id=resource_id, engine_id=expected_engine_id,
+        atomic_key=atomic_key).update(values)
 
-        return bool(rows_updated)
+    return bool(rows_updated)
 
 
 def resource_update_and_save(context, resource_id, values):
     resource = context.session.get(models.Resource, resource_id)
-    with transaction(context):
+    with context.session.begin():
         for k, v in values.items():
             setattr(resource, k, v)
 
 
 def resource_delete(context, resource_id):
-    with transaction(context):
+    with context.session.begin():
         resource = context.session.get(models.Resource, resource_id)
         if resource:
             context.session.delete(resource)
@@ -870,7 +858,7 @@ def stack_create(context, values):
 
 @retry_on_db_error
 def stack_update(context, stack_id, values, exp_trvsl=None):
-    with transaction(context):
+    with context.session.begin():
         query = (context.session.query(models.Stack)
                  .filter(and_(models.Stack.id == stack_id),
                          (models.Stack.deleted_at.is_(None))))
@@ -980,7 +968,7 @@ def stack_tags_set(context, stack_id, tags):
 
 
 def stack_tags_delete(context, stack_id):
-    with transaction(context):
+    with context.session.begin():
         return _stack_tags_delete(context, stack_id)
 
 
@@ -1445,7 +1433,7 @@ def software_deployment_get_all(context, server_id=None):
 def software_deployment_update(context, deployment_id, values):
     deployment = _software_deployment_get(context, deployment_id)
     try:
-        with transaction(context):
+        with context.session.begin():
             for k, v in values.items():
                 setattr(deployment, k, v)
     except db_exception.DBReferenceError:
