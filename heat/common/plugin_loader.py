@@ -66,11 +66,11 @@ def _import_module(importer, module_name, package):
     if module_name in sys.modules:
         return sys.modules[module_name]
 
-    loader = importer.find_module(module_name)
-    if loader is None:
+    module_spec = importer.find_spec(module_name)
+    if module_spec is None:
         return None
 
-    module = loader.load_module(module_name)
+    module = module_spec.loader.load_module(module_name)
 
     # Make this accessible through the parent package for static imports
     local_name = module_name.partition(package.__name__ + '.')[2]
