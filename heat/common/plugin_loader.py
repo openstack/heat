@@ -20,6 +20,7 @@ for them before loading them.
 """
 
 import functools
+import importlib.util
 import pkgutil
 import sys
 import types
@@ -70,7 +71,8 @@ def _import_module(importer, module_name, package):
     if module_spec is None:
         return None
 
-    module = module_spec.loader.load_module(module_name)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
 
     # Make this accessible through the parent package for static imports
     local_name = module_name.partition(package.__name__ + '.')[2]

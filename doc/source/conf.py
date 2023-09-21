@@ -33,8 +33,9 @@ from oslo_config import cfg
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(BASE_DIR, "..", ".."))
-CONTRIB_DIR = os.path.join(ROOT, 'contrib')
-PLUGIN_DIRS = glob.glob(os.path.join(CONTRIB_DIR, '*'))
+# TODO(tkajinam): Fix this
+# CONTRIB_DIR = os.path.join(ROOT, 'contrib')
+# PLUGIN_DIRS = glob.glob(os.path.join(CONTRIB_DIR, '*'))
 ENV_DIR = os.path.join(ROOT, "etc", "heat", "environment.d")
 TEMP_ENV_DIR = tempfile.mkdtemp()
 
@@ -48,7 +49,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, BASE_DIR)
 
 cfg.CONF.import_opt('plugin_dirs', 'heat.common.config')
-cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
+# cfg.CONF.set_override(name='plugin_dirs', override=PLUGIN_DIRS)
 
 cfg.CONF.import_opt('environment_dir', 'heat.common.config')
 cfg.CONF.set_override(name='environment_dir', override=TEMP_ENV_DIR)

@@ -12,7 +12,6 @@
 #    under the License.
 
 import os.path
-import sys
 from unittest import mock
 
 import fixtures
@@ -183,7 +182,6 @@ def constraint_mapping():
         plugin_file = os.path.join(plugin_dir.path, 'test.py')
         with open(plugin_file, 'w+') as ef:
             ef.write(constraint_content)
-        self.addCleanup(sys.modules.pop, "heat.engine.plugins.test")
         cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
 
         env = environment.Environment({})
@@ -202,7 +200,6 @@ def constraint_mapping():
         plugin_file = os.path.join(plugin_dir.path, 'test.py')
         with open(plugin_file, 'w+') as ef:
             ef.write(constraint_content)
-        self.addCleanup(sys.modules.pop, "heat.engine.plugins.test")
         cfg.CONF.set_override('plugin_dirs', plugin_dir.path)
 
         env = environment.Environment({})
