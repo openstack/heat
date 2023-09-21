@@ -457,7 +457,7 @@ function configure_tempest_for_heat {
     fi
     iniset $TEMPEST_CONFIG heat_plugin skip_functional_test_list $SKIP_FUNCTIONAL_TEST_LIST
 
-    openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 512 --disk 10
+    openstack flavor show m1.heat_int || openstack flavor create m1.heat_int --ram 1024 --vcpus 2 --disk 10
     openstack flavor show m1.heat_micro || openstack flavor create m1.heat_micro --ram 128 --disk 1
 
     export OS_CLOUD=devstack

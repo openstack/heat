@@ -29,7 +29,8 @@
 - name: Run heat tests
   command: tox -evenv-tempest -- stestr --test-path={{devstack_base_dir}}/heat/heat_integrationtests \
             --top-dir={{devstack_base_dir}}/heat \
-            --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' run
+            --group_regex='heat_tempest_plugin\.tests\.api\.test_heat_api[._]([^_]+)' \
+            run --concurrency 4
   args:
     chdir: "{{devstack_base_dir}}/tempest"
   become: true
