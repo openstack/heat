@@ -14,7 +14,13 @@
 import croniter
 import eventlet
 import netaddr
-import pytz
+
+try:
+    import zoneinfo
+except ImportError:
+    # zoneinfo is available in Python >= 3.9
+    import pytz
+    zoneinfo = None
 
 from neutron_lib.api import validators
 from oslo_utils import timeutils
@@ -167,7 +173,10 @@ class TimezoneConstraint(constraints.BaseCustomConstraint):
         if not value:
             return True
         try:
-            pytz.timezone(value)
+            if zoneinfo:
+                zoneinfo.ZoneInfo(value)
+            else:
+                pytz.timezone(value)
             return True
         except Exception as ex:
             self._error_message = _(
