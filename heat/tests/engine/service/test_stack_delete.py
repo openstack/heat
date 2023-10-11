@@ -13,6 +13,7 @@
 from unittest import mock
 
 from oslo_config import cfg
+from oslo_messaging import conffixture
 from oslo_messaging.rpc import dispatcher
 from oslo_utils import timeutils
 
@@ -35,6 +36,7 @@ class StackDeleteTest(common.HeatTestCase):
         self.ctx = utils.dummy_context()
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.thread_group_mgr = service.ThreadGroupManager()
+        self.useFixture(conffixture.ConfFixture(cfg.CONF))
 
     @mock.patch.object(parser.Stack, 'load')
     def test_stack_delete(self, mock_load):
