@@ -265,23 +265,6 @@ class WarningsFixture(fixtures.Fixture):
             category=sqla_exc.SADeprecationWarning,
         )
 
-        # ...but filter everything out until we get around to fixing them
-        # TODO(stephenfin): Fix all of these
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
-            message='The Session.transaction attribute is considered legacy ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
-        warnings.filterwarnings(
-            'ignore',
-            module='heat',
-            message='The Session.begin.subtransactions flag is deprecated ',
-            category=sqla_exc.SADeprecationWarning,
-        )
-
         # Enable general SQLAlchemy warnings also to ensure we're not doing
         # silly stuff. It's possible that we'll need to filter things out here
         # with future SQLAlchemy versions, but that's a good thing
