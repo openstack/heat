@@ -131,7 +131,7 @@ def update_and_save(context, obj, values):
 
 def _soft_delete(context, obj):
     """Mark this object as deleted."""
-    update_and_save(context, obj, {'deleted_at': timeutils.utcnow()})
+    setattr(obj, 'deleted_at', timeutils.utcnow())
 
 
 def _soft_delete_aware_query(context, *args, **kwargs):
@@ -178,7 +178,9 @@ def raw_template_update(context, template_id, values):
                   if getattr(raw_template_ref, k) != v)
 
     if values:
-        update_and_save(context, raw_template_ref, values)
+        with transaction(context):
+            for k, v in values.items():
+                setattr(raw_template_ref, k, v)
 
     return raw_template_ref
 
@@ -440,7 +442,9 @@ def _try_resource_update(context, resource_id, values, atomic_key,
 
 def resource_update_and_save(context, resource_id, values):
     resource = context.session.get(models.Resource, resource_id)
-    update_and_save(context, resource, values)
+    with transaction(context):
+        for k, v in values.items():
+            setattr(resource, k, v)
 
 
 def resource_delete(context, resource_id):
@@ -1441,7 +1445,9 @@ def software_deployment_get_all(context, server_id=None):
 def software_deployment_update(context, deployment_id, values):
     deployment = _software_deployment_get(context, deployment_id)
     try:
-        update_and_save(context, deployment, values)
+        with transaction(context):
+            for k, v in values.items():
+                setattr(deployment, k, v)
     except db_exception.DBReferenceError:
         # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
         err_msg = _('Config with id %s not found') % values['config_id']
