@@ -16,6 +16,7 @@ from unittest import mock
 from oslo_config import cfg
 import uuid
 
+from heat.db import api as db_api
 from heat.db import models
 from heat.engine import event
 from heat.engine import stack
@@ -175,16 +176,17 @@ class EventTest(EventCommon):
         # rpd1 should still exist since that is still referred to by
         # the resource. rpd2 shoud have been deleted along with the
         # 2nd event.
-        self.assertIsNotNone(self.ctx.session.get(
-            models.ResourcePropertiesData, rpd1_id))
-        self.assertIsNone(self.ctx.session.get(
-            models.ResourcePropertiesData, rpd2_id))
-        # We didn't purge the last two events, so we ought to have
-        # kept rsrc_prop_data for both.
-        self.assertIsNotNone(self.ctx.session.get(
-            models.ResourcePropertiesData, rpd3_id))
-        self.assertIsNotNone(self.ctx.session.get(
-            models.ResourcePropertiesData, rpd4_id))
+        with db_api.context_manager.reader.using(self.ctx):
+            self.assertIsNotNone(self.ctx.session.get(
+                models.ResourcePropertiesData, rpd1_id))
+            self.assertIsNone(self.ctx.session.get(
+                models.ResourcePropertiesData, rpd2_id))
+            # We didn't purge the last two events, so we ought to have
+            # kept rsrc_prop_data for both.
+            self.assertIsNotNone(self.ctx.session.get(
+                models.ResourcePropertiesData, rpd3_id))
+            self.assertIsNotNone(self.ctx.session.get(
+                models.ResourcePropertiesData, rpd4_id))
 
     def test_identifier(self):
         event_uuid = 'abc123yc-9f88-404d-a85b-531529456xyz'
@@ -244,8 +246,8 @@ class EventTest(EventCommon):
 
         # for test purposes, dress up the event to have the deprecated
         # properties_data field populated
-        e_obj = self.ctx.session.get(models.Event, e.id)
-        with self.ctx.session.begin():
+        with db_api.context_manager.writer.using(self.ctx):
+            e_obj = self.ctx.session.get(models.Event, e.id)
             e_obj['resource_properties'] = {'Time': 'not enough'}
             e_obj['rsrc_prop_data'] = None
 
@@ -287,9 +289,10 @@ class EventEncryptedTest(EventCommon):
         e_obj = event_object.Event.get_all_by_stack(self.resource.context,
                                                     self.stack.id)[0]
         rpd_id = e_obj['rsrc_prop_data_id']
-        results = self.resource.context.session.query(
-            models.ResourcePropertiesData).filter_by(
-                id=rpd_id)
+        with db_api.context_manager.reader.using(self.resource.context):
+            results = self.resource.context.session.query(
+                models.ResourcePropertiesData).filter_by(
+                    id=rpd_id)
         self.assertNotEqual('goo',
                             results[0]['data']['Foo'])
         self.assertTrue(results[0]['encrypted'])

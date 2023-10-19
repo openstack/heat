@@ -20,6 +20,7 @@ import uuid
 from oslo_config import cfg
 from oslo_db import exception as db_exception
 from oslo_utils import timeutils
+from sqlalchemy import orm
 from sqlalchemy.orm import exc
 from sqlalchemy.orm import session
 
@@ -1992,7 +1993,7 @@ class DBAPIStackTest(common.HeatTestCase):
             self.ctx,
             parent_stack1.id)
         # 3 stacks on the first level + 6 stack on the second
-        self.assertEqual(9, len(list(stack1_children)))
+        self.assertEqual(9, len(stack1_children))
         stack2_children = db_api.stack_get_all_by_root_owner_id(
             self.ctx,
             parent_stack2.id)
@@ -2260,14 +2261,15 @@ class DBAPIStackTest(common.HeatTestCase):
                 ctx, tmpl_files[s].files_id))
             self.assertIsNotNone(db_api.resource_get(
                 ctx, resources[s].id))
-            self.assertIsNotNone(ctx.session.get(
-                models.Event, events[s].id))
-            self.assertIsNotNone(ctx.session.query(
-                models.ResourcePropertiesData).filter_by(
-                    id=resources[s].rsrc_prop_data.id).first())
-            self.assertIsNotNone(ctx.session.query(
-                models.ResourcePropertiesData).filter_by(
-                    id=events[s].rsrc_prop_data.id).first())
+            with db_api.context_manager.reader.using(ctx):
+                self.assertIsNotNone(ctx.session.get(
+                    models.Event, events[s].id))
+                self.assertIsNotNone(ctx.session.query(
+                    models.ResourcePropertiesData).filter_by(
+                        id=resources[s].rsrc_prop_data.id).first())
+                self.assertIsNotNone(ctx.session.query(
+                    models.ResourcePropertiesData).filter_by(
+                        id=events[s].rsrc_prop_data.id).first())
         for s in deleted:
             self.assertIsNone(db_api.stack_get(ctx, stacks[s].id,
                                                show_deleted=True))
@@ -2282,14 +2284,15 @@ class DBAPIStackTest(common.HeatTestCase):
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
-            self.assertIsNone(ctx.session.get(
-                models.Event, events[s].id))
-            self.assertIsNone(ctx.session.query(
-                models.ResourcePropertiesData).filter_by(
-                    id=resources[s].rsrc_prop_data.id).first())
-            self.assertIsNone(ctx.session.query(
-                models.ResourcePropertiesData).filter_by(
-                    id=events[s].rsrc_prop_data.id).first())
+            with db_api.context_manager.reader.using(ctx):
+                self.assertIsNone(ctx.session.get(
+                    models.Event, events[s].id))
+                self.assertIsNone(ctx.session.query(
+                    models.ResourcePropertiesData).filter_by(
+                        id=resources[s].rsrc_prop_data.id).first())
+                self.assertIsNone(ctx.session.query(
+                    models.ResourcePropertiesData).filter_by(
+                        id=events[s].rsrc_prop_data.id).first())
             self.assertEqual([],
                              db_api.event_get_all_by_stack(ctx,
                                                            stacks[s].id))
@@ -2649,8 +2652,8 @@ class DBAPIResourceTest(common.HeatTestCase):
 
 class DBAPIResourceReplacementTest(common.HeatTestCase):
     def setUp(self):
-        self.useFixture(utils.ForeignKeyConstraintFixture())
         super(DBAPIResourceReplacementTest, self).setUp()
+        self.useFixture(utils.ForeignKeyConstraintFixture())
         self.ctx = utils.dummy_context()
         self.template = create_raw_template(self.ctx)
         self.user_creds = create_user_creds(self.ctx)
@@ -2922,7 +2925,15 @@ class DBAPIEventTest(common.HeatTestCase):
     def test_event_create(self):
         stack = create_stack(self.ctx, self.template, self.user_creds)
         event = create_event(self.ctx, stack_id=stack.id)
-        ret_event = self.ctx.session.get(models.Event, event.id)
+        with db_api.context_manager.reader.using(self.ctx):
+            ret_event = self.ctx.session.query(
+                models.Event,
+            ).filter_by(
+                id=event.id,
+            ).options(
+                orm.joinedload(models.Event.rsrc_prop_data)
+            ).first()
+
         self.assertIsNotNone(ret_event)
         self.assertEqual(stack.id, ret_event.stack_id)
         self.assertEqual('create', ret_event.resource_action)

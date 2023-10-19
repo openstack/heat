@@ -101,7 +101,6 @@ class SoftwareConfigService(object):
         rs = db_api.resource_get_by_physical_resource_id(cnxt, server_id)
         if not rs:
             return
-        cnxt.session.refresh(rs)
         if rs.action == resource.Resource.DELETE:
             return
         deployments = self.metadata_software_deployments(cnxt, server_id)

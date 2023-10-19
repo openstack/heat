@@ -21,6 +21,7 @@ from keystoneauth1 import session
 from keystoneauth1 import token_endpoint
 from oslo_config import cfg
 from oslo_context import context
+from oslo_db.sqlalchemy import enginefacade
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_middleware import request_id as oslo_request_id
@@ -31,7 +32,6 @@ from heat.common import endpoint_utils
 from heat.common import exception
 from heat.common import policy
 from heat.common import wsgi
-from heat.db import api as db_api
 from heat.engine import clients
 
 LOG = logging.getLogger(__name__)
@@ -71,6 +71,7 @@ def _moved_attr(new_name):
     return property(getter, setter)
 
 
+@enginefacade.transaction_context_provider
 class RequestContext(context.RequestContext):
     """Stores information about the security context.
 
@@ -134,12 +135,6 @@ class RequestContext(context.RequestContext):
         return cache
 
     tenant_id = _moved_attr('project_id')
-
-    @property
-    def session(self):
-        if self._session is None:
-            self._session = db_api.get_session()
-        return self._session
 
     @property
     def keystone_session(self):

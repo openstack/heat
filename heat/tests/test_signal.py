@@ -20,6 +20,7 @@ from oslo_utils import timeutils
 
 from heat.common import exception
 from heat.common import template_format
+from heat.db import api as db_api
 from heat.db import models
 from heat.engine.clients.os import heat_plugin
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
@@ -517,8 +518,9 @@ class SignalTest(common.HeatTestCase):
         # db resource concurrently, deleting it
 
         # Test exception not re-raised in DELETE case
-        res_obj = stack.context.session.get(models.Resource, rsrc.id)
-        res_obj.update({'action': 'DELETE'})
+        with db_api.context_manager.reader.using(stack.context):
+            res_obj = stack.context.session.get(models.Resource, rsrc.id)
+            res_obj.update({'action': 'DELETE'})
         rsrc._db_res_is_deleted = True
         rsrc._handle_signal(details=test_d)
         mock_handle.assert_called_once_with(test_d)

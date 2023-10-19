@@ -687,8 +687,11 @@ class ResourceTest(common.HeatTestCase):
                 'p2': 'good times, good times'}
         rpd_obj = rpd_object.ResourcePropertiesData().create_or_update(
             self.stack.context, data)
-        rpd_db_obj = self.stack.context.session.get(
-            models.ResourcePropertiesData, rpd_obj.id)
+
+        with db_api.context_manager.writer.using(self.stack.context):
+            rpd_db_obj = self.stack.context.session.get(
+                models.ResourcePropertiesData, rpd_obj.id)
+
         res_obj1 = resource_objects.Resource().create(
             self.stack.context,
             {'stack_id': self.stack.id,
@@ -744,8 +747,9 @@ class ResourceTest(common.HeatTestCase):
         res.metadata_set(md)
         self.assertFalse(hasattr(res, '_db_res_is_deleted'))
 
-        res_obj = self.stack.context.session.get(models.Resource, res.id)
-        res_obj.update({'action': 'DELETE'})
+        with db_api.context_manager.writer.using(self.stack.context):
+            res_obj = self.stack.context.session.get(models.Resource, res.id)
+            res_obj.update({'action': 'DELETE'})
 
         self.assertRaises(exception.ResourceNotAvailable,
                           res.metadata_set, md)
@@ -935,10 +939,11 @@ class ResourceTest(common.HeatTestCase):
         self.assertIsNone(res_obj.properties_data_encrypted)
         # Now that we've established these couple of depcrated fields
         # are not populated, let's populate them.
-        db_api.resource_update_and_save(self.stack.context, res_obj.id,
-                                        {'properties_data': {'Foo': 'lucky'},
-                                         'properties_data_encrypted': False,
-                                         'rsrc_prop_data': None})
+        res_obj = db_api.resource_update_and_save(
+            self.stack.context, res_obj.id,
+            {'properties_data': {'Foo': 'lucky'},
+             'properties_data_encrypted': False,
+             'rsrc_prop_data': None})
         res._rsrc_prop_data = None
         res._load_data(res_obj)
         # Legacy properties_data slurped into res._stored_properties_data
@@ -965,16 +970,17 @@ class ResourceTest(common.HeatTestCase):
         res_obj = db_api.resource_get(self.stack.context, res.id)
         self.assertIsNone(res_obj.properties_data)
         self.assertIsNone(res_obj.properties_data_encrypted)
-        # Now that we've established these couple of depcrated fields
+        # Now that we've established these couple of deprecated fields
         # are not populated, let's populate them.
         encrypted_data = \
             rpd_object.ResourcePropertiesData.encrypt_properties_data(
                 {'Foo': 'lucky'})[1]
 
-        db_api.resource_update_and_save(self.stack.context, res_obj.id,
-                                        {'properties_data': encrypted_data,
-                                         'properties_data_encrypted': True,
-                                         'rsrc_prop_data': None})
+        res_obj = db_api.resource_update_and_save(
+            self.stack.context, res_obj.id,
+            {'properties_data': encrypted_data,
+             'properties_data_encrypted': True,
+             'rsrc_prop_data': None})
         # This is where the decrypting of legacy data happens
         res_obj = resource_objects.Resource._from_db_object(
             resource_objects.Resource(), self.stack.context, res_obj)
