@@ -62,7 +62,7 @@ class TestBannedDBSchemaOperations(testtools.TestCase):
             self.assertRaises(DBNotAllowed, column.alter)
 
     def test_table(self):
-        table = sqlalchemy.Table()
+        table = sqlalchemy.Table("foo", sqlalchemy.MetaData())
         with BannedDBSchemaOperations(['Table']):
             self.assertRaises(DBNotAllowed, table.drop)
             self.assertRaises(DBNotAllowed, table.alter)
