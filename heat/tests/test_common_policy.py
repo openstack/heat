@@ -71,18 +71,20 @@ class TestPolicyEnforcer(common.HeatTestCase):
     @ddt.file_data('policy/test_acl_personas.yaml')
     @ddt.unpack
     def test_legacy_rbac_policies(self, **kwargs):
+        self.fixture.config(group='oslo_policy', enforce_scope=False)
+        self.fixture.config(group='oslo_policy', enforce_new_defaults=False)
         self._test_legacy_rbac_policies(**kwargs)
 
     @ddt.file_data('policy/test_deprecated_access.yaml')
     @ddt.unpack
     def test_deprecated_policies(self, **kwargs):
+        self.fixture.config(group='oslo_policy', enforce_scope=False)
+        self.fixture.config(group='oslo_policy', enforce_new_defaults=False)
         self._test_legacy_rbac_policies(**kwargs)
 
     @ddt.file_data('policy/test_new_acl_personas.yaml')
     @ddt.unpack
     def test_secure_rbac_policies(self, **kwargs):
-        self.fixture.config(group='oslo_policy', enforce_scope=True)
-        self.fixture.config(group='oslo_policy', enforce_new_defaults=True)
         scope = kwargs.get("scope")
         actions = kwargs.get("actions")
         allowed_personas = kwargs.get("allowed", [])
