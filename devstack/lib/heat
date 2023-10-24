@@ -61,6 +61,12 @@ HEAT_CFN_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-api-cfn-uwsgi.ini
 HEAT_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api
 HEAT_CFN_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api-cfn
 
+# Flag to set the oslo_policy.enforce_scope and oslo_policy.enforce_new_defaults.
+# This is used to disable the compute API policies scope and new defaults.
+# By Default, it is False.
+# For more detail: https://docs.openstack.org/oslo.policy/latest/configuration/index.html#oslo_policy.enforce_scope
+HEAT_ENFORCE_SCOPE=$(trueorfalse False HEAT_ENFORCE_SCOPE)
+
 # other default options
 if [[ "$HEAT_STANDALONE" == "True" ]]; then
     # for standalone, use defaults which require no service user
@@ -213,6 +219,14 @@ function configure_heat {
 
     if ! is_service_enabled c-bak; then
         iniset $HEAT_CONF volumes backups_enabled false
+    fi
+
+    if [[ "$HEAT_ENFORCE_SCOPE" == True || "$ENFORCE_SCOPE" == True ]] ; then
+        iniset $HEAT_CONF oslo_policy enforce_scope true
+        iniset $HEAT_CONF oslo_policy enforce_new_defaults true
+    else
+        iniset $HEAT_CONF oslo_policy enforce_scope false
+        iniset $HEAT_CONF oslo_policy enforce_new_defaults false
     fi
 
     sudo install -d -o $STACK_USER $HEAT_ENV_DIR $HEAT_TEMPLATES_DIR
