@@ -231,12 +231,12 @@ class ForeignKeyConstraintFixture(fixtures.Fixture):
         if self.engine.name == 'sqlite':
 
             with self.engine.connect() as conn:
-                conn.exec_driver_sql("PRAGMA foreign_keys = ON")
+                conn.connection.execute("PRAGMA foreign_keys = ON")
 
             def disable_fks():
                 with self.engine.connect() as conn:
                     conn.connection.rollback()
-                    conn.exec_driver_sql("PRAGMA foreign_keys=OFF")
+                    conn.connection.execute("PRAGMA foreign_keys = OFF")
 
             self.addCleanup(disable_fks)
 
