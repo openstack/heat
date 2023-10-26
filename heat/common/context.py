@@ -23,7 +23,6 @@ from oslo_config import cfg
 from oslo_context import context
 from oslo_log import log as logging
 import oslo_messaging
-from oslo_middleware import request_id as oslo_request_id
 from oslo_utils import importutils
 
 from heat.common import config
@@ -79,23 +78,15 @@ class RequestContext(context.RequestContext):
     """
 
     def __init__(self, username=None, password=None, aws_creds=None,
-                 auth_url=None, roles=None, is_admin=None, read_only=False,
-                 show_deleted=False, overwrite=True, trust_id=None,
-                 trustor_user_id=None, request_id=None, auth_token_info=None,
-                 region_name=None, auth_plugin=None, trusts_auth_plugin=None,
-                 user_domain_id=None, project_domain_id=None,
-                 project_name=None, **kwargs):
+                 auth_url=None, is_admin=None, trust_id=None,
+                 trustor_user_id=None, auth_token_info=None, region_name=None,
+                 auth_plugin=None, trusts_auth_plugin=None,
+                 **kwargs):
         """Initialisation of the request context.
 
-        :param overwrite: Set to False to ensure that the greenthread local
-            copy of the index is not overwritten.
         """
         super(RequestContext, self).__init__(
-            is_admin=is_admin, read_only=read_only,
-            show_deleted=show_deleted, request_id=request_id,
-            roles=roles, user_domain_id=user_domain_id,
-            project_domain_id=project_domain_id,
-            overwrite=overwrite, **kwargs)
+            is_admin=is_admin, **kwargs)
 
         self.username = username
         self.password = password
@@ -103,7 +94,6 @@ class RequestContext(context.RequestContext):
             self.username = self.user_name
         self.region_name = region_name
         self.aws_creds = aws_creds
-        self.project_name = project_name
         self.auth_token_info = auth_token_info
         self.auth_url = auth_url
         self._session = None
@@ -376,7 +366,6 @@ class ContextMiddleware(wsgi.Middleware):
 
         token_info = environ.get('keystone.token_info')
         auth_plugin = environ.get('keystone.token_auth')
-        req_id = environ.get(oslo_request_id.ENV_REQUEST_ID)
 
         req.context = self.ctxcls.from_environ(
             environ,
@@ -385,7 +374,6 @@ class ContextMiddleware(wsgi.Middleware):
             username=username,
             password=password,
             auth_url=auth_url,
-            request_id=req_id,
             user_domain_id=user_domain_id,
             project_domain_id=project_domain_id,
             auth_token_info=token_info,
