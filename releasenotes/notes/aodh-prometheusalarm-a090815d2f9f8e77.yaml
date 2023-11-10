@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Add OS::Aodh::PrometheusAlarm resource to enable autoscaling
+    with Prometheus instead of Gnocchi.
