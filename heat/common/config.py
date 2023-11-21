@@ -284,8 +284,6 @@ engine_opts = [
                 help=_('Stacks containing these tag names will be hidden. '
                        'Multiple tags should be given in a comma-delimited '
                        'list (eg. hidden_stack_tags=hide_me,me_too).')),
-    cfg.StrOpt('onready',
-               help=_('Deprecated.')),
     cfg.BoolOpt('stack_scheduler_hints',
                 default=False,
                 help=_('When this feature is enabled, scheduler hints'

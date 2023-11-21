@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    The ``[DEFAULT] onready`` option has been removed. This option has had
+    no effect.
