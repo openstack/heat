@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    Now heat enables the API policies (RBAC) new defaults and scope by default.
+    The default value of config options ``[oslo_policy] enforce_scope`` and
+    ``[oslo_policy] enforce_new_defaults`` have been changed from ``False`` to
+    ``True``.
