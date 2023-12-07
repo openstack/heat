@@ -180,10 +180,10 @@ apidoc_excluded_paths = [
     'engine/resources/aws',
     'engine/resources/openstack',
     'hacking',
-    'httpd',
     'locale',
     'tests',
     'version.py',
+    'wsgi',
 ]
 
 
