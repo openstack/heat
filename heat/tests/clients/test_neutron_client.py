@@ -178,9 +178,6 @@ class NeutronConstraintsValidate(common.HeatTestCase):
 
 class NeutronProviderConstraintsValidate(common.HeatTestCase):
     scenarios = [
-        ('validate_lbaasv1',
-            dict(constraint_class=nc.LBaasV1ProviderConstraint,
-                 service_type='LOADBALANCER')),
         ('validate_lbaasv2',
             dict(constraint_class=lc.LBaasV2ProviderConstraint,
                  service_type='LOADBALANCERV2'))

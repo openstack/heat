@@ -121,7 +121,3 @@ class ProviderConstraint(constraints.BaseCustomConstraint):
                 {'provider': value, 'providers': names}
             )
             raise exception.StackValidationFailed(message=not_found_message)
-
-
-class LBaasV1ProviderConstraint(ProviderConstraint):
-    service_type = 'LOADBALANCER'
