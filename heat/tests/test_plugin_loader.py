@@ -12,7 +12,7 @@
 #    under the License.
 
 
-import pkgutil
+import importlib.machinery
 import sys
 from unittest import mock
 
@@ -53,14 +53,14 @@ class PluginLoaderTest(common.HeatTestCase):
     def test_import_module_existing(self):
         import heat.engine.service
         existing = heat.engine.service
-        importer = pkgutil.ImpImporter(heat.engine.__path__[0])
+        importer = importlib.machinery.FileFinder(heat.engine.__path__[0])
         loaded = plugin_loader._import_module(importer,
                                               'heat.engine.service',
                                               heat.engine)
         self.assertIs(existing, loaded)
 
     def test_import_module_garbage(self):
-        importer = pkgutil.ImpImporter(heat.engine.__path__[0])
+        importer = importlib.machinery.FileFinder(heat.engine.__path__[0])
         self.assertIsNone(plugin_loader._import_module(importer,
                                                        'wibble',
                                                        heat.engine))
@@ -68,7 +68,7 @@ class PluginLoaderTest(common.HeatTestCase):
     @mock.patch.object(plugin_loader, "_import_module", mock.MagicMock())
     @mock.patch('pkgutil.walk_packages')
     def test_load_modules_skip_test(self, mp):
-        importer = pkgutil.ImpImporter(heat.engine.__path__[0])
+        importer = importlib.machinery.FileFinder(heat.engine.__path__[0])
 
         mp.return_value = ((importer, "hola.foo", None),
                            (importer, "hola.tests.test_foo", None))
@@ -79,7 +79,7 @@ class PluginLoaderTest(common.HeatTestCase):
     @mock.patch.object(plugin_loader, "_import_module", mock.MagicMock())
     @mock.patch('pkgutil.walk_packages')
     def test_load_modules_skip_setup(self, mp):
-        importer = pkgutil.ImpImporter(heat.engine.__path__[0])
+        importer = importlib.machinery.FileFinder(heat.engine.__path__[0])
 
         mp.return_value = ((importer, "hola.foo", None),
                            (importer, "hola.setup", None))
