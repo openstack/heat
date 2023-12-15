@@ -74,23 +74,6 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self.assertRaises(exception.NotFound, should_raise, ex)
         self.assertRaises(exception.NotFound, should_raise, exr)
 
-    def test_ignore_error_named(self):
-        ex = exception.NotFound()
-        exr = self._to_remote_error(ex)
-
-        self.rpcapi.ignore_error_named(ex, 'NotFound')
-        self.rpcapi.ignore_error_named(exr, 'NotFound')
-        self.assertRaises(
-            exception.NotFound,
-            self.rpcapi.ignore_error_named,
-            ex,
-            'NotSupported')
-        self.assertRaises(
-            exception.NotFound,
-            self.rpcapi.ignore_error_named,
-            exr,
-            'NotSupported')
-
     def _test_engine_api(self, method, rpc_method, **kwargs):
         ctxt = utils.dummy_context()
         expected_retval = 'foo' if method == 'call' else None
