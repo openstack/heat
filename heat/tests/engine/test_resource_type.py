@@ -42,8 +42,7 @@ class ResourceTypeTest(common.HeatTestCase):
                                             mock_is_service_available):
         mock_is_service_available.return_value = (True, None)
         resources = self.eng.list_resource_types(self.ctx, "DEPRECATED")
-        self.assertEqual(set(['OS::Aodh::Alarm',
-                              'OS::Glance::Image']),
+        self.assertEqual(set(['OS::Aodh::Alarm']),
                          set(resources))
 
     @mock.patch.object(res.Resource, 'is_service_available')
