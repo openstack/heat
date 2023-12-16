@@ -88,13 +88,9 @@ function _config_tempest_plugin
     iniset $conf_file heat_plugin heat_plugin credential_secret_id $OS_CREDENTIAL_SECRET_ID
 
     # Skip SoftwareConfigIntegrationTest because it requires a custom image
-    # Skip VolumeBackupRestoreIntegrationTest skipped until failure rate can be reduced ref bug #1382300
-    # Skip AutoscalingLoadBalancerTest and AutoscalingLoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
-    iniset $conf_file heat_plugin skip_scenario_test_list 'AutoscalingLoadBalancerTest, AutoscalingLoadBalancerv2Test, \
-        SoftwareConfigIntegrationTest'
+    iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest'
 
-    # Skip LoadBalancerv2Test as deprecated neutron-lbaas service is not enabled
-    iniset $conf_file heat_plugin skip_functional_test_list 'LoadBalancerv2Test'
+    iniset $conf_file heat_plugin skip_functional_test_list ''
 
     # disable cinder backup feature
     iniset $conf_file volume-feature-enabled backup False
