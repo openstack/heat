@@ -92,14 +92,9 @@ class ListenerTest(common.HeatTestCase):
         for prop in ('protocol', 'protocol_port', 'loadbalancer'):
             tmpl = yaml.safe_load(inline_templates.LISTENER_TEMPLATE)
             del tmpl['resources']['listener']['properties'][prop]
-            del tmpl['resources']['listener']['properties']['default_pool']
             self._create_stack(tmpl=yaml.safe_dump(tmpl))
-            if prop == 'loadbalancer':
-                self.assertRaises(exception.PropertyUnspecifiedError,
-                                  self.listener.validate)
-            else:
-                self.assertRaises(exception.StackValidationFailed,
-                                  self.listener.validate)
+            self.assertRaises(exception.StackValidationFailed,
+                              self.listener.validate)
 
     def test_show_resource(self):
         self._create_stack()
