@@ -197,15 +197,9 @@ function configure_heat {
     # Cloudformation API
     iniset $HEAT_CONF heat_api_cfn bind_port $HEAT_API_CFN_PORT
 
-    if is_ssl_enabled_service "key" || is_service_enabled tls-proxy; then
+    if is_service_enabled tls-proxy; then
         iniset $HEAT_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
-    fi
-
-    if is_ssl_enabled_service "nova" || is_service_enabled tls-proxy; then
         iniset $HEAT_CONF clients_nova ca_file $SSL_BUNDLE_FILE
-    fi
-
-    if is_ssl_enabled_service "cinder" || is_service_enabled tls-proxy; then
         iniset $HEAT_CONF clients_cinder ca_file $SSL_BUNDLE_FILE
     fi
 
