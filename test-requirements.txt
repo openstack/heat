@@ -11,6 +11,7 @@ pyflakes>=2.1.1
 
 bandit!=1.6.0,>=1.1.0 # Apache-2.0
 coverage!=4.4,>=4.0 # Apache-2.0
+ddt>=1.4.1 # MIT
 fixtures>=3.0.0 # Apache-2.0/BSD
 kombu!=4.0.2,>=5.0.1 # BSD
 PyMySQL>=0.8.0 # MIT License
