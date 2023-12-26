@@ -11,11 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import functools
 import sys
 import types
 
-import debtcollector
 import eventlet
 from oslo_log import log as logging
 from oslo_utils import encodeutils
@@ -292,61 +290,6 @@ class TaskRunner(object):
     def __bool__(self):
         """Return True if there are steps remaining."""
         return self.__nonzero__()
-
-
-@debtcollector.removals.remove(message="Use the Python 3 'yield from' keyword "
-                                       "in place of 'yield', instead of "
-                                       "decorating with @wrappertask.",
-                               stacklevel=1)
-def wrappertask(task):
-    """Decorator for a task that needs to drive a subtask.
-
-    This is essentially a replacement for the Python 3-only "yield from"
-    keyword (PEP 380), using the "yield" keyword that is supported in
-    Python 2. For example::
-
-        @wrappertask
-        def parent_task(self):
-            self.setup()
-
-            yield self.child_task()
-
-            self.cleanup()
-    """
-
-    @functools.wraps(task)
-    def wrapper(*args, **kwargs):
-        # This could be simplified by using 'yield from' for the parent loop
-        # as well, but not without adding yet another frame to the stack
-        # for the subtasks.
-        parent = task(*args, **kwargs)
-
-        try:
-            subtask = next(parent)
-        except StopIteration:
-            return
-
-        while True:
-            try:
-                if isinstance(subtask, types.GeneratorType):
-                    yield from subtask
-                else:
-                    yield subtask
-            except GeneratorExit:
-                parent.close()
-                raise
-            except:  # noqa
-                try:
-                    subtask = parent.throw(*sys.exc_info())
-                except StopIteration:
-                    return
-            else:
-                try:
-                    subtask = next(parent)
-                except StopIteration:
-                    return
-
-    return wrapper
 
 
 class DependencyTaskGroup(object):
