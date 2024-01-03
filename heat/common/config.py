@@ -460,7 +460,7 @@ def list_opts():
 
     for client in ('aodh', 'barbican', 'cinder', 'designate',
                    'glance', 'heat', 'keystone', 'magnum', 'manila', 'mistral',
-                   'monasca', 'neutron', 'nova', 'octavia', 'sahara', 'senlin',
+                   'monasca', 'neutron', 'nova', 'octavia', 'sahara',
                    'swift', 'trove', 'vitrage', 'zaqar'
                    ):
         client_specific_group = 'clients_' + client
