@@ -1,0 +1,19 @@
+---
+upgrade:
+  - |
+    Integration with sahara has been removed because the sahara project has
+    been retired. Because of the removal, the following resource types are no
+    longer supported and now hidden.
+
+    - ``OS::Senlin::Cluster``
+    - ``OS::Senlin::Node``
+    - ``OS::Senlin::Policy``
+    - ``OS::Senlin::Profile``
+    - ``OS::Senlin::Receiver``
+
+    Also, the options in ``[clients_sahara]`` section have been removed.
+
+  - |
+    Default value of the ``[DEFAULT] hidden_stack_tags`` option has been
+    updated and now stacks with the ``data-processing-cluster`` tag is not
+    hidden by default.

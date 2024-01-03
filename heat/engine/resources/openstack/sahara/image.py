@@ -13,113 +13,28 @@
 # limitations under the License.
 
 from heat.common.i18n import _
-from heat.engine import constraints
-from heat.engine import properties
-from heat.engine import resource
+from heat.engine.resources.openstack.heat import none_resource
 from heat.engine import support
-from heat.engine import translation
 
 
-class SaharaImageRegistry(resource.Resource):
+class SaharaImageRegistry(none_resource.NoneResource):
     """A resource for registering an image in sahara.
 
     Allows to register an image in the sahara image registry and add tags.
     """
 
     support_status = support.SupportStatus(
-        version='22.0.0',
-        status=support.DEPRECATED,
-        message=_('Sahara project was marked inactive'),
+        version='23.0.0',
+        status=support.HIDDEN,
+        message=_('Sahara project was retired'),
         previous_status=support.SupportStatus(
-            version='5.0.0',
-            status=support.SUPPORTED
-        ))
-
-    PROPERTIES = (
-        IMAGE, USERNAME, DESCRIPTION, TAGS
-
-    ) = (
-        'image', 'username', 'description', 'tags'
-    )
-
-    properties_schema = {
-        IMAGE: properties.Schema(
-            properties.Schema.STRING,
-            _("ID or name of the image to register."),
-            constraints=[
-                constraints.CustomConstraint('glance.image')
-            ],
-            required=True
-        ),
-        USERNAME: properties.Schema(
-            properties.Schema.STRING,
-            _('Username of privileged user in the image.'),
-            required=True,
-            update_allowed=True
-        ),
-        DESCRIPTION: properties.Schema(
-            properties.Schema.STRING,
-            _('Description of the image.'),
-            default='',
-            update_allowed=True
-        ),
-        TAGS: properties.Schema(
-            properties.Schema.LIST,
-            _('Tags to add to the image.'),
-            schema=properties.Schema(
-                properties.Schema.STRING
-            ),
-            update_allowed=True,
-            default=[]
-        )
-    }
-
-    def translation_rules(self, props):
-        return [
-            translation.TranslationRule(
-                props,
-                translation.TranslationRule.RESOLVE,
-                [self.IMAGE],
-                client_plugin=self.client_plugin('glance'),
-                finder='find_image_by_name_or_id')
-        ]
-
-    default_client_name = 'sahara'
-
-    entity = 'images'
-
-    def handle_create(self):
-        self.resource_id_set(self.properties[self.IMAGE])
-        self.client().images.update_image(
-            self.resource_id,
-            self.properties[self.USERNAME],
-            self.properties[self.DESCRIPTION]
-        )
-        if self.properties[self.TAGS]:
-            self.client().images.update_tags(self.resource_id,
-                                             self.properties[self.TAGS])
-
-    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        if prop_diff:
-            self.properties = json_snippet.properties(
-                self.properties_schema,
-                self.context)
-            if self.USERNAME in prop_diff or self.DESCRIPTION in prop_diff:
-                self.client().images.update_image(
-                    self.resource_id,
-                    self.properties[self.USERNAME],
-                    self.properties[self.DESCRIPTION]
-                )
-            if self.TAGS in prop_diff:
-                self.client().images.update_tags(self.resource_id,
-                                                 self.properties[self.TAGS])
-
-    def handle_delete(self):
-        if self.resource_id is None:
-            return
-
-        with self.client_plugin().ignore_not_found:
-            self.client().images.unregister_image(self.resource_id)
+            version='22.0.0',
+            status=support.DEPRECATED,
+            message=_('Sahara project was marked inactive'),
+            previous_status=support.SupportStatus(
+                version='5.0.0',
+                status=support.SUPPORTED
+            )))
 
 
 def resource_mapping():

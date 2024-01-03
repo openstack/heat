@@ -293,7 +293,7 @@ engine_opts = [
                       'software config data, and metadata is derived from any '
                       'associated SoftwareDeployment resources.')),
     cfg.ListOpt('hidden_stack_tags',
-                default=['data-processing-cluster'],
+                default=[],
                 help=_('Stacks containing these tag names will be hidden. '
                        'Multiple tags should be given in a comma-delimited '
                        'list (eg. hidden_stack_tags=hide_me,me_too).')),
@@ -460,7 +460,7 @@ def list_opts():
 
     for client in ('aodh', 'barbican', 'cinder', 'designate',
                    'glance', 'heat', 'keystone', 'magnum', 'manila', 'mistral',
-                   'monasca', 'neutron', 'nova', 'octavia', 'sahara',
+                   'monasca', 'neutron', 'nova', 'octavia',
                    'swift', 'trove', 'vitrage', 'zaqar'
                    ):
         client_specific_group = 'clients_' + client

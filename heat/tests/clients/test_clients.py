@@ -25,7 +25,6 @@ from mistralclient.api import base as mistral_base
 from neutronclient.common import exceptions as neutron_exc
 from openstack import exceptions
 from oslo_config import cfg
-from saharaclient.api import base as sahara_base
 from swiftclient import exceptions as swift_exc
 from testtools import testcase
 from troveclient import client as troveclient
@@ -690,41 +689,6 @@ class TestIsNotFound(common.HeatTestCase):
             plugin='trove',
             exception=lambda: troveclient.exceptions.Conflict(
                 message='Conflict'),
-        )),
-        ('sahara_not_found', dict(
-            is_not_found=True,
-            is_over_limit=False,
-            is_client_exception=True,
-            is_conflict=False,
-            plugin='sahara',
-            exception=lambda: sahara_base.APIException(
-                error_message='gone1', error_code=404),
-        )),
-        ('sahara_exception', dict(
-            is_not_found=False,
-            is_over_limit=False,
-            is_client_exception=False,
-            is_conflict=False,
-            plugin='sahara',
-            exception=lambda: Exception()
-        )),
-        ('sahara_overlimit', dict(
-            is_not_found=False,
-            is_over_limit=True,
-            is_client_exception=True,
-            is_conflict=False,
-            plugin='sahara',
-            exception=lambda: sahara_base.APIException(
-                error_message='over1', error_code=413),
-        )),
-        ('sahara_conflict', dict(
-            is_not_found=False,
-            is_over_limit=False,
-            is_client_exception=True,
-            is_conflict=True,
-            plugin='sahara',
-            exception=lambda: sahara_base.APIException(
-                error_message='conflict1', error_code=409),
         )),
         ('zaqar_not_found', dict(
             is_not_found=True,
