@@ -76,7 +76,7 @@ outputs:
         before_refid = self.rsrc.FnGetRefId()
         self.assertIsNotNone(before_refid)
         new_t = self.t.copy()
-        del(new_t['resources']['none']['properties']['ignored'])
+        del new_t['resources']['none']['properties']['ignored']
         utils.update_stack(self.stack, new_t)
         self.assertEqual((self.stack.UPDATE, self.stack.COMPLETE),
                          self.stack.state)

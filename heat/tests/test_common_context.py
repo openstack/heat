@@ -125,7 +125,7 @@ class TestRequestContext(common.HeatTestCase):
             user_domain_id=ctx_origin.get('user_domain_id'),
             project_domain_id=ctx_origin.get('project_domain_id'))
         ctx_dict = ctx.to_dict()
-        del(ctx_dict['request_id'])
+        del ctx_dict['request_id']
         self.assertEqual(ctx_origin, ctx_dict)
 
     def test_request_context_from_dict(self):

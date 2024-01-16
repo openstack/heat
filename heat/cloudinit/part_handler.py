@@ -19,7 +19,7 @@ import sys
 
 
 def list_types():
-    return(["text/x-cfninitdata"])
+    return ["text/x-cfninitdata"]
 
 
 def handle_part(data, ctype, filename, payload):

@@ -156,10 +156,10 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                     raise ex
 
             def find_network_port(self, value):
-                return('9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151')
+                return '9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151'
 
             def find_network_ip(self, value):
-                return('477e8273-60a7-4c41-b683-1d497e53c384')
+                return '477e8273-60a7-4c41-b683-1d497e53c384'
 
         self.ctx = utils.dummy_context()
         tpl = template_format.parse(neutron_floating_template)
@@ -694,7 +694,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         # test update FloatingIp with None port_id
         props = copy.deepcopy(fip.properties.data)
-        del(props['port_id'])
+        del props['port_id']
         update_snippet = rsrc_defn.ResourceDefinition(fip.name, fip.type(),
                                                       stack.t.parse(stack.defn,
                                                                     props))

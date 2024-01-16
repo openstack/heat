@@ -54,13 +54,13 @@ class Engine(message_processor.MessageProcessor):
             if props:
                 props_def = {}
                 for prop_name, prop_value in props.items():
-                    if type(prop_value) == scenario_template.GetRes:
-                        prop_res = getattr(prop_value, "target_name")
-                        prop_value = {'get_resource': prop_res}
-                    elif type(prop_value) == scenario_template.GetAtt:
+                    if isinstance(prop_value, scenario_template.GetAtt):
                         prop_res = getattr(prop_value, "target_name")
                         prop_attr = getattr(prop_value, "attr")
                         prop_value = {'get_attr': [prop_res, prop_attr]}
+                    elif isinstance(prop_value, scenario_template.GetRes):
+                        prop_res = getattr(prop_value, "target_name")
+                        prop_value = {'get_resource': prop_res}
                     props_def[prop_name] = prop_value
                 res_defn["properties"] = props_def
             if depends:

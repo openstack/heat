@@ -277,7 +277,7 @@ class KsClientWrapper(object):
         return trust_context
 
     def _get_username(self, username):
-        if(len(username) > 255):
+        if len(username) > 255:
             LOG.warning("Truncating the username %s to the last 255 "
                         "characters.", username)
         # get the last 255 characters of the username

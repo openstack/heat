@@ -545,7 +545,7 @@ class Port(neutron.NeutronResource):
                     ).get_secgroup_uuids(['default'])
 
         if self.REPLACEMENT_POLICY in props:
-            del(props[self.REPLACEMENT_POLICY])
+            del props[self.REPLACEMENT_POLICY]
 
     def _store_config_default_properties(self, attrs):
         """A method for storing properties default values.

@@ -1318,7 +1318,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
              mock.call('swift_signal_url')],
             self.deployment.data_delete.mock_calls)
 
-        del(dep_data['swift_signal_object_name'])
+        del dep_data['swift_signal_object_name']
         self.deployment.physical_resource_name = mock.Mock()
         self.deployment._delete_swift_signal_url()
         self.assertFalse(self.deployment.physical_resource_name.called)
