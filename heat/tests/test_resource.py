@@ -4092,8 +4092,8 @@ class ResourceAvailabilityTest(common.HeatTestCase):
             service_type='test_type',
             service_name=(generic_rsrc.ResourceWithDefaultClientName
                           .default_client_name))
-        mock_client_plugin.has_extension.has_calls(
-            [('foo'), ('bar')])
+        mock_client_plugin.has_extension.assert_has_calls(
+            [mock.call('foo'), mock.call('bar')])
 
     @mock.patch.object(clients.OpenStackClients, 'client_plugin')
     def test_service_deployed_required_extension_true_list(
@@ -4118,8 +4118,8 @@ class ResourceAvailabilityTest(common.HeatTestCase):
             service_type='test_type',
             service_name=(generic_rsrc.ResourceWithDefaultClientName
                           .default_client_name))
-        mock_client_plugin.has_extension.has_calls(
-            [('foo'), ('bar')])
+        mock_client_plugin.has_extension.assert_has_calls(
+            [mock.call('foo'), mock.call('bar')])
 
     @mock.patch.object(clients.OpenStackClients, 'client_plugin')
     def test_service_deployed_required_extension_true_list_fail(
@@ -4144,8 +4144,8 @@ class ResourceAvailabilityTest(common.HeatTestCase):
             service_type='test_type',
             service_name=(generic_rsrc.ResourceWithDefaultClientName
                           .default_client_name))
-        mock_client_plugin.has_extension.has_calls(
-            [('foo'), ('bar')])
+        mock_client_plugin.has_extension.assert_has_calls(
+            [mock.call('foo'), mock.call('bar')])
 
 
 class TestLiveStateUpdate(common.HeatTestCase):

@@ -753,12 +753,12 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         }
         self.engine.software_config._push_metadata_software_deployments(
             self.ctx, '1234', None)
-        res_upd.has_calls(
+        res_upd.assert_has_calls([
             mock.call(self.ctx, '1234',
                       {'rsrc_metadata': result_metadata}, 1),
             mock.call(self.ctx, '1234',
-                      {'rsrc_metadata': result_metadata}, 2),
-        )
+                      {}, 2),
+        ])
 
         put.assert_called_once_with(
             'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
