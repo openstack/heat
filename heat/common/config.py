@@ -152,6 +152,19 @@ engine_opts = [
                default=512,
                help=_('Maximum number of stacks any one tenant may have '
                       'active at one time. -1 stands for unlimited.')),
+    cfg.IntOpt('max_software_configs_per_tenant',
+               default=4096,
+               help=_('Maximum number of software configs any one tenant may '
+                      'have active at one time. -1 stands for unlimited.')),
+    cfg.IntOpt('max_software_deployments_per_tenant',
+               default=4096,
+               help=_('Maximum number of software deployments any one tenant '
+                      'may have active at one time.'
+                      '-1 stands for unlimited.')),
+    cfg.IntOpt('max_snapshots_per_stack',
+               default=32,
+               help=_('Maximum number of snapshot any one stack may have '
+                      'active at one time. -1 stands for unlimited.')),
     cfg.IntOpt('action_retry_limit',
                default=5,
                help=_('Number of times to retry to bring a '

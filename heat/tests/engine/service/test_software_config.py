@@ -15,6 +15,7 @@ import datetime
 from unittest import mock
 import uuid
 
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 from oslo_serialization import jsonutils as json
 from oslo_utils import timeutils
@@ -168,6 +169,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                            'error_output': False}],
                          config['outputs'])
         self.assertEqual(kwargs['options'], config['options'])
+
+    def test_create_config_exceeds_max_per_tenant(self):
+        cfg.CONF.set_override('max_software_configs_per_tenant', 0)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._create_software_config)
+        self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
+        self.assertIn("You have reached the maximum software configs "
+                      "per tenant", str(ex.exc_info[1]))
 
     def test_create_software_config_structured(self):
         kwargs = {
@@ -503,6 +512,14 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             self.ctx, deployment_id)
         self.assertEqual(deployment_id, deployment['id'])
         self.assertEqual(kwargs['input_values'], deployment['input_values'])
+
+    def test_create_deployment_exceeds_max_per_tenant(self):
+        cfg.CONF.set_override('max_software_deployments_per_tenant', 0)
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._create_software_deployment)
+        self.assertEqual(exception.RequestLimitExceeded, ex.exc_info[0])
+        self.assertIn("You have reached the maximum software deployments"
+                      " per tenant", str(ex.exc_info[1]))
 
     def test_create_software_deployment_invalid_stack_user_project_id(self):
         sc_kwargs = {

@@ -1431,6 +1431,14 @@ def software_config_get_all(context, limit=None, marker=None):
                            limit=limit, marker=marker).all()
 
 
+@context_manager.reader
+def software_config_count_all(context):
+    query = context.session.query(models.SoftwareConfig)
+    if not context.is_admin:
+        query = query.filter_by(tenant=context.tenant_id)
+    return query.count()
+
+
 @context_manager.writer
 def software_config_delete(context, config_id):
     config = _software_config_get(context, config_id)
@@ -1510,6 +1518,21 @@ def software_deployment_get_all(context, server_id=None):
     return query.all()
 
 
+@context_manager.reader
+def software_deployment_count_all(context):
+    sd = models.SoftwareDeployment
+    query = context.session.query(sd)
+    if not context.is_admin:
+        query = query.filter(
+            sqlalchemy.or_(
+                sd.tenant == context.tenant_id,
+                sd.stack_user_project_id == context.tenant_id,
+            )
+        )
+
+    return query.count()
+
+
 @context_manager.writer
 def software_deployment_update(context, deployment_id, values):
     deployment = _software_deployment_get(context, deployment_id)
@@ -1585,6 +1608,12 @@ def snapshot_delete(context, snapshot_id):
 def snapshot_get_all_by_stack(context, stack_id):
     return context.session.query(models.Snapshot).filter_by(
         stack_id=stack_id, tenant=context.tenant_id)
+
+
+@context_manager.reader
+def snapshot_count_all_by_stack(context, stack_id):
+    return context.session.query(models.Snapshot).filter_by(
+        stack_id=stack_id, tenant=context.tenant_id).count()
 
 
 # service

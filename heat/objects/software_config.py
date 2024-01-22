@@ -66,5 +66,9 @@ class SoftwareConfig(
         return [cls._from_db_object(context, cls(), sc) for sc in scs]
 
     @classmethod
+    def count_all(cls, context, **kwargs):
+        return db_api.software_config_count_all(context, **kwargs)
+
+    @classmethod
     def delete(cls, context, config_id):
         db_api.software_config_delete(context, config_id)
