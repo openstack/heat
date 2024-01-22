@@ -49,6 +49,15 @@ class SaharaCluster(resource.Resource):
     should specify a keypair.
     """
 
+    support_status = support.SupportStatus(
+        version='22.0.0',
+        status=support.DEPRECATED,
+        message=_('Sahara project was marked inactive'),
+        previous_status=support.SupportStatus(
+            version='5.0.0',
+            status=support.SUPPORTED
+        ))
+
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, CLUSTER_TEMPLATE_ID,
         KEY_NAME, IMAGE, MANAGEMENT_NETWORK, IMAGE_ID,

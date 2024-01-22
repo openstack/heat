@@ -1,0 +1,10 @@
+---
+deprecations:
+  - |
+    The following resources have been deprecated, because monasca, sahara and
+    senlin were marked inactive and will not get deliverables for the 2024.1
+    release. These resources will be removed in ``23.0.0`` release.
+
+    - ``OS::Monasca::*``
+    - ``OS::Sahara::*``
+    - ``OS::Senlin::*``

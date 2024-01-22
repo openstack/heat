@@ -29,7 +29,14 @@ class JobBinary(resource.Resource):
     credentials needed to retrieve the file.
     """
 
-    support_status = support.SupportStatus(version='5.0.0')
+    support_status = support.SupportStatus(
+        version='22.0.0',
+        status=support.DEPRECATED,
+        message=_('Sahara project was marked inactive'),
+        previous_status=support.SupportStatus(
+            version='5.0.0',
+            status=support.SUPPORTED
+        ))
 
     PROPERTIES = (
         NAME, URL, DESCRIPTION, CREDENTIALS
