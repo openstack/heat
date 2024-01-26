@@ -73,7 +73,7 @@ class StackTest(common.HeatTestCase):
         }
         snapshot_object.Snapshot.create(self.ctx, snapshot_fake)
 
-        self.assertIsNotNone(snapshot_object.Snapshot.get_all(
+        self.assertIsNotNone(snapshot_object.Snapshot.get_all_by_stack(
             self.ctx, stack_id))
 
         self.stack.delete()
@@ -81,7 +81,7 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual([], snapshot_object.Snapshot.get_all(
+        self.assertEqual([], snapshot_object.Snapshot.get_all_by_stack(
             self.ctx, stack_id))
 
     def test_delete_with_snapshot_after_stack_add_resource(self):
@@ -104,7 +104,7 @@ class StackTest(common.HeatTestCase):
         }
         snapshot_object.Snapshot.create(self.ctx, snapshot_fake)
 
-        self.assertIsNotNone(snapshot_object.Snapshot.get_all(
+        self.assertIsNotNone(snapshot_object.Snapshot.get_all_by_stack(
             self.ctx, stack_id))
 
         new_tmpl = {'heat_template_version': 'queens',
@@ -121,7 +121,7 @@ class StackTest(common.HeatTestCase):
         self.assertIsNone(db_s)
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          self.stack.state)
-        self.assertEqual([], snapshot_object.Snapshot.get_all(
+        self.assertEqual([], snapshot_object.Snapshot.get_all_by_stack(
             self.ctx, stack_id))
 
     def test_delete_user_creds(self):

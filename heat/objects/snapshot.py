@@ -70,6 +70,7 @@ class Snapshot(
         db_api.snapshot_delete(context, snapshot_id)
 
     @classmethod
-    def get_all(cls, context, stack_id):
+    def get_all_by_stack(cls, context, stack_id):
         return [cls._from_db_object(context, cls(), db_snapshot)
-                for db_snapshot in db_api.snapshot_get_all(context, stack_id)]
+                for db_snapshot
+                in db_api.snapshot_get_all_by_stack(context, stack_id)]

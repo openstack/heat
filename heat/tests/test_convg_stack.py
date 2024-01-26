@@ -549,14 +549,14 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
 
         # Ensure that snapshot is not deleted on stack update
         stack.converge_stack(template=stack.t, action=stack.UPDATE)
-        db_snapshot_obj = snapshot_objects.Snapshot.get_all(
+        db_snapshot_obj = snapshot_objects.Snapshot.get_all_by_stack(
             stack.context, stack.id)
         self.assertEqual('fake_snapshot', db_snapshot_obj[0].name)
         self.assertEqual(stack.id, db_snapshot_obj[0].stack_id)
 
         # Ensure that snapshot is deleted on stack delete
         stack.converge_stack(template=stack.t, action=stack.DELETE)
-        self.assertEqual([], snapshot_objects.Snapshot.get_all(
+        self.assertEqual([], snapshot_objects.Snapshot.get_all_by_stack(
             stack.context, stack.id))
         self.assertTrue(mock_cr.called)
 

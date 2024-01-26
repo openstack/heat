@@ -1421,7 +1421,7 @@ class SqlAlchemyTest(common.HeatTestCase):
 
         self.assertIn(snapshot_id, str(err))
 
-    def test_snapshot_get_all(self):
+    def test_snapshot_get_all_by_stack(self):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
@@ -1429,7 +1429,7 @@ class SqlAlchemyTest(common.HeatTestCase):
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.assertIsNotNone(snapshot)
-        [snapshot] = db_api.snapshot_get_all(self.ctx, stack.id)
+        [snapshot] = db_api.snapshot_get_all_by_stack(self.ctx, stack.id)
         self.assertIsNotNone(snapshot)
         self.assertEqual(values['tenant'], snapshot.tenant)
         self.assertEqual(values['status'], snapshot.status)

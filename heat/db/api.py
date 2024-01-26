@@ -1582,7 +1582,7 @@ def snapshot_delete(context, snapshot_id):
 
 
 @context_manager.reader
-def snapshot_get_all(context, stack_id):
+def snapshot_get_all_by_stack(context, stack_id):
     return context.session.query(models.Snapshot).filter_by(
         stack_id=stack_id, tenant=context.tenant_id)
 
