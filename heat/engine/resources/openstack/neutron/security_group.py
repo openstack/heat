@@ -180,7 +180,7 @@ class SecurityGroup(neutron.NeutronResource):
 
         if 'remote_mode' in rule:
             remote_mode = rule.get(self.RULE_REMOTE_MODE)
-            del(rule[self.RULE_REMOTE_MODE])
+            del rule[self.RULE_REMOTE_MODE]
 
             if remote_mode == self.RULE_REMOTE_GROUP_ID:
                 rule[self.RULE_REMOTE_IP_PREFIX] = None

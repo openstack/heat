@@ -47,7 +47,7 @@ class EnvironmentTest(common.HeatTestCase):
                     u'resource_registry': {u'resources': {}}}
         env = environment.Environment(old)
         self.assertEqual(expected, env.env_as_dict())
-        del(expected['encrypted_param_names'])
+        del expected['encrypted_param_names']
         self.assertEqual(expected, env.user_env_as_dict())
 
     def test_load_new_env(self):
@@ -59,7 +59,7 @@ class EnvironmentTest(common.HeatTestCase):
                                           u'resources': {}}}
         env = environment.Environment(new_env)
         self.assertEqual(new_env, env.env_as_dict())
-        del(new_env['encrypted_param_names'])
+        del new_env['encrypted_param_names']
         self.assertEqual(new_env, env.user_env_as_dict())
 
     def test_global_registry(self):

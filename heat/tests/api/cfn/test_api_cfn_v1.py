@@ -266,8 +266,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'stack_status': u'COMPLETE',
                         u'description': u'blah',
                         u'disable_rollback': 'true',
-                        u'timeout_mins':60,
-                        u'capabilities':[]}]
+                        u'timeout_mins': 60,
+                        u'capabilities': []}]
 
         self.m_call.side_effect = [identity, engine_resp]
 
@@ -358,8 +358,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                         u'stack_status': u'COMPLETE',
                         u'description': u'blah',
                         u'disable_rollback': 'true',
-                        u'timeout_mins':60,
-                        u'capabilities':[]}]
+                        u'timeout_mins': 60,
+                        u'capabilities': []}]
 
         self.m_call.return_value = engine_resp
 

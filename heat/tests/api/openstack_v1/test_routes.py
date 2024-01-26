@@ -28,8 +28,8 @@ class RoutesTest(common.HeatTestCase):
         class_name = reflection.get_class_name(route['controller'].controller,
                                                fully_qualified=False)
         self.assertEqual(controller, class_name)
-        del(route['action'])
-        del(route['controller'])
+        del route['action']
+        del route['controller']
         self.assertEqual(params, route)
 
     def setUp(self):

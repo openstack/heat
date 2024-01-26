@@ -368,7 +368,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
             ca_cert=ca_cert)
         self.assertEqual(ca_cert, rsrc._cacert)
         self.assertEqual(ca_cert, rsrc.cacert)
-        self.assertTrue('/tmp/' in rsrc._ssl_verify)
+        self.assertIn('/tmp/', rsrc._ssl_verify)
 
     def test_create_with_insecure(self):
         rsrc = self._create_with_remote_credential(insecure=True)

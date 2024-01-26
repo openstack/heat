@@ -50,8 +50,8 @@ done in the OpenStack CI systems.
 Heat Specific Commandments
 --------------------------
 
-- [Heat301] Use LOG.warning() rather than LOG.warn().
-- [Heat302] Python 3: do not use dict.iteritems.
-- [Heat303] Python 3: do not use dict.iterkeys.
-- [Heat304] Python 3: do not use dict.itervalues.
+- [HE301] Use LOG.warning() rather than LOG.warn().
+- [HE302] Python 3: do not use dict.iteritems.
+- [HE303] Python 3: do not use dict.iterkeys.
+- [HE304] Python 3: do not use dict.itervalues.
 

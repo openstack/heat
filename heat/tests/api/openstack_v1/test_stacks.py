@@ -1608,7 +1608,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'stack_status': u'COMPLETE',
                 u'description': u'blah',
                 u'disable_rollback': True,
-                u'timeout_mins':60,
+                u'timeout_mins': 60,
                 u'capabilities': [],
             }
         ]
@@ -1674,7 +1674,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                 u'stack_status': u'COMPLETE',
                 u'description': u'blah',
                 u'disable_rollback': True,
-                u'timeout_mins':60,
+                u'timeout_mins': 60,
                 u'capabilities': [],
             }
         ]

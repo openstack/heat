@@ -809,7 +809,7 @@ class Resource(status.ResourceStatus):
             if endpoint_exists:
                 req_extension = cls.required_service_extension
                 if not req_extension:
-                    return(True, None)
+                    return (True, None)
                 if isinstance(req_extension, str):
                     req_extension = re.split(' |,', req_extension)
                 for ext in req_extension:

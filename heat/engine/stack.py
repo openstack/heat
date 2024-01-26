@@ -1343,7 +1343,7 @@ class Stack(collections.abc.Mapping):
         elif create_if_missing:
             kwargs = self.get_kwargs_for_cloning(keep_tags=True)
             kwargs['owner_id'] = self.id
-            del(kwargs['prev_raw_template_id'])
+            del kwargs['prev_raw_template_id']
             prev = type(self)(self.context, self._backup_name(),
                               copy.deepcopy(self.t),
                               **kwargs)
