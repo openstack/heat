@@ -283,7 +283,7 @@ class KsClientWrapper(object):
         # get the last 255 characters of the username
         return username[-255:]
 
-    def create_stack_user(self, username, password=''):
+    def create_stack_user(self, username, password):
         """Create a user defined as part of a stack.
 
         The user is defined either via template or created internally by a
