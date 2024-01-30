@@ -40,7 +40,7 @@ Cold Upgrades
 Heat already supports "`cold-upgrades`_", where the heat services have to be
 down during the upgrade. For time-consuming upgrades, it may be unacceptable
 for the services to be unavailable for a long period of time. This type of
-upgrade is quite simple, follow the bellow steps:
+upgrade is quite simple, follow the below steps:
 
 1. Stop all heat-api and heat-engine services.
 

@@ -124,7 +124,7 @@ To create a remote stack, you can simply use an :ref:`OS::Heat::Stack` resource
 in your template.
 
 In resource properties, provide `credential_secret_id` (Barbican secret ID
-from the secret we just builded for credential) under `context` property.
+from the secret we just built for credential) under `context` property.
 
 Here is an template example for you:
 
