@@ -2493,13 +2493,13 @@ class DBAPIResourceTest(common.HeatTestCase):
         [self.assertIn(val['name'], names) for val in values]
 
     def test_resource_get_all_by_stack(self):
-        self.stack1 = create_stack(self.ctx, self.template, self.user_creds)
-        self.stack2 = create_stack(self.ctx, self.template, self.user_creds)
+        stack1 = create_stack(self.ctx, self.template, self.user_creds)
+        stack2 = create_stack(self.ctx, self.template, self.user_creds)
         values = [
             {'name': 'res1', 'stack_id': self.stack.id},
             {'name': 'res2', 'stack_id': self.stack.id},
             {'name': 'res3', 'stack_id': self.stack.id},
-            {'name': 'res4', 'stack_id': self.stack1.id},
+            {'name': 'res4', 'stack_id': stack1.id},
         ]
         [create_resource(self.ctx, self.stack, False, **val)
          for val in values]
@@ -2530,7 +2530,7 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertEqual('res2', resources.get('res2').name)
 
         self.assertEqual({}, db_api.resource_get_all_by_stack(
-            self.ctx, self.stack2.id))
+            self.ctx, stack2.id))
 
     def test_resource_get_all_active_by_stack(self):
         values = [
@@ -2555,8 +2555,8 @@ class DBAPIResourceTest(common.HeatTestCase):
             self.assertIn(res.name, ['res2', 'res3', 'res4', 'res5', 'res6'])
 
     def test_resource_get_all_by_root_stack(self):
-        self.stack1 = create_stack(self.ctx, self.template, self.user_creds)
-        self.stack2 = create_stack(self.ctx, self.template, self.user_creds)
+        stack1 = create_stack(self.ctx, self.template, self.user_creds)
+        stack2 = create_stack(self.ctx, self.template, self.user_creds)
 
         create_resource(self.ctx, self.stack, name='res1',
                         root_stack_id=self.stack.id)
@@ -2564,7 +2564,7 @@ class DBAPIResourceTest(common.HeatTestCase):
                         root_stack_id=self.stack.id)
         create_resource(self.ctx, self.stack, name='res3',
                         root_stack_id=self.stack.id)
-        create_resource(self.ctx, self.stack1, name='res4',
+        create_resource(self.ctx, stack1, name='res4',
                         root_stack_id=self.stack.id)
 
         # Test for all resources in a stack
@@ -2596,7 +2596,7 @@ class DBAPIResourceTest(common.HeatTestCase):
                          sorted(resource_names))
 
         self.assertEqual({}, db_api.resource_get_all_by_root_stack(
-            self.ctx, self.stack2.id))
+            self.ctx, stack2.id))
 
     def test_resource_purge_deleted_by_stack(self):
         val = {'name': 'res1', 'action': rsrc.Resource.DELETE,
@@ -2944,14 +2944,14 @@ class DBAPIEventTest(common.HeatTestCase):
         self.assertEqual({'foo2': 'ev_bar'}, ret_event.rsrc_prop_data.data)
 
     def test_event_get_all_by_tenant(self):
-        self.stack1 = create_stack(self.ctx, self.template, self.user_creds,
-                                   tenant='tenant1')
-        self.stack2 = create_stack(self.ctx, self.template, self.user_creds,
-                                   tenant='tenant2')
+        stack1 = create_stack(self.ctx, self.template, self.user_creds,
+                              tenant='tenant1')
+        stack2 = create_stack(self.ctx, self.template, self.user_creds,
+                              tenant='tenant2')
         values = [
-            {'stack_id': self.stack1.id, 'resource_name': 'res1'},
-            {'stack_id': self.stack1.id, 'resource_name': 'res2'},
-            {'stack_id': self.stack2.id, 'resource_name': 'res3'},
+            {'stack_id': stack1.id, 'resource_name': 'res1'},
+            {'stack_id': stack1.id, 'resource_name': 'res2'},
+            {'stack_id': stack2.id, 'resource_name': 'res3'},
         ]
         [create_event(self.ctx, **val) for val in values]
 
@@ -2984,38 +2984,38 @@ class DBAPIEventTest(common.HeatTestCase):
         self.assertEqual(1, len(events))
 
     def test_event_get_all_by_stack(self):
-        self.stack1 = create_stack(self.ctx, self.template, self.user_creds)
-        self.stack2 = create_stack(self.ctx, self.template, self.user_creds)
+        stack1 = create_stack(self.ctx, self.template, self.user_creds)
+        stack2 = create_stack(self.ctx, self.template, self.user_creds)
         values = [
-            {'stack_id': self.stack1.id, 'resource_name': 'res1'},
-            {'stack_id': self.stack1.id, 'resource_name': 'res2'},
-            {'stack_id': self.stack2.id, 'resource_name': 'res3'},
+            {'stack_id': stack1.id, 'resource_name': 'res1'},
+            {'stack_id': stack1.id, 'resource_name': 'res2'},
+            {'stack_id': stack2.id, 'resource_name': 'res3'},
         ]
         [create_event(self.ctx, **val) for val in values]
 
         self.ctx.project_id = 'tenant1'
-        events = db_api.event_get_all_by_stack(self.ctx, self.stack1.id)
+        events = db_api.event_get_all_by_stack(self.ctx, stack1.id)
         self.assertEqual(2, len(events))
 
         self.ctx.project_id = 'tenant2'
-        events = db_api.event_get_all_by_stack(self.ctx, self.stack2.id)
+        events = db_api.event_get_all_by_stack(self.ctx, stack2.id)
         self.assertEqual(1, len(events))
 
     def test_event_count_all_by_stack(self):
-        self.stack1 = create_stack(self.ctx, self.template, self.user_creds)
-        self.stack2 = create_stack(self.ctx, self.template, self.user_creds)
+        stack1 = create_stack(self.ctx, self.template, self.user_creds)
+        stack2 = create_stack(self.ctx, self.template, self.user_creds)
         values = [
-            {'stack_id': self.stack1.id, 'resource_name': 'res1'},
-            {'stack_id': self.stack1.id, 'resource_name': 'res2'},
-            {'stack_id': self.stack2.id, 'resource_name': 'res3'},
+            {'stack_id': stack1.id, 'resource_name': 'res1'},
+            {'stack_id': stack1.id, 'resource_name': 'res2'},
+            {'stack_id': stack2.id, 'resource_name': 'res3'},
         ]
         [create_event(self.ctx, **val) for val in values]
 
         self.assertEqual(2, db_api.event_count_all_by_stack(self.ctx,
-                                                            self.stack1.id))
+                                                            stack1.id))
 
         self.assertEqual(1, db_api.event_count_all_by_stack(self.ctx,
-                                                            self.stack2.id))
+                                                            stack2.id))
 
 
 class DBAPIServiceTest(common.HeatTestCase):
@@ -3440,9 +3440,9 @@ class ResetStackStatusTests(common.HeatTestCase):
         db_api.reset_stack_status(self.ctx, self.stack.id)
 
         grandchild = db_api.stack_get(self.ctx, grandchild.id)
-        self.stack = db_api.stack_get(self.ctx, self.stack.id)
+        stack = db_api.stack_get(self.ctx, self.stack.id)
         resource = db_api.resource_get(self.ctx, resource.id)
         self.assertEqual('FAILED', grandchild.status)
         self.assertEqual('FAILED', resource.status)
         self.assertIsNone(resource.engine_id)
-        self.assertEqual('FAILED', self.stack.status)
+        self.assertEqual('FAILED', stack.status)
