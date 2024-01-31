@@ -2198,7 +2198,7 @@ class EngineService(service.ServiceBase):
     @context.request_context
     def stack_list_snapshots(self, cnxt, stack_identity):
         s = self._get_stack(cnxt, stack_identity)
-        data = snapshot_object.Snapshot.get_all(cnxt, s.id)
+        data = snapshot_object.Snapshot.get_all_by_stack(cnxt, s.id)
         return [api.format_snapshot(snapshot) for snapshot in data]
 
     @context.request_context

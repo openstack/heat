@@ -2132,7 +2132,8 @@ class Stack(collections.abc.Mapping):
 
     def delete_all_snapshots(self):
         """Remove all snapshots for this stack."""
-        snapshots = snapshot_object.Snapshot.get_all(self.context, self.id)
+        snapshots = snapshot_object.Snapshot.get_all_by_stack(
+            self.context, self.id)
         for snapshot in snapshots:
             self.delete_snapshot(snapshot)
             snapshot_object.Snapshot.delete(self.context, snapshot.id)
