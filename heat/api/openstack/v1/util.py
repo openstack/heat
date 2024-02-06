@@ -29,9 +29,15 @@ def registered_policy_enforce(handler):
     """
     @functools.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
+        # NOTE(tkajinam): Heat uses stack owner's project id in redirect URI.
+        # So admin might be redirected to different project id when accessing
+        # resources in a different project. Use project id in context to
+        # bypass project_id check, because admin should have access to all
+        # projects.
+        if req.context.is_admin and req.context.project_id:
+            tenant_id = req.context.tenant_id
         _target = {"project_id": tenant_id}
-
-        if req.context.tenant_id != tenant_id and not req.context.is_admin:
+        if req.context.tenant_id != tenant_id:
             raise exc.HTTPForbidden()
         allowed = req.context.policy.enforce(
             context=req.context,
