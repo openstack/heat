@@ -14,7 +14,13 @@
 import datetime
 from unittest import mock
 
-import pytz
+try:
+    import zoneinfo
+except ImportError:
+    # zoneinfo is available in Python >= 3.9
+    import pytz
+    zoneinfo = None
+
 from testtools import matchers
 
 from heat.engine.clients.os import swift
@@ -126,8 +132,12 @@ class SwiftUtilsTest(SwiftClientPluginTestCase):
 
     def test_parse_last_modified(self):
         self.assertIsNone(self.swift_plugin.parse_last_modified(None))
+        if zoneinfo:
+            tz = zoneinfo.ZoneInfo('GMT')
+        else:
+            tz = pytz.timezone('GMT')
         now = datetime.datetime(
-            2015, 2, 5, 1, 4, 40, 0, pytz.timezone('GMT'))
+            2015, 2, 5, 1, 4, 40, 0, tz)
         now_naive = datetime.datetime(
             2015, 2, 5, 1, 4, 40, 0)
         last_modified = now.strftime('%a, %d %b %Y %H:%M:%S %Z')
