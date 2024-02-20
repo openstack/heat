@@ -106,7 +106,7 @@ class CIDRConstraint(constraints.BaseCustomConstraint):
 
     def validate(self, value, context, template=None):
         try:
-            netaddr.IPNetwork(value, implicit_prefix=True)
+            netaddr.IPNetwork(netaddr.cidr_abbrev_to_verbose(value))
             msg = validators.validate_subnet(value)
             if msg is not None:
                 self._error_message = msg
