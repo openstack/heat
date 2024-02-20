@@ -51,7 +51,7 @@ class FakeKeystoneClient(object):
             secret = self.secret
         self.creds = FakeCred()
 
-    def create_stack_user(self, username, password=''):
+    def create_stack_user(self, username, password):
         self.username = username
         return self.user_id
 
