@@ -21,67 +21,7 @@ from heat.cloudinit import loguserdata
 from heat.tests import common
 
 
-class FakeCiVersion(object):
-    def __init__(self, version):
-        self.version = version
-
-
 class LoguserdataTest(common.HeatTestCase):
-
-    @mock.patch('pkg_resources.get_distribution')
-    def test_ci_version_with_pkg_resources(self, mock_get):
-        # Setup
-        returned_versions = [
-            FakeCiVersion('0.5.0'),
-            FakeCiVersion('0.5.9'),
-            FakeCiVersion('0.6.0'),
-            FakeCiVersion('0.7.0'),
-            FakeCiVersion('1.0'),
-            FakeCiVersion('2.0'),
-        ]
-        mock_get.side_effect = returned_versions
-
-        # Test & Verify
-        self.assertFalse(loguserdata.chk_ci_version())
-        self.assertFalse(loguserdata.chk_ci_version())
-        self.assertTrue(loguserdata.chk_ci_version())
-        self.assertTrue(loguserdata.chk_ci_version())
-        self.assertTrue(loguserdata.chk_ci_version())
-        self.assertTrue(loguserdata.chk_ci_version())
-        self.assertEqual(6, mock_get.call_count)
-
-    @mock.patch('pkg_resources.get_distribution')
-    @mock.patch('subprocess.Popen')
-    def test_ci_version_with_subprocess(self, mock_popen,
-                                        mock_get_distribution):
-        # Setup
-        mock_get_distribution.side_effect = Exception()
-
-        popen_return = [
-            [None, 'cloud-init 0.0.5\n'],
-            [None, 'cloud-init 0.7.5\n'],
-        ]
-        mock_popen.return_value = mock.MagicMock()
-        mock_popen.return_value.communicate.side_effect = popen_return
-
-        # Test & Verify
-        self.assertFalse(loguserdata.chk_ci_version())
-        self.assertTrue(loguserdata.chk_ci_version())
-        self.assertEqual(2, mock_get_distribution.call_count)
-
-    @mock.patch('pkg_resources.get_distribution')
-    @mock.patch('subprocess.Popen')
-    def test_ci_version_with_subprocess_exception(self, mock_popen,
-                                                  mock_get_distribution):
-        # Setup
-        mock_get_distribution.side_effect = Exception()
-        mock_popen.return_value = mock.MagicMock()
-        mock_popen.return_value.communicate.return_value = ['non-empty',
-                                                            'irrelevant']
-
-        # Test
-        self.assertRaises(Exception, loguserdata.chk_ci_version)  # noqa
-        self.assertEqual(1, mock_get_distribution.call_count)
 
     @mock.patch('subprocess.Popen')
     def test_call(self, mock_popen):
@@ -141,12 +81,10 @@ class LoguserdataTest(common.HeatTestCase):
         # Verify
         self.assertEqual(os.EX_SOFTWARE, return_code)
 
-    @mock.patch('pkg_resources.get_distribution')
     @mock.patch('os.chmod')
     @mock.patch('heat.cloudinit.loguserdata.call')
-    def test_main(self, mock_call, mock_chmod, mock_get):
+    def test_main(self, mock_call, mock_chmod):
         # Setup
-        mock_get.return_value = FakeCiVersion('1.0')
         mock_call.return_value = 10
 
         # Test
@@ -156,14 +94,3 @@ class LoguserdataTest(common.HeatTestCase):
         expected_path = os.path.join(loguserdata.VAR_PATH, 'cfn-userdata')
         mock_chmod.assert_called_once_with(expected_path, int('700', 8))
         self.assertEqual(10, return_code)
-
-    @mock.patch('pkg_resources.get_distribution')
-    def test_main_failed_ci_version(self, mock_get):
-        # Setup
-        mock_get.return_value = FakeCiVersion('0.0.0')
-
-        # Test
-        return_code = loguserdata.main()
-
-        # Verify
-        self.assertEqual(-1, return_code)
