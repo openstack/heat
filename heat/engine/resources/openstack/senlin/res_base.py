@@ -14,6 +14,7 @@
 
 from oslo_log import log as logging
 
+from heat.common.i18n import _
 from heat.engine import resource
 from heat.engine import support
 
@@ -23,7 +24,13 @@ LOG = logging.getLogger(__name__)
 class BaseSenlinResource(resource.Resource):
     """A base class for Senlin resources."""
 
-    support_status = support.SupportStatus(version='6.0.0')
+    support_status = support.SupportStatus(
+        version='22.0.0',
+        status=support.DEPRECATED,
+        message=_('Senlin project was marked inactive'),
+        previous_status=support.SupportStatus(
+            version='6.0.0',
+            ))
 
     default_client_name = 'senlin'
 

@@ -44,7 +44,14 @@ class SaharaNodeGroupTemplate(resource.Resource):
     configurations for those processes.
     """
 
-    support_status = support.SupportStatus(version='2014.2')
+    support_status = support.SupportStatus(
+        version='22.0.0',
+        status=support.DEPRECATED,
+        message=_('Sahara project was marked inactive'),
+        previous_status=support.SupportStatus(
+            version='2014.2',
+            status=support.SUPPORTED
+        ))
 
     PROPERTIES = (
         NAME, PLUGIN_NAME, HADOOP_VERSION, FLAVOR, DESCRIPTION,

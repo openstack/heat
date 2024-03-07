@@ -33,7 +33,14 @@ class SaharaJob(signal_responder.SignalResponder, resource.Resource):
     job binary objects. Can be launched using resource-signal.
     """
 
-    support_status = support.SupportStatus(version='8.0.0')
+    support_status = support.SupportStatus(
+        version='22.0.0',
+        status=support.DEPRECATED,
+        message=_('Sahara project was marked inactive'),
+        previous_status=support.SupportStatus(
+            version='8.0.0',
+            status=support.SUPPORTED
+            ))
 
     PROPERTIES = (
         NAME, TYPE, MAINS, LIBS, DESCRIPTION,

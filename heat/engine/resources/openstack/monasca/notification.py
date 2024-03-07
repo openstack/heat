@@ -32,11 +32,16 @@ class MonascaNotification(resource.Resource):
     """
 
     support_status = support.SupportStatus(
-        version='7.0.0',
+        version='22.0.0',
+        status=support.DEPRECATED,
+        message=_('Monasca project was marked inactive'),
         previous_status=support.SupportStatus(
-            version='5.0.0',
-            status=support.UNSUPPORTED
-        ))
+            version='7.0.0',
+            status=support.SUPPORTED,
+            previous_status=support.SupportStatus(
+                version='5.0.0',
+                status=support.SUPPORTED
+                )))
 
     default_client_name = 'monasca'
 
