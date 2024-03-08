@@ -78,6 +78,11 @@ class SoftwareDeployment(
                     context, server_id)]
 
     @classmethod
+    def count_all(cls, context):
+        return db_api.software_deployment_count_all(
+            context)
+
+    @classmethod
     def update_by_id(cls, context, deployment_id, values):
         """Note this is a bit unusual as it returns the object.
 

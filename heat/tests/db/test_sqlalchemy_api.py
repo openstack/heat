@@ -1121,6 +1121,13 @@ class SqlAlchemyTest(common.HeatTestCase):
                                         tenant_id='admin_tenant')
         self._test_software_config_get_all(get_ctx=admin_ctx)
 
+    def test_software_config_count_all(self):
+        self.assertEqual(0, db_api.software_config_count_all(self.ctx))
+        self._create_software_config_record()
+        self._create_software_config_record()
+        self._create_software_config_record()
+        self.assertEqual(3, db_api.software_config_count_all(self.ctx))
+
     def test_software_config_delete(self):
         scf_id = self._create_software_config_record()
 
@@ -1249,6 +1256,17 @@ class SqlAlchemyTest(common.HeatTestCase):
                                         tenant_id='admin_tenant')
         deployments = db_api.software_deployment_get_all(admin_ctx)
         self.assertEqual(1, len(deployments))
+
+    def test_software_deployment_count_all(self):
+        self.assertEqual(0, db_api.software_deployment_count_all(self.ctx))
+        values = self._deployment_values()
+        deployment = db_api.software_deployment_create(self.ctx, values)
+        self.assertIsNotNone(deployment)
+        deployment = db_api.software_deployment_create(self.ctx, values)
+        self.assertIsNotNone(deployment)
+        deployment = db_api.software_deployment_create(self.ctx, values)
+        self.assertIsNotNone(deployment)
+        self.assertEqual(3, db_api.software_deployment_count_all(self.ctx))
 
     def test_software_deployment_update(self):
         deployment_id = str(uuid.uuid4())
@@ -1434,6 +1452,38 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(values['tenant'], snapshot.tenant)
         self.assertEqual(values['status'], snapshot.status)
         self.assertIsNotNone(snapshot.created_at)
+
+    def test_snapshot_count_all_by_stack(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack1 = create_stack(self.ctx, template, user_creds)
+        stack2 = create_stack(self.ctx, template, user_creds)
+        values = [
+            {
+                'tenant': self.ctx.tenant_id,
+                'status': 'IN_PROGRESS',
+                'stack_id': stack1.id,
+                'name': 'snp1'
+            },
+            {
+                'tenant': self.ctx.tenant_id,
+                'status': 'IN_PROGRESS',
+                'stack_id': stack1.id,
+                'name': 'snp1'
+            },
+            {
+                'tenant': self.ctx.tenant_id,
+                'status': 'IN_PROGRESS',
+                'stack_id': stack2.id,
+                'name': 'snp2'
+            }
+        ]
+        for val in values:
+            self.assertIsNotNone(db_api.snapshot_create(self.ctx, val))
+        self.assertEqual(2, db_api.snapshot_count_all_by_stack(self.ctx,
+                                                               stack1.id))
+        self.assertEqual(1, db_api.snapshot_count_all_by_stack(self.ctx,
+                                                               stack2.id))
 
 
 def create_raw_template(context, **kwargs):

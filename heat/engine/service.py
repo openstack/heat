@@ -73,6 +73,10 @@ from heat.rpc import worker_api as rpc_worker_api
 cfg.CONF.import_opt('engine_life_check_timeout', 'heat.common.config')
 cfg.CONF.import_opt('max_resources_per_stack', 'heat.common.config')
 cfg.CONF.import_opt('max_stacks_per_tenant', 'heat.common.config')
+cfg.CONF.import_opt('max_snapshots_per_stack', 'heat.common.config')
+cfg.CONF.import_opt('max_software_configs_per_tenant', 'heat.common.config')
+cfg.CONF.import_opt('max_software_deployments_per_tenant',
+                    'heat.common.config')
 cfg.CONF.import_opt('enable_stack_abandon', 'heat.common.config')
 cfg.CONF.import_opt('enable_stack_adopt', 'heat.common.config')
 cfg.CONF.import_opt('convergence_engine', 'heat.common.config')
@@ -2124,6 +2128,17 @@ class EngineService(service.ServiceBase):
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)
 
+        # Do not enforce the limit, following the stack limit
+        if not cnxt.is_admin:
+            stack_limit = cfg.CONF.max_snapshots_per_stack
+            count_all = snapshot_object.Snapshot.count_all_by_stack(cnxt,
+                                                                    stack.id)
+            if (stack_limit >= 0 and count_all >= stack_limit):
+                message = _("You have reached the maximum snapshots "
+                            "per stack, %d. Please delete some "
+                            "snapshots.") % stack_limit
+                raise exception.RequestLimitExceeded(message=message)
+
         lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
 
         with lock.thread_lock():
@@ -2219,6 +2234,15 @@ class EngineService(service.ServiceBase):
     @context.request_context
     def create_software_config(self, cnxt, group, name, config,
                                inputs, outputs, options):
+        # Do not enforce the limit, following the stack limit
+        if not cnxt.is_admin:
+            tenant_limit = cfg.CONF.max_software_configs_per_tenant
+            count_all = self.software_config.count_software_config(cnxt)
+            if (tenant_limit >= 0 and count_all >= tenant_limit):
+                message = _("You have reached the maximum software configs "
+                            "per tenant, %d. "
+                            "Please delete some configs.") % tenant_limit
+                raise exception.RequestLimitExceeded(message=message)
         return self.software_config.create_software_config(
             cnxt,
             group=group,
@@ -2257,6 +2281,16 @@ class EngineService(service.ServiceBase):
                                    input_values, action, status,
                                    status_reason, stack_user_project_id,
                                    deployment_id=None):
+        # Do not enforce the limit, following the stack limit
+        if not cnxt.is_admin:
+            tenant_limit = cfg.CONF.max_software_deployments_per_tenant
+            count_all = self.software_config.count_software_deployment(cnxt)
+            if (tenant_limit >= 0 and
+                    count_all >= tenant_limit):
+                message = _("You have reached the maximum software "
+                            "deployments per tenant, %d. "
+                            "Please delete some deployments.") % tenant_limit
+                raise exception.RequestLimitExceeded(message=message)
         return self.software_config.create_software_deployment(
             cnxt, server_id=server_id,
             config_id=config_id,

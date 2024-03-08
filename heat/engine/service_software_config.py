@@ -52,6 +52,9 @@ class SoftwareConfigService(object):
                   for sc in scs]
         return result
 
+    def count_software_config(self, cnxt):
+        return software_config_object.SoftwareConfig.count_all(cnxt)
+
     def create_software_config(self, cnxt, group, name, config,
                                inputs, outputs, options):
 
@@ -80,6 +83,10 @@ class SoftwareConfigService(object):
             cnxt, server_id)
         result = [api.format_software_deployment(sd) for sd in all_sd]
         return result
+
+    def count_software_deployment(self, cnxt):
+        return software_deployment_object.SoftwareDeployment.count_all(
+            cnxt)
 
     def metadata_software_deployments(self, cnxt, server_id):
         if not server_id:

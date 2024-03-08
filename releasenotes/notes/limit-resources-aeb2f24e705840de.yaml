@@ -1,0 +1,26 @@
+---
+features:
+  - |
+    Heat now supports limiting number of software configs, software
+    deployments, stack snapshots which users can create, by the following
+    config options. These limits are not enforced for users with admin role.
+
+    - ``[DEFAULT] max_software_configis_per_tenant``
+    - ``[DEFAULT] max_software_deployments_per_tenant``
+    - ``[DEFAULT] max_snapshots_per_stack``
+
+upgrade:
+  - |
+    Now the following limits are enforced by default, unless a request user
+    has admin role.
+
+    - Maximum number of software configs per project is 4096
+    - Maximum number of software deployments per project is 4096
+    - Maximum number of stack snapshots per tenant is 32
+
+    Set the following options in case the limits should be increased. Limits
+    can be disabled by setting -1 to these options.
+
+    - ``[DEFAULT] max_software_configis_per_tenant``
+    - ``[DEFAULT] max_software_deployments_per_tenant``
+    - ``[DEFAULT] max_snapshots_per_stack``
