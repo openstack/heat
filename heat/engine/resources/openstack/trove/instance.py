@@ -685,7 +685,7 @@ class Instance(resource.Resource):
                 msg = _("Can not use %s property on Nova-network.") % self.PORT
                 raise exception.StackValidationFailed(message=msg)
 
-            if bool(nic.get(self.NET)) == bool(nic.get(self.PORT)):
+            if (nic.get(self.NET) is None) == (nic.get(self.PORT) is None):
                 msg = _("Either %(net)s or %(port)s must be provided.") % {
                     'net': self.NET, 'port': self.PORT}
                 raise exception.StackValidationFailed(message=msg)
