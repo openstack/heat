@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    Fixed the ``OS::Heat::UpdateWaitConditionHandle`` resource type, which
+    caused stack update to fail consistently.
