@@ -123,8 +123,6 @@ class InstanceTest(common.HeatTestCase):
         self.patchobject(trove.TroveClientPlugin, '_create',
                          return_value=self.client)
         self.stub_TroveFlavorConstraint_validate()
-        self.patchobject(resource.Resource, 'is_using_neutron',
-                         return_value=True)
         self.flavor_resolve = self.patchobject(trove.TroveClientPlugin,
                                                'find_flavor_by_name_or_id',
                                                return_value='1')
@@ -143,18 +141,14 @@ class InstanceTest(common.HeatTestCase):
         rsrc.resource_id = '12345'
         return rsrc
 
-    def _stubout_validate(self, instance, neutron=None,
-                          mock_net_constraint=False,
+    def _stubout_validate(self, instance, mock_net_constraint=False,
                           with_port=True):
         if mock_net_constraint:
             self.stub_NetworkConstraint_validate()
 
         self.client.datastore_versions.list.return_value = [FakeVersion()]
-
-        if neutron is not None:
-            instance.is_using_neutron = mock.Mock(return_value=bool(neutron))
-            if with_port:
-                self.stub_PortConstraint_validate()
+        if with_port:
+            self.stub_PortConstraint_validate()
 
     def test_instance_create(self):
         t = template_format.parse(db_template)
@@ -468,8 +462,7 @@ class InstanceTest(common.HeatTestCase):
                 "network": "somenetuuid"
             }]
         instance = self._setup_test_instance('dbinstance_test', t)
-        self._stubout_validate(instance, neutron=True,
-                               mock_net_constraint=True)
+        self._stubout_validate(instance, mock_net_constraint=True)
 
         ex = self.assertRaises(
             exception.StackValidationFailed, instance.validate)
@@ -483,25 +476,11 @@ class InstanceTest(common.HeatTestCase):
                 "fixed_ip": "1.2.3.4"
             }]
         instance = self._setup_test_instance('dbinstance_test', t)
-        self._stubout_validate(instance, neutron=True, with_port=False)
+        self._stubout_validate(instance, with_port=False)
 
         ex = self.assertRaises(
             exception.StackValidationFailed, instance.validate)
         self.assertEqual('Either network or port must be provided.',
-                         str(ex))
-
-    def test_instance_validation_nic_port_on_novanet_fails(self):
-        t = template_format.parse(db_template)
-        t['Resources']['MySqlCloudDB']['Properties']['networks'] = [
-            {
-                "port": "someportuuid",
-            }]
-        instance = self._setup_test_instance('dbinstance_test', t)
-        self._stubout_validate(instance, neutron=False)
-
-        ex = self.assertRaises(
-            exception.StackValidationFailed, instance.validate)
-        self.assertEqual('Can not use port property on Nova-network.',
                          str(ex))
 
     def test_instance_create_with_port(self):

@@ -66,6 +66,11 @@ class ManilaShareNetwork(resource.Resource):
             properties.Schema.STRING,
             _('Nova network id.'),
             update_allowed=True,
+            support_status=support.SupportStatus(
+                status=support.HIDDEN,
+                message=_('nova-network is no longer supported.'),
+                version='21.0.0'
+            )
         ),
         DESCRIPTION: properties.Schema(
             properties.Schema.STRING,
@@ -119,19 +124,9 @@ class ManilaShareNetwork(resource.Resource):
 
     def validate(self):
         super(ManilaShareNetwork, self).validate()
-        if (self.properties[self.NEUTRON_NETWORK] and
-                self.properties[self.NOVA_NETWORK]):
-            raise exception.ResourcePropertyConflict(self.NEUTRON_NETWORK,
-                                                     self.NOVA_NETWORK)
 
-        if (self.properties[self.NOVA_NETWORK] and
-                self.properties[self.NEUTRON_SUBNET]):
-            raise exception.ResourcePropertyConflict(self.NEUTRON_SUBNET,
-                                                     self.NOVA_NETWORK)
-
-        if self.is_using_neutron() and self.properties[self.NOVA_NETWORK]:
-            msg = _('With Neutron enabled you need to pass Neutron network '
-                    'and Neutron subnet instead of Nova network')
+        if self.properties[self.NOVA_NETWORK]:
+            msg = _('Nova network is no longer supported')
             raise exception.StackValidationFailed(message=msg)
 
         if (self.properties[self.NEUTRON_NETWORK] and not
@@ -186,7 +181,6 @@ class ManilaShareNetwork(resource.Resource):
             name=self.properties[self.NAME],
             neutron_net_id=neutron_net_id,
             neutron_subnet_id=neutron_subnet_id,
-            nova_net_id=self.properties[self.NOVA_NETWORK],
             description=self.properties[self.DESCRIPTION])
         self.resource_id_set(network.id)
 
@@ -222,7 +216,6 @@ class ManilaShareNetwork(resource.Resource):
                 name=prop_diff.get(self.NAME),
                 neutron_net_id=neutron_net_id,
                 neutron_subnet_id=neutron_subnet_id,
-                nova_net_id=prop_diff.get(self.NOVA_NETWORK),
                 description=prop_diff.get(self.DESCRIPTION))
 
     def parse_live_resource_data(self, resource_properties, resource_data):

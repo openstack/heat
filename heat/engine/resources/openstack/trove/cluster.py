@@ -353,18 +353,8 @@ class TroveCluster(resource.Resource):
             datastore_type, datastore_version,
             self.DATASTORE_TYPE, self.DATASTORE_VERSION)
 
-        # check validity of instances' NETWORKS
-        is_neutron = self.is_using_neutron()
         for instance in self.properties[self.INSTANCES]:
             for nic in instance[self.NETWORKS]:
-                # 'nic.get(self.PORT) is not None' including two cases:
-                # 1. has set port value in template
-                # 2. using 'get_resource' to reference a new resource
-                if not is_neutron and nic.get(self.PORT) is not None:
-                    msg = (_("Can not use %s property on Nova-network.")
-                           % self.PORT)
-                    raise exception.StackValidationFailed(message=msg)
-
                 if (nic.get(self.NET) is None and
                         nic.get(self.PORT) is None):
                     msg = (_("Either %(net)s or %(port)s must be provided.")

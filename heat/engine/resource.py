@@ -2627,15 +2627,6 @@ class Resource(status.ResourceStatus):
                 self.context, self._stored_properties_data).id
         return self._rsrc_prop_data_id
 
-    def is_using_neutron(self):
-        try:
-            sess_client = self.client('neutron').httpclient
-            if not sess_client.get_endpoint():
-                return False
-        except Exception:
-            return False
-        return True
-
     @staticmethod
     def _make_resolver(ref):
         """Return an attribute resolution method.
