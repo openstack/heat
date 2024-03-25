@@ -233,7 +233,8 @@ class UpdateWaitConditionHandle(aws_wch.WaitConditionHandle):
 
     support_status = support.SupportStatus(version='2014.1')
 
-    def update(self, after, before=None, prev_resource=None):
+    def update(self, after, before=None, prev_resource=None,
+               new_template_id=None, new_requires=None):
         raise resource.UpdateReplace(self.name)
 
 
