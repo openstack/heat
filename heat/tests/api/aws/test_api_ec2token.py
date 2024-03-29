@@ -288,7 +288,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_once_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_ok_roles(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -317,7 +318,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_once_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_err_tokenid(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0/'}
@@ -342,7 +344,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_once_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_err_signature(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -367,7 +370,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_once_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_err_denied(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -391,7 +395,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_once_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_ok_v2(self):
         dummy_conf = {'auth_uri': 'http://123:5000/v2.0'}
@@ -411,7 +416,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_once_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_ok_multicloud(self):
         dummy_conf = {
@@ -451,7 +457,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_err_multicloud(self):
         dummy_conf = {
@@ -492,7 +499,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_err_multicloud_none_allowed(self):
         dummy_conf = {
@@ -541,7 +549,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_ok_auth_uri_ec2authtoken_long(self):
         # Prove we tolerate a url which already includes the /ec2tokens path
@@ -564,7 +573,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_call_ok_auth_uri_ks_authtoken(self):
         # Import auth_token to have keystone_authtoken settings setup.
@@ -592,7 +602,8 @@ class Ec2TokenTest(common.HeatTestCase):
         requests.post.assert_called_with(
             self.verify_req_url, data=self.verify_data,
             verify=self.verify_verify,
-            cert=self.verify_cert, headers=self.verify_req_headers)
+            cert=self.verify_cert, headers=self.verify_req_headers,
+            timeout=60)
 
     def test_filter_factory(self):
         ec2_filter = ec2token.EC2Token_filter_factory(global_conf={})

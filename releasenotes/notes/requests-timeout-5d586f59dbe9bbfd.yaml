@@ -1,0 +1,9 @@
+---
+features:
+  - |
+    The following parameters have been added, to define timeout in internal
+    HTTP requests.
+
+    - ``[DEFAULT] metadata_put_timeout``
+    - ``[DEFAULT] template_fetch_timeout``
+    - ``[ec2authtoken] timeout``

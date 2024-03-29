@@ -778,7 +778,8 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         ])
 
         put.assert_called_once_with(
-            'http://192.168.2.2/foo/bar', json.dumps(result_metadata))
+            'http://192.168.2.2/foo/bar', json.dumps(result_metadata),
+            timeout=60)
 
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        'metadata_software_deployments')

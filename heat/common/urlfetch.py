@@ -57,7 +57,8 @@ def get(url, allowed_schemes=('http', 'https')):
             raise URLFetchError(_('Failed to retrieve template: %s') % uex)
 
     try:
-        resp = requests.get(url, stream=True)
+        resp = requests.get(url, stream=True,
+                            timeout=cfg.CONF.template_fetch_timeout)
         resp.raise_for_status()
 
         # We cannot use resp.text here because it would download the

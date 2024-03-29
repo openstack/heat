@@ -88,6 +88,10 @@ service_opts = [
     cfg.IntOpt('max_nested_stack_depth',
                default=5,
                help=_('Maximum depth allowed when using nested stacks.')),
+    cfg.FloatOpt('template_fetch_timeout',
+                 default=60,
+                 min=0,
+                 help=_('Timeout in seconds for template download.')),
     cfg.IntOpt('num_engine_workers',
                help=_('Number of heat-engine processes to fork and run. '
                       'Will default to either to 4 or number of CPUs on '
@@ -319,7 +323,13 @@ engine_opts = [
                 default=False,
                 help=_('Encrypt template parameters that were marked as'
                        ' hidden and also all the resource properties before'
-                       ' storing them in database.'))]
+                       ' storing them in database.')),
+    cfg.FloatOpt('metadata_put_timeout',
+                 default=60,
+                 min=0,
+                 help=_('Timeout in seconds for metadata update for '
+                        'software deployment'))
+    ]
 
 rpc_opts = [
     cfg.StrOpt('host',

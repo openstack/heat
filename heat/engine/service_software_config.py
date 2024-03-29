@@ -14,6 +14,7 @@
 import itertools
 import uuid
 
+from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import timeutils
@@ -34,6 +35,8 @@ from heat.objects import software_deployment as software_deployment_object
 from heat.rpc import api as rpc_api
 
 LOG = logging.getLogger(__name__)
+
+cfg.CONF.import_opt('metadata_put_timeout', 'heat.common.config')
 
 
 class SoftwareConfigService(object):
@@ -135,10 +138,11 @@ class SoftwareConfigService(object):
 
         if metadata_put_url:
             json_md = jsonutils.dumps(md)
-            resp = requests.put(metadata_put_url, json_md)
             try:
+                resp = requests.put(metadata_put_url, json_md,
+                                    timeout=cfg.CONF.metadata_put_timeout)
                 resp.raise_for_status()
-            except requests.HTTPError as exc:
+            except requests.RequestException as exc:
                 LOG.error('Failed to deliver deployment data to '
                           'server %s: %s', server_id, exc)
         if metadata_queue_id:
