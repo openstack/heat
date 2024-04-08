@@ -25,6 +25,7 @@ from heat.engine.clients.os import swift as swift_plugin
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine.resources.openstack.heat import wait_condition_handle as h_wch
+from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import template as tmpl
 from heat.objects import resource as resource_objects
@@ -489,5 +490,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
 
         handle = self.stack['update_wait_handle']
         self.assertEqual((handle.CREATE, handle.COMPLETE), handle.state)
+
         self.assertRaises(
-            resource.UpdateReplace, handle.update, None, None)
+            resource.UpdateReplace,
+            scheduler.TaskRunner(handle.update, handle.t))
