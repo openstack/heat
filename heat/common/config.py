@@ -40,12 +40,14 @@ service_opts = [
     cfg.IntOpt('periodic_interval',
                default=60,
                help=_('Seconds between running periodic tasks.')),
-    cfg.StrOpt('heat_metadata_server_url',
+    cfg.URIOpt('heat_metadata_server_url',
+               schemes=['http', 'https'],
                help=_('URL of the Heat metadata server. '
                       'NOTE: Setting this is only needed if you require '
                       'instances to use a different endpoint than in the '
                       'keystone catalog')),
-    cfg.StrOpt('heat_waitcondition_server_url',
+    cfg.URIOpt('heat_waitcondition_server_url',
+               schemes=['http', 'https'],
                help=_('URL of the Heat waitcondition server.')),
     cfg.StrOpt('instance_connection_is_secure',
                default="0",
@@ -380,14 +382,14 @@ clients_opts = [
                        "be verified."))]
 
 heat_client_opts = [
-    cfg.StrOpt('url',
-               default='',
+    cfg.URIOpt('url',
+               schemes=['http', 'https'],
                help=_('Optional heat url in format like'
                       ' http://0.0.0.0:8004/v1/%(tenant_id)s.'))]
 
 keystone_client_opts = [
-    cfg.StrOpt('auth_uri',
-               default='',
+    cfg.URIOpt('auth_uri',
+               schemes=['http', 'https'],
                help=_('Unversioned keystone url in format like'
                       ' http://0.0.0.0:5000.'))]
 
@@ -544,7 +546,7 @@ def load_paste_app(app_name=None):
                                                 'e': e})
 
 
-def get_client_option(client, option):
+def get_client_option(client, option, fallback=True):
     # look for the option in the [clients_${client}] section
     # unknown options raise cfg.NoSuchOptError
     try:
@@ -552,9 +554,11 @@ def get_client_option(client, option):
         cfg.CONF.import_opt(option, 'heat.common.config',
                             group=group_name)
         v = getattr(getattr(cfg.CONF, group_name), option)
-        if v is not None:
+        if not fallback or v is not None:
             return v
     except cfg.NoSuchGroupError:
+        if not fallback:
+            raise
         pass  # do not error if the client is unknown
     # look for the option in the generic [clients] section
     cfg.CONF.import_opt(option, 'heat.common.config', group='clients')
