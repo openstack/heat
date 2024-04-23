@@ -130,14 +130,6 @@
               convergence_engine_enabled: false
 
 - job:
-    name: heat-functional-non-apache
-    parent: heat-functional-base
-    voting: false
-    vars:
-      devstack_localrc:
-        HEAT_USE_MOD_WSGI: False
-
-- job:
     name: grenade-heat-multinode
     parent: grenade-multinode
     required-projects:
