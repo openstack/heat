@@ -10,7 +10,6 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
-from testtools import testcase
 
 from heat.tests import common
 from heat.tests import utils
@@ -18,7 +17,6 @@ from heat.tests import utils
 
 class AodhClientPluginTest(common.HeatTestCase):
 
-    @testcase.skip('skipped till python-aodhclient fixed for pyparsing 3.0.6')
     def test_create(self):
         context = utils.dummy_context()
         plugin = context.clients.client_plugin('aodh')
