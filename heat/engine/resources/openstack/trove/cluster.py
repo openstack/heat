@@ -365,8 +365,7 @@ class TroveCluster(resource.Resource):
                            % self.PORT)
                     raise exception.StackValidationFailed(message=msg)
 
-                if (bool(nic.get(self.NET) is not None) ==
-                        bool(nic.get(self.PORT) is not None)):
+                if (nic.get(self.NET) is None) == (nic.get(self.PORT) is None):
                     msg = (_("Either %(net)s or %(port)s must be provided.")
                            % {'net': self.NET, 'port': self.PORT})
                     raise exception.StackValidationFailed(message=msg)
