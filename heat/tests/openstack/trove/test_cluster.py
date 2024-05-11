@@ -224,3 +224,17 @@ class TroveClusterTest(common.HeatTestCase):
                      "resources.cluster.properties.instances[0].flavor: "
                      "Error validating value 'm1.small': Not Found (HTTP 404)")
         self.assertEqual(error_msg, str(ex))
+
+    def test_validate_no_net(self):
+        props = self.tmpl['resources']['cluster']['properties'].copy()
+        props['instances'][0]['networks'][0].pop('port')
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
+        tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
+        self.assertRaises(exception.StackValidationFailed, tc.validate)
+
+    def test_validate_both_net_and_port_used(self):
+        props = self.tmpl['resources']['cluster']['properties'].copy()
+        props['instances'][0]['networks'][0]['network'] = 'mynetwork'
+        self.rsrc_defn = self.rsrc_defn.freeze(properties=props)
+        tc = cluster.TroveCluster('cluster', self.rsrc_defn, self.stack)
+        self.assertRaises(exception.ResourcePropertyConflict, tc.validate)
