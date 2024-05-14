@@ -155,8 +155,10 @@ class ProviderNet(net.Net):
         super(ProviderNet, self).validate()
 
         if (self.properties[self.PROVIDER_SEGMENTATION_ID] and
-                self.properties[self.PROVIDER_NETWORK_TYPE] != 'vlan'):
-            msg = _('segmentation_id not allowed for flat network type.')
+                self.properties[self.PROVIDER_NETWORK_TYPE] in (
+                    'local', 'flat')):
+            msg = _(
+                'segmentation_id not allowed for network types: local, flat')
             raise exception.StackValidationFailed(message=msg)
 
     @staticmethod
