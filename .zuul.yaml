@@ -10,7 +10,6 @@
       - zuul: opendev.org/openstack/devstack
       - zuul: opendev.org/openstack/tempest
     required-projects:
-      - openstack/devstack-gate
       - openstack/barbican
       - openstack/heat
       - openstack/heat-templates
