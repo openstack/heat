@@ -1,0 +1,15 @@
+---
+upgrade:
+  - |
+    Integration with senlin has been removed because the senlin project has
+    been retired. Because of the removal, the following resource types are no
+    longer supported and now hidden.
+
+    - ``OS::Senlin::Cluster``
+    - ``OS::Senlin::Node``
+    - ``OS::Senlin::Policy``
+    - ``OS::Senlin::Profile``
+    - ``OS::Senlin::Receiver``
+
+    Also, the options in ``[clients_senlin]`` section have been removed.
+
