@@ -101,8 +101,9 @@ def db_sync(version=None, engine=None):
     # uses *python* interpolation to write the string out ... where "%" is the
     # special python interpolation character! Avoid this mismatch by quoting
     # all %'s for the set below.
-    engine_url = str(engine.url).replace('%', '%%')
-    config.set_main_option('sqlalchemy.url', str(engine_url))
+    engine_url = engine.url.render_as_string(
+        hide_password=False).replace('%', '%%')
+    config.set_main_option('sqlalchemy.url', engine_url)
 
     LOG.info('Applying migration(s)')
     _upgrade_alembic(engine, config, version)
