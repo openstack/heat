@@ -31,7 +31,6 @@ from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os.keystone import keystone_constraints as ks_constr
 from heat.engine.clients.os.neutron import neutron_constraints as neutron
 from heat.engine.clients.os import nova
-from heat.engine.clients.os import sahara
 from heat.engine.clients.os import trove
 from heat.engine import environment
 from heat.engine import resource
@@ -302,10 +301,6 @@ class HeatTestCase(testscenarios.WithScenarios,
     def stub_KeystoneProjectConstraint(self):
         validate = self.patchobject(ks_constr.KeystoneProjectConstraint,
                                     'validate')
-        validate.return_value = True
-
-    def stub_SaharaPluginConstraint(self):
-        validate = self.patchobject(sahara.PluginConstraint, 'validate')
         validate.return_value = True
 
     def stub_ProviderConstraint_validate(self):

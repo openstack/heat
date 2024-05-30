@@ -63,7 +63,6 @@ We have integration with
 * https://opendev.org/openstack/python-cinderclient (block storage)
 * https://opendev.org/openstack/python-glanceclient (image service)
 * https://opendev.org/openstack/python-troveclient (database as a Service)
-* https://opendev.org/openstack/python-saharaclient (hadoop cluster)
 * https://opendev.org/openstack/python-barbicanclient (key management service)
 * https://opendev.org/openstack/python-designateclient (DNS service)
 * https://opendev.org/openstack/python-magnumclient (container service)

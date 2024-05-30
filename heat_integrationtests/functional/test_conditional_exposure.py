@@ -17,10 +17,10 @@ from heat_integrationtests.functional import functional_base
 
 
 class ServiceBasedExposureTest(functional_base.FunctionalTestsBase):
-    # NOTE(pas-ha) if we ever decide to install Sahara on Heat
+    # NOTE(pas-ha) if we ever decide to install Manila on Heat
     # functional gate, this must be changed to other not-installed
     # but in principle supported service
-    unavailable_service = 'Sahara'
+    unavailable_service = 'Manila'
     unavailable_template = """
 heat_template_version: 2015-10-15
 parameters:
@@ -28,25 +28,24 @@ parameters:
     type: string
 resources:
   not_available:
-    type: OS::Sahara::NodeGroupTemplate
+    type: OS::Manila::Share
     properties:
-      plugin_name: fake
-      hadoop_version: 0.1
-      flavor: {get_param: instance_type}
-      node_processes: []
+      name: not_available
+      share_protocol: NFS
+      size: 1
 """
 
     def setUp(self):
         super(ServiceBasedExposureTest, self).setUp()
         # check that Sahara endpoint is available
-        if self._is_sahara_deployed():
-            self.skipTest("Sahara is actually deployed, "
+        if self._is_manila_deployed():
+            self.skipTest("Manila is actually deployed, "
                           "can not run negative tests on "
-                          "Sahara resources availability.")
+                          "Manila resources availability.")
 
-    def _is_sahara_deployed(self):
+    def _is_manila_deployed(self):
         try:
-            self.identity_client.get_endpoint_url('data-processing',
+            self.identity_client.get_endpoint_url('sharev2',
                                                   self.conf.region)
         except keystoneclient.exceptions.EndpointNotFound:
             return False
@@ -66,7 +65,7 @@ resources:
                                parameters=parameters,
                                template=self.unavailable_template)
         self.assertIn('ResourceTypeUnavailable', ex.message.decode('utf-8'))
-        self.assertIn('OS::Sahara::NodeGroupTemplate',
+        self.assertIn('OS::Manila::Share',
                       ex.message.decode('utf-8'))
 
 
