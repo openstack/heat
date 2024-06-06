@@ -225,7 +225,7 @@ class ManilaShareTest(common.HeatTestCase):
             DummyShareExportLocation()]
         self.assertEqual('az', share.FnGetAtt('availability_zone'))
         self.assertEqual('host', share.FnGetAtt('host'))
-        self.assertEqual("['el']", share.FnGetAtt('export_locations'))
+        self.assertEqual(['el'], share.FnGetAtt('export_locations'))
         self.assertEqual('id', share.FnGetAtt('share_server_id'))
         self.assertEqual('ca', share.FnGetAtt('created_at'))
         self.assertEqual('s', share.FnGetAtt('status'))

@@ -1,0 +1,9 @@
+---
+upgrade:
+  - |
+    ``OS::Manila::Share`` attribute ``export_locations`` will now be a list of
+    export paths
+fixes:
+  - |
+    ``OS::Manila::Share`` attribute ``export_locations`` will now be a list of
+    export paths
