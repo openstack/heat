@@ -213,11 +213,11 @@ class KeystoneClientTest(common.HeatTestCase):
         self.mock_ks_v3_client.users.create.assert_called_once_with(
             name=good_user_name,
             password='password',
-            default_project=ctx.tenant_id)
+            default_project=ctx.project_id)
         self.mock_ks_v3_client.roles.list.assert_called_once_with(
             name='heat_stack_user')
         self.mock_ks_v3_client.roles.grant.assert_called_once_with(
-            project=ctx.tenant_id,
+            project=ctx.project_id,
             role='4546',
             user='auser123')
         self._validate_stub_auth()
@@ -304,9 +304,9 @@ class KeystoneClientTest(common.HeatTestCase):
         self.mock_ks_v3_client.users.create.assert_called_once_with(
             name='auser',
             password='password',
-            default_project=ctx.tenant_id)
+            default_project=ctx.project_id)
         self.mock_ks_v3_client.roles.grant.assert_called_once_with(
-            project=ctx.tenant_id,
+            project=ctx.project_id,
             role='4546',
             user='auser123')
         self.mock_ks_v3_client.roles.list.assert_called_once_with(
@@ -1138,7 +1138,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.assertEqual('dummy_secret', ec2_cred.secret)
         self.mock_ks_v3_client.credentials.create.assert_called_once_with(
             user='atestuser', type='ec2', blob=ex_data_json,
-            project=ctx.tenant_id)
+            project=ctx.project_id)
         self._validate_stub_auth()
 
     def test_create_stack_domain_user_keypair(self):
@@ -1212,7 +1212,7 @@ class KeystoneClientTest(common.HeatTestCase):
         self.assertEqual('dummy_secret2', ec2_cred.secret)
         self.mock_ks_v3_client.credentials.create.assert_called_once_with(
             user='atestuser2', type='ec2', blob=ex_data_json,
-            project=ctx.tenant_id)
+            project=ctx.project_id)
         self._validate_stub_auth()
 
     def test_get_ec2_keypair_id(self):
@@ -1353,7 +1353,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx = utils.dummy_context()
         self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
-        expected_name = '%s-astack' % ctx.tenant_id
+        expected_name = '%s-astack' % ctx.project_id
 
         self._stub_domain_admin_client()
         dummy = mock.Mock()
@@ -1377,7 +1377,7 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx.trust_id = None
         self.patchobject(ctx, '_create_auth_plugin')
         heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
-        self.assertEqual(ctx.tenant_id,
+        self.assertEqual(ctx.project_id,
                          heat_ks_client.create_stack_domain_project('astack'))
 
     def test_delete_stack_domain_project(self):

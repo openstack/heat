@@ -75,7 +75,7 @@ class SoftwareConfigService(object):
                 rpc_api.SOFTWARE_CONFIG_OPTIONS: options,
                 rpc_api.SOFTWARE_CONFIG_CONFIG: config
             },
-            'tenant': cnxt.tenant_id})
+            'tenant': cnxt.project_id})
         return api.format_software_config(sc)
 
     def delete_software_config(self, cnxt, config_id):
@@ -290,7 +290,7 @@ class SoftwareConfigService(object):
             'config_id': config_id,
             'server_id': server_id,
             'input_values': input_values,
-            'tenant': cnxt.tenant_id,
+            'tenant': cnxt.project_id,
             'stack_user_project_id': stack_user_project_id,
             'action': action,
             'status': status,

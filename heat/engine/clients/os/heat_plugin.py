@@ -55,7 +55,7 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
     def get_heat_url(self):
         heat_url = self._get_client_option(CLIENT_NAME, 'url')
         if heat_url:
-            tenant_id = self.context.tenant_id
+            tenant_id = self.context.project_id
             heat_url = heat_url % {'tenant_id': tenant_id}
         else:
             endpoint_type = self._get_client_option(CLIENT_NAME,

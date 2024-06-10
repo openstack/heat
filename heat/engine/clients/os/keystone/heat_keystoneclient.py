@@ -303,12 +303,12 @@ class KsClientWrapper(object):
             # Create the user
             user = self.client.users.create(
                 name=self._get_username(username), password=password,
-                default_project=self.context.tenant_id)
+                default_project=self.context.project_id)
             # Add user to heat_stack_user_role
             LOG.debug("Adding user %(user)s to role %(role)s",
                       {'user': user.id, 'role': role_id})
             self.client.roles.grant(role=role_id, user=user.id,
-                                    project=self.context.tenant_id)
+                                    project=self.context.project_id)
         else:
             LOG.error("Failed to add user %(user)s to role %(role)s, "
                       "check role exists!",
@@ -439,10 +439,10 @@ class KsClientWrapper(object):
         if not self.stack_domain:
             # FIXME(shardy): Legacy fallback for folks using old heat.conf
             # files which lack domain configuration
-            return self.context.tenant_id
+            return self.context.project_id
         # Note we use the tenant ID not name to ensure uniqueness in a multi-
         # domain environment (where the tenant name may not be globally unique)
-        project_name = ('%s-%s' % (self.context.tenant_id, stack_id))[:64]
+        project_name = ('%s-%s' % (self.context.project_id, stack_id))[:64]
         desc = "Heat stack user project"
         domain_project = self.domain_admin_client.projects.create(
             name=project_name,
@@ -526,7 +526,7 @@ class KsClientWrapper(object):
 
     def create_ec2_keypair(self, user_id=None):
         user_id = user_id or self.context.get_access(self.session).user_id
-        project_id = self.context.tenant_id
+        project_id = self.context.project_id
         data_blob = {'access': uuid.uuid4().hex,
                      'secret': password_gen.generate_openstack_password()}
         ec2_creds = self.client.credentials.create(

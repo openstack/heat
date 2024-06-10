@@ -85,7 +85,7 @@ class SoftwareConfigController(object):
                 req.params.get(name))
 
         if global_tenant:
-            return self.global_index(req, req.context.tenant_id)
+            return self.global_index(req, req.context.project_id)
 
         return self._index(req)
 

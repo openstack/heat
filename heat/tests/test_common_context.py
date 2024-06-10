@@ -146,7 +146,7 @@ class TestRequestContext(common.HeatTestCase):
                 continue
 
             # these values are different between attribute and context
-            if k == 'tenant' or k == 'user':
+            if k in ('tenant', 'user', 'tenant_id'):
                 continue
 
             self.assertEqual(self.ctx.get(k), ctx.to_dict().get(k))

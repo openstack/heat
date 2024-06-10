@@ -153,9 +153,9 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
         # the one needed for signalling from the stack_user_project
         heat_client_plugin = self.stack.clients.client_plugin('heat')
         endpoint = heat_client_plugin.get_heat_url()
-        rsrc_ep = endpoint.replace(self.context.tenant_id,
+        rsrc_ep = endpoint.replace(self.context.project_id,
                                    self.identifier().url_path())
-        return rsrc_ep.replace(self.context.tenant_id,
+        return rsrc_ep.replace(self.context.project_id,
                                self.stack.stack_user_project_id)
 
     def _resolve_attribute(self, key):

@@ -411,7 +411,7 @@ def format_notification_body(stack):
 
     updated_at = heat_timeutils.isotime(stack.updated_time)
     result = {
-        rpc_api.NOTIFY_TENANT_ID: stack.context.tenant_id,
+        rpc_api.NOTIFY_TENANT_ID: stack.context.project_id,
         rpc_api.NOTIFY_USER_ID: stack.context.username,
         # deprecated: please use rpc_api.NOTIFY_USERID for user id or
         # rpc_api.NOTIFY_USERNAME for user name.

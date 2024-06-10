@@ -374,7 +374,7 @@ def _resource_get_all_by_physical_resource_id(context, physical_resource_id):
     ).all()
 
     for result in results:
-        if context is None or context.is_admin or context.tenant_id in (
+        if context is None or context.is_admin or context.project_id in (
             result.stack.tenant, result.stack.stack_user_project_id,
         ):
             yield result
@@ -646,8 +646,8 @@ def stack_get_by_name_and_owner_id(context, stack_name, owner_id):
         orm.joinedload(models.Stack.raw_template),
     ).filter(
         sqlalchemy.or_(
-            models.Stack.tenant == context.tenant_id,
-            models.Stack.stack_user_project_id == context.tenant_id,
+            models.Stack.tenant == context.project_id,
+            models.Stack.stack_user_project_id == context.project_id,
         )
     ).filter_by(name=stack_name).filter_by(owner_id=owner_id)
     return query.first()
@@ -665,8 +665,8 @@ def _stack_get_by_name(context, stack_name):
         orm.joinedload(models.Stack.raw_template),
     ).filter(
         sqlalchemy.or_(
-            models.Stack.tenant == context.tenant_id,
-            models.Stack.stack_user_project_id == context.tenant_id),
+            models.Stack.tenant == context.project_id,
+            models.Stack.stack_user_project_id == context.project_id),
     ).filter_by(name=stack_name)
     return query.order_by(models.Stack.created_at).first()
 
@@ -692,8 +692,8 @@ def _stack_get(context, stack_id, show_deleted=False, eager_load=True):
     # stacks in the stack_user_project_id (in the heat stack user domain)
     if (result is not None
         and context is not None and not context.is_admin
-        and context.tenant_id not in (result.tenant,
-                                      result.stack_user_project_id)):
+        and context.project_id not in (result.tenant,
+                                       result.stack_user_project_id)):
         return None
     return result
 
@@ -792,7 +792,7 @@ def _query_stack_get_all(context, show_deleted=False,
         ).filter_by(owner_id=None)
 
     if not context.is_admin:
-        query = query.filter_by(tenant=context.tenant_id)
+        query = query.filter_by(tenant=context.project_id)
 
     query = query.options(orm.subqueryload(models.Stack.tags))
     if tags:
@@ -907,8 +907,8 @@ def stack_update(context, stack_id, values, exp_trvsl=None):
                      (models.Stack.deleted_at.is_(None))))
     if not context.is_admin:
         query = query.filter(sqlalchemy.or_(
-            models.Stack.tenant == context.tenant_id,
-            models.Stack.stack_user_project_id == context.tenant_id))
+            models.Stack.tenant == context.project_id,
+            models.Stack.stack_user_project_id == context.project_id))
     if exp_trvsl is not None:
         query = query.filter(models.Stack.current_traversal == exp_trvsl)
     rows_updated = query.update(values, synchronize_session=False)
@@ -1188,7 +1188,7 @@ def event_get_all_by_tenant(context, limit=None, marker=None,
     query = db_filters.exact_filter(query, models.Event, filters)
     query = query.join(
         models.Event.stack
-    ).filter_by(tenant=context.tenant_id).filter_by(deleted_at=None)
+    ).filter_by(tenant=context.project_id).filter_by(deleted_at=None)
     filters = None
     return _events_filter_and_page_query(context, query, limit, marker,
                                          sort_keys, sort_dir, filters).all()
@@ -1302,8 +1302,8 @@ def _all_backup_stack_ids(context, stack_id):
                 yield backup_id
     else:
         q_backup = context.session.query(models.Stack).filter(sqlalchemy.or_(
-            models.Stack.tenant == context.tenant_id,
-            models.Stack.stack_user_project_id == context.tenant_id))
+            models.Stack.tenant == context.project_id,
+            models.Stack.stack_user_project_id == context.project_id))
         q_backup = q_backup.filter_by(name=stack.name + '*')
         q_backup = q_backup.filter_by(owner_id=stack_id)
         for backup in q_backup.all():
@@ -1413,7 +1413,7 @@ def software_config_get(context, config_id):
 def _software_config_get(context, config_id):
     result = context.session.get(models.SoftwareConfig, config_id)
     if (result is not None and context is not None and not context.is_admin and
-            result.tenant != context.tenant_id):
+            result.tenant != context.project_id):
         result = None
 
     if not result:
@@ -1426,7 +1426,7 @@ def _software_config_get(context, config_id):
 def software_config_get_all(context, limit=None, marker=None):
     query = context.session.query(models.SoftwareConfig)
     if not context.is_admin:
-        query = query.filter_by(tenant=context.tenant_id)
+        query = query.filter_by(tenant=context.project_id)
     return _paginate_query(context, query, models.SoftwareConfig,
                            limit=limit, marker=marker).all()
 
@@ -1435,7 +1435,7 @@ def software_config_get_all(context, limit=None, marker=None):
 def software_config_count_all(context):
     query = context.session.query(models.SoftwareConfig)
     if not context.is_admin:
-        query = query.filter_by(tenant=context.tenant_id)
+        query = query.filter_by(tenant=context.project_id)
     return query.count()
 
 
@@ -1485,8 +1485,8 @@ def _software_deployment_get(context, deployment_id):
         orm.joinedload(models.SoftwareDeployment.config),
     ).first()
     if (result is not None and context is not None and not context.is_admin and
-        context.tenant_id not in (result.tenant,
-                                  result.stack_user_project_id)):
+        context.project_id not in (result.tenant,
+                                   result.stack_user_project_id)):
         result = None
 
     if not result:
@@ -1502,8 +1502,8 @@ def software_deployment_get_all(context, server_id=None):
     if not context.is_admin:
         query = query.filter(
             sqlalchemy.or_(
-                sd.tenant == context.tenant_id,
-                sd.stack_user_project_id == context.tenant_id,
+                sd.tenant == context.project_id,
+                sd.stack_user_project_id == context.project_id,
             )
         )
     if server_id:
@@ -1525,8 +1525,8 @@ def software_deployment_count_all(context):
     if not context.is_admin:
         query = query.filter(
             sqlalchemy.or_(
-                sd.tenant == context.tenant_id,
-                sd.stack_user_project_id == context.tenant_id,
+                sd.tenant == context.project_id,
+                sd.stack_user_project_id == context.project_id,
             )
         )
 
@@ -1571,7 +1571,7 @@ def snapshot_get(context, snapshot_id):
 def _snapshot_get(context, snapshot_id):
     result = context.session.get(models.Snapshot, snapshot_id)
     if (result is not None and context is not None and
-            context.tenant_id != result.tenant):
+            context.project_id != result.tenant):
         result = None
 
     if not result:
@@ -1607,13 +1607,13 @@ def snapshot_delete(context, snapshot_id):
 @context_manager.reader
 def snapshot_get_all_by_stack(context, stack_id):
     return context.session.query(models.Snapshot).filter_by(
-        stack_id=stack_id, tenant=context.tenant_id)
+        stack_id=stack_id, tenant=context.project_id)
 
 
 @context_manager.reader
 def snapshot_count_all_by_stack(context, stack_id):
     return context.session.query(models.Snapshot).filter_by(
-        stack_id=stack_id, tenant=context.tenant_id).count()
+        stack_id=stack_id, tenant=context.project_id).count()
 
 
 # service

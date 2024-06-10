@@ -59,17 +59,6 @@ def list_opts():
     yield TRUSTEE_CONF_GROUP, trustee_opts
 
 
-def _moved_attr(new_name):
-
-    def getter(self):
-        return getattr(self, new_name)
-
-    def setter(self, value):
-        setattr(self, new_name, value)
-
-    return property(getter, setter)
-
-
 @enginefacade.transaction_context_provider
 class RequestContext(context.RequestContext):
     """Stores information about the security context.
@@ -123,8 +112,6 @@ class RequestContext(context.RequestContext):
             cache = cache_cls()
             self._object_cache[cache_cls] = cache
         return cache
-
-    tenant_id = _moved_attr('project_id')
 
     @property
     def keystone_session(self):

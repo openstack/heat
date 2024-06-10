@@ -1009,7 +1009,7 @@ class TemplateResourceCrudTest(common.HeatTestCase):
         self.res.resource_id = str(uuid.uuid4())
         self.res.action = self.res.CREATE
         self.res.nested = mock.MagicMock()
-        ident = identifier.HeatIdentifier(self.ctx.tenant_id,
+        ident = identifier.HeatIdentifier(self.ctx.project_id,
                                           self.res.physical_resource_name(),
                                           self.res.resource_id)
         self.res.nested().identifier.return_value = ident

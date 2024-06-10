@@ -422,7 +422,7 @@ Outputs:
         self.res.action = self.res.CREATE
         self.res.nested_identifier = mock.MagicMock()
         stack_identity = identifier.HeatIdentifier(
-            self.ctx.tenant_id,
+            self.ctx.project_id,
             self.res.physical_resource_name(),
             self.res.resource_id)
         self.res.nested_identifier.return_value = stack_identity

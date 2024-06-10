@@ -65,7 +65,7 @@ class StackTest(common.HeatTestCase):
         self.stack = stack.Stack(self.ctx, 'delete_test', self.tmpl)
         stack_id = self.stack.store()
         snapshot_fake = {
-            'tenant': self.ctx.tenant_id,
+            'tenant': self.ctx.project_id,
             'name': 'Snapshot',
             'stack_id': stack_id,
             'status': 'COMPLETE',
@@ -96,7 +96,7 @@ class StackTest(common.HeatTestCase):
         data = copy.deepcopy(self.stack.prepare_abandon())
         data['resources']['A']['resource_data']['a_string'] = 'foo'
         snapshot_fake = {
-            'tenant': self.ctx.tenant_id,
+            'tenant': self.ctx.project_id,
             'name': 'Snapshot',
             'stack_id': stack_id,
             'status': 'COMPLETE',
