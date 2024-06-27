@@ -37,6 +37,7 @@
         s-object: false
         s-proxy: false
         tempest: true
+        openstack-cli-server: false
       devstack_plugins:
         barbican: https://opendev.org/openstack/barbican
         heat: https://opendev.org/openstack/heat
@@ -147,6 +148,7 @@
         h-api-cfn: true
         h-eng: true
         heat: true
+        openstack-cli-server: false
       # We do run a list of tests after upgrade. This is just to bypass the req from parent.
       tempest_test_regex: ^tempest\.api\.identity\.v3\.test_tokens
       tox_envlist: all
@@ -167,6 +169,7 @@
           h-api-cfn: true
           h-eng: true
           heat: true
+          openstack-cli-server: false
         # We do run a list of tests after upgrade. This is just to bypass the req from parent.
         devstack_plugins:
           heat: https://opendev.org/openstack/heat
