@@ -412,8 +412,12 @@ class GetSocketTestCase(common.HeatTestCase):
 
     def test_correct_configure_socket(self):
         mock_socket = mock.Mock()
+        mock_load_cert_chain = mock.Mock()
         self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.ssl.wrap_socket',
+            'heat.common.wsgi.ssl.SSLContext.load_cert_chain',
+            mock_load_cert_chain))
+        self.useFixture(fixtures.MonkeyPatch(
+            'heat.common.wsgi.ssl.SSLContext.wrap_socket',
             mock_socket))
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.wsgi.eventlet.listen',
@@ -447,9 +451,6 @@ class GetSocketTestCase(common.HeatTestCase):
             'heat.common.wsgi.eventlet.listen',
             mock.Mock(side_effect=(
                 [err] * 3 + [None]))))
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.ssl.wrap_socket',
-            lambda *x, **y: None))
 
         self.assertRaises(RuntimeError, wsgi.get_socket,
                           wsgi.cfg.CONF.heat_api, 1234)
@@ -458,8 +459,5 @@ class GetSocketTestCase(common.HeatTestCase):
         self.useFixture(fixtures.MonkeyPatch(
             'heat.common.wsgi.eventlet.listen',
             mock.Mock(side_effect=wsgi.socket.error(socket.errno.ENOMEM))))
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.ssl.wrap_socket',
-            lambda *x, **y: None))
         self.assertRaises(wsgi.socket.error, wsgi.get_socket,
                           wsgi.cfg.CONF.heat_api, 1234)

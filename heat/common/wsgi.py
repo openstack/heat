@@ -173,7 +173,7 @@ def get_socket(conf, default_port):
     :param default_port: port to bind to if none is specified in conf
 
     :returns: a socket object as returned from socket.listen or
-               ssl.wrap_socket if conf specifies cert_file
+               ssl.SSLContext.wrap_socket if conf specifies cert_file
     """
     bind_addr = get_bind_addr(conf, default_port)
 
@@ -348,9 +348,9 @@ class Server(object):
             self._sock = _sock
 
         if wrap_sock:
-            self.sock = ssl.wrap_socket(self._sock,
-                                        certfile=self.conf.cert_file,
-                                        keyfile=self.conf.key_file)
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            context.load_cert_chain(self.conf.cert_file, self.conf.key_file)
+            self.sock = context.wrap_socket(self._sock)
 
         if unwrap_sock:
             self.sock = self._sock
