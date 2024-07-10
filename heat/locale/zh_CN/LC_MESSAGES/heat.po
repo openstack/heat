@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2023-05-31 06:03+0000\n"
+"POT-Creation-Date: 2024-06-28 05:41+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -153,22 +153,12 @@ msgid "%(action)s is restricted for resource."
 msgstr "%(action)s 在获取资源时受到限制。"
 
 #, python-format
-msgid "%(desired_capacity)s must be between %(min_size)s and %(max_size)s"
-msgstr "%(desired_capacity)s 必须在 %(min_size)s 到 %(max_size)s 之间"
-
-#, python-format
 msgid "%(error)s%(path)s%(message)s"
 msgstr "%(error)s%(path)s%(message)s"
 
 #, python-format
 msgid "%(feature)s is not supported."
 msgstr "%(feature)s 不受支持。"
-
-#, python-format
-msgid ""
-"%(img)s must be provided: Referenced cluster template %(tmpl)s has no "
-"default_image_id defined."
-msgstr "必须提供 %(img)s：引用的集群模板 %(tmpl)s 未定义 default_image_id。"
 
 #, python-format
 msgid "%(lc)s (%(ref)s) reference can not be found."
@@ -191,10 +181,6 @@ msgstr "接收到 %(len)d 个（共 %(count)d 个）- %(reasons)s"
 #, python-format
 msgid "%(message)s"
 msgstr "%(message)s"
-
-#, python-format
-msgid "%(min_size)s can not be greater than %(max_size)s"
-msgstr "%(min_size)s 不能大于 %(max_size)s"
 
 #, python-format
 msgid "%(name)s constraint invalid for %(utype)s"
@@ -245,20 +231,12 @@ msgid "%s Value Name must be a string"
 msgstr "%s值名必须为字符串"
 
 #, python-format
-msgid "%s is not a valid job location."
-msgstr "%s 是无效作业位置。"
-
-#, python-format
 msgid "%s is not active"
 msgstr "%s 未处于活动状态"
 
 #, python-format
 msgid "%s is not an integer."
 msgstr "%s 不是整数。"
-
-#, python-format
-msgid "%s must be provided"
-msgstr "必须提供 %s"
 
 #, python-format
 msgid "'%(attr)s': expected '%(expected)s', got '%(current)s'"
@@ -362,9 +340,6 @@ msgstr "字符序列及要据其生成随机字符串的约束的列表。"
 
 msgid "A list of cluster instance IPs."
 msgstr "集群实例 IP 的列表。"
-
-msgid "A list of clusters to which this policy is attached."
-msgstr "此策略附加至的集群列表。"
 
 msgid "A list of host route dictionaries for the subnet."
 msgstr "子网的主机路由字典列表。"
@@ -817,12 +792,6 @@ msgstr "子网的可用域。"
 msgid "Availability zone in which you want the subnet."
 msgstr "在其中需要子网的可用性区域。"
 
-msgid "Availability zone to create servers in."
-msgstr "要在其中创建服务器的可用性区域。"
-
-msgid "Availability zone to create volumes in."
-msgstr "要在其中创建卷的可用性区域。"
-
 msgid "Availability zone to launch the instance in."
 msgstr "要在其中启动实例的可用性区域。"
 
@@ -964,21 +933,6 @@ msgstr "必须指定客户机名称和资源获取者名称。"
 msgid "Client to poll."
 msgstr "要轮询的客户机。"
 
-msgid "Cluster configs dictionary."
-msgstr "集群配置字典。"
-
-msgid "Cluster information."
-msgstr "集群信息。"
-
-msgid "Cluster metadata."
-msgstr "集群元数据。"
-
-msgid "Cluster name."
-msgstr "集群名称。"
-
-msgid "Cluster status."
-msgstr "集群状态。"
-
 msgid "Comparison operator."
 msgstr "比较运算符。"
 
@@ -993,9 +947,6 @@ msgid ""
 "Configuration script or manifest which specifies what actual configuration "
 "is performed."
 msgstr "用于指定执行的实际配置的配置脚本或清单。"
-
-msgid "Configure most important configs automatically."
-msgstr "自动配置最重要的配置。"
 
 #, python-format
 msgid "Confirm resize for server %s failed"
@@ -1082,16 +1033,6 @@ msgstr "未能装入 %(name)s：%(error)s"
 msgid "Could not retrieve template: %s"
 msgstr "未能检索到模板：%s"
 
-msgid "Create volumes on the same physical port as an instance."
-msgstr "在实例所在的物理端口上创建卷。"
-
-msgid ""
-"Credentials used for swift. Not required if sahara is configured to use "
-"proxy users and delegated trusts for access."
-msgstr ""
-"用于 swift 的证书。如果 sahara 配置为使用代理用户和代理信托来进行访问，那么不"
-"需要此项。"
-
 msgid "Cron expression."
 msgstr "cron 表达式。"
 
@@ -1150,9 +1091,6 @@ msgstr "用于检索 TLS 信息的缺省 TLS 容器引用。"
 msgid "Default must be a comma-delimited list string: %s"
 msgstr "缺省值必须是以逗号定界的列表字符串：%s"
 
-msgid "Default name or UUID of the image used to boot Hadoop nodes."
-msgstr "用于引导 Hadoop 节点的映像的缺省名称或 UUID。"
-
 msgid "Default region name used to get services endpoints."
 msgstr "用于获取服务端点的缺省区域名称。"
 
@@ -1207,9 +1145,6 @@ msgid ""
 "starting a task."
 msgstr "定义 Mistral 引擎在启动任务前是否应搁置此工作流程。"
 
-msgid "Defines whether auto-assign security group to this Node Group template."
-msgstr "定义是否将安全组自动分配给此“节点组”模板。"
-
 #, python-format
 msgid ""
 "Defining more than one configuration for the same action in "
@@ -1245,9 +1180,6 @@ msgstr "部署至云主机失败：%s"
 #, python-format
 msgid "Deployment with id %s not found"
 msgstr "找不到标识为 %s 的部署"
-
-msgid "Deprecated."
-msgstr "不推荐。"
 
 msgid ""
 "Describe time constraints for the alarm. Only evaluate the alarm if the time "
@@ -1303,17 +1235,8 @@ msgstr "keystone 服务的描述。"
 msgid "Description of keystone user."
 msgstr "keystone 用户的描述。"
 
-msgid "Description of the Node Group Template."
-msgstr "节点组模板的描述。"
-
-msgid "Description of the Sahara Group Template."
-msgstr "Sahara 组模板的描述。"
-
 msgid "Description of the alarm."
 msgstr "警报的描述。"
-
-msgid "Description of the data source."
-msgstr "数据源的描述。"
 
 msgid "Description of the firewall policy."
 msgstr "防火墙策略的描述。"
@@ -1324,14 +1247,8 @@ msgstr "防火墙规则的描述。"
 msgid "Description of the firewall."
 msgstr "防火墙的描述信息。"
 
-msgid "Description of the image."
-msgstr "映像的描述。"
-
 msgid "Description of the input."
 msgstr "输入的描述信息。"
-
-msgid "Description of the job binary."
-msgstr "作业二进制文件的描述。"
 
 msgid "Description of the metering label."
 msgstr "测量标签的描述。"
@@ -1339,14 +1256,8 @@ msgstr "测量标签的描述。"
 msgid "Description of the output."
 msgstr "输出的描述。"
 
-msgid "Description of the pool."
-msgstr "池的描述。"
-
 msgid "Description of the security group."
 msgstr "安全组的描述。"
-
-msgid "Description of the vip."
-msgstr "vip 的描述。"
 
 msgid "Description of the volume type."
 msgstr "卷类型的描述。"
@@ -1366,14 +1277,8 @@ msgstr "此池的描述。"
 msgid "Desired IPs for this port."
 msgstr "此端口的所需 IP。"
 
-msgid "Desired capacity of the cluster."
-msgstr "集群的期望容量。"
-
 msgid "Desired initial number of instances."
 msgstr "所需初始实例数。"
-
-msgid "Desired initial number of resources in cluster."
-msgstr "集群中的期望初始资源数。"
 
 msgid "Desired initial number of resources."
 msgstr "所需初始资源数。"
@@ -1417,9 +1322,6 @@ msgstr "已扩展端口属性的字典。仅当未对创建端口指定端口属
 
 msgid "Dictionary containing workflow tasks."
 msgstr "包含工作流程任务的字典。"
-
-msgid "Dictionary of node configurations."
-msgstr "节点配置的字典。"
 
 msgid "Dictionary of variables to publish to the workflow context."
 msgstr "要发布至工作流程上下文的变量的字典。"
@@ -1637,10 +1539,6 @@ msgid "Failed to detach interface (%(port)s) from server (%(server)s)"
 msgstr "无法从服务器 (%(server)s) 拆离接口 (%(port)s)"
 
 #, python-format
-msgid "Failed to execute %(action)s for %(cluster)s: %(reason)s"
-msgstr "对 %(cluster)s 执行 %(action)s 失败：%(reason)s"
-
-#, python-format
 msgid "Failed to extend volume %(vol)s - %(err)s"
 msgstr "无法扩展卷 %(vol)s - %(err)s"
 
@@ -1782,17 +1680,11 @@ msgstr "发生一般性 HeatAPIException，请使用特定子类！"
 msgid "Glance image ID or name."
 msgstr "Glance 映像标识或名称。"
 
-msgid "Governs permissions set in manila for the cluster ips."
-msgstr "管理 manila 中为集群 IP 设置的许可权。"
-
 msgid "Granularity to use for age argument, defaults to days."
 msgstr "要用于 age 自变量的粒度，缺省为天。"
 
 msgid "HTTP verb to use for signaling output values"
 msgstr "要用于发出输出值的信号的 HTTP 动词"
-
-msgid "Hadoop cluster name."
-msgstr "Hadoop 集群名称。"
 
 #, python-format
 msgid "Header X-Auth-Url \"%s\" not an allowed endpoint"
@@ -1920,9 +1812,6 @@ msgid ""
 "ID of software configuration resource to execute when applying to the server."
 msgstr "应用于服务器时，要执行的软件配置资源的标识。"
 
-msgid "ID of the Cluster Template used for Node Groups and configurations."
-msgstr "用于节点组和配置的集群模板的标识。"
-
 msgid "ID of the InternetGateway."
 msgstr "InternetGateway 的标识。"
 
@@ -1932,14 +1821,8 @@ msgid ""
 msgstr ""
 "L3 代理的标识。注：Neutron 中的缺省策略设置将此属性限制为仅供管理用户使用。"
 
-msgid "ID of the Node Group Template."
-msgstr "节点组模板的标识。"
-
 msgid "ID of the VPNGateway to attach to the VPC."
 msgstr "要连接至 VPC 的 VPNGateway 的标识。"
-
-msgid "ID of the default image to use for the template."
-msgstr "要用于模板的缺省映像的标识。"
 
 msgid "ID of the default pool this listener is associated to."
 msgstr "与此侦听器相关联的缺省池的标识。"
@@ -1952,9 +1835,6 @@ msgstr "要关联的浮动 IP 的标识。"
 
 msgid "ID of the health monitor associated with this pool."
 msgstr "与此池相关联的运行状况监视器标识。"
-
-msgid "ID of the image to use for the template."
-msgstr "要用于模板的映像的标识。"
 
 msgid "ID of the load balancer this listener is associated to."
 msgstr "与此侦听器相关联的负载均衡器的标识。"
@@ -1995,9 +1875,6 @@ msgstr "RBAC 对象的标识或名称。"
 msgid "ID or name of the external network for the gateway."
 msgstr "网关的外部网络的标识或名称。"
 
-msgid "ID or name of the image to register."
-msgstr "要注册的映像的标识或名称。"
-
 msgid "ID or name of the load balancer with which listener is associated."
 msgstr "与侦听器相关联的负载均衡器的标识或名称。"
 
@@ -2010,9 +1887,6 @@ msgid ""
 msgstr ""
 "AWS 分配的标识，用于表示要与 Amazon VPC 配合使用的地址分配。仅对于 VPC 弹性 "
 "IP 地址才返回。"
-
-msgid "IP address and port of the pool."
-msgstr "池的 IP 地址和端口。"
 
 msgid "IP address desired in the subnet for this port."
 msgstr "此端口的子网中所需的 IP 地址。"
@@ -2033,12 +1907,6 @@ msgstr ""
 msgid "IP address of the pool member on the pool network."
 msgstr "池网络上池成员的 IP 地址。"
 
-msgid "IP address of the pool member."
-msgstr "池成员的 IP 地址。"
-
-msgid "IP address of the vip."
-msgstr "vip 的 IP 地址。"
-
 msgid "IP address to allow through this port."
 msgstr "要通过此端口允许的 IP 地址。"
 
@@ -2057,9 +1925,6 @@ msgstr "IPv6 地址方式。"
 
 msgid "Id of a resource."
 msgstr "资源标识。"
-
-msgid "Id of the manila share."
-msgstr "manila 共享的标识。"
 
 msgid "Id of the tenant owning the firewall policy."
 msgstr "拥有此防火墙策略的租户的标识。"
@@ -2492,9 +2357,6 @@ msgstr "与卷关联的键/值对。"
 msgid "Key/value pairs to associate with the volume."
 msgstr "要与卷关联的键/值对。"
 
-msgid "Keypair added to instances to make them accessible for user."
-msgstr "已添加至实例（以使这些实例可供用户访问）的密钥对。"
-
 msgid "Keypair secret key."
 msgstr "密钥对密钥。"
 
@@ -2552,9 +2414,6 @@ msgstr ""
 msgid "L2 segmentation strategy on the external side of the network gateway."
 msgstr "网络网关外端上的 L2 分段策略。"
 
-msgid "LBaaS provider to implement this load balancer instance."
-msgstr "用于实现此负载均衡器实例的 LBaaS 提供程序。"
-
 msgid "Length of OS_PASSWORD after encryption exceeds Heat limit (255 chars)"
 msgstr "在加密超过 Heat 限制（255 个字符）之后，OS_PASSWORD 的长度"
 
@@ -2601,23 +2460,11 @@ msgstr "DNS 名称服务器的列表。"
 msgid "List of firewall rules in this firewall policy."
 msgstr "此防火墙策略中的防火墙规则列表。"
 
-msgid "List of health monitors associated with the pool."
-msgstr "与池关联的运行状况监视器的列表。"
-
 msgid "List of hosts to join aggregate."
 msgstr "加入聚集的主机的列表。"
 
-msgid "List of manila shares to be mounted."
-msgstr "要安装的 manila 共享列表。"
-
 msgid "List of network interfaces to create on instance."
 msgstr "要对实例创建的网络接口的列表。"
-
-msgid "List of processes to enable anti-affinity for."
-msgstr "要对其启用反亲缘关系的进程的列表。"
-
-msgid "List of processes to run on every node."
-msgstr "要在每个节点上运行的进程的列表。"
 
 msgid "List of role assignments."
 msgstr "角色分配的列表。"
@@ -2630,10 +2477,6 @@ msgstr "安全组外出权规则的列表。"
 
 msgid "List of security group ingress rules."
 msgstr "安全组进入权规则的列表。"
-
-msgid ""
-"List of security group names or IDs to assign to this Node Group template."
-msgstr "要分配给此“节点组”模板的安全组名称或标识的列表。"
 
 msgid ""
 "List of security group names or IDs. Cannot be used if neutron ports are "
@@ -2693,11 +2536,6 @@ msgstr ""
 msgid "Listener associated with this pool."
 msgstr "与此池相关联的侦听器。"
 
-msgid ""
-"Local path on each cluster node on which to mount the share. Defaults to '/"
-"mnt/{share_id}'."
-msgstr "要在每个集群节点上安装该共享的本地路径。缺省为 '/mnt/{share_id}'。"
-
 msgid "Location of the SSL certificate file to use for SSL mode."
 msgstr "要用于 SSL 方式的 SSL 证书文件的位置。"
 
@@ -2734,9 +2572,6 @@ msgstr "最大带宽（以 kbps 计）。"
 msgid "Max burst bandwidth in kbps."
 msgstr "最大脉冲带宽（以 kbps 计）。"
 
-msgid "Max size of the cluster."
-msgstr "集群的最大大小。"
-
 #, python-format
 msgid "Maximum %s is 1 hour."
 msgstr "最大 %s 为 1 小时。"
@@ -2754,9 +2589,6 @@ msgstr ""
 
 msgid "Maximum number of instances in the group."
 msgstr "组中的最大实例数。"
-
-msgid "Maximum number of resources in the cluster. -1 means unlimited."
-msgstr "集群中的最大资源数。-1 表示无限制。"
 
 msgid "Maximum number of resources in the group."
 msgstr "组中的最大资源数。"
@@ -2806,15 +2638,6 @@ msgstr "消息：%(message)s，代码：%(code)s"
 msgid "Metadata format invalid"
 msgstr "元数据格式无效"
 
-msgid "Metadata key-values defined for cluster."
-msgstr "对集群定义的元数据键/值。"
-
-msgid "Metadata key-values defined for node."
-msgstr "对节点定义的元数据键/值。"
-
-msgid "Metadata key-values defined for profile."
-msgstr "对概要文件定义的元数据键/值。"
-
 msgid "Metadata key-values defined for share."
 msgstr "为共享定义的元数据链值。"
 
@@ -2835,17 +2658,11 @@ msgstr "会话持久性功能的实现方法。"
 msgid "Metric name watched by the alarm."
 msgstr "警报监视的度量值名称。"
 
-msgid "Min size of the cluster."
-msgstr "集群的最小大小。"
-
 msgid "MinSize can not be greater than MaxSize"
 msgstr "MinSize 不能超过 MaxSize"
 
 msgid "Minimum number of instances in the group."
 msgstr "组中的最小实例数。"
-
-msgid "Minimum number of resources in the cluster."
-msgstr "集群中的最小资源数。"
 
 msgid "Minimum number of resources in the group."
 msgstr "组中的最小资源数。"
@@ -2897,12 +2714,6 @@ msgstr "找到名称为 %s 的多个路由器"
 
 msgid "Must specify 'InstanceId' if you specify 'EIP'."
 msgstr "如果指定“EIP”，那么必须指定“InstanceId”。"
-
-msgid "Name for the Sahara Cluster Template."
-msgstr "Sahara 集群模板的名称。"
-
-msgid "Name for the Sahara Node Group Template."
-msgstr "Sahara 节点组模板的名称。"
 
 msgid "Name for the aggregate."
 msgstr "聚集的名称。"
@@ -2983,9 +2794,6 @@ msgstr "已注册数据存储器类型的名称。"
 msgid "Name of the DB instance to create."
 msgstr "要创建的数据库实例的名称。"
 
-msgid "Name of the Node group."
-msgstr "节点组的名称。"
-
 msgid ""
 "Name of the action associated with the task. Either action or workflow may "
 "be defined in the task."
@@ -3006,9 +2814,6 @@ msgstr "用于服务器放置的可用性区域的名称。"
 msgid "Name of the cluster to create."
 msgstr "要创建的集群的名称。"
 
-msgid "Name of the cluster. By default, physical resource name is used."
-msgstr "集群的名称。缺省情况下，将使用物理资源名称。"
-
 msgid "Name of the cookie, required if type is APP_COOKIE."
 msgstr "cookie 的名称（如果类型为 APP_COOKIE，那么为必需）。"
 
@@ -3017,9 +2822,6 @@ msgstr "cron 触发器的名称。"
 
 msgid "Name of the current action being deployed"
 msgstr "正在部署的当前操作的名称"
-
-msgid "Name of the data source."
-msgstr "数据源的名称。"
 
 msgid ""
 "Name of the derived config associated with this deployment. This is used to "
@@ -3037,9 +2839,6 @@ msgstr ""
 
 msgid "Name of the input."
 msgstr "输入的名称。"
-
-msgid "Name of the job binary."
-msgstr "作业二进制文件的名称。"
 
 msgid "Name of the metering label."
 msgstr "测量标签的名称。"
@@ -3060,9 +2859,6 @@ msgstr "通知的名称。缺省情况下，将使用物理资源名称。"
 msgid "Name of the output."
 msgstr "输出的名称。"
 
-msgid "Name of the pool."
-msgstr "池的名称。"
-
 msgid "Name of the queue instance to create."
 msgstr "要创建的队列实例的名称。"
 
@@ -3079,19 +2875,6 @@ msgstr ""
 msgid "Name of the secret."
 msgstr "密钥的名称。"
 
-msgid "Name of the senlin node. By default, physical resource name is used."
-msgstr "senlin 节点的名称。缺省情况下，将使用物理资源名称。"
-
-msgid "Name of the senlin policy. By default, physical resource name is used."
-msgstr "senlin 策略的名称。缺省情况下，将使用物理资源名称。"
-
-msgid "Name of the senlin profile. By default, physical resource name is used."
-msgstr "senlin 概要文件的名称。缺省情况下，将使用物理资源名称。"
-
-msgid ""
-"Name of the senlin receiver. By default, physical resource name is used."
-msgstr "senlin 接收器的名称。缺省情况下，将使用物理资源名称。"
-
 msgid "Name of the server."
 msgstr "服务器名称。"
 
@@ -3106,9 +2889,6 @@ msgstr "堆栈的名称。"
 
 msgid "Name of the subnet pool."
 msgstr "子网池的名称。"
-
-msgid "Name of the vip."
-msgstr "vip 的名称。"
 
 msgid "Name of the volume type."
 msgstr "卷类型的名称。"
@@ -3138,14 +2918,8 @@ msgstr "此侦听器的名称。"
 msgid "Name of this pool."
 msgstr "此池的名称。"
 
-msgid "Name or ID Nova flavor for the nodes."
-msgstr "节点的名称或标识 Nova 实例类型。"
-
 msgid "Name or ID of network to create a port on."
 msgstr "要在其上创建端口的网络的名称或标识。"
-
-msgid "Name or ID of senlin profile to create this node."
-msgstr "要创建此节点的 senlin 概要文件的名称或标识。"
 
 msgid ""
 "Name or ID of shared file system snapshot that will be restored and created "
@@ -3162,9 +2936,6 @@ msgstr ""
 msgid "Name or ID of shared network defined for shared filesystem."
 msgstr "对共享文件系统定义的共享网络的名称或标识。"
 
-msgid "Name or ID of target cluster."
-msgstr "目标集群的名称或标识。"
-
 msgid "Name or ID of the load balancing pool."
 msgstr "负载均衡池的名称或标识。"
 
@@ -3180,20 +2951,6 @@ msgid ""
 "%(net)s must be specified."
 msgstr ""
 "要将此 NIC 连接至的 Neutron 端口的名称或 UUID。必须指定 %(port)s 或 %(net)s。"
-
-msgid "Name or UUID of network."
-msgstr "网络的名称或 UUID。"
-
-msgid ""
-"Name or UUID of the Neutron floating IP network or name of the Nova floating "
-"ip pool to use. Should not be provided when used with Nova-network that auto-"
-"assign floating IPs."
-msgstr ""
-"要使用的 Neutron 浮动 IP 网络的名称或 UUID，或要使用的 Nova 浮动 IP 池的名"
-"称。与自动分配浮动 IP 的 Nova 网络配合使用时，不应该提供。"
-
-msgid "Name or UUID of the image used to boot Hadoop nodes."
-msgstr "用于引导 Hadoop 节点的映像的名称或 UUID。"
 
 #, python-format
 msgid ""
@@ -3306,12 +3063,6 @@ msgstr "未指定任何模板"
 msgid "No volume service available."
 msgstr "没有任何卷服务可用。"
 
-msgid "Node groups."
-msgstr "节点组。"
-
-msgid "Nodes list in the cluster."
-msgstr "集群中的节点列表。"
-
 msgid "Non HA routers can only have one L3 agent."
 msgstr "非 HA 路由器只能具有一个 L3 代理。"
 
@@ -3348,9 +3099,6 @@ msgstr "对应该类型的 VCPU 数。"
 
 msgid "Number of backlog requests to configure the socket with."
 msgstr "用于配置套接字的储备请求数。"
-
-msgid "Number of instances in the Node group."
-msgstr "节点组中的实例数。"
 
 msgid "Number of minutes to wait for this stack creation."
 msgstr "用于等待此堆栈创建的分钟数。"
@@ -3541,12 +3289,6 @@ msgstr "属于此消息的部件。"
 msgid "Password for API authentication"
 msgstr "API认证的密码"
 
-msgid "Password for accessing the data source URL."
-msgstr "要访问数据源 URL 的密码。"
-
-msgid "Password for accessing the job binary URL."
-msgstr "要访问作业二进制文件 URL 的密码。"
-
 msgid "Password for those users on instance creation."
 msgstr "在进行实例创建时那些用户的密码。"
 
@@ -3586,17 +3328,6 @@ msgstr "要对其进行评估的时间段（秒）。"
 msgid "Physical ID of the VPC. Not implemented."
 msgstr "VPC 的物理标识。未实现。"
 
-#, python-format
-msgid ""
-"Plugin %(plugin)s doesn't support the following node processes: "
-"%(unsupported)s. Allowed processes are: %(allowed)s"
-msgstr ""
-"插件 %(plugin)s 不支持以下节点进程：%(unsupported)s。允许的进程为："
-"%(allowed)s"
-
-msgid "Plugin name."
-msgstr "插件名称。"
-
 msgid "Policies for removal of resources on update."
 msgstr "用于在更新时移除资源的策略。"
 
@@ -3628,17 +3359,8 @@ msgid ""
 "specific resources."
 msgstr "当执行需要删除特定资源的更新时要处理的策略。"
 
-msgid "Pool creation failed"
-msgstr "池创建失败"
-
-msgid "Pool creation failed due to vip"
-msgstr "由于 vip，池创建失败"
-
 msgid "Pool from which floating IP is allocated."
 msgstr "从中分配浮动 IP 的池。"
-
-msgid "Port number on which the servers are running on the members."
-msgstr "正在其上对成员运行服务器的端口的端口号。"
 
 msgid "Port on which the pool member listens for requests or connections."
 msgstr "池成员在其上侦听请求或连接的端口。"
@@ -3682,12 +3404,6 @@ msgid ""
 "of order."
 msgstr ""
 "对于 %(type)s 类型的指令，属性 %(algorithm)s 和 %(bit_length)s 是必需的。"
-
-msgid "Properties for profile."
-msgstr "概要文件的属性。"
-
-msgid "Properties of this policy."
-msgstr "此策略的属性。"
 
 msgid "Properties to pass to each resource being created in the chain."
 msgstr "要传递至要在链中创建的每个资源的属性。"
@@ -3737,12 +3453,6 @@ msgid ""
 msgstr "session_persistence 类型设置为 APP_COOKIE 时，需要属性 cookie_name。"
 
 msgid ""
-"Property cookie_name is required, when session_persistence type is set to "
-"APP_COOKIE."
-msgstr ""
-"需要属性 cookie_name（当 session_persistence 类型设置为 APP_COOKIE 时）。"
-
-msgid ""
 "Property cookie_name must NOT be specified when session_persistence type is "
 "set to SOURCE_IP."
 msgstr ""
@@ -3750,9 +3460,6 @@ msgstr ""
 
 msgid "Property values for the resources in the group."
 msgstr "组中资源的属性值。"
-
-msgid "Protocol for balancing."
-msgstr "用于进行均衡的协议。"
 
 msgid "Protocol for the firewall rule."
 msgstr "防火墙规则的协议。"
@@ -3763,15 +3470,8 @@ msgstr "此池的协议。"
 msgid "Protocol on which to listen for the client traffic."
 msgstr "侦听客户机流量时使用的协议。"
 
-msgid "Protocol to balance."
-msgstr "用于进行均衡的协议。"
-
 msgid "Protocol value for this firewall rule."
 msgstr "此防火墙规则的协议值。"
-
-msgid ""
-"Provide access to nodes using other nodes of the cluster as proxy gateways."
-msgstr "通过将集群的其他节点用作代理网关来提供对某些节点的访问。"
 
 msgid ""
 "Provide old encryption key. New encryption key would be used from config "
@@ -3780,9 +3480,6 @@ msgstr "提供旧的加密密钥。新的加密密钥将通过配置文件使用
 
 msgid "Provider for this Load Balancer."
 msgstr "此负载均衡器的供应商。"
-
-msgid "Provider implementing this load balancer instance."
-msgstr "用于实现此负载均衡器实例的提供程序。"
 
 #, python-format
 msgid "Provider requires property %(n)s unknown in facade %(type)s"
@@ -3871,13 +3568,6 @@ msgstr "请求缺少必需的头 X-Auth-Url"
 
 msgid "Request was denied due to request throttling"
 msgstr "由于请求调速，已拒绝请求"
-
-#, python-format
-msgid ""
-"Requested plugin '%(plugin)s' doesn't support version '%(version)s'. Allowed "
-"versions are %(allowed)s"
-msgstr ""
-"所请求插件“%(plugin)s”不支持版本“%(version)s”。允许的版本为 %(allowed)s"
 
 msgid ""
 "Required extra specification. Defines if share drivers handles share servers."
@@ -4186,9 +3876,6 @@ msgstr ""
 msgid "Size of the instance disk volume in GB."
 msgstr "实例磁盘卷的大小，以 GB 计。"
 
-msgid "Size of the volumes, in GB."
-msgstr "卷大小，以 GB 计。"
-
 msgid "Smallest prefix size that can be allocated from the subnet pool."
 msgstr "可从子网池分配的最小前缀大小。"
 
@@ -4339,9 +4026,6 @@ msgstr "此成员的子网名称或标识。"
 msgid "Subnet of external fixed IP address."
 msgstr "外部固定 IP 地址的子网。"
 
-msgid "Subnet of the vip."
-msgstr "vip 的子网。"
-
 msgid "Subnets of this network."
 msgstr "此网络的子网。"
 
@@ -4378,14 +4062,6 @@ msgstr "要侦听客户机流量的 TCP 或 UDP 端口。"
 msgid "TCP port on which the instance server is listening."
 msgstr "实例服务器正在侦听的 TCP 端口。"
 
-msgid "TCP port on which the pool member listens for requests or connections."
-msgstr "池成员在其上侦听请求或连接的 TCP 端口。"
-
-msgid ""
-"TCP port on which to listen for client traffic that is associated with the "
-"vip address."
-msgstr "要在其上侦听与 vip 地址关联的客户机流量的 TCP 端口。"
-
 msgid ""
 "TTL, in seconds, for any cached item in the dogpile.cache region used for "
 "caching of OpenStack service finder functions."
@@ -4408,9 +4084,6 @@ msgstr "标记键。"
 
 msgid "Tag value."
 msgstr "标记值。"
-
-msgid "Tags to add to the image."
-msgstr "要添加至映像的标记。"
 
 msgid "Tags to attach to instance."
 msgstr "要连接至实例的标记。"
@@ -4489,15 +4162,6 @@ msgstr "找不到带有版本 %s 的模板"
 msgid "TemplateBody or TemplateUrl were not given."
 msgstr "未给定 TemplateBody 或 TemplateUrl。"
 
-msgid "Tenant owning the health monitor."
-msgstr "拥有运行状况监视器的租户。"
-
-msgid "Tenant owning the pool member."
-msgstr "拥有池成员的租户。"
-
-msgid "Tenant owning the pool."
-msgstr "拥有池的租户。"
-
 msgid "Tenant owning the port."
 msgstr "拥有端口的租户。"
 
@@ -4568,11 +4232,6 @@ msgstr "用于通过类型为 HTTP 的监视器进行的请求的 HTTP 方法。
 
 msgid ""
 "The HTTP path used in the HTTP request used by the monitor to test a member "
-"health."
-msgstr "由监视器用来测试成员运行状况的 HTTP 请求中使用的 HTTP 路径。"
-
-msgid ""
-"The HTTP path used in the HTTP request used by the monitor to test a member "
 "health. A valid value is a string the begins with a forward slash (/)."
 msgstr ""
 "监视器使用的 HTTP 请求中用于测试成员运行状况的 HTTP 路径。有效值为以正斜杠 "
@@ -4620,12 +4279,6 @@ msgstr "要从其创建卷的映像的标识。"
 
 msgid "The ID of the instance to which the volume attaches."
 msgstr "卷连接至的实例的标识。"
-
-msgid "The ID of the load balancing pool."
-msgstr "负载均衡池的标识。"
-
-msgid "The ID of the pool to which the pool member belongs."
-msgstr "池成员所属的池的标识。"
 
 msgid "The ID of the server to which the volume attaches."
 msgstr "卷连接至的服务器的标识。"
@@ -4683,9 +4336,6 @@ msgid ""
 msgstr ""
 "要安排网络的 DHCP 代理的标识。请注意，Neutron 中的缺省策略设置会将此属性限制"
 "为仅供管理用户使用。"
-
-msgid "The IP address of the pool member."
-msgstr "池成员的 IP 地址。"
 
 msgid "The IP version, which is 4 or 6."
 msgstr "IP 版本，即 4 或 6。"
@@ -4769,9 +4419,6 @@ msgstr "负载均衡器的 VIP 子刚刚。"
 msgid "The action or operation requested is invalid"
 msgstr "请求的动作或操作无效"
 
-msgid "The action to be executed when the receiver is signaled."
-msgstr "通告接收器时要执行的操作。"
-
 msgid "The administrative state of the firewall."
 msgstr "防火墙的管理状态。"
 
@@ -4793,23 +4440,14 @@ msgstr "VPN 服务的管理状态。"
 msgid "The administrative state of this Load Balancer."
 msgstr "此负载均衡器的管理状态。"
 
-msgid "The administrative state of this health monitor."
-msgstr "此运行状况监视器的管理状态。"
-
 msgid "The administrative state of this listener."
 msgstr "此侦听器的管理状态。"
-
-msgid "The administrative state of this pool member."
-msgstr "此池成员的管理状态。"
 
 msgid "The administrative state of this pool."
 msgstr "此池的管理状态。"
 
 msgid "The administrative state of this port."
 msgstr "此端口的管理状态。"
-
-msgid "The administrative state of this vip."
-msgstr "此 vip 的管理状态。"
 
 msgid "The administrative status of the network."
 msgstr "网络的管理状态。"
@@ -4874,9 +4512,6 @@ msgstr "它可用于对已定义设备取消映射。"
 msgid "The certificate or AWS Key ID provided does not exist"
 msgstr "已提供的证书或 AWS 密钥标识不存在"
 
-msgid "The channel for receiving signals."
-msgstr "用于接收信号的通道。"
-
 msgid ""
 "The class that provides encryption support. For example, nova.volume."
 "encryptors.luks.LuksEncryptor."
@@ -4886,9 +4521,6 @@ msgstr ""
 #, python-format
 msgid "The client (%(client_name)s) is not available."
 msgstr "客户机 (%(client_name)s) 不可用。"
-
-msgid "The cluster ID this node belongs to."
-msgstr "此节点所属的集群标识。"
 
 msgid "The config value of the software config."
 msgstr "软件配置的配置值。"
@@ -4958,9 +4590,6 @@ msgstr "VPN 服务的描述。"
 
 msgid "The destination for static route."
 msgstr "静态路由的目标。"
-
-msgid "The details of physical object."
-msgstr "物理对象的详细信息。"
 
 msgid "The device id for the network gateway."
 msgstr "网络网关的设备标识。"
@@ -5095,14 +4724,6 @@ msgstr "长度不能超过 %(max)s。"
 msgid "The length of time, in minutes, to wait for the nested stack creation."
 msgstr "用于等待嵌套堆栈创建的时间长度（以分钟计）。"
 
-msgid ""
-"The list of HTTP status codes expected in response from the member to "
-"declare it healthy."
-msgstr "希望在成员响应中看到的 HTTP 状态码（用于声明其处于正常状态）的列表。"
-
-msgid "The list of Nova server IDs load balanced."
-msgstr "已实现负载均衡的 Nova 服务器的标识列表。"
-
 msgid "The list of Pools related to this monitor."
 msgstr "与此监视器相关的池的列表。"
 
@@ -5144,9 +4765,6 @@ msgstr "服务器的手动分配替代公共 IPv4 地址。"
 
 msgid "The manually assigned alternative public IPv6 address of the server."
 msgstr "服务器的手动分配替代公共 IPv6 地址。"
-
-msgid "The maximum number of connections per second allowed for the vip."
-msgstr "vip 所允许的每秒最大连接数。"
 
 msgid ""
 "The maximum number of connections permitted for this load balancer. Defaults "
@@ -5283,17 +4901,11 @@ msgstr "要附加至此端口的 QoS 策略的名称或标识。"
 msgid "The name or ID of parent of this keystone project in hierarchy."
 msgstr "此 keystone 项目在层次结构中的父代的名称或标识。"
 
-msgid "The name or ID of target cluster."
-msgstr "目标集群的名称或标识。"
-
 msgid "The name or ID of the subnet on which to allocate the VIP address."
 msgstr "要在其上分配 VIP 地址的子网的名称或标识。"
 
 msgid "The name or ID of the subnet pool."
 msgstr "子网池的名称或标识。"
-
-msgid "The name or id of the Senlin profile."
-msgstr "Senlin 概要文件的名称或标识。"
 
 msgid "The negotiation mode of the ike policy."
 msgstr "ike 策略的协商方式。"
@@ -5341,9 +4953,6 @@ msgstr "更新批次之间等待的秒数。"
 msgid "The number of seconds to wait between batches."
 msgstr "要在批处理之间等待的秒数。"
 
-msgid "The number of seconds to wait for the cluster actions."
-msgstr "要等待集群操作的秒数。"
-
 msgid ""
 "The number of seconds to wait for the correct number of signals to arrive."
 msgstr "用于等待正确数目的信号到达的秒数。"
@@ -5370,9 +4979,6 @@ msgid ""
 msgstr ""
 "所有者租户标识。仅当调用者具有管理角色并且想要为另一租户创建 RBAC 时，才需要"
 "此项。"
-
-msgid "The parameters passed to action when the receiver is signaled."
-msgstr "通告接收器时要传递至操作的参数。"
 
 msgid "The parent URL of the container."
 msgstr "容器的父 URL。"
@@ -5599,10 +5205,6 @@ msgstr "所存储的字符串。此值还可通过引用资源来提供。"
 msgid "The subject of the certificate request."
 msgstr "证书请求的主题。"
 
-msgid ""
-"The subnet for the port on which the members of the pool will be connected."
-msgstr "端口的子网，将在该端口上连接池的成员。"
-
 msgid "The subnet, either subnet or port should be specified."
 msgstr "应该指定子网（subnet 或 port）。"
 
@@ -5637,12 +5239,6 @@ msgstr "指示卷创建的时间戳记。"
 
 msgid "The transform protocol of the ipsec policy."
 msgstr "IPSec 策略的变换协议。"
-
-msgid "The type of profile."
-msgstr "概要文件的类型。"
-
-msgid "The type of senlin policy."
-msgstr "senlin 策略的类型。"
 
 msgid "The type of the certificate request."
 msgstr "证书请求的类型。"
@@ -5877,12 +5473,6 @@ msgstr "要用于与 OpenStack 服务通信的身份服务目录中的端点类�
 msgid "Type of keystone Service."
 msgstr "keystone 服务的类型。"
 
-msgid "Type of receiver."
-msgstr "接收器的类型。"
-
-msgid "Type of the data source."
-msgstr "数据源的类型。"
-
 msgid "Type of the notification."
 msgstr "通知的类型。"
 
@@ -5895,21 +5485,8 @@ msgstr "输入值的类型。"
 msgid "Type of the value of the output."
 msgstr "输出的值类型。"
 
-msgid "Type of the volume to create on Cinder backend."
-msgstr "要在 Cinder 后端上创建的卷类型。"
-
 msgid "URL for API authentication"
 msgstr "API认证的URL"
-
-msgid "URL for the data source."
-msgstr "数据源的 URL。"
-
-msgid ""
-"URL for the job binary. Must be in the format swift://<container>/<path> or "
-"internal-db://<uuid>."
-msgstr ""
-"作业二进制文件的 URL。必须为以下格式：swift://<container>/<path> 或 internal-"
-"db://<uuid>。"
 
 msgid ""
 "URL of TempURL where resource will signal completion and optionally upload "
@@ -5945,18 +5522,6 @@ msgid ""
 "Unable to find neutron provider '%(provider)s', available providers are "
 "%(providers)s."
 msgstr "找不到 neutron 提供程序“%(provider)s”，可用提供程序为 %(providers)s。"
-
-#, python-format
-msgid ""
-"Unable to find senlin policy type '%(pt)s', available policy types are "
-"%(pts)s."
-msgstr "找不到 senlin 策略类型“%(pt)s”，可用策略类型为 %(pts)s。"
-
-#, python-format
-msgid ""
-"Unable to find senlin profile type '%(pt)s', available profile types are "
-"%(pts)s."
-msgstr "找不到 senlin 概要文件类型“%(pt)s”，可用概要文件类型为 %(pts)s。"
 
 #, python-format
 msgid ""
@@ -6143,15 +5708,6 @@ msgstr "与访问码关联的用户名。"
 msgid "Username for API authentication"
 msgstr "API认证的用户名"
 
-msgid "Username for accessing the data source URL."
-msgstr "要访问数据源 URL 的用户名。"
-
-msgid "Username for accessing the job binary URL."
-msgstr "要访问作业二进制文件 URL 的用户名。"
-
-msgid "Username of privileged user in the image."
-msgstr "映像中的特权用户的用户名。"
-
 msgid "VLAN ID for VLAN networks or tunnel-id for GRE/VXLAN networks."
 msgstr " VLAN 网络的 VLAN 标识，或 GRE/VXLAN 网络的通道标识。"
 
@@ -6224,14 +5780,8 @@ msgstr "%(objname)s 的版本 %(objver)s 不被支持"
 msgid "Version for the ike policy."
 msgstr "IKE策略的版本。"
 
-msgid "Version of Hadoop running on instances."
-msgstr "实例上运行的 Hadoop 的版本。"
-
 msgid "Version of IP address."
 msgstr "IP 地址的版本。"
-
-msgid "Vip associated with the pool."
-msgstr "与池关联的 Vip。"
 
 msgid "Volume attachment failed"
 msgstr "卷连接失败"
@@ -6254,9 +5804,6 @@ msgstr "正在使用卷"
 msgid "Volume resize failed"
 msgstr "调整云硬盘大小失败"
 
-msgid "Volumes per node."
-msgstr "每个节点的卷数。"
-
 msgid "Volumes to attach to instance."
 msgstr "要连接至实例的卷。"
 
@@ -6275,9 +5822,6 @@ msgstr "WaitCondition 无效句柄租户 %s"
 msgid "Weight of pool member in the pool (default to 1)."
 msgstr "池中池成员的权重（缺省为 1）。"
 
-msgid "Weight of the pool member in the pool."
-msgstr "池中池成员的权重。"
-
 #, python-format
 msgid "Went to status %(resource_status)s due to \"%(status_reason)s\""
 msgstr "因为“%(status_reason)s”变为状态 %(resource_status)s"
@@ -6292,9 +5836,6 @@ msgid ""
 msgstr ""
 "以 SSL 方式运行服务器时，必须在配置文件中同时指定 cert_file 和 key_file 选项"
 "值"
-
-msgid "Whether enable this policy on that cluster."
-msgstr "是否在该集群上启用此策略。"
 
 msgid ""
 "Whether the address scope should be shared to other tenants. Note that the "
@@ -6451,12 +5992,6 @@ msgstr "服务器 %s 的部署"
 msgid "environment has wrong section \"%s\""
 msgstr "环境具有不正确的部分“%s”"
 
-msgid "error in pool"
-msgstr "池中出错"
-
-msgid "error in vip"
-msgstr "vip 中出错"
-
 msgid "external network for the gateway."
 msgstr "网关的外部网络。"
 
@@ -6524,9 +6059,6 @@ msgstr "对于使用平面网络的情况，不能指定除了 0 之外的 segme
 
 msgid "segmentation_id must be specified for using vlan"
 msgstr "对于使用 vlan 网络的情况，必须指定 segmentation_id"
-
-msgid "segmentation_id not allowed for flat network type."
-msgstr "对于平面网络类型，不允许 segmentation_id。"
 
 msgid "server_id must be specified"
 msgstr "必须指定server_id"

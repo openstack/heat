@@ -5,15 +5,16 @@
 # Andi Chandler <andi@gowling.com>, 2021. #zanata
 # Andi Chandler <andi@gowling.com>, 2022. #zanata
 # Andi Chandler <andi@gowling.com>, 2023. #zanata
+# Andi Chandler <andi@gowling.com>, 2024. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: openstack-heat\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-29 05:29+0000\n"
+"POT-Creation-Date: 2024-06-28 05:35+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2023-06-20 11:23+0000\n"
+"PO-Revision-Date: 2024-07-10 12:27+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -30,18 +31,6 @@ msgstr ""
 msgid "10.0.0"
 msgstr "10.0.0"
 
-msgid "10.0.0.0b1"
-msgstr "10.0.0.0b1"
-
-msgid "10.0.0.0b2"
-msgstr "10.0.0.0b2"
-
-msgid "10.0.0.0b3"
-msgstr "10.0.0.0b3"
-
-msgid "10.0.0.0rc1"
-msgstr "10.0.0.0rc1"
-
 msgid "10.0.1"
 msgstr "10.0.1"
 
@@ -54,15 +43,6 @@ msgstr "10.0.3-31"
 msgid "11.0.0"
 msgstr "11.0.0"
 
-msgid "11.0.0.0b1"
-msgstr "11.0.0.0b1"
-
-msgid "11.0.0.0b3"
-msgstr "11.0.0.0b3"
-
-msgid "11.0.0.0rc1"
-msgstr "11.0.0.0rc1"
-
 msgid "11.0.2"
 msgstr "11.0.2"
 
@@ -72,17 +52,11 @@ msgstr "11.0.3"
 msgid "12.0.0"
 msgstr "12.0.0"
 
-msgid "12.0.0.0rc1"
-msgstr "12.0.0.0rc1"
-
 msgid "12.1.0"
 msgstr "12.1.0"
 
 msgid "13.0.0"
 msgstr "13.0.0"
-
-msgid "13.0.0.0rc1"
-msgstr "13.0.0.0rc1"
 
 msgid "13.0.1"
 msgstr "13.0.1"
@@ -102,17 +76,17 @@ msgstr "15.0.0"
 msgid "15.1.0"
 msgstr "15.1.0"
 
+msgid "15.1.0-21"
+msgstr "15.1.0-21"
+
 msgid "16.0.0"
 msgstr "16.0.0"
 
-msgid "16.1.0-5"
-msgstr "16.1.0-5"
+msgid "16.1.0-9"
+msgstr "16.1.0-9"
 
 msgid "17.0.0"
 msgstr "17.0.0"
-
-msgid "17.0.0.0rc1"
-msgstr "17.0.0.0rc1"
 
 msgid "17.0.2"
 msgstr "17.0.2"
@@ -126,9 +100,6 @@ msgstr "18.0.1"
 msgid "19.0.0"
 msgstr "19.0.0"
 
-msgid "19.0.0.0rc1"
-msgstr "19.0.0.0rc1"
-
 msgid "19.0.1"
 msgstr "19.0.1"
 
@@ -141,6 +112,21 @@ msgstr "20.0.0.0rc1"
 msgid "2023.1 Series Release Notes"
 msgstr "2023.1 Series Release Notes"
 
+msgid "21.0.0"
+msgstr "21.0.0"
+
+msgid "21.0.0-5"
+msgstr "21.0.0-5"
+
+msgid "22.0.0"
+msgstr "22.0.0"
+
+msgid "22.0.0-22"
+msgstr "22.0.0-22"
+
+msgid "22.0.1"
+msgstr "22.0.1"
+
 msgid "5.0.1"
 msgstr "5.0.1"
 
@@ -150,47 +136,14 @@ msgstr "6.0.0"
 msgid "7.0.0"
 msgstr "7.0.0"
 
-msgid "7.0.0.0b1"
-msgstr "7.0.0.0b1"
-
-msgid "7.0.0.0b2"
-msgstr "7.0.0.0b2"
-
-msgid "7.0.0.0b3"
-msgstr "7.0.0.0b3"
-
-msgid "7.0.0.0rc1"
-msgstr "7.0.0.0rc1"
-
 msgid "8.0.0"
 msgstr "8.0.0"
-
-msgid "8.0.0.0b1"
-msgstr "8.0.0.0b1"
-
-msgid "8.0.0.0b2"
-msgstr "8.0.0.0b2"
-
-msgid "8.0.0.0b3"
-msgstr "8.0.0.0b3"
 
 msgid "8.0.7"
 msgstr "8.0.7"
 
 msgid "9.0.0"
 msgstr "9.0.0"
-
-msgid "9.0.0.0b1"
-msgstr "9.0.0.0b1"
-
-msgid "9.0.0.0b2"
-msgstr "9.0.0.0b2"
-
-msgid "9.0.0.0b3"
-msgstr "9.0.0.0b3"
-
-msgid "9.0.0.0rc1"
-msgstr "9.0.0.0rc1"
 
 msgid "9.0.3"
 msgstr "9.0.3"
@@ -372,6 +325,13 @@ msgstr ""
 "action, id and physical_resource_id. And this feature is enabled both in "
 "REST API and CLI. For more details, please refer orchestration API document "
 "and Heat CLI user guide."
+
+msgid ""
+"Add OS::Aodh::PrometheusAlarm resource to enable autoscaling with Prometheus "
+"instead of Gnocchi."
+msgstr ""
+"Add OS::Aodh::PrometheusAlarm resource to enable autoscaling with Prometheus "
+"instead of Gnocchi."
 
 msgid "Add UDP to supported protocols for Octavia."
 msgstr "Add UDP to supported protocols for Octavia."
@@ -900,6 +860,12 @@ msgstr "Allow to set or update the tags for OS::Neutron::Subnet resource."
 msgid "Allow to set or update the tags for OS::Neutron::SubnetPool resource."
 msgstr "Allow to set or update the tags for OS::Neutron::SubnetPool resource."
 
+msgid "Also, the options in ``[clients_sahara]`` section have been removed."
+msgstr "Also, the options in ``[clients_sahara]`` section have been removed."
+
+msgid "Also, the options in ``[clients_senlin]`` section have been removed."
+msgstr "Also, the options in ``[clients_senlin]`` section have been removed."
+
 msgid ""
 "Attempting to specify an sqlalchemy-migrate-based version will result in an "
 "error."
@@ -940,6 +906,15 @@ msgstr ""
 "policies in code. Please be aware that when using that file in your "
 "environment. You still can generate a `policy.yaml` file if that's required "
 "in your environment."
+
+msgid ""
+"Default value of the ``[DEFAULT] hidden_stack_tags`` option has been updated "
+"and now stacks with the ``data-processing-cluster`` tag is not hidden by "
+"default."
+msgstr ""
+"Default value of the ``[DEFAULT] hidden_stack_tags`` option has been updated "
+"and now stacks with the ``data-processing-cluster`` tag is not hidden by "
+"default."
 
 msgid "Deprecation Notes"
 msgstr "Deprecation Notes"
@@ -986,6 +961,13 @@ msgid ""
 msgstr ""
 "Erroneously, availability_zone for host aggregate resource types was "
 "considered mandatory in heat templates."
+
+msgid ""
+"Fixed the ``OS::Heat::UpdateWaitConditionHandle`` resource type, which "
+"caused stack update to fail consistently."
+msgstr ""
+"Fixed the ``OS::Heat::UpdateWaitConditionHandle`` resource type, which "
+"caused stack update to fail consistently."
 
 msgid ""
 "For more information see http://lists.openstack.org/pipermail/openstack-"
@@ -1196,6 +1178,9 @@ msgid "Manila resources now use the 'sharev2' endpoint and API version '2.13'."
 msgstr ""
 "Manila resources now use the 'sharev2' endpoint and API version '2.13'."
 
+msgid "Maximum number of software configs per project is 4096"
+msgstr "Maximum number of software configs per project is 4096"
+
 msgid "Mitaka Series Release Notes"
 msgstr "Mitaka Series Release Notes"
 
@@ -1224,17 +1209,6 @@ msgid ""
 "particular."
 msgstr ""
 "New ``OS::Zaqar::Notification`` and ``OS::Zaqar::MistralTrigger`` resource "
-"types allow users to attach to Zaqar queues (respectively) notifications in "
-"general, and notifications that trigger Mistral workflow executions in "
-"particular."
-
-msgid ""
-"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
-"types allow users to attach to Zaqar queues (respectively) notifications in "
-"general, and notifications that trigger Mistral workflow executions in "
-"particular."
-msgstr ""
-"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
 "types allow users to attach to Zaqar queues (respectively) notifications in "
 "general, and notifications that trigger Mistral workflow executions in "
 "particular."
@@ -2653,6 +2627,24 @@ msgstr ""
 "``OS::Neutron::Port`` resources will now be replaced when the "
 "``mac_address`` property is modified. Neutron is unable to update the MAC "
 "address of a port once the port is in use."
+
+msgid "``OS::Senlin::Cluster``"
+msgstr "``OS::Senlin::Cluster``"
+
+msgid "``OS::Senlin::Node``"
+msgstr "``OS::Senlin::Node``"
+
+msgid "``OS::Senlin::Profile``"
+msgstr "``OS::Senlin::Profile``"
+
+msgid "``OS::Senlin::Receiver``"
+msgstr "``OS::Senlin::Receiver``"
+
+msgid "``[DEFAULT] max_snapshots_per_stack``"
+msgstr "``[DEFAULT] max_snapshots_per_stack``"
+
+msgid "``[DEFAULT] max_software_configis_per_tenant``"
+msgstr "``[DEFAULT] max_software_configis_per_tenant``"
 
 msgid ""
 "``multiattach``` property in ``OS::Cinder::Volume`` is now hidden. Please "
