@@ -501,7 +501,6 @@ function configure_tempest_for_heat {
     iniset $TEMPEST_CONFIG heat_plugin user_domain_name $OS_USER_DOMAIN_NAME
     iniset $TEMPEST_CONFIG heat_plugin project_domain_name $OS_PROJECT_DOMAIN_NAME
     iniset $TEMPEST_CONFIG heat_plugin region $OS_REGION_NAME
-    iniset $TEMPEST_CONFIG heat_plugin auth_version 3
 
     source $TOP_DIR/openrc admin admin
     iniset $TEMPEST_CONFIG heat_plugin admin_username $OS_USERNAME

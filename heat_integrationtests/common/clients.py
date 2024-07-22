@@ -12,7 +12,6 @@
 
 import os
 
-from heat.common.i18n import _
 from heatclient import client as heat_client
 from keystoneauth1.identity.generic import password
 from keystoneauth1 import session
@@ -59,20 +58,14 @@ class ClientManager(object):
     calling various OpenStack APIs.
     """
 
-    HEATCLIENT_VERSION = '1'
+    HEAT_API_VERSION = '1'
+    KEYSTONE_API_VERSION = '3'
     NOVA_API_VERSION = '2.1'
 
     def __init__(self, conf, admin_credentials=False):
         self.conf = conf
         self.admin_credentials = admin_credentials
 
-        self.auth_version = self.conf.auth_version
-        if not self.auth_version:
-            try:
-                self.auth_version = self.conf.auth_url.split('/v')[1]
-            except IndexError:
-                raise ValueError(_('Please specify version in auth_url or '
-                                   'auth_version in config.'))
         self.insecure = self.conf.disable_ssl_certificate_validation
         self.ca_file = self.conf.ca_file
 
@@ -105,7 +98,7 @@ class ClientManager(object):
             session = self.identity_client.session
 
         return heat_client.Client(
-            self.HEATCLIENT_VERSION,
+            self.HEAT_API_VERSION,
             endpoint,
             session=session,
             endpoint_type='publicURL',
@@ -123,15 +116,12 @@ class ClientManager(object):
             'username': self._username(),
             'password': self._password(),
             'project_name': self._project_name(),
-            'auth_url': self.conf.auth_url
+            'auth_url': self.conf.auth_url,
+            'user_domain_id': user_domain_id,
+            'project_domain_id': project_domain_id,
+            'user_domain_name': user_domain_name,
+            'project_domain_name': project_domain_name
         }
-        # keystone v2 can't ignore domain details
-        if self.auth_version == '3':
-            kwargs.update({
-                'user_domain_id': user_domain_id,
-                'project_domain_id': project_domain_id,
-                'user_domain_name': user_domain_name,
-                'project_domain_name': project_domain_name})
         auth = password.Password(**kwargs)
         if self.insecure:
             verify_cert = False
@@ -160,7 +150,7 @@ class ClientManager(object):
 
     def _get_object_client(self):
         args = {
-            'auth_version': self.auth_version,
+            'auth_version': self.KEYSTONE_API_VERSION,
             'session': self.identity_client.session,
             'os_options': {'endpoint_type': 'publicURL',
                            'region_name': self.conf.region,
