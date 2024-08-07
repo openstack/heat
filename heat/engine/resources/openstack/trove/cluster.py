@@ -365,10 +365,16 @@ class TroveCluster(resource.Resource):
                            % self.PORT)
                     raise exception.StackValidationFailed(message=msg)
 
-                if (nic.get(self.NET) is None) == (nic.get(self.PORT) is None):
+                if (nic.get(self.NET) is None and
+                        nic.get(self.PORT) is None):
                     msg = (_("Either %(net)s or %(port)s must be provided.")
                            % {'net': self.NET, 'port': self.PORT})
                     raise exception.StackValidationFailed(message=msg)
+
+                if (nic.get(self.NET) is not None and
+                        nic.get(self.PORT) is not None):
+                    raise exception.ResourcePropertyConflict(
+                        self.NET, self.PORT)
 
     def _resolve_attribute(self, name):
         if self.resource_id is None:
