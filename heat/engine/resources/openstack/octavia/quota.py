@@ -132,10 +132,10 @@ class OctaviaQuota(resource.Resource):
 
         kwargs = dict((k, v) for k, v in props.items()
                       if k != self.PROJECT and v is not None)
-        self.client().quotas.update(props.get(self.PROJECT), **kwargs)
+        self.client().quota_set(props.get(self.PROJECT), **kwargs)
 
     def handle_delete(self):
-        self.client().quotas.delete(self.properties[self.PROJECT])
+        self.client().quota_reset(self.properties[self.PROJECT])
 
     def validate(self):
         super(OctaviaQuota, self).validate()
