@@ -57,14 +57,8 @@ class OcataQuotaTest(common.HeatTestCase):
         )
 
         self.my_quota = self.stack['my_quota']
-        ocata = mock.MagicMock()
-        self.ocataclient = mock.MagicMock()
-        self.my_quota.client = ocata
-        ocata.return_value = self.ocataclient
-        self.quotas = self.ocataclient.quotas
-        self.quota_set = mock.MagicMock()
-        self.quotas.update.return_value = self.quota_set
-        self.quotas.delete.return_value = self.quota_set
+        self.octaviaclient = mock.MagicMock()
+        self.my_quota.client = mock.MagicMock(return_value=self.octaviaclient)
 
     def _test_validate(self, resource, error_msg):
         exc = self.assertRaises(exception.StackValidationFailed,
@@ -103,7 +97,7 @@ class OcataQuotaTest(common.HeatTestCase):
             return_value='some_resource_id')
         self.my_quota.reparse()
         self.my_quota.handle_create()
-        self.quotas.update.assert_called_once_with(
+        self.octaviaclient.quota_set.assert_called_once_with(
             'some_project_id',
             healthmonitor=5,
             listener=5,
@@ -124,7 +118,7 @@ class OcataQuotaTest(common.HeatTestCase):
             properties=props)
         self.my_quota.reparse()
         self.my_quota.handle_update(json_snippet, tmpl_diff, prop_diff)
-        self.quotas.update.assert_called_once_with(
+        self.octaviaclient.quota_set.assert_called_once_with(
             'some_project_id',
             pool=1,
             member=2,
@@ -136,4 +130,5 @@ class OcataQuotaTest(common.HeatTestCase):
     def test_quota_handle_delete(self):
         self.my_quota.reparse()
         self.my_quota.handle_delete()
-        self.quotas.delete.assert_called_once_with('some_project_id')
+        self.octaviaclient.quota_reset.assert_called_once_with(
+            'some_project_id')
