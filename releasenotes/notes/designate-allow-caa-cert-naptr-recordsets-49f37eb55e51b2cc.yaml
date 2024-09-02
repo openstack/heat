@@ -1,0 +1,4 @@
+---
+features:
+  - |
+    Add to ``OS::Designate::RecordSet`` new types: CAA, CERT, NAPTR.

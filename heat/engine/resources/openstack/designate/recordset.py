@@ -37,10 +37,10 @@ class DesignateRecordSet(resource.Resource):
 
     _ALLOWED_TYPES = (
         A, AAAA, CNAME, MX, SRV, TXT, SPF,
-        NS, PTR, SSHFP, SOA
+        NS, PTR, SSHFP, SOA, CAA, CERT, NAPTR
     ) = (
         'A', 'AAAA', 'CNAME', 'MX', 'SRV', 'TXT', 'SPF',
-        'NS', 'PTR', 'SSHFP', 'SOA'
+        'NS', 'PTR', 'SSHFP', 'SOA', 'CAA', 'CERT', 'NAPTR'
     )
 
     properties_schema = {
