@@ -19,7 +19,6 @@ from neutronclient.common import exceptions as neutron_exc
 from neutronclient.v2_0 import client as neutronclient
 
 from heat.common import template_format
-from heat.engine import resource
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.engine import stack as parser
@@ -79,13 +78,7 @@ Resources:
             neutronclient.Client, 'delete_security_group')
         self.m_usg = self.patchobject(
             neutronclient.Client, 'update_security_group')
-        self.patchobject(resource.Resource, 'is_using_neutron',
-                         return_value=True)
         self.sg_name = utils.PhysName('test_stack', 'the_sg')
-
-    def mock_no_neutron(self):
-        self.patchobject(resource.Resource, 'is_using_neutron',
-                         return_value=False)
 
     def create_stack(self, templ):
         self.stack = self.parse_stack(template_format.parse(templ))

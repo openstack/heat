@@ -677,14 +677,8 @@ class Instance(resource.Resource):
                            % {'dbs': missing_db, 'name': self.name})
                     raise exception.StackValidationFailed(message=msg)
 
-        # check validity of NICS
-        is_neutron = self.is_using_neutron()
         nics = self.properties[self.NICS]
         for nic in nics:
-            if not is_neutron and nic.get(self.PORT):
-                msg = _("Can not use %s property on Nova-network.") % self.PORT
-                raise exception.StackValidationFailed(message=msg)
-
             if (nic.get(self.NET) is None) == (nic.get(self.PORT) is None):
                 msg = _("Either %(net)s or %(port)s must be provided.") % {
                     'net': self.NET, 'port': self.PORT}
