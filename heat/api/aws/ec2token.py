@@ -49,6 +49,10 @@ opts = [
                 default=False,
                 help=_('If set, then the server\'s certificate will not '
                        'be verified.')),
+    cfg.FloatOpt('timeout',
+                 default=60,
+                 min=0,
+                 help=_('Timeout in seconds for HTTP requests.')),
 ]
 cfg.CONF.register_opts(opts, group='ec2authtoken')
 
@@ -205,11 +209,13 @@ class EC2Token(wsgi.Middleware):
         headers = {'Content-Type': 'application/json'}
 
         keystone_ec2_uri = self._conf_get_keystone_ec2_uri(auth_uri)
+        timeout = self._conf_get('timeout')
         LOG.info('Authenticating with %s', keystone_ec2_uri)
         response = requests.post(keystone_ec2_uri, data=creds_json,
                                  headers=headers,
                                  verify=self.ssl_options['verify'],
-                                 cert=self.ssl_options['cert'])
+                                 cert=self.ssl_options['cert'],
+                                 timeout=timeout)
         result = response.json()
         try:
             token_id = response.headers['X-Subject-Token']

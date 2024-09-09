@@ -65,7 +65,7 @@ class UrlFetchTest(common.HeatTestCase):
         mock_get = self.patchobject(requests, 'get')
         mock_get.return_value = response
         self.assertEqual(data, urlfetch.get(url))
-        mock_get.assert_called_once_with(url, stream=True)
+        mock_get.assert_called_once_with(url, stream=True, timeout=60)
 
     def test_https_scheme(self):
         url = 'https://example.com/template'
@@ -74,21 +74,21 @@ class UrlFetchTest(common.HeatTestCase):
         mock_get = self.patchobject(requests, 'get')
         mock_get.return_value = response
         self.assertEqual(data, urlfetch.get(url))
-        mock_get.assert_called_once_with(url, stream=True)
+        mock_get.assert_called_once_with(url, stream=True, timeout=60)
 
     def test_http_error(self):
         url = 'http://example.com/template'
         mock_get = self.patchobject(requests, 'get')
         mock_get.side_effect = exceptions.HTTPError()
         self.assertRaises(urlfetch.URLFetchError, urlfetch.get, url)
-        mock_get.assert_called_once_with(url, stream=True)
+        mock_get.assert_called_once_with(url, stream=True, timeout=60)
 
     def test_non_exist_url(self):
         url = 'http://non-exist.com/template'
         mock_get = self.patchobject(requests, 'get')
         mock_get.side_effect = exceptions.Timeout()
         self.assertRaises(urlfetch.URLFetchError, urlfetch.get, url)
-        mock_get.assert_called_once_with(url, stream=True)
+        mock_get.assert_called_once_with(url, stream=True, timeout=60)
 
     def test_garbage(self):
         self.assertRaises(urlfetch.URLFetchError, urlfetch.get, 'wibble')
@@ -101,7 +101,7 @@ class UrlFetchTest(common.HeatTestCase):
         mock_get = self.patchobject(requests, 'get')
         mock_get.return_value = response
         urlfetch.get(url)
-        mock_get.assert_called_once_with(url, stream=True)
+        mock_get.assert_called_once_with(url, stream=True, timeout=60)
 
     def test_max_fetch_size_error(self):
         url = 'http://example.com/template'
@@ -113,4 +113,4 @@ class UrlFetchTest(common.HeatTestCase):
         exception = self.assertRaises(urlfetch.URLFetchError,
                                       urlfetch.get, url)
         self.assertIn("Template exceeds", str(exception))
-        mock_get.assert_called_once_with(url, stream=True)
+        mock_get.assert_called_once_with(url, stream=True, timeout=60)
