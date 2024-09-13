@@ -14,6 +14,7 @@
 from ironicclient.common.apiclient import exceptions as ic_exc
 from ironicclient.v1 import client as ironic_client
 from oslo_config import cfg
+from oslo_utils import versionutils
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
@@ -25,11 +26,11 @@ CLIENT_NAME = 'ironic'
 class IronicClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [BAREMETAL] = ['baremetal']
-    IRONIC_API_VERSION = 1.58
+    IRONIC_API_VERSION = '1.58'
     max_ironic_api_microversion = cfg.CONF.max_ironic_api_microversion
     max_microversion = max_ironic_api_microversion if (
-        max_ironic_api_microversion is not None and (
-            IRONIC_API_VERSION > max_ironic_api_microversion)
+        max_ironic_api_microversion and not versionutils.is_compatible(
+            IRONIC_API_VERSION, max_ironic_api_microversion)
     ) else IRONIC_API_VERSION
 
     def _create(self):

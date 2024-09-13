@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Changed type of the following parameters from integer to string, to
+    correctly parse micro versions with trailing zero (e.g. 2.20).
+
+    - ``[DEFAULT] max_nova_api_microversion``
+    - ``[DEFAULT] max_ironic_api_microversion``
