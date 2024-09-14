@@ -12,36 +12,39 @@
 #    under the License.
 
 from ironicclient.common.apiclient import exceptions as ic_exc
+from ironicclient.common import http
 from ironicclient.v1 import client as ironic_client
 from oslo_config import cfg
 from oslo_utils import versionutils
 
 from heat.common import exception
 from heat.engine.clients import client_plugin
+from heat.engine.clients import microversion_mixin
 from heat.engine import constraints
 
 CLIENT_NAME = 'ironic'
 
 
-class IronicClientPlugin(client_plugin.ClientPlugin):
+class IronicClientPlugin(microversion_mixin.MicroversionMixin,
+                         client_plugin.ClientPlugin):
 
     service_types = [BAREMETAL] = ['baremetal']
-    IRONIC_API_VERSION = '1.58'
-    max_ironic_api_microversion = cfg.CONF.max_ironic_api_microversion
-    max_microversion = max_ironic_api_microversion if (
-        max_ironic_api_microversion and not versionutils.is_compatible(
-            IRONIC_API_VERSION, max_ironic_api_microversion)
-    ) else IRONIC_API_VERSION
+    # TODO(tkajinam): This should probably be detected via API, but current
+    #                 ironicclient does not expose any API for it.
+    IRONIC_API_VERSION = http.LATEST_VERSION
+    max_microversion = cfg.CONF.max_ironic_api_microversion
 
-    def _create(self):
+    def _create(self, version=None):
         interface = self._get_client_option(CLIENT_NAME, 'endpoint_type')
         args = {
             'interface': interface,
             'service_type': self.BAREMETAL,
             'session': self.context.keystone_session,
             'region_name': self._get_region_name(),
-            'os_ironic_api_version': self.max_microversion
         }
+        if version:
+            args['os_ironic_api_version'] = version
+
         client = ironic_client.Client(**args)
         return client
 
@@ -71,6 +74,14 @@ class IronicClientPlugin(client_plugin.ClientPlugin):
     def get_node(self, value):
         return self._get_rsrc_name_or_id(value, entity='node',
                                          entity_msg='Node')
+
+    def get_max_microversion(self):
+        if not self.max_microversion:
+            self.max_microversion = self.IRONIC_API_VERSION
+        return self.max_microversion
+
+    def is_version_supported(self, version):
+        return versionutils.is_compatible(version, self.get_max_microversion())
 
 
 class PortGroupConstraint(constraints.BaseCustomConstraint):
