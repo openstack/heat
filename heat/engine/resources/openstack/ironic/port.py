@@ -11,6 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from oslo_utils import versionutils
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -43,10 +45,11 @@ class Port(resource.Resource):
         'physical_network', 'extra', 'is_smartnic',
     )
     PROPERTIES_MIN_SUPPORT_VERSION = (
-        (PXE_ENABLED, 1.19),
-        (LOCAL_LINK_CONNECTION, 1.191),
-        (PORTGROUP, 1.24), (PHYSICAL_NETWORK, 1.34),
-        (IS_SMARTNIC, 1.53)
+        (PXE_ENABLED, '1.19'),
+        (LOCAL_LINK_CONNECTION, '1.19'),
+        (PORTGROUP, '1.24'),
+        (PHYSICAL_NETWORK, '1.34'),
+        (IS_SMARTNIC, '1.53')
     )
 
     ATTRIBUTES = (
@@ -186,9 +189,10 @@ class Port(resource.Resource):
 
     def _check_supported(self, properties):
         # TODO(ricolin) Implement version support in property schema.
+        max_microversion = self.client_plugin().max_microversion
         for k, v in self.PROPERTIES_MIN_SUPPORT_VERSION:
             if k in properties and properties[k] is not None and (
-                self.client_plugin().max_microversion < v
+                not versionutils.is_compatible(v, max_microversion)
             ):
                 raise exception.NotSupported(
                     feature="OS::Ironic::Port with %s property" % k)

@@ -65,7 +65,7 @@ RESOURCE_TYPE = 'OS::Ironic::Port'
 class TestIronicPort(common.HeatTestCase):
     def setUp(self):
         super(TestIronicPort, self).setUp()
-        cfg.CONF.set_override('max_ironic_api_microversion', 1.11)
+        cfg.CONF.set_override('max_ironic_api_microversion', '1.11')
         cfg.CONF.set_override('action_retry_limit', 0)
         self.fake_node_name = 'node_1'
         self.fake_portgroup_name = 'pg1'
@@ -182,7 +182,7 @@ class TestIronicPort(common.HeatTestCase):
         p = self._create_resource('port-with-%s' % property_name,
                                   new_port, self.stack)
 
-        p.client_plugin().max_microversion = version - 0.01
+        p.client_plugin().max_microversion = version
 
         feature = "OS::Ironic::Port with %s property" % property_name
         err = self.assertRaises(exception.ResourceFailure,
@@ -193,19 +193,19 @@ class TestIronicPort(common.HeatTestCase):
                          str(err))
 
     def test_port_create_with_pxe_enabled_not_supported(self):
-        self._property_not_supported(port.Port.PXE_ENABLED, 1.19)
+        self._property_not_supported(port.Port.PXE_ENABLED, '1.18')
 
     def test_port_create_with_local_link_connection_not_supported(self):
-        self._property_not_supported(port.Port.LOCAL_LINK_CONNECTION, 1.19)
+        self._property_not_supported(port.Port.LOCAL_LINK_CONNECTION, '1.18')
 
     def test_port_create_with_portgroup_not_supported(self):
-        self._property_not_supported(port.Port.PORTGROUP, 1.24)
+        self._property_not_supported(port.Port.PORTGROUP, '1.23')
 
     def test_port_create_with_physical_network_not_supported(self):
-        self._property_not_supported(port.Port.PHYSICAL_NETWORK, 1.34)
+        self._property_not_supported(port.Port.PHYSICAL_NETWORK, '1.33')
 
     def test_port_create_with_is_smartnic_not_supported(self):
-        self._property_not_supported(port.Port.IS_SMARTNIC, 1.53)
+        self._property_not_supported(port.Port.IS_SMARTNIC, '1.52')
 
     def test_port_check_create_complete(self):
         b = self._create_resource('port', self.rsrc_defn, self.stack)
