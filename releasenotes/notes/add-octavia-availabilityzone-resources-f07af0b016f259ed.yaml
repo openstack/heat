@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    The new resources, ``OS::Octavia::AvailabilityZoneProfile`` and
+    ``OS::Octavia::AvailabilityZone``, are added. These resource types allow an
+    operator to create Octavia availabilityzone profile and availabilityzone.
+    A created ``OS::Octavia::AvailabilityZone`` resource can be referred by the
+    ``availability_zone`` property of ``OS::Octavia::LoadBalancer`` resources.

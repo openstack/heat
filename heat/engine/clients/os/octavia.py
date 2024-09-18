@@ -89,6 +89,12 @@ class OctaviaClientPlugin(client_plugin.ClientPlugin):
             value=value, attr=DEFAULT_FIND_ATTR)
         return flavorprofile['id']
 
+    def get_availabilityzoneprofile(self, value):
+        availability_zone_profile = self.client().find(
+            path=constants.BASE_AVAILABILITYZONEPROFILE_URL,
+            value=value, attr=DEFAULT_FIND_ATTR)
+        return availability_zone_profile['id']
+
 
 class OctaviaConstraint(constraints.BaseCustomConstraint):
 
@@ -124,3 +130,11 @@ class FlavorConstraint(OctaviaConstraint):
 
 class FlavorProfileConstraint(OctaviaConstraint):
     base_url = constants.BASE_FLAVORPROFILE_URL
+
+
+class AvailabilityZoneConstraint(OctaviaConstraint):
+    base_url = constants.BASE_AVAILABILITYZONE_URL
+
+
+class AvailabilityZoneProfileConstraint(OctaviaConstraint):
+    base_url = constants.BASE_AVAILABILITYZONEPROFILE_URL

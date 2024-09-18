@@ -151,7 +151,6 @@ resources:
         {"flavor_data_key": "flavor_data_value"}
 '''
 
-
 FLAVOR_TEMPLATE = '''
 heat_template_version: 2016-10-14
 description: Template to test Flavor Octavia resource
@@ -163,4 +162,29 @@ resources:
       name: test_name
       description: test_description
       enabled: True
+'''
+
+AVAILABILITY_ZONE_PROFILE_TEMPLATE = '''
+heat_template_version: 2016-10-14
+description: Template to test AvailabilityZone Octavia resource
+resources:
+  availability_zone_profile:
+    type: OS::Octavia::AvailabilityZoneProfile
+    properties:
+      name: test_availability_zone_profile
+      availability_zone_data: '{"compute_zone": "az-central"}'
+      provider_name: amphora
+'''
+
+AVAILABILITY_ZONE_TEMPLATE = '''
+heat_template_version: 2016-10-14
+description: Template to test AvailabilityZone Octavia resource
+resources:
+  availability_zone:
+    type: OS::Octavia::AvailabilityZone
+    properties:
+      name: test_availability_zone
+      description: my availability zone
+      enabled: True
+      availability_zone_profile: az_profile_id_1234
 '''

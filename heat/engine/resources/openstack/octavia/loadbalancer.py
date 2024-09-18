@@ -101,6 +101,9 @@ class LoadBalancer(octavia_base.OctaviaBase):
             properties.Schema.STRING,
             _('The availability zone of the Load Balancer.'),
             support_status=support.SupportStatus(version='17.0.0'),
+            constraints=[
+                constraints.CustomConstraint('octavia.availabilityzone')
+            ]
         )
 
     }
