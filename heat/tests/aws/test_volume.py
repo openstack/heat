@@ -14,6 +14,7 @@
 import copy
 from unittest import mock
 
+from cinderclient import api_versions
 from cinderclient import exceptions as cinder_exp
 from oslo_config import cfg
 
@@ -623,7 +624,8 @@ class VolumeTest(vt_base.VolumeTestCase):
 
         self.create_volume(self.t, stack, 'DataVolume', no_create=True)
 
-        cinder.CinderClientPlugin._create.assert_called_once_with()
+        cinder.CinderClientPlugin._create.assert_called_once_with(
+            version=api_versions.MAX_VERSION)
         self.m_restore.assert_called_once_with('backup-123')
         self.cinder_fc.volumes.get.assert_called_with('vol-123')
         self.cinder_fc.volumes.update.assert_called_once_with(
@@ -651,7 +653,8 @@ class VolumeTest(vt_base.VolumeTestCase):
         self.assertIn('Went to status error due to "Unknown"',
                       str(ex))
 
-        cinder.CinderClientPlugin._create.assert_called_once_with()
+        cinder.CinderClientPlugin._create.assert_called_once_with(
+            version=api_versions.MAX_VERSION)
         self.m_restore.assert_called_once_with('backup-123')
         self.cinder_fc.volumes.update.assert_called_once_with(
             fv.id, description=vol_name, name=vol_name)

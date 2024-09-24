@@ -13,6 +13,7 @@
 
 from unittest import mock
 
+from cinderclient import api_versions
 from cinderclient.v3 import client as cinderclient
 
 from heat.engine.clients.os import cinder
@@ -32,6 +33,8 @@ class VolumeTestCase(common.HeatTestCase):
         self.fc = fakes_nova.FakeClient()
         self.cinder_fc = cinderclient.Client('username', 'password')
         self.cinder_fc.volume_api_version = 3
+        self.patchobject(cinder.CinderClientPlugin, 'get_max_microversion',
+                         return_value=api_versions.MAX_VERSION)
         self.patchobject(cinder.CinderClientPlugin, '_create',
                          return_value=self.cinder_fc)
         self.patchobject(nova.NovaClientPlugin, 'client',

@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from cinderclient import api_versions
 from cinderclient import client as cc
 from cinderclient import exceptions
 from keystoneauth1 import exceptions as ks_exceptions
@@ -20,6 +21,7 @@ from oslo_log import log as logging
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.clients import client_plugin
+from heat.engine.clients import microversion_mixin
 from heat.engine.clients import os as os_client
 from heat.engine import constraints
 
@@ -29,12 +31,17 @@ LOG = logging.getLogger(__name__)
 CLIENT_NAME = 'cinder'
 
 
-class CinderClientPlugin(os_client.ExtensionMixin,
+class CinderClientPlugin(microversion_mixin.MicroversionMixin,
+                         os_client.ExtensionMixin,
                          client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
     service_types = [VOLUME_V3] = ['volumev3']
+
+    CINDER_API_VERSION = '3'
+
+    max_microversion = cfg.CONF.max_cinder_api_microversion
 
     def get_volume_api_version(self):
         '''Returns the most recent API version.'''
@@ -43,27 +50,37 @@ class CinderClientPlugin(os_client.ExtensionMixin,
             self.context.keystone_session.get_endpoint(
                 service_type=self.VOLUME_V3,
                 interface=self.interface)
-            self.service_type = self.VOLUME_V3
-            self.client_version = '3'
         except ks_exceptions.EndpointNotFound:
             raise exception.Error(_('No volume service available.'))
 
-    def _create(self):
+    def _create(self, version=None):
+        if version is None:
+            version = self.CINDER_API_VERSION
         self.get_volume_api_version()
-        extensions = cc.discover_extensions(self.client_version)
+        extensions = cc.discover_extensions(self.CINDER_API_VERSION)
         args = {
             'session': self.context.keystone_session,
             'extensions': extensions,
             'interface': self.interface,
-            'service_type': self.service_type,
+            'service_type': self.VOLUME_V3,
             'region_name': self._get_region_name(),
             'connect_retries': cfg.CONF.client_retry_limit,
             'http_log_debug': self._get_client_option(CLIENT_NAME,
                                                       'http_log_debug')
         }
-
-        client = cc.Client(self.client_version, **args)
+        client = cc.Client(version, **args)
         return client
+
+    def get_max_microversion(self):
+        if not self.max_microversion:
+            self.max_microversion = api_versions.get_highest_version(
+                self._create()).get_string()
+        return self.max_microversion
+
+    def is_version_supported(self, version):
+        api_ver = api_versions.APIVersion(version)
+        max_api_ver = api_versions.APIVersion(self.get_max_microversion())
+        return max_api_ver >= api_ver
 
     @os_client.MEMOIZE_EXTENSIONS
     def _list_extensions(self):

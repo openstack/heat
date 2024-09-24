@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The new ``[DEFAULT] max_cinder_api_microversion`` option has been added.
+    This option overrides the maximum API microversion supported by Cinder,
+    which is detected automatically by default.
