@@ -368,9 +368,7 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
     def _ready_to_extend_volume(self):
         vol = self.client().volumes.get(self.resource_id)
-        expected_status = (
-            'available', 'in-use') if vol.multiattach else ('available',)
-
+        expected_status = ('available',)
         if vol.status in expected_status:
             LOG.debug("Volume %s is ready to extend.", vol.id)
             return True
@@ -382,7 +380,8 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             LOG.debug("Volume %s is being extended", vol.id)
             return False
 
-        if vol.status != 'available':
+        expected_status = ('available',)
+        if vol.status not in expected_status:
             LOG.info("Resize failed: Volume %(vol)s "
                      "is in %(status)s state.",
                      {'vol': vol.id, 'status': vol.status})

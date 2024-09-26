@@ -1388,10 +1388,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
                                  extra_get_mocks=[
                                      vt_base.FakeVolume('extending'),
                                      vt_base.FakeVolume('reserved'),
-                                     vt_base.FakeVolume('in-use',
-                                                        multiattach=True),
-                                     vt_base.FakeVolume('in-use',
-                                                        multiattach=False),
+                                     vt_base.FakeVolume('in-use'),
                                      vt_base.FakeVolume('available')])
 
         stack = utils.parse_stack(self.t, stack_name=self.stack_name)
@@ -1401,7 +1398,6 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
 
         self.assertEqual(False, rsrc._ready_to_extend_volume())
         self.assertEqual(False, rsrc._ready_to_extend_volume())
-        self.assertEqual(True, rsrc._ready_to_extend_volume())
         self.assertEqual(False, rsrc._ready_to_extend_volume())
         self.assertEqual(True, rsrc._ready_to_extend_volume())
 
