@@ -1,0 +1,6 @@
+---
+features:
+  - |
+    The ``OS::Cinder::Volume`` resource type now supports extending volumes
+    in use. Note that this requires that Cinder supports API microversion
+    3.42 or later. 

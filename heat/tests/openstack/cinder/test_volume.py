@@ -449,6 +449,36 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.stack_name = 'test_cvolume_extend_att_stack'
         self._update_if_attached(self.stack_name)
 
+    def test_cinder_volume_extend_attached_live(self):
+        self.patchobject(cinder.CinderClientPlugin, 'get_max_microversion',
+                         return_value='3.42')
+        self.stack_name = 'test_cvolume_extend_live_att_stack'
+
+        fv = vt_base.FakeVolume('available',
+                                size=1, attachments=[])
+        self._mock_create_volume(vt_base.FakeVolume('creating'),
+                                 self.stack_name,
+                                 extra_get_mocks=[
+                                     fv, vt_base.FakeVolume('extending'),
+                                     vt_base.FakeVolume('extending'),
+                                     vt_base.FakeVolume('in-use')])
+
+        stack = utils.parse_stack(self.t, stack_name=self.stack_name)
+
+        rsrc = self.create_volume(self.t, stack, 'volume')
+
+        props = copy.deepcopy(rsrc.properties.data)
+        props['size'] = 2
+        after = rsrc_defn.ResourceDefinition(rsrc.name, rsrc.type(), props)
+
+        update_task = scheduler.TaskRunner(rsrc.update, after)
+        self.assertIsNone(update_task())
+
+        self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
+        self.cinder_fc.volumes.extend.assert_called_once_with(fv.id, 2)
+        self.fc.volumes.get_server_volume.assert_not_called()
+        self.fc.volumes.delete_server_volume.assert_not_called()
+
     def test_cinder_volume_extend_created_from_backup_with_same_size(self):
         self.stack_name = 'test_cvolume_extend_snapsht_stack'
 
@@ -1389,6 +1419,11 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
                                      vt_base.FakeVolume('extending'),
                                      vt_base.FakeVolume('reserved'),
                                      vt_base.FakeVolume('in-use'),
+                                     vt_base.FakeVolume('available'),
+                                     vt_base.FakeVolume('creating'),
+                                     vt_base.FakeVolume('extending'),
+                                     vt_base.FakeVolume('reserved'),
+                                     vt_base.FakeVolume('in-use'),
                                      vt_base.FakeVolume('available')])
 
         stack = utils.parse_stack(self.t, stack_name=self.stack_name)
@@ -1399,6 +1434,14 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.assertEqual(False, rsrc._ready_to_extend_volume())
         self.assertEqual(False, rsrc._ready_to_extend_volume())
         self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(True, rsrc._ready_to_extend_volume())
+
+        self.patchobject(cinder.CinderClientPlugin, 'get_max_microversion',
+                         return_value='3.42')
+        self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(False, rsrc._ready_to_extend_volume())
+        self.assertEqual(True, rsrc._ready_to_extend_volume())
         self.assertEqual(True, rsrc._ready_to_extend_volume())
 
     def test_try_detach_volume_if_server_was_temporarily_in_error(self):
