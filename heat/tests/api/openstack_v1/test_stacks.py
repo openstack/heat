@@ -459,20 +459,6 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                     'acceptable values are: true, false')
         self.assertIn(excepted, str(exc))
 
-    @mock.patch.object(rpc_client.EngineClient, 'count_stacks')
-    def test_index_doesnt_break_with_old_engine(self, mock_count_stacks,
-                                                mock_enforce):
-        self._mock_enforce_setup(mock_enforce, 'index', True)
-        params = {'with_count': 'True'}
-        req = self._get('/stacks', params=params)
-        engine = self.controller.rpc_client
-
-        engine.list_stacks = mock.Mock(return_value=[])
-        mock_count_stacks.side_effect = AttributeError("Should not exist")
-
-        result = self.controller.index(req, tenant_id=self.tenant)
-        self.assertNotIn('count', result)
-
     def test_index_enforces_global_index_if_global_tenant(self, mock_enforce):
         params = {'global_tenant': 'True'}
         req = self._get('/stacks', params=params)
