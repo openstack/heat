@@ -326,20 +326,15 @@ class StackController(object):
                                              **params)
         count = None
         if with_count:
-            try:
-                # Check if engine has been updated to a version with
-                # support to count_stacks before trying to use it.
-                count = self.rpc_client.count_stacks(cnxt,
-                                                     filters=filter_params,
-                                                     show_deleted=show_deleted,
-                                                     show_nested=show_nested,
-                                                     show_hidden=show_hidden,
-                                                     tags=tags,
-                                                     tags_any=tags_any,
-                                                     not_tags=not_tags,
-                                                     not_tags_any=not_tags_any)
-            except AttributeError as ex:
-                LOG.warning("Old Engine Version: %s", ex)
+            count = self.rpc_client.count_stacks(cnxt,
+                                                 filters=filter_params,
+                                                 show_deleted=show_deleted,
+                                                 show_nested=show_nested,
+                                                 show_hidden=show_hidden,
+                                                 tags=tags,
+                                                 tags_any=tags_any,
+                                                 not_tags=not_tags,
+                                                 not_tags_any=not_tags_any)
 
         return stacks_view.collection(req, stacks=stacks,
                                       count=count,
