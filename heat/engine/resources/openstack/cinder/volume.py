@@ -27,6 +27,8 @@ from heat.engine import translation
 
 LOG = logging.getLogger(__name__)
 
+CINDER_MICROVERSIONS = (MICROVERSION_EXTEND_INUSE,) = ('3.42',)
+
 
 class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
     """A resource that implements Cinder volumes.
@@ -369,6 +371,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
     def _ready_to_extend_volume(self):
         vol = self.client().volumes.get(self.resource_id)
         expected_status = ('available',)
+        if self.client_plugin().is_version_supported(
+                MICROVERSION_EXTEND_INUSE):
+            expected_status = ('available', 'in-use')
         if vol.status in expected_status:
             LOG.debug("Volume %s is ready to extend.", vol.id)
             return True
@@ -381,6 +386,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
             return False
 
         expected_status = ('available',)
+        if self.client_plugin().is_version_supported(
+                MICROVERSION_EXTEND_INUSE):
+            expected_status = ('available', 'in-use')
         if vol.status not in expected_status:
             LOG.info("Resize failed: Volume %(vol)s "
                      "is in %(status)s state.",
@@ -490,7 +498,9 @@ class CinderVolume(vb.BaseVolume, sh.SchedulerHintsMixin):
 
             elif new_size > vol.size:
                 prg_resize = progress.VolumeResizeProgress(size=new_size)
-                prg_detach, prg_attach = self._detach_attach_progress(vol)
+                if not self.client_plugin().is_version_supported(
+                        MICROVERSION_EXTEND_INUSE):
+                    prg_detach, prg_attach = self._detach_attach_progress(vol)
 
         return prg_restore, prg_detach, prg_resize, prg_access, prg_attach
 
