@@ -13,7 +13,6 @@
 
 import collections
 import contextlib
-import datetime as dt
 import itertools
 import pydoc
 import re
@@ -24,6 +23,7 @@ from oslo_config import cfg
 from oslo_log import log as logging
 from oslo_utils import excutils
 from oslo_utils import reflection
+from oslo_utils import timeutils as oslo_timeutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -57,8 +57,6 @@ cfg.CONF.import_opt('observe_on_update', 'heat.common.config')
 cfg.CONF.import_opt('error_wait_time', 'heat.common.config')
 
 LOG = logging.getLogger(__name__)
-
-datetime = dt.datetime
 
 
 def _register_class(resource_type, resource_class):
@@ -1675,7 +1673,7 @@ class Resource(status.ResourceStatus):
 
         LOG.info('updating %s', self)
 
-        self.updated_time = datetime.utcnow()
+        self.updated_time = oslo_timeutils.utcnow()
 
         if new_requires is not None:
             self.requires = self.requires | new_requires

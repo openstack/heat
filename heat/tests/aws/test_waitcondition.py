@@ -604,7 +604,7 @@ class WaitConditionUpdateTest(common.HeatTestCase):
 
         now = timeutils.utcnow()
         fake_clock = [now + datetime.timedelta(0, t)
-                      for t in (0, 0.001, 0.1, 4.1, 5.1)]
+                      for t in (0, 0, 0.001, 0.1, 4.1, 5.1, 5.1)]
         timeutils.set_time_override(fake_clock)
         self.addCleanup(timeutils.clear_time_override)
 

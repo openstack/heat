@@ -12,7 +12,6 @@
 #    under the License.
 
 import collections
-import datetime
 import itertools
 import json
 import os
@@ -22,6 +21,7 @@ import uuid
 
 import eventlet
 from oslo_config import cfg
+from oslo_utils import timeutils as oslo_timeutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -600,7 +600,7 @@ class ResourceTest(common.HeatTestCase):
         res = generic_rsrc.GenericResource('test_resource', tmpl, self.stack)
         res.store()
         self.assertIsNone(res.updated_time)
-        res.updated_time = datetime.datetime.utcnow()
+        res.updated_time = oslo_timeutils.utcnow()
         res.store()
         self.assertIsNotNone(res.updated_time)
 
