@@ -15,6 +15,7 @@
 from unittest import mock
 import uuid
 
+from cinderclient import api_versions as cinder_api_versions
 from cinderclient import exceptions as cinder_exc
 from keystoneauth1 import exceptions as ks_exceptions
 
@@ -160,6 +161,8 @@ class CinderClientAPIVersionTest(common.HeatTestCase):
     def test_cinder_api_v3(self):
         ctx = utils.dummy_context()
         self.patchobject(ctx.keystone_session, 'get_endpoint')
+        ctx.clients.client_plugin(
+            'cinder').max_microversion = cinder_api_versions.MAX_VERSION
         client = ctx.clients.client('cinder')
         self.assertEqual('3.0', client.version)
 

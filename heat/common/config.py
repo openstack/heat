@@ -197,6 +197,12 @@ engine_opts = [
                       'this limitation, any nova feature supported with '
                       'microversion number above max_nova_api_microversion '
                       'will not be available.')),
+    cfg.StrOpt('max_cinder_api_microversion',
+               regex=r'^3\.\d+$',
+               help=_('Maximum cinder API version for client plugin. With '
+                      'this limitation, any cinder feature supported with '
+                      'microversion number above max_cinder_api_microversion '
+                      'will not be available.')),
     cfg.StrOpt('max_ironic_api_microversion',
                regex=r'^1\.\d+$',
                help=_('Maximum ironic API version for client plugin. With '
