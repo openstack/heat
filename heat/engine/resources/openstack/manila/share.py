@@ -204,8 +204,8 @@ class ManilaShare(resource.Resource):
             return
         if name == self.EXPORT_LOCATIONS_ATTR:
             attr = self._request_export_locations()
-        else:
-            attr = getattr(self._request_share(), name)
+            return attr
+        attr = getattr(self._request_share(), name)
         return str(attr)
 
     def handle_create(self):
