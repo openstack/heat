@@ -157,7 +157,7 @@ Resources:
         self.assertEqual(secret.FnGetRefId(), random_string)
         # check, that property was translated according to the TranslationRule
         self.assertIsNone(secret.properties['sequence'])
-        expected = [{'class': u'octdigits', 'min': 1}]
+        expected = [{'class': 'octdigits', 'min': 1}]
         self.assertEqual(expected, secret.properties['character_classes'])
 
     def test_random_string_refid_convergence_cache_data(self):

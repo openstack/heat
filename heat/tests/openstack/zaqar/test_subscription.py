@@ -134,7 +134,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.fc.subscription.assert_called_once_with(
             subscr.properties['queue_name'],
             options={'key1': 'value1'},
-            subscriber=u'mailto:name@domain.com',
+            subscriber='mailto:name@domain.com',
             ttl=3600)
 
     def test_delete(self):
@@ -150,7 +150,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.fc.subscription.assert_called_with(
             subscr.properties['queue_name'],
             options={'key1': 'value1'},
-            subscriber=u'mailto:name@domain.com',
+            subscriber='mailto:name@domain.com',
             ttl=3600)
         scheduler.TaskRunner(subscr.delete)()
         self.fc.subscription.assert_called_with(
@@ -173,7 +173,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.fc.subscription.assert_called_with(
             subscr.properties['queue_name'],
             options={'key1': 'value1'},
-            subscriber=u'mailto:name@domain.com',
+            subscriber='mailto:name@domain.com',
             ttl=3600)
         scheduler.TaskRunner(subscr.delete)()
         self.fc.subscription.assert_called_with(
@@ -199,7 +199,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.fc.subscription.assert_called_with(
             subscr.properties['queue_name'],
             options={'key1': 'value1'},
-            subscriber=u'mailto:name@domain.com',
+            subscriber='mailto:name@domain.com',
             ttl=3600)
         scheduler.TaskRunner(subscr.update, resource_defns['MySubscription'])()
         self.fc.subscription.assert_called_with(
@@ -226,7 +226,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.fc.subscription.assert_called_with(
             subscr.properties['queue_name'],
             options={'key1': 'value1'},
-            subscriber=u'mailto:name@domain.com',
+            subscriber='mailto:name@domain.com',
             ttl=3600)
         err = self.assertRaises(resource.UpdateReplace,
                                 scheduler.TaskRunner(subscr.update,
@@ -255,7 +255,7 @@ class ZaqarSubscriptionTest(common.HeatTestCase):
         self.fc.subscription.assert_called_with(
             subscr.properties['queue_name'],
             options={'key1': 'value1'},
-            subscriber=u'mailto:name@domain.com',
+            subscriber='mailto:name@domain.com',
             ttl=3600)
         self.assertEqual(rsrc_data, subscr._show_resource())
         self.assertEqual(

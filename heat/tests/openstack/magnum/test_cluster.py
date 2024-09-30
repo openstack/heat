@@ -55,12 +55,12 @@ class TestMagnumCluster(common.HeatTestCase):
         super(TestMagnumCluster, self).setUp()
 
         self.resource_id = '12345'
-        self.fake_name = u'test_cluster'
-        self.fake_keypair = u'key'
+        self.fake_name = 'test_cluster'
+        self.fake_keypair = 'key'
         self.fake_cluster_template = '123456'
         self.fake_node_count = 5
         self.fake_master_count = 1
-        self.fake_discovery_url = u'https://discovery.etcd.io'
+        self.fake_discovery_url = 'https://discovery.etcd.io'
         self.fake_create_timeout = 15
         self.fake_api_address = 'https://192.168.0.249:6443'
         self.fake_coe_version = 'v1.5.2'

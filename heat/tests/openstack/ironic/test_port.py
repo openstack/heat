@@ -72,8 +72,8 @@ class TestIronicPort(common.HeatTestCase):
 
         self.resource_id = '9cc6fd32-f711-4e1f-a82d-59e6ae074e95'
         self.fake_name = 'test_port'
-        self.fake_address = u'52:54:00:4d:e1:5e'
-        self.fake_node_uuid = u'22767a68-a7f2-45fe-bc08-335a83e2b919'
+        self.fake_address = '52:54:00:4d:e1:5e'
+        self.fake_node_uuid = '22767a68-a7f2-45fe-bc08-335a83e2b919'
         self.fake_portgroup_uuid = '92972f88-a1e7-490f-866c-b6704d65c4de'
         self.fake_local_link_connection = {'switch_info': 'brbm',
                                            'port_id': 'ovs-node-1i1',

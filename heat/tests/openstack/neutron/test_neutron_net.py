@@ -182,10 +182,10 @@ class NeutronNetTest(common.HeatTestCase):
         rsrc = self.create_net(t, stack, 'network')
         create_mock.assert_called_with(
             {'network':
-                {'name': u'the_network',
+                {'name': 'the_network',
                  'admin_state_up': True,
-                 'tenant_id': u'c1210485b2424d48804aad5d39c61b8f',
-                 'dns_domain': u'openstack.org.',
+                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
+                 'dns_domain': 'openstack.org.',
                  'shared': True,
                  'port_security_enabled': False,
                  'availability_zone_hints': ['az1'],
@@ -194,7 +194,7 @@ class NeutronNetTest(common.HeatTestCase):
         )
         add_dhcp_agent_mock.assert_called_with(
             '28c25a04-3f73-45a7-a2b4-59e183943ddc',
-            {'network_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'})
+            {'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'})
         replace_tag_mock.assert_called_with(
             resource_type,
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
@@ -333,7 +333,7 @@ class NeutronNetTest(common.HeatTestCase):
             'port_security_enabled': True,
             'shared': False,
             'qos_policy_id': 'some',
-            'id': u'5a4bb8a0-5077-4f8a-8140-5430370020e6',
+            'id': '5a4bb8a0-5077-4f8a-8140-5430370020e6',
             'test:property': 'test_value_resp'
         }
         show_net.return_value = {'network': network_resp}

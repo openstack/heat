@@ -58,7 +58,7 @@ class TestInstanceGroup(common.HeatTestCase):
         self.assertEqual(expected, self.instance_group.child_params())
 
     def test_tags_default(self):
-        expected = [{'Value': u'asg',
+        expected = [{'Value': 'asg',
                      'Key': 'metering.groupname'}]
         self.assertEqual(expected, self.instance_group._tags())
 
@@ -66,7 +66,7 @@ class TestInstanceGroup(common.HeatTestCase):
         self.instance_group.properties.data['Tags'] = [
             {'Key': 'fee', 'Value': 'foo'}]
         expected = [{'Key': 'fee', 'Value': 'foo'},
-                    {'Value': u'asg',
+                    {'Value': 'asg',
                      'Key': 'metering.groupname'}]
         self.assertEqual(expected, self.instance_group._tags())
 
@@ -253,8 +253,8 @@ class LoadbalancerReloadTest(common.HeatTestCase):
             'ElasticLoadBalancer',
             'AWS::ElasticLoadBalancing::LoadBalancer',
             {'Instances': ['aaaa', 'bbb'],
-             'Listeners': [{'InstancePort': u'80',
-                            'LoadBalancerPort': u'80',
+             'Listeners': [{'InstancePort': '80',
+                            'LoadBalancerPort': '80',
                             'Protocol': 'HTTP'}],
              'AvailabilityZones': ['nova']}
         )

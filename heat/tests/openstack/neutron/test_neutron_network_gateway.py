@@ -174,7 +174,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
         ref_id = rsrc.FnGetRefId()
-        self.assertEqual(u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', ref_id)
+        self.assertEqual('ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', ref_id)
 
         self.assertRaises(
             exception.InvalidTemplateAttribute, rsrc.FnGetAtt, 'Foo')
@@ -229,7 +229,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                           scheduler.TaskRunner(rsrc.create))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         ref_id = rsrc.FnGetRefId()
-        self.assertEqual(u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', ref_id)
+        self.assertEqual('ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', ref_id)
 
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
         self.assertEqual((rsrc.DELETE, rsrc.COMPLETE), rsrc.state)
@@ -329,10 +329,10 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             rsrc.name,
             rsrc.type(),
             {
-                'name': u'NetworkGatewayUpdate',
+                'name': 'NetworkGatewayUpdate',
                 'devices': [{
-                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                    'interface_name': u'breth1'}],
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth1'}],
                 'connections': [{
                     'network': '6af055d3-26f6-48dd-a597-7611d7e58d35',
                     'segmentation_type': 'vlan',
@@ -345,13 +345,13 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             rsrc.name,
             rsrc.type(),
             {
-                'name': u'NetworkGatewayUpdate',
+                'name': 'NetworkGatewayUpdate',
                 'devices': [{
-                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                    'interface_name': u'breth1'}],
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth1'}],
                 'connections': [{
-                    'network': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                    'segmentation_type': u'flat',
+                    'network': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'segmentation_type': 'flat',
                     'segmentation_id': 0}]
             })
         scheduler.TaskRunner(rsrc.update, snippet_for_update2,
@@ -362,13 +362,13 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             rsrc.name,
             rsrc.type(),
             {
-                'name': u'NetworkGatewayUpdate',
+                'name': 'NetworkGatewayUpdate',
                 'devices': [{
-                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                    'interface_name': u'breth1'}],
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth1'}],
                 'connections': [{
-                    'network': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                    'segmentation_type': u'flat',
+                    'network': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'segmentation_type': 'flat',
                     'segmentation_id': 1}]
             })
         scheduler.TaskRunner(rsrc.update, snippet_for_update3,
@@ -379,13 +379,13 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             rsrc.name,
             rsrc.type(),
             {
-                'name': u'NetworkGatewayUpdate',
+                'name': 'NetworkGatewayUpdate',
                 'devices': [{
-                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                    'interface_name': u'breth2'}],
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth2'}],
                 'connections': [{
-                    'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
-                    'segmentation_type': u'vlan',
+                    'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
+                    'segmentation_type': 'vlan',
                     'segmentation_id': 10}]
             })
         scheduler.TaskRunner(rsrc.update, snippet_for_update4,
@@ -401,9 +401,9 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
             }),
             mock.call({
                 'network_gateway': {
-                    'name': u'NetworkGatewayUpdate',
-                    'devices': [{'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                                 'interface_name': u'breth2'}]
+                    'name': 'NetworkGatewayUpdate',
+                    'devices': [{'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                                 'interface_name': 'breth2'}]
                 }
             }),
         ])
@@ -424,9 +424,9 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
                 'segmentation_type': 'flat'
             }),
             mock.call('ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
-                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+                'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
                 'segmentation_id': 1,
-                'segmentation_type': u'flat'
+                'segmentation_type': 'flat'
             }),
         ])
         self.mockclient.update_network_gateway.assert_has_calls([
@@ -478,10 +478,10 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
         self.mockclient.create_network_gateway.assert_called_once_with({
             'network_gateway': {
-                'name': u'NetworkGateway',
+                'name': 'NetworkGateway',
                 'devices': [{
-                    'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                    'interface_name': u'breth1'}]
+                    'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                    'interface_name': 'breth1'}]
             }
         })
 
@@ -526,7 +526,7 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
         self.mockclient.show_network_gateway.return_value = sng
 
         scheduler.TaskRunner(rsrc.create)()
-        self.assertEqual(u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37',
+        self.assertEqual('ed4c03b9-8251-4c09-acc4-e59ee9e6aa37',
                          rsrc.FnGetRefId())
         self.assertFalse(rsrc.FnGetAtt('default'))
 
@@ -538,16 +538,16 @@ class NeutronNetworkGatewayTest(common.HeatTestCase):
 
         self.mockclient.create_network_gateway.assert_called_once_with({
             'network_gateway': {
-                'name': u'NetworkGateway',
-                'devices': [{'id': u'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
-                             'interface_name': u'breth1'}]
+                'name': 'NetworkGateway',
+                'devices': [{'id': 'e52148ca-7db9-4ec3-abe6-2c7c0ff316eb',
+                             'interface_name': 'breth1'}]
             }
         })
         self.mockclient.connect_network_gateway.assert_called_once_with(
-            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
-                'network_id': u'6af055d3-26f6-48dd-a597-7611d7e58d35',
+            'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37', {
+                'network_id': '6af055d3-26f6-48dd-a597-7611d7e58d35',
                 'segmentation_id': 10,
-                'segmentation_type': u'vlan'
+                'segmentation_type': 'vlan'
             })
         self.mockclient.show_network_gateway.assert_called_with(
-            u'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37')
+            'ed4c03b9-8251-4c09-acc4-e59ee9e6aa37')

@@ -124,11 +124,11 @@ class L7PolicyTest(common.HeatTestCase):
         ]
         expected = {
             'l7policy': {
-                'name': u'test_l7policy',
-                'description': u'test l7policy resource',
-                'action': u'REDIRECT_TO_URL',
-                'listener_id': u'123',
-                'redirect_url': u'http://www.mirantis.com',
+                'name': 'test_l7policy',
+                'description': 'test l7policy resource',
+                'action': 'REDIRECT_TO_URL',
+                'listener_id': '123',
+                'redirect_url': 'http://www.mirantis.com',
                 'position': 1,
                 'admin_state_up': True
             }

@@ -188,7 +188,7 @@ class NeutronRouterTest(common.HeatTestCase):
         stack = utils.parse_stack(t)
         rsrc = stack['router']
         self.assertIsNone(rsrc.properties['l3_agent_id'])
-        self.assertEqual([u'792ff887-6c85-4a56-b518-23f24fa65581'],
+        self.assertEqual(['792ff887-6c85-4a56-b518-23f24fa65581'],
                          rsrc.properties['l3_agent_ids'])
 
     def test_router_validate_distribute_l3_agents(self):
@@ -377,29 +377,29 @@ class NeutronRouterTest(common.HeatTestCase):
         add_router_calls = [
             # create
             mock.call(
-                u'792ff887-6c85-4a56-b518-23f24fa65581',
-                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}),
+                '792ff887-6c85-4a56-b518-23f24fa65581',
+                {'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8'}),
             # first update
             mock.call(
-                u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
-                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}),
+                '63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
+                {'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8'}),
             # second update
             mock.call(
-                u'4c692423-2c5f-4dad-b3ae-e2339f58539f',
-                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'}),
+                '4c692423-2c5f-4dad-b3ae-e2339f58539f',
+                {'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8'}),
             mock.call(
-                u'8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4',
-                {'router_id': u'3e46229d-8fce-4733-819a-b5fe630550f8'})
+                '8363b3fd-2c5f-4dad-b3ae-0f216e0f83a4',
+                {'router_id': '3e46229d-8fce-4733-819a-b5fe630550f8'})
         ]
         remove_router_calls = [
             # first update
             mock.call(
-                u'792ff887-6c85-4a56-b518-23f24fa65581',
-                u'3e46229d-8fce-4733-819a-b5fe630550f8'),
+                '792ff887-6c85-4a56-b518-23f24fa65581',
+                '3e46229d-8fce-4733-819a-b5fe630550f8'),
             # second update
             mock.call(
-                u'63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
-                u'3e46229d-8fce-4733-819a-b5fe630550f8')
+                '63b3fd83-2c5f-4dad-b3ae-e0f83a40f216',
+                '3e46229d-8fce-4733-819a-b5fe630550f8')
         ]
         self.add_router_mock.assert_has_calls(add_router_calls)
         self.remove_router_mock.assert_has_calls(remove_router_calls)

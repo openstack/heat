@@ -124,7 +124,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
 
         self.mockclient.create_network.assert_called_once_with({
             'network': {
-                'name': u'the_provider_network',
+                'name': 'the_provider_network',
                 'admin_state_up': True,
                 'provider:network_type': 'vlan',
                 'provider:physical_network': 'physnet_1',
@@ -177,7 +177,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
 
         self.mockclient.create_network.assert_called_once_with({
             'network': {
-                'name': u'the_provider_network',
+                'name': 'the_provider_network',
                 'admin_state_up': True,
                 'provider:network_type': 'vlan',
                 'provider:physical_network': 'physnet_1',

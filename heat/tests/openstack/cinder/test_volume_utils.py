@@ -51,7 +51,7 @@ class VolumeTestCase(common.HeatTestCase):
 
     def validate_mock_create_server_volume_script(self):
         self.fc.volumes.create_server_volume.assert_called_once_with(
-            device=u'/dev/vdc', server_id=u'WikiDatabase', volume_id='vol-123')
+            device='/dev/vdc', server_id='WikiDatabase', volume_id='vol-123')
 
     def _mock_create_server_volume_script(self, fva,
                                           final_status='in-use',
@@ -100,7 +100,7 @@ class VolumeTestCase(common.HeatTestCase):
                     size=1, availability_zone=az,
                     description=self.vol_name,
                     name=self.vol_name,
-                    metadata={u'Usage': u'Wiki Data Volume'})
+                    metadata={'Usage': 'Wiki Data Volume'})
         return rsrc
 
     def create_attachment(self, t, stack, resource_name):

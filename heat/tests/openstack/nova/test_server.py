@@ -1370,7 +1370,7 @@ class ServersTest(common.HeatTestCase):
                                     resource_defns['WebServer'], stack)
             return server
 
-        server = create_server(u'vda')
+        server = create_server('vda')
         self.assertIsNone(server.validate())
         server = create_server('vda')
         self.assertIsNone(server.validate())

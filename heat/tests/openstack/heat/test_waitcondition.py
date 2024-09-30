@@ -281,7 +281,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
                          'status': 'SUCCESS', 'id': '456'}
         ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(json.loads(u'{"123": "foo", "456": "dog"}'),
+        self.assertEqual(json.loads('{"123": "foo", "456": "dog"}'),
                          json.loads(wc_att))
         self.assertEqual('status:SUCCESS reason:cat', ret)
         mock_get_status.assert_called_once()
@@ -299,7 +299,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
                          'status': 'SUCCESS'}
         ret = handle.handle_signal(details=test_metadata)
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(json.loads(u'{"1": "foo", "2": "dog"}'),
+        self.assertEqual(json.loads('{"1": "foo", "2": "dog"}'),
                          json.loads(wc_att))
         self.assertEqual('status:SUCCESS reason:cat', ret)
         mock_get_status.assert_called_once()
@@ -314,7 +314,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
 
         handle.handle_signal()
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(json.loads(u'{"1": null, "2": null}'),
+        self.assertEqual(json.loads('{"1": null, "2": null}'),
                          json.loads(wc_att))
         mock_get_status.assert_called_once()
 
@@ -332,7 +332,7 @@ class HeatWaitConditionTest(common.HeatTestCase):
         expected = 'status:SUCCESS reason:Signal 2 received'
         self.assertEqual(expected, ret)
         wc_att = rsrc.FnGetAtt('data')
-        self.assertEqual(json.loads(u'{"1": null, "2": null}'),
+        self.assertEqual(json.loads('{"1": null, "2": null}'),
                          json.loads(wc_att))
         mock_get_status.assert_called_once()
 

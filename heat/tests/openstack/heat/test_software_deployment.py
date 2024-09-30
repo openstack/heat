@@ -855,7 +855,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
             'input_values': {'foo': 'bar'},
             'status': 'IN_PROGRESS',
-            'status_reason': u'Deploy data available'},
+            'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
 
     def test_handle_update_no_replace_on_change(self):
@@ -883,7 +883,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
             'config_id': '9966c8e7-bc9c-42de-aa7d-f2447a952cb2',
             'input_values': {'trigger_replace': 'default_value'},
             'status': 'IN_PROGRESS',
-            'status_reason': u'Deploy data available'},
+            'status_reason': 'Deploy data available'},
             self.rpc_client.update_software_deployment.call_args[1])
 
         self.assertEqual([

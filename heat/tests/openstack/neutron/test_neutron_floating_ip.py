@@ -208,7 +208,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.mockclient.create_floatingip.return_value = {
             'floatingip': {
                 'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                'floating_network_id': u'abcd1234'
+                'floating_network_id': 'abcd1234'
             }
         }
 
@@ -217,20 +217,20 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             {
                 'floatingip': {
                     'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                    'floating_network_id': u'abcd1234'
+                    'floating_network_id': 'abcd1234'
                 }
             },
             {
                 'floatingip': {
                     'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                    'floating_network_id': u'abcd1234'
+                    'floating_network_id': 'abcd1234'
                 }
             },
             # Start delete
             {
                 'floatingip': {
                     'id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                    'floating_network_id': u'abcd1234'
+                    'floating_network_id': 'abcd1234'
                 }
             },
             qe.NeutronClientException(status_code=404),
@@ -272,13 +272,13 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.assertRaises(exception.InvalidTemplateAttribute,
                           fip.FnGetAtt, 'Foo')
 
-        self.assertEqual(u'abcd1234', fip.FnGetAtt('floating_network_id'))
+        self.assertEqual('abcd1234', fip.FnGetAtt('floating_network_id'))
         scheduler.TaskRunner(fip.delete)()
         fip.state_set(fip.CREATE, fip.COMPLETE, 'to delete again')
         scheduler.TaskRunner(fip.delete)()
 
         self.mockclient.create_floatingip.assert_called_once_with({
-            'floatingip': {'floating_network_id': u'abcd1234'}
+            'floatingip': {'floating_network_id': 'abcd1234'}
         })
         self.mockclient.show_floatingip.assert_called_with(
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
@@ -446,13 +446,13 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         scheduler.TaskRunner(fip.delete)()
 
         self.mockclient.create_floatingip.assert_called_once_with({
-            'floatingip': {'floating_network_id': u'abcd1234'}
+            'floatingip': {'floating_network_id': 'abcd1234'}
         })
         self.mockclient.create_port.assert_called_once_with({
             'port': {
-                'network_id': u'abcd1234',
+                'network_id': 'abcd1234',
                 'fixed_ips': [
-                    {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
+                    {'subnet_id': 'sub1234', 'ip_address': '10.0.0.10'}
                 ],
                 'name': utils.PhysName(stack.name, 'port_floating'),
                 'admin_state_up': True,
@@ -468,12 +468,12 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             # create as
             mock.call('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                       {'floatingip': {
-                          'port_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+                          'port_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
                       }}),
             # update as with port_id
             mock.call('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                       {'floatingip': {
-                          'port_id': u'2146dfbf-ba77-4083-8e86-d052f671ece5',
+                          'port_id': '2146dfbf-ba77-4083-8e86-d052f671ece5',
                           'fixed_ip_address': None
                       }}),
             # update as with floatingip_id
@@ -481,7 +481,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                       {'floatingip': {'port_id': None}}),
             mock.call('2146dfbf-ba77-4083-8e86-d052f671ece5',
                       {'floatingip': {
-                          'port_id': u'2146dfbf-ba77-4083-8e86-d052f671ece5',
+                          'port_id': '2146dfbf-ba77-4083-8e86-d052f671ece5',
                           'fixed_ip_address': None
                       }}),
             # update as with both
@@ -489,7 +489,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
                       {'floatingip': {'port_id': None}}),
             mock.call('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                       {'floatingip': {
-                          'port_id': u'ade6fcac-7d47-416e-a3d7-ad12efe445c1',
+                          'port_id': 'ade6fcac-7d47-416e-a3d7-ad12efe445c1',
                           'fixed_ip_address': None
                       }}),
             # delete as
@@ -567,7 +567,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.assertEqual('172.24.4.98', fip.FnGetAtt('floating_ip_address'))
 
         self.mockclient.create_floatingip.assert_called_once_with({
-            'floatingip': {'floating_network_id': u'abcd1234',
+            'floatingip': {'floating_network_id': 'abcd1234',
                            'floating_ip_address': '172.24.4.98'}
         })
         self.mockclient.show_floatingip.assert_called_once_with(
@@ -593,7 +593,7 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
 
         self.mockclient.create_floatingip.assert_called_once_with({
-            'floatingip': {'floating_network_id': u'abcd1234',
+            'floatingip': {'floating_network_id': 'abcd1234',
                            'dns_name': 'myvm',
                            'dns_domain': 'openstack.org.'}
         })
@@ -617,8 +617,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         self.assertEqual((fip.CREATE, fip.COMPLETE), fip.state)
 
         self.mockclient.create_floatingip.assert_called_once_with({
-            'floatingip': {'floating_network_id': u'abcd1234',
-                           'subnet_id': u'sub1234'}
+            'floatingip': {'floating_network_id': 'abcd1234',
+                           'subnet_id': 'sub1234'}
         })
 
     def test_floatip_port(self):
@@ -706,9 +706,9 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         self.mockclient.create_port.assert_called_once_with({
             'port': {
-                'network_id': u'xyz1234',
+                'network_id': 'xyz1234',
                 'fixed_ips': [
-                    {'subnet_id': u'sub1234', 'ip_address': u'10.0.0.10'}
+                    {'subnet_id': 'sub1234', 'ip_address': '10.0.0.10'}
                 ],
                 'name': utils.PhysName(stack.name, 'port_floating'),
                 'admin_state_up': True,
@@ -721,15 +721,15 @@ class NeutronFloatingIPTest(common.HeatTestCase):
             'fc68ea2c-b60b-4b4f-bd82-94ec81110766')
         self.mockclient.create_floatingip.assert_called_once_with({
             'floatingip': {
-                'floating_network_id': u'abcd1234',
-                'port_id': u'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
+                'floating_network_id': 'abcd1234',
+                'port_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766'
             }
         })
         self.mockclient.update_floatingip.assert_has_calls([
             # update with new port_id
             mock.call('fc68ea2c-b60b-4b4f-bd82-94ec81110766',
                       {'floatingip': {
-                          'port_id': u'2146dfbf-ba77-4083-8e86-d052f671ece5',
+                          'port_id': '2146dfbf-ba77-4083-8e86-d052f671ece5',
                           'fixed_ip_address': None
                       }}),
             # update with None port_id

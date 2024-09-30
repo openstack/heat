@@ -47,10 +47,10 @@ class SecurityGroupRuleTest(common.HeatTestCase):
             'security_group_rule': {'id': '1234'}}
         expected = {
             'security_group_rule': {
-                'security_group_id': u'123',
-                'description': u'test description',
-                'remote_group_id': u'123',
-                'protocol': u'tcp',
+                'security_group_id': '123',
+                'description': 'test description',
+                'remote_group_id': '123',
+                'protocol': 'tcp',
                 'port_range_min': '100',
                 'direction': 'ingress',
                 'ethertype': 'IPv4'

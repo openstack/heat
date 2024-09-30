@@ -402,7 +402,7 @@ class NeutronTrunkTest(common.HeatTestCase):
 
         self.update_trunk_mock.assert_not_called()
         self.trunk_remove_subports_mock.assert_called_once_with(
-            'trunk id', {'sub_ports': [{'port_id': u'subport_2_id'}]}
+            'trunk id', {'sub_ports': [{'port_id': 'subport_2_id'}]}
         )
         self.trunk_add_subports_mock.assert_not_called()
 
@@ -452,7 +452,7 @@ class NeutronTrunkTest(common.HeatTestCase):
 
         self.update_trunk_mock.assert_not_called()
         self.trunk_remove_subports_mock.assert_called_once_with(
-            'trunk id', {'sub_ports': [{'port_id': u'subport_2_id'}]}
+            'trunk id', {'sub_ports': [{'port_id': 'subport_2_id'}]}
         )
         self.trunk_add_subports_mock.assert_called_once_with(
             'trunk id',

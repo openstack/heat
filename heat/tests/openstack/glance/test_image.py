@@ -229,18 +229,18 @@ class GlanceWebImageTest(common.HeatTestCase):
         # assert that no tags pass when image create
         self.images.create.assert_called_once_with(
             architecture='test_architecture',
-            container_format=u'bare',
-            disk_format=u'qcow2',
-            id=u'41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
+            container_format='bare',
+            disk_format='qcow2',
+            id='41f0e60c-ebb4-4375-a2b4-845ae8b9c995',
             kernel_id='12345678-1234-1234-1234-123456789012',
             os_distro='test_distro',
             ramdisk_id='12345678-1234-1234-1234-123456789012',
             visibility='private',
             min_disk=10,
             min_ram=512,
-            name=u'cirros_image',
+            name='cirros_image',
             protected=False,
-            owner=u'test_owner',
+            owner='test_owner',
             tags=['tag1']
         )
         self.images.update.assert_called_once_with(

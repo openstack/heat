@@ -146,7 +146,7 @@ class NeutronSubnetTest(common.HeatTestCase):
                     {"start": "10.0.3.20", "end": "10.0.3.150"}],
                 "gateway_ip": "10.0.3.1",
                 'host_routes': [
-                    {'destination': u'10.0.4.0/24', 'nexthop': u'10.0.3.20'}],
+                    {'destination': '10.0.4.0/24', 'nexthop': '10.0.3.20'}],
                 "ip_version": 4,
                 "cidr": "10.0.3.0/24",
                 "dns_nameservers": ["8.8.8.8"],
@@ -186,13 +186,13 @@ class NeutronSubnetTest(common.HeatTestCase):
         create_props = {'subnet': {
             'name': utils.PhysName(stack.name, 'test_subnet'),
             'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-            'dns_nameservers': [u'8.8.8.8'],
+            'dns_nameservers': ['8.8.8.8'],
             'allocation_pools': [
-                {'start': u'10.0.3.20', 'end': u'10.0.3.150'}],
+                {'start': '10.0.3.20', 'end': '10.0.3.150'}],
             'host_routes': [
-                {'destination': u'10.0.4.0/24', 'nexthop': u'10.0.3.20'}],
+                {'destination': '10.0.4.0/24', 'nexthop': '10.0.3.20'}],
             'ip_version': 4,
-            'cidr': u'10.0.3.0/24',
+            'cidr': '10.0.3.0/24',
             'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
             'enable_dhcp': True}}
 
@@ -516,10 +516,10 @@ class NeutronSubnetTest(common.HeatTestCase):
             'subnet': {
                 'name': utils.PhysName(stack.name, 'test_subnet'),
                 'network_id': 'fc68ea2c-b60b-4b4f-bd82-94ec81110766',
-                'dns_nameservers': [u'2001:4860:4860::8844'],
+                'dns_nameservers': ['2001:4860:4860::8844'],
                 'ip_version': 6,
                 'enable_dhcp': True,
-                'cidr': u'fdfa:6a50:d22b::/64',
+                'cidr': 'fdfa:6a50:d22b::/64',
                 'tenant_id': 'c1210485b2424d48804aad5d39c61b8f',
                 'ipv6_address_mode': 'slaac',
                 'ipv6_ra_mode': 'slaac'

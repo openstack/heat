@@ -100,7 +100,7 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
     def _check_alarm_create(self):
         expected = {
             'alarm_actions': [],
-            'description': u'Do stuff with gnocchi',
+            'description': 'Do stuff with gnocchi',
             'enabled': True,
             'insufficient_data_actions': [],
             'ok_actions': [],
@@ -136,7 +136,7 @@ class GnocchiResourcesAlarmTest(common.HeatTestCase):
             'foo',
             {
                 'alarm_actions': [],
-                'description': u'Do stuff with gnocchi',
+                'description': 'Do stuff with gnocchi',
                 'enabled': True,
                 'insufficient_data_actions': [],
                 'ok_actions': [],
@@ -270,7 +270,7 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
         self.fc.alarm.create.assert_called_once_with(
             {
                 'alarm_actions': [],
-                'description': u'Do stuff with gnocchi metrics',
+                'description': 'Do stuff with gnocchi metrics',
                 'enabled': True,
                 'insufficient_data_actions': [],
                 'ok_actions': [],
@@ -318,7 +318,7 @@ class GnocchiAggregationByMetricsAlarmTest(GnocchiResourcesAlarmTest):
             'foo',
             {
                 'alarm_actions': [],
-                'description': u'Do stuff with gnocchi metrics',
+                'description': 'Do stuff with gnocchi metrics',
                 'enabled': True,
                 'insufficient_data_actions': [],
                 'ok_actions': [],

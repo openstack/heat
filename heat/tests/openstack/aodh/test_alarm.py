@@ -338,8 +338,8 @@ class AodhAlarmTest(common.HeatTestCase):
         rsrc.properties.data = rsrc.get_alarm_props(properties)
         self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
         query = rsrc.properties.data['threshold_rule']['query']
-        expected_query = [{'field': u'metadata.user_metadata.groupname',
-                           'value': u'foo', 'op': 'eq'}]
+        expected_query = [{'field': 'metadata.user_metadata.groupname',
+                           'value': 'foo', 'op': 'eq'}]
         self.assertEqual(expected_query, query)
 
     def test_alarm_metadata_correct_query_key(self):
@@ -355,8 +355,8 @@ class AodhAlarmTest(common.HeatTestCase):
         rsrc.properties.data = rsrc.get_alarm_props(properties)
         self.assertIsNone(rsrc.properties.data.get('matching_metadata'))
         query = rsrc.properties.data['threshold_rule']['query']
-        expected_query = [{'field': u'metadata.metering.groupname',
-                           'value': u'foo', 'op': 'eq'}]
+        expected_query = [{'field': 'metadata.metering.groupname',
+                           'value': 'foo', 'op': 'eq'}]
         self.assertEqual(expected_query, query)
 
     def test_mem_alarm_high_correct_matching_metadata(self):

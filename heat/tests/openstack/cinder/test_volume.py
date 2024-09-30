@@ -254,23 +254,23 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         stack = utils.parse_stack(self.t, stack_name=self.stack_name)
         rsrc = self.create_volume(self.t, stack, 'volume')
 
-        self.assertEqual(u'zone1', rsrc.FnGetAtt('availability_zone'))
-        self.assertEqual(u'1', rsrc.FnGetAtt('size'))
-        self.assertEqual(u'snap-123', rsrc.FnGetAtt('snapshot_id'))
-        self.assertEqual(u'name', rsrc.FnGetAtt('display_name'))
-        self.assertEqual(u'desc', rsrc.FnGetAtt('display_description'))
-        self.assertEqual(u'lvm', rsrc.FnGetAtt('volume_type'))
+        self.assertEqual('zone1', rsrc.FnGetAtt('availability_zone'))
+        self.assertEqual('1', rsrc.FnGetAtt('size'))
+        self.assertEqual('snap-123', rsrc.FnGetAtt('snapshot_id'))
+        self.assertEqual('name', rsrc.FnGetAtt('display_name'))
+        self.assertEqual('desc', rsrc.FnGetAtt('display_description'))
+        self.assertEqual('lvm', rsrc.FnGetAtt('volume_type'))
         self.assertEqual(json.dumps({'key': 'value'}),
                          rsrc.FnGetAtt('metadata'))
         self.assertEqual({'key': 'value'},
                          rsrc.FnGetAtt('metadata_values'))
-        self.assertEqual(u'None', rsrc.FnGetAtt('source_volid'))
-        self.assertEqual(u'available', rsrc.FnGetAtt('status'))
-        self.assertEqual(u'2013-02-25T02:40:21.000000',
+        self.assertEqual('None', rsrc.FnGetAtt('source_volid'))
+        self.assertEqual('available', rsrc.FnGetAtt('status'))
+        self.assertEqual('2013-02-25T02:40:21.000000',
                          rsrc.FnGetAtt('created_at'))
-        self.assertEqual(u'False', rsrc.FnGetAtt('bootable'))
-        self.assertEqual(u'False', rsrc.FnGetAtt('encrypted'))
-        self.assertEqual(u'[]', rsrc.FnGetAtt('attachments'))
+        self.assertEqual('False', rsrc.FnGetAtt('bootable'))
+        self.assertEqual('False', rsrc.FnGetAtt('encrypted'))
+        self.assertEqual('[]', rsrc.FnGetAtt('attachments'))
         self.assertEqual([], rsrc.FnGetAtt('attachments_list'))
         error = self.assertRaises(exception.InvalidTemplateAttribute,
                                   rsrc.FnGetAtt, 'unknown')
@@ -306,7 +306,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         scheduler.TaskRunner(rsrc.delete)()
 
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 
@@ -337,7 +337,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         scheduler.TaskRunner(rsrc.delete)()
 
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 
@@ -605,7 +605,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone='nova',
             description='test_description',
             name='test_name',
-            metadata={u'key': u'value'})
+            metadata={'key': 'value'})
         self.cinder_fc.volumes.get.assert_called_with(fv.id)
 
     def test_cinder_volume_update_no_need_replace(self):
@@ -659,7 +659,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             extra_create_server_volume_mocks=[fv3])
         attachments = [{'id': 'vol-123',
                         'device': '/dev/vdc',
-                        'server_id': u'WikiDatabase'}]
+                        'server_id': 'WikiDatabase'}]
         fv2 = vt_base.FakeVolume('in-use',
                                  attachments=attachments, size=1)
         fvd = vt_base.FakeVolume('in-use')
@@ -708,7 +708,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         if update_type == 'resize':
             self.cinder_fc.volumes.extend.assert_called_once_with(fvd.id, 2)
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 
@@ -782,7 +782,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         self.assertEqual((rsrc.SNAPSHOT, rsrc.FAILED), rsrc.state)
         self.assertIn(fail_reason, rsrc.status_reason)
 
-        self.assertEqual({u'backup_id': u'backup-123'},
+        self.assertEqual({'backup_id': 'backup-123'},
                          resource_data_object.ResourceData.get_all(rsrc))
         self.cinder_fc.volumes.create.assert_called_once_with(
             size=1, availability_zone=None,
@@ -830,7 +830,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 
@@ -884,7 +884,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             metadata={}
         )
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 
@@ -923,7 +923,7 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
 
         self.assertEqual((rsrc.UPDATE, rsrc.COMPLETE), rsrc.state)
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
 

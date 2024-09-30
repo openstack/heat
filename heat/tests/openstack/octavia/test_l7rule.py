@@ -71,10 +71,10 @@ class L7RuleTest(common.HeatTestCase):
             'rule': {
                 'admin_state_up': True,
                 'invert': False,
-                'type': u'HEADER',
-                'compare_type': u'ENDS_WITH',
-                'key': u'test_key',
-                'value': u'test_value',
+                'type': 'HEADER',
+                'compare_type': 'ENDS_WITH',
+                'key': 'test_key',
+                'value': 'test_value',
                 'invert': False
             }
         }
