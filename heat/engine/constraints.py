@@ -294,7 +294,7 @@ class Constraint(collections.abc.Mapping):
                 yield self.description
             yield self._str()
 
-        return u'\n'.join(desc())
+        return '\n'.join(desc())
 
     def validate(self, value, schema=None, context=None):
         if not self._is_valid(value, schema, context):

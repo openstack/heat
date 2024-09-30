@@ -109,7 +109,7 @@ class CheckResource(object):
             self.retrigger_check_resource(cnxt, rsrc_id, latest_stack)
 
     def _handle_stack_timeout(self, cnxt, stack):
-        failure_reason = u'Timed out'
+        failure_reason = 'Timed out'
         stack.mark_failed(failure_reason)
 
     def _handle_resource_replacement(self, cnxt,
@@ -179,7 +179,7 @@ class CheckResource(object):
                                           stack, reason)
         except scheduler.Timeout:
             self._handle_resource_failure(cnxt, is_update, rsrc.id,
-                                          stack, u'Timed out')
+                                          stack, 'Timed out')
         except CancelOperation:
             # Stack is already marked FAILED, so we just need to retrigger
             # in case a new traversal has started and is waiting on us.

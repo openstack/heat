@@ -446,7 +446,7 @@ class InstanceGroup(stack_resource.StackResource):
         """
         if name == self.INSTANCE_LIST:
             def listify(ips):
-                return u','.join(ips) or None
+                return ','.join(ips) or None
 
             try:
                 output = self.get_output(name)

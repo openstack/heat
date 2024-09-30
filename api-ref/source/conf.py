@@ -61,7 +61,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-copyright = u'2010-present, OpenStack Foundation'
+copyright = '2010-present, OpenStack Foundation'
 
 # openstackdocstheme options
 openstackdocs_repo_name = 'openstack/heat'
@@ -99,7 +99,7 @@ pygments_style = 'native'
 # -- Options for man page output ----------------------------------------------
 
 # Grouping the document tree for man pages.
-# List of tuples 'sourcefile', 'target', u'title', u'Authors name', 'manual'
+# List of tuples 'sourcefile', 'target', 'title', 'Authors name', 'manual'
 
 
 # -- Options for HTML output --------------------------------------------------
@@ -185,8 +185,8 @@ htmlhelp_basename = 'heatdoc'
 # (source start file, target name, title, author, documentclass
 # [howto/manual]).
 latex_documents = [
-    ('index', 'Heat.tex', u'OpenStack Orchestration API Documentation',
-     u'OpenStack Foundation', 'manual'),
+    ('index', 'Heat.tex', 'OpenStack Orchestration API Documentation',
+     'OpenStack Foundation', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

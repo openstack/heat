@@ -172,7 +172,7 @@ class ResourcePages(rst.Directive):
         # Ignore title generated for list items
         if title != '*':
             title = nodes.term('', title)
-            ref = nodes.reference('', u'\xb6')
+            ref = nodes.reference('', '\xb6')
             ref['classes'] = ['headerlink']
             ref['refid'] = id
             title.append(ref)
