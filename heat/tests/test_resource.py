@@ -67,10 +67,10 @@ class ResourceTest(common.HeatTestCase):
         super(ResourceTest, self).setUp()
 
         self.env = environment.Environment()
-        self.env.load({u'resource_registry':
-                      {u'OS::Test::GenericResource': u'GenericResourceType',
-                       u'OS::Test::ResourceWithCustomConstraint':
-                       u'ResourceWithCustomConstraint'}})
+        self.env.load({'resource_registry':
+                      {'OS::Test::GenericResource': 'GenericResourceType',
+                       'OS::Test::ResourceWithCustomConstraint':
+                       'ResourceWithCustomConstraint'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
@@ -1668,7 +1668,7 @@ class ResourceTest(common.HeatTestCase):
                     'Value': {"Fn::GetAtt": ["TestResource", "output2"]}
                 },
                 'show': {
-                    'Description': u'Detailed information about resource.',
+                    'Description': 'Detailed information about resource.',
                     'Value': {"Fn::GetAtt": ["TestResource", "show"]}
                 },
                 'OS::stack_id': {
@@ -1755,7 +1755,7 @@ class ResourceTest(common.HeatTestCase):
                     'value': {"get_attr": ["TestResource", "output2"]}
                 },
                 'show': {
-                    'description': u'Detailed information about resource.',
+                    'description': 'Detailed information about resource.',
                     'value': {"get_attr": ["TestResource", "show"]}
                 },
                 'OS::stack_id': {
@@ -2666,8 +2666,8 @@ class ResourceDeleteRetryTest(common.HeatTestCase):
         super(ResourceDeleteRetryTest, self).setUp()
 
         self.env = environment.Environment()
-        self.env.load({u'resource_registry':
-                      {u'OS::Test::GenericResource': u'GenericResourceType'}})
+        self.env.load({'resource_registry':
+                      {'OS::Test::GenericResource': 'GenericResourceType'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
@@ -4169,10 +4169,10 @@ class TestLiveStateUpdate(common.HeatTestCase):
     def setUp(self):
         super(TestLiveStateUpdate, self).setUp()
         self.env = environment.Environment()
-        self.env.load({u'resource_registry':
-                      {u'OS::Test::GenericResource': u'GenericResourceType',
-                       u'OS::Test::ResourceWithCustomConstraint':
-                       u'ResourceWithCustomConstraint'}})
+        self.env.load({'resource_registry':
+                      {'OS::Test::GenericResource': 'GenericResourceType',
+                       'OS::Test::ResourceWithCustomConstraint':
+                       'ResourceWithCustomConstraint'}})
 
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
                                   template.Template(empty_template,
@@ -4329,8 +4329,8 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         return res
 
     def test_update_restricted(self):
-        self.env_snippet = {u'resource_registry': {
-            u'resources': {
+        self.env_snippet = {'resource_registry': {
+            'resources': {
                 'bar': {'restricted_actions': 'update'}
             }
         }
@@ -4356,8 +4356,8 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                               'update is restricted for resource.')
 
     def test_replace_restricted(self):
-        self.env_snippet = {u'resource_registry': {
-            u'resources': {
+        self.env_snippet = {'resource_registry': {
+            'resources': {
                 'bar': {'restricted_actions': 'replace'}
             }
         }
@@ -4383,8 +4383,8 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                               'replace is restricted for resource.')
 
     def test_update_with_replace_restricted(self):
-        self.env_snippet = {u'resource_registry': {
-            u'resources': {
+        self.env_snippet = {'resource_registry': {
+            'resources': {
                 'bar': {'restricted_actions': 'replace'}
             }
         }
@@ -4404,8 +4404,8 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                               'state changed')
 
     def test_replace_with_update_restricted(self):
-        self.env_snippet = {u'resource_registry': {
-            u'resources': {
+        self.env_snippet = {'resource_registry': {
+            'resources': {
                 'bar': {'restricted_actions': 'update'}
             }
         }
@@ -4428,8 +4428,8 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
         ev.assert_not_called()
 
     def test_replace_restricted_type_change_with_convergence(self):
-        self.env_snippet = {u'resource_registry': {
-            u'resources': {
+        self.env_snippet = {'resource_registry': {
+            'resources': {
                 'bar': {'restricted_actions': 'replace'}
             }
         }
@@ -4460,8 +4460,8 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                               'replace is restricted for resource.')
 
     def test_update_restricted_type_change_with_convergence(self):
-        self.env_snippet = {u'resource_registry': {
-            u'resources': {
+        self.env_snippet = {'resource_registry': {
+            'resources': {
                 'bar': {'restricted_actions': 'update'}
             }
         }

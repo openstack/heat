@@ -333,11 +333,11 @@ Resources:
         self.validate_mock_create_network()
 
         self.mockclient.add_interface_router.assert_called_once_with(
-            u'bbbb', {'subnet_id': 'cccc'})
+            'bbbb', {'subnet_id': 'cccc'})
         self.mockclient.create_subnet.assert_called_once_with(
             {'subnet': {
-                'network_id': u'aaaa',
-                'cidr': u'10.0.0.0/24',
+                'network_id': 'aaaa',
+                'cidr': '10.0.0.0/24',
                 'ip_version': 4,
                 'name': self.subnet_name}})
         self.assertEqual(4, self.mockclient.show_network.call_count)
@@ -389,12 +389,12 @@ Resources:
                           scheduler.TaskRunner(rsrc.create))
         self.assertEqual((rsrc.CREATE, rsrc.FAILED), rsrc.state)
         ref_id = rsrc.FnGetRefId()
-        self.assertEqual(u'cccc', ref_id)
+        self.assertEqual('cccc', ref_id)
 
         self.mockclient.create_subnet.assert_called_once_with(
             {'subnet': {
-                'network_id': u'aaaa',
-                'cidr': u'10.0.0.0/24',
+                'network_id': 'aaaa',
+                'cidr': '10.0.0.0/24',
                 'ip_version': 4,
                 'name': self.subnet_name}})
         self.assertEqual(1, self.mockclient.show_network.call_count)
@@ -523,8 +523,8 @@ Resources:
         self.nic_name = utils.PhysName('test_stack', 'the_nic')
         self._port = {'network_id': 'aaaa',
                       'fixed_ips': [{
-                          'subnet_id': u'cccc',
-                          'ip_address': u'10.0.0.100'
+                          'subnet_id': 'cccc',
+                          'ip_address': '10.0.0.100'
                       }],
                       'name': self.nic_name,
                       'admin_state_up': True}
@@ -717,8 +717,8 @@ Resources:
         self.mockclient.create_router.assert_called_with(
             {'router': {'name': self.rt_name}})
         self.mockclient.add_interface_router.assert_has_calls([
-            mock.call('bbbb', {'subnet_id': u'cccc'}),
-            mock.call('ffff', {'subnet_id': u'cccc'}),
+            mock.call('bbbb', {'subnet_id': 'cccc'}),
+            mock.call('ffff', {'subnet_id': 'cccc'}),
         ])
         self.mockclient.list_networks.assert_called_once_with(
             **{'router:external': True})
@@ -736,8 +736,8 @@ Resources:
 
         stack.delete()
         self.mockclient.remove_interface_router.assert_has_calls([
-            mock.call('ffff', {'subnet_id': u'cccc'}),
-            mock.call('bbbb', {'subnet_id': u'cccc'}),
+            mock.call('ffff', {'subnet_id': 'cccc'}),
+            mock.call('bbbb', {'subnet_id': 'cccc'}),
         ])
         self.mockclient.remove_gateway_router.assert_called_with('ffff')
         self.assertEqual(2, self.mockclient.remove_gateway_router.call_count)
@@ -784,8 +784,8 @@ Resources:
         self.mockclient.create_router.assert_called_with(
             {'router': {'name': self.rt_name}})
         self.mockclient.add_interface_router.assert_has_calls([
-            mock.call('bbbb', {'subnet_id': u'cccc'}),
-            mock.call('ffff', {'subnet_id': u'cccc'}),
+            mock.call('bbbb', {'subnet_id': 'cccc'}),
+            mock.call('ffff', {'subnet_id': 'cccc'}),
         ])
 
         route_table = stack['the_route_table']
@@ -803,8 +803,8 @@ Resources:
 
         stack.delete()
         self.mockclient.remove_interface_router.assert_has_calls([
-            mock.call('ffff', {'subnet_id': u'cccc'}),
-            mock.call('bbbb', {'subnet_id': u'cccc'}),
+            mock.call('ffff', {'subnet_id': 'cccc'}),
+            mock.call('bbbb', {'subnet_id': 'cccc'}),
         ])
         self.mockclient.remove_gateway_router.assert_called_once_with('ffff')
         self.assertEqual(2, self.mockclient.show_subnet.call_count)

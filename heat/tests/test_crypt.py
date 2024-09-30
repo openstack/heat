@@ -37,10 +37,10 @@ class CryptTest(common.HeatTestCase):
         self.assertIn(exp_msg, str(err))
 
     def _test_encrypt_decrypt_dict(self, encryption_key=None):
-        data = {'p1': u'happy',
-                '2': [u'a', u'little', u'blue'],
-                'p3': {u'really': u'exited', u'ok int': 9},
-                '4': u'',
+        data = {'p1': 'happy',
+                '2': ['a', 'little', 'blue'],
+                'p3': {'really': 'exited', 'ok int': 9},
+                '4': '',
                 'p5': True,
                 '6': 7}
         encrypted_data = crypt.encrypted_dict(data, encryption_key)
@@ -61,8 +61,8 @@ class CryptTest(common.HeatTestCase):
         self._test_encrypt_decrypt_dict()
 
     def test_decrypt_dict_invalid_key(self):
-        data = {'p1': u'happy',
-                '2': [u'a', u'little', u'blue'],
+        data = {'p1': 'happy',
+                '2': ['a', 'little', 'blue'],
                 '6': 7}
         encrypted_data = crypt.encrypted_dict(
             data, '767c3ed056cbaa3b9dfedb8c6f825bf0')

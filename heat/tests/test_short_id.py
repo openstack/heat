@@ -62,7 +62,7 @@ class ShortIdTest(common.HeatTestCase):
         self.assertRaises(ValueError, short_id.get_id, source)
 
     def test_generate_ids(self):
-        allowed_chars = [ord(c) for c in u'abcdefghijklmnopqrstuvwxyz234567']
+        allowed_chars = [ord(c) for c in 'abcdefghijklmnopqrstuvwxyz234567']
         ids = [short_id.generate_id() for i in range(25)]
 
         for id in ids:

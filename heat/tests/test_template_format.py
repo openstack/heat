@@ -54,14 +54,14 @@ class JsonToYamlTest(common.HeatTestCase):
     def compare_json_vs_yaml(self, json_str, yml_str):
         yml = template_format.parse(yml_str)
 
-        self.assertEqual(u'2012-12-12', yml[u'HeatTemplateFormatVersion'])
-        self.assertNotIn(u'AWSTemplateFormatVersion', yml)
-        del yml[u'HeatTemplateFormatVersion']
+        self.assertEqual('2012-12-12', yml['HeatTemplateFormatVersion'])
+        self.assertNotIn('AWSTemplateFormatVersion', yml)
+        del yml['HeatTemplateFormatVersion']
 
         jsn = template_format.parse(json_str)
 
-        if u'AWSTemplateFormatVersion' in jsn:
-            del jsn[u'AWSTemplateFormatVersion']
+        if 'AWSTemplateFormatVersion' in jsn:
+            del jsn['AWSTemplateFormatVersion']
 
         self.assertEqual(yml, jsn)
 
@@ -189,8 +189,8 @@ class JsonYamlResolvedCompareTest(common.HeatTestCase):
     def compare_stacks(self, json_file, yaml_file, parameters):
         t1 = self.load_template(json_file)
         t2 = self.load_template(yaml_file)
-        del t1[u'AWSTemplateFormatVersion']
-        t1[u'HeatTemplateFormatVersion'] = t2[u'HeatTemplateFormatVersion']
+        del t1['AWSTemplateFormatVersion']
+        t1['HeatTemplateFormatVersion'] = t2['HeatTemplateFormatVersion']
         stack1 = utils.parse_stack(t1, parameters)
         stack2 = utils.parse_stack(t2, parameters)
 

@@ -524,7 +524,6 @@ class FormatTest(common.HeatTestCase):
                              tmpl, stack_id=str(uuid.uuid4()))
         info = api.format_stack(stack)
 
-        # Should be 'bar,baz' NOT "[u'bar', u'baz']"
         self.assertEqual('bar,baz', info['parameters']['foo'])
 
     def test_format_stack_params_json(self):
@@ -541,7 +540,7 @@ class FormatTest(common.HeatTestCase):
                              tmpl, stack_id=str(uuid.uuid4()))
         info = api.format_stack(stack)
 
-        # Should be '{"bar": "baz"}' NOT "{u'bar': u'baz'}"
+        # Should be '{"bar": "baz"}' NOT "{'bar': 'baz'}"
         self.assertEqual('{"bar": "baz"}', info['parameters']['foo'])
 
 

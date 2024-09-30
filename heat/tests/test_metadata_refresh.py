@@ -333,12 +333,12 @@ class MetadataRefreshServerTest(common.HeatTestCase):
         s1 = stack['instance1']
         s2 = stack['instance2']
         md = s1.metadata_get()
-        self.assertEqual({u'template_data': '192.0.2.1'}, md)
+        self.assertEqual({'template_data': '192.0.2.1'}, md)
 
         # Now set some metadata via the resource, like is done by
         # _populate_deployments_metadata. This should be persisted over
         # calls to metadata_update()
-        new_md = {u'template_data': '192.0.2.2', 'set_by_rsrc': 'orange'}
+        new_md = {'template_data': '192.0.2.2', 'set_by_rsrc': 'orange'}
         s1.metadata_set(new_md)
         md = s1.metadata_get(refresh=True)
         self.assertEqual(new_md, md)

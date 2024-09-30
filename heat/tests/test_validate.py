@@ -1130,14 +1130,14 @@ class ValidateTest(common.HeatTestCase):
             'Parameters': {
                 'size': {'AllowedValues': [1, 4, 8],
                          'Description': '',
-                         'Label': u'size',
+                         'Label': 'size',
                          'NoEcho': 'false',
                          'Type': 'Number'}},
             'Environment': {
                 'event_sinks': [],
                 'parameter_defaults': {
-                    'net_name': u'net2',
-                    'net_name2': u'net3'},
+                    'net_name': 'net2',
+                    'net_name2': 'net3'},
                 'parameters': {},
                 'resource_registry': {'resources': {}}}}
 
@@ -1169,14 +1169,14 @@ class ValidateTest(common.HeatTestCase):
             'Parameters': {
                 'size': {'AllowedValues': [1, 4, 8],
                          'Description': '',
-                         'Label': u'size',
+                         'Label': 'size',
                          'NoEcho': 'false',
                          'Type': 'Number'}},
             'Environment': {
                 'event_sinks': [],
                 'parameter_defaults': {
-                    'net_name': u'net2',
-                    'net_name2': u'net3',
+                    'net_name': 'net2',
+                    'net_name2': 'net3',
                     'merged_param': ['net1', 'net2', 'net3', 'net4']},
                 'parameters': {},
                 'resource_registry': {'resources': {}}}}
@@ -1371,7 +1371,7 @@ class ValidateTest(common.HeatTestCase):
         t = template_format.parse(test_template_volume_snapshot)
 
         res = dict(self.engine.validate_template(self.ctx, t, {}))
-        expected = {'Description': u'test.', 'Parameters': {},
+        expected = {'Description': 'test.', 'Parameters': {},
                     'Environment': self.empty_environment}
         self.assertEqual(expected, res)
 

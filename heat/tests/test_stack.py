@@ -1021,7 +1021,7 @@ class StackTest(common.HeatTestCase):
         self.stack.store()
         self.stack.adopt()
         res = self.stack['AResource']
-        self.assertEqual(u'test-res-id', res.resource_id)
+        self.assertEqual('test-res-id', res.resource_id)
         self.assertEqual('AResource', res.name)
         self.assertEqual('COMPLETE', res.status)
         self.assertEqual('ADOPT', res.action)

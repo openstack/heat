@@ -119,13 +119,13 @@ class TestMergeEnvironments(common.HeatTestCase):
 
         # Verify
         expected = {'parameters': {
-                    'json_value1': {u'3': [u'str3', u'str4']},
-                    'json_value2': {u'4': [u'test3', u'test4']},
+                    'json_value1': {'3': ['str3', 'str4']},
+                    'json_value2': {'4': ['test3', 'test4']},
                     'del_lst_value1': '5,6',
                     'del_lst_value2': '7,8',
                     'lst_value1': [5, 6],
-                    'str_value1': u'string3',
-                    'str_value2': u'string4'},
+                    'str_value1': 'string3',
+                    'str_value2': 'string4'},
                     'resource_registry': {
                         'test::R1': "OS::Heat::RandomString",
                         'test::R2': "OS::Heat::None"},
@@ -146,15 +146,15 @@ class TestMergeEnvironments(common.HeatTestCase):
 
         # Verify
         expected = {'parameters': {
-                    'json_value1': {u'3': [u'str3', u'str4'],
-                                    u'1': [u'str1', u'str2']},  # added
-                    'json_value2': {u'4': [u'test3', u'test4'],
-                                    u'2': [u'test1', u'test2']},
+                    'json_value1': {'3': ['str3', 'str4'],
+                                    '1': ['str1', 'str2']},  # added
+                    'json_value2': {'4': ['test3', 'test4'],
+                                    '2': ['test1', 'test2']},
                     'del_lst_value1': '1,2,5,6',
                     'del_lst_value2': '3,4,7,8',
                     'lst_value1': [1, 2, 5, 6],  # added
-                    'str_value1': u'string1string3',
-                    'str_value2': u'string2string4'},
+                    'str_value1': 'string1string3',
+                    'str_value2': 'string2string4'},
                     'resource_registry': {
                         'test::R1': "OS::Heat::RandomString",
                         'test::R2': "OS::Heat::None"},
@@ -181,14 +181,14 @@ class TestMergeEnvironments(common.HeatTestCase):
 
         # Verify
         expected = {'parameters': {
-                    'json_value1': {u'3': [u'str3', u'str4'],
-                                    u'1': [u'str1', u'str2']},  # added
-                    'json_value2': {u'4': [u'test3', u'test4']},
+                    'json_value1': {'3': ['str3', 'str4'],
+                                    '1': ['str1', 'str2']},  # added
+                    'json_value2': {'4': ['test3', 'test4']},
                     'del_lst_value1': '5,6',
                     'del_lst_value2': '7,8',
                     'lst_value1': [1, 2, 5, 6],  # added
-                    'str_value1': u'string3',
-                    'str_value2': u'string4'},
+                    'str_value1': 'string3',
+                    'str_value2': 'string4'},
                     'resource_registry': {
                         'test::R1': 'OS::Heat::RandomString',
                         'test::R2': 'OS::Heat::None'},

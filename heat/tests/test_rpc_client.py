@@ -144,21 +144,21 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def test_preview_stack(self):
         self._test_engine_api('preview_stack', 'call', stack_name='wordpress',
-                              template={u'Foo': u'bar'},
-                              params={u'InstanceType': u'm1.xlarge'},
-                              files={u'a_file': u'the contents'},
+                              template={'Foo': 'bar'},
+                              params={'InstanceType': 'm1.xlarge'},
+                              files={'a_file': 'the contents'},
                               environment_files=['foo.yaml'],
                               files_container=None,
-                              args={'timeout_mins': u'30'})
+                              args={'timeout_mins': '30'})
 
     def test_create_stack(self):
         kwargs = dict(stack_name='wordpress',
-                      template={u'Foo': u'bar'},
-                      params={u'InstanceType': u'm1.xlarge'},
-                      files={u'a_file': u'the contents'},
+                      template={'Foo': 'bar'},
+                      params={'InstanceType': 'm1.xlarge'},
+                      files={'a_file': 'the contents'},
                       environment_files=['foo.yaml'],
                       files_container=None,
-                      args={'timeout_mins': u'30'})
+                      args={'timeout_mins': '30'})
         call_kwargs = copy.deepcopy(kwargs)
         call_kwargs['owner_id'] = None
         call_kwargs['nested_depth'] = 0
@@ -172,8 +172,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def test_update_stack(self):
         kwargs = dict(stack_identity=self.identity,
-                      template={u'Foo': u'bar'},
-                      params={u'InstanceType': u'm1.xlarge'},
+                      template={'Foo': 'bar'},
+                      params={'InstanceType': 'm1.xlarge'},
                       files={},
                       environment_files=['foo.yaml'],
                       files_container=None,
@@ -188,8 +188,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
     def test_preview_update_stack(self):
         self._test_engine_api('preview_update_stack', 'call',
                               stack_identity=self.identity,
-                              template={u'Foo': u'bar'},
-                              params={u'InstanceType': u'm1.xlarge'},
+                              template={'Foo': 'bar'},
+                              params={'InstanceType': 'm1.xlarge'},
                               files={},
                               environment_files=['foo.yaml'],
                               files_container=None,
@@ -209,8 +209,8 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def test_validate_template(self):
         self._test_engine_api('validate_template', 'call',
-                              template={u'Foo': u'bar'},
-                              params={u'Egg': u'spam'},
+                              template={'Foo': 'bar'},
+                              params={'Egg': 'spam'},
                               files=None,
                               environment_files=['foo.yaml'],
                               files_container=None,
@@ -253,12 +253,12 @@ class EngineRpcAPITestCase(common.HeatTestCase):
 
     def test_find_physical_resource(self):
         self._test_engine_api('find_physical_resource', 'call',
-                              physical_resource_id=u'404d-a85b-5315293e67de')
+                              physical_resource_id='404d-a85b-5315293e67de')
 
     def test_describe_stack_resources(self):
         self._test_engine_api('describe_stack_resources', 'call',
                               stack_identity=self.identity,
-                              resource_name=u'WikiDatabase')
+                              resource_name='WikiDatabase')
 
     def test_list_stack_resources(self):
         self._test_engine_api('list_stack_resources', 'call',
@@ -286,7 +286,7 @@ class EngineRpcAPITestCase(common.HeatTestCase):
         self._test_engine_api('resource_signal', 'call',
                               stack_identity=self.identity,
                               resource_name='LogicalResourceId',
-                              details={u'wordpress': []},
+                              details={'wordpress': []},
                               sync_call=True)
 
     def test_list_software_configs(self):

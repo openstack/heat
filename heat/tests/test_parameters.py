@@ -239,8 +239,8 @@ class ParameterTestSpecific(common.HeatTestCase):
 
     def test_string_value_unicode(self):
         schema = {'Type': 'String'}
-        p = new_parameter('p', schema, u'test\u2665')
-        self.assertEqual(u'test\u2665', p.value())
+        p = new_parameter('p', schema, 'test\u2665')
+        self.assertEqual('test\u2665', p.value())
 
     def test_string_value_list_bad(self):
         schema = {'Type': 'String',

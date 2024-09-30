@@ -687,14 +687,14 @@ class StackServiceTest(common.HeatTestCase):
         cfg.CONF.set_override('enable_stack_abandon', True)
         self.patchobject(parser.Stack, 'load', return_value=self.stack)
         expected_res = {
-            u'WebServer': {
+            'WebServer': {
                 'action': 'CREATE',
                 'metadata': {},
-                'name': u'WebServer',
+                'name': 'WebServer',
                 'resource_data': {},
                 'resource_id': '9999',
                 'status': 'COMPLETE',
-                'type': u'AWS::EC2::Instance'}}
+                'type': 'AWS::EC2::Instance'}}
         self.stack.tags = ['tag1', 'tag2']
         ret = self.eng.export_stack(self.ctx, self.stack.identifier())
         self.assertEqual(11, len(ret))
@@ -1249,7 +1249,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.eng._validate_new_stack,
                                self.ctx, 'test_existing_stack',
                                parsed_template)
-        msg = (u'"Type" is not a valid keyword '
+        msg = ('"Type" is not a valid keyword '
                'inside a resource definition')
 
         self.assertEqual(msg, str(ex))
@@ -1263,7 +1263,7 @@ class StackServiceTest(common.HeatTestCase):
                                self.eng._validate_new_stack,
                                self.ctx, 'test_existing_stack',
                                parsed_template)
-        msg = u'The template section is invalid: unknown_section'
+        msg = 'The template section is invalid: unknown_section'
         self.assertEqual(msg, str(ex))
 
     def test_validate_new_stack_checks_resource_limit(self):

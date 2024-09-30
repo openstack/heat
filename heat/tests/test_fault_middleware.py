@@ -95,7 +95,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
     def test_exception_with_non_ascii_chars(self):
         # We set debug to true to test the code path for serializing traces too
         cfg.CONF.set_override('debug', True)
-        msg = u'Error with non-ascii chars \x80'
+        msg = 'Error with non-ascii chars \x80'
 
         class TestException(heat_exc.HeatException):
             msg_fmt = msg
@@ -103,7 +103,7 @@ class FaultMiddlewareTest(common.HeatTestCase):
         wrapper = fault.FaultWrapper(None)
         msg = wrapper._error(TestException())
         expected = {'code': 500,
-                    'error': {'message': u'Error with non-ascii chars \x80',
+                    'error': {'message': 'Error with non-ascii chars \x80',
                               'traceback': 'None\n',
                               'type': 'TestException'},
                     'explanation': ('The server has either erred or is '

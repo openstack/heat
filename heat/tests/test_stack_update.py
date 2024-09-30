@@ -300,8 +300,8 @@ class StackUpdateTest(common.HeatTestCase):
 
     def test_update_replace_resticted(self):
         env = environment.Environment()
-        env_snippet = {u'resource_registry': {
-            u'resources': {
+        env_snippet = {'resource_registry': {
+            'resources': {
                 'AResource': {'restricted_actions': 'update'}
             }
         }

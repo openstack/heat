@@ -262,11 +262,11 @@ class ValidateGetAttTest(common.HeatTestCase):
         super(ValidateGetAttTest, self).setUp()
 
         env = environment.Environment()
-        env.load({u'resource_registry':
-                  {u'OS::Test::GenericResource': u'GenericResourceType'}})
+        env.load({'resource_registry':
+                  {'OS::Test::GenericResource': 'GenericResourceType'}})
 
-        env.load({u'resource_registry':
-                  {u'OS::Test::FakeResource': u'OverwrittenFnGetAttType'}})
+        env.load({'resource_registry':
+                  {'OS::Test::FakeResource': 'OverwrittenFnGetAttType'}})
 
         tmpl = template.Template({"HeatTemplateFormatVersion": "2012-12-12",
                                   "Resources": {
