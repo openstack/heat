@@ -72,7 +72,7 @@ def update_input_data(context, entity_id, current_traversal,
 
 
 def str_pack_tuple(t):
-    return u'tuple:' + str(tuple(t))
+    return 'tuple:' + str(tuple(t))
 
 
 def _str_unpack_tuple(s):
@@ -83,7 +83,7 @@ def _str_unpack_tuple(s):
 def _deserialize(d):
     d2 = {}
     for k, v in d.items():
-        if isinstance(k, str) and k.startswith(u'tuple:('):
+        if isinstance(k, str) and k.startswith('tuple:('):
             k = _str_unpack_tuple(k)
         if isinstance(v, dict):
             v = _deserialize(v)
