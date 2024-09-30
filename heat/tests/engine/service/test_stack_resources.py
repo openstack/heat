@@ -103,7 +103,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @mock.patch.object(service.EngineService, '_get_stack')
     def test_stack_resource_describe_nonexist_stack(self, mock_get):
         non_exist_identifier = identifier.HeatIdentifier(
-            self.ctx.tenant_id, 'wibble',
+            self.ctx.project_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
         mock_get.side_effect = exception.EntityNotFound(
             entity='Stack', name='test')
@@ -194,7 +194,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
 
     def test_stack_resources_describe_nonexist_stack(self):
         non_exist_identifier = identifier.HeatIdentifier(
-            self.ctx.tenant_id, 'wibble',
+            self.ctx.project_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
         ex = self.assertRaises(dispatcher.ExpectedException,
@@ -307,7 +307,7 @@ class StackResourcesServiceTest(common.HeatTestCase):
     @mock.patch.object(service.EngineService, '_get_stack')
     def test_stack_resources_list_nonexist_stack(self, mock_get):
         non_exist_identifier = identifier.HeatIdentifier(
-            self.ctx.tenant_id, 'wibble',
+            self.ctx.project_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
         mock_get.side_effect = exception.EntityNotFound(entity='Stack',
                                                         name='test')

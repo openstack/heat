@@ -724,7 +724,7 @@ class StackServiceTest(common.HeatTestCase):
 
     def test_stack_describe_nonexistent(self):
         non_exist_identifier = identifier.HeatIdentifier(
-            self.ctx.tenant_id, 'wibble',
+            self.ctx.project_id, 'wibble',
             '18d06e2e-44d3-4bef-9fbf-52480d604b02')
 
         stack_not_found_exc = exception.EntityNotFound(

@@ -514,11 +514,11 @@ class EngineService(service.ServiceBase):
             raise exception.EntityNotFound(entity='Stack',
                                            name=identity.stack_name)
 
-        if not cnxt.is_admin and cnxt.tenant_id not in (
+        if not cnxt.is_admin and cnxt.project_id not in (
                 identity.tenant, s.stack_user_project_id):
             # The DB API should not allow this, but sanity-check anyway..
             raise exception.InvalidTenant(target=identity.tenant,
-                                          actual=cnxt.tenant_id)
+                                          actual=cnxt.project_id)
 
         if identity.path or s.name != identity.stack_name:
             raise exception.EntityNotFound(entity='Stack',
@@ -2143,7 +2143,7 @@ class EngineService(service.ServiceBase):
 
         with lock.thread_lock():
             snapshot = snapshot_object.Snapshot.create(cnxt, {
-                'tenant': cnxt.tenant_id,
+                'tenant': cnxt.project_id,
                 'name': name,
                 'stack_id': stack.id,
                 'status': 'IN_PROGRESS'})

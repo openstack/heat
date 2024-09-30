@@ -169,7 +169,7 @@ class NovaFlavor(resource.Resource):
             if not tenants:
                 LOG.info('Tenant property is recommended '
                          'for the private flavors.')
-                tenant = self.stack.context.tenant_id
+                tenant = self.stack.context.project_id
                 self.client().flavor_access.add_tenant_access(flavor, tenant)
             else:
                 for tenant in tenants:

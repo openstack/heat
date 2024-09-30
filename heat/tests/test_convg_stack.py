@@ -541,7 +541,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
         snapshot_values = {
             'stack_id': stack.id,
             'name': 'fake_snapshot',
-            'tenant': stack.context.tenant_id,
+            'tenant': stack.context.project_id,
             'status': 'COMPLETE',
             'data': None
         }

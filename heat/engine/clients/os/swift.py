@@ -86,7 +86,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         return bool(len(parts) == 5 and
                     not parts[0] and
                     parts[1] == 'v1' and
-                    parts[2].endswith(self.context.tenant_id) and
+                    parts[2].endswith(self.context.project_id) and
                     parts[3] and
                     parts[4].strip('/'))
 
@@ -102,7 +102,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
 
         key = self.client().head_account()[key_header]
 
-        path = '/v1/AUTH_%s/%s/%s' % (self.context.tenant_id, container_name,
+        path = '/v1/AUTH_%s/%s/%s' % (self.context.project_id, container_name,
                                       obj_name)
         if timeout is None:
             timeout = int(MAX_EPOCH - 60 - time.time())

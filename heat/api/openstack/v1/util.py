@@ -35,9 +35,9 @@ def registered_policy_enforce(handler):
         # bypass project_id check, because admin should have access to all
         # projects.
         if req.context.is_admin and req.context.project_id:
-            tenant_id = req.context.tenant_id
+            tenant_id = req.context.project_id
         _target = {"project_id": tenant_id}
-        if req.context.tenant_id != tenant_id:
+        if req.context.project_id != tenant_id:
             raise exc.HTTPForbidden()
         allowed = req.context.policy.enforce(
             context=req.context,
@@ -61,7 +61,7 @@ def no_policy_enforce(handler):
     """
     @functools.wraps(handler)
     def handle_stack_method(controller, req, tenant_id, **kwargs):
-        if req.context.tenant_id != tenant_id and not req.context.is_admin:
+        if req.context.project_id != tenant_id and not req.context.is_admin:
             raise exc.HTTPForbidden()
         return handler(controller, req, **kwargs)
 
@@ -80,7 +80,7 @@ def registered_identified_stack(handler):
 def _identified_stack(handler):
     @functools.wraps(handler)
     def handle_stack_method(controller, req, stack_name, stack_id, **kwargs):
-        stack_identity = identifier.HeatIdentifier(req.context.tenant_id,
+        stack_identity = identifier.HeatIdentifier(req.context.project_id,
                                                    stack_name,
                                                    stack_id)
         return handler(controller, req, dict(stack_identity), **kwargs)

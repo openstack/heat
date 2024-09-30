@@ -504,10 +504,10 @@ class StackTest(common.HeatTestCase):
         "resource_id": null, "action": "INIT", "type": "GenericResourceType",
         "metadata": {}}}'''
         env = environment.Environment({'parameters': {'param1': 'test'}})
-        self.ctx.tenant_id = '123'
+        self.ctx.project_id = '123'
         self.stack = stack.Stack(self.ctx, 'stack_details_test',
                                  template.Template(tpl, env=env),
-                                 tenant_id=self.ctx.tenant_id,
+                                 tenant_id=self.ctx.project_id,
                                  stack_user_project_id='234',
                                  tags=['tag1', 'tag2'])
         self.stack.store()

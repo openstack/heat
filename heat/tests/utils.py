@@ -102,7 +102,7 @@ def dummy_system_admin_context():
     ctx = dummy_context(roles=['admin', 'member', 'reader'])
     ctx.system_scope = 'all'
     ctx.project_id = None
-    ctx.tenant_id = None
+    ctx.project_id = None
     return ctx
 
 
@@ -115,7 +115,7 @@ def dummy_system_reader_context():
     ctx = dummy_context(roles=['reader'])
     ctx.system_scope = 'all'
     ctx.project_id = None
-    ctx.tenant_id = None
+    ctx.project_id = None
     return ctx
 
 

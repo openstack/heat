@@ -206,7 +206,7 @@ class Stack(collections.abc.Mapping):
 
         # This will use the provided tenant ID when loading the stack
         # from the DB or get it from the context for new stacks.
-        self.tenant_id = tenant_id or self.context.tenant_id
+        self.tenant_id = tenant_id or self.context.project_id
         self.username = username or self.context.username
 
         resources.initialise()
@@ -553,7 +553,7 @@ class Stack(collections.abc.Mapping):
             stored_context = common_context.StoredContext.from_dict(creds)
 
             if cfg.CONF.deferred_auth_method == 'trusts':
-                old_trustor_proj_id = stored_context.tenant_id
+                old_trustor_proj_id = stored_context.project_id
                 old_trustor_user_id = stored_context.trustor_user_id
 
                 trustor_user_id = context.auth_plugin.get_user_id(

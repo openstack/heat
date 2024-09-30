@@ -80,7 +80,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
         :param image_identifier: image name or a UUID-like identifier
         :returns: the id of the requested :image_identifier:
         """
-        return self._find_image_id(self.context.tenant_id,
+        return self._find_image_id(self.context.project_id,
                                    image_identifier)
 
     @os_client.MEMOIZE_FINDER

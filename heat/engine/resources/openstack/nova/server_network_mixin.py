@@ -345,7 +345,7 @@ class ServerNetworkMixin(object):
 
     def _get_available_networks(self):
         # first we get the private networks owned by the tenant
-        search_opts = {'tenant_id': self.context.tenant_id, 'shared': False,
+        search_opts = {'tenant_id': self.context.project_id, 'shared': False,
                        'admin_state_up': True, }
         nc = self.client('neutron')
         nets = nc.list_networks(**search_opts).get('networks', [])
@@ -359,7 +359,7 @@ class ServerNetworkMixin(object):
 
     def _auto_allocate_network(self):
         topology = self.client('neutron').get_auto_allocated_topology(
-            self.context.tenant_id)['auto_allocated_topology']
+            self.context.project_id)['auto_allocated_topology']
 
         return topology['id']
 

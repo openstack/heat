@@ -980,7 +980,7 @@ class WithTemplateTest(StackResourceBaseTest):
     def test_update_with_template(self):
         if self.adopt_data is not None:
             return
-        ident = identifier.HeatIdentifier(self.ctx.tenant_id, 'fake_name',
+        ident = identifier.HeatIdentifier(self.ctx.project_id, 'fake_name',
                                           'pancakes')
         self.parent_resource.resource_id = ident.stack_id
         self.parent_resource.nested_identifier = mock.Mock(return_value=ident)
@@ -1014,7 +1014,7 @@ class WithTemplateTest(StackResourceBaseTest):
 
         if self.adopt_data is not None:
             return
-        ident = identifier.HeatIdentifier(self.ctx.tenant_id, 'fake_name',
+        ident = identifier.HeatIdentifier(self.ctx.project_id, 'fake_name',
                                           'pancakes')
         self.parent_resource.resource_id = ident.stack_id
         self.parent_resource.nested_identifier = mock.Mock(return_value=ident)

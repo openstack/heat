@@ -1049,7 +1049,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIsNone(load_creds.get('region_name'))
 
     def test_software_config_create(self):
-        tenant_id = self.ctx.tenant_id
+        tenant_id = self.ctx.project_id
         config = db_api.software_config_create(
             self.ctx, {'name': 'config_mysql',
                        'tenant': tenant_id})
@@ -1071,7 +1071,7 @@ class SqlAlchemyTest(common.HeatTestCase):
             'config': conf,
             'options': {}
         }
-        tenant_id = self.ctx.tenant_id
+        tenant_id = self.ctx.project_id
         values = {'name': 'config_mysql',
                   'tenant': tenant_id,
                   'group': 'Heat::Shell',
@@ -1098,7 +1098,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIsNotNone(config)
 
     def _create_software_config_record(self):
-        tenant_id = self.ctx.tenant_id
+        tenant_id = self.ctx.project_id
         software_config = db_api.software_config_create(
             self.ctx, {'name': 'config_mysql',
                        'tenant': tenant_id})
@@ -1156,7 +1156,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         db_api.software_config_delete(admin_ctx, scf_id)
 
     def test_software_config_delete_not_allowed(self):
-        tenant_id = self.ctx.tenant_id
+        tenant_id = self.ctx.project_id
         config = db_api.software_config_create(
             self.ctx, {'name': 'config_mysql',
                        'tenant': tenant_id})
@@ -1176,7 +1176,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertIn(msg, str(err))
 
     def _deployment_values(self):
-        tenant_id = self.ctx.tenant_id
+        tenant_id = self.ctx.project_id
         stack_user_project_id = str(uuid.uuid4())
         config_id = db_api.software_config_create(
             self.ctx, {'name': 'config_mysql', 'tenant': tenant_id}).id
@@ -1325,7 +1325,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.assertIsNotNone(snapshot)
@@ -1335,7 +1335,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id, 'name': 'snap1'}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.assertIsNotNone(snapshot)
@@ -1353,7 +1353,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.assertIsNotNone(snapshot)
@@ -1369,7 +1369,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
         stack1 = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.assertIsNotNone(snapshot)
@@ -1382,7 +1382,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.ctx.project_id = str(uuid.uuid4())
@@ -1403,7 +1403,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         snapshot_id = snapshot.id
@@ -1423,7 +1423,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         snapshot_id = snapshot.id
@@ -1443,7 +1443,7 @@ class SqlAlchemyTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        values = {'tenant': self.ctx.tenant_id, 'status': 'IN_PROGRESS',
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
                   'stack_id': stack.id}
         snapshot = db_api.snapshot_create(self.ctx, values)
         self.assertIsNotNone(snapshot)
@@ -1460,19 +1460,19 @@ class SqlAlchemyTest(common.HeatTestCase):
         stack2 = create_stack(self.ctx, template, user_creds)
         values = [
             {
-                'tenant': self.ctx.tenant_id,
+                'tenant': self.ctx.project_id,
                 'status': 'IN_PROGRESS',
                 'stack_id': stack1.id,
                 'name': 'snp1'
             },
             {
-                'tenant': self.ctx.tenant_id,
+                'tenant': self.ctx.project_id,
                 'status': 'IN_PROGRESS',
                 'stack_id': stack1.id,
                 'name': 'snp1'
             },
             {
-                'tenant': self.ctx.tenant_id,
+                'tenant': self.ctx.project_id,
                 'status': 'IN_PROGRESS',
                 'stack_id': stack2.id,
                 'name': 'snp2'
@@ -1703,7 +1703,7 @@ class DBAPIUserCredsTest(common.HeatTestCase):
         self.assertIsNone(user_creds['username'])
         self.assertIsNone(user_creds['password'])
         self.assertEqual(self.ctx.project_name, user_creds['tenant'])
-        self.assertEqual(self.ctx.tenant_id, user_creds['tenant_id'])
+        self.assertEqual(self.ctx.project_id, user_creds['tenant_id'])
 
     def test_user_creds_create_password(self):
         user_creds = create_user_creds(self.ctx)
@@ -1798,7 +1798,7 @@ class DBAPIStackTest(common.HeatTestCase):
         self.assertEqual(12, len(stack.name))
         self.assertEqual(self.template.id, stack.raw_template_id)
         self.assertEqual(self.ctx.username, stack.username)
-        self.assertEqual(self.ctx.tenant_id, stack.tenant)
+        self.assertEqual(self.ctx.project_id, stack.tenant)
         self.assertEqual('create', stack.action)
         self.assertEqual('complete', stack.status)
         self.assertEqual('create_complete', stack.status_reason)

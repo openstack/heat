@@ -259,7 +259,7 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
         :param flavor: the name of the flavor to find
         :returns: the id of :flavor:
         """
-        return self._find_flavor_id(self.context.tenant_id,
+        return self._find_flavor_id(self.context.project_id,
                                     flavor)
 
     @os_client.MEMOIZE_FINDER

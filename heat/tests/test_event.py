@@ -200,7 +200,7 @@ class EventTest(EventCommon):
         expected_identifier = {
             'stack_name': self.stack.name,
             'stack_id': self.stack.id,
-            'tenant': self.ctx.tenant_id,
+            'tenant': self.ctx.project_id,
             'path': '/resources/EventTestResource/events/%s' % str(event_uuid)
         }
         self.assertEqual(expected_identifier, e.identifier())

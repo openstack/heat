@@ -137,7 +137,7 @@ class StackResource(resource.Resource):
         if self.resource_id is None:
             return None
         return identifier.HeatIdentifier(
-            self.context.tenant_id,
+            self.context.project_id,
             self.physical_resource_name(),
             self.resource_id)
 

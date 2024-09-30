@@ -355,7 +355,7 @@ class StackController(object):
                 req.params.get(name))
 
         if global_tenant:
-            return self.global_index(req, req.context.tenant_id)
+            return self.global_index(req, req.context.project_id)
 
         return self._index(req)
 
@@ -511,7 +511,7 @@ class StackController(object):
         Add the flag patch to the args so the engine code can distinguish
         """
         data = InstantiationData(body, patch=True)
-        _target = {"project_id": req.context.tenant_id}
+        _target = {"project_id": req.context.project_id}
 
         policy_act = 'update_no_change' if data.no_change() else 'update_patch'
         allowed = req.context.policy.enforce(

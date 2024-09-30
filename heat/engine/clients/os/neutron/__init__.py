@@ -101,7 +101,7 @@ class NeutronClientPlugin(os_client.ExtensionMixin,
         """
         cmd_resource = (cmd_resource or
                         self._res_cmdres_mapping.get(resource))
-        return self._find_resource_id(self.context.tenant_id,
+        return self._find_resource_id(self.context.project_id,
                                       resource, name_or_id,
                                       cmd_resource)
 

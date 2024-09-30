@@ -56,7 +56,7 @@ class ClientsTest(common.HeatTestCase):
 
     def test_clients_get_heat_url(self):
         con = mock.Mock()
-        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.project_id = "b363706f891f48019483f8bd6503c54b"
         c = clients.Clients(con)
         con.clients = c
 
@@ -115,7 +115,7 @@ class ClientsTest(common.HeatTestCase):
         self.stub_keystoneclient()
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
-        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.project_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
         con.clients = c
@@ -130,7 +130,7 @@ class ClientsTest(common.HeatTestCase):
     def test_clients_heat_no_auth_token(self, mock_call):
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
-        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.project_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = None
         con.auth_plugin = fakes.FakeAuth(auth_token='anewtoken')
         c = clients.Clients(con)
@@ -146,7 +146,7 @@ class ClientsTest(common.HeatTestCase):
         self.stub_auth()
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
-        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.project_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         con.trust_id = None
         c = clients.Clients(con)
@@ -177,7 +177,7 @@ class ClientPluginTest(common.HeatTestCase):
     def test_get_client_option(self):
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
-        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.project_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
         con.clients = c
@@ -306,7 +306,7 @@ class TestClientPluginsInitialise(common.HeatTestCase):
     def test_create_all_clients(self):
         con = mock.Mock()
         con.auth_url = "http://auth.example.com:5000/v2.0"
-        con.tenant_id = "b363706f891f48019483f8bd6503c54b"
+        con.project_id = "b363706f891f48019483f8bd6503c54b"
         con.auth_token = "3bcc3d3a03f44e3d8377f9247b0ad155"
         c = clients.Clients(con)
         con.clients = c

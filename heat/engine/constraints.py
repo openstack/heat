@@ -705,7 +705,7 @@ class BaseCustomConstraint(object):
                 return True
         class_name = reflection.get_class_name(self, fully_qualified=False)
         cache_value_prefix = "{0}:{1}".format(class_name,
-                                              str(context.tenant_id))
+                                              str(context.project_id))
         validation_result = check_cache_or_validate_value(
             cache_value_prefix, value)
         # if validation failed we should not store it in cache
