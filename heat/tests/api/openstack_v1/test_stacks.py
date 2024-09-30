@@ -90,9 +90,9 @@ parameters:
 foo: bar
 blarg: wibble
 '''
-        parsed = {u'HeatTemplateFormatVersion': u'2012-12-12',
-                  u'blarg': u'wibble',
-                  u'foo': u'bar'}
+        parsed = {'HeatTemplateFormatVersion': '2012-12-12',
+                  'blarg': 'wibble',
+                  'foo': 'bar'}
 
         body = {'template': template}
         data = stacks.InstantiationData(body)
@@ -266,21 +266,21 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'stack_identity': dict(identity),
-                u'updated_time': u'2012-07-09T09:13:11Z',
-                u'template_description': u'blah',
-                u'description': u'blah',
-                u'stack_status_reason': u'Stack successfully created',
-                u'creation_time': u'2012-07-09T09:12:45Z',
-                u'stack_name': identity.stack_name,
-                u'stack_action': u'CREATE',
-                u'stack_status': u'COMPLETE',
-                u'parameters': {},
-                u'outputs': [],
-                u'notification_topics': [],
-                u'capabilities': [],
-                u'disable_rollback': True,
-                u'timeout_mins': 60,
+                'stack_identity': dict(identity),
+                'updated_time': '2012-07-09T09:13:11Z',
+                'template_description': 'blah',
+                'description': 'blah',
+                'stack_status_reason': 'Stack successfully created',
+                'creation_time': '2012-07-09T09:12:45Z',
+                'stack_name': identity.stack_name,
+                'stack_action': 'CREATE',
+                'stack_status': 'COMPLETE',
+                'parameters': {},
+                'outputs': [],
+                'notification_topics': [],
+                'capabilities': [],
+                'disable_rollback': True,
+                'timeout_mins': 60,
             }
         ]
         mock_call.return_value = engine_resp
@@ -293,12 +293,12 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                     'links': [{"href": self._url(identity),
                                "rel": "self"}],
                     'id': '1',
-                    u'updated_time': u'2012-07-09T09:13:11Z',
-                    u'description': u'blah',
-                    u'stack_status_reason': u'Stack successfully created',
-                    u'creation_time': u'2012-07-09T09:12:45Z',
-                    u'stack_name': u'wordpress',
-                    u'stack_status': u'CREATE_COMPLETE'
+                    'updated_time': '2012-07-09T09:13:11Z',
+                    'description': 'blah',
+                    'stack_status_reason': 'Stack successfully created',
+                    'creation_time': '2012-07-09T09:12:45Z',
+                    'stack_name': 'wordpress',
+                    'stack_status': 'CREATE_COMPLETE'
                 }
             ]
         }
@@ -622,21 +622,21 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'stack_identity': dict(identity),
-                u'updated_time': u'2012-07-09T09:13:11Z',
-                u'template_description': u'blah',
-                u'description': u'blah',
-                u'stack_status_reason': u'Stack successfully created',
-                u'creation_time': u'2012-07-09T09:12:45Z',
-                u'stack_name': identity.stack_name,
-                u'stack_action': u'CREATE',
-                u'stack_status': u'COMPLETE',
-                u'parameters': {'foo': 'bar'},
-                u'outputs': ['key', 'value'],
-                u'notification_topics': [],
-                u'capabilities': [],
-                u'disable_rollback': True,
-                u'timeout_mins': 60,
+                'stack_identity': dict(identity),
+                'updated_time': '2012-07-09T09:13:11Z',
+                'template_description': 'blah',
+                'description': 'blah',
+                'stack_status_reason': 'Stack successfully created',
+                'creation_time': '2012-07-09T09:12:45Z',
+                'stack_name': identity.stack_name,
+                'stack_action': 'CREATE',
+                'stack_status': 'COMPLETE',
+                'parameters': {'foo': 'bar'},
+                'outputs': ['key', 'value'],
+                'notification_topics': [],
+                'capabilities': [],
+                'disable_rollback': True,
+                'timeout_mins': 60,
             }
         ]
         mock_call.return_value = engine_resp
@@ -649,19 +649,19 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                     'links': [{"href": self._url(identity),
                                "rel": "self"}],
                     'id': '1',
-                    u'updated_time': u'2012-07-09T09:13:11Z',
-                    u'template_description': u'blah',
-                    u'description': u'blah',
-                    u'stack_status_reason': u'Stack successfully created',
-                    u'creation_time': u'2012-07-09T09:12:45Z',
-                    u'stack_name': identity.stack_name,
-                    u'stack_status': u'CREATE_COMPLETE',
-                    u'parameters': {'foo': 'bar'},
-                    u'outputs': ['key', 'value'],
-                    u'notification_topics': [],
-                    u'capabilities': [],
-                    u'disable_rollback': True,
-                    u'timeout_mins': 60,
+                    'updated_time': '2012-07-09T09:13:11Z',
+                    'template_description': 'blah',
+                    'description': 'blah',
+                    'stack_status_reason': 'Stack successfully created',
+                    'creation_time': '2012-07-09T09:12:45Z',
+                    'stack_name': identity.stack_name,
+                    'stack_status': 'CREATE_COMPLETE',
+                    'parameters': {'foo': 'bar'},
+                    'outputs': ['key', 'value'],
+                    'notification_topics': [],
+                    'capabilities': [],
+                    'disable_rollback': True,
+                    'timeout_mins': 60,
                 }
             ]
         }
@@ -723,8 +723,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': identity.stack_name,
                 'parameters': parameters,
@@ -771,8 +771,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_with_tags(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': identity.stack_name,
                 'parameters': parameters,
@@ -928,8 +928,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_with_files(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': identity.stack_name,
                 'parameters': parameters,
@@ -975,8 +975,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_err_rpcerr(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True, 3)
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -1045,8 +1045,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_err_existing(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -1092,8 +1092,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_timeout_not_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -1113,8 +1113,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', False)
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -1133,8 +1133,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_err_engine(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         stack_name = "wordpress"
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': parameters,
@@ -1178,8 +1178,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
     def test_create_err_stack_bad_reqest(self, mock_enforce):
         cfg.CONF.set_override('debug', True)
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'timeout_mins': 30}
@@ -1201,7 +1201,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_create_err_circulardep(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'create', True)
         stack_name = "foobar"
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
         body = {'template': template,
                 'stack_name': stack_name,
                 'parameters': {},
@@ -1264,8 +1264,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                                        mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'preview', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '1')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'stack_name': identity.stack_name,
                 'parameters': parameters,
@@ -1300,8 +1300,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_preview_update_stack(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'preview_update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -1344,7 +1344,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_preview_update_stack_patch(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'preview_update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': None,
                 'parameters': parameters,
                 'files': {},
@@ -1388,8 +1388,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_immutable_parameter(self, mock_call, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'param1': u'bar'}
+        template = {'Foo': 'bar'}
+        parameters = {'param1': 'bar'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -1420,11 +1420,11 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             ('update_stack',
              {'stack_identity': dict(identity),
               'template': template,
-              'params': {u'parameters': parameters,
-                         u'encrypted_param_names': [],
-                         u'parameter_defaults': {},
-                         u'event_sinks': [],
-                         u'resource_registry': {}},
+              'params': {'parameters': parameters,
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'event_sinks': [],
+                         'resource_registry': {}},
               'files': {},
               'environment_files': None,
               'files_container': None,
@@ -1570,32 +1570,32 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity,
                         params={'resolve_outputs': True})
 
-        parameters = {u'DBUsername': u'admin',
-                      u'LinuxDistribution': u'F17',
-                      u'InstanceType': u'm1.large',
-                      u'DBRootPassword': u'admin',
-                      u'DBPassword': u'admin',
-                      u'DBName': u'wordpress'}
-        outputs = [{u'output_key': u'WebsiteURL',
-                    u'description': u'URL for Wordpress wiki',
-                    u'output_value': u'http://10.0.0.8/wordpress'}]
+        parameters = {'DBUsername': 'admin',
+                      'LinuxDistribution': 'F17',
+                      'InstanceType': 'm1.large',
+                      'DBRootPassword': 'admin',
+                      'DBPassword': 'admin',
+                      'DBName': 'wordpress'}
+        outputs = [{'output_key': 'WebsiteURL',
+                    'description': 'URL for Wordpress wiki',
+                    'output_value': 'http://10.0.0.8/wordpress'}]
 
         engine_resp = [
             {
-                u'stack_identity': dict(identity),
-                u'updated_time': u'2012-07-09T09:13:11Z',
-                u'parameters': parameters,
-                u'outputs': outputs,
-                u'stack_status_reason': u'Stack successfully created',
-                u'creation_time': u'2012-07-09T09:12:45Z',
-                u'stack_name': identity.stack_name,
-                u'notification_topics': [],
-                u'stack_action': u'CREATE',
-                u'stack_status': u'COMPLETE',
-                u'description': u'blah',
-                u'disable_rollback': True,
-                u'timeout_mins': 60,
-                u'capabilities': [],
+                'stack_identity': dict(identity),
+                'updated_time': '2012-07-09T09:13:11Z',
+                'parameters': parameters,
+                'outputs': outputs,
+                'stack_status_reason': 'Stack successfully created',
+                'creation_time': '2012-07-09T09:12:45Z',
+                'stack_name': identity.stack_name,
+                'notification_topics': [],
+                'stack_action': 'CREATE',
+                'stack_status': 'COMPLETE',
+                'description': 'blah',
+                'disable_rollback': True,
+                'timeout_mins': 60,
+                'capabilities': [],
             }
         ]
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -1611,18 +1611,18 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                 'links': [{"href": self._url(identity),
                            "rel": "self"}],
                 'id': '6',
-                u'updated_time': u'2012-07-09T09:13:11Z',
-                u'parameters': parameters,
-                u'outputs': outputs,
-                u'description': u'blah',
-                u'stack_status_reason': u'Stack successfully created',
-                u'creation_time': u'2012-07-09T09:12:45Z',
-                u'stack_name': identity.stack_name,
-                u'stack_status': u'CREATE_COMPLETE',
-                u'capabilities': [],
-                u'notification_topics': [],
-                u'disable_rollback': True,
-                u'timeout_mins': 60,
+                'updated_time': '2012-07-09T09:13:11Z',
+                'parameters': parameters,
+                'outputs': outputs,
+                'description': 'blah',
+                'stack_status_reason': 'Stack successfully created',
+                'creation_time': '2012-07-09T09:12:45Z',
+                'stack_name': identity.stack_name,
+                'stack_status': 'CREATE_COMPLETE',
+                'capabilities': [],
+                'notification_topics': [],
+                'disable_rollback': True,
+                'timeout_mins': 60,
             }
         }
         self.assertEqual(expected, response)
@@ -1640,28 +1640,28 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity,
                         params={'resolve_outputs': False})
 
-        parameters = {u'DBUsername': u'admin',
-                      u'LinuxDistribution': u'F17',
-                      u'InstanceType': u'm1.large',
-                      u'DBRootPassword': u'admin',
-                      u'DBPassword': u'admin',
-                      u'DBName': u'wordpress'}
+        parameters = {'DBUsername': 'admin',
+                      'LinuxDistribution': 'F17',
+                      'InstanceType': 'm1.large',
+                      'DBRootPassword': 'admin',
+                      'DBPassword': 'admin',
+                      'DBName': 'wordpress'}
 
         engine_resp = [
             {
-                u'stack_identity': dict(identity),
-                u'updated_time': u'2012-07-09T09:13:11Z',
-                u'parameters': parameters,
-                u'stack_status_reason': u'Stack successfully created',
-                u'creation_time': u'2012-07-09T09:12:45Z',
-                u'stack_name': identity.stack_name,
-                u'notification_topics': [],
-                u'stack_action': u'CREATE',
-                u'stack_status': u'COMPLETE',
-                u'description': u'blah',
-                u'disable_rollback': True,
-                u'timeout_mins': 60,
-                u'capabilities': [],
+                'stack_identity': dict(identity),
+                'updated_time': '2012-07-09T09:13:11Z',
+                'parameters': parameters,
+                'stack_status_reason': 'Stack successfully created',
+                'creation_time': '2012-07-09T09:12:45Z',
+                'stack_name': identity.stack_name,
+                'notification_topics': [],
+                'stack_action': 'CREATE',
+                'stack_status': 'COMPLETE',
+                'description': 'blah',
+                'disable_rollback': True,
+                'timeout_mins': 60,
+                'capabilities': [],
             }
         ]
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -1677,17 +1677,17 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
                 'links': [{"href": self._url(identity),
                            "rel": "self"}],
                 'id': '6',
-                u'updated_time': u'2012-07-09T09:13:11Z',
-                u'parameters': parameters,
-                u'description': u'blah',
-                u'stack_status_reason': u'Stack successfully created',
-                u'creation_time': u'2012-07-09T09:12:45Z',
-                u'stack_name': identity.stack_name,
-                u'stack_status': u'CREATE_COMPLETE',
-                u'capabilities': [],
-                u'notification_topics': [],
-                u'disable_rollback': True,
-                u'timeout_mins': 60,
+                'updated_time': '2012-07-09T09:13:11Z',
+                'parameters': parameters,
+                'description': 'blah',
+                'stack_status_reason': 'Stack successfully created',
+                'creation_time': '2012-07-09T09:12:45Z',
+                'stack_name': identity.stack_name,
+                'stack_status': 'CREATE_COMPLETE',
+                'capabilities': [],
+                'notification_topics': [],
+                'disable_rollback': True,
+                'timeout_mins': 60,
             }
         }
         self.assertEqual(expected, response)
@@ -1759,7 +1759,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
         self._mock_enforce_setup(mock_enforce, 'template', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
         req = self._get('/stacks/%(stack_name)s/%(stack_id)s' % identity)
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
 
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=template)
@@ -1858,8 +1858,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -1899,8 +1899,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_with_tags(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -1941,8 +1941,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_bad_name(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -1970,11 +1970,11 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             ('update_stack',
              {'stack_identity': dict(identity),
               'template': template,
-              'params': {u'parameters': parameters,
-                         u'encrypted_param_names': [],
-                         u'parameter_defaults': {},
-                         u'event_sinks': [],
-                         u'resource_registry': {}},
+              'params': {'parameters': parameters,
+                         'encrypted_param_names': [],
+                         'parameter_defaults': {},
+                         'event_sinks': [],
+                         'resource_registry': {}},
               'files': {},
               'environment_files': None,
               'files_container': None,
@@ -1986,8 +1986,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_timeout_negative(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -2011,8 +2011,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_timeout_not_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -2035,8 +2035,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update', False)
         identity = identifier.HeatIdentifier(self.tenant, 'wibble', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -2098,7 +2098,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_with_existing_parameters(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
         body = {'template': template,
                 'parameters': {},
                 'files': {},
@@ -2139,7 +2139,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_with_existing_parameters_with_tags(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
         body = {'template': template,
                 'parameters': {},
                 'files': {},
@@ -2182,8 +2182,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_with_patched_existing_parameters(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -2224,8 +2224,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_with_patch_timeout_negative(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -2249,8 +2249,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
     def test_update_with_patch_timeout_not_int(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
         body = {'template': template,
                 'parameters': parameters,
                 'files': {},
@@ -2274,8 +2274,8 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        clear_params = [u'DBUsername', u'DBPassword', u'LinuxDistribution']
+        template = {'Foo': 'bar'}
+        clear_params = ['DBUsername', 'DBPassword', 'LinuxDistribution']
         body = {'template': template,
                 'parameters': {},
                 'clear_parameters': clear_params,
@@ -2319,9 +2319,9 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
             self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'update_patch', True)
         identity = identifier.HeatIdentifier(self.tenant, 'wordpress', '6')
-        template = {u'Foo': u'bar'}
-        parameters = {u'InstanceType': u'm1.xlarge'}
-        clear_params = [u'DBUsername', u'DBPassword', u'LinuxDistribution']
+        template = {'Foo': 'bar'}
+        parameters = {'InstanceType': 'm1.xlarge'}
+        clear_params = ['DBUsername', 'DBPassword', 'LinuxDistribution']
         body = {'template': template,
                 'parameters': parameters,
                 'clear_parameters': clear_params,
@@ -2483,18 +2483,18 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
     def test_validate_template(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate_template', True)
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
         body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
 
         engine_response = {
-            u'Description': u'blah',
-            u'Parameters': [
+            'Description': 'blah',
+            'Parameters': [
                 {
-                    u'NoEcho': u'false',
-                    u'ParameterKey': u'InstanceType',
-                    u'Description': u'Instance type'
+                    'NoEcho': 'false',
+                    'ParameterKey': 'InstanceType',
+                    'Description': 'Instance type'
                 }
             ]
         }
@@ -2526,7 +2526,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
     def test_validate_template_error(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate_template', True)
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
         body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))
@@ -2557,7 +2557,7 @@ class StackControllerTest(tools.ControllerTest, common.HeatTestCase):
 
     def test_validate_err_denied_policy(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'validate_template', False)
-        template = {u'Foo': u'bar'}
+        template = {'Foo': 'bar'}
         body = {'template': template}
 
         req = self._post('/validate', json.dumps(body))

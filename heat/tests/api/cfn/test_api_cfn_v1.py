@@ -45,8 +45,8 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.fixture.conf(args=['--config-dir', policy_path])
         self.topic = rpc_api.ENGINE_TOPIC
         self.api_version = '1.0'
-        self.template = {u'AWSTemplateFormatVersion': u'2010-09-09',
-                         u'Foo': u'bar'}
+        self.template = {'AWSTemplateFormatVersion': '2010-09-09',
+                         'Foo': 'bar'}
 
         # Create WSGI controller instance
         class DummyConfig(object):
@@ -82,10 +82,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         response = self.controller._id_format({
             'StackName': 'Foo',
             'StackId': {
-                u'tenant': u't',
-                u'stack_name': u'Foo',
-                u'stack_id': u'123',
-                u'path': u''
+                'tenant': 't',
+                'stack_name': 'Foo',
+                'stack_id': '123',
+                'path': ''
             }
         })
         expected = {'StackName': 'Foo',
@@ -124,30 +124,30 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'ListStacks')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'1',
-                                            u'path': u''},
-                        u'updated_time': u'2012-07-09T09:13:11Z',
-                        u'template_description': u'blah',
-                        u'stack_status_reason': u'Stack successfully created',
-                        u'creation_time': u'2012-07-09T09:12:45Z',
-                        u'stack_name': u'wordpress',
-                        u'stack_action': u'CREATE',
-                        u'stack_status': u'COMPLETE'}]
+        engine_resp = [{'stack_identity': {'tenant': 't',
+                                           'stack_name': 'wordpress',
+                                           'stack_id': '1',
+                                           'path': ''},
+                        'updated_time': '2012-07-09T09:13:11Z',
+                        'template_description': 'blah',
+                        'stack_status_reason': 'Stack successfully created',
+                        'creation_time': '2012-07-09T09:12:45Z',
+                        'stack_name': 'wordpress',
+                        'stack_action': 'CREATE',
+                        'stack_status': 'COMPLETE'}]
         self.m_call.return_value = engine_resp
 
         # Call the list controller function and compare the response
         result = self.controller.list(dummy_req)
         expected = {'ListStacksResponse': {'ListStacksResult':
                     {'StackSummaries':
-                     [{u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1',
-                       u'LastUpdatedTime': u'2012-07-09T09:13:11Z',
-                       u'TemplateDescription': u'blah',
-                       u'StackStatusReason': u'Stack successfully created',
-                       u'CreationTime': u'2012-07-09T09:12:45Z',
-                       u'StackName': u'wordpress',
-                       u'StackStatus': u'CREATE_COMPLETE'}]}}}
+                     [{'StackId': 'arn:openstack:heat::t:stacks/wordpress/1',
+                       'LastUpdatedTime': '2012-07-09T09:13:11Z',
+                       'TemplateDescription': 'blah',
+                       'StackStatusReason': 'Stack successfully created',
+                       'CreationTime': '2012-07-09T09:12:45Z',
+                       'StackName': 'wordpress',
+                       'StackStatus': 'CREATE_COMPLETE'}]}}}
         self.assertEqual(expected, result)
         default_args = {'limit': None, 'sort_keys': None, 'marker': None,
                         'sort_dir': None, 'filters': None,
@@ -193,10 +193,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'DescribeStacks')
 
-        engine_resp = [{u'updated_time': '1970-01-01',
-                        u'parameters': {},
-                        u'stack_action': u'CREATE',
-                        u'stack_status': u'COMPLETE'}]
+        engine_resp = [{'updated_time': '1970-01-01',
+                        'parameters': {},
+                        'stack_action': 'CREATE',
+                        'stack_status': 'COMPLETE'}]
 
         self.m_call.return_value = engine_resp
         response = self.controller.describe(dummy_req)
@@ -214,10 +214,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'DescribeStacks')
 
-        engine_resp = [{u'updated_time': None,
-                        u'parameters': {},
-                        u'stack_action': u'CREATE',
-                        u'stack_status': u'COMPLETE'}]
+        engine_resp = [{'updated_time': None,
+                        'parameters': {},
+                        'stack_action': 'CREATE',
+                        'stack_status': 'COMPLETE'}]
 
         self.m_call.return_value = engine_resp
 
@@ -242,32 +242,32 @@ class CfnStackControllerTest(common.HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # Note the engine returns a load of keys we don't actually use
         # so this is a subset of the real response format
-        engine_resp = [{u'stack_identity':
-                        {u'tenant': u't',
-                         u'stack_name': u'wordpress',
-                         u'stack_id': u'6',
-                         u'path': u''},
-                        u'updated_time': u'2012-07-09T09:13:11Z',
-                        u'parameters': {u'DBUsername': u'admin',
-                                        u'LinuxDistribution': u'F17',
-                                        u'InstanceType': u'm1.large',
-                                        u'DBRootPassword': u'admin',
-                                        u'DBPassword': u'admin',
-                                        u'DBName': u'wordpress'},
-                        u'outputs':
-                        [{u'output_key': u'WebsiteURL',
-                          u'description': u'URL for Wordpress wiki',
-                          u'output_value': u'http://10.0.0.8/wordpress'}],
-                        u'stack_status_reason': u'Stack successfully created',
-                        u'creation_time': u'2012-07-09T09:12:45Z',
-                        u'stack_name': u'wordpress',
-                        u'notification_topics': [],
-                        u'stack_action': u'CREATE',
-                        u'stack_status': u'COMPLETE',
-                        u'description': u'blah',
-                        u'disable_rollback': 'true',
-                        u'timeout_mins': 60,
-                        u'capabilities': []}]
+        engine_resp = [{'stack_identity':
+                        {'tenant': 't',
+                         'stack_name': 'wordpress',
+                         'stack_id': '6',
+                         'path': ''},
+                        'updated_time': '2012-07-09T09:13:11Z',
+                        'parameters': {'DBUsername': 'admin',
+                                       'LinuxDistribution': 'F17',
+                                       'InstanceType': 'm1.large',
+                                       'DBRootPassword': 'admin',
+                                       'DBPassword': 'admin',
+                                       'DBName': 'wordpress'},
+                        'outputs':
+                        [{'output_key': 'WebsiteURL',
+                          'description': 'URL for Wordpress wiki',
+                          'output_value': 'http://10.0.0.8/wordpress'}],
+                        'stack_status_reason': 'Stack successfully created',
+                        'creation_time': '2012-07-09T09:12:45Z',
+                        'stack_name': 'wordpress',
+                        'notification_topics': [],
+                        'stack_action': 'CREATE',
+                        'stack_status': 'COMPLETE',
+                        'description': 'blah',
+                        'disable_rollback': 'true',
+                        'timeout_mins': 60,
+                        'capabilities': []}]
 
         self.m_call.side_effect = [identity, engine_resp]
 
@@ -277,34 +277,34 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStacksResponse':
                     {'DescribeStacksResult':
                      {'Stacks':
-                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                        'StackStatusReason': u'Stack successfully created',
-                        'Description': u'blah',
+                      [{'StackId': 'arn:openstack:heat::t:stacks/wordpress/6',
+                        'StackStatusReason': 'Stack successfully created',
+                        'Description': 'blah',
                         'Parameters':
-                        [{'ParameterValue': u'wordpress',
-                          'ParameterKey': u'DBName'},
-                         {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBPassword'},
-                         {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBRootPassword'},
-                         {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBUsername'},
-                         {'ParameterValue': u'm1.large',
-                          'ParameterKey': u'InstanceType'},
-                         {'ParameterValue': u'F17',
-                          'ParameterKey': u'LinuxDistribution'}],
+                        [{'ParameterValue': 'wordpress',
+                          'ParameterKey': 'DBName'},
+                         {'ParameterValue': 'admin',
+                          'ParameterKey': 'DBPassword'},
+                         {'ParameterValue': 'admin',
+                          'ParameterKey': 'DBRootPassword'},
+                         {'ParameterValue': 'admin',
+                          'ParameterKey': 'DBUsername'},
+                         {'ParameterValue': 'm1.large',
+                          'ParameterKey': 'InstanceType'},
+                         {'ParameterValue': 'F17',
+                          'ParameterKey': 'LinuxDistribution'}],
                         'Outputs':
-                        [{'OutputKey': u'WebsiteURL',
-                          'OutputValue': u'http://10.0.0.8/wordpress',
-                          'Description': u'URL for Wordpress wiki'}],
+                        [{'OutputKey': 'WebsiteURL',
+                          'OutputValue': 'http://10.0.0.8/wordpress',
+                          'Description': 'URL for Wordpress wiki'}],
                         'TimeoutInMinutes': 60,
-                        'CreationTime': u'2012-07-09T09:12:45Z',
+                        'CreationTime': '2012-07-09T09:12:45Z',
                         'Capabilities': [],
-                        'StackName': u'wordpress',
+                        'StackName': 'wordpress',
                         'NotificationARNs': [],
-                        'StackStatus': u'CREATE_COMPLETE',
+                        'StackStatus': 'CREATE_COMPLETE',
                         'DisableRollback': 'true',
-                        'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
+                        'LastUpdatedTime': '2012-07-09T09:13:11Z'}]}}}
         stacks = (response['DescribeStacksResponse']['DescribeStacksResult']
                   ['Stacks'])
         stacks[0]['Parameters'] = sorted(
@@ -335,31 +335,31 @@ class CfnStackControllerTest(common.HeatTestCase):
         # Stub out the RPC call to the engine with a pre-canned response
         # Note the engine returns a load of keys we don't actually use
         # so this is a subset of the real response format
-        engine_resp = [{u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'6',
-                                            u'path': u''},
-                        u'updated_time': u'2012-07-09T09:13:11Z',
-                        u'parameters': {u'DBUsername': u'admin',
-                                        u'LinuxDistribution': u'F17',
-                                        u'InstanceType': u'm1.large',
-                                        u'DBRootPassword': u'admin',
-                                        u'DBPassword': u'admin',
-                                        u'DBName': u'wordpress'},
-                        u'outputs':
-                        [{u'output_key': u'WebsiteURL',
-                          u'description': u'URL for Wordpress wiki',
-                          u'output_value': u'http://10.0.0.8/wordpress'}],
-                        u'stack_status_reason': u'Stack successfully created',
-                        u'creation_time': u'2012-07-09T09:12:45Z',
-                        u'stack_name': u'wordpress',
-                        u'notification_topics': [],
-                        u'stack_action': u'CREATE',
-                        u'stack_status': u'COMPLETE',
-                        u'description': u'blah',
-                        u'disable_rollback': 'true',
-                        u'timeout_mins': 60,
-                        u'capabilities': []}]
+        engine_resp = [{'stack_identity': {'tenant': 't',
+                                           'stack_name': 'wordpress',
+                                           'stack_id': '6',
+                                           'path': ''},
+                        'updated_time': '2012-07-09T09:13:11Z',
+                        'parameters': {'DBUsername': 'admin',
+                                       'LinuxDistribution': 'F17',
+                                       'InstanceType': 'm1.large',
+                                       'DBRootPassword': 'admin',
+                                       'DBPassword': 'admin',
+                                       'DBName': 'wordpress'},
+                        'outputs':
+                        [{'output_key': 'WebsiteURL',
+                          'description': 'URL for Wordpress wiki',
+                          'output_value': 'http://10.0.0.8/wordpress'}],
+                        'stack_status_reason': 'Stack successfully created',
+                        'creation_time': '2012-07-09T09:12:45Z',
+                        'stack_name': 'wordpress',
+                        'notification_topics': [],
+                        'stack_action': 'CREATE',
+                        'stack_status': 'COMPLETE',
+                        'description': 'blah',
+                        'disable_rollback': 'true',
+                        'timeout_mins': 60,
+                        'capabilities': []}]
 
         self.m_call.return_value = engine_resp
 
@@ -369,34 +369,34 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStacksResponse':
                     {'DescribeStacksResult':
                      {'Stacks':
-                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                        'StackStatusReason': u'Stack successfully created',
-                        'Description': u'blah',
+                      [{'StackId': 'arn:openstack:heat::t:stacks/wordpress/6',
+                        'StackStatusReason': 'Stack successfully created',
+                        'Description': 'blah',
                         'Parameters':
-                        [{'ParameterValue': u'wordpress',
-                          'ParameterKey': u'DBName'},
-                         {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBPassword'},
-                         {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBRootPassword'},
-                         {'ParameterValue': u'admin',
-                          'ParameterKey': u'DBUsername'},
-                         {'ParameterValue': u'm1.large',
-                          'ParameterKey': u'InstanceType'},
-                         {'ParameterValue': u'F17',
-                          'ParameterKey': u'LinuxDistribution'}],
+                        [{'ParameterValue': 'wordpress',
+                          'ParameterKey': 'DBName'},
+                         {'ParameterValue': 'admin',
+                          'ParameterKey': 'DBPassword'},
+                         {'ParameterValue': 'admin',
+                          'ParameterKey': 'DBRootPassword'},
+                         {'ParameterValue': 'admin',
+                          'ParameterKey': 'DBUsername'},
+                         {'ParameterValue': 'm1.large',
+                          'ParameterKey': 'InstanceType'},
+                         {'ParameterValue': 'F17',
+                          'ParameterKey': 'LinuxDistribution'}],
                         'Outputs':
-                        [{'OutputKey': u'WebsiteURL',
-                          'OutputValue': u'http://10.0.0.8/wordpress',
-                          'Description': u'URL for Wordpress wiki'}],
+                        [{'OutputKey': 'WebsiteURL',
+                          'OutputValue': 'http://10.0.0.8/wordpress',
+                          'Description': 'URL for Wordpress wiki'}],
                         'TimeoutInMinutes': 60,
-                        'CreationTime': u'2012-07-09T09:12:45Z',
+                        'CreationTime': '2012-07-09T09:12:45Z',
                         'Capabilities': [],
-                        'StackName': u'wordpress',
+                        'StackName': 'wordpress',
                         'NotificationARNs': [],
-                        'StackStatus': u'CREATE_COMPLETE',
+                        'StackStatus': 'CREATE_COMPLETE',
                         'DisableRollback': 'true',
-                        'LastUpdatedTime': u'2012-07-09T09:13:11Z'}]}}}
+                        'LastUpdatedTime': '2012-07-09T09:13:11Z'}]}}}
         stacks = (response['DescribeStacksResponse']['DescribeStacksResult']
                   ['Stacks'])
         stacks[0]['Parameters'] = sorted(
@@ -501,10 +501,10 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'CreateStack')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'tenant': u't',
-                       u'stack_name': u'wordpress',
-                       u'stack_id': u'1',
-                       u'path': u''}
+        engine_resp = {'tenant': 't',
+                       'stack_name': 'wordpress',
+                       'stack_id': '1',
+                       'path': ''}
 
         self.m_call.return_value = engine_resp
 
@@ -520,8 +520,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'DisableRollback': 'true',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30', 'disable_rollback': 'true'}
         dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
                                                              engine_parms,
                                                              engine_args,
@@ -531,7 +531,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {
             'CreateStackResponse': {
                 'CreateStackResult': {
-                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                    'StackId': 'arn:openstack:heat::t:stacks/wordpress/1'
                 }
             }
         }
@@ -566,8 +566,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'DisableRollback': 'false',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30', 'disable_rollback': 'false'}
         dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
                                                              engine_parms,
                                                              engine_args,
@@ -578,7 +578,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {
             'CreateStackResponse': {
                 'CreateStackResult': {
-                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                    'StackId': 'arn:openstack:heat::t:stacks/wordpress/1'
                 }
             }
         }
@@ -613,8 +613,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'OnFailure': 'DO_NOTHING',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'true'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30', 'disable_rollback': 'true'}
         dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
                                                              engine_parms,
                                                              engine_args,
@@ -625,7 +625,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {
             'CreateStackResponse': {
                 'CreateStackResult': {
-                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                    'StackId': 'arn:openstack:heat::t:stacks/wordpress/1'
                 }
             }
         }
@@ -660,8 +660,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'OnFailure': 'DELETE',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30', 'disable_rollback': 'false'}
         dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
                                                              engine_parms,
                                                              engine_args,
@@ -690,7 +690,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {
             'CreateStackResponse': {
                 'CreateStackResult': {
-                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                    'StackId': 'arn:openstack:heat::t:stacks/wordpress/1'
                 }
             }
         }
@@ -707,8 +707,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'OnFailure': 'ROLLBACK',
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30', 'disable_rollback': 'false'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30', 'disable_rollback': 'false'}
         dummy_req = self._stub_rpc_create_stack_call_success(stack_name,
                                                              engine_parms,
                                                              engine_args,
@@ -719,7 +719,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {
             'CreateStackResponse': {
                 'CreateStackResult': {
-                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                    'StackId': 'arn:openstack:heat::t:stacks/wordpress/1'
                 }
             }
         }
@@ -792,8 +792,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'TimeoutInMinutes': 30,
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30'}
         dummy_req = self._dummy_GET_request(params)
         m_f = self._stub_rpc_create_stack_call_failure(
             dummy_req.context,
@@ -840,8 +840,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'TimeoutInMinutes': 30,
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30'}
         failure = heat_exception.StackExists(stack_name='test')
         dummy_req = self._dummy_GET_request(params)
         self._stub_rpc_create_stack_call_failure(dummy_req.context,
@@ -863,8 +863,8 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'TimeoutInMinutes': 30,
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
-        engine_args = {'timeout_mins': u'30'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
+        engine_args = {'timeout_mins': '30'}
         failure = heat_exception.StackValidationFailed(
             message='Something went wrong')
         dummy_req = self._dummy_GET_request(params)
@@ -885,7 +885,7 @@ class CfnStackControllerTest(common.HeatTestCase):
                   'TemplateBody': '%s' % json_template,
                   'Parameters.member.1.ParameterKey': 'InstanceType',
                   'Parameters.member.1.ParameterValue': 'm1.xlarge'}
-        engine_parms = {u'InstanceType': u'm1.xlarge'}
+        engine_parms = {'InstanceType': 'm1.xlarge'}
         engine_args = {}
         dummy_req = self._dummy_GET_request(params)
         self._stub_enforce(dummy_req, 'UpdateStack')
@@ -900,7 +900,7 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {
             'UpdateStackResponse': {
                 'UpdateStackResult': {
-                    u'StackId': u'arn:openstack:heat::t:stacks/wordpress/1'
+                    'StackId': 'arn:openstack:heat::t:stacks/wordpress/1'
                 }
             }
         }
@@ -1179,25 +1179,25 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackEvents')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'stack_name': u'wordpress',
-                        u'event_time': u'2012-07-23T13:05:39Z',
-                        u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'6',
-                                            u'path': u''},
-                        u'resource_name': u'WikiDatabase',
-                        u'resource_status_reason': u'state changed',
-                        u'event_identity':
-                        {u'tenant': u't',
-                         u'stack_name': u'wordpress',
-                         u'stack_id': u'6',
-                         u'path': u'/resources/WikiDatabase/events/{0}'.format(
+        engine_resp = [{'stack_name': 'wordpress',
+                        'event_time': '2012-07-23T13:05:39Z',
+                        'stack_identity': {'tenant': 't',
+                                           'stack_name': 'wordpress',
+                                           'stack_id': '6',
+                                           'path': ''},
+                        'resource_name': 'WikiDatabase',
+                        'resource_status_reason': 'state changed',
+                        'event_identity':
+                        {'tenant': 't',
+                         'stack_name': 'wordpress',
+                         'stack_id': '6',
+                         'path': '/resources/WikiDatabase/events/{0}'.format(
                              event_id)},
-                        u'resource_action': u'TEST',
-                        u'resource_status': u'IN_PROGRESS',
-                        u'physical_resource_id': None,
-                        u'resource_properties': {u'UserData': u'blah'},
-                        u'resource_type': u'AWS::EC2::Instance'}]
+                        'resource_action': 'TEST',
+                        'resource_status': 'IN_PROGRESS',
+                        'physical_resource_id': None,
+                        'resource_properties': {'UserData': 'blah'},
+                        'resource_type': 'AWS::EC2::Instance'}]
 
         kwargs = {'stack_identity': identity, 'nested_depth': None,
                   'limit': None, 'sort_keys': None, 'marker': None,
@@ -1210,16 +1210,16 @@ class CfnStackControllerTest(common.HeatTestCase):
                     {'DescribeStackEventsResult':
                      {'StackEvents':
                       [{'EventId': str(event_id),
-                        'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                        'ResourceStatus': u'TEST_IN_PROGRESS',
-                        'ResourceType': u'AWS::EC2::Instance',
-                        'Timestamp': u'2012-07-23T13:05:39Z',
-                        'StackName': u'wordpress',
+                        'StackId': 'arn:openstack:heat::t:stacks/wordpress/6',
+                        'ResourceStatus': 'TEST_IN_PROGRESS',
+                        'ResourceType': 'AWS::EC2::Instance',
+                        'Timestamp': '2012-07-23T13:05:39Z',
+                        'StackName': 'wordpress',
                         'ResourceProperties':
-                        json.dumps({u'UserData': u'blah'}),
+                        json.dumps({'UserData': 'blah'}),
                         'PhysicalResourceId': None,
-                        'ResourceStatusReason': u'state changed',
-                        'LogicalResourceId': u'WikiDatabase'}]}}}
+                        'ResourceStatusReason': 'state changed',
+                        'LogicalResourceId': 'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
         self.assertEqual([mock.call(
@@ -1282,27 +1282,27 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackResource')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = {u'description': u'',
-                       u'resource_identity': {
-                           u'tenant': u't',
-                           u'stack_name': u'wordpress',
-                           u'stack_id': u'6',
-                           u'path': u'resources/WikiDatabase'
+        engine_resp = {'description': '',
+                       'resource_identity': {
+                           'tenant': 't',
+                           'stack_name': 'wordpress',
+                           'stack_id': '6',
+                           'path': 'resources/WikiDatabase'
                        },
-                       u'stack_name': u'wordpress',
-                       u'resource_name': u'WikiDatabase',
-                       u'resource_status_reason': None,
-                       u'updated_time': u'2012-07-23T13:06:00Z',
-                       u'stack_identity': {u'tenant': u't',
-                                           u'stack_name': u'wordpress',
-                                           u'stack_id': u'6',
-                                           u'path': u''},
-                       u'resource_action': u'CREATE',
-                       u'resource_status': u'COMPLETE',
-                       u'physical_resource_id':
-                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                       u'resource_type': u'AWS::EC2::Instance',
-                       u'metadata': {u'wordpress': []}}
+                       'stack_name': 'wordpress',
+                       'resource_name': 'WikiDatabase',
+                       'resource_status_reason': None,
+                       'updated_time': '2012-07-23T13:06:00Z',
+                       'stack_identity': {'tenant': 't',
+                                          'stack_name': 'wordpress',
+                                          'stack_id': '6',
+                                          'path': ''},
+                       'resource_action': 'CREATE',
+                       'resource_status': 'COMPLETE',
+                       'physical_resource_id':
+                       'a3455d8c-9f88-404d-a85b-5315293e67de',
+                       'resource_type': 'AWS::EC2::Instance',
+                       'metadata': {'wordpress': []}}
 
         self.m_call.side_effect = [identity, engine_resp]
         args = {
@@ -1316,17 +1316,17 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStackResourceResponse':
                     {'DescribeStackResourceResult':
                      {'StackResourceDetail':
-                      {'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                       'ResourceStatus': u'CREATE_COMPLETE',
-                       'Description': u'',
-                       'ResourceType': u'AWS::EC2::Instance',
+                      {'StackId': 'arn:openstack:heat::t:stacks/wordpress/6',
+                       'ResourceStatus': 'CREATE_COMPLETE',
+                       'Description': '',
+                       'ResourceType': 'AWS::EC2::Instance',
                        'ResourceStatusReason': None,
-                       'LastUpdatedTimestamp': u'2012-07-23T13:06:00Z',
-                       'StackName': u'wordpress',
+                       'LastUpdatedTimestamp': '2012-07-23T13:06:00Z',
+                       'StackName': 'wordpress',
                        'PhysicalResourceId':
-                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                       'Metadata': {u'wordpress': []},
-                       'LogicalResourceId': u'WikiDatabase'}}}}
+                       'a3455d8c-9f88-404d-a85b-5315293e67de',
+                       'Metadata': {'wordpress': []},
+                       'LogicalResourceId': 'WikiDatabase'}}}}
 
         self.assertEqual(expected, response)
         self.assertEqual([mock.call(
@@ -1394,27 +1394,27 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackResources')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'description': u'',
-                        u'resource_identity': {
-                            u'tenant': u't',
-                            u'stack_name': u'wordpress',
-                            u'stack_id': u'6',
-                            u'path': u'resources/WikiDatabase'
+        engine_resp = [{'description': '',
+                        'resource_identity': {
+                            'tenant': 't',
+                            'stack_name': 'wordpress',
+                            'stack_id': '6',
+                            'path': 'resources/WikiDatabase'
                         },
-                        u'stack_name': u'wordpress',
-                        u'resource_name': u'WikiDatabase',
-                        u'resource_status_reason': None,
-                        u'updated_time': u'2012-07-23T13:06:00Z',
-                        u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'6',
-                                            u'path': u''},
-                        u'resource_action': u'CREATE',
-                        u'resource_status': u'COMPLETE',
-                        u'physical_resource_id':
-                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                        u'resource_type': u'AWS::EC2::Instance',
-                        u'metadata': {u'ensureRunning': u'true''true'}}]
+                        'stack_name': 'wordpress',
+                        'resource_name': 'WikiDatabase',
+                        'resource_status_reason': None,
+                        'updated_time': '2012-07-23T13:06:00Z',
+                        'stack_identity': {'tenant': 't',
+                                           'stack_name': 'wordpress',
+                                           'stack_id': '6',
+                                           'path': ''},
+                        'resource_action': 'CREATE',
+                        'resource_status': 'COMPLETE',
+                        'physical_resource_id':
+                        'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'resource_type': 'AWS::EC2::Instance',
+                        'metadata': {'ensureRunning': 'true''true'}}]
 
         self.m_call.side_effect = [identity, engine_resp]
         args = {
@@ -1427,16 +1427,16 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStackResourcesResponse':
                     {'DescribeStackResourcesResult':
                      {'StackResources':
-                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                        'ResourceStatus': u'CREATE_COMPLETE',
-                        'Description': u'',
-                        'ResourceType': u'AWS::EC2::Instance',
-                        'Timestamp': u'2012-07-23T13:06:00Z',
+                      [{'StackId': 'arn:openstack:heat::t:stacks/wordpress/6',
+                        'ResourceStatus': 'CREATE_COMPLETE',
+                        'Description': '',
+                        'ResourceType': 'AWS::EC2::Instance',
+                        'Timestamp': '2012-07-23T13:06:00Z',
                         'ResourceStatusReason': None,
-                        'StackName': u'wordpress',
+                        'StackName': 'wordpress',
                         'PhysicalResourceId':
-                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                        'LogicalResourceId': u'WikiDatabase'}]}}}
+                        'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'LogicalResourceId': 'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
         self.assertEqual([mock.call(
@@ -1475,27 +1475,27 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'DescribeStackResources')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'description': u'',
-                        u'resource_identity': {
-                            u'tenant': u't',
-                            u'stack_name': u'wordpress',
-                            u'stack_id': u'6',
-                            u'path': u'resources/WikiDatabase'
+        engine_resp = [{'description': '',
+                        'resource_identity': {
+                            'tenant': 't',
+                            'stack_name': 'wordpress',
+                            'stack_id': '6',
+                            'path': 'resources/WikiDatabase'
                         },
-                        u'stack_name': u'wordpress',
-                        u'resource_name': u'WikiDatabase',
-                        u'resource_status_reason': None,
-                        u'updated_time': u'2012-07-23T13:06:00Z',
-                        u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'6',
-                                            u'path': u''},
-                        u'resource_action': u'CREATE',
-                        u'resource_status': u'COMPLETE',
-                        u'physical_resource_id':
-                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                        u'resource_type': u'AWS::EC2::Instance',
-                        u'metadata': {u'ensureRunning': u'true''true'}}]
+                        'stack_name': 'wordpress',
+                        'resource_name': 'WikiDatabase',
+                        'resource_status_reason': None,
+                        'updated_time': '2012-07-23T13:06:00Z',
+                        'stack_identity': {'tenant': 't',
+                                           'stack_name': 'wordpress',
+                                           'stack_id': '6',
+                                           'path': ''},
+                        'resource_action': 'CREATE',
+                        'resource_status': 'COMPLETE',
+                        'physical_resource_id':
+                        'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'resource_type': 'AWS::EC2::Instance',
+                        'metadata': {'ensureRunning': 'true''true'}}]
 
         self.m_call.side_effect = [identity, engine_resp]
         args = {
@@ -1508,16 +1508,16 @@ class CfnStackControllerTest(common.HeatTestCase):
         expected = {'DescribeStackResourcesResponse':
                     {'DescribeStackResourcesResult':
                      {'StackResources':
-                      [{'StackId': u'arn:openstack:heat::t:stacks/wordpress/6',
-                        'ResourceStatus': u'CREATE_COMPLETE',
-                        'Description': u'',
-                        'ResourceType': u'AWS::EC2::Instance',
-                        'Timestamp': u'2012-07-23T13:06:00Z',
+                      [{'StackId': 'arn:openstack:heat::t:stacks/wordpress/6',
+                        'ResourceStatus': 'CREATE_COMPLETE',
+                        'Description': '',
+                        'ResourceType': 'AWS::EC2::Instance',
+                        'Timestamp': '2012-07-23T13:06:00Z',
                         'ResourceStatusReason': None,
-                        'StackName': u'wordpress',
+                        'StackName': 'wordpress',
                         'PhysicalResourceId':
-                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                        'LogicalResourceId': u'WikiDatabase'}]}}}
+                        'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'LogicalResourceId': 'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
         self.assertEqual([mock.call(
@@ -1574,24 +1574,24 @@ class CfnStackControllerTest(common.HeatTestCase):
         self._stub_enforce(dummy_req, 'ListStackResources')
 
         # Stub out the RPC call to the engine with a pre-canned response
-        engine_resp = [{u'resource_identity':
-                        {u'tenant': u't',
-                         u'stack_name': u'wordpress',
-                         u'stack_id': u'6',
-                         u'path': u'/resources/WikiDatabase'},
-                        u'stack_name': u'wordpress',
-                        u'resource_name': u'WikiDatabase',
-                        u'resource_status_reason': None,
-                        u'updated_time': u'2012-07-23T13:06:00Z',
-                        u'stack_identity': {u'tenant': u't',
-                                            u'stack_name': u'wordpress',
-                                            u'stack_id': u'6',
-                                            u'path': u''},
-                        u'resource_action': u'CREATE',
-                        u'resource_status': u'COMPLETE',
-                        u'physical_resource_id':
-                        u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                        u'resource_type': u'AWS::EC2::Instance'}]
+        engine_resp = [{'resource_identity':
+                        {'tenant': 't',
+                         'stack_name': 'wordpress',
+                         'stack_id': '6',
+                         'path': '/resources/WikiDatabase'},
+                        'stack_name': 'wordpress',
+                        'resource_name': 'WikiDatabase',
+                        'resource_status_reason': None,
+                        'updated_time': '2012-07-23T13:06:00Z',
+                        'stack_identity': {'tenant': 't',
+                                           'stack_name': 'wordpress',
+                                           'stack_id': '6',
+                                           'path': ''},
+                        'resource_action': 'CREATE',
+                        'resource_status': 'COMPLETE',
+                        'physical_resource_id':
+                        'a3455d8c-9f88-404d-a85b-5315293e67de',
+                        'resource_type': 'AWS::EC2::Instance'}]
 
         self.m_call.side_effect = [identity, engine_resp]
 
@@ -1599,13 +1599,13 @@ class CfnStackControllerTest(common.HeatTestCase):
 
         expected = {'ListStackResourcesResponse': {'ListStackResourcesResult':
                     {'StackResourceSummaries':
-                     [{'ResourceStatus': u'CREATE_COMPLETE',
-                       'ResourceType': u'AWS::EC2::Instance',
+                     [{'ResourceStatus': 'CREATE_COMPLETE',
+                       'ResourceType': 'AWS::EC2::Instance',
                        'ResourceStatusReason': None,
-                       'LastUpdatedTimestamp': u'2012-07-23T13:06:00Z',
+                       'LastUpdatedTimestamp': '2012-07-23T13:06:00Z',
                        'PhysicalResourceId':
-                       u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                       'LogicalResourceId': u'WikiDatabase'}]}}}
+                       'a3455d8c-9f88-404d-a85b-5315293e67de',
+                       'LogicalResourceId': 'WikiDatabase'}]}}}
 
         self.assertEqual(expected, response)
         self.assertEqual([mock.call(

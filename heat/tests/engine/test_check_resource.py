@@ -488,7 +488,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
                                   mock_csc):
         mock_mf = self.stack.mark_failed = mock.Mock(return_value=True)
         self.cr._handle_stack_timeout(self.ctx, self.stack)
-        mock_mf.assert_called_once_with(u'Timed out')
+        mock_mf.assert_called_once_with('Timed out')
 
     def test_do_check_resource_marks_stack_as_failed_if_stack_timesout(
             self, mock_cru, mock_crc, mock_pcr, mock_csc):
@@ -498,7 +498,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         self.cr._do_check_resource(self.ctx, self.stack.current_traversal,
                                    self.stack.t, {}, self.is_update,
                                    self.resource, self.stack, {})
-        mock_mf.assert_called_once_with(u'Timed out')
+        mock_mf.assert_called_once_with('Timed out')
 
     @mock.patch.object(check_resource.CheckResource,
                        '_handle_stack_timeout')
@@ -540,8 +540,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
     @mock.patch.object(resource.Resource, 'load')
     def test_requires(self, mock_load, mock_cru, mock_crc, mock_pcr, mock_csc):
         mock_load.return_value = self.resource, self.stack, self.stack
-        res_data = {(1, True): {u'id': 5, u'name': 'A', 'attrs': {}},
-                    (2, True): {u'id': 3, u'name': 'B', 'attrs': {}}}
+        res_data = {(1, True): {'id': 5, 'name': 'A', 'attrs': {}},
+                    (2, True): {'id': 3, 'name': 'B', 'attrs': {}}}
         self.worker.check_resource(self.ctx, self.resource.id,
                                    self.stack.current_traversal,
                                    sync_point.serialize_input_data(res_data),
@@ -635,10 +635,10 @@ class MiscMethodsTest(common.HeatTestCase):
 
     def test_node_data_ok(self):
         self.resource.action = self.resource.CREATE
-        expected_input_data = {'attrs': {(u'flat_dict', u'key2'): 'val2',
-                                         (u'flat_dict', u'key3'): 'val3',
-                                         (u'nested_dict', u'dict', u'a'): 1,
-                                         (u'nested_dict', u'dict', u'b'): 2},
+        expected_input_data = {'attrs': {('flat_dict', 'key2'): 'val2',
+                                         ('flat_dict', 'key3'): 'val3',
+                                         ('nested_dict', 'dict', 'a'): 1,
+                                         ('nested_dict', 'dict', 'b'): 2},
                                'id': mock.ANY,
                                'reference_id': 'A',
                                'name': 'A',

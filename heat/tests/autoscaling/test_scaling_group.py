@@ -164,7 +164,7 @@ class TestAutoScalingGroupValidation(common.HeatTestCase):
         mock_server.image = {'id': 'dd619705-468a-4f7d-8a06-b84794b3561a'}
         mock_server.flavor = {'id': '1'}
         mock_server.key_name = 'test'
-        mock_server.security_groups = [{u'name': u'hth_test'}]
+        mock_server.security_groups = [{'name': 'hth_test'}]
         if not_found:
             self.patchobject(nova.NovaClientPlugin, 'get_server',
                              side_effect=exception.EntityNotFound(
@@ -218,9 +218,9 @@ class TestScalingGroupTags(common.HeatTestCase):
 
     def test_tags_default(self):
         expected = [{'Key': 'metering.groupname',
-                     'Value': u'WebServerGroup'},
+                     'Value': 'WebServerGroup'},
                     {'Key': 'metering.AutoScalingGroupName',
-                     'Value': u'WebServerGroup'}]
+                     'Value': 'WebServerGroup'}]
         self.assertEqual(expected, self.group._tags())
 
     def test_tags_with_extra(self):
@@ -229,9 +229,9 @@ class TestScalingGroupTags(common.HeatTestCase):
         expected = [{'Key': 'fee',
                      'Value': 'foo'},
                     {'Key': 'metering.groupname',
-                     'Value': u'WebServerGroup'},
+                     'Value': 'WebServerGroup'},
                     {'Key': 'metering.AutoScalingGroupName',
-                     'Value': u'WebServerGroup'}]
+                     'Value': 'WebServerGroup'}]
         self.assertEqual(expected, self.group._tags())
 
     def test_tags_with_metering(self):
@@ -239,7 +239,7 @@ class TestScalingGroupTags(common.HeatTestCase):
             {'Key': 'metering.fee', 'Value': 'foo'}]
         expected = [{'Key': 'metering.fee', 'Value': 'foo'},
                     {'Key': 'metering.AutoScalingGroupName',
-                     'Value': u'WebServerGroup'}]
+                     'Value': 'WebServerGroup'}]
 
         self.assertEqual(expected, self.group._tags())
 
@@ -326,15 +326,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=1, suffix='start',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'Start resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='Start resizing the group WebServerGroup',
                 adjustment=33,
                 stack=self.group.stack),
             mock.call(
                 capacity=3, suffix='end',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'End resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='End resizing the group WebServerGroup',
                 adjustment=33,
                 stack=self.group.stack)]
 
@@ -358,15 +358,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=5, suffix='start',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'Start resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='Start resizing the group WebServerGroup',
                 adjustment=-33,
                 stack=self.group.stack),
             mock.call(
                 capacity=3, suffix='end',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'End resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='End resizing the group WebServerGroup',
                 adjustment=-33,
                 stack=self.group.stack)]
 
@@ -388,15 +388,15 @@ class TestGroupAdjust(common.HeatTestCase):
         expected_notifies = [
             mock.call(
                 capacity=0, suffix='start', adjustment_type='ChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'Start resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='Start resizing the group WebServerGroup',
                 adjustment=1,
                 stack=self.group.stack),
             mock.call(
                 capacity=1, suffix='end',
                 adjustment_type='ChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'End resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='End resizing the group WebServerGroup',
                 adjustment=1,
                 stack=self.group.stack)]
 
@@ -420,15 +420,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=0, suffix='start',
                 adjustment_type='ChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'Start resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='Start resizing the group WebServerGroup',
                 adjustment=1,
                 stack=self.group.stack),
             mock.call(
                 capacity=0, suffix='error',
                 adjustment_type='ChangeInCapacity',
-                groupname=u'WebServerGroup',
-                message=u'test error',
+                groupname='WebServerGroup',
+                message='test error',
                 adjustment=1,
                 stack=self.group.stack)]
 
@@ -451,15 +451,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=3, suffix='start',
                 adjustment_type='ExactCapacity',
-                groupname=u'WebServerGroup',
-                message=u'Start resizing the group WebServerGroup',
+                groupname='WebServerGroup',
+                message='Start resizing the group WebServerGroup',
                 adjustment=5,
                 stack=self.group.stack),
             mock.call(
                 capacity=4, suffix='error',
                 adjustment_type='ExactCapacity',
-                groupname=u'WebServerGroup',
-                message=u'test error',
+                groupname='WebServerGroup',
+                message='test error',
                 adjustment=5,
                 stack=self.group.stack)]
 

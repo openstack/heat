@@ -108,21 +108,21 @@ class TestStacksViewBuilder(common.HeatTestCase):
         self.request.params = {}
         identity = identifier.HeatIdentifier('123456', 'wordpress', '1')
         self.stack1 = {
-            u'stack_identity': dict(identity),
-            u'updated_time': u'2012-07-09T09:13:11Z',
-            u'template_description': u'blah',
-            u'description': u'blah',
-            u'stack_status_reason': u'Stack successfully created',
-            u'creation_time': u'2012-07-09T09:12:45Z',
-            u'stack_name': identity.stack_name,
-            u'stack_action': u'CREATE',
-            u'stack_status': u'COMPLETE',
-            u'parameters': {'foo': 'bar'},
-            u'outputs': ['key', 'value'],
-            u'notification_topics': [],
-            u'capabilities': [],
-            u'disable_rollback': True,
-            u'timeout_mins': 60,
+            'stack_identity': dict(identity),
+            'updated_time': '2012-07-09T09:13:11Z',
+            'template_description': 'blah',
+            'description': 'blah',
+            'stack_status_reason': 'Stack successfully created',
+            'creation_time': '2012-07-09T09:12:45Z',
+            'stack_name': identity.stack_name,
+            'stack_action': 'CREATE',
+            'stack_status': 'COMPLETE',
+            'parameters': {'foo': 'bar'},
+            'outputs': ['key', 'value'],
+            'notification_topics': [],
+            'capabilities': [],
+            'disable_rollback': True,
+            'timeout_mins': 60,
         }
 
     def test_stack_index(self):

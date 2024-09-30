@@ -56,17 +56,17 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'resource_identity': dict(res_identity),
-                u'stack_name': stack_identity.stack_name,
-                u'resource_name': res_name,
-                u'resource_status_reason': None,
-                u'updated_time': u'2012-07-23T13:06:00Z',
-                u'stack_identity': stack_identity,
-                u'resource_action': u'CREATE',
-                u'resource_status': u'COMPLETE',
-                u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                u'resource_type': u'AWS::EC2::Instance',
+                'resource_identity': dict(res_identity),
+                'stack_name': stack_identity.stack_name,
+                'resource_name': res_name,
+                'resource_status_reason': None,
+                'updated_time': '2012-07-23T13:06:00Z',
+                'stack_identity': stack_identity,
+                'resource_action': 'CREATE',
+                'resource_status': 'COMPLETE',
+                'physical_resource_id':
+                'a3455d8c-9f88-404d-a85b-5315293e67de',
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -81,14 +81,14 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                       'rel': 'self'},
                                      {'href': self._url(stack_identity),
                                       'rel': 'stack'}],
-                           u'resource_name': res_name,
-                           u'logical_resource_id': res_name,
-                           u'resource_status_reason': None,
-                           u'updated_time': u'2012-07-23T13:06:00Z',
-                           u'resource_status': u'CREATE_COMPLETE',
-                           u'physical_resource_id':
-                           u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                           u'resource_type': u'AWS::EC2::Instance'}]}
+                           'resource_name': res_name,
+                           'logical_resource_id': res_name,
+                           'resource_status_reason': None,
+                           'updated_time': '2012-07-23T13:06:00Z',
+                           'resource_status': 'CREATE_COMPLETE',
+                           'physical_resource_id':
+                           'a3455d8c-9f88-404d-a85b-5315293e67de',
+                           'resource_type': 'AWS::EC2::Instance'}]}
         self.assertEqual(expected, result)
 
         mock_call.assert_called_once_with(
@@ -238,20 +238,20 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'resource_identity': dict(res_identity),
-                u'stack_name': stack_identity.stack_name,
-                u'resource_name': res_name,
-                u'resource_status_reason': None,
-                u'updated_time': u'2012-07-23T13:06:00Z',
-                u'stack_identity': stack_identity,
-                u'resource_action': u'CREATE',
-                u'resource_status': u'COMPLETE',
-                u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                u'resource_type': u'AWS::EC2::Instance',
-                u'parameters': resp_parameters,
-                u'description': u'Hello description',
-                u'stack_user_project_id': u'6f38bcfebbc4400b82d50c1a2ea3057d',
+                'resource_identity': dict(res_identity),
+                'stack_name': stack_identity.stack_name,
+                'resource_name': res_name,
+                'resource_status_reason': None,
+                'updated_time': '2012-07-23T13:06:00Z',
+                'stack_identity': stack_identity,
+                'resource_action': 'CREATE',
+                'resource_status': 'COMPLETE',
+                'physical_resource_id':
+                'a3455d8c-9f88-404d-a85b-5315293e67de',
+                'resource_type': 'AWS::EC2::Instance',
+                'parameters': resp_parameters,
+                'description': 'Hello description',
+                'stack_user_project_id': '6f38bcfebbc4400b82d50c1a2ea3057d',
             }
         ]
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -266,18 +266,18 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                       'rel': 'self'},
                                      {'href': self._url(stack_identity),
                                       'rel': 'stack'}],
-                           u'resource_name': res_name,
-                           u'logical_resource_id': res_name,
-                           u'resource_status_reason': None,
-                           u'updated_time': u'2012-07-23T13:06:00Z',
-                           u'resource_status': u'CREATE_COMPLETE',
-                           u'physical_resource_id':
-                           u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                           u'resource_type': u'AWS::EC2::Instance',
-                           u'parameters': resp_parameters,
-                           u'description': u'Hello description',
-                           u'stack_user_project_id':
-                           u'6f38bcfebbc4400b82d50c1a2ea3057d'}]}
+                           'resource_name': res_name,
+                           'logical_resource_id': res_name,
+                           'resource_status_reason': None,
+                           'updated_time': '2012-07-23T13:06:00Z',
+                           'resource_status': 'CREATE_COMPLETE',
+                           'physical_resource_id':
+                           'a3455d8c-9f88-404d-a85b-5315293e67de',
+                           'resource_type': 'AWS::EC2::Instance',
+                           'parameters': resp_parameters,
+                           'description': 'Hello description',
+                           'stack_user_project_id':
+                           '6f38bcfebbc4400b82d50c1a2ea3057d'}]}
         self.assertEqual(expected, result)
 
         mock_call.assert_called_once_with(
@@ -300,20 +300,20 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(stack_identity._tenant_path())
 
         engine_resp = {
-            u'description': u'',
-            u'resource_identity': dict(res_identity),
-            u'stack_name': stack_identity.stack_name,
-            u'resource_name': res_name,
-            u'resource_status_reason': None,
-            u'updated_time': u'2012-07-23T13:06:00Z',
-            u'stack_identity': dict(stack_identity),
-            u'resource_action': u'CREATE',
-            u'resource_status': u'COMPLETE',
-            u'physical_resource_id':
-            u'a3455d8c-9f88-404d-a85b-5315293e67de',
-            u'resource_type': u'AWS::EC2::Instance',
-            u'attributes': {u'foo': 'bar'},
-            u'metadata': {u'ensureRunning': u'true'}
+            'description': '',
+            'resource_identity': dict(res_identity),
+            'stack_name': stack_identity.stack_name,
+            'resource_name': res_name,
+            'resource_status_reason': None,
+            'updated_time': '2012-07-23T13:06:00Z',
+            'stack_identity': dict(stack_identity),
+            'resource_action': 'CREATE',
+            'resource_status': 'COMPLETE',
+            'physical_resource_id':
+            'a3455d8c-9f88-404d-a85b-5315293e67de',
+            'resource_type': 'AWS::EC2::Instance',
+            'attributes': {'foo': 'bar'},
+            'metadata': {'ensureRunning': 'true'}
         }
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
@@ -329,16 +329,15 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                     {'href': self._url(res_identity), 'rel': 'self'},
                     {'href': self._url(stack_identity), 'rel': 'stack'},
                 ],
-                u'description': u'',
-                u'resource_name': res_name,
-                u'logical_resource_id': res_name,
-                u'resource_status_reason': None,
-                u'updated_time': u'2012-07-23T13:06:00Z',
-                u'resource_status': u'CREATE_COMPLETE',
-                u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                u'resource_type': u'AWS::EC2::Instance',
-                u'attributes': {u'foo': 'bar'},
+                'description': '',
+                'resource_name': res_name,
+                'logical_resource_id': res_name,
+                'resource_status_reason': None,
+                'updated_time': '2012-07-23T13:06:00Z',
+                'resource_status': 'CREATE_COMPLETE',
+                'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de',
+                'resource_type': 'AWS::EC2::Instance',
+                'attributes': {'foo': 'bar'},
             }
         }
         self.assertEqual(expected, result)
@@ -364,21 +363,20 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(stack_identity._tenant_path())
 
         engine_resp = {
-            u'description': u'',
-            u'resource_identity': dict(res_identity),
-            u'stack_name': stack_identity.stack_name,
-            u'resource_name': res_name,
-            u'resource_status_reason': None,
-            u'updated_time': u'2012-07-23T13:06:00Z',
-            u'stack_identity': dict(stack_identity),
-            u'resource_action': u'CREATE',
-            u'resource_status': u'COMPLETE',
-            u'physical_resource_id':
-            u'a3455d8c-9f88-404d-a85b-5315293e67de',
-            u'resource_type': u'AWS::EC2::Instance',
-            u'attributes': {u'foo': 'bar'},
-            u'metadata': {u'ensureRunning': u'true'},
-            u'nested_stack_id': dict(nested_stack_identity)
+            'description': '',
+            'resource_identity': dict(res_identity),
+            'stack_name': stack_identity.stack_name,
+            'resource_name': res_name,
+            'resource_status_reason': None,
+            'updated_time': '2012-07-23T13:06:00Z',
+            'stack_identity': dict(stack_identity),
+            'resource_action': 'CREATE',
+            'resource_status': 'COMPLETE',
+            'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de',
+            'resource_type': 'AWS::EC2::Instance',
+            'attributes': {'foo': 'bar'},
+            'metadata': {'ensureRunning': 'true'},
+            'nested_stack_id': dict(nested_stack_identity)
         }
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
@@ -575,19 +573,18 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
         req = self._get(stack_identity._tenant_path())
 
         engine_resp = {
-            u'description': u'',
-            u'resource_identity': dict(res_identity),
-            u'stack_name': stack_identity.stack_name,
-            u'resource_name': res_name,
-            u'resource_status_reason': None,
-            u'updated_time': u'2012-07-23T13:06:00Z',
-            u'stack_identity': dict(stack_identity),
-            u'resource_action': u'CREATE',
-            u'resource_status': u'COMPLETE',
-            u'physical_resource_id':
-            u'a3455d8c-9f88-404d-a85b-5315293e67de',
-            u'resource_type': u'AWS::EC2::Instance',
-            u'metadata': {u'ensureRunning': u'true'}
+            'description': '',
+            'resource_identity': dict(res_identity),
+            'stack_name': stack_identity.stack_name,
+            'resource_name': res_name,
+            'resource_status_reason': None,
+            'updated_time': '2012-07-23T13:06:00Z',
+            'stack_identity': dict(stack_identity),
+            'resource_action': 'CREATE',
+            'resource_status': 'COMPLETE',
+            'physical_resource_id': 'a3455d8c-9f88-404d-a85b-5315293e67de',
+            'resource_type': 'AWS::EC2::Instance',
+            'metadata': {'ensureRunning': 'true'}
         }
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
                                      return_value=engine_resp)
@@ -597,7 +594,7 @@ class ResourceControllerTest(tools.ControllerTest, common.HeatTestCase):
                                           stack_id=stack_identity.stack_id,
                                           resource_name=res_name)
 
-        expected = {'metadata': {u'ensureRunning': u'true'}}
+        expected = {'metadata': {'ensureRunning': 'true'}}
         self.assertEqual(expected, result)
 
         mock_call.assert_called_once_with(

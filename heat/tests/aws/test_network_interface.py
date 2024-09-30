@@ -66,7 +66,7 @@ class NetworkInterfaceTest(common.HeatTestCase):
         self.nic_name = utils.PhysName(stack_name, resource_name)
         self.port = {'network_id': 'nnnn',
                      'fixed_ips': [{
-                         'subnet_id': u'ssss'
+                         'subnet_id': 'ssss'
                      }],
                      'name': self.nic_name,
                      'admin_state_up': True}

@@ -159,7 +159,7 @@ class VolumeTest(vt_base.VolumeTestCase):
             size=1, availability_zone=None,
             description=vol_name,
             name=vol_name,
-            metadata={u'Usage': u'Wiki Data Volume'})
+            metadata={'Usage': 'Wiki Data Volume'})
         self.cinder_fc.volumes.get.assert_called_with('vol-123')
         aws_vol.VolumeAttachment.check_delete_complete.assert_called_once_with(
             cookie)
@@ -234,12 +234,12 @@ class VolumeTest(vt_base.VolumeTestCase):
             fva, fva, fakes_nova.fake_exception()]
 
         scheduler.TaskRunner(rsrc.delete)()
-        self.fc.volumes.get_server_volume.assert_called_with(u'WikiDatabase',
+        self.fc.volumes.get_server_volume.assert_called_with('WikiDatabase',
                                                              'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_with(
             'WikiDatabase', 'vol-123')
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.validate_mock_create_server_volume_script()
 
     def test_volume_detachment_err(self):
@@ -268,7 +268,7 @@ class VolumeTest(vt_base.VolumeTestCase):
 
         scheduler.TaskRunner(rsrc.delete)()
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.delete_server_volume.assert_called_once_with(
             'WikiDatabase', 'vol-123')
         self.validate_mock_create_server_volume_script()
@@ -299,9 +299,9 @@ class VolumeTest(vt_base.VolumeTestCase):
         scheduler.TaskRunner(rsrc.delete)()
 
         self.fc.volumes.delete_server_volume.assert_called_once_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.validate_mock_create_server_volume_script()
 
     def test_volume_detach_deleting_volume(self):
@@ -327,7 +327,7 @@ class VolumeTest(vt_base.VolumeTestCase):
         scheduler.TaskRunner(rsrc.delete)()
 
         self.fc.volumes.delete_server_volume.assert_called_once_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.validate_mock_create_server_volume_script()
 
     def test_volume_detach_with_latency(self):
@@ -355,9 +355,9 @@ class VolumeTest(vt_base.VolumeTestCase):
         scheduler.TaskRunner(rsrc.delete)()
 
         self.fc.volumes.delete_server_volume.assert_called_once_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.fc.volumes.get_server_volume.assert_called_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.validate_mock_create_server_volume_script()
 
     def test_volume_detach_with_error(self):
@@ -385,7 +385,7 @@ class VolumeTest(vt_base.VolumeTestCase):
                       str(ex))
 
         self.fc.volumes.delete_server_volume.assert_called_once_with(
-            u'WikiDatabase', 'vol-123')
+            'WikiDatabase', 'vol-123')
         self.validate_mock_create_server_volume_script()
 
     def test_volume_delete(self):

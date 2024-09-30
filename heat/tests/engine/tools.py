@@ -24,7 +24,7 @@ from heat.engine import template as templatem
 from heat.tests.openstack.nova import fakes as fakes_nova
 from heat.tests import utils
 
-wp_template = u'''
+wp_template = '''
 heat_template_version: 2014-10-16
 description: WordPress
 parameters:

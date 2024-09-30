@@ -417,9 +417,9 @@ class WaitConditionHandleTest(common.HeatTestCase):
         test_metadata = {'Data': 'foo', 'Reason': 'bar',
                          'Status': 'SUCCESS', 'UniqueId': '123'}
         rsrc.handle_signal(test_metadata)
-        handle_metadata = {u'123': {u'Data': u'foo',
-                                    u'Reason': u'bar',
-                                    u'Status': u'SUCCESS'}}
+        handle_metadata = {'123': {'Data': 'foo',
+                                   'Reason': 'bar',
+                                   'Status': 'SUCCESS'}}
         self.assertEqual(handle_metadata, rsrc.metadata_get())
 
     def test_handle_signal_invalid(self):

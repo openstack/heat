@@ -60,18 +60,18 @@ class TestScalingGroupTags(common.HeatTestCase):
 
     def test_tags_default(self):
         expected = [{'Key': 'metering.groupname',
-                     'Value': u'my-group'},
+                     'Value': 'my-group'},
                     {'Key': 'metering.AutoScalingGroupName',
-                     'Value': u'my-group'}]
+                     'Value': 'my-group'}]
         self.assertEqual(expected, self.group._tags())
 
     def test_tags_with_extra(self):
         self.group.properties.data['Tags'] = [
             {'Key': 'fee', 'Value': 'foo'}]
         expected = [{'Key': 'metering.groupname',
-                     'Value': u'my-group'},
+                     'Value': 'my-group'},
                     {'Key': 'metering.AutoScalingGroupName',
-                     'Value': u'my-group'}]
+                     'Value': 'my-group'}]
         self.assertEqual(expected, self.group._tags())
 
     def test_tags_with_metering(self):
@@ -79,7 +79,7 @@ class TestScalingGroupTags(common.HeatTestCase):
             {'Key': 'metering.fee', 'Value': 'foo'}]
         expected = [{'Key': 'metering.groupname', 'Value': 'my-group'},
                     {'Key': 'metering.AutoScalingGroupName',
-                     'Value': u'my-group'}]
+                     'Value': 'my-group'}]
 
         self.assertEqual(expected, self.group._tags())
 
@@ -161,15 +161,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=1, suffix='start',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'my-group',
-                message=u'Start resizing the group my-group',
+                groupname='my-group',
+                message='Start resizing the group my-group',
                 adjustment=33,
                 stack=self.group.stack),
             mock.call(
                 capacity=3, suffix='end',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'my-group',
-                message=u'End resizing the group my-group',
+                groupname='my-group',
+                message='End resizing the group my-group',
                 adjustment=33,
                 stack=self.group.stack)]
 
@@ -193,15 +193,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=3, suffix='start',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'my-group',
-                message=u'Start resizing the group my-group',
+                groupname='my-group',
+                message='Start resizing the group my-group',
                 adjustment=-33,
                 stack=self.group.stack),
             mock.call(
                 capacity=1, suffix='end',
                 adjustment_type='PercentChangeInCapacity',
-                groupname=u'my-group',
-                message=u'End resizing the group my-group',
+                groupname='my-group',
+                message='End resizing the group my-group',
                 adjustment=-33,
                 stack=self.group.stack)]
 
@@ -223,15 +223,15 @@ class TestGroupAdjust(common.HeatTestCase):
         expected_notifies = [
             mock.call(
                 capacity=0, suffix='start', adjustment_type='ChangeInCapacity',
-                groupname=u'my-group',
-                message=u'Start resizing the group my-group',
+                groupname='my-group',
+                message='Start resizing the group my-group',
                 adjustment=1,
                 stack=self.group.stack),
             mock.call(
                 capacity=1, suffix='end',
                 adjustment_type='ChangeInCapacity',
-                groupname=u'my-group',
-                message=u'End resizing the group my-group',
+                groupname='my-group',
+                message='End resizing the group my-group',
                 adjustment=1,
                 stack=self.group.stack)]
 
@@ -255,15 +255,15 @@ class TestGroupAdjust(common.HeatTestCase):
             mock.call(
                 capacity=0, suffix='start',
                 adjustment_type='ChangeInCapacity',
-                groupname=u'my-group',
-                message=u'Start resizing the group my-group',
+                groupname='my-group',
+                message='Start resizing the group my-group',
                 adjustment=1,
                 stack=self.group.stack),
             mock.call(
                 capacity=0, suffix='error',
                 adjustment_type='ChangeInCapacity',
-                groupname=u'my-group',
-                message=u'test error',
+                groupname='my-group',
+                message='test error',
                 adjustment=1,
                 stack=self.group.stack)]
 
@@ -294,7 +294,7 @@ class TestGroupAdjust(common.HeatTestCase):
                 capacity=4, suffix='error',
                 adjustment_type='ExactCapacity',
                 groupname='my-group',
-                message=u'test error',
+                message='test error',
                 adjustment=5,
                 stack=self.group.stack)]
 

@@ -101,7 +101,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             strict_validate=True,
             tenant_id='test_tenant_id',
             timeout_mins=60,
-            user_creds_id=u'1',
+            user_creds_id='1',
             username='test_username',
             converge=True
         )
@@ -221,7 +221,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
             strict_validate=True,
             tenant_id='test_tenant_id',
             timeout_mins=60,
-            user_creds_id=u'1',
+            user_creds_id='1',
             username='test_username',
             converge=False
         )
@@ -268,7 +268,7 @@ class ServiceStackUpdateTest(common.HeatTestCase):
     def test_stack_update_existing_encrypted_parameters(self):
         # Create the stack with encryption enabled
         # On update encrypted_param_names should be used from existing stack
-        hidden_param_template = u'''
+        hidden_param_template = '''
 heat_template_version: 2013-05-23
 parameters:
    param2:
@@ -319,10 +319,10 @@ resources:
                                            update_params,
                                            None, api_args)
             tmpl = mock_stack.call_args[0][2]
-            self.assertEqual({u'param2': u'bar'}, tmpl.env.params)
+            self.assertEqual({'param2': 'bar'}, tmpl.env.params)
             # encrypted_param_names must be passed from existing to new
             # stack otherwise the updated stack won't decrypt the params
-            self.assertEqual([u'param2'], tmpl.env.encrypted_param_names)
+            self.assertEqual(['param2'], tmpl.env.encrypted_param_names)
             self.assertEqual(stk.identifier(), result)
 
     def test_stack_update_existing_parameters_remove(self):
@@ -571,7 +571,7 @@ resources:
             stack_user_project_id='1234',
             strict_validate=True,
             tenant_id='test_tenant_id', timeout_mins=1,
-            user_creds_id=u'1',
+            user_creds_id='1',
             username='test_username',
             converge=False
         )
@@ -704,7 +704,7 @@ resources:
             owner_id=None, parent_resource=None,
             stack_user_project_id='1234', strict_validate=True,
             tenant_id='test_tenant_id',
-            timeout_mins=60, user_creds_id=u'1',
+            timeout_mins=60, user_creds_id='1',
             username='test_username',
             converge=False
         )
@@ -826,7 +826,7 @@ resources:
             owner_id=None, parent_resource=None,
             stack_user_project_id='1234', strict_validate=True,
             tenant_id='test_tenant_id',
-            timeout_mins=60, user_creds_id=u'1',
+            timeout_mins=60, user_creds_id='1',
             username='test_username',
             converge=False
         )
@@ -892,7 +892,7 @@ resources:
             stack_user_project_id='1234',
             strict_validate=True,
             tenant_id='test_tenant_id', timeout_mins=60,
-            user_creds_id=u'1', username='test_username',
+            user_creds_id='1', username='test_username',
             converge=False
         )
         mock_load.assert_called_once_with(self.ctx, stack=s,
@@ -1151,7 +1151,7 @@ resources:
             disable_rollback=True, nested_depth=0, owner_id=None,
             parent_resource=None, stack_user_project_id='1234',
             strict_validate=True, tenant_id='test_tenant_id', timeout_mins=60,
-            user_creds_id=u'1', username='test_username',
+            user_creds_id='1', username='test_username',
             converge=False
         )
         mock_load.assert_called_once_with(self.ctx, stack=s)

@@ -1274,10 +1274,10 @@ class DescriptionTest(common.HeatTestCase):
     def test_unicode(self):
         class C(object):
             def __str__(self):
-                return u'C "\u2665"'
+                return 'C "\u2665"'
 
             def __repr__(self):
-                return u'\u2665'
+                return '\u2665'
 
             def __call__(self):
                 pass
@@ -1285,7 +1285,7 @@ class DescriptionTest(common.HeatTestCase):
             def m(self):
                 pass
 
-        self.assertEqual(u'm from C "\u2665"',
+        self.assertEqual('m from C "\u2665"',
                          scheduler.task_description(C().m))
-        self.assertEqual(u'\u2665',
+        self.assertEqual('\u2665',
                          scheduler.task_description(C()))

@@ -181,7 +181,7 @@ class UserTest(common.HeatTestCase):
         t = template_format.parse(user_template_password)
         stack = utils.parse_stack(t, stack_name=self.stack_name)
         project_id = 'stackproject'
-        password = u'myP@ssW0rd'
+        password = 'myP@ssW0rd'
         rsrc = self.create_user(t, stack, 'CfnUser',
                                 project_id=project_id,
                                 password=password)
@@ -204,18 +204,18 @@ class UserTest(common.HeatTestCase):
         self.assertEqual(self.username, rsrc.FnGetRefId())
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
-        self.assertEqual([u'WebServerAccessPolicy'],
+        self.assertEqual(['WebServerAccessPolicy'],
                          rsrc.properties['Policies'])
 
         # OK
-        self.assertTrue(rsrc._validate_policies([u'WebServerAccessPolicy']))
+        self.assertTrue(rsrc._validate_policies(['WebServerAccessPolicy']))
 
         # Resource name doesn't exist in the stack
-        self.assertFalse(rsrc._validate_policies([u'NoExistAccessPolicy']))
+        self.assertFalse(rsrc._validate_policies(['NoExistAccessPolicy']))
 
         # Resource name is wrong Resource type
-        self.assertFalse(rsrc._validate_policies([u'NoExistAccessPolicy',
-                                                  u'WikiDatabase']))
+        self.assertFalse(rsrc._validate_policies(['NoExistAccessPolicy',
+                                                  'WikiDatabase']))
 
         # Wrong type (AWS embedded policy format, not yet supported)
         dict_policy = {"PolicyName": "AccessForCFNInit",

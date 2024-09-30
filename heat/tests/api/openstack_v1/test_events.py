@@ -78,16 +78,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_type': u'AWS::EC2::Instance',
+                'stack_name': 'wordpress',
+                'event_time': '2012-07-23T13:05:39Z',
+                'stack_identity': dict(stack_identity),
+                'resource_name': res_name,
+                'resource_status_reason': 'state changed',
+                'event_identity': dict(ev_identity),
+                'resource_action': 'CREATE',
+                'resource_status': 'IN_PROGRESS',
+                'physical_resource_id': None,
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
         if nested_depth:
@@ -110,12 +110,12 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                         {'href': self._url(res_identity), 'rel': 'resource'},
                         {'href': self._url(stack_identity), 'rel': 'stack'},
                     ],
-                    u'resource_name': res_name,
-                    u'logical_resource_id': res_name,
-                    u'resource_status_reason': u'state changed',
-                    u'event_time': u'2012-07-23T13:05:39Z',
-                    u'resource_status': u'CREATE_IN_PROGRESS',
-                    u'physical_resource_id': None,
+                    'resource_name': res_name,
+                    'logical_resource_id': res_name,
+                    'resource_status_reason': 'state changed',
+                    'event_time': '2012-07-23T13:05:39Z',
+                    'resource_status': 'CREATE_IN_PROGRESS',
+                    'physical_resource_id': None,
                 }
             ]
         }
@@ -151,16 +151,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         mock_call.return_value = [
             {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_type': u'AWS::EC2::Instance',
+                'stack_name': 'wordpress',
+                'event_time': '2012-07-23T13:05:39Z',
+                'stack_identity': dict(stack_identity),
+                'resource_name': res_name,
+                'resource_status_reason': 'state changed',
+                'event_identity': dict(ev_identity),
+                'resource_action': 'CREATE',
+                'resource_status': 'IN_PROGRESS',
+                'physical_resource_id': None,
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
 
@@ -198,16 +198,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         mock_call.return_value = [
             {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_type': u'AWS::EC2::Instance',
+                'stack_name': 'wordpress',
+                'event_time': '2012-07-23T13:05:39Z',
+                'stack_identity': dict(stack_identity),
+                'resource_name': res_name,
+                'resource_status_reason': 'state changed',
+                'event_identity': dict(ev_identity),
+                'resource_action': 'CREATE',
+                'resource_status': 'IN_PROGRESS',
+                'physical_resource_id': None,
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
 
@@ -248,16 +248,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_type': u'AWS::EC2::Instance',
+                'stack_name': 'wordpress',
+                'event_time': '2012-07-23T13:05:39Z',
+                'stack_identity': dict(stack_identity),
+                'resource_name': res_name,
+                'resource_status_reason': 'state changed',
+                'event_identity': dict(ev_identity),
+                'resource_action': 'CREATE',
+                'resource_status': 'IN_PROGRESS',
+                'physical_resource_id': None,
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -277,12 +277,12 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                         {'href': self._url(res_identity), 'rel': 'resource'},
                         {'href': self._url(stack_identity), 'rel': 'stack'},
                     ],
-                    u'resource_name': res_name,
-                    u'logical_resource_id': res_name,
-                    u'resource_status_reason': u'state changed',
-                    u'event_time': u'2012-07-23T13:05:39Z',
-                    u'resource_status': u'CREATE_IN_PROGRESS',
-                    u'physical_resource_id': None,
+                    'resource_name': res_name,
+                    'logical_resource_id': res_name,
+                    'resource_status_reason': 'state changed',
+                    'event_time': '2012-07-23T13:05:39Z',
+                    'resource_status': 'CREATE_IN_PROGRESS',
+                    'physical_resource_id': None,
                 }
             ]
         }
@@ -491,18 +491,18 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         engine_resp = [
             {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:06:00Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'COMPLETE',
-                u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                u'resource_properties': {u'UserData': u'blah'},
-                u'resource_type': u'AWS::EC2::Instance',
+                'stack_name': 'wordpress',
+                'event_time': '2012-07-23T13:06:00Z',
+                'stack_identity': dict(stack_identity),
+                'resource_name': res_name,
+                'resource_status_reason': 'state changed',
+                'event_identity': dict(ev_identity),
+                'resource_action': 'CREATE',
+                'resource_status': 'COMPLETE',
+                'physical_resource_id':
+                'a3455d8c-9f88-404d-a85b-5315293e67de',
+                'resource_properties': {'UserData': 'blah'},
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
         mock_call = self.patchobject(rpc_client.EngineClient, 'call',
@@ -522,15 +522,15 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
                     {'href': self._url(res_identity), 'rel': 'resource'},
                     {'href': self._url(stack_identity), 'rel': 'stack'},
                 ],
-                u'resource_name': res_name,
-                u'logical_resource_id': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_time': u'2012-07-23T13:06:00Z',
-                u'resource_status': u'CREATE_COMPLETE',
-                u'physical_resource_id':
-                u'a3455d8c-9f88-404d-a85b-5315293e67de',
-                u'resource_type': u'AWS::EC2::Instance',
-                u'resource_properties': {u'UserData': u'blah'},
+                'resource_name': res_name,
+                'logical_resource_id': res_name,
+                'resource_status_reason': 'state changed',
+                'event_time': '2012-07-23T13:06:00Z',
+                'resource_status': 'CREATE_COMPLETE',
+                'physical_resource_id':
+                'a3455d8c-9f88-404d-a85b-5315293e67de',
+                'resource_type': 'AWS::EC2::Instance',
+                'resource_properties': {'UserData': 'blah'},
             }
         }
 
@@ -649,16 +649,16 @@ class EventControllerTest(tools.ControllerTest, common.HeatTestCase):
 
         mock_call.return_value = [
             {
-                u'stack_name': u'wordpress',
-                u'event_time': u'2012-07-23T13:05:39Z',
-                u'stack_identity': dict(stack_identity),
-                u'resource_name': res_name,
-                u'resource_status_reason': u'state changed',
-                u'event_identity': dict(ev_identity),
-                u'resource_action': u'CREATE',
-                u'resource_status': u'IN_PROGRESS',
-                u'physical_resource_id': None,
-                u'resource_type': u'AWS::EC2::Instance',
+                'stack_name': 'wordpress',
+                'event_time': '2012-07-23T13:05:39Z',
+                'stack_identity': dict(stack_identity),
+                'resource_name': res_name,
+                'resource_status_reason': 'state changed',
+                'event_identity': dict(ev_identity),
+                'resource_action': 'CREATE',
+                'resource_status': 'IN_PROGRESS',
+                'physical_resource_id': None,
+                'resource_type': 'AWS::EC2::Instance',
             }
         ]
 
