@@ -233,7 +233,7 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     def test_describe(self):
         # Format a dummy GET request to pass into the WSGI handler
-        stack_name = u"wordpress"
+        stack_name = "wordpress"
         identity = dict(identifier.HeatIdentifier('t', stack_name, '6'))
         params = {'Action': 'DescribeStacks', 'StackName': stack_name}
         dummy_req = self._dummy_GET_request(params)
@@ -324,7 +324,7 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     def test_describe_arn(self):
         # Format a dummy GET request to pass into the WSGI handler
-        stack_name = u"wordpress"
+        stack_name = "wordpress"
         stack_identifier = identifier.HeatIdentifier('t', stack_name, '6')
         identity = dict(stack_identifier)
         params = {'Action': 'DescribeStacks',
@@ -413,7 +413,7 @@ class CfnStackControllerTest(common.HeatTestCase):
 
     def test_describe_arn_invalidtenant(self):
         # Format a dummy GET request to pass into the WSGI handler
-        stack_name = u"wordpress"
+        stack_name = "wordpress"
         stack_identifier = identifier.HeatIdentifier('wibble', stack_name, '6')
         identity = dict(stack_identifier)
         params = {'Action': 'DescribeStacks',

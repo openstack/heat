@@ -900,7 +900,7 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         sc.head_object.assert_called_with(container, object_name)
         sc.get_object.assert_called_once_with(container, object_name)
         # signal_software_deployment called with signal
-        ssd.assert_called_once_with(self.ctx, deployment_id, {u"foo": u"bar"},
+        ssd.assert_called_once_with(self.ctx, deployment_id, {"foo": "bar"},
                                     then.isoformat())
 
         # second poll updated_at populated with first poll last-modified

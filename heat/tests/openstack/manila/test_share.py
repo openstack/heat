@@ -113,14 +113,14 @@ class ManilaShareTest(common.HeatTestCase):
             share=share.resource_id, access_type="ip")
         args, kwargs = share.client().shares.create.call_args
         message_end = " parameter was not passed to manila client"
-        self.assertEqual(u"NFS", kwargs["share_proto"],
+        self.assertEqual("NFS", kwargs["share_proto"],
                          "Share protocol" + message_end)
         self.assertEqual(1, kwargs["size"], "Share size" + message_end)
         self.assertEqual("basic_test_share", kwargs["name"],
                          "Share name" + message_end)
         self.assertEqual("basic test share", kwargs["description"],
                          "Share description" + message_end)
-        self.assertEqual({u"key": u"value"}, kwargs["metadata"],
+        self.assertEqual({"key": "value"}, kwargs["metadata"],
                          "Metadata" + message_end)
         self.assertTrue(kwargs["is_public"])
         share.client().shares.get.assert_called_once_with(self.fake_share.id)
