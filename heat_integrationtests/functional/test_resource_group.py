@@ -71,7 +71,7 @@ resources:
             environment=env
         )
 
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
         # Check we created an empty nested stack
@@ -116,7 +116,7 @@ resources:
         create_template = self.template.replace("count: 0", "count: 2")
         stack_identifier = self.stack_create(template=create_template,
                                              environment=env)
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
         # validate count, type and name of resources in a resource group.
@@ -190,7 +190,7 @@ resources:
         create_template = self.template.replace("count: 0", "count: 2")
         stack_identifier = self.stack_create(template=create_template,
                                              environment=env)
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
         # verify that the resource group has 2 resources
         self._validate_resources(stack_identifier, 2)
@@ -222,15 +222,15 @@ resources:
 
         # create stack with resource group, initial count 5
         stack_identifier = self.stack_create(template=rp_template)
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
         group_resources = self.list_group_resources(stack_identifier,
                                                     'random_group')
-        expected_resources = {u'0': u'OS::Heat::RandomString',
-                              u'1': u'OS::Heat::RandomString',
-                              u'2': u'OS::Heat::RandomString',
-                              u'3': u'OS::Heat::RandomString',
-                              u'4': u'OS::Heat::RandomString'}
+        expected_resources = {'0': 'OS::Heat::RandomString',
+                              '1': 'OS::Heat::RandomString',
+                              '2': 'OS::Heat::RandomString',
+                              '3': 'OS::Heat::RandomString',
+                              '4': 'OS::Heat::RandomString'}
         self.assertEqual(expected_resources, group_resources)
 
         # Remove three, specifying the middle resources to be removed
@@ -240,11 +240,11 @@ resources:
         self.update_stack(stack_identifier, update_template)
         group_resources = self.list_group_resources(stack_identifier,
                                                     'random_group')
-        expected_resources = {u'0': u'OS::Heat::RandomString',
-                              u'4': u'OS::Heat::RandomString',
-                              u'5': u'OS::Heat::RandomString',
-                              u'6': u'OS::Heat::RandomString',
-                              u'7': u'OS::Heat::RandomString'}
+        expected_resources = {'0': 'OS::Heat::RandomString',
+                              '4': 'OS::Heat::RandomString',
+                              '5': 'OS::Heat::RandomString',
+                              '6': 'OS::Heat::RandomString',
+                              '7': 'OS::Heat::RandomString'}
         self.assertEqual(expected_resources, group_resources)
 
     def test_props_update(self):
@@ -255,7 +255,7 @@ resources:
         template_one = self.template.replace("count: 0", "count: 1")
         stack_identifier = self.stack_create(template=template_one,
                                              environment=env)
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
         initial_nested_ident = self.group_nested_identifier(stack_identifier,
@@ -287,7 +287,7 @@ resources:
         template_one = self.template.replace("count: 0", "count: 2")
         stack_identifier = self.stack_create(template=template_one,
                                              environment=env)
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
 
         initial_nested_ident = self.group_nested_identifier(stack_identifier,
@@ -349,7 +349,7 @@ outputs:
         stack_identifier = self.stack_create(template=template_one,
                                              environment=env,
                                              files=files1)
-        self.assertEqual({u'random_group': u'OS::Heat::ResourceGroup'},
+        self.assertEqual({'random_group': 'OS::Heat::ResourceGroup'},
                          self.list_resources(stack_identifier))
         self.assertEqual(files1, self.client.stacks.files(stack_identifier))
 
@@ -397,7 +397,7 @@ resources:
                     'Environment': {'event_sinks': [],
                                     'parameter_defaults': {},
                                     'parameters': {},
-                                    'resource_registry': {u'resources': {}}},
+                                    'resource_registry': {'resources': {}}},
                     'Parameters': {
                         'the_count': {'Description': '',
                                       'Label': 'the_count',

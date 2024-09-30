@@ -17,7 +17,7 @@ from heat_integrationtests.functional import functional_base
 class SimpleStackValidationTest(functional_base.FunctionalTestsBase):
 
     def test_validate_json_content(self):
-        template = u'''
+        template = '''
 heat_template_version: rocky
 resources:
   server:

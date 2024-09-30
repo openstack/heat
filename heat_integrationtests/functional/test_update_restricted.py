@@ -28,15 +28,15 @@ test_template = {
     }
 }
 
-env_both_restrict = {u'resource_registry': {
-    u'resources': {
+env_both_restrict = {'resource_registry': {
+    'resources': {
         'bar': {'restricted_actions': ['update', 'replace']}
     }
 }
 }
 
-env_replace_restrict = {u'resource_registry': {
-    u'resources': {
+env_replace_restrict = {'resource_registry': {
+    'resources': {
         '*ar': {'restricted_actions': 'replace'}
     }
 }
