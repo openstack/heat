@@ -500,7 +500,7 @@ resources:
 
         # Parent resources should be unchanged and the nested stack
         # should have been updated in-place without replacement
-        self.assertEqual({u'test1': u'My::TestResource2'},
+        self.assertEqual({'test1': 'My::TestResource2'},
                          self.list_resources(stack_identifier))
         rsrc = self.client.resources.get(stack_identifier, 'test1')
         self.assertEqual(rsrc.physical_resource_id, nested_id)
@@ -551,7 +551,7 @@ resources:
             provider_stack = self.client.stacks.get(rsrc.physical_resource_id)
             provider_identifier = '%s/%s' % (provider_stack.stack_name,
                                              provider_stack.id)
-            provider_resources = {u'test1': u'OS::Heat::TestResource'}
+            provider_resources = {'test1': 'OS::Heat::TestResource'}
             self.assertEqual(provider_resources,
                              self.list_resources(provider_identifier))
 
@@ -678,7 +678,7 @@ resources:
         self.update_stack(stack_identifier,
                           parameters={'do_fail': False},
                           existing=True)
-        self.assertEqual({u'aresource': u'OS::Heat::TestResource'},
+        self.assertEqual({'aresource': 'OS::Heat::TestResource'},
                          self.list_resources(stack_identifier))
 
     def test_stack_update_with_new_env(self):
