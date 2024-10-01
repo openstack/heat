@@ -39,7 +39,7 @@ GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 HEAT_USE_APACHE=${HEAT_USE_APACHE:-${HEAT_USE_MOD_WSGI:-True}}
 
 HEAT_DIR=$DEST/heat
-HEAT_FILES_DIR=$HEAT_DIR/heat/httpd/files
+HEAT_HTTPD_VHOST_FILES_DIR=$HEAT_DIR/etc/heat/httpd
 
 HEAT_STANDALONE=$(trueorfalse False HEAT_STANDALONE)
 HEAT_ENABLE_ADOPT_ABANDON=$(trueorfalse False HEAT_ENABLE_ADOPT_ABANDON)
@@ -58,8 +58,8 @@ HEAT_TRUSTEE_DOMAIN=${HEAT_TRUSTEE_DOMAIN:-default}
 HEAT_BIN_DIR=$(get_python_exec_prefix)
 HEAT_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-api-uwsgi.ini
 HEAT_CFN_API_UWSGI_CONF=$HEAT_CONF_DIR/heat-api-cfn-uwsgi.ini
-HEAT_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api
-HEAT_CFN_API_UWSGI=$HEAT_BIN_DIR/heat-wsgi-api-cfn
+HEAT_API_UWSGI=heat.wsgi.api:application
+HEAT_CFN_API_UWSGI=heat.wsgi.cfn:application
 
 # Flag to set the oslo_policy.enforce_scope and oslo_policy.enforce_new_defaults.
 # This is used to disable the compute API policies scope and new defaults.
@@ -159,12 +159,12 @@ function configure_heat {
 
     if [[ "$HEAT_USE_APACHE" == "True" ]]; then
         if [[ $WSGI_MODE == "uwsgi" ]]; then
-            write_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI" "/heat-api"
+            write_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI" "/heat-api" "" "heat-api"
             # configure threads for h-api to avoid IO wait and messaging timeout. We use
             # 'nproc/4' to calculate API workers, hence, 4 would be probably correct
             # approximation.
             iniset "$HEAT_API_UWSGI_CONF" uwsgi threads 4
-            write_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI" "/heat-api-cfn"
+            write_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI" "/heat-api-cfn" "" "heat-api-cfn"
         else
             _config_heat_apache_wsgi
         fi
@@ -368,11 +368,11 @@ function _config_heat_apache_wsgi {
     local heat_cfn_api_port=$HEAT_API_CFN_PORT
     local venv_path=""
 
-    sudo cp $HEAT_FILES_DIR/heat-api.conf $heat_apache_conf
+    sudo cp $HEAT_HTTPD_VHOST_FILES_DIR/heat-api.conf $heat_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
-        s|%HEAT_BIN_DIR%|$HEAT_BIN_DIR|g;
+        s|%HEAT_DIR%|$HEAT_DIR|g;
         s|%API_WORKERS%|$API_WORKERS|g;
         s|%SSLENGINE%|$heat_ssl|g;
         s|%SSLCERTFILE%|$heat_certfile|g;
@@ -381,11 +381,11 @@ function _config_heat_apache_wsgi {
         s|%VIRTUALENV%|$venv_path|g
     " -i $heat_apache_conf
 
-    sudo cp $HEAT_FILES_DIR/heat-api-cfn.conf $heat_cfn_apache_conf
+    sudo cp $HEAT_HTTPD_VHOST_FILES_DIR/heat-api-cfn.conf $heat_cfn_apache_conf
     sudo sed -e "
         s|%PUBLICPORT%|$heat_cfn_api_port|g;
         s|%APACHE_NAME%|$APACHE_NAME|g;
-        s|%HEAT_BIN_DIR%|$HEAT_BIN_DIR|g;
+        s|%HEAT_DIR%|$HEAT_DIR|g;
         s|%API_WORKERS%|$API_WORKERS|g;
         s|%SSLENGINE%|$heat_ssl|g;
         s|%SSLCERTFILE%|$heat_certfile|g;
