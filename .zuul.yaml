@@ -100,6 +100,7 @@
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^etc/heat/heat-.*-generator.conf$
       - ^heat/locale/.*$
       - ^heat/tests/.*$
       - ^releasenotes/.*$
@@ -177,6 +178,7 @@
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
+      - ^etc/heat/heat-.*-generator.conf$
       - ^heat/locale/.*$
       - ^heat/tests/.*$
       - ^releasenotes/.*$

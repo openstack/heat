@@ -92,7 +92,7 @@ policy_generator_config_file = '../../etc/heat/heat-policy-generator.conf'
 sample_policy_basename = '_static/heat'
 
 # oslo_config.sphinxconfiggen options
-config_generator_config_file = '../../config-generator.conf'
+config_generator_config_file = '../../etc/heat/heat-config-generator.conf'
 sample_config_basename = '_static/heat'
 
 # openstackdocstheme options
