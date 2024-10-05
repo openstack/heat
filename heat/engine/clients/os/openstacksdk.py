@@ -28,7 +28,7 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
-    service_types = [NETWORK, CLUSTERING] = ['network', 'clustering']
+    service_types = [NETWORK] = ['network']
 
     def _create(self, version=None):
         config = cloud_region.from_session(
