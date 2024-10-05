@@ -433,7 +433,7 @@ class TestIsNotFound(common.HeatTestCase):
             is_client_exception=True,
             is_conflict=True,
             plugin='glance',
-            exception=lambda: glance_exc.Conflict(),
+            exception=lambda: glance_exc.HTTPConflict(),
         )),
         ('heat_not_found', dict(
             is_not_found=True,
