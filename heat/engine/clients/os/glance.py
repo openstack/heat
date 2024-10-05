@@ -31,7 +31,7 @@ class GlanceClientPlugin(client_plugin.ClientPlugin):
 
     service_types = [IMAGE] = ['image']
 
-    supported_versions = [V1, V2] = ['1', '2']
+    supported_versions = [V2] = ['2']
 
     default_version = V2
 
