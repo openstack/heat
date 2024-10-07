@@ -185,11 +185,18 @@ class DesignateZone(resource.Resource):
             return zone[name]
 
     def check_delete_complete(self, handler_data=None):
-        if handler_data:
-            with self.client_plugin().ignore_not_found:
-                return self._check_status_complete()
-
-        return True
+        if not handler_data:
+            return True
+        try:
+            zone = self.client().zones.get(self.resource_id)
+        except Exception as exc:
+            self.client_plugin().ignore_not_found(exc)
+            return True
+        if zone["status"] == "ERROR":
+            raise exception.ResourceInError(
+                resource_status=zone['status'],
+                status_reason=_('Error in zone'))
+        return False
 
 
 def resource_mapping():

@@ -151,11 +151,21 @@ class DesignateRecordSet(resource.Resource):
                 return self.resource_id
 
     def check_delete_complete(self, handler_data=None):
-        if handler_data:
-            with self.client_plugin().ignore_not_found:
-                return self._check_status_complete()
-
-        return True
+        if not handler_data:
+            return True
+        try:
+            recordset = self.client().recordsets.get(
+                recordset=self.resource_id,
+                zone=self.properties[self.ZONE]
+            )
+        except Exception as exc:
+            self.client_plugin().ignore_not_found(exc)
+            return True
+        if recordset['status'] == 'ERROR':
+            raise exception.ResourceInError(
+                resource_status=recordset['status'],
+                status_reason=_('Error in RecordSet'))
+        return False
 
     def _show_resource(self):
         return self.client().recordsets.get(

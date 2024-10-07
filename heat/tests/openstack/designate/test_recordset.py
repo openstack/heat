@@ -193,7 +193,11 @@ class DesignateRecordSetTest(common.HeatTestCase):
 
     def test_check_delete_complete(self):
         self.test_resource.resource_id = self._get_mock_resource()['id']
-        self._mock_check_status_active()
+        self.test_client.recordsets.get.side_effect = [
+            {'status': 'PENDING'},
+            designate_exception.NotFound,
+            {'status': 'ERROR'}
+        ]
         self.assertFalse(self.test_resource.check_delete_complete(
             self.test_resource.resource_id))
         self.assertTrue(self.test_resource.check_delete_complete(

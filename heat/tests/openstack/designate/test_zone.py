@@ -13,6 +13,8 @@
 
 from unittest import mock
 
+from designateclient import exceptions as designate_exception
+
 from heat.common import exception
 from heat.engine.resources.openstack.designate import zone
 from heat.engine import stack
@@ -188,7 +190,11 @@ class DesignateZoneTest(common.HeatTestCase):
                       ex.message)
 
     def test_check_delete_complete(self):
-        self._mock_check_status_active()
+        self.test_client.zones.get.side_effect = [
+            {'status': 'PENDING'},
+            designate_exception.NotFound,
+            {'status': 'ERROR'}
+        ]
         self.assertFalse(self.test_resource.check_delete_complete(
             self._get_mock_resource()['id']
         ))
