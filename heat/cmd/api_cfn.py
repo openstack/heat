@@ -29,6 +29,7 @@ from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
+from oslo_reports import opts as gmr_opts
 from oslo_service import systemd
 
 from heat.common import config
@@ -63,7 +64,8 @@ def launch_cfn_api(setup_logging=True):
     LOG.info('Starting Heat API on %(host)s:%(port)s',
              {'host': host, 'port': port})
     profiler.setup(CONF.prog, host)
-    gmr.TextGuruMeditation.setup_autorun(version)
+    gmr_opts.set_defaults(CONF)
+    gmr.TextGuruMeditation.setup_autorun(version, conf=CONF)
     server = wsgi.Server(CONF.prog, CONF.heat_api_cfn)
     server.start(app, default_port=port)
     return server

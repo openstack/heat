@@ -30,6 +30,7 @@ from oslo_config import cfg
 import oslo_i18n as i18n
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
+from oslo_reports import opts as gmr_opts
 from oslo_service import service
 
 from heat.common import config
@@ -69,7 +70,8 @@ def launch_engine(setup_logging=True):
     from heat.engine import service as engine  # noqa
 
     profiler.setup(CONF.prog, CONF.host)
-    gmr.TextGuruMeditation.setup_autorun(version)
+    gmr_opts.set_defaults(CONF)
+    gmr.TextGuruMeditation.setup_autorun(version, conf=CONF)
     srv = engine.EngineService(CONF.host, rpc_api.ENGINE_TOPIC)
     workers = CONF.num_engine_workers
     if not workers:
