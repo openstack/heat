@@ -84,7 +84,7 @@ fi
 upgrade_project heat $RUN_DIR $BASE_DEVSTACK_BRANCH $TARGET_DEVSTACK_BRANCH
 
 # Simulate init_heat()
-HEAT_BIN_DIR=$(dirname $(which heat-manage))
+HEAT_BIN_DIR=$(get_python_exec_prefix)
 $HEAT_BIN_DIR/heat-manage --config-file $HEAT_CONF db_sync || die $LINENO "DB sync error"
 
 # Start Heat
