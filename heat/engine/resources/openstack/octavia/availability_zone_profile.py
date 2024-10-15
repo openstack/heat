@@ -12,6 +12,7 @@
 #    under the License.
 
 from heat.common.i18n import _
+from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine import support
@@ -50,7 +51,8 @@ class AvailabilityZoneProfile(resource.Resource):
             properties.Schema.STRING,
             _('JSON string containing the availability zone metadata.'),
             update_allowed=True,
-            required=True
+            required=True,
+            constraints=[constraints.CustomConstraint('json_string')]
         ),
         PROVIDER_NAME: properties.Schema(
             properties.Schema.STRING,

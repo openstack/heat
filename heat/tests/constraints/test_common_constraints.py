@@ -445,3 +445,30 @@ class ExpirationConstraintTest(common.HeatTestCase):
 
     def test_validation_none(self):
         self.assertTrue(self.constraint.validate(None, self.ctx))
+
+
+class JsonStringConstraintTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(JsonStringConstraintTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.constraint = cc.JsonStringConstraint()
+
+    def test_validate_json(self):
+        data = '{"key": "value"}'
+        self.assertTrue(self.constraint.validate(data, None))
+
+    def test_validation_error(self):
+        data = '{\'key\': \'value\'}'
+        expected = (
+            "JSON string {0} is invalid: Expecting property name "
+            "enclosed in double quotes: line 1 column 2 (char 1)".format(data))
+
+        self.assertFalse(self.constraint.validate(data, self.ctx))
+        self.assertEqual(
+            expected,
+            str(self.constraint._error_message)
+        )
+
+    def test_validation_none(self):
+        self.assertTrue(self.constraint.validate(None, self.ctx))
