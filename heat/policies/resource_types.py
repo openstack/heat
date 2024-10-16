@@ -108,6 +108,14 @@ resource_types_policies = [
     policy.RuleDefault(
         name=POLICY_ROOT % 'OS::Octavia::FlavorProfile',
         check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
+    policy.RuleDefault(
+        name=POLICY_ROOT % 'OS::Octavia::AvailabilityZone',
+        check_str=base.RULE_PROJECT_ADMIN,
+        scope_types=['project']),
+    policy.RuleDefault(
+        name=POLICY_ROOT % 'OS::Octavia::AvailabilityZoneProfile',
+        check_str=base.RULE_PROJECT_ADMIN,
         scope_types=['project'])
 ]
 
