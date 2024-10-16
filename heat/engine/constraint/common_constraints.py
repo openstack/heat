@@ -13,6 +13,7 @@
 
 import croniter
 import eventlet
+import json
 import netaddr
 import zoneinfo
 
@@ -188,6 +189,19 @@ class ExpirationConstraint(constraints.BaseCustomConstraint):
             raise ValueError(_('Expiration time is out of date.'))
         except Exception as ex:
             self._error_message = (_(
-                'Expiration {0} is invalid: {1}').format(value,
-                                                         str(ex)))
+                'Expiration {0} is invalid: {1}').format(value, str(ex)))
+        return False
+
+
+class JsonStringConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        if not value:
+            return True
+        try:
+            json.loads(value)
+            return True
+        except json.decoder.JSONDecodeError as ex:
+            self._error_message = (_(
+                'JSON string {0} is invalid: {1}').format(value, str(ex)))
         return False
