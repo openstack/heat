@@ -29,7 +29,6 @@
         TEMPEST_PLUGINS: '/opt/stack/heat-tempest-plugin'
         HEAT_USE_MOD_WSGI: True
         CEILOMETER_PIPELINE_INTERVAL: 60
-        GLOBAL_VENV: False
       devstack_services:
         tls-proxy: false
         s-account: false

@@ -295,6 +295,10 @@ function install_heat {
            install_apache_wsgi
        fi
     fi
+    if [[ "$GLOBAL_VENV" == "True" ]] ; then
+        # TODO(tkajinam): find a better solution for this
+        sudo ln -sf $HEAT_BIN_DIR/heat-manage /usr/local/bin
+    fi
 }
 
 # start_heat() - Start running processes, including screen
