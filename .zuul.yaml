@@ -182,6 +182,12 @@
       - ^heat/tests/.*$
       - ^releasenotes/.*$
 
+- job:
+    name: grenade-heat-multinode-skip-level
+    parent: grenade-heat-multinode
+    vars:
+      grenade_from_branch: stable/2024.1
+
 - project:
     queue: heat
     templates:
@@ -195,11 +201,13 @@
     check:
       jobs:
         - grenade-heat-multinode
+        - grenade-heat-multinode-skip-level
         - heat-functional
         - heat-functional-legacy
         - heat-functional-centos-9-stream
     gate:
       jobs:
         - grenade-heat-multinode
+        - grenade-heat-multinode-skip-level
         - heat-functional
         - heat-functional-legacy
