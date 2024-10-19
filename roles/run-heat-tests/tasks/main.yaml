@@ -13,7 +13,7 @@
     # Set TOX_CONSTRAINTS_FILE/UPPER_CONSTRAINTS_FILE to stable constraints only
     # for the EM stable branch where old tempest (not master) is used.
     tempest_tox_environment: "{{ tempest_tox_environment | combine({'UPPER_CONSTRAINTS_FILE': constraints_file}) | combine({'TOX_CONSTRAINTS_FILE': constraints_file}) }}"
-  when: target_branch in ["stable/ocata", "stable/pike", "stable/queens", "stable/rocky", "stable/stein", "stable/train", "stable/ussuri", "stable/victoria", "stable/wallaby"]
+  when: target_branch in ["stable/victoria", "stable/wallaby", "stable/xena", "stable/yoga", "stable/zed"]
 
 - name: Allow git to read plugin directories
   become: true
