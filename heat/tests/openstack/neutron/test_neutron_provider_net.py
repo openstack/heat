@@ -14,6 +14,7 @@
 import copy
 from unittest import mock
 
+import ddt
 from neutronclient.common import exceptions as qe
 from neutronclient.v2_0 import client as neutronclient
 
@@ -67,6 +68,7 @@ stpnb = copy.deepcopy(stpna)
 stpnb['network']['status'] = "BUILD"
 
 
+@ddt.ddt
 class NeutronProviderNetTest(common.HeatTestCase):
 
     def setUp(self):
@@ -254,3 +256,21 @@ class NeutronProviderNetTest(common.HeatTestCase):
         self.assertEqual(expected, reality)
 
         self.mockclient.show_network.assert_called_once()
+
+    @ddt.data('flat', 'local')
+    def test_segmentation_id_unsupported(self, net_type):
+        t = template_format.parse(provider_network_template)
+        provnet_t = t['resources']['provider_network_vlan']
+        provnet_t['properties']['network_type'] = net_type
+        stack = utils.parse_stack(t)
+        provnet = stack['provider_network_vlan']
+        self.assertRaises(exception.StackValidationFailed, provnet.validate)
+
+    @ddt.data('vxlan', 'gre', 'geneve', 'local')
+    def test_physnet_unsupported(self, net_type):
+        t = template_format.parse(provider_network_template)
+        provnet_t = t['resources']['provider_network_vlan']
+        provnet_t['properties']['network_type'] = net_type
+        stack = utils.parse_stack(t)
+        provnet = stack['provider_network_vlan']
+        self.assertRaises(exception.StackValidationFailed, provnet.validate)

@@ -156,9 +156,17 @@ class ProviderNet(net.Net):
 
         if (self.properties[self.PROVIDER_SEGMENTATION_ID] and
                 self.properties[self.PROVIDER_NETWORK_TYPE] in (
-                    'local', 'flat')):
+                    self.LOCAL, self.FLAT)):
             msg = _(
                 'segmentation_id not allowed for network types: local, flat')
+            raise exception.StackValidationFailed(message=msg)
+
+        if (self.properties[self.PROVIDER_PHYSICAL_NETWORK] and
+                self.properties[self.PROVIDER_NETWORK_TYPE] in (
+                    self.VXLAN, self.GRE, self.GENEVE, self.LOCAL)):
+            msg = _(
+                'physical_network not allowed for network types: '
+                'vxlan, gre, geneve, flat')
             raise exception.StackValidationFailed(message=msg)
 
     @staticmethod
