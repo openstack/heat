@@ -17,6 +17,7 @@ import copy
 import eventlet
 import functools
 import re
+import time
 import warnings
 
 from oslo_config import cfg
@@ -995,7 +996,7 @@ class Stack(collections.abc.Mapping):
                                                       resource=res)
             if result:
                 raise exception.StackValidationFailed(message=result)
-            eventlet.sleep(0)
+            time.sleep(0)
 
         for op_name, output in self.outputs.items():
             try:
@@ -1521,7 +1522,7 @@ class Stack(collections.abc.Mapping):
                                                   self.adopt_stack_data,
                                                   self.converge)
                 if scheduler.ENABLE_SLEEP:
-                    eventlet.sleep(1)
+                    time.sleep(1)
 
     def rollback(self):
         old_tmpl_id = self.prev_raw_template_id

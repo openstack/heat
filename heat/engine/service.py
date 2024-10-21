@@ -21,6 +21,7 @@ import pydoc
 import signal
 import socket
 import sys
+import time
 
 import eventlet
 from oslo_config import cfg
@@ -256,7 +257,7 @@ class ThreadGroupManager(object):
             for th in threads:
                 th.link(mark_done, th)
             while not all(links_done.values()):
-                eventlet.sleep()
+                time.sleep(0)
 
     def send(self, stack_id, message):
         for msg_queue in self.msg_queues.get(stack_id, []):
@@ -283,7 +284,7 @@ class NotifyEvent(object):
         # Another option would be to set the queue length to 0 (which would
         # cause put() to block until the event has been seen, but many unit
         # tests run in a single greenthread and would thus deadlock.
-        eventlet.sleep(0)
+        time.sleep(0)
 
     def wait(self):
         """Wait for the event."""
@@ -1519,7 +1520,7 @@ class EngineService(service.ServiceBase):
                         self.thread_group_mgr.start_with_acquired_lock(
                             stack, lock, stack.delete)
                         return
-                eventlet.sleep(1.0)
+                time.sleep(1.0)
 
             if acquire_result == self.engine_id:
                 # cancel didn't finish in time, attempt a stop instead
