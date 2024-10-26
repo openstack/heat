@@ -473,7 +473,6 @@ def list_opts():
     yield revision_group.name, revision_opts
     yield volumes_group.name, volumes_opts
     yield noauth_group.name, noauth_opts
-    yield profiler.list_opts()[0]
     yield 'clients', default_clients_opts
 
     for client in ('aodh', 'barbican', 'cinder', 'designate',
@@ -494,7 +493,6 @@ def list_opts():
 cfg.CONF.register_group(paste_deploy_group)
 cfg.CONF.register_group(auth_password_group)
 cfg.CONF.register_group(revision_group)
-profiler.set_defaults(cfg.CONF)
 
 for group, opts in list_opts():
     cfg.CONF.register_opts(opts, group=group)
@@ -618,3 +616,5 @@ def set_config_defaults():
     # once oslo_policy change the default value to 'policy.yaml'.
     # https://github.com/openstack/oslo.policy/blob/a626ad12fe5a3abd49d70e3e5b95589d279ab578/oslo_policy/opts.py#L49
     policy_opts.set_defaults(cfg.CONF, 'policy.yaml')
+
+    profiler.set_defaults(cfg.CONF)
