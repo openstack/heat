@@ -120,6 +120,8 @@ class ServerNetworkMixin(object):
         # we should add fixed_ips only if subnet or ip were provided
         if body:
             kwargs.update({'fixed_ips': [body]})
+        if net_data.get(neutron_port.Port.NO_FIXED_IPS):
+            kwargs.update({'fixed_ips': []})
 
         if security_groups:
             sec_uuids = self.client_plugin(
@@ -133,6 +135,7 @@ class ServerNetworkMixin(object):
                 kwargs.update(specs)
             port_extra_keys = list(neutron_port.Port.EXTRA_PROPERTIES)
             port_extra_keys.remove(neutron_port.Port.ALLOWED_ADDRESS_PAIRS)
+            port_extra_keys.remove(neutron_port.Port.NO_FIXED_IPS)
             for key in port_extra_keys:
                 if extra_props.get(key) is not None:
                     kwargs[key] = extra_props.get(key)
