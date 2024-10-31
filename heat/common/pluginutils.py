@@ -18,17 +18,8 @@ LOG = logging.getLogger(__name__)
 
 
 def log_fail_msg(manager, entrypoint, exception):
-    # importlib.metadata in Python 3.8 is quite old and the EntryPoint class
-    # does not have module. This logic is required to workaround AttributeError
-    # caused by that old implementation.
-    if hasattr(entrypoint, 'module'):
-        LOG.warning('Encountered exception while loading %(module_name)s: '
-                    '"%(message)s". Not using %(name)s.',
-                    {'module_name': entrypoint.module,
-                     'message': getattr(exception, 'message', str(exception)),
-                     'name': entrypoint.name})
-    else:
-        LOG.warning('Encountered exception: "%(message)s". '
-                    'Not using %(name)s.',
-                    {'message': getattr(exception, 'message', str(exception)),
-                     'name': entrypoint.name})
+    LOG.warning('Encountered exception while loading %(module_name)s: '
+                '"%(message)s". Not using %(name)s.',
+                {'module_name': entrypoint.module,
+                 'message': getattr(exception, 'message', str(exception)),
+                 'name': entrypoint.name})
