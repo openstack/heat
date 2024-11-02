@@ -600,14 +600,14 @@ class KsClientWrapper(object):
                     auth_ref = self.context.auth_plugin.get_access(
                         self.session)
                     if hasattr(auth_ref, "service_catalog"):
-                        unversioned_sc_auth_uri = (
-                            auth_ref.service_catalog.get_urls(
-                                service_type='identity',
-                                interface=ks_endpoint_type))
-                        if len(unversioned_sc_auth_uri) > 0:
-                            sc_auth_uri = (
-                                unversioned_sc_auth_uri[0] + "/v3")
-                            return sc_auth_uri
+                        keystone_urls = auth_ref.service_catalog.get_urls(
+                            service_type='identity',
+                            interface=ks_endpoint_type)
+                        if keystone_urls:
+                            keystone_url = keystone_urls[0].rstrip('/')
+                            if not keystone_url.endswith('/v3'):
+                                keystone_url += "/v3"
+                            return keystone_url
                 except ks_exception.Unauthorized:
                     LOG.error("Keystone client authentication failed")
         return fallback_endpoint
