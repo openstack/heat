@@ -581,6 +581,8 @@ class FloatingIPPortForward(neutron.NeutronResource):
 
     def handle_create(self):
         props = self.prepare_properties(self.properties, self.name)
+        props['internal_port_id'] = props.pop(self.INTERNAL_PORT)
+        props['internal_port'] = props.pop(self.INTERNAL_PORT_NUMBER)
         fp = self.client().network.create_floating_ip_port_forwarding(
             props.pop(self.FLOATINGIP),
             **props)
@@ -602,12 +604,23 @@ class FloatingIPPortForward(neutron.NeutronResource):
             self.properties[self.FLOATINGIP]
         )
 
-    def handle_update(self, prop_diff):
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
+            # Create a new dictionary to store the corrected properties
+            updated_props = {}
+            for key, value in prop_diff.items():
+                if key == self.INTERNAL_PORT_NUMBER:
+                    # Replace internal_port_number with internal_port
+                    updated_props['internal_port'] = value
+                elif key == self.INTERNAL_PORT:
+                    # Replace internal_port with internal_port_id
+                    updated_props['internal_port_id'] = value
+                else:
+                    updated_props[key] = value
             self.client().network.update_floating_ip_port_forwarding(
                 self.properties[self.FLOATINGIP],
                 self.resource_id,
-                **prop_diff)
+                **updated_props)
 
 
 def resource_mapping():
