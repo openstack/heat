@@ -198,12 +198,14 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - grenade-heat-multinode
+        # NOTE(tkajinam): 2023.1 is unmaintained.
+        #- grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
         - heat-functional-centos-9-stream
     gate:
       jobs:
-        - grenade-heat-multinode
+        # NOTE(tkajinam): 2023.1 is unmaintained.
+        #- grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
