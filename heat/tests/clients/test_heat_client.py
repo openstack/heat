@@ -1528,6 +1528,23 @@ class KeystoneClientTest(common.HeatTestCase):
             'http://server.public.test:5000/v3')
         cfg.CONF.clear_override('server_keystone_endpoint_type')
 
+    def test_server_keystone_endpoint_url_config_with_version(self):
+        """Return non fallback url path."""
+        cfg.CONF.set_override('server_keystone_endpoint_type', 'public')
+        ctx = utils.dummy_context()
+        ctx.trust_id = None
+        heat_ks_client = heat_keystoneclient.KeystoneClient(ctx)
+        fallback_url = 'http://server.fallback.test:5000/v3'
+        auth_ref = heat_ks_client.context.auth_plugin.get_access(
+            heat_ks_client.session)
+        auth_ref.service_catalog.get_urls = mock.MagicMock()
+        auth_ref.service_catalog.get_urls.return_value = [
+            'http://server.public.test:5000/v3']
+        self.assertEqual(
+            heat_ks_client.server_keystone_endpoint_url(fallback_url),
+            'http://server.public.test:5000/v3')
+        cfg.CONF.clear_override('server_keystone_endpoint_type')
+
     def test_server_keystone_endpoint_url_no_config(self):
         """Return fallback as no config option specified."""
         ctx = utils.dummy_context()
