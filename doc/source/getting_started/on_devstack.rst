@@ -67,7 +67,7 @@ To use aodh alarms you need to enable ceilometer and aodh in devstack.
 Adding the following lines to `[[local|localrc]]` section of `local.conf`
 will enable the services::
 
-    CEILOMETER_BACKEND=mongodb
+    CEILOMETER_BACKENDS=gnocchi
     enable_plugin ceilometer https://opendev.org/openstack/ceilometer
     enable_plugin aodh https://opendev.org/openstack/aodh
 
