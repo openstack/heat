@@ -174,7 +174,7 @@ function configure_heat {
         iniset $HEAT_CONF paste_deploy flavor standalone
         iniset $HEAT_CONF clients_heat url "http://$HEAT_API_HOST:$HEAT_API_PORT/v1/%(tenant_id)s"
     else
-        configure_auth_token_middleware $HEAT_CONF heat
+        configure_keystone_authtoken_middleware $HEAT_CONF heat
     fi
 
     # If HEAT_DEFERRED_AUTH is unset or explicitly set to trusts, configure
