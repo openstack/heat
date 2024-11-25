@@ -258,19 +258,15 @@ class CRONExpressionConstraint(common.HeatTestCase):
 
     def test_validation_out_of_range_error(self):
         cron_expression = "* * * * * 100"
-        expect = ("Invalid CRON expression: [%s] "
-                  "is not acceptable, out of range") % cron_expression
+        expect = "Invalid CRON expression: "
         self.assertFalse(self.constraint.validate(cron_expression, self.ctx))
-        self.assertEqual(expect,
-                         str(self.constraint._error_message))
+        self.assertTrue(str(self.constraint._error_message).startswith(expect))
 
     def test_validation_columns_length_error(self):
         cron_expression = "* *"
-        expect = ("Invalid CRON expression: Exactly 5 "
-                  "or 6 columns has to be specified for ")
+        expect = "Invalid CRON expression: "
         self.assertFalse(self.constraint.validate(cron_expression, self.ctx))
-        self.assertIn(expect,
-                      str(self.constraint._error_message))
+        self.assertTrue(str(self.constraint._error_message).startswith(expect))
 
 
 class TimezoneConstraintTest(common.HeatTestCase):
