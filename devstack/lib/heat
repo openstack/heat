@@ -35,9 +35,6 @@ GITDIR["python-heatclient"]=$DEST/python-heatclient
 GITREPO["python-heatclient"]=${HEATCLIENT_REPO:-${GIT_BASE}/openstack/python-heatclient.git}
 GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 
-# Use HEAT_USE_MOD_WSGI for backward compatibility
-HEAT_USE_APACHE=${HEAT_USE_APACHE:-${HEAT_USE_MOD_WSGI:-True}}
-
 HEAT_DIR=$DEST/heat
 HEAT_HTTPD_VHOST_FILES_DIR=$HEAT_DIR/etc/heat/httpd
 
@@ -49,6 +46,8 @@ HEAT_ENV_DIR=$HEAT_CONF_DIR/environment.d
 HEAT_TEMPLATES_DIR=$HEAT_CONF_DIR/templates
 HEAT_API_HOST=${HEAT_API_HOST:-$SERVICE_HOST}
 HEAT_API_PORT=${HEAT_API_PORT:-8004}
+HEAT_API_CFN_HOST=${HEAT_API_CFN_HOST:-$SERVICE_HOST}
+HEAT_API_CFN_PORT=${HEAT_API_CFN_PORT:-8000}
 HEAT_SERVICE_USER=${HEAT_SERVICE_USER:-heat}
 HEAT_TRUSTEE_USER=${HEAT_TRUSTEE_USER:-$HEAT_SERVICE_USER}
 HEAT_TRUSTEE_PASSWORD=${HEAT_TRUSTEE_PASSWORD:-$SERVICE_PASSWORD}
@@ -99,9 +98,8 @@ function is_heat_enabled {
 # cleanup_heat() - Remove residual data files, anything left over from previous
 # runs that a clean run would need to clean up
 function cleanup_heat {
-    if [[ "$HEAT_USE_APACHE" == "True" ]]; then
-        _cleanup_heat_apache_wsgi
-    fi
+    remove_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI"
+    remove_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI"
     sudo rm -rf $HEAT_ENV_DIR
     sudo rm -rf $HEAT_TEMPLATES_DIR
     sudo rm -rf $HEAT_CONF_DIR
@@ -114,23 +112,14 @@ function configure_heat {
     # remove old config files
     rm -f $HEAT_CONF_DIR/heat-*.conf
 
-    HEAT_API_CFN_HOST=${HEAT_API_CFN_HOST:-$SERVICE_HOST}
-    HEAT_API_CFN_PORT=${HEAT_API_CFN_PORT:-8000}
-    HEAT_ENGINE_HOST=${HEAT_ENGINE_HOST:-$SERVICE_HOST}
-    HEAT_ENGINE_PORT=${HEAT_ENGINE_PORT:-8001}
     HEAT_API_PASTE_FILE=$HEAT_CONF_DIR/api-paste.ini
 
     cp $HEAT_DIR/etc/heat/api-paste.ini $HEAT_API_PASTE_FILE
 
     # common options
     iniset_rpc_backend heat $HEAT_CONF
-    if [[ "$HEAT_USE_APACHE" == "True" && "$WSGI_MODE" == "uwsgi" ]]; then
-        iniset $HEAT_CONF DEFAULT heat_metadata_server_url http://$HEAT_API_CFN_HOST/heat-api-cfn
-        iniset $HEAT_CONF DEFAULT heat_waitcondition_server_url http://$HEAT_API_CFN_HOST/heat-api-cfn/v1/waitcondition
-    else
-        iniset $HEAT_CONF DEFAULT heat_metadata_server_url http://$HEAT_API_CFN_HOST:$HEAT_API_CFN_PORT
-        iniset $HEAT_CONF DEFAULT heat_waitcondition_server_url http://$HEAT_API_CFN_HOST:$HEAT_API_CFN_PORT/v1/waitcondition
-    fi
+    iniset $HEAT_CONF DEFAULT heat_metadata_server_url http://$HEAT_API_CFN_HOST/heat-api-cfn
+    iniset $HEAT_CONF DEFAULT heat_waitcondition_server_url http://$HEAT_API_CFN_HOST/heat-api-cfn/v1/waitcondition
 
     iniset $HEAT_CONF database connection `database_connection_url heat`
     # we are using a hardcoded auth_encryption_key as it has to be the same for
@@ -145,30 +134,19 @@ function configure_heat {
     # reduce Heat engine workers
     iniset $HEAT_CONF DEFAULT num_engine_workers "$HEAT_ENGINE_WORKERS"
 
-    local no_format="False"
-    if [[ "$HEAT_USE_APACHE" == "True" && "$WSGI_MODE" != "uwsgi" ]]; then
-         no_format="True"
-    fi
-
     # Format logging
-    setup_logging $HEAT_CONF $no_format
+    setup_logging $HEAT_CONF
 
     if [[ ! -z "$HEAT_DEFERRED_AUTH" ]]; then
         iniset $HEAT_CONF DEFAULT deferred_auth_method $HEAT_DEFERRED_AUTH
     fi
 
-    if [[ "$HEAT_USE_APACHE" == "True" ]]; then
-        if [[ $WSGI_MODE == "uwsgi" ]]; then
-            write_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI" "/heat-api" "" "heat-api"
-            # configure threads for h-api to avoid IO wait and messaging timeout. We use
-            # 'nproc/4' to calculate API workers, hence, 4 would be probably correct
-            # approximation.
-            iniset "$HEAT_API_UWSGI_CONF" uwsgi threads 4
-            write_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI" "/heat-api-cfn" "" "heat-api-cfn"
-        else
-            _config_heat_apache_wsgi
-        fi
-    fi
+    write_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI" "/heat-api" "" "heat-api"
+    # configure threads for h-api to avoid IO wait and messaging timeout. We use
+    # 'nproc/4' to calculate API workers, hence, 4 would be probably correct
+    # approximation.
+    iniset "$HEAT_API_UWSGI_CONF" uwsgi threads 4
+    write_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI" "/heat-api-cfn" "" "heat-api-cfn"
 
     if [[ "$HEAT_STANDALONE" = "True" ]]; then
         iniset $HEAT_CONF paste_deploy flavor standalone
@@ -193,7 +171,6 @@ function configure_heat {
     # OpenStack API
     iniset $HEAT_CONF heat_api bind_port $HEAT_API_PORT
     iniset $HEAT_CONF heat_api workers "$API_WORKERS"
-
     # Cloudformation API
     iniset $HEAT_CONF heat_api_cfn bind_port $HEAT_API_CFN_PORT
 
@@ -288,13 +265,7 @@ function install_heatclient {
 # install_heat() - Collect source and prepare
 function install_heat {
     setup_develop $HEAT_DIR
-    if [[ "$HEAT_USE_APACHE" == "True" ]]; then
-       if [ "$WSGI_MODE" == "uwsgi" ]; then
-           pip_install uwsgi
-       else
-           install_apache_wsgi
-       fi
-    fi
+    pip_install uwsgi
     if [[ "$GLOBAL_VENV" == "True" ]] ; then
         # TODO(tkajinam): find a better solution for this
         sudo ln -sf $HEAT_BIN_DIR/heat-manage /usr/local/bin
@@ -306,128 +277,33 @@ function start_heat {
     run_process h-eng "$HEAT_BIN_DIR/heat-engine --config-file=$HEAT_CONF"
 
     # If the site is not enabled then we are in a grenade scenario
-    local enabled_site_file
-    enabled_site_file=$(apache_site_config_for heat-api)
-    if [[ "$HEAT_USE_APACHE" == "True" ]]; then
-        if [[ -f ${enabled_site_file} && "$WSGI_MODE" != "uwsgi" ]]; then
-            enable_apache_site heat-api
-            enable_apache_site heat-api-cfn
-            restart_apache_server
-        else
-            run_process h-api "$HEAT_BIN_DIR/uwsgi --ini $HEAT_API_UWSGI_CONF" ""
-            run_process h-api-cfn "$HEAT_BIN_DIR/uwsgi --ini $HEAT_CFN_API_UWSGI_CONF" ""
-        fi
-    else
-        run_process h-api "$HEAT_BIN_DIR/heat-api --config-file=$HEAT_CONF"
-        run_process h-api-cfn "$HEAT_BIN_DIR/heat-api-cfn --config-file=$HEAT_CONF"
-    fi
-}
-
-function _stop_processes {
-    local serv
-    for serv in h-api h-api-cfn; do
-        stop_process $serv
-    done
+    run_process h-api "$HEAT_BIN_DIR/uwsgi --ini $HEAT_API_UWSGI_CONF" ""
+    run_process h-api-cfn "$HEAT_BIN_DIR/uwsgi --ini $HEAT_CFN_API_UWSGI_CONF" ""
 }
 
 # stop_heat() - Stop running processes
 function stop_heat {
     # Kill the screen windows
+    stop_process h-api
+    stop_process h-api-cfn
     stop_process h-eng
-
-    if [[ "$HEAT_USE_APACHE" == "True" ]]; then
-        if [[ "$WSGI_MODE" == "uwsgi" ]]; then
-            _stop_processes
-        else
-            disable_apache_site heat-api
-            disable_apache_site heat-api-cfn
-            restart_apache_server
-        fi
-    else
-       _stop_processes
-    fi
 }
-
-# _cleanup_heat_apache_wsgi() - Remove wsgi files, disable and remove apache vhost file
-function _cleanup_heat_apache_wsgi {
-    if [[ "$WSGI_MODE" == "uwsgi" ]]; then
-        remove_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI"
-        remove_uwsgi_config "$HEAT_CFN_API_UWSGI_CONF" "$HEAT_CFN_API_UWSGI"
-    fi
-    sudo rm -f $(apache_site_config_for heat-api)
-    sudo rm -f $(apache_site_config_for heat-api-cfn)
-}
-
-# _config_heat_apache_wsgi() - Set WSGI config files of Heat
-function _config_heat_apache_wsgi {
-
-    local heat_apache_conf
-    heat_apache_conf=$(apache_site_config_for heat-api)
-    local heat_cfn_apache_conf
-    heat_cfn_apache_conf=$(apache_site_config_for heat-api-cfn)
-    local heat_ssl=""
-    local heat_certfile=""
-    local heat_keyfile=""
-    local heat_api_port=$HEAT_API_PORT
-    local heat_cfn_api_port=$HEAT_API_CFN_PORT
-    local venv_path=""
-
-    sudo cp $HEAT_HTTPD_VHOST_FILES_DIR/heat-api.conf $heat_apache_conf
-    sudo sed -e "
-        s|%PUBLICPORT%|$heat_api_port|g;
-        s|%APACHE_NAME%|$APACHE_NAME|g;
-        s|%HEAT_DIR%|$HEAT_DIR|g;
-        s|%API_WORKERS%|$API_WORKERS|g;
-        s|%SSLENGINE%|$heat_ssl|g;
-        s|%SSLCERTFILE%|$heat_certfile|g;
-        s|%SSLKEYFILE%|$heat_keyfile|g;
-        s|%USER%|$STACK_USER|g;
-        s|%VIRTUALENV%|$venv_path|g
-    " -i $heat_apache_conf
-
-    sudo cp $HEAT_HTTPD_VHOST_FILES_DIR/heat-api-cfn.conf $heat_cfn_apache_conf
-    sudo sed -e "
-        s|%PUBLICPORT%|$heat_cfn_api_port|g;
-        s|%APACHE_NAME%|$APACHE_NAME|g;
-        s|%HEAT_DIR%|$HEAT_DIR|g;
-        s|%API_WORKERS%|$API_WORKERS|g;
-        s|%SSLENGINE%|$heat_ssl|g;
-        s|%SSLCERTFILE%|$heat_certfile|g;
-        s|%SSLKEYFILE%|$heat_keyfile|g;
-        s|%USER%|$STACK_USER|g;
-        s|%VIRTUALENV%|$venv_path|g
-    " -i $heat_cfn_apache_conf
-
-}
-
 
 # create_heat_accounts() - Set up common required heat accounts
 function create_heat_accounts {
     if [[ "$HEAT_STANDALONE" != "True" ]]; then
-
-        local heat_api_service_url
-        local heat_cfn_api_service_url
-
-        if [[ "$HEAT_USE_APACHE" == "True" && "$WSGI_MODE" == "uwsgi" ]]; then
-            heat_api_service_url="$SERVICE_PROTOCOL://$HEAT_API_HOST/heat-api/v1/\$(project_id)s"
-            heat_cfn_api_service_url="$SERVICE_PROTOCOL://$HEAT_API_CFN_HOST/heat-api-cfn/v1"
-        else
-            heat_api_service_url="$SERVICE_PROTOCOL://$HEAT_API_HOST:$HEAT_API_PORT/v1/\$(project_id)s"
-            heat_cfn_api_service_url="$SERVICE_PROTOCOL://$HEAT_API_CFN_HOST:$HEAT_API_CFN_PORT/v1"
-        fi
-
         create_service_user "heat" "admin"
         get_or_create_service "heat" "orchestration" "Heat Orchestration Service"
         get_or_create_endpoint \
             "orchestration" \
             "$REGION_NAME" \
-            "$heat_api_service_url"
+            "$SERVICE_PROTOCOL://$HEAT_API_HOST/heat-api/v1/\$(project_id)s"
 
         get_or_create_service "heat-cfn" "cloudformation" "Heat CloudFormation Service"
         get_or_create_endpoint \
             "cloudformation"  \
             "$REGION_NAME" \
-            "$heat_cfn_api_service_url"
+            "$SERVICE_PROTOCOL://$HEAT_API_CFN_HOST/heat-api-cfn/v1"
 
         # heat_stack_user role is for users created by Heat
         get_or_create_role "heat_stack_user"
