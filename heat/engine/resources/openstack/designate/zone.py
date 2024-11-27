@@ -32,9 +32,11 @@ class DesignateZone(resource.Resource):
         version='8.0.0')
 
     PROPERTIES = (
-        NAME, TTL, DESCRIPTION, EMAIL, TYPE, PRIMARIES, MASTERS
+        NAME, TTL, DESCRIPTION, EMAIL, TYPE, PRIMARIES,
+        MASTERS, ATTRS,
     ) = (
-        'name', 'ttl', 'description', 'email', 'type', 'primaries', 'masters'
+        'name', 'ttl', 'description', 'email', 'type', 'primaries',
+        'masters', 'attributes',
     )
 
     ATTRIBUTES = (
@@ -102,6 +104,14 @@ class DesignateZone(resource.Resource):
             _('The primary servers to transfer DNS zone information from. '
               'Mandatory for zone type SECONDARY, otherwise ignored.'),
             update_allowed=True
+        ),
+        ATTRS: properties.Schema(
+            properties.Schema.MAP,
+            _('Key:Value pairs of information about this zone, '
+              'and the pool the user would like to place the zone in. '
+              'This information can be used by the scheduler to place '
+              'zones on the correct pool.'),
+            support_status=support.SupportStatus(version='24.0.0')
         ),
     }
 

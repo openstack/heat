@@ -1,0 +1,8 @@
+---
+features:
+ - |
+    Added ``attributes`` property to resource type
+    ``OS::Designate::Zone``. It can be any key:value
+    pairs of information about this zone including the
+    pool where the user wants to place the zone used
+    by scheduler.

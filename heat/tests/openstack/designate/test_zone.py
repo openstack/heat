@@ -32,6 +32,9 @@ sample_template = {
                 'name': 'test-zone.com',
                 'description': 'Test zone',
                 'ttl': 3600,
+                'attributes': {
+                    'tier': 'gold', 'ha': 'true'
+                    },
                 'email': 'abc@test-zone.com',
                 'type': 'PRIMARY',
                 'masters': []
@@ -108,7 +111,8 @@ class DesignateZoneTest(common.HeatTestCase):
             description='Test zone',
             ttl=3600,
             email='abc@test-zone.com',
-            type_='PRIMARY'
+            type_='PRIMARY',
+            attributes=dict(tier='gold', ha='true')
         )
 
         mock_zone_create.assert_called_once_with(**args)
