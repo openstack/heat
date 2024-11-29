@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed the consistent type mismatch error caused by creating or updating
+    a stack with files stored in OpenStack Swift containers, using
+    the `files_container` parameter. Now file content is always decoded and
+    can be used as a string value.

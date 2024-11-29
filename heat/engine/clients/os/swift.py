@@ -166,7 +166,10 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
                 file_name = obj['name']
                 if file_name not in files_to_skip:
                     contents = client.get_object(files_container, file_name)[1]
-                files[file_name] = contents
+                    if isinstance(contents, bytes):
+                        files[file_name] = contents.decode(encoding='utf-8')
+                    else:
+                        files[file_name] = contents
         except exceptions.ClientException as cex:
             raise exception.NotFound(_('Could not fetch files from '
                                        'container %(container)s, '
