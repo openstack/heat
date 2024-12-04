@@ -134,7 +134,10 @@
     parent: grenade-multinode
     required-projects:
       - opendev.org/openstack/heat
-      - opendev.org/openstack/heat-tempest-plugin
+      # NOTE(elod.illes): as soon as 2023.1-last tag exists for
+      # heat-tempest-plugin we should replace 2.3.0 version to that.
+      - name: opendev.org/openstack/heat-tempest-plugin
+        override-checkout: 2.3.0
       - opendev.org/openstack/python-heatclient
     vars:
       grenade_devstack_localrc:
