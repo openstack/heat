@@ -10,11 +10,11 @@
       - zuul: opendev.org/openstack/devstack
       - zuul: opendev.org/openstack/tempest
     required-projects:
-      - openstack/devstack-gate
       - openstack/barbican
       - openstack/heat
       - openstack/heat-templates
-      - openstack/heat-tempest-plugin
+      - name: opendev.org/openstack/heat-tempest-plugin
+        override-checkout: yoga-last
       - openstack/octavia
       - openstack/neutron
       - openstack/oslo.messaging
@@ -139,7 +139,8 @@
     voting: false
     required-projects:
       - opendev.org/openstack/heat
-      - opendev.org/openstack/heat-tempest-plugin
+      - name: opendev.org/openstack/heat-tempest-plugin
+        override-checkout: yoga-last
       - opendev.org/openstack/python-heatclient
     vars:
       grenade_devstack_localrc:
@@ -197,10 +198,20 @@
     check:
       jobs:
         - grenade-heat-multinode
-        - heat-functional
-        - heat-functional-legacy
+        # NOTE(elod.illes): functional jobs are failing due to
+        # python-zaqarclient dropped py38 support and even on
+        # this old branch the client is installed from master
+        # as a quick workaround this is now set as non-voting
+        - heat-functional:
+            voting: false
+        - heat-functional-legacy:
+            voting: false
     gate:
       jobs:
         - grenade-heat-multinode
-        - heat-functional
-        - heat-functional-legacy
+        # NOTE(elod.illes): functional jobs are failing due to
+        # python-zaqarclient dropped py38 support and even on
+        # this old branch the client is installed from master
+        # as a quick workaround this is now removed from gate
+        # - heat-functional
+        # - heat-functional-legacy
