@@ -13,7 +13,8 @@
       - openstack/barbican
       - openstack/heat
       - openstack/heat-templates
-      - openstack/heat-tempest-plugin
+      - name: opendev.org/openstack/heat-tempest-plugin
+        override-checkout: zed-last
       - openstack/octavia
       - openstack/neutron
       - openstack/oslo.messaging
@@ -134,7 +135,8 @@
     parent: grenade-multinode
     required-projects:
       - opendev.org/openstack/heat
-      - opendev.org/openstack/heat-tempest-plugin
+      - name: opendev.org/openstack/heat-tempest-plugin
+        override-checkout: zed-last
       - opendev.org/openstack/python-heatclient
     vars:
       grenade_devstack_localrc:
