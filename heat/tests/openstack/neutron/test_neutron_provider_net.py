@@ -251,6 +251,7 @@ class NeutronProviderNetTest(common.HeatTestCase):
             'router_external': False,
             'availability_zone_hints': [],
             'tags': ['tag1', 'tag2'],
+            'tenant_id': 'df49ea64e87c43a792a510698364f03e',
         }
 
         self.assertEqual(expected, reality)

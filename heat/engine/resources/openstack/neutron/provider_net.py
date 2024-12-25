@@ -38,13 +38,12 @@ class ProviderNet(net.Net):
         NAME, PROVIDER_NETWORK_TYPE, PROVIDER_PHYSICAL_NETWORK,
         PROVIDER_SEGMENTATION_ID, ADMIN_STATE_UP, SHARED,
         PORT_SECURITY_ENABLED, ROUTER_EXTERNAL, DNS_DOMAIN,
-        AVAILABILITY_ZONE_HINTS, TAGS,
+        AVAILABILITY_ZONE_HINTS, TAGS, TENANT_ID,
     ) = (
         'name', 'network_type', 'physical_network',
         'segmentation_id', 'admin_state_up', 'shared',
         'port_security_enabled', 'router_external', 'dns_domain',
-        'availability_zone_hints', 'tags',
-
+        'availability_zone_hints', 'tags', 'tenant_id',
     )
 
     ATTRIBUTES = (
@@ -127,6 +126,13 @@ class ProviderNet(net.Net):
               'availability_zone extension to be available.'),
             update_allowed=True,
             support_status=support.SupportStatus(version='19.0.0')
+        ),
+        TENANT_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the tenant which will own the provider network. Only '
+              'administrative users can set the tenant identifier; this '
+              'cannot be changed using authorization policies.'),
+            support_status=support.SupportStatus(version='24.0.0')
         ),
     }
 
