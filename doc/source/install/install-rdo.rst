@@ -329,7 +329,7 @@ Install and configure components
 
    .. code-block:: console
 
-      # yum install openstack-heat-api openstack-heat-api-cfn \
+      # dnf install openstack-heat-api openstack-heat-api-cfn \
         openstack-heat-engine
 
 2. Edit the ``/etc/heat/heat.conf`` file and complete the following
