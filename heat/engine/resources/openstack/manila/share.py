@@ -12,7 +12,6 @@
 #    under the License.
 
 from oslo_log import log as logging
-from oslo_utils import encodeutils
 
 from heat.common import exception
 from heat.common.i18n import _
@@ -256,11 +255,10 @@ class ManilaShare(resource.Resource):
                             access_level=rule.get(self.ACCESS_LEVEL))
                 return True
             except Exception as ex:
-                err_msg = encodeutils.exception_to_unicode(ex)
                 reason = _(
                     'Error during applying access rules to share "{0}". '
                     'The root cause of the problem is the following: {1}.'
-                ).format(self.resource_id, err_msg)
+                ).format(self.resource_id, str(ex))
                 raise exception.ResourceInError(
                     status_reason=reason, resource_status=share_status)
         elif share_status == self.STATUS_ERROR:
