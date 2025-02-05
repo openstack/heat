@@ -43,12 +43,24 @@ class SoftwareConfigController(object):
         except ValueError as e:
             raise exc.HTTPBadRequest(str(e))
 
+    def _extract_int_param(self, name, value,
+                           allow_zero=True, allow_negative=False):
+        try:
+            return param_utils.extract_int(name, value,
+                                           allow_zero, allow_negative)
+        except ValueError as e:
+            raise exc.HTTPBadRequest(str(e))
+
     def _index(self, req, use_admin_cnxt=False):
         param_types = {
             'limit': util.PARAM_TYPE_SINGLE,
             'marker': util.PARAM_TYPE_SINGLE
         }
         params = util.get_allowed_params(req.params, param_types)
+
+        key = rpc_api.PARAM_LIMIT
+        if key in params:
+            params[key] = self._extract_int_param(key, params[key])
 
         if use_admin_cnxt:
             cnxt = context.get_admin_context()
