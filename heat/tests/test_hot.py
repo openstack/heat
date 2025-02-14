@@ -12,6 +12,7 @@
 #    under the License.
 
 import copy
+import sys
 from unittest import mock
 
 from heat.common import exception
@@ -2339,8 +2340,12 @@ resources:
         tmpl = template.Template(hot_pike_tpl_empty)
         resolved = self.resolve(snippet, tmpl)
 
-        self.assertEqual('file:///foo/bar',
-                         resolved)
+        if sys.version_info >= (3, 12, 6):
+            self.assertEqual('file:foo/bar',
+                             resolved)
+        else:
+            self.assertEqual('file:///foo/bar',
+                             resolved)
 
     def test_make_url_file_leading_slash(self):
         snippet = {
