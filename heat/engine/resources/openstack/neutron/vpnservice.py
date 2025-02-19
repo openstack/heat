@@ -197,9 +197,15 @@ class VPNService(neutron.NeutronResource):
     def check_create_complete(self, data):
         attributes = self._show_resource()
         status = attributes['status']
-        if status == 'PENDING_CREATE':
-            return False
-        elif status == 'ACTIVE':
+        # The Neutron VPN service doesn't hit the ACTIVE status until
+        # it has a matching site-to-site connection. However, it is
+        # required that the VPNService resource be in CREATE_COMPLETE,
+        # in order for the IPsecSiteConnection resource to progress to
+        # CREATE_IN_PROGRESS. The only way to resolve this catch-22 is
+        # to already consider the VPNService resource complete, even
+        # when its underlying Neutron VPN service object is still in
+        # PENDING_CREATE.
+        if status in ['PENDING_CREATE', 'ACTIVE']:
             return True
         elif status == 'ERROR':
             raise exception.ResourceInError(
