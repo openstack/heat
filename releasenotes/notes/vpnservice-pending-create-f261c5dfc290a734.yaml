@@ -1,0 +1,6 @@
+---
+fixes:
+  - |
+    Enable the creation of an ``OS::Neutron::VPNService`` resource,
+    and an ``OS::Neutron::IPsecSiteConnection`` resource that depends
+    on it, within the same stack.
