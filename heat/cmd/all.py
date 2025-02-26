@@ -22,6 +22,7 @@ import eventlet
 eventlet.monkey_patch(os=False)
 
 import sys
+import warnings
 
 from oslo_config import cfg
 import oslo_i18n as i18n
@@ -49,6 +50,9 @@ LAUNCH_SERVICES = {
 services_opt = cfg.ListOpt(
     'enabled_services',
     default=['engine', 'api', 'api_cfn'],
+    deprecated_for_removal=True,
+    deprecated_reason='The heat-all console script has been deprecated.',
+    deprecated_since='24.0.0',
     help='Specifies the heat services that are enabled when running heat-all. '
          'Valid options are all or any combination of '
          'api, engine or api_cfn.'
@@ -79,6 +83,9 @@ def launch_all(setup_logging=True):
 
 
 def main():
+    warnings.warn("The heat-all script has been deprecated and will be "
+                  "removed in the future.",
+                  DeprecationWarning)
     try:
         threads = launch_all()
         services = [thread.wait() for thread in threads]

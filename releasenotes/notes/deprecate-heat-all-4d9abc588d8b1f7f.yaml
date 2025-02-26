@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ``heat-all`` console script has been deprecated and will be removed
+    in a future release.
