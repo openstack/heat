@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added the ``tenant_id`` property to the following resources. This property
+    allows admin users to create these resources in specific tenants.
+
+    - ``OS::Neutron::ProviderNet``
+    - ``OS::Neutron::Router``

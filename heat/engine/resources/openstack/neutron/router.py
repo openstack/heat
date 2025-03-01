@@ -36,11 +36,11 @@ class Router(neutron.NeutronResource):
     PROPERTIES = (
         NAME, EXTERNAL_GATEWAY, VALUE_SPECS, ADMIN_STATE_UP,
         L3_AGENT_ID, L3_AGENT_IDS, DISTRIBUTED, HA, AVAILABILITY_ZONE_HINTS,
-        TAGS,
+        TAGS, TENANT_ID,
     ) = (
         'name', 'external_gateway_info', 'value_specs', 'admin_state_up',
         'l3_agent_id', 'l3_agent_ids', 'distributed', 'ha',
-        'availability_zone_hints', 'tags',
+        'availability_zone_hints', 'tags', 'tenant_id',
     )
 
     _EXTERNAL_GATEWAY_KEYS = (
@@ -186,6 +186,13 @@ class Router(neutron.NeutronResource):
             schema=properties.Schema(properties.Schema.STRING),
             update_allowed=True,
             support_status=support.SupportStatus(version='9.0.0')
+        ),
+        TENANT_ID: properties.Schema(
+            properties.Schema.STRING,
+            _('The ID of the tenant which will own the router. Only '
+              'administrative users can set the tenant identifier; this '
+              'cannot be changed using authorization policies.'),
+            support_status=support.SupportStatus(version='24.0.0')
         ),
     }
 
