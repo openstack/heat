@@ -18,13 +18,15 @@ import os_service_types
 
 from heat.common import config
 from heat.engine.clients import client_plugin
+from heat.engine.clients import os as os_client
 from heat.engine import constraints
 import heat.version
 
 CLIENT_NAME = 'openstack'
 
 
-class OpenStackSDKPlugin(client_plugin.ClientPlugin):
+class OpenStackSDKPlugin(os_client.ExtensionMixin,
+                         client_plugin.ClientPlugin):
 
     exceptions_module = exceptions
 
@@ -77,6 +79,13 @@ class OpenStackSDKPlugin(client_plugin.ClientPlugin):
 
     def find_network_ip(self, value):
         return self.client().network.find_ip(value).id
+
+    # TODO(tkajinam): This should be generalized when we onboard more services
+    #                 requiring extension detection.
+    @os_client.MEMOIZE_EXTENSIONS
+    def _list_extensions(self):
+        extensions = self.client().network.extensions()
+        return set(extension.alias for extension in extensions)
 
 
 class SegmentConstraint(constraints.BaseCustomConstraint):

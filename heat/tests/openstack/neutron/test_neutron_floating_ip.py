@@ -783,9 +783,9 @@ class NeutronFloatingIPTest(common.HeatTestCase):
         pfid = mock.Mock(id='180941c5-9e82-41c7-b64d-6a57302ec211')
 
         props = {'internal_ip_address': '10.0.0.10',
-                 'internal_port_number': 8080,
+                 'internal_port': 8080,
                  'external_port': 80,
-                 'internal_port': '9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151',
+                 'internal_port_id': '9c1eb3fe-7bba-479d-bd43-fdb0bc7cd151',
                  'protocol': 'tcp'}
 
         mock_create = self.patchobject(self.sdkclient.network,
@@ -880,7 +880,8 @@ class NeutronFloatingIPTest(common.HeatTestCase):
 
         port_forward = self.stack['port_forwarding']
         scheduler.TaskRunner(port_forward.create)()
-        self.port_forward.handle_update(prop_diff)
+        self.port_forward.handle_update(port_forward.name, port_forward.type(),
+                                        prop_diff)
 
         mock_update.assert_called_once_with(
             fip_id,
