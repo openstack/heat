@@ -109,14 +109,6 @@
     name: heat-functional
     parent: heat-functional-base
 
-# TODO(gmann): As per the 2025.1 testing runtime, we need to run at least
-# one job on jammy. This job can be removed in the next cycle(2025.2).
-- job:
-    name: heat-functional-jammy
-    description: This job testing on Ubuntu jammy(22.04)
-    parent: heat-functional
-    nodeset: openstack-single-node-jammy
-
 - job:
     name: heat-functional-centos-9-stream
     parent: heat-functional-base
@@ -211,7 +203,6 @@
         - grenade-heat-multinode
         - grenade-heat-multinode-skip-level
         - heat-functional
-        - heat-functional-jammy
         - heat-functional-legacy
         - heat-functional-centos-9-stream
     gate:
@@ -219,5 +210,4 @@
         - grenade-heat-multinode
         - grenade-heat-multinode-skip-level
         - heat-functional
-        - heat-functional-jammy
         - heat-functional-legacy
