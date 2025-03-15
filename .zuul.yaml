@@ -96,6 +96,7 @@
         yaml: true
         yml: true
     irrelevant-files:
+      - ^\.gitreview$
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
