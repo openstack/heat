@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: openstack-heat\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-13 18:24+0000\n"
+"POT-Creation-Date: 2025-03-14 13:53+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -31,6 +31,18 @@ msgstr ""
 msgid "10.0.0"
 msgstr "10.0.0"
 
+msgid "10.0.0.0b1"
+msgstr "10.0.0.0b1"
+
+msgid "10.0.0.0b2"
+msgstr "10.0.0.0b2"
+
+msgid "10.0.0.0b3"
+msgstr "10.0.0.0b3"
+
+msgid "10.0.0.0rc1"
+msgstr "10.0.0.0rc1"
+
 msgid "10.0.1"
 msgstr "10.0.1"
 
@@ -43,6 +55,15 @@ msgstr "10.0.3-31"
 msgid "11.0.0"
 msgstr "11.0.0"
 
+msgid "11.0.0.0b1"
+msgstr "11.0.0.0b1"
+
+msgid "11.0.0.0b3"
+msgstr "11.0.0.0b3"
+
+msgid "11.0.0.0rc1"
+msgstr "11.0.0.0rc1"
+
 msgid "11.0.2"
 msgstr "11.0.2"
 
@@ -52,11 +73,17 @@ msgstr "11.0.3"
 msgid "12.0.0"
 msgstr "12.0.0"
 
+msgid "12.0.0.0rc1"
+msgstr "12.0.0.0rc1"
+
 msgid "12.1.0"
 msgstr "12.1.0"
 
 msgid "13.0.0"
 msgstr "13.0.0"
+
+msgid "13.0.0.0rc1"
+msgstr "13.0.0.0rc1"
 
 msgid "13.0.1"
 msgstr "13.0.1"
@@ -82,6 +109,9 @@ msgstr "16.0.0"
 msgid "17.0.0"
 msgstr "17.0.0"
 
+msgid "17.0.0.0rc1"
+msgstr "17.0.0.0rc1"
+
 msgid "17.0.2"
 msgstr "17.0.2"
 
@@ -93,6 +123,9 @@ msgstr "18.0.1"
 
 msgid "19.0.0"
 msgstr "19.0.0"
+
+msgid "19.0.0.0rc1"
+msgstr "19.0.0.0rc1"
 
 msgid "19.0.1"
 msgstr "19.0.1"
@@ -139,14 +172,47 @@ msgstr "6.0.0"
 msgid "7.0.0"
 msgstr "7.0.0"
 
+msgid "7.0.0.0b1"
+msgstr "7.0.0.0b1"
+
+msgid "7.0.0.0b2"
+msgstr "7.0.0.0b2"
+
+msgid "7.0.0.0b3"
+msgstr "7.0.0.0b3"
+
+msgid "7.0.0.0rc1"
+msgstr "7.0.0.0rc1"
+
 msgid "8.0.0"
 msgstr "8.0.0"
+
+msgid "8.0.0.0b1"
+msgstr "8.0.0.0b1"
+
+msgid "8.0.0.0b2"
+msgstr "8.0.0.0b2"
+
+msgid "8.0.0.0b3"
+msgstr "8.0.0.0b3"
 
 msgid "8.0.7"
 msgstr "8.0.7"
 
 msgid "9.0.0"
 msgstr "9.0.0"
+
+msgid "9.0.0.0b1"
+msgstr "9.0.0.0b1"
+
+msgid "9.0.0.0b2"
+msgstr "9.0.0.0b2"
+
+msgid "9.0.0.0b3"
+msgstr "9.0.0.0b3"
+
+msgid "9.0.0.0rc1"
+msgstr "9.0.0.0rc1"
 
 msgid "9.0.3"
 msgstr "9.0.3"
@@ -1289,6 +1355,17 @@ msgstr ""
 "particular."
 
 msgid ""
+"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
+"types allow users to attach to Zaqar queues (respectively) notifications in "
+"general, and notifications that trigger Mistral workflow executions in "
+"particular."
+msgstr ""
+"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
+"types allow users to attach to Zaqar queues (respectively) notifications in "
+"general, and notifications that trigger Mistral workflow executions in "
+"particular."
+
+msgid ""
 "New config ``max_nova_api_microversion`` to set the maximum nova API "
 "microversion for nova client plugin. If``max_nova_api_microversion`` is set, "
 "any nova features supported with microversion number above "
@@ -2401,6 +2478,21 @@ msgstr ""
 "e. the name of the nested Heat stack which implemented the group). It will "
 "now return the UUID of the nested stack if available. This will also apply "
 "to any resource type that inherits from ``OS::Heat::AutoScalingGroup``."
+
+msgid ""
+"The behavior of ``get_resource`` on an ``OS::Heat::InstanceGroup`` resource "
+"has changed. Previously it returned the physical resource name (i.e. the "
+"name of the nested Heat stack which implemented the group). It will now "
+"return the UUID of the nested stack if available. This will also apply to "
+"any resource type that inherits from ``OS::Heat::AutoScalingGroup``, ``OS::"
+"Heat::InstanceGroup``, and ``AWS::AutoScaling::AutoScalingGroup``."
+msgstr ""
+"The behaviour of ``get_resource`` on an ``OS::Heat::InstanceGroup`` resource "
+"has changed. Previously it returned the physical resource name (i.e. the "
+"name of the nested Heat stack which implemented the group). It will now "
+"return the UUID of the nested stack if available. This will also apply to "
+"any resource type that inherits from ``OS::Heat::AutoScalingGroup``, ``OS::"
+"Heat::InstanceGroup``, and ``AWS::AutoScaling::AutoScalingGroup``."
 
 msgid ""
 "The ceilometer client plugin is no longer provided, due to the Ceilometer "
