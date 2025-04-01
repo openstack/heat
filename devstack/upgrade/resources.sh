@@ -126,7 +126,7 @@ function create {
     resource_save heat user_id $id
     # with keystone v3 user created in a project is not assigned a role
     # https://bugs.launchpad.net/keystone/+bug/1662911
-    openstack role add Member --user $id --project $project_id
+    openstack role add member --user $id --project $project_id
 
     _heat_set_user
 
