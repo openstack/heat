@@ -187,7 +187,6 @@ class VPNServiceTest(common.HeatTestCase):
         rsrc = self.create_vpnservice()
 
         self.mockclient.show_vpnservice.side_effect = [
-            {'vpnservice': {'status': 'PENDING_CREATE'}},
             {'vpnservice': {'status': 'ERROR'}},
         ]
 
