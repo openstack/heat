@@ -24,6 +24,7 @@ import eventlet
 eventlet.monkey_patch(os=False)
 
 import sys
+import warnings
 
 from oslo_config import cfg
 import oslo_i18n as i18n
@@ -72,6 +73,9 @@ def launch_cfn_api(setup_logging=True):
 
 
 def main():
+    warnings.warn("The heat-api script has been deprecated and will be "
+                  "removed in the future.",
+                  DeprecationWarning)
     try:
         server = launch_cfn_api()
         systemd.notify_once()

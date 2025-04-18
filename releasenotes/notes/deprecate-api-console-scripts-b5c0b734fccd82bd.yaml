@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The ``heat-api`` console script and the ``heat-api-cfn`` console script,
+    which are used to launch standalone api services, have been deprecated and
+    will be removed in a future release. It is now highly recommended to Use
+    the wsgi scripts (or wsgi applications directly) instead.
