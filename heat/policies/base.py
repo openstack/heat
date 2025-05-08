@@ -19,8 +19,6 @@ RULE_DENY_EVERYBODY = 'rule:deny_everybody'
 RULE_ALLOW_EVERYBODY = 'rule:allow_everybody'
 
 # Check strings that embody common personas
-SYSTEM_ADMIN = 'role:admin and system_scope:all'
-SYSTEM_READER = 'role:reader and system_scope:all'
 PROJECT_MEMBER = 'role:member and project_id:%(project_id)s'
 PROJECT_READER = 'role:reader and project_id:%(project_id)s'
 
@@ -44,8 +42,7 @@ rules = [
     policy.RuleDefault(
         name="context_is_admin",
         check_str=(
-            "(role:admin and is_admin_project:True) OR "
-            "(" + SYSTEM_ADMIN + ")"
+            "(role:admin and is_admin_project:True)"
         ),
         description="Decides what is required for the 'is_admin:True' check "
         "to succeed."),
