@@ -15,7 +15,6 @@ Note that installation and configuration vary by distribution.
 .. toctree::
    :maxdepth: 1
 
-   install-obs.rst
    install-rdo.rst
    install-ubuntu.rst
    install-debian.rst
