@@ -111,12 +111,6 @@
     parent: heat-functional-base
 
 - job:
-    name: heat-functional-centos-9-stream
-    parent: heat-functional-base
-    voting: false
-    nodeset: devstack-single-node-centos-9-stream
-
-- job:
     name: heat-functional-legacy
     parent: heat-functional-base
     vars:
@@ -198,7 +192,6 @@
         - grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
-        - heat-functional-centos-9-stream
     gate:
       jobs:
         - grenade-heat-multinode
