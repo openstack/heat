@@ -1,0 +1,10 @@
+---
+deprecations:
+  - |
+    The legacy engine has been deprecated and convergence engine will be
+    the only supported engine. Due to this deprecation, the following options
+    have been deprecated.
+
+    - ``[DEFAULT] convergence_engine``
+    - ``[DEFAULT] enable_stack_abandon``
+    - ``[DEFAULT] enable_stack_adopt``
