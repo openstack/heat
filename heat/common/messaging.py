@@ -126,7 +126,6 @@ def get_rpc_server(target, endpoint):
         oslo_messaging.JsonPayloadSerializer())
     access_policy = dispatcher.DefaultRPCAccessPolicy
     return oslo_messaging.get_rpc_server(TRANSPORT, target, [endpoint],
-                                         executor='eventlet',
                                          serializer=serializer,
                                          access_policy=access_policy)
 
