@@ -42,8 +42,7 @@ The localrc looked like this::
   RABBIT_PASSWORD=$MY_PASSWORD
 
   disable_all_services
-  # Alternative RPC backends are zeromq and rabbit
-  ENABLED_SERVICES=qpid
+  ENABLED_SERVICES=rabbit
   enable_service mysql heat h-api h-api-cfn h-eng
 
 Then run your ./stack.sh as normal.
