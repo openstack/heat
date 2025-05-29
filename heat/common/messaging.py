@@ -13,7 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import eventlet
 from oslo_config import cfg
 import oslo_messaging
 from oslo_messaging.rpc import dispatcher
@@ -92,10 +91,6 @@ def setup(url=None, optional=False):
     """Initialise the oslo_messaging layer."""
     global NOTIFIER
 
-    if url and url.startswith("fake://"):
-        # NOTE(sileht): oslo_messaging fake driver uses time.sleep
-        # for task switch, so we need to monkey_patch it
-        eventlet.monkey_patch(time=True)
     if not TRANSPORT or not NOTIFICATIONS_TRANSPORT:
         setup_transports(url, optional)
         # In the fake driver, make the dict of exchanges local to each exchange
