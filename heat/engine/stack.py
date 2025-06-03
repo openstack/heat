@@ -199,7 +199,7 @@ class Stack(collections.abc.Mapping):
 
         self.in_convergence_check = cache_data is not None
 
-        if use_stored_context:
+        if use_stored_context and not self.refresh_cred:
             self.context = self.stored_context()
 
         self.clients = self.context.clients
@@ -221,6 +221,13 @@ class Stack(collections.abc.Mapping):
                                                  parent_info)
         else:
             self.defn = None
+
+        if use_stored_context and self.refresh_cred:
+            # If we need to refresh credential, make sure we do refresh
+            # and use correct credential as stored_context for stack.
+            # Do this right at end of init to make sure we do have most
+            # stack attributes ready for store()
+            self.store(use_stored_context=True)
 
     @property
     def tags(self):
@@ -583,16 +590,15 @@ class Stack(collections.abc.Mapping):
             message = _('No stack exists with id "%s"') % str(stack_id)
             raise exception.NotFound(message)
 
+        if force_reload:
+            stack.refresh()
+
         refresh_cred = False
         if check_refresh_cred and (
             cfg.CONF.deferred_auth_method == 'trusts'
         ):
             if cls._check_refresh_cred(context, stack):
-                use_stored_context = False
                 refresh_cred = True
-
-        if force_reload:
-            stack.refresh()
 
         return cls._from_db(context, stack,
                             use_stored_context=use_stored_context,
@@ -709,7 +715,7 @@ class Stack(collections.abc.Mapping):
 
     @profiler.trace('Stack.store', hide_args=False)
     def store(self, backup=False, exp_trvsl=None,
-              ignore_traversal_check=False):
+              ignore_traversal_check=False, use_stored_context=False):
         """Store the stack in the database and return its ID.
 
         If self.id is set, we update the existing stack.
@@ -726,6 +732,8 @@ class Stack(collections.abc.Mapping):
 
         if self.id is not None:
             if self.refresh_cred:
+                # Only rotate user_creds_id right at storing.
+                # To make sure we store it right away.
                 keystone = self.clients.client('keystone')
                 trust_ctx = keystone.regenerate_trust_context()
                 new_creds = ucreds_object.UserCreds.create(trust_ctx)
@@ -735,6 +743,9 @@ class Stack(collections.abc.Mapping):
 
                 self.user_creds_id = new_creds.id
                 self.refresh_cred = False
+                if use_stored_context:
+                    # Make sure context will use new user_creds_id
+                    self.context = self.stored_context()
 
             if exp_trvsl is None and not ignore_traversal_check:
                 exp_trvsl = self.current_traversal
