@@ -1439,7 +1439,7 @@ class EngineService(service.ServiceBase):
 
         st = self._get_stack(cnxt, stack_identity)
         LOG.info('Deleting stack %s', st.name)
-        stack = parser.Stack.load(cnxt, stack=st)
+        stack = parser.Stack.load(cnxt, stack=st, check_refresh_cred=True)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
         if (stack.status == stack.COMPLETE and stack.action == stack.DELETE):
             # In convergence try to soft delete the stack again
