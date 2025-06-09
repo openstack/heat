@@ -13,8 +13,8 @@
 
 """Routines for configuring Heat."""
 import os
+import socket
 
-from eventlet.green import socket
 from oslo_config import cfg
 from oslo_db import options as oslo_db_ops
 from oslo_log import log as logging
