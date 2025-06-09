@@ -14,7 +14,6 @@
 import os
 import sys
 
-import eventlet
 import fixtures
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -110,10 +109,6 @@ class HeatTestCase(testscenarios.WithScenarios,
         self.addCleanup(cfg.CONF.reset)
 
         messaging.setup("fake://", optional=True)
-        # NOTE(sileht): oslo_messaging fake driver uses time.sleep
-        # for task switch, so we need to monkey_patch it
-        eventlet.monkey_patch(time=True)
-
         self.addCleanup(messaging.cleanup)
 
         tri_names = ['AWS::RDS::DBInstance', 'AWS::CloudWatch::Alarm']

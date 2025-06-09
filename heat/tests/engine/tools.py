@@ -323,6 +323,9 @@ class DummyThreadGroup(object):
     def wait(self):
         pass
 
+    def stopall(self):
+        pass
+
 
 class DummyThreadGroupManager(object):
     def __init__(self):

@@ -16,10 +16,10 @@ import itertools
 import json
 import os
 import sys
+import threading
 from unittest import mock
 import uuid
 
-import eventlet
 from oslo_config import cfg
 from oslo_utils import timeutils as oslo_timeutils
 
@@ -77,7 +77,7 @@ class ResourceTest(common.HeatTestCase):
                                                     env=self.env),
                                   stack_id=str(uuid.uuid4()))
         self.dummy_timeout = 10
-        self.dummy_event = eventlet.event.Event()
+        self.dummy_event = threading.Event()
 
     def test_get_class_ok(self):
         cls = resources.global_env().get_class_to_instantiate(
@@ -4307,7 +4307,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
             }
         }
         self.dummy_timeout = 10
-        self.dummy_event = eventlet.event.Event()
+        self.dummy_event = threading.Event()
 
     def create_resource(self):
         self.stack = parser.Stack(utils.dummy_context(), 'test_stack',
@@ -4450,7 +4450,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                                                        'engine-007',
                                                        self.dummy_timeout,
                                                        self.new_stack,
-                                                       eventlet.event.Event()))
+                                                       threading.Event()))
         self.assertEqual('ResourceActionRestricted: resources.bar: '
                          'replace is restricted for resource.',
                          str(error))
@@ -4482,7 +4482,7 @@ class ResourceUpdateRestrictionTest(common.HeatTestCase):
                                                        'engine-007',
                                                        self.dummy_timeout,
                                                        self.new_stack,
-                                                       eventlet.event.Event()))
+                                                       threading.Event()))
         self.assertIn('requires replacement', str(error))
         ev.assert_not_called()
 

@@ -229,7 +229,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.engine.worker.WorkerService',
                 return_value=mock.Mock())
-    @mock.patch('oslo_service.threadgroup.ThreadGroup',
+    @mock.patch('heat.engine.service.ThreadGroup',
                 return_value=mock.Mock())
     @mock.patch.object(service.EngineService, '_configure_db_conn_pool_size')
     def test_engine_service_start_in_non_convergence_mode(
@@ -269,7 +269,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.engine.worker.WorkerService',
                 return_value=mock.Mock())
-    @mock.patch('oslo_service.threadgroup.ThreadGroup',
+    @mock.patch('heat.engine.service.ThreadGroup',
                 return_value=mock.Mock())
     @mock.patch.object(service.EngineService, '_configure_db_conn_pool_size')
     def test_engine_service_start_in_convergence_mode(
@@ -392,7 +392,7 @@ class ServiceEngineTest(common.HeatTestCase):
                 return_value=mock.Mock())
     @mock.patch('heat.engine.worker.WorkerService',
                 return_value=mock.Mock())
-    @mock.patch('oslo_service.threadgroup.ThreadGroup',
+    @mock.patch('heat.engine.service.ThreadGroup',
                 return_value=mock.Mock())
     def test_engine_service_configures_connection_pool(
             self,

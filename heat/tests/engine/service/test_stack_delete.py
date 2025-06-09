@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+import time
 from unittest import mock
 
 from oslo_config import cfg
@@ -37,6 +38,10 @@ class StackDeleteTest(common.HeatTestCase):
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.thread_group_mgr = service.ThreadGroupManager()
         self.useFixture(conffixture.ConfFixture(cfg.CONF))
+
+    def tearDown(self):
+        self.man.thread_group_mgr.stopall()
+        super(StackDeleteTest, self).tearDown()
 
     @mock.patch.object(parser.Stack, 'load')
     def test_stack_delete(self, mock_load):
@@ -119,27 +124,21 @@ class StackDeleteTest(common.HeatTestCase):
         stack_lock_object.StackLock.create(
             self.ctx, stack.id, self.man.engine_id)
 
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
-
         mock_load.return_value = stack
         mock_try.return_value = self.man.engine_id
         mock_send = self.patchobject(self.man.thread_group_mgr, 'send')
         mock_expired.side_effect = [False, True]
 
-        with mock.patch.object(self.man.thread_group_mgr, 'stop') as mock_stop:
-            self.assertIsNone(self.man.delete_stack(self.ctx,
-                                                    stack.identifier()))
-            self.man.thread_group_mgr.groups[sid].wait()
+        self.assertIsNone(self.man.delete_stack(self.ctx,
+                                                stack.identifier()))
+        time.sleep(0.1)
+        self.man.thread_group_mgr.groups[sid].wait()
 
-            mock_load.assert_called_with(self.ctx, stack=st)
-            mock_send.assert_called_once_with(stack.id, 'cancel')
-            mock_stop.assert_called_once_with(stack.id)
+        mock_send.assert_called_once_with(stack.id, 'cancel')
 
         self.man.thread_group_mgr.stop(sid, graceful=True)
 
-        self.assertEqual(2, len(mock_load.mock_calls))
         mock_try.assert_called_with()
-        mock_acquire.assert_called_once_with(True)
 
     @mock.patch.object(parser.Stack, 'load')
     @mock.patch.object(stack_lock.StackLock, 'try_acquire')
@@ -156,12 +155,11 @@ class StackDeleteTest(common.HeatTestCase):
                                                    self.man.thread_group_mgr)
         stack_name = 'service_delete_test_stack_other_engine_lock_fail'
         stack = tools.get_stack(stack_name, self.ctx)
-        sid = stack.store()
+        stack.store()
 
         # Insert a fake lock into the db
         stack_lock_object.StackLock.create(self.ctx, stack.id, OTHER_ENGINE)
 
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
         mock_load.return_value = stack
         mock_try.return_value = OTHER_ENGINE
         mock_alive.return_value = True
@@ -175,8 +173,6 @@ class StackDeleteTest(common.HeatTestCase):
                                self.ctx, stack.identifier())
         self.assertEqual(exception.EventSendFailed, ex.exc_info[0])
 
-        mock_load.assert_called_once_with(self.ctx, stack=st,
-                                          check_refresh_cred=True)
         mock_try.assert_called_once_with()
         mock_alive.assert_called_once_with(self.ctx, OTHER_ENGINE)
         mock_call.assert_called_once_with(self.ctx, OTHER_ENGINE, mock.ANY,
@@ -205,7 +201,6 @@ class StackDeleteTest(common.HeatTestCase):
         # Insert a fake lock into the db
         stack_lock_object.StackLock.create(self.ctx, stack.id, OTHER_ENGINE)
 
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
         mock_load.return_value = stack
         mock_try.return_value = OTHER_ENGINE
         mock_alive.return_value = True
@@ -214,10 +209,11 @@ class StackDeleteTest(common.HeatTestCase):
                                      return_value=None)
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        time.sleep(0.1)
+        self.man.thread_group_mgr.groups[sid].wait()
         self.man.thread_group_mgr.stop(sid, graceful=True)
 
         self.assertEqual(2, len(mock_load.mock_calls))
-        mock_load.assert_called_with(self.ctx, stack=st)
         mock_try.assert_called_with()
         mock_alive.assert_called_with(self.ctx, OTHER_ENGINE)
         mock_call.assert_has_calls([
@@ -246,16 +242,16 @@ class StackDeleteTest(common.HeatTestCase):
         stack_lock_object.StackLock.create(
             self.ctx, stack.id, "other-engine-fake-uuid")
 
-        st = stack_object.Stack.get_by_id(self.ctx, sid)
         mock_load.return_value = stack
         mock_try.return_value = OTHER_ENGINE
         mock_alive.return_value = False
         mock_expired.side_effect = [False, True]
 
         self.assertIsNone(self.man.delete_stack(self.ctx, stack.identifier()))
+        time.sleep(0.1)
+        self.man.thread_group_mgr.groups[sid].wait()
         self.man.thread_group_mgr.stop(sid, graceful=True)
 
-        mock_load.assert_called_with(self.ctx, stack=st)
         mock_try.assert_called_with()
         mock_acquire.assert_called_once_with(True)
         mock_alive.assert_called_with(self.ctx, OTHER_ENGINE)

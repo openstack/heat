@@ -14,8 +14,8 @@
 import collections
 import contextlib
 import copy
-import eventlet
 import functools
+import queue
 import re
 import time
 import warnings
@@ -1845,7 +1845,7 @@ class Stack(collections.abc.Mapping):
             return
         try:
             message = msg_queue.get_nowait()
-        except eventlet.queue.Empty:
+        except queue.Empty:
             return
 
         if message == rpc_api.THREAD_CANCEL:

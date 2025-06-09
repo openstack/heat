@@ -14,9 +14,9 @@
 # limitations under the License.
 
 import functools
+import queue
 import time
 
-import eventlet.queue
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import excutils
@@ -183,7 +183,7 @@ class WorkerService(object):
 
         rsrc.converge = converge
 
-        msg_queue = eventlet.queue.LightQueue()
+        msg_queue = queue.Queue()
         try:
             self.thread_group_mgr.add_msg_queue(stack.id, msg_queue)
             cr = check_resource.CheckResource(self.engine_id,

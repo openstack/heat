@@ -10,10 +10,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import queue
 from unittest import mock
 import uuid
 
-import eventlet.queue
 from oslo_config import cfg
 from oslo_messaging import conffixture
 from oslo_messaging.rpc import dispatcher
@@ -72,8 +72,8 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
         msgq_mock = mock.Mock()
-        self.patchobject(eventlet.queue, 'LightQueue',
-                         side_effect=[msgq_mock, eventlet.queue.LightQueue()])
+        self.patchobject(queue, 'Queue',
+                         side_effect=[msgq_mock, queue.Queue()])
 
         # do update
         api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: True}
@@ -127,9 +127,9 @@ class ServiceStackUpdateTest(common.HeatTestCase):
         self.patchobject(templatem, 'Template', return_value=stk.t)
         self.patchobject(environment, 'Environment', return_value=stk.env)
         self.patchobject(stk, 'validate', return_value=None)
-        self.patchobject(eventlet.queue, 'LightQueue',
+        self.patchobject(queue, 'Queue',
                          side_effect=[mock.Mock(),
-                                      eventlet.queue.LightQueue()])
+                                      queue.Queue()])
 
         mock_merge = self.patchobject(env_util, 'merge_environments')
 
@@ -192,8 +192,9 @@ class ServiceStackUpdateTest(common.HeatTestCase):
 
         mock_validate = self.patchobject(stk, 'validate', return_value=None)
         msgq_mock = mock.Mock()
-        self.patchobject(eventlet.queue, 'LightQueue',
-                         side_effect=[msgq_mock, eventlet.queue.LightQueue()])
+        self.patchobject(queue, 'Queue',
+                         side_effect=[msgq_mock,
+                                      queue.Queue()])
 
         # do update
         api_args = {'timeout_mins': 60, rpc_api.PARAM_CONVERGE: False}

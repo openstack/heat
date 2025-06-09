@@ -16,10 +16,11 @@ import copy
 import datetime
 import json
 import logging
+import threading
 import time
+
 from unittest import mock
 
-import eventlet
 import fixtures
 from oslo_config import cfg
 
@@ -2667,7 +2668,7 @@ class StackTest(common.HeatTestCase):
 
     def test_event_dispatch(self):
         env = environment.Environment()
-        evt = eventlet.event.Event()
+        evt = threading.Event()
         sink = fakes.FakeEventSink(evt)
         env.register_event_sink('dummy', lambda: sink)
         env.load({"event_sinks": [{"type": "dummy"}]})
@@ -2677,7 +2678,7 @@ class StackTest(common.HeatTestCase):
         self.addCleanup(stk.thread_group_mgr.stop, stk.id)
         stk.store()
         stk._add_event('CREATE', 'IN_PROGRESS', '')
-        evt.wait()
+        evt.wait(timeout=1.0)
         expected = [{
             'id': mock.ANY,
             'timestamp': mock.ANY,

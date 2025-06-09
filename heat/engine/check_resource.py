@@ -13,8 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import eventlet.queue
 import functools
+import queue
 
 from oslo_log import log as logging
 from oslo_utils import excutils
@@ -367,7 +367,7 @@ def _check_for_message(msg_queue):
         return
     try:
         message = msg_queue.get_nowait()
-    except eventlet.queue.Empty:
+    except queue.Empty:
         return
 
     if message == rpc_api.THREAD_CANCEL:
