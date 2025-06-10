@@ -25,7 +25,6 @@ import signal
 import sys
 import time
 
-import eventlet
 from eventlet.green import socket
 from eventlet.green import ssl
 import eventlet.greenio
@@ -201,7 +200,7 @@ def get_socket(conf, default_port):
         except socket.error as err:
             if err.errno != errno.EADDRINUSE:
                 raise
-            eventlet.sleep(0.1)
+            time.sleep(0.1)
     if not sock:
         raise RuntimeError(_("Could not bind to %(bind_addr)s "
                              "after trying for 30 seconds")

@@ -13,9 +13,8 @@
 
 import contextlib
 import itertools
+import time
 from unittest import mock
-
-import eventlet
 
 from heat.common import exception
 from heat.common import timeutils
@@ -92,7 +91,7 @@ class StepTracker(object):
         if isinstance(se, BaseException):
             raise se
         if isinstance(se, float):
-            eventlet.sleep(se)
+            time.sleep(se)
 
     def verify_calls(self, mock_step):
         actual_calls = mock_step.mock_calls
@@ -366,7 +365,7 @@ class DependencyTaskGroupTest(common.HeatTestCase):
             self.error_wait_time = 0.05
 
             def sleep():
-                eventlet.sleep(self.error_wait_time)
+                time.sleep(self.error_wait_time)
 
             tasks = (('A', None), ('B', None), ('C', 'A'))
             with self._dep_test(*tasks) as track:
@@ -1192,7 +1191,7 @@ class TaskSleepTest(common.HeatTestCase):
     def setUp(self):
         super(TaskSleepTest, self).setUp()
         scheduler.ENABLE_SLEEP = True
-        self.mock_sleep = self.patchobject(eventlet, 'sleep',
+        self.mock_sleep = self.patchobject(time, 'sleep',
                                            return_value=None)
 
     def test_sleep(self):
@@ -1222,7 +1221,7 @@ class TimeoutTest(common.HeatTestCase):
         task = scheduler.TaskRunner(DummyTask())
 
         earlier = scheduler.Timeout(task, 10)
-        eventlet.sleep(0.01)
+        time.sleep(0.01)
         later = scheduler.Timeout(task, 10)
 
         self.assertTrue(earlier.earlier_than(later))

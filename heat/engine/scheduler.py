@@ -12,9 +12,9 @@
 #    under the License.
 
 import sys
+import time
 import types
 
-import eventlet
 from oslo_log import log as logging
 from oslo_utils import encodeutils
 from oslo_utils import excutils
@@ -25,7 +25,7 @@ from heat.common import timeutils
 LOG = logging.getLogger(__name__)
 
 
-# Whether TaskRunner._sleep actually does an eventlet sleep when called.
+# Whether TaskRunner._sleep actually does a sleep when called.
 ENABLE_SLEEP = True
 
 
@@ -144,7 +144,7 @@ class TaskRunner(object):
         """Sleep for the specified number of seconds."""
         if ENABLE_SLEEP and wait_time is not None:
             LOG.debug('%s sleeping', str(self))
-            eventlet.sleep(wait_time)
+            time.sleep(wait_time)
 
     def __call__(self, wait_time=1, timeout=None, progress_callback=None):
         """Start and run the task to completion.

@@ -12,9 +12,9 @@
 #    under the License.
 
 import croniter
-import eventlet
 import json
 import netaddr
+import time
 import zoneinfo
 
 from neutron_lib.api import validators
@@ -28,7 +28,7 @@ from heat.engine import constraints
 class TestConstraintDelay(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, value):
-        eventlet.sleep(value)
+        time.sleep(value)
 
 
 class IPConstraint(constraints.BaseCustomConstraint):

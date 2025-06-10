@@ -11,9 +11,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import time
 from unittest import mock
 
-import eventlet
 from oslo_context import context
 
 from heat.engine import service
@@ -114,11 +114,11 @@ class ThreadGroupManagerStopTest(common.HeatTestCase):
 
         def function():
             while True:
-                eventlet.sleep()
+                time.sleep(0)
 
         def linked(gt, thread):
             for i in range(10):
-                eventlet.sleep()
+                time.sleep(0)
             done.append(thread)
 
         thm = service.ThreadGroupManager()

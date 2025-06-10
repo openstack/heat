@@ -12,7 +12,8 @@
 #    under the License.
 
 import datetime
-import eventlet
+import time
+
 from oslo_utils import timeutils
 
 from heat.common.i18n import _
@@ -220,7 +221,7 @@ class TestResource(resource.Resource):
                                                 entity_id, str(exc)))
             else:
                 # just sleep some more
-                eventlet.sleep(1)
+                time.sleep(1)
 
         if isinstance(started_at, str):
             started_at = timeutils.parse_isotime(started_at)
@@ -243,7 +244,7 @@ class TestResource(resource.Resource):
         return False
 
     def _resolve_attribute(self, name):
-        eventlet.sleep(self.properties[self.ATTR_WAIT_SECS])
+        time.sleep(self.properties[self.ATTR_WAIT_SECS])
         if name == self.OUTPUT:
             return self.data().get('value')
 

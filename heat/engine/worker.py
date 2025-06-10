@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import eventlet.queue
 import functools
+import time
 
+import eventlet.queue
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import excutils
@@ -251,7 +252,7 @@ def _wait_for_cancellation(stack, wait=5):
     retries = CANCEL_RETRIES
     while retries > 0:
         retries -= 1
-        eventlet.sleep(wait)
+        time.sleep(wait)
         engines = db_api.engine_get_all_locked_by_stack(
             stack.context, stack.id)
         if not engines:

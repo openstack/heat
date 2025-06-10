@@ -12,8 +12,8 @@
 #    under the License.
 
 import itertools
+import time
 
-import eventlet
 from oslo_log import log as logging
 from oslo_serialization import jsonutils
 from oslo_utils import netutils
@@ -622,7 +622,7 @@ class ServerNetworkMixin(object):
                         existing_server.resource_id)
                     if active:
                         break
-                    eventlet.sleep(1)
+                    time.sleep(1)
             except exception.ResourceInError:
                 pass
 
