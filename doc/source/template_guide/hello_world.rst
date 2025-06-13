@@ -137,7 +137,7 @@ following example defines a default value ``m1.small`` for the
        type: string
        label: Instance Type
        description: Flavor to be used
-      default: m1.small
+       default: m1.small
 
 .. note::
    If a template doesn't define a default value for a parameter, then the user
