@@ -1,0 +1,6 @@
+---
+upgrade:
+  - |
+    All wsgi application implementations using eventlet for
+    heat-api, heat-api-cfn and heat-all are removed as a precusror
+    to dropping eventlet usage from heat.

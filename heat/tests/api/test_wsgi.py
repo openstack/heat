@@ -17,87 +17,14 @@
 
 from unittest import mock
 
-import fixtures
 import json
 from oslo_config import cfg
-import socket
 import webob
 
 from heat.api.aws import exception as aws_exception
 from heat.common import exception
 from heat.common import wsgi
 from heat.tests import common
-
-
-class RequestTest(common.HeatTestCase):
-
-    def test_content_type_missing(self):
-        request = wsgi.Request.blank('/tests/123')
-        self.assertRaises(exception.InvalidContentType,
-                          request.get_content_type, ('application/xml'))
-
-    def test_content_type_unsupported(self):
-        request = wsgi.Request.blank('/tests/123')
-        request.headers["Content-Type"] = "text/html"
-        self.assertRaises(exception.InvalidContentType,
-                          request.get_content_type, ('application/xml'))
-
-    def test_content_type_with_charset(self):
-        request = wsgi.Request.blank('/tests/123')
-        request.headers["Content-Type"] = "application/json; charset=UTF-8"
-        result = request.get_content_type(('application/json'))
-        self.assertEqual("application/json", result)
-
-    def test_content_type_from_accept_xml(self):
-        request = wsgi.Request.blank('/tests/123')
-        request.headers["Accept"] = "application/xml"
-        result = request.best_match_content_type()
-        self.assertEqual("application/json", result)
-
-    def test_content_type_from_accept_json(self):
-        request = wsgi.Request.blank('/tests/123')
-        request.headers["Accept"] = "application/json"
-        result = request.best_match_content_type()
-        self.assertEqual("application/json", result)
-
-    def test_content_type_from_accept_xml_json(self):
-        request = wsgi.Request.blank('/tests/123')
-        request.headers["Accept"] = "application/xml, application/json"
-        result = request.best_match_content_type()
-        self.assertEqual("application/json", result)
-
-    def test_content_type_from_accept_json_xml_quality(self):
-        request = wsgi.Request.blank('/tests/123')
-        request.headers["Accept"] = ("application/json; q=0.3, "
-                                     "application/xml; q=0.9")
-        result = request.best_match_content_type()
-        self.assertEqual("application/json", result)
-
-    def test_content_type_accept_default(self):
-        request = wsgi.Request.blank('/tests/123.unsupported')
-        request.headers["Accept"] = "application/unsupported1"
-        result = request.best_match_content_type()
-        self.assertEqual("application/json", result)
-
-    def test_best_match_language(self):
-        # Test that we are actually invoking language negotiation by webop
-        request = wsgi.Request.blank('/')
-        accepted = 'unknown-lang'
-        request.headers = {'Accept-Language': accepted}
-
-        def fake_best_match(self, offers, default_match=None):
-            # Best match on an unknown locale returns None
-            return None
-        with mock.patch.object(request.accept_language,
-                               'best_match') as mock_match:
-            mock_match.side_effect = fake_best_match
-        self.assertIsNone(request.best_match_language())
-
-        # If Accept-Language is missing or empty, match should be None
-        request.headers = {'Accept-Language': ''}
-        self.assertIsNone(request.best_match_language())
-        request.headers.pop('Accept-Language')
-        self.assertIsNone(request.best_match_language())
 
 
 class ResourceTest(common.HeatTestCase):
@@ -387,77 +314,3 @@ class JSONRequestDeserializerTest(common.HeatTestCase):
                '(%s bytes) exceeds maximum allowed size (%s bytes).' % (
                    len(body), cfg.CONF.max_json_body_size))
         self.assertEqual(msg, str(error))
-
-
-class GetSocketTestCase(common.HeatTestCase):
-
-    def setUp(self):
-        super(GetSocketTestCase, self).setUp()
-        self.useFixture(fixtures.MonkeyPatch(
-            "heat.common.wsgi.get_bind_addr",
-            lambda x, y: ('192.168.0.13', 1234)))
-        addr_info_list = [(2, 1, 6, '', ('192.168.0.13', 80)),
-                          (2, 2, 17, '', ('192.168.0.13', 80)),
-                          (2, 3, 0, '', ('192.168.0.13', 80))]
-        self.useFixture(fixtures.MonkeyPatch(
-            "heat.common.wsgi.socket.getaddrinfo",
-            lambda *x: addr_info_list))
-        self.useFixture(fixtures.MonkeyPatch(
-            "heat.common.wsgi.time.time",
-            mock.Mock(side_effect=[0, 1, 5, 10, 20, 35])))
-        wsgi.cfg.CONF.heat_api.cert_file = '/etc/ssl/cert'
-        wsgi.cfg.CONF.heat_api.key_file = '/etc/ssl/key'
-        wsgi.cfg.CONF.heat_api.ca_file = '/etc/ssl/ca_cert'
-        wsgi.cfg.CONF.heat_api.tcp_keepidle = 600
-
-    def test_correct_configure_socket(self):
-        mock_socket = mock.Mock()
-        mock_load_cert_chain = mock.Mock()
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.ssl.SSLContext.load_cert_chain',
-            mock_load_cert_chain))
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.ssl.SSLContext.wrap_socket',
-            mock_socket))
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.eventlet.listen',
-            lambda *x, **y: mock_socket))
-        server = wsgi.Server(name='heat-api', conf=cfg.CONF.heat_api)
-        server.default_port = 1234
-        server.configure_socket()
-        self.assertIn(mock.call.setsockopt(
-            socket.SOL_SOCKET,
-            socket.SO_REUSEADDR,
-            1), mock_socket.mock_calls)
-        self.assertIn(mock.call.setsockopt(
-            socket.SOL_SOCKET,
-            socket.SO_KEEPALIVE,
-            1), mock_socket.mock_calls)
-        if hasattr(socket, 'TCP_KEEPIDLE'):
-            self.assertIn(mock.call().setsockopt(
-                socket.IPPROTO_TCP,
-                socket.TCP_KEEPIDLE,
-                wsgi.cfg.CONF.heat_api.tcp_keepidle), mock_socket.mock_calls)
-
-    def test_get_socket_without_all_ssl_reqs(self):
-        wsgi.cfg.CONF.heat_api.key_file = None
-        self.assertRaises(RuntimeError, wsgi.get_socket,
-                          wsgi.cfg.CONF.heat_api, 1234)
-
-    def test_get_socket_with_bind_problems(self):
-        err = wsgi.socket.error(
-            socket.errno.EADDRINUSE, 'Address already in use')
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.eventlet.listen',
-            mock.Mock(side_effect=(
-                [err] * 3 + [None]))))
-
-        self.assertRaises(RuntimeError, wsgi.get_socket,
-                          wsgi.cfg.CONF.heat_api, 1234)
-
-    def test_get_socket_with_unexpected_socket_errno(self):
-        self.useFixture(fixtures.MonkeyPatch(
-            'heat.common.wsgi.eventlet.listen',
-            mock.Mock(side_effect=wsgi.socket.error(socket.errno.ENOMEM))))
-        self.assertRaises(wsgi.socket.error, wsgi.get_socket,
-                          wsgi.cfg.CONF.heat_api, 1234)
