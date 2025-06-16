@@ -11,8 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from datetime import datetime
-from datetime import timedelta
+import datetime
 from unittest import mock
 
 from oslo_config import cfg
@@ -445,10 +444,11 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             db_res['replaced_by'] = None
             return db_res
 
-        start_time = datetime.utcfromtimestamp(0)
+        start_time = datetime.datetime.fromtimestamp(
+            0, tz=datetime.timezone.utc).replace(tzinfo=None)
 
         def t(minutes):
-            return start_time + timedelta(minutes=minutes)
+            return start_time + datetime.timedelta(minutes=minutes)
 
         a_res_2 = db_resource(2)
         a_res_3 = db_resource(3)
