@@ -229,17 +229,6 @@ class Template(collections.abc.Mapping):
         """Return a parameters.Parameters object for the stack."""
         pass
 
-    def validate_resource_definitions(self, stack):
-        """Check validity of resource definitions.
-
-        This method is deprecated. Subclasses should validate the resource
-        definitions in the process of generating them when calling
-        resource_definitions(). However, for now this method is still called
-        in case any third-party plugins are relying on this for validation and
-        need time to migrate.
-        """
-        pass
-
     def conditions(self, stack):
         """Return a dictionary of resolved conditions."""
         return conditions.Conditions({})
