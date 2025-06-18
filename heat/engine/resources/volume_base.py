@@ -12,12 +12,15 @@
 #    under the License.
 
 from oslo_config import cfg
+from oslo_log import log as logging
 
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine.clients import progress
 from heat.engine import resource
 from heat.engine import rsrc_defn
+
+LOG = logging.getLogger(__name__)
 
 
 class BaseVolume(resource.Resource):
@@ -95,8 +98,13 @@ class BaseVolume(resource.Resource):
         return prg
 
     def _create_backup(self):
-        backup = self.client().backups.create(self.resource_id)
-        return backup.id
+        with self.client_plugin().ignore_not_found:
+            backup = self.client().backups.create(self.resource_id)
+            return backup.id
+        LOG.debug(
+            "Skip creating a backup for volume %s - NotFound",
+            self.resource_id)
+        return None
 
     def _check_create_backup_complete(self, prg):
         backup = self.client().backups.get(prg.backup_id)
@@ -133,6 +141,8 @@ class BaseVolume(resource.Resource):
         if not prg.backup['called']:
             prg.backup_id = self._create_backup()
             prg.backup['called'] = True
+            if prg.backup_id is None:
+                prg.backup['complete'] = True
             return False
 
         if not prg.backup['complete']:
