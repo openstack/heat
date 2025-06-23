@@ -16,12 +16,6 @@ import copy
 import json
 from unittest import mock
 
-try:
-    import zoneinfo
-except ImportError:
-    # zoneinfo is available in Python >= 3.9
-    zoneinfo = None
-
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import aodh
@@ -585,9 +579,7 @@ class AodhAlarmTest(common.HeatTestCase):
             exception.ResourceFailure,
             scheduler.TaskRunner(rsrc.update, snippet)
         )
-        err = timezone
-        if zoneinfo:
-            err = "No time zone found with key %s" % timezone
+        err = "No time zone found with key %s" % timezone
         self.assertEqual(
             "StackValidationFailed: resources.MEMAlarmHigh: Property error: "
             "Properties.time_constraints[0].timezone: Error "
