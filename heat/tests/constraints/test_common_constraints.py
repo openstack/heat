@@ -13,12 +13,6 @@
 
 from unittest import mock
 
-try:
-    import zoneinfo
-except ImportError:
-    # zoneinfo is available in Python >= 3.9
-    zoneinfo = None
-
 from heat.engine.constraint import common_constraints as cc
 from heat.tests import common
 from heat.tests import utils
@@ -281,9 +275,7 @@ class TimezoneConstraintTest(common.HeatTestCase):
 
     def test_validation_error(self):
         timezone = "wrong_timezone"
-        err = timezone
-        if zoneinfo:
-            err = "No time zone found with key %s" % timezone
+        err = "No time zone found with key %s" % timezone
         expected = "Invalid timezone: '%s'" % err
 
         self.assertFalse(self.constraint.validate(timezone, self.ctx))
