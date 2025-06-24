@@ -13,15 +13,13 @@
 
 import copy
 
+from neutronclient.v2_0 import client as neutronclient
+
 from heat.engine import rsrc_defn
 from heat.engine import scheduler
 from heat.tests import common
 from heat.tests import utils
 
-try:
-    from neutronclient.v2_0 import client as neutronclient
-except ImportError:
-    neutronclient = None
 
 test_template = {
     'heat_template_version': '2013-05-23',

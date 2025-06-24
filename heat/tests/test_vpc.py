@@ -14,6 +14,9 @@
 from unittest import mock
 import uuid
 
+from neutronclient.common import exceptions as neutron_exc
+from neutronclient.v2_0 import client as neutronclient
+
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.resources.aws.ec2 import subnet as sn
@@ -22,12 +25,6 @@ from heat.engine import stack as parser
 from heat.engine import template
 from heat.tests import common
 from heat.tests import utils
-
-try:
-    from neutronclient.common import exceptions as neutron_exc
-    from neutronclient.v2_0 import client as neutronclient
-except ImportError:
-    neutronclient = None
 
 
 class VPCTestBase(common.HeatTestCase):
