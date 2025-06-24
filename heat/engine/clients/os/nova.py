@@ -810,11 +810,23 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
         retry=tenacity.retry_if_result(client_plugin.retry_if_result_is_false))
     def check_interface_detach(self, server_id, port_id):
         with self.ignore_not_found:
-            server = self.fetch_server(server_id)
-            if server:
-                interfaces = server.interface_list()
-                for iface in interfaces:
-                    if iface.port_id == port_id:
+            # os-interface API returns the ports according to the device_id
+            # in neutron api, and it does not return a port in case the port
+            # is already unbound in neutron but is not in nova. So we use
+            # addresses field in servers API, which unfortunately does not
+            # return the full information to strictly identify the port.
+            # So make the best "guess" according to mac addr.
+            # TODO(tkajinam): Consider using instance-action record once
+            # https://review.opendev.org/c/openstack/nova/+/928933 is merged.
+            port = self.clients.client('neutron').show_port(port_id)['port']
+            if 'device_id' in port and port['device_id'] == server_id:
+                return False
+            mac_address = port['mac_address']
+            addresses = self.fetch_server_attr(server_id, 'addresses')
+            for net_addrs in addresses.values():
+                for addr in net_addrs:
+                    if (addr['OS-EXT-IPS:type'] == 'fixed' and
+                            mac_address == addr['OS-EXT-IPS-MAC:mac_addr']):
                         return False
         return True
 
