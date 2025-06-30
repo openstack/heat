@@ -1474,7 +1474,8 @@ class Filter(function.Function):
             return sequence
         if not isinstance(values, list):
             raise TypeError(
-                _('"%(fn)s" filters a list of values') % self.fn_name)
+                _('"%(fn)s" filters a list of values') %
+                {'fn': self.fn_name})
         return [i for i in sequence if i not in values]
 
 
