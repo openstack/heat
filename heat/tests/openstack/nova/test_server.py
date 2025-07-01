@@ -261,8 +261,12 @@ class ServersTest(common.HeatTestCase):
         self.patchobject(glance.GlanceClientPlugin, 'find_image_by_name_or_id',
                          side_effect=image_side_effect)
 
-        self.port_show = self.patchobject(neutronclient.Client,
-                                          'show_port')
+        self.port_show = self.patchobject(
+            neutronclient.Client,
+            'show_port',
+            return_value={'port': {
+                'mac_address': '12:34:56:78:90:AB'
+            }})
         self.subnet_show = self.patchobject(neutronclient.Client,
                                             'show_subnet')
         self.network_show = self.patchobject(neutronclient.Client,
@@ -4691,8 +4695,6 @@ class ServerInternalPortTest(ServersTest):
                                             'create_port')
         self.port_delete = self.patchobject(neutronclient.Client,
                                             'delete_port')
-        self.port_show = self.patchobject(neutronclient.Client,
-                                          'show_port')
 
         def neutron_side_effect(*args):
             if args[0] == 'subnet':
@@ -5148,10 +5150,16 @@ class ServerInternalPortTest(ServersTest):
             'test', tmpl_server_with_network_id)
 
         class Fake(object):
-            def interface_list(self):
-                return [iface(1122)]
-        iface = collections.namedtuple('iface', ['port_id'])
-
+            addresses = {
+                'public': [
+                    {
+                        'addr': '112.112.112.112',
+                        'OS-EXT-IPS-MAC:mac_addr': '12:34:56:78:90:AB',
+                        'OS-EXT-IPS:type': 'fixed',
+                        'version': 4
+                    }
+                ]
+            }
         server.resource_id = 'ser-11'
         port_ids = [{'id': 1122}]
 
