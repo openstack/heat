@@ -32,6 +32,10 @@ class StackServiceAdoptTest(common.HeatTestCase):
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.thread_group_mgr = service.ThreadGroupManager()
 
+    def tearDown(self):
+        self.man.thread_group_mgr.stopall()
+        super(StackServiceAdoptTest, self).tearDown()
+
     def _get_adopt_data_and_template(self, environment=None):
         template = {
             "heat_template_version": "2013-05-23",

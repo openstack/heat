@@ -11,7 +11,7 @@
 #    under the License.
 
 import copy
-import eventlet
+import time
 
 from heat_integrationtests.common import test
 from heat_integrationtests.functional import functional_base
@@ -73,7 +73,7 @@ class StackCancelTest(functional_base.FunctionalTestsBase):
         self.assertTrue(test.call_until_true(
             60, 2, self.verify_resource_status,
             stack_id, 'test1', 'UPDATE_COMPLETE'))
-        eventlet.sleep(2)
+        time.sleep(2)
         self.assertTrue(self.verify_resource_status(stack_id, 'test2',
                                                     'CREATE_COMPLETE'))
 
@@ -87,6 +87,6 @@ class StackCancelTest(functional_base.FunctionalTestsBase):
         self.assertTrue(test.call_until_true(
             60, 2, self.verify_resource_status,
             stack_id, 'test1', 'CREATE_COMPLETE'))
-        eventlet.sleep(2)
+        time.sleep(2)
         self.assertTrue(self.verify_resource_status(stack_id, 'test2',
                                                     'INIT_COMPLETE'))

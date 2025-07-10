@@ -58,12 +58,14 @@ def setup_dummy_db():
     # options.cfg.set_defaults(options.database_opts, connection_debug=100)
     options.set_defaults(cfg.CONF, connection="sqlite://")
     engine = get_engine()
+    engine.dispose()
     models.BASE.metadata.create_all(engine)
     engine.connect()
 
 
 def reset_dummy_db():
     engine = get_engine()
+    engine.dispose()
     meta = sqlalchemy.MetaData()
     meta.reflect(bind=engine)
 

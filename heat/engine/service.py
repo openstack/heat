@@ -18,19 +18,20 @@ import functools
 import itertools
 import os
 import pydoc
+import queue
 import signal
 import socket
 import sys
+import threading
 import time
 
-import eventlet
 from oslo_config import cfg
 from oslo_context import context as oslo_context
 from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_serialization import jsonutils
+from oslo_service.backend.threading import threadgroup
 from oslo_service import service
-from oslo_service import threadgroup
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
@@ -89,25 +90,79 @@ STOP_STACK_TIMEOUT = 30
 LOG = logging.getLogger(__name__)
 
 
+class ThreadWithCallback(threading.Thread):
+    """Thread that supports callback functions on completion."""
+    def __init__(self, target, args=(), kwargs=None):
+        super().__init__()
+        self.target = target
+        self.args = args
+        self.kwargs = kwargs or {}
+        self.callbacks = []
+        self._finished = threading.Event()
+
+    def link(self, callback, *args, **kwargs):
+        """Add a callback to be executed when thread completes."""
+        self.callbacks.append((callback, args, kwargs))
+        # If thread is already finished, run callback immediately
+        if self._finished.is_set():
+            try:
+                callback(self, *args, **kwargs)
+            except Exception:
+                callback_name = getattr(
+                    callback, '__name__', str(callback))
+                LOG.exception(
+                    'Exception in callback execution of %s',
+                    callback_name)
+
+    def run(self):
+        try:
+            self.target(*self.args, **self.kwargs)
+        except Exception:
+            target_name = getattr(
+                self.target, '__name__', str(self.target))
+            LOG.exception(
+                'Exception in thread execution of %s',
+                target_name)
+        except BaseException:
+            raise
+        finally:
+            self._finished.set()
+            # Run all callbacks
+            for callback, args, kwargs in self.callbacks:
+                try:
+                    callback(self, *args, **kwargs)
+                except Exception:
+                    callback_name = getattr(
+                        callback, '__name__', str(callback))
+                    LOG.exception(
+                        'Exception in callback execution of %s',
+                        callback_name)
+
+
+class ThreadGroup(threadgroup.ThreadGroup):
+    def add_thread(self, func, *args, **kwargs):
+        """Start a new thread in the group."""
+        if len(self.threads) >= self.max_threads:
+            raise RuntimeError(
+                "Maximum number of threads reached")
+        with self._lock:
+            th = ThreadWithCallback(target=func, args=args, kwargs=kwargs)
+            th.start()
+            self.threads.append(th)
+        return th
+
+    def wait(self):
+        """Wait for all threads in the group to complete."""
+        self.waitall()
+
+
 class ThreadGroupManager(object):
 
     def __init__(self):
         super(ThreadGroupManager, self).__init__()
         self.groups = {}
         self.msg_queues = collections.defaultdict(list)
-
-        # Create dummy service task, because when there is nothing queued
-        # on any of the service's ThreadGroups, the process exits.
-        self.add_timer(None, self._service_task)
-
-    def _service_task(self):
-        """Dummy task which gets queued on the service.Service threadgroup.
-
-        Without this, service.Service sees nothing running i.e has nothing to
-        wait() on, so the process exits. This could also be used to trigger
-        periodic non-stack-specific housekeeping tasks.
-        """
-        pass
+        self._lock = threading.Lock()
 
     def _serialize_profile_info(self):
         prof = profiler.get()
@@ -129,22 +184,14 @@ class ThreadGroupManager(object):
 
     def start(self, stack_id, func, *args, **kwargs):
         """Run the given method in a sub-thread."""
-        if stack_id not in self.groups:
-            self.groups[stack_id] = threadgroup.ThreadGroup()
-
-        def log_exceptions(gt):
-            try:
-                gt.wait()
-            except Exception:
-                LOG.exception('Unhandled error in asynchronous task')
-            except BaseException:
-                pass
+        with self._lock:
+            if stack_id not in self.groups:
+                self.groups[stack_id] = ThreadGroup()
 
         req_cnxt = oslo_context.get_current()
         th = self.groups[stack_id].add_thread(self._start_with_trace, req_cnxt,
                                               self._serialize_profile_info(),
                                               func, *args, **kwargs)
-        th.link(log_exceptions)
         return th
 
     def start_with_lock(self, cnxt, stack, engine_id, func, *args, **kwargs):
@@ -187,7 +234,7 @@ class ThreadGroupManager(object):
             os._exit(-1)
 
         def release(gt):
-            """Callback function that will be passed to GreenThread.link().
+            """Callback function that will be passed to Thread.link().
 
             Persist the stack state to COMPLETE and FAILED close to
             releasing the lock to avoid race conditions.
@@ -217,20 +264,25 @@ class ThreadGroupManager(object):
     def add_timer(self, stack_id, func, *args, **kwargs):
         """Define a periodic task in the stack threadgroups.
 
-        The task is run in a separate greenthread.
+        The task is run in a separate thread.
 
         Periodicity is cfg.CONF.periodic_interval
         """
-        if stack_id not in self.groups:
-            self.groups[stack_id] = threadgroup.ThreadGroup()
+
+        with self._lock:
+            if stack_id not in self.groups:
+                self.groups[stack_id] = ThreadGroup()
         self.groups[stack_id].add_timer(cfg.CONF.periodic_interval,
                                         func, None, *args, **kwargs)
 
     def add_msg_queue(self, stack_id, msg_queue):
-        self.msg_queues[stack_id].append(msg_queue)
+        with self._lock:
+            self.msg_queues[stack_id].append(msg_queue)
 
     def remove_msg_queue(self, gt, stack_id, msg_queue):
-        for q in self.msg_queues.pop(stack_id, []):
+        with self._lock:
+            queues = self.msg_queues.pop(stack_id, [])
+        for q in queues:
             if q is not msg_queue:
                 self.add_msg_queue(stack_id, q)
 
@@ -240,60 +292,65 @@ class ThreadGroupManager(object):
 
     def stop(self, stack_id, graceful=False):
         """Stop any active threads on a stack."""
-        if stack_id in self.groups:
-            self.msg_queues.pop(stack_id, None)
-            threadgroup = self.groups.pop(stack_id)
-            threads = threadgroup.threads[:]
-
-            threadgroup.stop(graceful)
-            threadgroup.wait()
-
-            # Wait for link()ed functions (i.e. lock release)
-            links_done = dict((th, False) for th in threads)
-
-            def mark_done(gt, th):
-                links_done[th] = True
-
-            for th in threads:
-                th.link(mark_done, th)
-            while not all(links_done.values()):
-                time.sleep(0)
+        with self._lock:
+            if stack_id in self.groups:
+                self.msg_queues.pop(stack_id, None)
+                threadgroup = self.groups.pop(stack_id)
+            else:
+                return
+        threadgroup.stop(graceful)
+        threadgroup.wait()
 
     def send(self, stack_id, message):
-        for msg_queue in self.msg_queues.get(stack_id, []):
+        with self._lock:
+            queues = self.msg_queues.get(stack_id, [])[:]
+
+        for msg_queue in queues:
             msg_queue.put_nowait(message)
+
+    def stopall(self):
+        groups = self.groups.copy()
+        for stack_id in groups:
+            self.stop(stack_id)
 
 
 class NotifyEvent(object):
     def __init__(self):
-        self._queue = eventlet.queue.LightQueue(1)
+        self._queue = queue.Queue(maxsize=1)  # Size 1 to match behavior
         self._signalled = False
+        self._lock = threading.Lock()  # To protect _signalled
 
     def signalled(self):
-        return self._signalled
+        with self._lock:
+            return self._signalled
 
     def signal(self):
         """Signal the event."""
-        if self._signalled:
-            return
-        self._signalled = True
+        with self._lock:
+            if self._signalled:
+                return
+            self._signalled = True
 
-        self._queue.put(None)
-        # Yield control so that the waiting greenthread will get the message
-        # as soon as possible, so that the API handler can respond to the user.
-        # Another option would be to set the queue length to 0 (which would
-        # cause put() to block until the event has been seen, but many unit
-        # tests run in a single greenthread and would thus deadlock.
+        # Put None in the queue to signal
+        try:
+            self._queue.put_nowait(None)
+        except queue.Full:
+            # Already signalled, which is fine
+            pass
+
+        # In standard threading, we can just yield to the scheduler
         time.sleep(0)
 
-    def wait(self):
-        """Wait for the event."""
+    def wait(self, timeout=None):
+        """Wait for the event with optional timeout."""
+        if timeout is None:
+            timeout = cfg.CONF.rpc_response_timeout
         try:
-            # There's no timeout argument to eventlet.event.Event available
-            # until eventlet 0.22.1, so use a queue.
-            self._queue.get(timeout=cfg.CONF.rpc_response_timeout)
-        except eventlet.queue.Empty:
+            self._queue.get(timeout=timeout)
+            return True
+        except queue.Empty:
             LOG.warning('Timed out waiting for operation to start')
+            return False
 
 
 @profiler.trace_cls("rpc")
@@ -418,7 +475,7 @@ class EngineService(service.ServiceBase):
         self._configure_db_conn_pool_size()
         self.service_manage_cleanup()
         if self.manage_thread_grp is None:
-            self.manage_thread_grp = threadgroup.ThreadGroup()
+            self.manage_thread_grp = ThreadGroup()
         self.manage_thread_grp.add_timer(cfg.CONF.periodic_interval,
                                          self.service_manage_report)
         self.manage_thread_grp.add_thread(self.reset_stack_status)
@@ -873,7 +930,7 @@ class EngineService(service.ServiceBase):
             stack.thread_group_mgr = self.thread_group_mgr
             stack.converge_stack(template=stack.t, action=action)
         else:
-            msg_queue = eventlet.queue.LightQueue()
+            msg_queue = queue.Queue()
             th = self.thread_group_mgr.start_with_lock(cnxt, stack,
                                                        self.engine_id,
                                                        _stack_create, stack,
@@ -1059,7 +1116,7 @@ class EngineService(service.ServiceBase):
             current_stack.converge_stack(template=tmpl,
                                          new_stack=updated_stack)
         else:
-            msg_queue = eventlet.queue.LightQueue()
+            msg_queue = queue.Queue()
             stored_event = NotifyEvent()
             th = self.thread_group_mgr.start_with_lock(cnxt, current_stack,
                                                        self.engine_id,

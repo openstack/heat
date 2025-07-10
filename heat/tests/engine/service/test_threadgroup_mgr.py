@@ -12,6 +12,8 @@
 #    under the License.
 
 import time
+
+import threading
 from unittest import mock
 
 from oslo_context import context
@@ -29,92 +31,90 @@ class ThreadGroupManagerTest(common.HeatTestCase):
         self.fkwargs = {'foo': 'bar'}
         self.cnxt = 'ctxt'
         self.engine_id = 'engine_id'
+        self.stack_id = 'test'
         self.stack = mock.Mock()
         self.lock_mock = mock.Mock()
         self.stlock_mock = self.patch('heat.engine.service.stack_lock')
         self.stlock_mock.StackLock.return_value = self.lock_mock
         self.tg_mock = mock.Mock()
-        self.thg_mock = self.patch('heat.engine.service.threadgroup')
-        self.thg_mock.ThreadGroup.return_value = self.tg_mock
+        self.patch('heat.engine.service.ThreadGroup',
+                   return_value=self.tg_mock)
         self.cfg_mock = self.patch('heat.engine.service.cfg')
+        self.thm = service.ThreadGroupManager()
+
+    def tearDown(self):
+        self.thm.stop_timers(self.stack_id)
+        super(ThreadGroupManagerTest, self).tearDown()
 
     def test_tgm_start_with_lock(self):
-        thm = service.ThreadGroupManager()
-        with self.patchobject(thm, 'start_with_acquired_lock'):
+        with self.patchobject(self.thm, 'start_with_acquired_lock'):
             mock_thread_lock = mock.Mock()
             mock_thread_lock.__enter__ = mock.Mock(return_value=None)
             mock_thread_lock.__exit__ = mock.Mock(return_value=None)
             self.lock_mock.thread_lock.return_value = mock_thread_lock
-            thm.start_with_lock(self.cnxt, self.stack, self.engine_id, self.f,
-                                *self.fargs, **self.fkwargs)
+            self.thm.start_with_lock(self.cnxt, self.stack,
+                                     self.engine_id, self.f,
+                                     *self.fargs, **self.fkwargs)
             self.stlock_mock.StackLock.assert_called_with(self.cnxt,
                                                           self.stack.id,
                                                           self.engine_id)
 
-            thm.start_with_acquired_lock.assert_called_once_with(
+            self.thm.start_with_acquired_lock.assert_called_once_with(
                 self.stack, self.lock_mock,
                 self.f, *self.fargs, **self.fkwargs)
 
     def test_tgm_start(self):
-        stack_id = 'test'
+        ret = self.thm.start(self.stack_id, self.f,
+                             *self.fargs, **self.fkwargs)
 
-        thm = service.ThreadGroupManager()
-        ret = thm.start(stack_id, self.f, *self.fargs, **self.fkwargs)
-
-        self.assertEqual(self.tg_mock, thm.groups['test'])
+        self.assertEqual(self.tg_mock, self.thm.groups['test'])
         self.tg_mock.add_thread.assert_called_with(
-            thm._start_with_trace, context.get_current(), None,
+            self.thm._start_with_trace, context.get_current(), None,
             self.f, *self.fargs, **self.fkwargs)
         self.assertEqual(ret, self.tg_mock.add_thread())
 
     def test_tgm_add_timer(self):
-        stack_id = 'test'
+        self.thm.add_timer(self.stack_id, self.f,
+                           *self.fargs, **self.fkwargs)
 
-        thm = service.ThreadGroupManager()
-        thm.add_timer(stack_id, self.f, *self.fargs, **self.fkwargs)
-
-        self.assertEqual(self.tg_mock, thm.groups[stack_id])
+        self.assertEqual(self.tg_mock,
+                         self.thm.groups[self.stack_id])
         self.tg_mock.add_timer.assert_called_with(
             self.cfg_mock.CONF.periodic_interval,
             self.f, None, *self.fargs, **self.fkwargs)
 
     def test_tgm_add_msg_queue(self):
-        stack_id = 'add_msg_queues_test'
         e1, e2 = mock.Mock(), mock.Mock()
-        thm = service.ThreadGroupManager()
-        thm.add_msg_queue(stack_id, e1)
-        thm.add_msg_queue(stack_id, e2)
-        self.assertEqual([e1, e2], thm.msg_queues[stack_id])
+        self.thm.add_msg_queue(self.stack_id, e1)
+        self.thm.add_msg_queue(self.stack_id, e2)
+        self.assertEqual([e1, e2],
+                         self.thm.msg_queues[self.stack_id])
 
     def test_tgm_remove_msg_queue(self):
-        stack_id = 'add_msg_queues_test'
         e1, e2 = mock.Mock(), mock.Mock()
-        thm = service.ThreadGroupManager()
-        thm.add_msg_queue(stack_id, e1)
-        thm.add_msg_queue(stack_id, e2)
-        thm.remove_msg_queue(None, stack_id, e2)
-        self.assertEqual([e1], thm.msg_queues[stack_id])
-        thm.remove_msg_queue(None, stack_id, e1)
-        self.assertNotIn(stack_id, thm.msg_queues)
+        self.thm.add_msg_queue(self.stack_id, e1)
+        self.thm.add_msg_queue(self.stack_id, e2)
+        self.thm.remove_msg_queue(None, self.stack_id, e2)
+        self.assertEqual([e1], self.thm.msg_queues[self.stack_id])
+        self.thm.remove_msg_queue(None, self.stack_id, e1)
+        self.assertNotIn(self.stack_id, self.thm.msg_queues)
 
     def test_tgm_send(self):
-        stack_id = 'send_test'
         e1, e2 = mock.MagicMock(), mock.Mock()
-        thm = service.ThreadGroupManager()
-        thm.add_msg_queue(stack_id, e1)
-        thm.add_msg_queue(stack_id, e2)
-        thm.send(stack_id, 'test_message')
+        self.thm.add_msg_queue(self.stack_id, e1)
+        self.thm.add_msg_queue(self.stack_id, e2)
+        self.thm.send(self.stack_id, 'test_message')
 
 
 class ThreadGroupManagerStopTest(common.HeatTestCase):
-
     def test_tgm_stop(self):
         stack_id = 'test'
         done = []
+        stop_flag = threading.Event()
 
         def function():
-            while True:
-                time.sleep(0)
+            while not stop_flag.is_set():  # Make the loop breakable
+                time.sleep(0.1)  # Shorter sleep for faster test
 
         def linked(gt, thread):
             for i in range(10):
@@ -126,8 +126,14 @@ class ThreadGroupManagerStopTest(common.HeatTestCase):
         thread = thm.start(stack_id, function)
         thread.link(linked, thread)
 
-        thm.stop(stack_id)
+        stop_flag.set()  # Ensure thread stops
+        # Wait with timeout instead of fixed sleep
+        for _ in range(50):  # 5 second timeout (50 * 0.1)
+            if thread in done:
+                break
+            time.sleep(0.1)
 
         self.assertIn(thread, done)
+        thm.stop(stack_id)
         self.assertNotIn(stack_id, thm.groups)
         self.assertNotIn(stack_id, thm.msg_queues)

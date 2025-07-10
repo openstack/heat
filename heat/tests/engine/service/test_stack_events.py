@@ -39,6 +39,10 @@ class StackEventTest(common.HeatTestCase):
         self.eng = service.EngineService('a-host', 'a-topic')
         self.eng.thread_group_mgr = service.ThreadGroupManager()
 
+    def tearDown(self):
+        self.eng.thread_group_mgr.stopall()
+        super(StackEventTest, self).tearDown()
+
     @tools.stack_context('service_event_list_test_stack')
     @mock.patch.object(service.EngineService, '_get_stack')
     def test_event_list(self, mock_get):

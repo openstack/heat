@@ -17,11 +17,7 @@ This does the work of actually implementing the API calls made by the user.
 Normal communications is done via the heat API which then calls into this
 engine.
 """
-
 # flake8: noqa: E402
-
-import eventlet
-eventlet.monkey_patch()
 
 import sys
 
@@ -31,6 +27,10 @@ import oslo_i18n as i18n
 from oslo_log import log as logging
 from oslo_reports import guru_meditation_report as gmr
 from oslo_reports import opts as gmr_opts
+
+from oslo_service import backend
+backend.init_backend(backend.BackendType.THREADING)
+
 from oslo_service import service
 
 from heat.common import config
@@ -39,7 +39,6 @@ from heat.common import profiler
 from heat.engine import template
 from heat.rpc import api as rpc_api
 from heat import version
-
 
 i18n.enable_lazy()
 

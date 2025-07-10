@@ -33,6 +33,10 @@ class StackServiceActionsTest(common.HeatTestCase):
         self.man = service.EngineService('a-host', 'a-topic')
         self.man.thread_group_mgr = service.ThreadGroupManager()
 
+    def tearDown(self):
+        self.man.thread_group_mgr.stopall()
+        super(StackServiceActionsTest, self).tearDown()
+
     @mock.patch.object(stack.Stack, 'load')
     @mock.patch.object(service.ThreadGroupManager, 'start')
     def test_stack_suspend(self, mock_start, mock_load):

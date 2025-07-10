@@ -13,10 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import queue
 from unittest import mock
 import uuid
 
-import eventlet
 from oslo_config import cfg
 
 from heat.common import exception
@@ -743,7 +743,7 @@ class MiscMethodsTest(common.HeatTestCase):
     def test_check_message_raises_cancel_exception(self):
         # ensure CancelOperation is raised on receiving
         # rpc_api.THREAD_CANCEL message
-        msg_queue = eventlet.queue.LightQueue()
+        msg_queue = queue.Queue()
         msg_queue.put_nowait(rpc_api.THREAD_CANCEL)
         self.assertRaises(check_resource.CancelOperation,
                           check_resource._check_for_message, msg_queue)
