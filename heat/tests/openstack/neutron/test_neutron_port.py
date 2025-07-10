@@ -999,6 +999,58 @@ class NeutronPortTest(common.HeatTestCase):
         for key in expected:
             self.assertEqual(expected[key], reality[key])
 
+    def test_prepare_update_properties_binding_profile(self):
+        """Test 3-way merge behavior for binding:profile."""
+        t = template_format.parse(neutron_port_template)
+        stack = utils.parse_stack(t)
+
+        port = stack['port']
+        port.resource_id = '1234'
+
+        current_profile = {
+            'keep': 'yes',
+            'update': 'old',
+            'delete': 'x',
+            'delete2': 'y',
+            'sriov_field': 'preserved'
+        }
+        self.patchobject(port, '_show_resource',
+                         return_value={'binding:profile': current_profile})
+
+        before_value_specs = {
+            'binding:profile': {
+                'keep': 'yes',
+                'update': 'old',
+                'delete': 'x',
+                'delete2': 'y'
+            },
+            'port_security_enabled': False
+        }
+        with mock.patch.object(port.properties, 'get',
+                               return_value=before_value_specs):
+            prop_diff = {
+                'value_specs': {
+                    'binding:profile': {
+                        'keep': 'yes',
+                        'update': 'new',
+                        'delete': None,
+                        'new_field': 'added'
+                    },
+                    'port_security_enabled': True
+                }
+            }
+            port.prepare_update_properties(prop_diff)
+
+            expected_profile = {
+                'keep': 'yes',
+                'update': 'new',
+                'delete2': 'y',
+                'sriov_field': 'preserved',
+                'new_field': 'added'
+            }
+            self.assertEqual(expected_profile, prop_diff['binding:profile'])
+            self.assertTrue(prop_diff['port_security_enabled'])
+
 
 class UpdatePortTest(common.HeatTestCase):
     scenarios = [
