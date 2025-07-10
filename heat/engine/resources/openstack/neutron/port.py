@@ -612,6 +612,46 @@ class Port(neutron.NeutronResource):
         """Mandatory replace based on props."""
         return after_props.get(self.REPLACEMENT_POLICY) == 'REPLACE_ALWAYS'
 
+    def prepare_update_properties(self, prop_diff):
+        """Prepare update properties with 3-way merge for binding:profile.
+
+        Preserve Neutron-managed fields (e.g. SR-IOV pci_slot) on update.
+        """
+        if 'value_specs' in prop_diff:
+            before_value_specs = self.properties.get(self.VALUE_SPECS)
+
+            if ('binding:profile' in prop_diff['value_specs'] and
+                    self.resource_id):
+                current_attrs = self._show_resource()
+                if current_attrs and 'binding:profile' in current_attrs:
+                    old_profile = (before_value_specs or {}).get(
+                        'binding:profile', {})
+                    new_profile = prop_diff['value_specs']['binding:profile']
+                    merged_profile = current_attrs['binding:profile'].copy()
+
+                    for key, new_val in new_profile.items():
+                        if new_val != old_profile.get(key):
+                            if new_val is None:
+                                merged_profile.pop(key, None)
+                            else:
+                                merged_profile[key] = new_val
+
+                    prop_diff['value_specs']['binding:profile'] = (
+                        merged_profile)
+                    if (before_value_specs and
+                            'binding:profile' in before_value_specs):
+                        # Exclude binding:profile to avoid
+                        # merge_value_specs overriding merged result.
+                        before_value_specs = {
+                            k: v for k, v in before_value_specs.items()
+                            if k != 'binding:profile'
+                        }
+
+            neutron.NeutronResource.merge_value_specs(
+                prop_diff, before_value_specs)
+        if 'name' in prop_diff and prop_diff['name'] is None:
+            prop_diff['name'] = self.physical_resource_name()
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         if prop_diff:
             self.prepare_update_properties(prop_diff)
