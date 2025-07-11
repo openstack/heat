@@ -18,7 +18,6 @@ import functools
 import queue
 import re
 import time
-import warnings
 
 from oslo_config import cfg
 from oslo_log import log as logging
@@ -940,19 +939,6 @@ class Stack(collections.abc.Mapping):
         # Validate Parameter Groups
         parameter_groups = param_groups.ParameterGroups(self.t)
         parameter_groups.validate()
-
-        # Continue to call this function, since old third-party Template
-        # plugins may depend on it being called to validate the resource
-        # definitions before actually generating them.
-        if (type(self.t).validate_resource_definitions !=
-                tmpl.Template.validate_resource_definitions):
-            warnings.warn("The Template.validate_resource_definitions() "
-                          "method is deprecated and will no longer be called "
-                          "in future versions of Heat. Template subclasses "
-                          "should validate resource definitions in the "
-                          "resource_definitions() method.",
-                          DeprecationWarning)
-        self.t.validate_resource_definitions(self)
 
         self.t.conditions(self).validate()
 
