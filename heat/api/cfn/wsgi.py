@@ -42,14 +42,9 @@ def init_application():
          version=version.version_info.version_string())
     logging.setup(CONF, CONF.prog)
     logging.set_defaults()
-    LOG = logging.getLogger(CONF.prog)
     config.set_config_defaults()
     messaging.setup()
 
-    port = CONF.heat_api_cfn.bind_port
-    host = CONF.heat_api_cfn.bind_host
-    LOG.info('Starting Heat API on %(host)s:%(port)s',
-             {'host': host, 'port': port})
-    profiler.setup(CONF.prog, host)
+    profiler.setup(CONF.prog, CONF.host)
 
     return config.load_paste_app()

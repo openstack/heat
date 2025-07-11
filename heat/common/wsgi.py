@@ -40,34 +40,6 @@ from heat.common import serializers
 LOG = logging.getLogger(__name__)
 URL_LENGTH_LIMIT = 50000
 
-api_opts = [
-    cfg.IPOpt('bind_host', default='0.0.0.0',
-              help=_('Address to bind the server. Useful when '
-                     'selecting a particular network interface.'),
-              deprecated_group='DEFAULT'),
-    cfg.PortOpt('bind_port', default=8004,
-                help=_('The port on which the server will listen.'),
-                deprecated_group='DEFAULT'),
-]
-api_group = cfg.OptGroup('heat_api')
-cfg.CONF.register_group(api_group)
-cfg.CONF.register_opts(api_opts,
-                       group=api_group)
-
-api_cfn_opts = [
-    cfg.IPOpt('bind_host', default='0.0.0.0',
-              help=_('Address to bind the server. Useful when '
-                     'selecting a particular network interface.'),
-              deprecated_group='DEFAULT'),
-    cfg.PortOpt('bind_port', default=8000,
-                help=_('The port on which the server will listen.'),
-                deprecated_group='DEFAULT'),
-]
-api_cfn_group = cfg.OptGroup('heat_api_cfn')
-cfg.CONF.register_group(api_cfn_group)
-cfg.CONF.register_opts(api_cfn_opts,
-                       group=api_cfn_group)
-
 json_size_opt = cfg.IntOpt('max_json_body_size',
                            default=1048576,
                            help=_('Maximum raw byte size of JSON request body.'
@@ -77,13 +49,6 @@ cfg.CONF.register_opt(json_size_opt)
 
 def list_opts():
     yield None, [json_size_opt]
-    yield 'heat_api', api_opts
-    yield 'heat_api_cfn', api_cfn_opts
-
-
-def get_bind_addr(conf, default_port=None):
-    """Return the host and port to bind to."""
-    return (conf.bind_host, conf.bind_port or default_port)
 
 
 class Middleware(object):
