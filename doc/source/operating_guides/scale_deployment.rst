@@ -111,23 +111,15 @@ new REST and CFN API services, you must run:
     python bin/heat-api --config-file=/etc/heat/heat.conf
     python bin/heat-api-cfn --config-file=/etc/heat/heat.conf
 
-Each API service must have a unique address to listen. This address have to be
-defined in the configuration file. For REST and CFN APIs, modify the
-*[heat_api]* and *[heat_api_cfn]* blocks, respectively.
+Each API service must have a unique address to listen. Also the host value
+should be unique.
 ::
 
-    [heat_api]
-    bind_port = {API_PORT}
-    bind_host = {API_HOST}
-
-    ...
-
-    [heat_api_cfn]
-    bind_port = {API_CFN_PORT}
-    bind_host = {API_CFN_HOST}
+    [DEFAULT]
+    host = {host}
 
 If you wish to run multiple API processes on the same machine, you must create
-multiple copies of the heat.conf file, each containing a unique port number.
+multiple copies of the heat.conf file, each containing a unique host string.
 
 In addition, if you want to run some API services in different machines than
 the devstack server, you have to update the loopback addresses found at the
@@ -163,13 +155,6 @@ the REST and CFN APIs deployed when installing devstack by the HAProxy server.
 This way, there is no need to update, on the CLI, the addresses where it should
 look for the APIs. In this case, when it makes a call to any API, it will find
 the proxy, acting on their behalf.
-
-Note that the addresses that the HAProxy will be listening to are the pairs
-*API_HOST:API-PORT* and *API_CFN_HOST:API_CFN_PORT*, found at the *[heat_api]*
-and *[heat_api_cfn]* blocks on the devstack server's configuration file. In
-addition, the original *heat-api* and *heat-api-cfn* processes running in these
-ports have to be killed, because these addresses must be free to be used by the
-proxy.
 
 To deploy the HAProxy server on the devstack server, run
 *haproxy -f apis-proxy.conf*, where this configuration file looks like:
@@ -288,14 +273,8 @@ The original file from A looks like:
     ...
     sql_connection = mysql+pymysql://root:admin@127.0.0.1/heat?charset=utf8
     rabbit_host = localhost
+    host = localhost
     ...
-    [heat_api]
-    bind_port = 8004
-    bind_host = 10.0.0.1
-    ...
-    [heat_api_cfn]
-    bind_port = 8000
-    bind_host = 10.0.0.1
 
 After the changes for B, it looks like:
 ::
@@ -304,14 +283,8 @@ After the changes for B, it looks like:
     ...
     sql_connection = mysql+pymysql://root:admin@10.0.0.1/heat?charset=utf8
     rabbit_host = 10.0.0.1
+    host = 10.0.0.2
     ...
-    [heat_api]
-    bind_port = 8004
-    bind_host = 10.0.0.2
-    ...
-    [heat_api_cfn]
-    bind_port = 8000
-    bind_host = 10.0.0.2
 
 Setting Up HAProxy
 ------------------

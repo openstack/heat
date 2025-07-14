@@ -40,13 +40,8 @@ def init_application():
     version = hversion.version_info.version_string()
     CONF(project='heat', prog='heat-api', version=version)
     logging.setup(CONF, CONF.prog)
-    LOG = logging.getLogger(CONF.prog)
     config.set_config_defaults()
     messaging.setup()
 
-    port = CONF.heat_api.bind_port
-    host = CONF.heat_api.bind_host
-    profiler.setup(CONF.prog, host)
-    LOG.info('Starting Heat REST API on %(host)s:%(port)s',
-             {'host': host, 'port': port})
+    profiler.setup(CONF.prog, CONF.host)
     return config.load_paste_app()

@@ -36,7 +36,6 @@ GITREPO["python-heatclient"]=${HEATCLIENT_REPO:-${GIT_BASE}/openstack/python-hea
 GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
 
 HEAT_DIR=$DEST/heat
-HEAT_HTTPD_VHOST_FILES_DIR=$HEAT_DIR/etc/heat/httpd
 
 HEAT_STANDALONE=$(trueorfalse False HEAT_STANDALONE)
 HEAT_ENABLE_ADOPT_ABANDON=$(trueorfalse False HEAT_ENABLE_ADOPT_ABANDON)
@@ -45,9 +44,7 @@ HEAT_CONF=$HEAT_CONF_DIR/heat.conf
 HEAT_ENV_DIR=$HEAT_CONF_DIR/environment.d
 HEAT_TEMPLATES_DIR=$HEAT_CONF_DIR/templates
 HEAT_API_HOST=${HEAT_API_HOST:-$SERVICE_HOST}
-HEAT_API_PORT=${HEAT_API_PORT:-8004}
 HEAT_API_CFN_HOST=${HEAT_API_CFN_HOST:-$SERVICE_HOST}
-HEAT_API_CFN_PORT=${HEAT_API_CFN_PORT:-8000}
 HEAT_SERVICE_USER=${HEAT_SERVICE_USER:-heat}
 HEAT_TRUSTEE_USER=${HEAT_TRUSTEE_USER:-$HEAT_SERVICE_USER}
 HEAT_TRUSTEE_PASSWORD=${HEAT_TRUSTEE_PASSWORD:-$SERVICE_PASSWORD}
@@ -150,7 +147,7 @@ function configure_heat {
 
     if [[ "$HEAT_STANDALONE" = "True" ]]; then
         iniset $HEAT_CONF paste_deploy flavor standalone
-        iniset $HEAT_CONF clients_heat url "http://$HEAT_API_HOST:$HEAT_API_PORT/v1/%(tenant_id)s"
+        iniset $HEAT_CONF clients_heat url "$SERVICE_PROTOCOL://$HEAT_API_HOST/heat-api/v1/%(tenant_id)s"
     else
         configure_keystone_authtoken_middleware $HEAT_CONF heat
     fi
@@ -167,12 +164,6 @@ function configure_heat {
 
     # clients_keystone
     iniset $HEAT_CONF clients_keystone auth_uri $KEYSTONE_AUTH_URI
-
-    # OpenStack API
-    iniset $HEAT_CONF heat_api bind_port $HEAT_API_PORT
-    iniset $HEAT_CONF heat_api workers "$API_WORKERS"
-    # Cloudformation API
-    iniset $HEAT_CONF heat_api_cfn bind_port $HEAT_API_CFN_PORT
 
     if is_service_enabled tls-proxy; then
         iniset $HEAT_CONF clients_keystone ca_file $SSL_BUNDLE_FILE
