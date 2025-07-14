@@ -151,10 +151,6 @@ class ThreadGroup(threadgroup.ThreadGroup):
             self.threads.append(th)
         return th
 
-    def wait(self):
-        """Wait for all threads in the group to complete."""
-        self.waitall()
-
 
 class ThreadGroupManager(object):
 
