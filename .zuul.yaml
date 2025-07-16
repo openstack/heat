@@ -53,10 +53,6 @@
               enable_stack_adopt: true
               enable_stack_abandon: true
               max_stacks_per_tenant: 256
-            heat_api:
-              workers: 2
-            heat_api_cfn:
-              workers: 2
             cache:
               enabled: True
             eventlet_opts:
