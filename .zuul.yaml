@@ -53,8 +53,6 @@
               enable_stack_adopt: true
               enable_stack_abandon: true
               max_stacks_per_tenant: 256
-            cache:
-              enabled: True
             oslo_messaging_notifications:
               driver: messagingv2
         test-config:
