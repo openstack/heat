@@ -70,12 +70,10 @@ parameters:
 
 resources:
   random1:
-    type: OS::Heat::RandomString
-    properties:
-      salt: {get_param: UserData}
+    type: OS::Heat::TestResource
 outputs:
   PublicIp:
-    value: {get_attr: [random1, value]}
+    value: {get_attr: [random1, output]}
 '''
 
     # This is designed to fail.
@@ -90,18 +88,12 @@ parameters:
 
 resources:
   random1:
-    type: OS::Heat::RandomString
-    depends_on: waiter
-  ready_poster:
-    type: AWS::CloudFormation::WaitConditionHandle
-  waiter:
-    type: AWS::CloudFormation::WaitCondition
+    type: OS::Heat::TestResource
     properties:
-      Handle: {Ref: ready_poster}
-      Timeout: 1
+      fail: true
 outputs:
   PublicIp:
-    value: {get_attr: [random1, value]}
+    value: {get_attr: [random1, output]}
 '''
 
     def setUp(self):
@@ -242,7 +234,16 @@ class InstanceGroupBasicTest(InstanceGroupTest):
 
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'JobServerGroup')
-        self._assert_instance_state(nested_ident, 0, 2)
+        # Check at least one resource is in *_FAILED as there is a
+        # chance that before other leaf resources are processed, stack
+        # is marked as failed and traversal is set to empty string,
+        # so that all other workers processing resources bail out
+        # and the traversal gets cancelled.
+        for res in self.client.resources.list(nested_ident):
+            if res.resource_status.endswith('CREATE_FAILED'):
+                break
+        else:
+            self.fail('No resource in CREATE_FAILED')
 
     def test_update_instance_error_causes_group_error(self):
         """Test update failing a resource in the instance group.
@@ -271,8 +272,6 @@ class InstanceGroupBasicTest(InstanceGroupTest):
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'JobServerGroup')
         self._assert_instance_state(nested_ident, 2, 0)
-        initial_list = [res.resource_name
-                        for res in self.client.resources.list(nested_ident)]
 
         env['parameters']['size'] = 3
         files2 = {'provider.yaml': self.bad_instance_template}
@@ -285,20 +284,18 @@ class InstanceGroupBasicTest(InstanceGroupTest):
             environment=env
         )
         self._wait_for_stack_status(stack_identifier, 'UPDATE_FAILED')
-
         nested_ident = self.assert_resource_is_a_stack(stack_identifier,
                                                        'JobServerGroup')
-        # assert that there are 3 bad instances
-        # 2 resources should be in update failed, and one create failed.
+        # Check at least one resource is in *_FAILED as there is a
+        # chance that before other leaf resources are processed, stack
+        # is marked as failed and traversal is set to empty string,
+        # so that all other workers processing resources bail out
+        # and the traversal gets cancelled.
         for res in self.client.resources.list(nested_ident):
-            if res.resource_name in initial_list:
-                self._wait_for_resource_status(nested_ident,
-                                               res.resource_name,
-                                               'UPDATE_FAILED')
-            else:
-                self._wait_for_resource_status(nested_ident,
-                                               res.resource_name,
-                                               'CREATE_FAILED')
+            if res.resource_status.endswith('_FAILED'):
+                break
+        else:
+            self.fail('No resource in *_FAILED')
 
 
 class InstanceGroupUpdatePolicyTest(InstanceGroupTest):
