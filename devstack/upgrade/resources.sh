@@ -102,11 +102,7 @@ function _run_heat_integrationtests {
 
 function create {
     if [ "${RUN_HEAT_INTEGRATION_TESTS}" == "True" ]; then
-        # run heat integration tests instead of tempest smoke before create
-        # TODO(ramishra) switch to run tests from $BASE_DEVSTACK_DIR once
-        # https://review.opendev.org/c/openstack/heat/+/954938
-        # has been backported
-        _run_heat_integrationtests $TARGET_DEVSTACK_DIR
+        _run_heat_integrationtests $BASE_DEVSTACK_DIR
     fi
 
     source $TOP_DIR/openrc admin admin
