@@ -543,7 +543,7 @@ def load_paste_app(app_name=None):
 
     # append the deployment flavor to the application name,
     # in order to identify the appropriate paste pipeline
-    app_name += _get_deployment_flavor()
+    app_name_flavor = app_name + _get_deployment_flavor()
 
     conf_file = _get_deployment_config_file()
     if conf_file is None:
@@ -551,20 +551,22 @@ def load_paste_app(app_name=None):
                            cfg.CONF.paste_deploy['api_paste_config'])
 
     try:
-        app = wsgi.paste_deploy_app(conf_file, app_name, cfg.CONF)
-
-        # Log the options used when starting if we're in debug mode...
-        if cfg.CONF.debug:
-            cfg.CONF.log_opt_values(logging.getLogger(app_name),
-                                    logging.DEBUG)
-
-        return app
+        try:
+            app = wsgi.paste_deploy_app(conf_file, app_name_flavor, cfg.CONF)
+        except LookupError:
+            app = wsgi.paste_deploy_app(conf_file, app_name, cfg.CONF)
     except (LookupError, ImportError) as e:
-        raise RuntimeError(_("Unable to load %(app_name)s from "
-                             "configuration file %(conf_file)s."
-                             "\nGot: %(e)r") % {'app_name': app_name,
-                                                'conf_file': conf_file,
-                                                'e': e})
+        raise RuntimeError(
+            _("Unable to load %(app_name)s from configuration file "
+              "%(conf_file)s.\nGot: %(e)r") % {'app_name': app_name_flavor,
+                                               'conf_file': conf_file,
+                                               'e': e})
+
+    # Log the options used when starting if we're in debug mode...
+    if cfg.CONF.debug:
+        cfg.CONF.log_opt_values(logging.getLogger(app_name),
+                                logging.DEBUG)
+    return app
 
 
 def get_client_option(client, option):
