@@ -10,6 +10,7 @@
 #    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 #    License for the specific language governing permissions and limitations
 #    under the License.
+import warnings
 
 from oslo_config import cfg
 import paste.urlmap
@@ -18,6 +19,9 @@ CONF = cfg.CONF
 
 
 def root_app_factory(loader, global_conf, **local_conf):
+    warnings.warn('root_app_facotry is deprecated. Use the built-in '
+                  'urlmap application from the Paste library instead.',
+                  DeprecationWarning)
     return paste.urlmap.urlmap_factory(loader, global_conf, **local_conf)
 
 

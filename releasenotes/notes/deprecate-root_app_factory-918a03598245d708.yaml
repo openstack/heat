@@ -1,0 +1,6 @@
+---
+deprecations:
+  - |
+    The ``root_app_factory`` composite factory has been deprecated, because
+    it is equivalent the ``urlmap`` factory from paste. Replace usage in
+    ``api-paste.ini`` in case the file is modified to use customized pipelines.
