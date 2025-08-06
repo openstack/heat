@@ -26,7 +26,6 @@
       tempest_plugins:
         - heat-tempest-plugin
       devstack_localrc:
-        TEMPEST_PLUGINS: '/opt/stack/heat-tempest-plugin'
         CEILOMETER_PIPELINE_INTERVAL: 60
       devstack_services:
         tls-proxy: false
