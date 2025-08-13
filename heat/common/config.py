@@ -482,10 +482,9 @@ def list_opts():
     yield noauth_group.name, noauth_opts
     yield 'clients', default_clients_opts
 
-    for client in ('aodh', 'barbican', 'cinder', 'designate',
-                   'glance', 'heat', 'keystone', 'magnum', 'manila', 'mistral',
-                   'monasca', 'neutron', 'nova', 'octavia',
-                   'swift', 'trove', 'vitrage', 'zaqar'
+    for client in ('aodh', 'barbican', 'cinder', 'designate', 'glance', 'heat',
+                   'keystone', 'magnum', 'manila', 'mistral', 'neutron',
+                   'nova', 'octavia', 'swift', 'trove', 'vitrage', 'zaqar'
                    ):
         client_specific_group = 'clients_' + client
         yield client_specific_group, clients_opts

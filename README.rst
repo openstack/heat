@@ -69,7 +69,6 @@ We have integration with
 * https://opendev.org/openstack/python-manilaclient (shared file system service)
 * https://opendev.org/openstack/python-mistralclient (workflow service)
 * https://opendev.org/openstack/python-zaqarclient (messaging service)
-* https://opendev.org/openstack/python-monascaclient (monitoring service)
 * https://opendev.org/openstack/python-zunclient (container management service)
 * https://opendev.org/openstack/python-blazarclient (reservation service)
 * https://opendev.org/openstack/python-octaviaclient (Load-balancer service)

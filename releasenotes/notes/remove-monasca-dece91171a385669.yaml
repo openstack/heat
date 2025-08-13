@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    Integration with monasca has been removed because the monasca project was
+    retired. Because of the removal, the following resource types are no longer
+    supported and now hidden.
+
+    - ``OS::Monasca::AlarmDefinition``
+    - ``OS::Monasca::Notifications``
+
+    Also, the options in ``[clients_monasca]`` section have been removed.
