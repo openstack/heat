@@ -25,6 +25,7 @@ from heat.common import template_format
 from heat.engine.clients.os import cinder
 from heat.engine.clients.os import glance
 from heat.engine.clients.os import nova
+from heat.engine.clients import progress
 from heat.engine.resources.openstack.cinder import volume as c_vol
 from heat.engine.resources import scheduler_hints as sh
 from heat.engine import rsrc_defn
@@ -1235,6 +1236,92 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
             stack.t.resource_definitions(stack)['volume'],
             stack)
         self.assertIsNone(rsrc.handle_delete_snapshot(mock_vs))
+
+    def test_check_delete_complete(self):
+        fb_creating = vt_base.FakeBackup('creating')
+        fb_available = vt_base.FakeBackup("available")
+        self.cinder_fc.backups.create.return_value = fb_creating
+        self.cinder_fc.backups.get.side_effect = [fb_creating, fb_available]
+        self.cinder_fc.volumes.get.side_effect = [
+            vt_base.FakeVolume('available'),
+            vt_base.FakeVolume('deleting'),
+            cinder_exp.NotFound("Nope")
+        ]
+        # will need backup first
+        fake_prg = progress.VolumeDeleteProgress()
+        self.stack_name = 'test_volume_check_delete'
+        t = template_format.parse(single_cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
+        rsrc = c_vol.CinderVolume(
+            'volume',
+            stack.t.resource_definitions(stack)['volume'],
+            stack)
+
+        # first backup was called
+        self.assertFalse(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertFalse(fake_prg.backup["complete"])
+        self.assertFalse(fake_prg.delete["called"])
+        self.assertFalse(fake_prg.delete["complete"])
+        self.assertEqual(fake_prg.backup_id, fb_creating.id)
+        self.cinder_fc.backups.create.assert_called_once_with(rsrc.resource_id)
+
+        # polling for backup status
+        self.assertFalse(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertFalse(fake_prg.backup["complete"])
+        self.assertFalse(fake_prg.delete["called"])
+        self.assertFalse(fake_prg.delete["complete"])
+        self.cinder_fc.backups.get.assert_called_once_with(fb_creating.id)
+        self.assertFalse(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertTrue(fake_prg.backup["complete"])
+        self.assertFalse(fake_prg.delete["called"])
+        self.assertFalse(fake_prg.delete["complete"])
+        self.cinder_fc.backups.get.assert_called_with(fb_creating.id)
+        self.assertEqual(2, self.cinder_fc.backups.get.call_count)
+
+        # volume delete called, includes one volume get too
+        self.assertFalse(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertTrue(fake_prg.backup["complete"])
+        self.assertTrue(fake_prg.delete["called"])
+        self.assertFalse(fake_prg.delete["complete"])
+        self.cinder_fc.volumes.delete.assert_called_once_with(rsrc.resource_id)
+        self.cinder_fc.volumes.get.assert_called_with(rsrc.resource_id)
+        self.assertEqual(1, self.cinder_fc.volumes.get.call_count)
+
+        # polling for volume deleted
+        self.assertFalse(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertTrue(fake_prg.backup["complete"])
+        self.assertTrue(fake_prg.delete["called"])
+        self.assertFalse(fake_prg.delete["complete"])
+        self.cinder_fc.volumes.get.assert_called_with(rsrc.resource_id)
+        self.assertEqual(2, self.cinder_fc.volumes.get.call_count)
+        self.assertTrue(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertTrue(fake_prg.backup["complete"])
+        self.assertTrue(fake_prg.delete["called"])
+        self.assertTrue(fake_prg.delete["complete"])
+        self.cinder_fc.volumes.get.assert_called_with(rsrc.resource_id)
+        self.assertEqual(3, self.cinder_fc.volumes.get.call_count)
+
+    def test_check_delete_complete_snapshot_missing_volume(self):
+        self.cinder_fc.backups.create.side_effect = cinder_exp.NotFound("Nope")
+        fake_prg = progress.VolumeDeleteProgress()
+        self.stack_name = 'test_check_delete_complete_snapshot_missing_volume'
+        t = template_format.parse(single_cinder_volume_template)
+        stack = utils.parse_stack(t, stack_name=self.stack_name)
+        rsrc = c_vol.CinderVolume(
+            'volume',
+            stack.t.resource_definitions(stack)['volume'],
+            stack)
+        self.assertFalse(rsrc.check_delete_complete(fake_prg))
+        self.assertTrue(fake_prg.backup["called"])
+        self.assertTrue(fake_prg.backup["complete"])
+        self.assertIsNone(fake_prg.backup_id)
+        self.cinder_fc.backups.create.assert_called_once_with(rsrc.resource_id)
 
     def test_vaildate_deletion_policy(self):
         cfg.CONF.set_override('backups_enabled', False, group='volumes')
