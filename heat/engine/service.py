@@ -30,8 +30,8 @@ from oslo_context import context as oslo_context
 from oslo_log import log as logging
 import oslo_messaging as messaging
 from oslo_serialization import jsonutils
-from oslo_service.backend.threading import threadgroup
 from oslo_service import service
+from oslo_service import threadgroup
 from oslo_utils import timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler

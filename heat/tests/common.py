@@ -11,12 +11,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+# flake8: noqa: E402
+
 import os
 import sys
 
 import fixtures
 from oslo_config import cfg
 from oslo_log import log as logging
+from oslo_service import backend
+backend.init_backend(backend.BackendType.THREADING)
+
 import testscenarios
 import testtools
 
