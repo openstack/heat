@@ -335,28 +335,28 @@ class IdentifierTest(common.HeatTestCase):
     def test_equal(self):
         hi1 = identifier.HeatIdentifier('t', 's', 'i', 'p')
         hi2 = identifier.HeatIdentifier('t', 's', 'i', 'p')
-        self.assertTrue(hi1 == hi2)
+        self.assertTrue(hi1 == hi2)  # noqa: H204
 
     def test_equal_dict(self):
         hi = identifier.HeatIdentifier('t', 's', 'i', 'p')
-        self.assertTrue(hi == dict(hi))
-        self.assertTrue(dict(hi) == hi)
+        self.assertTrue(hi == dict(hi))  # noqa: H204
+        self.assertTrue(dict(hi) == hi)  # noqa: H204
 
     def test_not_equal(self):
         hi1 = identifier.HeatIdentifier('t', 's', 'i', 'p')
         hi2 = identifier.HeatIdentifier('t', 's', 'i', 'q')
-        self.assertFalse(hi1 == hi2)
-        self.assertFalse(hi2 == hi1)
+        self.assertFalse(hi1 == hi2)  # noqa: H204
+        self.assertFalse(hi2 == hi1)  # noqa: H204
 
     def test_not_equal_dict(self):
         hi1 = identifier.HeatIdentifier('t', 's', 'i', 'p')
         hi2 = identifier.HeatIdentifier('t', 's', 'i', 'q')
-        self.assertFalse(hi1 == dict(hi2))
-        self.assertFalse(dict(hi1) == hi2)
-        self.assertFalse(hi1 == {'tenant': 't',
+        self.assertFalse(hi1 == dict(hi2))  # noqa: H204
+        self.assertFalse(dict(hi1) == hi2)  # noqa: H204
+        self.assertFalse(hi1 == {'tenant': 't',  # noqa: H204
                                  'stack_name': 's',
                                  'stack_id': 'i'})
-        self.assertFalse({'tenant': 't',
+        self.assertFalse({'tenant': 't',  # noqa: H204
                           'stack_name': 's',
                           'stack_id': 'i'} == hi1)
 

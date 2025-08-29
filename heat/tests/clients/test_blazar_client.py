@@ -30,7 +30,7 @@ class BlazarClientPluginTest(common.HeatTestCase):
 
     def test_create(self):
         client = self.blazar_client_plugin.client()
-        self.assertEqual(None, client.blazar_url)
+        self.assertIsNone(client.blazar_url)
 
     def test_has_host_pass(self):
         self._stub_client()

@@ -160,14 +160,12 @@ class TestMagnumCluster(common.HeatTestCase):
         b = self._create_resource('cluster', self.min_rsrc_defn,
                                   self.stack)
         # validate the properties
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             b.properties.get(cluster.Cluster.NAME))
         self.assertEqual(
             self.fake_cluster_template,
             b.properties.get(cluster.Cluster.CLUSTER_TEMPLATE))
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             b.properties.get(cluster.Cluster.KEYPAIR))
         self.assertEqual(
             1,
@@ -175,8 +173,7 @@ class TestMagnumCluster(common.HeatTestCase):
         self.assertEqual(
             1,
             b.properties.get(cluster.Cluster.MASTER_COUNT))
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             b.properties.get(cluster.Cluster.DISCOVERY_URL))
         self.assertEqual(
             60,

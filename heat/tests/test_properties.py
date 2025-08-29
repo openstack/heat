@@ -1645,13 +1645,13 @@ class PropertiesTest(common.HeatTestCase):
         schema = {'foo': {'Type': 'Integer'}}
         props_a = properties.Properties(schema, {'foo': 1})
         props_b = properties.Properties(schema, {'foo': 1})
-        self.assertFalse(props_a != props_b)
+        self.assertFalse(props_a != props_b)  # noqa: H204
 
     def test_compare_different(self):
         schema = {'foo': {'Type': 'Integer'}}
         props_a = properties.Properties(schema, {'foo': 0})
         props_b = properties.Properties(schema, {'foo': 1})
-        self.assertTrue(props_a != props_b)
+        self.assertTrue(props_a != props_b)  # noqa: H204
 
     def test_description_substitution(self):
         schema = {
@@ -1668,11 +1668,11 @@ class PropertiesTest(common.HeatTestCase):
 
         blank_props = blank_rsrc.properties(schema)
         self.assertEqual('Foo resource', blank_props['description'])
-        self.assertEqual(None, blank_props['not_description'])
+        self.assertIsNone(blank_props['not_description'])
 
         replace_schema = {'description': properties.Schema('String')}
         empty_props = blank_rsrc.properties(replace_schema)
-        self.assertEqual(None, empty_props['description'])
+        self.assertIsNone(empty_props['description'])
 
         bar_props = bar_rsrc.properties(schema)
         self.assertEqual('bar', bar_props['description'])
@@ -1690,10 +1690,10 @@ class PropertiesTest(common.HeatTestCase):
         user_props = {'Foo': NullFunction(None, 'null', []), 'Baz': None}
         props = properties.Properties(schema, user_props, function.resolve)
 
-        self.assertEqual(None, props['Foo'])
-        self.assertEqual(None, props.get_user_value('Foo'))
-        self.assertEqual(None, props['Bar'])
-        self.assertEqual(None, props.get_user_value('Bar'))
+        self.assertIsNone(props['Foo'])
+        self.assertIsNone(props.get_user_value('Foo'))
+        self.assertIsNone(props['Bar'])
+        self.assertIsNone(props.get_user_value('Bar'))
         self.assertEqual('', props['Baz'])
         self.assertEqual('', props.get_user_value('Baz'))
 

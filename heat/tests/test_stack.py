@@ -2713,8 +2713,7 @@ class StackTest(common.HeatTestCase):
         tmpl_stack.status = tmpl_stack.IN_PROGRESS
         tmpl_stack.current_traversal = 'some-traversal'
         tmpl_stack.mark_complete()
-        self.assertEqual(tmpl_stack.prev_raw_template_id,
-                         None)
+        self.assertIsNone(tmpl_stack.prev_raw_template_id)
         self.assertFalse(mock_tmpl_delete.called)
         self.assertFalse(mock_stack_delete.called)
         self.assertEqual(tmpl_stack.status, tmpl_stack.COMPLETE)

@@ -64,18 +64,18 @@ class TestFunctionResult(function.Function):
 class FunctionTest(common.HeatTestCase):
     def test_equal(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
-        self.assertTrue(func == 'wibble')
-        self.assertTrue('wibble' == func)
+        self.assertTrue(func == 'wibble')  # noqa: H204
+        self.assertTrue('wibble' == func)  # noqa: H204
 
     def test_not_equal(self):
         func = TestFunction(None, 'foo', ['bar', 'baz'])
-        self.assertTrue(func != 'foo')
-        self.assertTrue('foo' != func)
+        self.assertTrue(func != 'foo')  # noqa: H204
+        self.assertTrue('foo' != func)  # noqa: H204
 
     def test_equal_func(self):
         func1 = TestFunction(None, 'foo', ['bar', 'baz'])
         func2 = TestFunction(None, 'blarg', ['wibble', 'quux'])
-        self.assertTrue(func1 == func2)
+        self.assertTrue(func1 == func2)  # noqa: H204
 
     def test_function_str_value(self):
         func1 = TestFunction(None, 'foo', ['bar', 'baz'])

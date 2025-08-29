@@ -271,8 +271,7 @@ class KeystoneProjectTest(common.HeatTestCase):
         self.test_project.physical_resource_name.return_value = 'foo'
 
         # validate the properties
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             self.test_project.properties.get(project.KeystoneProject.NAME))
         self.assertEqual(
             '',

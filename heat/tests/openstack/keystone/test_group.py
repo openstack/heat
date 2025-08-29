@@ -220,8 +220,7 @@ class KeystoneGroupTest(common.HeatTestCase):
         self.test_group.physical_resource_name.return_value = 'foo'
 
         # validate the properties
-        self.assertEqual(
-            None,
+        self.assertIsNone(
             self.test_group.properties.get(group.KeystoneGroup.NAME))
         self.assertEqual(
             '',
