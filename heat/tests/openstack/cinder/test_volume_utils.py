@@ -53,16 +53,16 @@ class VolumeTestCase(common.HeatTestCase):
         self.fc.volumes.create_server_volume.assert_called_once_with(
             device='/dev/vdc', server_id='WikiDatabase', volume_id='vol-123')
 
-    def _mock_create_server_volume_script(self, fva,
-                                          final_status='in-use',
-                                          update=False,
-                                          extra_create_server_volume_mocks=[]):
+    def _mock_create_server_volume_script(
+            self, fva, final_status='in-use', update=False,
+            extra_create_server_volume_mocks=None):
         if not update:
             nova.NovaClientPlugin.client.return_value = self.fc
 
         result = [fva]
-        for m in extra_create_server_volume_mocks:
-            result.append(m)
+        if extra_create_server_volume_mocks:
+            for m in extra_create_server_volume_mocks:
+                result.append(m)
         prev = self.fc.volumes.create_server_volume.side_effect or []
         self.fc.volumes.create_server_volume.side_effect = list(prev) + result
         fv_ready = FakeVolume(final_status, id=fva.id)

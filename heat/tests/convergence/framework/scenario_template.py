@@ -40,9 +40,9 @@ class RsrcDef(object):
 
 class Template(object):
 
-    def __init__(self, resources={}, key=None):
+    def __init__(self, resources=None, key=None):
         self.key = key
-        self.resources = resources
+        self.resources = resources or {}
 
     def __repr__(self):
         return 'Template(%r)' % self.resources

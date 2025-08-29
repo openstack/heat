@@ -142,8 +142,9 @@ class HeatWaitConditionTest(common.HeatTestCase):
 
     def create_stack(self, stack_id=None,
                      template=test_template_heat_waitcondition_count,
-                     params={},
+                     params=None,
                      stub=True, stub_status=True):
+        params = params or {}
         temp = template_format.parse(template)
         template = tmpl.Template(temp,
                                  env=environment.Environment(params))

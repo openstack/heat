@@ -103,16 +103,18 @@ class CinderVolumeTest(vt_base.VolumeTestCase):
         return rsrc
 
     def _mock_create_volume(self, fv, stack_name, size=1,
-                            final_status='available', extra_get_mocks=[],
-                            extra_create_mocks=[]):
+                            final_status='available', extra_get_mocks=None,
+                            extra_create_mocks=None):
         result = [fv]
-        for m in extra_create_mocks:
-            result.append(m)
+        if extra_create_mocks:
+            for m in extra_create_mocks:
+                result.append(m)
         self.cinder_fc.volumes.create.side_effect = result
         fv_ready = vt_base.FakeVolume(final_status, id=fv.id)
         result = [fv, fv_ready]
-        for m in extra_get_mocks:
-            result.append(m)
+        if extra_get_mocks:
+            for m in extra_get_mocks:
+                result.append(m)
         self.cinder_fc.volumes.get.side_effect = result
         return fv_ready
 
