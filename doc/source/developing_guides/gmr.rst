@@ -62,8 +62,7 @@ Adding support for GMRs to new executable
 
 Adding support for a *GMR* to a given executable is fairly easy.
 
-First import the module (currently residing in oslo-incubator), as well as the
-Heat version module:
+First import the module, as well as the Heat version module:
 
 .. code-block:: python
 
