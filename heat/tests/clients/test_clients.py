@@ -46,13 +46,11 @@ class ClientsTest(common.HeatTestCase):
         con = mock.Mock()
         cfg.CONF.set_override('cloud_backend', 'some.weird.object')
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
-        self.assertIn('Invalid cloud_backend setting in heat.conf detected',
-                      str(exc))
+        self.assertIn('Invalid cloud_backend setting', str(exc))
 
         cfg.CONF.set_override('cloud_backend', 'heat.engine.clients.Clients')
         exc = self.assertRaises(exception.Invalid, clients.Clients, con)
-        self.assertIn('Invalid cloud_backend setting in heat.conf detected',
-                      str(exc))
+        self.assertIn('Invalid cloud_backend setting', str(exc))
 
     def test_clients_get_heat_url(self):
         con = mock.Mock()

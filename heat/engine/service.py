@@ -1304,10 +1304,11 @@ class EngineService(service.ServiceBase):
                                                 engine_id=engine_id)
 
         else:
-            LOG.warning(_('Cannot cancel stack %(stack_name)s: lock held by '
-                          'unknown engine %(engine_id)s') % {
-                              'stack_name': db_stack.name,
-                              'engine_id': engine_id})
+            LOG.warning(
+                'Cannot cancel stack %(stack_name)s: lock held by '
+                'unknown engine %(engine_id)s',
+                {'stack_name': db_stack.name,
+                 'engine_id': engine_id})
 
     @context.request_context
     def validate_template(self, cnxt, template, params=None, files=None,

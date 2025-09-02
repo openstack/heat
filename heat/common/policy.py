@@ -23,7 +23,6 @@ from oslo_policy import policy
 from oslo_utils import excutils
 
 from heat.common import exception
-from heat.common.i18n import _
 from heat import policies
 
 
@@ -88,7 +87,7 @@ class Enforcer(object):
                 except policy.PolicyNotRegistered:
                     if self.log_not_registered:
                         with excutils.save_and_reraise_exception():
-                            LOG.exception(_('Policy not registered.'))
+                            LOG.exception('Policy not registered.')
                     else:
                         raise
             else:
