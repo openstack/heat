@@ -285,6 +285,16 @@ class Stack(collections.abc.Mapping):
             parent_rsrc.use_parent_stack(parent_info, parent_stack)
 
     def stored_context(self):
+        if not self.user_creds_id:
+            # if it's a nested stack and the creds have been deleted after
+            # the trust is regenerated, make sure we grab the newly created
+            # user_creds_id from the parent stack value for the nested stack
+            parent_id = self.root_stack_id()
+            if parent_id:  # check if it's a nested stack
+                stack = stack_object.Stack.get_by_id(self.context, parent_id,
+                                                     show_deleted=True)
+                self.user_creds_id = stack.user_creds_id
+
         if self.user_creds_id:
             creds_obj = ucreds_object.UserCreds.get_by_id(
                 self.context, self.user_creds_id)
