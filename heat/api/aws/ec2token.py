@@ -14,6 +14,7 @@
 import hashlib
 
 from oslo_config import cfg
+from oslo_config import types
 from oslo_log import log as logging
 from oslo_serialization import jsonutils as json
 import requests
@@ -28,13 +29,15 @@ LOG = logging.getLogger(__name__)
 
 
 opts = [
-    cfg.StrOpt('auth_uri',
+    cfg.URIOpt('auth_uri',
+               schemes=['http', 'https'],
                help=_("Authentication Endpoint URI.")),
     cfg.BoolOpt('multi_cloud',
                 default=False,
                 help=_('Allow orchestration of multiple clouds.')),
     cfg.ListOpt('allowed_auth_uris',
                 default=[],
+                item_type=types.URI(schemes=['http', 'https']),
                 help=_('Allowed keystone endpoints for auth_uri when '
                        'multi_cloud is enabled. At least one endpoint needs '
                        'to be specified.')),

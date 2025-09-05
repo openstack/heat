@@ -53,7 +53,7 @@ class Ec2TokenTest(common.HeatTestCase):
     def test_conf_get_opts(self):
         cfg.CONF.set_default('auth_uri', 'http://192.0.2.9/v2.0/',
                              group='ec2authtoken')
-        cfg.CONF.set_default('auth_uri', 'this-should-be-ignored',
+        cfg.CONF.set_default('auth_uri', 'http://this-should-be-ignored/',
                              group='clients_keystone')
         ec2 = ec2token.EC2Token(app=None, conf={})
         self.assertEqual('http://192.0.2.9/v2.0/', ec2._conf_get('auth_uri'))

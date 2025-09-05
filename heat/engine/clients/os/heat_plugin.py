@@ -31,7 +31,7 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
     def _create(self):
         endpoint = self.get_heat_url()
         args = {}
-        if self._get_client_option(CLIENT_NAME, 'url'):
+        if self._get_client_option(CLIENT_NAME, 'url', fallback=False):
             # assume that the heat API URL is manually configured because
             # it is not in the keystone catalog, so include the credentials
             # for the standalone auth_password middleware
@@ -53,7 +53,7 @@ class HeatClientPlugin(client_plugin.ClientPlugin):
         return isinstance(ex, exc.HTTPConflict)
 
     def get_heat_url(self):
-        heat_url = self._get_client_option(CLIENT_NAME, 'url')
+        heat_url = self._get_client_option(CLIENT_NAME, 'url', fallback=False)
         if heat_url:
             tenant_id = self.context.project_id
             heat_url = heat_url % {'tenant_id': tenant_id}
