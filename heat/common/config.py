@@ -410,13 +410,13 @@ heat_client_opts = [
     cfg.URIOpt('url',
                schemes=['http', 'https'],
                help=_('Optional heat url in format like'
-                      ' http://0.0.0.0:8004/v1/%(tenant_id)s.'))]
+                      ' http://127.0.0.1:8004/v1/%(tenant_id)s.'))]
 
 keystone_client_opts = [
     cfg.URIOpt('auth_uri',
                schemes=['http', 'https'],
                help=_('Unversioned keystone url in format like'
-                      ' http://0.0.0.0:5000.'))]
+                      ' http://127.0.0.1:5000.'))]
 
 client_http_log_debug_opts = [
     cfg.BoolOpt('http_log_debug',
