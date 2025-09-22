@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2025-07-10 16:33+0000\n"
+"POT-Creation-Date: 2025-09-21 15:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -73,7 +73,7 @@ msgstr ""
 msgid "\"%(version)s\". \"%(version_type)s\" should be: %(available)s"
 msgstr "\"%(version)s\". \"%(version_type)s\"은(는) %(available)s이어야 함"
 
-#, python-format
+#, python-format, python-brace-format
 msgid "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 msgstr "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 
@@ -306,6 +306,7 @@ msgid ""
 msgstr ""
 "시스템의 /dev/device_name에서 볼륨이 접속되는 디바이스 이름입니다(예: vdb)."
 
+#, python-brace-format
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
@@ -430,6 +431,7 @@ msgstr ""
 "자원 이름과 각 개별 자원의 지정된 속성 간의 맵. heat_template_version: "
 "2014-10-16이 필요합니다."
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the account. Each key in "
 "the map will set the header X-Account-Meta-{key} with the corresponding "
@@ -438,6 +440,7 @@ msgstr ""
 "계정과 연관시킬 사용자 정의 메타 데이터의 맵입니다. 맵의 각 키는 헤더 X-"
 "Account-Meta-{key}를 해당 값으로 설정합니다."
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the container. Each key in "
 "the map will set the header X-Container-Meta-{key} with the corresponding "
@@ -556,18 +559,6 @@ msgstr "이 서브넷에 대한 추가 라우트입니다."
 
 msgid "Address family of the address scope, which is 4 or 6."
 msgstr "주소 범위의 주소군입니다. 즉, 4 또는 6입니다."
-
-msgid ""
-"Address of the notification. It could be a valid email address, url or "
-"service key based on notification type."
-msgstr ""
-"알림의 주소입니다. 알림 타입에 따라 올바른 이메일 주소, url 또는 서비스 키일 "
-"수 있습니다."
-
-msgid ""
-"Address to bind the server. Useful when selecting a particular network "
-"interface."
-msgstr "서버를 바인드할 주소. 특정 네트워크 인터페이스를 선택할 때유용합니다. "
 
 msgid "Administrative state for the ipsec site connection."
 msgstr "ipsec 사이트 연결의 관리 상태입니다."
@@ -1028,6 +1019,7 @@ msgstr ""
 "(현재 아무 것도 지정되지 않은 경우)입니다. 서버가 둘 이상의 네트워크에서 주소"
 "를 가지는 경우 결과가 예측 불가능할 수 있습니다."
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure when signal_transport is set to "
@@ -1041,6 +1033,7 @@ msgstr ""
 "하고 실패를 표시하려면 --data-binary '{\"status\": \"FAILURE\"}'를 추가하면 "
 "됩니다. 이 속성은 기타 모든 신호 전송의 경우 None으로 설정됩니다."
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure. You can signal success by "
@@ -1292,9 +1285,6 @@ msgstr "keystone 서비스의 설명입니다."
 msgid "Description of keystone user."
 msgstr "keystone 사용자의 설명입니다."
 
-msgid "Description of the alarm."
-msgstr "알람에 대한 설명입니다."
-
 msgid "Description of the firewall policy."
 msgstr "방화벽 정책의 설명입니다."
 
@@ -1525,6 +1515,7 @@ msgstr "조치 %s 권한 부여 중 오류 발생"
 msgid "Error creating ec2 keypair for user %s"
 msgstr "사용자 %s에 대한 ec2 키 쌍을 작성하는 중에 오류 발생"
 
+#, python-brace-format
 msgid ""
 "Error during applying access rules to share \"{0}\". The root cause of the "
 "problem is the following: {1}."
@@ -1532,9 +1523,11 @@ msgstr ""
 "공유 \"{0}\"에 액세스 규칙을 적용하는 중에 오류가 발생했습니다. 문제점의 근"
 "본 원인은 다음과 같습니다. {1}."
 
+#, python-brace-format
 msgid "Error during creation of share \"{0}\""
 msgstr "\"{0}\" 공유 작성 중에 오류 발생"
 
+#, python-brace-format
 msgid "Error during deleting share \"{0}\"."
 msgstr "공유 \"{0}\" 삭제 중에 오류가 발생했습니다."
 
@@ -1558,9 +1551,6 @@ msgstr "1 외부 네트워크 예상, %d 찾음"
 
 msgid "Export locations of share."
 msgstr "공유 위치를 내보내십시오."
-
-msgid "Expression of the alarm to evaluate."
-msgstr "평가할 알람의 식입니다."
 
 msgid "External fixed IP address."
 msgstr "외부 Fixed IP 주소입니다."
@@ -2262,10 +2252,6 @@ msgid "Invalid adopt data: %s"
 msgstr "올바르지 않은 채택 데이터: %s"
 
 #, python-format
-msgid "Invalid cloud_backend setting in heat.conf detected - %s"
-msgstr "heat.conf에서 올바르지 않은 cloud_backend 설정 발견 - %s"
-
-#, python-format
 msgid "Invalid codes in ignore_errors : %s"
 msgstr "ignore_errors의 올바르지 않은 코드: %s"
 
@@ -2794,9 +2780,6 @@ msgstr "필수 신임 정보 누락: %(required)s"
 msgid "Mistral resource validation error"
 msgstr "Mistral 자원 유효성 검증 오류"
 
-msgid "Monasca notification."
-msgstr "Monasca 알림입니다."
-
 msgid "Multiple actions specified"
 msgstr "여러 조치가 지정됨"
 
@@ -2902,9 +2885,6 @@ msgstr ""
 msgid "Name of the administrative user to use on the server."
 msgstr "서버에서 사용할 관리자의 이름입니다."
 
-msgid "Name of the alarm. By default, physical resource name is used."
-msgstr "알람의 이름입니다. 기본적으로 실제 자원 이름이 사용됩니다."
-
 msgid "Name of the availability zone for DB instance."
 msgstr "DB 인스턴스의 가용성 구역 이름입니다."
 
@@ -2954,9 +2934,6 @@ msgstr ""
 "포트를 소유하는 네트워크의 이름입니다. 값은 일반적으로 network:floatingip 또"
 "는 network:router_interface 또는 network:dhcp입니다. "
 
-msgid "Name of the notification. By default, physical resource name is used."
-msgstr "알림의 이름입니다. 기본적으로 실제 자원 이름이 사용됩니다."
-
 msgid "Name of the output."
 msgstr "출력의 이름입니다."
 
@@ -2998,6 +2975,7 @@ msgstr "볼륨 타입의 이름입니다."
 msgid "Name of the volume."
 msgstr "볼륨의 이름입니다."
 
+#, python-brace-format
 msgid ""
 "Name of the workflow associated with the task. Can be defined by intrinsic "
 "function get_resource or by name of the referenced workflow, i.e. "
@@ -3298,12 +3276,6 @@ msgstr "개인 키를 포함하는 선택적 PEM 형식의 파일입니다."
 
 msgid "Optional filename to associate with part."
 msgstr "파트와 연관시킬 선택적 파일 이름입니다."
-
-#, python-format
-msgid "Optional heat url in format like http://0.0.0.0:8004/v1/%(tenant_id)s."
-msgstr ""
-"다음과 같은 형식의 선택적 히트 URL입니다. http://0.0.0.0:8004/v1/"
-"%(tenant_id)s"
 
 msgid "Optional subtype to specify with the type."
 msgstr "유형으로 지정할 선택적 하위 유형입니다."
@@ -4976,13 +4948,6 @@ msgid "The metering label ID to associate with this metering rule."
 msgstr "이 측정 규칙과 연관시킬 측정 레이블 ID입니다."
 
 msgid ""
-"The metric dimensions to match to the alarm dimensions. One or more "
-"dimension key names separated by a comma."
-msgstr ""
-"알람 크기와 일치할 지표 크기입니다. 쉼표로 구분된 하나 이상의 크기 키 이름입"
-"니다."
-
-msgid ""
 "The minimum number of characters from this character class that will be in "
 "the generated string."
 msgstr "생성된 문자열에 포함될 이 문자 클래스의 최소 문자 수입니다."
@@ -5092,15 +5057,6 @@ msgstr "ike 정책의 협상 모드입니다."
 msgid "The next hop for the destination."
 msgstr "대상의 다음 hop입니다."
 
-msgid "The notification methods to use when an alarm state is ALARM."
-msgstr "알람 상태가 ALARM이면 사용할 알림 방법입니다."
-
-msgid "The notification methods to use when an alarm state is OK."
-msgstr "알람 상태가 OK이면 사용할 알림 방법입니다."
-
-msgid "The notification methods to use when an alarm state is UNDETERMINED."
-msgstr "알람 상태가 UNDETERMINED이면 사용할 알림 방법입니다."
-
 msgid "The number of I/O operations per second that the volume supports."
 msgstr "볼륨이 지원하는 초당 I/O 조작 수입니다."
 
@@ -5196,9 +5152,6 @@ msgstr "포트를 확인합니다."
 
 msgid "The port id, either subnet or port_id should be specified."
 msgstr "포트 ID, subnet 또는 port_id가 지정되어야 합니다."
-
-msgid "The port on which the server will listen."
-msgstr "서버가 청취할 포트입니다. "
 
 msgid "The port, either subnet or port should be specified."
 msgstr "포트, subnet 또는 port가 지정되어야 합니다."
@@ -5664,9 +5617,6 @@ msgstr ""
 msgid "Type of keystone Service."
 msgstr "keystone 서비스의 타입입니다."
 
-msgid "Type of the notification."
-msgstr "알림의 타입입니다."
-
 msgid "Type of the object that RBAC policy affects."
 msgstr "RBAC 정책이 영향을 미치는 오브젝트 타입입니다."
 
@@ -5802,9 +5752,11 @@ msgstr "알 수 없는 입력 %s"
 msgid "Unknown key(s) %s"
 msgstr "알 수 없는 키 %s"
 
+#, python-brace-format
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr "공유 \"{0}\" 작성 중에 알 수 없는 share_status"
 
+#, python-brace-format
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "공유 \"{0}\" 삭제 중에 알 수 없는 상태"
 
@@ -5827,9 +5779,6 @@ msgstr "지원되지 않는 오브젝트 유형 %(objtype)s"
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr "LoadBalancerNames의 지원되지 않는 자원 '%s' "
 
-msgid "Unversioned keystone url in format like http://0.0.0.0:5000."
-msgstr "http://0.0.0.0:5000과 같은 형식의 버전이 지정되지 않은 keystone url."
-
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr "%(name)s(%(res)s)의 %(props)s 특성으로 업데이트"
@@ -5843,6 +5792,7 @@ msgstr "삭제 중에 스택 업데이트"
 msgid "Updating a stack when it is suspended"
 msgstr "일시중단될 때 스택 업데이트"
 
+#, python-brace-format
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
 "<resource_name> }"
@@ -5873,6 +5823,7 @@ msgstr ""
 "라우터 자원에서 `external_gateway_info` 특성을 사용하여 게이트웨이를 설정합니"
 "다."
 
+#, python-brace-format
 msgid ""
 "Use the networks attribute instead of first_address. For example: "
 "\"{get_attr: [<server name>, networks, <network name>, 0]}\""
@@ -6128,9 +6079,6 @@ msgstr "이 규칙을 사용해야 하는지 여부입니다."
 
 msgid "Whether this rule should be shared across all tenants."
 msgstr "이 규칙을 전체 테넌트 간에 공유해야 하는지 여부입니다. "
-
-msgid "Whether to enable the actions or not."
-msgstr "작업 사용 여부입니다."
 
 msgid "Whether to specify a remote group or a remote IP prefix."
 msgstr "원격 그룹 또는 원격 IP 접두부를 지정할지 여부입니다."

@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2025-07-10 16:33+0000\n"
+"POT-Creation-Date: 2025-09-21 15:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -72,7 +72,7 @@ msgid "\"%(version)s\". \"%(version_type)s\" should be: %(available)s"
 msgstr ""
 "\"%(version)s\"。\"%(version_type)s\" は、%(available)s でなければなりません"
 
-#, python-format
+#, python-format, python-brace-format
 msgid "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 msgstr "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 
@@ -308,6 +308,7 @@ msgstr ""
 "システムの /dev/device_name でボリュームが接続される場合のデバイス名。例えば "
 "vdb"
 
+#, python-brace-format
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
@@ -435,6 +436,7 @@ msgstr ""
 "個別のリソースごとに指定されている属性とリソース名のマップ。"
 "heat_template_version : 2014-10-16 が必要です。"
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the account. Each key in "
 "the map will set the header X-Account-Meta-{key} with the corresponding "
@@ -443,6 +445,7 @@ msgstr ""
 "アカウントに関連付けるユーザー定義メタデータのマップ。マップ内の各キーはヘッ"
 "ダー X-Account-Meta-{key} とそれに対応する値に設定されます。"
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the container. Each key in "
 "the map will set the header X-Container-Meta-{key} with the corresponding "
@@ -568,20 +571,6 @@ msgstr "このサブネットの追加経路。"
 
 msgid "Address family of the address scope, which is 4 or 6."
 msgstr "アドレススコープのアドレスファミリー (4 または 6)。"
-
-msgid ""
-"Address of the notification. It could be a valid email address, url or "
-"service key based on notification type."
-msgstr ""
-"通知のアドレス。通知タイプに基づいて、有効な E メールアドレス、URL、または"
-"サービスキーのいずれかである場合があります。"
-
-msgid ""
-"Address to bind the server. Useful when selecting a particular network "
-"interface."
-msgstr ""
-"サーバーをバインドするアドレス。特定のネットワークインターフェースを選択する"
-"ときに役立ちます。"
 
 msgid "Administrative state for the ipsec site connection."
 msgstr "ipsec サイト接続の管理状態。"
@@ -1066,6 +1055,7 @@ msgstr ""
 "ない場合は空の文字列を取り出すための便利属性。サーバーが複数のネットワークか"
 "らのアドレスを持っている場合、結果は予測できないものになる可能性があります。"
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure when signal_transport is set to "
@@ -1080,6 +1070,7 @@ msgstr ""
 "'{\"status\": \"FAILURE\"}' を追加します。その他の信号の送信の場合は、この値"
 "を None に設定します。"
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure. You can signal success by "
@@ -1336,9 +1327,6 @@ msgstr "keystone サービスの説明。"
 msgid "Description of keystone user."
 msgstr "keystone ユーザーの説明。"
 
-msgid "Description of the alarm."
-msgstr "アラームの説明。"
-
 msgid "Description of the firewall policy."
 msgstr "ファイアウォールポリシーの説明。"
 
@@ -1582,6 +1570,7 @@ msgstr "エラー許可アクション %s"
 msgid "Error creating ec2 keypair for user %s"
 msgstr "ユーザー %s の ec2 キーペアの作成エラーです"
 
+#, python-brace-format
 msgid ""
 "Error during applying access rules to share \"{0}\". The root cause of the "
 "problem is the following: {1}."
@@ -1589,9 +1578,11 @@ msgstr ""
 "シェア \"{0}\" にアクセスルールを適用する際にエラーが発生しました。この問題の"
 "根本原因は以下のとおりです: {1}"
 
+#, python-brace-format
 msgid "Error during creation of share \"{0}\""
 msgstr "シェア \"{0}\" の作成中にエラーが発生しました 。"
 
+#, python-brace-format
 msgid "Error during deleting share \"{0}\"."
 msgstr "シェア \"{0}\" の削除中にエラーが発生しました。"
 
@@ -1619,9 +1610,6 @@ msgstr "1 つの外部ネットワークが必要ですが、%d が見つかり�
 
 msgid "Export locations of share."
 msgstr "シェアのロケーションをエクスポートします。"
-
-msgid "Expression of the alarm to evaluate."
-msgstr "評価対象のアラームの式。"
 
 msgid "External fixed IP address."
 msgstr "外部 Fixed IP のアドレス。"
@@ -2355,10 +2343,6 @@ msgid "Invalid adopt data: %s"
 msgstr "無効な引き取りデータ: %s"
 
 #, python-format
-msgid "Invalid cloud_backend setting in heat.conf detected - %s"
-msgstr "heat.conf で cloud_backend の無効な設定が見つかりました:  %s"
-
-#, python-format
 msgid "Invalid codes in ignore_errors : %s"
 msgstr "ignore_errors に含まれる無効なコード : %s"
 
@@ -2930,9 +2914,6 @@ msgstr "必須のクレデンシャルがありません: %(required)s"
 msgid "Mistral resource validation error"
 msgstr "Mistral のリソース検証エラー"
 
-msgid "Monasca notification."
-msgstr "Monasca の通知。"
-
 msgid "Multiple actions specified"
 msgstr "複数のアクションが指定されています。"
 
@@ -3047,9 +3028,6 @@ msgstr ""
 msgid "Name of the administrative user to use on the server."
 msgstr "サーバー上で使用する管理者の名前。"
 
-msgid "Name of the alarm. By default, physical resource name is used."
-msgstr "アラームの名前。デフォルトでは物理リソース名を使用します。"
-
 msgid "Name of the availability zone for DB instance."
 msgstr "DB インスタンスのアベイラビリティーゾーン名。"
 
@@ -3099,9 +3077,6 @@ msgstr ""
 "このポートを所有するネットワークの名前。典型的な値は、network:floatingip、"
 "network:router_interface、または network:dhcp です。"
 
-msgid "Name of the notification. By default, physical resource name is used."
-msgstr "通知の名前。デフォルトでは物理リソース名を使用します。"
-
 msgid "Name of the output."
 msgstr "出力の名前。"
 
@@ -3143,6 +3118,7 @@ msgstr "ボリュームタイプの名前。"
 msgid "Name of the volume."
 msgstr "ボリュームの名前。"
 
+#, python-brace-format
 msgid ""
 "Name of the workflow associated with the task. Can be defined by intrinsic "
 "function get_resource or by name of the referenced workflow, i.e. "
@@ -3450,11 +3426,6 @@ msgstr "秘密鍵を含む PEM ファイル。オプション。"
 
 msgid "Optional filename to associate with part."
 msgstr "パーツに関連付けるオプションのファイル名。"
-
-#, python-format
-msgid "Optional heat url in format like http://0.0.0.0:8004/v1/%(tenant_id)s."
-msgstr ""
-"http://0.0.0.0:8004/v1/%(tenant_id)s のような形式のオプションの heat URL。"
 
 msgid "Optional subtype to specify with the type."
 msgstr "タイプとともに指定するオプションのサブタイプ。"
@@ -5193,13 +5164,6 @@ msgid "The metering label ID to associate with this metering rule."
 msgstr "この計測ルールに関連付けられている計測ラベル ID。"
 
 msgid ""
-"The metric dimensions to match to the alarm dimensions. One or more "
-"dimension key names separated by a comma."
-msgstr ""
-"アラームの次元に合致するメトリックの次元。コンマで区切られた 1 つ以上の次元の"
-"キー名。"
-
-msgid ""
 "The minimum number of characters from this character class that will be in "
 "the generated string."
 msgstr "生成される文字列に含められる、この文字クラスの文字の最小数。"
@@ -5311,15 +5275,6 @@ msgstr "IKE ポリシーのネゴシエーションモード。"
 msgid "The next hop for the destination."
 msgstr "宛先のネクストホップ。"
 
-msgid "The notification methods to use when an alarm state is ALARM."
-msgstr "アラームの状態が ALARM の場合に使用する通知方法。"
-
-msgid "The notification methods to use when an alarm state is OK."
-msgstr "アラームの状態が OK の場合に使用する通知方法。"
-
-msgid "The notification methods to use when an alarm state is UNDETERMINED."
-msgstr "アラームの状態が UNDETERMINED の場合に使用する通知方法。"
-
 msgid "The number of I/O operations per second that the volume supports."
 msgstr "ボリュームでサポートされる 1 秒当たりの入出力操作数。"
 
@@ -5419,9 +5374,6 @@ msgstr "ポートの検査中。"
 
 msgid "The port id, either subnet or port_id should be specified."
 msgstr "ポート ID。サブネットまたは port_id を指定する必要があります。"
-
-msgid "The port on which the server will listen."
-msgstr "サーバーが listen するポート。"
 
 msgid "The port, either subnet or port should be specified."
 msgstr "ポート。サブネット、またはポートを指定する必要があります。"
@@ -5899,9 +5851,6 @@ msgstr ""
 msgid "Type of keystone Service."
 msgstr "keystone サービスのタイプ。"
 
-msgid "Type of the notification."
-msgstr "通知のタイプ。"
-
 msgid "Type of the object that RBAC policy affects."
 msgstr "RBAC ポリシーが影響するオブジェクトのタイプ。"
 
@@ -6037,9 +5986,11 @@ msgstr "入力 %s は不明です"
 msgid "Unknown key(s) %s"
 msgstr "キー %s は不明です"
 
+#, python-brace-format
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr "シェア \"{0}\" の作成中の share_status が不明です。"
 
+#, python-brace-format
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "シェア \"{0}\" の削除中の状態が不明です。"
 
@@ -6063,9 +6014,6 @@ msgstr "サポートされないオブジェクト種別 %(objtype)s"
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr "LoadBalancerNames ではリソース '%s' はサポートされません"
 
-msgid "Unversioned keystone url in format like http://0.0.0.0:5000."
-msgstr "http://0.0.0.0:5000 のような形式のバージョンなし keystone URL。"
-
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr "%(name)s (%(res)s) のプロパティー %(props)s に更新します"
@@ -6079,6 +6027,7 @@ msgstr "スタックを削除中に更新しています"
 msgid "Updating a stack when it is suspended"
 msgstr "中断中にスタックを更新しています"
 
+#, python-brace-format
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
 "<resource_name> }"
@@ -6110,6 +6059,7 @@ msgstr ""
 "ゲートウェイを設定するには、ルーターリソース内の 'external_gateway_info' プロ"
 "パティーを使用します。"
 
+#, python-brace-format
 msgid ""
 "Use the networks attribute instead of first_address. For example: "
 "\"{get_attr: [<server name>, networks, <network name>, 0]}\""
@@ -6374,9 +6324,6 @@ msgstr "このルールを有効にするかどうか。"
 
 msgid "Whether this rule should be shared across all tenants."
 msgstr "このルールがすべてのテナントで共有されるかどうか。"
-
-msgid "Whether to enable the actions or not."
-msgstr "アクションを有効化すべきかどうか。"
 
 msgid "Whether to specify a remote group or a remote IP prefix."
 msgstr "リモートグループまたはリモート IP プレフィックスのどちらを指定するか。"
