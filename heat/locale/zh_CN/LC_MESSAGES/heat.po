@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2025-07-10 16:33+0000\n"
+"POT-Creation-Date: 2025-09-21 15:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -64,7 +64,7 @@ msgstr "“%(version)s”.“%(version_type)s”应该为下列其中一项：%(
 msgid "\"%(version)s\". \"%(version_type)s\" should be: %(available)s"
 msgstr "“%(version)s”.“%(version_type)s”应该为：%(available)s"
 
-#, python-format
+#, python-format, python-brace-format
 msgid "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 msgstr "“%s”：[ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 
@@ -289,6 +289,7 @@ msgid ""
 "device_name.e.g. vdb"
 msgstr "设备名，该卷将连接至系统中的以下位置：/dev/device_name，例如，vdb"
 
+#, python-brace-format
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
@@ -410,6 +411,7 @@ msgid ""
 msgstr ""
 "资源名称至每个资源的指定属性的映射。需要 heat_template_version：2014-10-16。"
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the account. Each key in "
 "the map will set the header X-Account-Meta-{key} with the corresponding "
@@ -418,6 +420,7 @@ msgstr ""
 "要与帐户关联的用户定义的元数据的映射。映射中的每个键都将使用对应值设置头 X-"
 "Account-Meta-{key}。"
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the container. Each key in "
 "the map will set the header X-Container-Meta-{key} with the corresponding "
@@ -530,16 +533,6 @@ msgstr "此子网的其他路由。"
 
 msgid "Address family of the address scope, which is 4 or 6."
 msgstr "地址范围的地址系列（4 或 6）。"
-
-msgid ""
-"Address of the notification. It could be a valid email address, url or "
-"service key based on notification type."
-msgstr "通知的地址。它可以是有效电子邮件地址、URL 或基于通知类型的服务关键字。"
-
-msgid ""
-"Address to bind the server. Useful when selecting a particular network "
-"interface."
-msgstr "用于绑定服务器的地址。当选择特定网络接口时，此项很有用。"
 
 msgid "Administrative state for the ipsec site connection."
 msgstr "IPSec 站点连接的管理状态。"
@@ -980,6 +973,7 @@ msgstr ""
 "用于访存第一个已分配网络地址的方便属性，或空字符串（如果此时尚未分配任何"
 "项）。如果服务器具有来自多个网络的地址，那么结果可能无法预测。"
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure when signal_transport is set to "
@@ -992,6 +986,7 @@ msgstr ""
 "告成功，或通过添加 --data-binary '{\"status\": \"FAILURE\"}' 通告失败。对于所"
 "有其他信号传输，此属性设置为 None。"
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure. You can signal success by "
@@ -1231,9 +1226,6 @@ msgstr "keystone 服务的描述。"
 msgid "Description of keystone user."
 msgstr "keystone 用户的描述。"
 
-msgid "Description of the alarm."
-msgstr "警报的描述。"
-
 msgid "Description of the firewall policy."
 msgstr "防火墙策略的描述。"
 
@@ -1457,14 +1449,17 @@ msgstr "授权操作 %s 时出错"
 msgid "Error creating ec2 keypair for user %s"
 msgstr "为用户 %s 创建 EC2 密钥对时出错"
 
+#, python-brace-format
 msgid ""
 "Error during applying access rules to share \"{0}\". The root cause of the "
 "problem is the following: {1}."
 msgstr "对共享“{0}”应用访问规则时出错。问题的根本原因如下：{1}。"
 
+#, python-brace-format
 msgid "Error during creation of share \"{0}\""
 msgstr "创建共享“{0}”时出错"
 
+#, python-brace-format
 msgid "Error during deleting share \"{0}\"."
 msgstr "删除共享“{0}”时出错"
 
@@ -1488,9 +1483,6 @@ msgstr "需要 1 个外部网络，找到 %d 个"
 
 msgid "Export locations of share."
 msgstr "导出共享位置。"
-
-msgid "Expression of the alarm to evaluate."
-msgstr "要求值的警报表达式。"
 
 msgid "External fixed IP address."
 msgstr "外部固定 IP 地址。"
@@ -2166,10 +2158,6 @@ msgid "Invalid adopt data: %s"
 msgstr "以下采用数据无效：%s"
 
 #, python-format
-msgid "Invalid cloud_backend setting in heat.conf detected - %s"
-msgstr "在 heat.conf 中检测到无效 cloud_backend 设置 - %s"
-
-#, python-format
 msgid "Invalid codes in ignore_errors : %s"
 msgstr "ignore_errors 中的代码无效：%s"
 
@@ -2677,9 +2665,6 @@ msgstr "缺少必需凭证：%(required)s"
 msgid "Mistral resource validation error"
 msgstr "Mistral 资源验证错误"
 
-msgid "Monasca notification."
-msgstr "Monasca 通知。"
-
 msgid "Multiple actions specified"
 msgstr "已指定多个操作"
 
@@ -2781,9 +2766,6 @@ msgstr "与任务相关联的操作的名称。可在该任务中定义操作或
 msgid "Name of the administrative user to use on the server."
 msgstr "要在服务器上使用的管理用户名称。"
 
-msgid "Name of the alarm. By default, physical resource name is used."
-msgstr "警报的名称。缺省情况下，将使用物理资源名称。"
-
 msgid "Name of the availability zone for DB instance."
 msgstr "用于数据库实例的可用性区域的名称。"
 
@@ -2832,9 +2814,6 @@ msgstr ""
 "拥有该端口的网络的名称。此值通常为 network:floatingip、network:"
 "router_interface 或 network:dhcp。"
 
-msgid "Name of the notification. By default, physical resource name is used."
-msgstr "通知的名称。缺省情况下，将使用物理资源名称。"
-
 msgid "Name of the output."
 msgstr "输出的名称。"
 
@@ -2875,6 +2854,7 @@ msgstr "卷类型的名称。"
 msgid "Name of the volume."
 msgstr "卷名。"
 
+#, python-brace-format
 msgid ""
 "Name of the workflow associated with the task. Can be defined by intrinsic "
 "function get_resource or by name of the referenced workflow, i.e. "
@@ -3162,11 +3142,6 @@ msgstr "包含专用密钥的可选 PEM 格式文件。"
 
 msgid "Optional filename to associate with part."
 msgstr "要与部件关联的可选文件名。"
-
-#, python-format
-msgid "Optional heat url in format like http://0.0.0.0:8004/v1/%(tenant_id)s."
-msgstr ""
-"可选 Heat URL，采用诸如 http://0.0.0.0:8004/v1/%(tenant_id)s 之类的格式。"
 
 msgid "Optional subtype to specify with the type."
 msgstr "要与类型一起指定的可选子类型。"
@@ -4767,11 +4742,6 @@ msgid "The metering label ID to associate with this metering rule."
 msgstr "要与此测量规则关联的测量标签标识。"
 
 msgid ""
-"The metric dimensions to match to the alarm dimensions. One or more "
-"dimension key names separated by a comma."
-msgstr "要与警报维匹配的指标维。一个或多个维键名称之间用逗号分隔。"
-
-msgid ""
 "The minimum number of characters from this character class that will be in "
 "the generated string."
 msgstr "将包含在所生成字符串中的此字符类中的最小字符数。"
@@ -4879,15 +4849,6 @@ msgstr "ike 策略的协商方式。"
 msgid "The next hop for the destination."
 msgstr "目标的下一中断段。"
 
-msgid "The notification methods to use when an alarm state is ALARM."
-msgstr "要在警报状态为 ALARM 时使用的通知方法。"
-
-msgid "The notification methods to use when an alarm state is OK."
-msgstr "要在警报状态为 OK 时使用的通知方法。"
-
-msgid "The notification methods to use when an alarm state is UNDETERMINED."
-msgstr "要在警报状态为 UNDETERMINED 时使用的通知方法。"
-
 msgid "The number of I/O operations per second that the volume supports."
 msgstr "该卷支持的每秒 I/O 操作数。"
 
@@ -4979,9 +4940,6 @@ msgstr "正在检查端口。"
 
 msgid "The port id, either subnet or port_id should be specified."
 msgstr "应该指定端口标识（subnet 或 port_id）。"
-
-msgid "The port on which the server will listen."
-msgstr "服务器将侦听的端口。"
 
 msgid "The port, either subnet or port should be specified."
 msgstr "应该指定端口（subnet 或 port）。"
@@ -5424,9 +5382,6 @@ msgstr "要用于与 OpenStack 服务通信的身份服务目录中的端点类�
 msgid "Type of keystone Service."
 msgstr "keystone 服务的类型。"
 
-msgid "Type of the notification."
-msgstr "通知的类型。"
-
 msgid "Type of the object that RBAC policy affects."
 msgstr "RBAC 策略影响的对象类型。"
 
@@ -5557,9 +5512,11 @@ msgstr "未知输入 %s"
 msgid "Unknown key(s) %s"
 msgstr "键 %s 未知"
 
+#, python-brace-format
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr "创建共享“{0}”期间出现未知 share_status"
 
+#, python-brace-format
 msgid "Unknown status during deleting share \"{0}\""
 msgstr "删除共享“{0}”期间出现未知状态"
 
@@ -5581,9 +5538,6 @@ msgstr "不支持的对象类型 %(objtype)s"
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr "LoadBalancerNames 中不支持资源“%s”"
 
-msgid "Unversioned keystone url in format like http://0.0.0.0:5000."
-msgstr "未版本化 keystone URL 为以下格式：http://0.0.0.0:5000。"
-
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr "对 %(name)s (%(res)s) 的属性 %(props)s 的更新"
@@ -5597,6 +5551,7 @@ msgstr "删除堆栈时正在对其进行更新"
 msgid "Updating a stack when it is suspended"
 msgstr "当堆栈已暂挂时，正在对其进行更新"
 
+#, python-brace-format
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
 "<resource_name> }"
@@ -5623,6 +5578,7 @@ msgid ""
 "the gateway."
 msgstr "在路由器资源中使用“external_gateway_info”属性以设置网关。"
 
+#, python-brace-format
 msgid ""
 "Use the networks attribute instead of first_address. For example: "
 "\"{get_attr: [<server name>, networks, <network name>, 0]}\""
@@ -5865,9 +5821,6 @@ msgstr "是否应该启用此规则。"
 
 msgid "Whether this rule should be shared across all tenants."
 msgstr "是否应该在所有租户之间共享此规则。"
-
-msgid "Whether to enable the actions or not."
-msgstr "是否启用这些操作。"
 
 msgid "Whether to specify a remote group or a remote IP prefix."
 msgstr "是指定远程组还是远程 IP 前缀。"

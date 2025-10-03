@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2025-07-10 16:33+0000\n"
+"POT-Creation-Date: 2025-09-21 15:09+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -68,7 +68,7 @@ msgstr ""
 msgid "\"%(version)s\". \"%(version_type)s\" should be: %(available)s"
 msgstr "\"%(version)s\". \"%(version_type)s\" debe ser: %(available)s"
 
-#, python-format
+#, python-format, python-brace-format
 msgid "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 msgstr "\"%s\" : [ { \"key1\": \"val1\" }, { \"key2\": \"val2\" } ]"
 
@@ -313,6 +313,7 @@ msgstr ""
 "Un nombre de dispositivo donde el volumen se conectará en el sistema en /dev/"
 "device_name.e.g. vdb"
 
+#, python-brace-format
 msgid ""
 "A dict of assigned network addresses of the form: {\"public\": [ip1, "
 "ip2...], \"private\": [ip3, ip4], \"public_uuid\": [ip1, ip2...], "
@@ -459,6 +460,7 @@ msgstr ""
 "Una correlación de nombres de recursos con el atributo especificado de cada "
 "recurso. Requiere heat_template_version: 2014-10-16."
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the account. Each key in "
 "the map will set the header X-Account-Meta-{key} with the corresponding "
@@ -468,6 +470,7 @@ msgstr ""
 "cuenta. Cada clave de la correlación establecerá la cabecera X-Account-Meta-"
 "{key} con el valor correspondiente."
 
+#, python-brace-format
 msgid ""
 "A map of user-defined meta data to associate with the container. Each key in "
 "the map will set the header X-Container-Meta-{key} with the corresponding "
@@ -604,20 +607,6 @@ msgstr "Rutas adicionales para esta subred."
 
 msgid "Address family of the address scope, which is 4 or 6."
 msgstr "Familia de direcciones del ámbito de dirección, que es 4 o 6."
-
-msgid ""
-"Address of the notification. It could be a valid email address, url or "
-"service key based on notification type."
-msgstr ""
-"Dirección de la notificación. Puede ser una dirección de correo electrónico "
-"válida, un URL o una clave de servicio basada en el tipo notificación."
-
-msgid ""
-"Address to bind the server. Useful when selecting a particular network "
-"interface."
-msgstr ""
-"Dirección para enlazar el servidor. Útil al seleccionar una red particular "
-"interfaz."
 
 msgid "Administrative state for the ipsec site connection."
 msgstr "Estado administrativo para la conexión del sitio ipsec."
@@ -1116,6 +1105,7 @@ msgstr ""
 "una serie vacía si no se ha asignado nada en este momento. El resultado "
 "puede no ser previsible si el servidor tiene direcciones de más de una red ."
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure when signal_transport is set to "
@@ -1130,6 +1120,7 @@ msgstr ""
 "añadiendo --data-binary '{\"status\": \"FAILURE\"}'. Este atributo está "
 "definido a None en todos los demás transportes de señal."
 
+#, python-brace-format
 msgid ""
 "Convenience attribute, provides curl CLI command prefix, which can be used "
 "for signalling handle completion or failure. You can signal success by "
@@ -1396,9 +1387,6 @@ msgstr "Descripción del servicio de keystone."
 msgid "Description of keystone user."
 msgstr "Descripción del usuario de keystone."
 
-msgid "Description of the alarm."
-msgstr "Descripción de la alarma."
-
 msgid "Description of the firewall policy."
 msgstr "Descripción de la política de cortafuegos."
 
@@ -1640,6 +1628,7 @@ msgstr "Error autorizando la acción %s"
 msgid "Error creating ec2 keypair for user %s"
 msgstr "Error al crear par de claves ec2 para el usuario %s"
 
+#, python-brace-format
 msgid ""
 "Error during applying access rules to share \"{0}\". The root cause of the "
 "problem is the following: {1}."
@@ -1647,9 +1636,11 @@ msgstr ""
 "Error al aplicar las reglas de acceso al recurso compartido \"{0}\". La "
 "causa raíz del problema es la siguiente: {1}."
 
+#, python-brace-format
 msgid "Error during creation of share \"{0}\""
 msgstr "Error durante la creación del recurso compartido \"{0}\""
 
+#, python-brace-format
 msgid "Error during deleting share \"{0}\"."
 msgstr "Error al suprimir el recurso compartido \"{0}\""
 
@@ -1673,9 +1664,6 @@ msgstr "Se esperaba 1 red externa, se ha encontrado %d"
 
 msgid "Export locations of share."
 msgstr "Exportar ubicaciones del recurso compartido."
-
-msgid "Expression of the alarm to evaluate."
-msgstr "Expresión de la alarma a evaluar."
 
 msgid "External fixed IP address."
 msgstr "Dirección IP fija externa."
@@ -2434,10 +2422,6 @@ msgid "Invalid adopt data: %s"
 msgstr "Datos de adopción no válidos: %s"
 
 #, python-format
-msgid "Invalid cloud_backend setting in heat.conf detected - %s"
-msgstr "Se ha detectado un ajuste de cloud_backend no válido en heat.conf: %s"
-
-#, python-format
 msgid "Invalid codes in ignore_errors : %s"
 msgstr "Códigos no válidos en ignore_errors : %s"
 
@@ -3021,9 +3005,6 @@ msgstr "Falta la credencial necesaria :%(required)s "
 msgid "Mistral resource validation error"
 msgstr "Error de validación de recurso de Mistral"
 
-msgid "Monasca notification."
-msgstr "Notificación Monasca."
-
 msgid "Multiple actions specified"
 msgstr "Múltiples acciónes especificadas"
 
@@ -3134,11 +3115,6 @@ msgstr ""
 msgid "Name of the administrative user to use on the server."
 msgstr "Nombre del usuario administrativo a utilizar en el servidor."
 
-msgid "Name of the alarm. By default, physical resource name is used."
-msgstr ""
-"El nombre de la alarma. De forma predeterminada, se utiliza el nombre del "
-"recurso físico."
-
 msgid "Name of the availability zone for DB instance."
 msgstr ""
 "Nombre de la zona de disponibilidad para la instancia de base de datos."
@@ -3190,11 +3166,6 @@ msgstr ""
 "Nombre de la red propietaria del puerto. Normalmente el valor es network:"
 "floatingip, network:router_interface o network:dhcp."
 
-msgid "Name of the notification. By default, physical resource name is used."
-msgstr ""
-"El nombre de la notificación. De forma predeterminada, se utiliza el nombre "
-"del recurso físico."
-
 msgid "Name of the output."
 msgstr "Nombre de la salida."
 
@@ -3237,6 +3208,7 @@ msgstr "Nombre del tipo de volumen."
 msgid "Name of the volume."
 msgstr "Nombre del volumen."
 
+#, python-brace-format
 msgid ""
 "Name of the workflow associated with the task. Can be defined by intrinsic "
 "function get_resource or by name of the referenced workflow, i.e. "
@@ -3561,12 +3533,6 @@ msgstr "Archivo opcional en formato PEM conteniendo la clave privada."
 
 msgid "Optional filename to associate with part."
 msgstr "Nombre de archivo opcional a asociar con la parte."
-
-#, python-format
-msgid "Optional heat url in format like http://0.0.0.0:8004/v1/%(tenant_id)s."
-msgstr ""
-"Heat URL opcional en un formato parecido a http://0.0.0.0:8004/v1/"
-"%(tenant_id)s."
 
 msgid "Optional subtype to specify with the type."
 msgstr "Subtipo opcional a especificar con el tipo."
@@ -5359,13 +5325,6 @@ msgid "The metering label ID to associate with this metering rule."
 msgstr "El ID de etiqueta de medición a asociar con esta regla de medición."
 
 msgid ""
-"The metric dimensions to match to the alarm dimensions. One or more "
-"dimension key names separated by a comma."
-msgstr ""
-"Las dimensiones métricas que deben coincidir con las dimensiones de la "
-"alarma. Uno o más nombres clave de dimensión separados por una coma."
-
-msgid ""
 "The minimum number of characters from this character class that will be in "
 "the generated string."
 msgstr ""
@@ -5485,21 +5444,6 @@ msgstr "La modalidad de negociación de la política ike."
 msgid "The next hop for the destination."
 msgstr "El siguiente salto del destino."
 
-msgid "The notification methods to use when an alarm state is ALARM."
-msgstr ""
-"Los métodos de notificación a utilizar cuando el estado de una alarma es "
-"ALARMA."
-
-msgid "The notification methods to use when an alarm state is OK."
-msgstr ""
-"Los métodos de notificación a utilizar cuando el estado de una alarma es "
-"Correcto."
-
-msgid "The notification methods to use when an alarm state is UNDETERMINED."
-msgstr ""
-"Los métodos de notificación a utilizar cuando el estado de una alarma es "
-"INDETERMINADO."
-
 msgid "The number of I/O operations per second that the volume supports."
 msgstr "El número de operaciones de E/S por segundo que admite el volumen."
 
@@ -5601,9 +5545,6 @@ msgstr "El puerto que se está comprobando."
 
 msgid "The port id, either subnet or port_id should be specified."
 msgstr "Se debe especificar el id de puerto, subnet o port_id."
-
-msgid "The port on which the server will listen."
-msgstr "El puerto en el cual el servidor escuchará."
 
 msgid "The port, either subnet or port should be specified."
 msgstr "El puerto; debe especificarse la subred o el puerto."
@@ -6115,9 +6056,6 @@ msgstr ""
 msgid "Type of keystone Service."
 msgstr "Tipo del servicio de keystone."
 
-msgid "Type of the notification."
-msgstr "Tipo de la notificación"
-
 msgid "Type of the object that RBAC policy affects."
 msgstr "Tipo de objeto al que afecta la política RBAC ."
 
@@ -6267,11 +6205,13 @@ msgstr "Entrada desconocida %s"
 msgid "Unknown key(s) %s"
 msgstr "Clave(s) desconocida(s) %s"
 
+#, python-brace-format
 msgid "Unknown share_status during creation of share \"{0}\""
 msgstr ""
 "Estado del recurso compartido (share_status) desconocido durante la creación "
 "del recurso compartido \"{0}\""
 
+#, python-brace-format
 msgid "Unknown status during deleting share \"{0}\""
 msgstr ""
 "Estado del recurso compartido (share_status) desconocido al suprimir el "
@@ -6297,9 +6237,6 @@ msgstr "Tipo de objeto no soportado %(objtype)s"
 msgid "Unsupported resource '%s' in LoadBalancerNames"
 msgstr "Recurso '%s' no soportado en LoadBalancerNames"
 
-msgid "Unversioned keystone url in format like http://0.0.0.0:5000."
-msgstr "URL de keystone sin versión con un formato como http://0.0.0.0:5000."
-
 #, python-format
 msgid "Update to properties %(props)s of %(name)s (%(res)s)"
 msgstr "Actualizar a las propiedades %(props)s de %(name)s (%(res)s)"
@@ -6313,6 +6250,7 @@ msgstr "Actualización de una pila cuando se está suprimiendo"
 msgid "Updating a stack when it is suspended"
 msgstr "Actualizando una pila cuando se suspende"
 
+#, python-brace-format
 msgid ""
 "Use get_resource|Ref command instead. For example: { get_resource : "
 "<resource_name> }"
@@ -6344,6 +6282,7 @@ msgstr ""
 "Utilice la propiedad `external_gateway_info` del recurso de router para "
 "configurar la pasarela."
 
+#, python-brace-format
 msgid ""
 "Use the networks attribute instead of first_address. For example: "
 "\"{get_attr: [<server name>, networks, <network name>, 0]}\""
@@ -6623,9 +6562,6 @@ msgstr "Indica si esta regla debe estar habilitada."
 
 msgid "Whether this rule should be shared across all tenants."
 msgstr "Indica si esta regla debe compartirse entre todos los arrendatarios."
-
-msgid "Whether to enable the actions or not."
-msgstr "Si se desea habilitar o no las acciones ."
 
 msgid "Whether to specify a remote group or a remote IP prefix."
 msgstr "Si especificar o no un grupo remote o un prefijo de IP remote."
