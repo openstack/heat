@@ -40,21 +40,21 @@ opts = [
     cfg.StrOpt('stack-domain-admin',
                default="heat_stack_admin",
                help=_("Keystone username with roles sufficient to manage users"
-                    " and projects in the stack-user-domain")),
+                      " and projects in the stack-user-domain")),
     cfg.StrOpt('stack-domain-admin-password',
                secret=True,
                help=_("Password to set for stack-domain-admin")),
     cfg.BoolOpt('insecure',
                 default=False,
                 help=_("If set, then the server's certificate will not "
-                     "be verified.")),
+                       "be verified.")),
     cfg.StrOpt('os-cacert',
                help=_('Optional CA cert file to use in SSL connections.')),
     cfg.StrOpt('os-cert',
                help=_('Optional PEM-formatted certificate chain file.')),
     cfg.StrOpt('os-key',
                help=_('Optional PEM-formatted file that contains the '
-                    'private key.')),
+                      'private key.')),
 
 ]
 
@@ -65,7 +65,8 @@ logging.set_defaults(
     logging_context_format_string="%(levelname)s (%(module)s:"
                                   "%(lineno)d) %(message)s",
     default_log_levels=(logging.get_default_log_levels() +
-                       extra_log_level_defaults))
+                        extra_log_level_defaults)
+)
 logging.setup(cfg.CONF, 'heat-keystone-setup-domain',
               version.version_info.version_string())
 
@@ -101,7 +102,6 @@ def main():
         'user_domain_name': USER_DOMAIN_NAME,
         'project_domain_name': PROJECT_DOMAIN_NAME
     }
-
 
     if insecure:
         client_kwargs['verify'] = False

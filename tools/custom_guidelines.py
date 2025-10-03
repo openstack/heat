@@ -172,15 +172,15 @@ class HeatCustomGuidelines(object):
                     while level != 0:
                         level += len(re.findall(r'(\{|\()', lines[idx]))
                         level -= len(re.findall(r'(\}|\))', lines[idx]))
-                        if re.search("^((\'|\") )", lines[idx]):
+                        if re.search(r"^((\'|\") )", lines[idx]):
                             kwargs.update(
                                 {'details': 'line %s' % idx,
                                  'message': _('Trailing whitespace should '
                                               'be on previous line'),
                                  'snippet': lines[idx]})
                             self.print_guideline_error(**kwargs)
-                        elif (re.search("(\\S(\'|\"))$", lines[idx - 1]) and
-                              re.search("^((\'|\")\\S)", lines[idx])):
+                        elif (re.search(r"(\\S(\'|\"))$", lines[idx - 1]) and
+                              re.search(r"^((\'|\")\\S)", lines[idx])):
                             kwargs.update(
                                 {'details': 'line %s' % (idx - 1),
                                  'message': _('Omitted whitespace at the '
@@ -192,7 +192,7 @@ class HeatCustomGuidelines(object):
 
     def _check_description_summary(self, description, error_kwargs,
                                    error_key):
-        if re.search("^[a-z]", description):
+        if re.search(r"^[a-z]", description):
             error_kwargs.update(
                 {'message': _('%s description summary should start '
                               'with uppercase letter') % error_key.title(),
@@ -239,16 +239,15 @@ class HeatCustomGuidelines(object):
 
         params = False
         for line in doclines[1:]:
-                if re.search(r"\s{2,}", line):
-                    error_kwargs.update(
-                        {'message': _('%s description '
-                                      'contains double or more '
-                                      'whitespaces') % error_key.title(),
-                         'snippet': line})
-                    self.print_guideline_error(**error_kwargs)
-                if re.search("^(:param|:type|:returns|:rtype|:raises)",
-                             line):
-                    params = True
+            if re.search(r"\s{2,}", line):
+                error_kwargs.update(
+                    {'message': _('%s description '
+                                  'contains double or more '
+                                  'whitespaces') % error_key.title(),
+                     'snippet': line})
+                self.print_guideline_error(**error_kwargs)
+            if re.search(r"^(:param|:type|:returns|:rtype|:raises)", line):
+                params = True
         if not params and not (doclines[-2].endswith('.') or
                                doclines[-2].endswith('.)')):
             error_kwargs.update(

@@ -12,12 +12,12 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import sys
 import os
-import yaml
-import json
 import re
+import sys
+
 from heat.common import template_format
+
 
 def main():
     path = sys.argv[1]
@@ -28,21 +28,24 @@ def main():
     else:
         print('File or directory not valid: %s' % path)
 
+
 def convert_file(path):
     f = open(path, 'r')
     print(template_format.convert_json_to_yaml(f.read()))
+
 
 def convert_directory(dirpath):
     for path in os.listdir(dirpath):
         if not path.endswith('.template') and not path.endswith('.json'):
             continue
-        yamlpath = re.sub('\..*$', '.yaml', path)
+        yamlpath = re.sub(r'\..*$', '.yaml', path)
         print('Writing to %s' % yamlpath)
         f = open(os.path.join(dirpath, path), 'r')
         out = open(os.path.join(dirpath, yamlpath), 'w')
         yml = template_format.convert_json_to_yaml(f.read())
         out.write(yml)
         out.close()
+
 
 if __name__ == '__main__':
     main()
