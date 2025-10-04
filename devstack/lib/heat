@@ -256,7 +256,6 @@ function install_heatclient {
 # install_heat() - Collect source and prepare
 function install_heat {
     setup_develop $HEAT_DIR
-    pip_install uwsgi
     if [[ "$GLOBAL_VENV" == "True" ]] ; then
         # TODO(tkajinam): find a better solution for this
         sudo ln -sf $HEAT_BIN_DIR/heat-manage /usr/local/bin
@@ -268,8 +267,8 @@ function start_heat {
     run_process h-eng "$HEAT_BIN_DIR/heat-engine --config-file=$HEAT_CONF"
 
     # If the site is not enabled then we are in a grenade scenario
-    run_process h-api "$HEAT_BIN_DIR/uwsgi --ini $HEAT_API_UWSGI_CONF" ""
-    run_process h-api-cfn "$HEAT_BIN_DIR/uwsgi --ini $HEAT_CFN_API_UWSGI_CONF" ""
+    run_process h-api "$(which uwsgi) --ini $HEAT_API_UWSGI_CONF" ""
+    run_process h-api-cfn "$(which uwsgi) --ini $HEAT_CFN_API_UWSGI_CONF" ""
 }
 
 # stop_heat() - Stop running processes
