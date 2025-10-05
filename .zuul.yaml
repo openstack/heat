@@ -85,8 +85,10 @@
         log: true
         yaml: true
         yml: true
-    irrelevant-files:
+    irrelevant-files: &base_irrelevant_files
+      - ^\.gitignore$
       - ^\.gitreview$
+      - ^\.pre-commit-config\.yaml$
       - ^.*\.rst$
       - ^api-ref/.*$
       - ^doc/.*$
@@ -94,7 +96,6 @@
       - ^heat/locale/.*$
       - ^heat/tests/.*$
       - ^releasenotes/.*$
-
 
 - job:
     name: heat-functional
@@ -158,14 +159,7 @@
         # We do run a list of tests after upgrade. This is just to bypass the req from parent.
         devstack_plugins:
           heat: https://opendev.org/openstack/heat
-    irrelevant-files:
-      - ^.*\.rst$
-      - ^api-ref/.*$
-      - ^doc/.*$
-      - ^etc/heat/heat-.*-generator.conf$
-      - ^heat/locale/.*$
-      - ^heat/tests/.*$
-      - ^releasenotes/.*$
+    irrelevant-files: *base_irrelevant_files
 
 - project:
     queue: heat
