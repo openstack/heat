@@ -1,14 +1,17 @@
-Heat style commandments
+Heat Style Commandments
 =======================
 
 - Step 1: Read the OpenStack style commandments
   https://docs.openstack.org/hacking/
 - Step 2: Read on
 
-Heat specific commandments
+Heat Specific Commandments
 --------------------------
 
-None so far
+- [HE301] Use LOG.warning() rather than LOG.warn().
+- [HE302] Python 3: do not use dict.iteritems.
+- [HE303] Python 3: do not use dict.iterkeys.
+- [HE304] Python 3: do not use dict.itervalues.
 
 Creating unit tests
 -------------------
@@ -20,7 +23,6 @@ without the patch and passes with the patch.
 
 For more information on creating unit tests and utilizing the testing
 infrastructure in OpenStack Heat, please read heat/tests/testing-overview.txt.
-
 
 Running tests
 -------------
@@ -46,12 +48,3 @@ http://stestr.readthedocs.io
 Note that unit tests use a database if available. See
 ``tools/test-setup.sh`` on how to set up the databases the same way as
 done in the OpenStack CI systems.
-
-Heat Specific Commandments
---------------------------
-
-- [HE301] Use LOG.warning() rather than LOG.warn().
-- [HE302] Python 3: do not use dict.iteritems.
-- [HE303] Python 3: do not use dict.iterkeys.
-- [HE304] Python 3: do not use dict.itervalues.
-
