@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    The following WSGI scripts have been removed. Deployment tooling should
+    use python module paths (``heat.wsgi.api`` or ``heat.wsgi.cfn``).
+
+    - ``heat-wsgi-api``
+    - ``heat-wsgi-api-cfn``
+
+    In case the WSGI server doesn't support python module paths (for example
+    mod_wsgi is known not to support it), create a ``.wsgi`` script::
+
+       import heat.wsgi.api
+       application = heat.wsgi.api.application

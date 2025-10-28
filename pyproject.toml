@@ -1,6 +1,208 @@
 [build-system]
-requires = ["pbr>=6.0.0", "setuptools>=64.0.0"]
+requires = ["pbr>=6.1.1"]
 build-backend = "pbr.build"
+
+[project]
+name = "openstack-heat"
+description = "OpenStack Orchestration"
+authors = [
+    {name = "OpenStack", email = "openstack-discuss@lists.openstack.org"},
+]
+readme = {file = "README.rst", content-type = "text/x-rst"}
+license = {text = "Apache-2.0"}
+dynamic = ["version", "dependencies"]
+requires-python = ">=3.11"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: OpenStack",
+  "Intended Audience :: Information Technology",
+  "Intended Audience :: System Administrators",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: Implementation :: CPython",
+]
+
+[project.urls]
+Homepage = "https://docs.openstack.org/heat"
+Repository = "https://opendev.org/openstack/heat"
+
+[tool.setuptools]
+packages = [
+    "heat",
+    "heat_integrationtests",
+]
+script-files = [
+    "bin/heat-db-setup",
+    "bin/heat-keystone-setup-domain",
+]
+
+[tool.setuptools.data-files]
+"etc/heat" = [
+    "etc/heat/api-paste.ini",
+]
+"etc/heat/environment.d" = [
+    "etc/heat/environment.d/*",
+]
+"etc/heat/templates" = [
+    "etc/heat/templates/*",
+]
+
+[project.scripts]
+heat-engine = "heat.cmd.engine:main"
+heat-manage = "heat.cmd.manage:main"
+heat-status = "heat.cmd.status:main"
+
+[project.entry-points."oslo.config.opts"]
+"heat.common.cache" = "heat.common.cache:list_opts"
+"heat.common.config" = "heat.common.config:list_opts"
+"heat.common.context" = "heat.common.context:list_opts"
+"heat.common.crypt" = "heat.common.crypt:list_opts"
+"heat.engine.clients.os.keystone.heat_keystoneclient" = "heat.engine.clients.os.keystone.heat_keystoneclient:list_opts"
+"heat.engine.hot.functions" = "heat.engine.hot.functions:list_opts"
+"heat.common.wsgi" = "heat.common.wsgi:list_opts"
+"heat.engine.clients" = "heat.engine.clients:list_opts"
+"heat.engine.notification" = "heat.engine.notification:list_opts"
+"heat.engine.resources" = "heat.engine.resources:list_opts"
+"heat.api.aws.ec2token" = "heat.api.aws.ec2token:list_opts"
+
+[project.entry-points."oslo.config.opts.defaults"]
+"heat.common.config" = "heat.common.config:set_config_defaults"
+
+[project.entry-points."oslo.policy.enforcer"]
+heat = "heat.common.policy:get_policy_enforcer"
+
+[project.entry-points."oslo.policy.policies"]
+heat = "heat.policies:list_rules"
+
+[project.entry-points."heat.clients"]
+aodh = "heat.engine.clients.os.aodh:AodhClientPlugin"
+barbican = "heat.engine.clients.os.barbican:BarbicanClientPlugin"
+blazar = "heat.engine.clients.os.blazar:BlazarClientPlugin"
+cinder = "heat.engine.clients.os.cinder:CinderClientPlugin"
+designate = "heat.engine.clients.os.designate:DesignateClientPlugin"
+glance = "heat.engine.clients.os.glance:GlanceClientPlugin"
+heat = "heat.engine.clients.os.heat_plugin:HeatClientPlugin"
+ironic = "heat.engine.clients.os.ironic:IronicClientPlugin"
+keystone = "heat.engine.clients.os.keystone:KeystoneClientPlugin"
+magnum = "heat.engine.clients.os.magnum:MagnumClientPlugin"
+manila = "heat.engine.clients.os.manila:ManilaClientPlugin"
+mistral = "heat.engine.clients.os.mistral:MistralClientPlugin"
+nova = "heat.engine.clients.os.nova:NovaClientPlugin"
+neutron = "heat.engine.clients.os.neutron:NeutronClientPlugin"
+octavia = "heat.engine.clients.os.octavia:OctaviaClientPlugin"
+openstack = "heat.engine.clients.os.openstacksdk:OpenStackSDKPlugin"
+swift = "heat.engine.clients.os.swift:SwiftClientPlugin"
+trove = "heat.engine.clients.os.trove:TroveClientPlugin"
+zaqar = "heat.engine.clients.os.zaqar:ZaqarClientPlugin"
+zun = "heat.engine.clients.os.zun:ZunClientPlugin"
+
+[project.entry-points."heat.constraints"]
+# common constraints
+"cron_expression" = "heat.engine.constraint.common_constraints:CRONExpressionConstraint"
+"dns_domain" = "heat.engine.constraint.common_constraints:DNSDomainConstraint"
+"dns_name" = "heat.engine.constraint.common_constraints:DNSNameConstraint"
+"expiration" = "heat.engine.constraint.common_constraints:ExpirationConstraint"
+"rel_dns_name" = "heat.engine.constraint.common_constraints:RelativeDNSNameConstraint"
+"ip_addr" = "heat.engine.constraint.common_constraints:IPConstraint"
+"iso_8601" = "heat.engine.constraint.common_constraints:ISO8601Constraint"
+"mac_addr" = "heat.engine.constraint.common_constraints:MACConstraint"
+"net_cidr" = "heat.engine.constraint.common_constraints:CIDRConstraint"
+"ip_or_cidr" = "heat.engine.constraint.common_constraints:IPCIDRConstraint"
+"test_constr" = "heat.engine.constraint.common_constraints:TestConstraintDelay"
+"timezone" = "heat.engine.constraint.common_constraints:TimezoneConstraint"
+"json_string" = "heat.engine.constraint.common_constraints:JsonStringConstraint"
+# service constraints
+"barbican.container" = "heat.engine.clients.os.barbican:ContainerConstraint"
+"barbican.secret" = "heat.engine.clients.os.barbican:SecretConstraint"
+"blazar.reservation" = "heat.engine.clients.os.blazar:ReservationConstraint"
+"cinder.backup" = "heat.engine.clients.os.cinder:VolumeBackupConstraint"
+"cinder.qos_specs" = "heat.engine.clients.os.cinder:QoSSpecsConstraint"
+"cinder.snapshot" = "heat.engine.clients.os.cinder:VolumeSnapshotConstraint"
+"cinder.volume" = "heat.engine.clients.os.cinder:VolumeConstraint"
+"cinder.vtype" = "heat.engine.clients.os.cinder:VolumeTypeConstraint"
+"designate.zone" = "heat.engine.clients.os.designate:DesignateZoneConstraint"
+"glance.image" = "heat.engine.clients.os.glance:ImageConstraint"
+"keystone.domain" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneDomainConstraint"
+"keystone.group" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneGroupConstraint"
+"keystone.project" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneProjectConstraint"
+"keystone.region" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneRegionConstraint"
+"keystone.role" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneRoleConstraint"
+"keystone.service" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneServiceConstraint"
+"keystone.user" = "heat.engine.clients.os.keystone.keystone_constraints:KeystoneUserConstraint"
+"magnum.cluster_template" = "heat.engine.clients.os.magnum:ClusterTemplateConstraint"
+"manila.share_network" = "heat.engine.clients.os.manila:ManilaShareNetworkConstraint"
+"manila.share_snapshot" = "heat.engine.clients.os.manila:ManilaShareSnapshotConstraint"
+"manila.share_type" = "heat.engine.clients.os.manila:ManilaShareTypeConstraint"
+"mistral.workflow" = "heat.engine.clients.os.mistral:WorkflowConstraint"
+"neutron.address_scope" = "heat.engine.clients.os.neutron.neutron_constraints:AddressScopeConstraint"
+"neutron.flow_classifier" = "heat.engine.clients.os.neutron.neutron_constraints:FlowClassifierConstraint"
+"neutron.lbaas.listener" = "heat.engine.clients.os.neutron.lbaas_constraints:ListenerConstraint"
+"neutron.lbaas.loadbalancer" = "heat.engine.clients.os.neutron.lbaas_constraints:LoadbalancerConstraint"
+"neutron.lbaas.pool" = "heat.engine.clients.os.neutron.lbaas_constraints:PoolConstraint"
+"neutron.lbaas.provider" = "heat.engine.clients.os.neutron.lbaas_constraints:LBaasV2ProviderConstraint"
+"neutron.network" = "heat.engine.clients.os.neutron.neutron_constraints:NetworkConstraint"
+"neutron.port" = "heat.engine.clients.os.neutron.neutron_constraints:PortConstraint"
+"neutron.port_pair" = "heat.engine.clients.os.neutron.neutron_constraints:PortPairConstraint"
+"neutron.port_pair_group" = "heat.engine.clients.os.neutron.neutron_constraints:PortPairGroupConstraint"
+"neutron.qos_policy" = "heat.engine.clients.os.neutron.neutron_constraints:QoSPolicyConstraint"
+"neutron.router" = "heat.engine.clients.os.neutron.neutron_constraints:RouterConstraint"
+"neutron.security_group" = "heat.engine.clients.os.neutron.neutron_constraints:SecurityGroupConstraint"
+"neutron.segment" = "heat.engine.clients.os.openstacksdk:SegmentConstraint"
+"neutron.subnet" = "heat.engine.clients.os.neutron.neutron_constraints:SubnetConstraint"
+"neutron.subnetpool" = "heat.engine.clients.os.neutron.neutron_constraints:SubnetPoolConstraint"
+"neutron.taas.tap_service" = "heat.engine.clients.os.neutron.taas_constraints:TapServiceConstraint"
+"neutron.taas.tap_flow" = "heat.engine.clients.os.neutron.taas_constraints:TapFlowConstraint"
+"nova.flavor" = "heat.engine.clients.os.nova:FlavorConstraint"
+"nova.host" = "heat.engine.clients.os.nova:HostConstraint"
+"nova.keypair" = "heat.engine.clients.os.nova:KeypairConstraint"
+"nova.network" = "heat.engine.constraint.common_constraints:TestConstraintDelay"
+"nova.server" = "heat.engine.clients.os.nova:ServerConstraint"
+"octavia.listener" = "heat.engine.clients.os.octavia:ListenerConstraint"
+"octavia.loadbalancer" = "heat.engine.clients.os.octavia:LoadbalancerConstraint"
+"octavia.l7policy" = "heat.engine.clients.os.octavia:L7PolicyConstraint"
+"octavia.pool" = "heat.engine.clients.os.octavia:PoolConstraint"
+"octavia.flavor" = "heat.engine.clients.os.octavia:FlavorConstraint"
+"octavia.flavorprofile" = "heat.engine.clients.os.octavia:FlavorProfileConstraint"
+"octavia.availabilityzone" = "heat.engine.clients.os.octavia:AvailabilityZoneConstraint"
+"octavia.availabilityzoneprofile" = "heat.engine.clients.os.octavia:AvailabilityZoneProfileConstraint"
+"trove.flavor" = "heat.engine.clients.os.trove:FlavorConstraint"
+"zaqar.queue" = "heat.engine.clients.os.zaqar:QueueConstraint"
+#ironic
+"ironic.portgroup" = "heat.engine.clients.os.ironic:PortGroupConstraint"
+"ironic.node" = "heat.engine.clients.os.ironic:NodeConstraint"
+
+[project.entry-points."heat.stack_lifecycle_plugins"]
+
+[project.entry-points."heat.event_sinks"]
+zaqar-queue = "heat.engine.clients.os.zaqar:ZaqarEventSink"
+
+[project.entry-points."heat.templates"]
+"AWSTemplateFormatVersion.2010-09-09" = "heat.engine.cfn.template:CfnTemplate"
+"HeatTemplateFormatVersion.2012-12-12" = "heat.engine.cfn.template:HeatTemplate"
+"heat_template_version.2013-05-23" = "heat.engine.hot.template:HOTemplate20130523"
+"heat_template_version.2014-10-16" = "heat.engine.hot.template:HOTemplate20141016"
+"heat_template_version.2015-04-30" = "heat.engine.hot.template:HOTemplate20150430"
+"heat_template_version.2015-10-15" = "heat.engine.hot.template:HOTemplate20151015"
+"heat_template_version.2016-04-08" = "heat.engine.hot.template:HOTemplate20160408"
+"heat_template_version.2016-10-14" = "heat.engine.hot.template:HOTemplate20161014"
+"heat_template_version.newton" = "heat.engine.hot.template:HOTemplate20161014"
+"heat_template_version.2017-02-24" = "heat.engine.hot.template:HOTemplate20170224"
+"heat_template_version.ocata" = "heat.engine.hot.template:HOTemplate20170224"
+"heat_template_version.2017-09-01" = "heat.engine.hot.template:HOTemplate20170901"
+"heat_template_version.pike" = "heat.engine.hot.template:HOTemplate20170901"
+"heat_template_version.2018-03-02" = "heat.engine.hot.template:HOTemplate20180302"
+"heat_template_version.queens" = "heat.engine.hot.template:HOTemplate20180302"
+"heat_template_version.2018-08-31" = "heat.engine.hot.template:HOTemplate20180831"
+"heat_template_version.rocky" = "heat.engine.hot.template:HOTemplate20180831"
+"heat_template_version.2021-04-16" = "heat.engine.hot.template:HOTemplate20210416"
+"heat_template_version.wallaby" = "heat.engine.hot.template:HOTemplate20210416"
 
 [tool.bandit]
 # B101: Test for use of assert
