@@ -362,8 +362,8 @@ class KsClientWrapper(object):
         # disable_user_account_days_inactive
         # TODO(pas-ha) think if we also need to add lock_password too
         user_options = {
-            "ignore_change_password_upon_first_use": True,
-            "ignore_password_expiry": True,
+            "ignore_change_password_upon_first_use": True,  # nosec: B105
+            "ignore_password_expiry": True,  # nosec: B105
             "ignore_lockout_failure_attempts": True
         }
         # We add the new user to a special keystone role

@@ -19,6 +19,13 @@
   become: true
   command: git config --system --add safe.directory {{heat_tempest_plugin}}
 
+- name: Pin setuptools in tempest env
+  command: tox -evenv-tempest -- pip install setuptools[core]<82.0.0
+  become: true
+  args:
+    chdir: "{{devstack_base_dir}}/tempest"
+  environment: "{{ tempest_tox_environment }}"
+
 - name: Install plugins
   command: tox -evenv-tempest -- pip install -c{{constraints_file}} {{heat_tempest_plugin}}
   become: true

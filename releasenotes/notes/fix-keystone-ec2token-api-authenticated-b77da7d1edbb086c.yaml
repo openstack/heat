@@ -1,0 +1,17 @@
+---
+fixes:
+  - |
+    The Keystone v3 ec2token end point requires authenticated access. The Heat
+    ec2token filter now requires Keystone auth settings to be able to
+    verify EC2 credentials. For single cloud mode the ec2token filter will
+    look in the ``[ec2authtoken]`` section of the heat configuration for
+    keystone authentication settings.
+
+    In multicloud mode keystone auth settings must be supplied in configuration
+    file sections names ``[ec2authtoken.<name>]`` .
+    The ``[ec2authtoken] clouds`` option should be also configured to define
+    the list of names.
+
+    Note that ec2token request will be sent without authentication if
+    the legacy settings (``auth_uri`` and ``allowed_auth_uris``) are still
+    used.

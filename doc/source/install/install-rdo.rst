@@ -358,7 +358,7 @@ Install and configure components
      Replace ``RABBIT_PASS`` with the password you chose for the
      ``openstack`` account in ``RabbitMQ``.
 
-   * In the ``[keystone_authtoken]``, ``[trustee]``,
+   * In the ``[keystone_authtoken]``, ``[ec2authtoken]``, ``[trustee]``,
      and ``[clients_keystone]`` sections,
      configure Identity service access:
 
@@ -372,6 +372,16 @@ Install and configure components
         auth_type = password
         project_domain_name = default
         user_domain_name = default
+        project_name = service
+        username = heat
+        password = HEAT_PASS
+
+        [ec2authtoken]
+        ...
+        auth_url = http://controller:5000
+        auth_type = password
+        project_domain_name = Default
+        user_domain_name = Default
         project_name = service
         username = heat
         password = HEAT_PASS
