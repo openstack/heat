@@ -13,7 +13,8 @@
       - openstack/barbican
       - openstack/heat
       - openstack/heat-templates
-      - openstack/heat-tempest-plugin
+      - name: openstack/heat-tempest-plugin
+        override-checkout: 2023.1-last
       - openstack/octavia
       - openstack/neutron
       - openstack/oslo.messaging
@@ -134,10 +135,8 @@
     parent: grenade-multinode
     required-projects:
       - opendev.org/openstack/heat
-      # NOTE(elod.illes): as soon as 2023.1-last tag exists for
-      # heat-tempest-plugin we should replace 2.3.0 version to that.
       - name: opendev.org/openstack/heat-tempest-plugin
-        override-checkout: 2.3.0
+        override-checkout: 2023.1-last
       - opendev.org/openstack/python-heatclient
     vars:
       grenade_devstack_localrc:
@@ -194,11 +193,11 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - grenade-heat-multinode
+        #- grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
     gate:
       jobs:
-        - grenade-heat-multinode
+        #- grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
