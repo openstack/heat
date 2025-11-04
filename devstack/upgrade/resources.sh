@@ -36,6 +36,9 @@ function _heat_set_user {
     OS_PROJECT_DOMAIN_ID=$DEFAULT_DOMAIN
 }
 
+# TODO: Add this test back once https://review.opendev.org/966092
+# has landed and backported.
+# heat_tempest_plugin.tests.functional.test_software_config.ParallelDeploymentsTest
 function _write_heat_integrationtests {
     local upgrade_tests=$1
     cat > $upgrade_tests <<EOF
@@ -46,7 +49,6 @@ heat_integrationtests.functional.test_resource_group.ResourceGroupTest
 heat_integrationtests.functional.test_resource_group.ResourceGroupUpdatePolicyTest
 heat_integrationtests.functional.test_software_deployment_group
 heat_integrationtests.functional.test_validation
-heat_tempest_plugin.tests.functional.test_software_config.ParallelDeploymentsTest
 heat_tempest_plugin.tests.functional.test_nova_server_networks
 EOF
 }
