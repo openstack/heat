@@ -312,7 +312,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                           'suitable default if omitted.'),
                         constraints=[
                             constraints.AllowedValues(['ide', 'lame_bus',
-                                                       'scsi', 'usb',
+                                                       'sata', 'scsi', 'usb',
                                                        'virtio']),
                         ],
                     ),
