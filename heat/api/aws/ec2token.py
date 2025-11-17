@@ -38,7 +38,10 @@ LOG = logging.getLogger(__name__)
 opts = [
     cfg.URIOpt('auth_uri',
                schemes=['http', 'https'],
-               help=_("Authentication Endpoint URI.")),
+               help=_("Authentication Endpoint URI."),
+               deprecated_for_removal=True,
+               deprecated_reason='Superseded by the endpoint_override option'
+               ),
     cfg.BoolOpt('multi_cloud',
                 default=False,
                 help=_('Allow orchestration of multiple clouds.')),
@@ -53,20 +56,22 @@ opts = [
                 item_type=types.URI(schemes=['http', 'https']),
                 help=_('Allowed keystone endpoints for auth_uri when '
                        'multi_cloud is enabled. At least one endpoint needs '
-                       'to be specified.')),
-    cfg.StrOpt('cert_file',
-               help=_('Optional PEM-formatted certificate chain file.')),
-    cfg.StrOpt('key_file',
-               help=_('Optional PEM-formatted file that contains the '
-                      'private key.')),
-    cfg.StrOpt('ca_file',
-               help=_('Optional CA cert file to use in SSL connections.')),
+                       'to be specified.'),
+                deprecated_for_removal=True,
+                deprecated_reason='Superseded by the clouds option'
+                ),
 ]
+
+_deprecated_opts = {
+    'certfile': [cfg.DeprecatedOpt('cert_file')],
+    'keyfile': [cfg.DeprecatedOpt('key_file')],
+    'cafile': [cfg.DeprecatedOpt('ca_file')]
+}
 
 cfg.CONF.register_opts(opts, group='ec2authtoken')
 ks_loading.register_auth_conf_options(cfg.CONF, 'ec2authtoken')
 ks_loading.register_session_conf_options(
-    cfg.CONF, 'ec2authtoken')
+    cfg.CONF, 'ec2authtoken', deprecated_opts=_deprecated_opts)
 ks_loading.register_adapter_conf_options(cfg.CONF, 'ec2authtoken')
 cfg.CONF.set_default('service_type', 'identity', group='ec2authtoken')
 
@@ -94,10 +99,11 @@ class EC2Token(wsgi.Middleware):
             cfg.CONF, cfg_group, session=session)
 
     def _create_noauth_ks_adapter(self, auth_url):
-        insecure = strutils.bool_from_string(self._conf_get('insecure'))
-        certfile = self._conf_get('cert_file')
-        keyfile = self._conf_get('key_file')
-        cafile = self._conf_get('ca_file')
+        insecure = strutils.bool_from_string(
+            self.conf.get('insecure', cfg.CONF.ec2authtoken.insecure))
+        certfile = self.conf.get('cert_file', cfg.CONF.ec2authtoken.certfile)
+        keyfile = self.conf.get('key_file', cfg.CONF.ec2authtoken.keyfile)
+        cafile = self.conf.get('ca_file', cfg.CONF.ec2authtoken.cafile)
 
         verify = False
         cert = None
@@ -382,6 +388,7 @@ def list_opts():
         opts,
         ks_loading.get_auth_common_conf_options(),
         ks_loading.get_auth_plugin_conf_options('v3password'),
-        ks_loading.get_session_conf_options(),
+        ks_loading.get_session_conf_options(
+            deprecated_opts=_deprecated_opts),
         ks_loading.get_adapter_conf_options()
     )
