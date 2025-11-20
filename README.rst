@@ -1,15 +1,10 @@
-========================
-Team and repository tags
-========================
-
-.. image:: https://governance.openstack.org/tc/badges/heat.svg
-    :target: https://governance.openstack.org/tc/reference/tags/index.html
-
-.. Change things from this point on
-
 ====
 Heat
 ====
+
+.. image:: https://governance.openstack.org/tc/badges/heat.svg
+
+.. Change things from this point on
 
 Heat is a service to orchestrate multiple composite cloud applications using
 templates, through both an OpenStack-native REST API and a
