@@ -1,0 +1,18 @@
+---
+deprecations:
+  - |
+    The ``[ec2authtoken] auth_uri`` option was deprecated in favor of
+    keystoneauth options added to the same section.
+
+  - |
+    The ``[ec2authtoken] allowed_auth_uris`` option was deprecated in favor of
+    new ``[ec2authtoken] clouds`` options and ``[ec2authtoken.<name>]``
+    sections.
+
+  - |
+    The following options in the ``[ec2authtoken]`` section have been
+    deprecated.
+
+    - ``ca_file``: Use ``cafile``
+    - ``cert_file``: Use ``certfile``
+    - ``key_file``: Use ``keyfile``

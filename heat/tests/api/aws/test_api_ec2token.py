@@ -814,12 +814,12 @@ class Ec2TokenConfigurationTest(common.HeatTestCase):
     def test_conf_ssl_opttions(self):
         cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
                              group='ec2authtoken')
-        cfg.CONF.set_default('ca_file', '/home/user/cacert.pem',
+        cfg.CONF.set_default('cafile', '/home/user/cacert.pem',
                              group='ec2authtoken')
         cfg.CONF.set_default('insecure', False, group='ec2authtoken')
-        cfg.CONF.set_default('cert_file', '/home/user/mycert',
+        cfg.CONF.set_default('certfile', '/home/user/mycert',
                              group='ec2authtoken')
-        cfg.CONF.set_default('key_file', '/home/user/mykey',
+        cfg.CONF.set_default('keyfile', '/home/user/mykey',
                              group='ec2authtoken')
         ec2 = ec2token.EC2Token(app=None, conf={})
         adapter = ec2._ks_adapters[None]
