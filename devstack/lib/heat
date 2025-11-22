@@ -150,6 +150,7 @@ function configure_heat {
         iniset $HEAT_CONF clients_heat url "$SERVICE_PROTOCOL://$HEAT_API_HOST/heat-api/v1/%(tenant_id)s"
     else
         configure_keystone_authtoken_middleware $HEAT_CONF heat
+        configure_keystone_authtoken_middleware $HEAT_CONF heat ec2authtoken
     fi
 
     # If HEAT_DEFERRED_AUTH is unset or explicitly set to trusts, configure
