@@ -53,8 +53,6 @@ class OpenStackSDKPlugin(os_client.ExtensionMixin,
 
     def _get_service_interfaces(self):
         interfaces = {}
-        if not os_service_types:
-            return interfaces
         types = os_service_types.ServiceTypes()
         for name, _ in config.list_opts():
             if not name or not name.startswith('clients_'):
