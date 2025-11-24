@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    The ``disk_bus`` property of ``OS::Nova::Server`` resource's
+    ``block_device_mapping_v2`` now accepts 'sata' as a valid value.
+    The SATA disk bus was added to Nova in the Queens release.
+    See `story 2011600 <https://storyboard.openstack.org/#!/story/2011600>`_.
