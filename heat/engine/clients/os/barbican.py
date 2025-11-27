@@ -11,8 +11,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from barbicanclient import client as barbican_client
 from barbicanclient import exceptions
-from barbicanclient.v1 import client as barbican_client
 from barbicanclient.v1 import containers
 from oslo_config import cfg
 from oslo_log import log as logging
