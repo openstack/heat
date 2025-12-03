@@ -548,7 +548,7 @@ class StackResource(resource.Resource):
     def _handle_cancel(self):
         stack_identity = self.nested_identifier()
         if stack_identity is not None:
-            LOG.debug('Cancelling %s of %s' % (self.action, self))
+            LOG.debug('Cancelling %s of %s', self.action, self)
             try:
                 self.rpc_client().stack_cancel_update(
                     self.context,

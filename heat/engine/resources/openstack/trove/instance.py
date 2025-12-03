@@ -480,10 +480,9 @@ class Instance(resource.Resource):
                                                            _("Unknown")))
         if updates:
             if instance.status != self.ACTIVE:
-                dmsg = ("Instance is in status %(now)s. Waiting on status"
-                        " %(stat)s")
-                LOG.debug(dmsg % {"now": instance.status,
-                                  "stat": self.ACTIVE})
+                LOG.debug("Instance is in status %(now)s. Waiting on status"
+                          " %(stat)s",
+                          {"now": instance.status, "stat": self.ACTIVE})
                 return False
             try:
                 return (
@@ -520,17 +519,16 @@ class Instance(resource.Resource):
             current_flav = str(instance.flavor['id'])
             new_flav = str(new_flavor)
             if new_flav != current_flav:
-                dmsg = "Resizing instance flavor from %(old)s to %(new)s"
-                LOG.debug(dmsg % {"old": current_flav, "new": new_flav})
+                LOG.debug("Resizing instance flavor from %(old)s to %(new)s",
+                          {"old": current_flav, "new": new_flav})
                 self.client().instances.resize_instance(instance, new_flavor)
                 return False
         return True
 
     def _update_size(self, instance, new_size):
         if new_size and instance.volume['size'] != new_size:
-            dmsg = "Resizing instance storage from %(old)s to %(new)s"
-            LOG.debug(dmsg % {"old": instance.volume['size'],
-                              "new": new_size})
+            LOG.debug("Resizing instance storage from %(old)s to %(new)s",
+                      {"old": instance.volume['size'], "new": new_size})
             self.client().instances.resize_volume(instance, new_size)
             return False
         return True
@@ -540,13 +538,12 @@ class Instance(resource.Resource):
             for db in databases:
                 if db.get("ACTION") == self.CREATE:
                     db.pop("ACTION", None)
-                    dmsg = "Adding new database %(db)s to instance"
-                    LOG.debug(dmsg % {"db": db})
+                    LOG.debug("Adding new database %(db)s to instance",
+                              {"db": db})
                     self.client().databases.create(instance, [db])
                 elif db.get("ACTION") == self.DELETE:
-                    dmsg = ("Deleting existing database %(db)s from "
-                            "instance")
-                    LOG.debug(dmsg % {"db": db['name']})
+                    LOG.debug("Deleting existing database %(db)s from "
+                              "instance", {"db": db['name']})
                     self.client().databases.delete(instance, db['name'])
         return True
 
@@ -558,13 +555,11 @@ class Instance(resource.Resource):
                 usr[self.USER_DATABASES] = dbs
                 if usr.get("ACTION") == self.CREATE:
                     usr.pop("ACTION", None)
-                    dmsg = "Adding new user %(u)s to instance"
-                    LOG.debug(dmsg % {"u": usr})
+                    LOG.debug("Adding new user %(u)s to instance", {"u": usr})
                     self.client().users.create(instance, [usr])
                 elif usr.get("ACTION") == self.DELETE:
-                    dmsg = ("Deleting existing user %(u)s from "
-                            "instance")
-                    LOG.debug(dmsg % {"u": usr['name']})
+                    LOG.debug("Deleting existing user %(u)s from instance",
+                              {"u": usr['name']})
                     self.client().users.delete(instance, usr['name'])
                 else:
                     newattrs = {}

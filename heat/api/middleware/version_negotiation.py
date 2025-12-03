@@ -66,19 +66,20 @@ class VersionNegotiationFilter(wsgi.Middleware):
             minor_version = req.environ['api.minor_version']
 
             if (major_version == 1 and minor_version == 0):
-                LOG.debug("Matched versioned URI. "
-                          "Version: %(major_version)d.%(minor_version)d"
-                          % {'major_version': major_version,
-                             'minor_version': minor_version})
+                LOG.debug(
+                    "Matched versioned URI. "
+                    "Version: %(major_version)d.%(minor_version)d",
+                    {'major_version': major_version,
+                     'minor_version': minor_version})
                 # Strip the version from the path
                 req.path_info_pop()
                 return None
             else:
                 LOG.debug("Unknown version in versioned URI: "
                           "%(major_version)d.%(minor_version)d. "
-                          "Returning version choices."
-                          % {'major_version': major_version,
-                             'minor_version': minor_version})
+                          "Returning version choices.",
+                          {'major_version': major_version,
+                           'minor_version': minor_version})
                 return self.versions_app
 
         accept = str(req.accept)
@@ -91,16 +92,16 @@ class VersionNegotiationFilter(wsgi.Middleware):
                 minor_version = req.environ['api.minor_version']
                 if (major_version == 1 and minor_version == 0):
                     LOG.debug("Matched versioned media type. Version: "
-                              "%(major_version)d.%(minor_version)d"
-                              % {'major_version': major_version,
-                                 'minor_version': minor_version})
+                              "%(major_version)d.%(minor_version)d",
+                              {'major_version': major_version,
+                               'minor_version': minor_version})
                     return None
                 else:
                     LOG.debug("Unknown version in accept header: "
                               "%(major_version)d.%(minor_version)d... "
-                              "returning version choices."
-                              % {'major_version': major_version,
-                                  'minor_version': minor_version})
+                              "returning version choices.",
+                              {'major_version': major_version,
+                               'minor_version': minor_version})
                     return self.versions_app
         else:
             if req.accept not in ('*/*', ''):

@@ -152,10 +152,8 @@ class HeatWaitCondition(resource.Resource):
         if key == self.DATA:
             meta = handle.metadata_get(refresh=True)
             res = {k: meta[k][handle.DATA] for k in meta}
-            LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s'
-                      % {'name': self.name,
-                         'key': key,
-                         'res': res})
+            LOG.debug('%(name)s.GetAtt(%(key)s) == %(res)s',
+                      {'name': self.name, 'key': key, 'res': res})
 
             return str(jsonutils.dumps(res))
 

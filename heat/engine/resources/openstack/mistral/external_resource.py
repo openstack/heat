@@ -153,9 +153,8 @@ class MistralExternalResource(resource.Resource):
         raises ResourceUnknownState otherwise.
         """
         execution = self.client().executions.get(execution_id)
-        LOG.debug('Mistral execution %(id)s is in state '
-                  '%(state)s' % {'id': execution_id,
-                                 'state': execution.state})
+        LOG.debug('Mistral execution %(id)s is in state %(state)s',
+                  {'id': execution_id, 'state': execution.state})
 
         if execution.state in ('IDLE', 'RUNNING', 'PAUSED'):
             return False, {}
@@ -190,9 +189,9 @@ class MistralExternalResource(resource.Resource):
                 workflow_input=jsonutils.dumps(inputs),
                 description=self.properties[self.DESCRIPTION],
                 **action_data[self.PARAMS])
-            LOG.debug('Mistral execution %(id)s params set to '
-                      '%(params)s' % {'id': execution.id,
-                                      'params': action_data[self.PARAMS]})
+            LOG.debug('Mistral execution %(id)s params set to %(params)s',
+                      {'id': execution.id,
+                       'params': action_data[self.PARAMS]})
             return execution.id
 
     def _check_action(self, action, execution_id):
@@ -209,8 +208,8 @@ class MistralExternalResource(resource.Resource):
             if output.get('resource_id'):
                 rsrc_id = output.get('resource_id')
                 LOG.debug('ExternalResource id set to %(rid)s from Mistral '
-                          'execution %(eid)s output' % {'eid': execution_id,
-                                                        'rid': rsrc_id})
+                          'execution %(eid)s output',
+                          {'eid': execution_id, 'rid': rsrc_id})
             self.resource_id_set(str(rsrc_id)[:255])
         return success
 
@@ -226,9 +225,8 @@ class MistralExternalResource(resource.Resource):
         for i in after_props[self.REPLACE_ON_CHANGE]:
             if old_inputs.get(i) != new_inputs.get(i):
                 LOG.debug('Replacing ExternalResource %(id)s instead of '
-                          'updating due to change to input "%(i)s"' %
-                          {"id": self.resource_id,
-                           "i": i})
+                          'updating due to change to input "%(i)s"',
+                          {"id": self.resource_id, "i": i})
                 raise resource.UpdateReplace(self)
         # honor always_update if found
         if self.properties[self.ALWAYS_UPDATE]:

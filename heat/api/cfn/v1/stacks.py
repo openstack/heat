@@ -244,7 +244,7 @@ class StackController(object):
             return req.params['TemplateBody']
         elif 'TemplateUrl' in req.params:
             url = req.params['TemplateUrl']
-            LOG.debug('TemplateUrl %s' % url)
+            LOG.debug('TemplateUrl %s', url)
             try:
                 return urlfetch.get(url)
             except IOError as exc:

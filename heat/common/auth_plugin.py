@@ -32,7 +32,7 @@ def parse_auth_credential_to_dict(cred):
     try:
         _cred = json.loads(cred)
     except ValueError as e:
-        LOG.error('Failed to parse credential with error: %s' % e)
+        LOG.error('Failed to parse credential with error: %s', e)
         raise ValueError('Failed to parse credential, please check your '
                          'Stack Credential format.')
     validate(_cred)

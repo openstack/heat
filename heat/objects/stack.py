@@ -89,7 +89,7 @@ class Stack(
             return self._raw_template
 
         LOG.warning('Loading a raw_template that should have been '
-                    'eagerly loaded for stack id %s' % self.id)
+                    'eagerly loaded for stack id %s', self.id)
         self._raw_template = raw_template.RawTemplate.get_by_id(
             self._context,
             self['raw_template_id'])

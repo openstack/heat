@@ -59,9 +59,8 @@ class StackLock(object):
                                                             self.stack_id,
                                                             self.engine_id)
         if lock_engine_id is None:
-            LOG.debug("Engine %(engine)s acquired lock on stack "
-                      "%(stack)s" % {'engine': self.engine_id,
-                                     'stack': self.stack_id})
+            LOG.debug("Engine %(engine)s acquired lock on stack %(stack)s",
+                      {'engine': self.engine_id, 'stack': self.stack_id})
             return
 
         stack = stack_object.Stack.get_by_id(self.context, self.stack_id,
@@ -70,8 +69,8 @@ class StackLock(object):
         if (lock_engine_id == self.engine_id or
                 service_utils.engine_alive(self.context, lock_engine_id)):
             LOG.debug("Lock on stack %(stack)s is owned by engine "
-                      "%(engine)s" % {'stack': self.stack_id,
-                                      'engine': lock_engine_id})
+                      "%(engine)s", {'stack': self.stack_id,
+                                     'engine': lock_engine_id})
             raise exception.ActionInProgress(stack_name=stack.name,
                                              action=stack.action)
         else:
@@ -118,9 +117,8 @@ class StackLock(object):
             LOG.warning("Lock was already released on stack %s!",
                         self.stack_id)
         else:
-            LOG.debug("Engine %(engine)s released lock on stack "
-                      "%(stack)s" % {'engine': self.engine_id,
-                                     'stack': self.stack_id})
+            LOG.debug("Engine %(engine)s released lock on stack %(stack)s",
+                      {'engine': self.engine_id, 'stack': self.stack_id})
 
     def __enter__(self):
         self.acquire()

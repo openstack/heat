@@ -67,8 +67,8 @@ class BarbicanClientPlugin(client_plugin.ClientPlugin):
                 raise exception.EntityNotFound(
                     entity="Secret",
                     name=secret_ref)
-            LOG.info('Failed to get Barbican secret from reference %s' % (
-                secret_ref))
+            LOG.info('Failed to get Barbican secret from reference %s',
+                     secret_ref)
             raise
 
     def get_secret_payload_by_ref(self, secret_ref):

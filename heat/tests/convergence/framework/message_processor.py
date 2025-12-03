@@ -74,11 +74,11 @@ class MessageProcessor(object):
         try:
             method = getattr(self, message.name)
         except AttributeError:
-            LOG.error('[%s] Bad message name "%s"' % (self.name,
-                                                      message.name))
+            LOG.error('[%s] Bad message name "%s"',
+                      self.name, message.name)
             raise
         else:
-            LOG.info('[%s] %r' % (self.name, message.data))
+            LOG.info('[%s] %r', self.name, message.data)
 
         method(message.data)
         return True

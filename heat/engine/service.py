@@ -1297,8 +1297,8 @@ class EngineService(service.ServiceBase):
                 stack_identity=stack_identity, message=cancel_message)
             if cancel_result is None:
                 LOG.debug("Successfully sent %(msg)s message "
-                          "to remote task on engine %(eng)s" % {
-                              'eng': engine_id, 'msg': cancel_message})
+                          "to remote task on engine %(eng)s",
+                          {'eng': engine_id, 'msg': cancel_message})
             else:
                 raise exception.EventSendFailed(stack_name=current_stack.name,
                                                 engine_id=engine_id)
@@ -1545,9 +1545,9 @@ class EngineService(service.ServiceBase):
                 stack_identity=stack_identity, message=rpc_api.THREAD_CANCEL)
             if cancel_result is None:
                 LOG.debug("Successfully sent %(msg)s message "
-                          "to remote task on engine %(eng)s" % {
-                              'eng': acquire_result,
-                              'msg': rpc_api.THREAD_CANCEL})
+                          "to remote task on engine %(eng)s",
+                          {'eng': acquire_result,
+                           'msg': rpc_api.THREAD_CANCEL})
             else:
                 raise exception.EventSendFailed(stack_name=stack.name,
                                                 engine_id=acquire_result)
@@ -1945,7 +1945,7 @@ class EngineService(service.ServiceBase):
         """
 
         def _resource_signal(stack, rsrc, details, need_check):
-            LOG.debug("signaling resource %s:%s" % (stack.name, rsrc.name))
+            LOG.debug("signaling resource %s:%s", stack.name, rsrc.name)
             needs_metadata_updates = rsrc.signal(details, need_check)
 
             if not needs_metadata_updates:

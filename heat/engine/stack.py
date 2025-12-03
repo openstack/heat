@@ -950,7 +950,7 @@ class Stack(collections.abc.Mapping):
         dup_names = set(self.parameters) & set(resources)
 
         if dup_names:
-            LOG.debug("Duplicate names %s" % dup_names)
+            LOG.debug("Duplicate names %s", dup_names)
             raise exception.StackValidationFailed(
                 message=_("Duplicate names %s") % dup_names)
 

@@ -114,7 +114,7 @@ class InstantiationData(object):
 
         elif self.PARAM_TEMPLATE_URL in self.data:
             url = self.data[self.PARAM_TEMPLATE_URL]
-            LOG.debug('TemplateUrl %s' % url)
+            LOG.debug('TemplateUrl %s', url)
             try:
                 template_data = urlfetch.get(url)
             except IOError as ex:

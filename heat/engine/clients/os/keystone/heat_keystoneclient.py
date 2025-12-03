@@ -223,8 +223,8 @@ class KsClientWrapper(object):
                 project=trustor_proj_id, impersonation=True,
                 allow_redelegation=allow_redelegation, **role_kw)
         except ks_exception.NotFound:
-            LOG.debug("Failed to find roles %s for user %s"
-                      % (role_kw, trustor_user_id))
+            LOG.debug("Failed to find roles %s for user %s",
+                      role_kw, trustor_user_id)
             raise exception.MissingCredentialError(
                 required=_("roles %s") % role_kw)
 

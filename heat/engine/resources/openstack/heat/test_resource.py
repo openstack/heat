@@ -217,8 +217,8 @@ class TestResource(resource.Resource):
                     obj = getattr(self.client(name=client_name), self.entity)
                     obj.get(entity_id)
                 except Exception as exc:
-                    LOG.debug('%s.%s(%s) %s' % (client_name, self.entity,
-                                                entity_id, str(exc)))
+                    LOG.debug('%s.%s(%s) %s', client_name, self.entity,
+                              entity_id, str(exc))
             else:
                 # just sleep some more
                 time.sleep(1)

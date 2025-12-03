@@ -246,18 +246,18 @@ class EC2Token(wsgi.Middleware):
             if clouds:
                 for cloud in clouds:
                     try:
-                        LOG.debug("Attempt authorize on %s" % cloud)
+                        LOG.debug("Attempt authorize on %s", cloud)
                         return self._authorize(req, cloud)
                     except exception.HeatAPIException as e:
-                        LOG.debug("Authorize failed: %s" % e.__class__)
+                        LOG.debug("Authorize failed: %s", e.__class__)
                         last_failure = e
             else:
                 for auth_uri in self._conf_get('allowed_auth_uris'):
                     try:
-                        LOG.debug("Attempt authorize on %s" % auth_uri)
+                        LOG.debug("Attempt authorize on %s", auth_uri)
                         return self._authorize(req, auth_uri)
                     except exception.HeatAPIException as e:
-                        LOG.debug("Authorize failed: %s" % e.__class__)
+                        LOG.debug("Authorize failed: %s", e.__class__)
                         last_failure = e
 
             raise last_failure or exception.HeatAccessDeniedError()
@@ -290,7 +290,7 @@ class EC2Token(wsgi.Middleware):
         adapter = self._ks_adapters.get(cloud)
         if not adapter:
             LOG.error("Ec2Token authorization failed due to missing "
-                      "keystone auth configuration for %s" % cloud)
+                      "keystone auth configuration for %s", cloud)
             raise exception.HeatInternalFailureError(_('Service '
                                                        'misconfigured'))
 
