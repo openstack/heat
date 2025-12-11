@@ -283,6 +283,46 @@ class StackTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          loaded_stack.state)
 
+    def test_delete_trust_not_trustor_auth_fail(self):
+        # Stack gets created with trustor_ctx, deleted with other_ctx
+        # then the trust delete should be with stored_ctx (and fails)
+        trustor_ctx = utils.dummy_context(user_id='thetrustor')
+        other_ctx = utils.dummy_context(user_id='nottrustor')
+        stored_ctx = utils.dummy_context(trust_id='thetrust')
+
+        mock_kc = self.patchobject(hkc, 'KeystoneClient')
+        self.stub_keystoneclient(user_id='thetrustor')
+
+        mock_sc = self.patchobject(stack.Stack, 'stored_context')
+        mock_sc.return_value = stored_ctx
+
+        self.stack = stack.Stack(trustor_ctx, 'delete_trust_nt', self.tmpl)
+        stack_id = self.stack.store()
+
+        db_s = stack_object.Stack.get_by_id(self.ctx, stack_id)
+        self.assertIsNotNone(db_s)
+
+        user_creds_id = db_s.user_creds_id
+        self.assertIsNotNone(user_creds_id)
+        user_creds = ucreds_object.UserCreds.get_by_id(
+            self.ctx, user_creds_id)
+        self.assertEqual('thetrustor', user_creds.get('trustor_user_id'))
+
+        fkc = mock.Mock()
+        fkc.client = mock.PropertyMock(
+            side_effect=exception.AuthorizationFailure())
+        mock_kc.return_value = fkc
+
+        loaded_stack = stack.Stack.load(other_ctx, self.stack.id)
+        loaded_stack.delete()
+        mock_sc.assert_called_with()
+        fkc.delete_trust.assert_not_called()
+
+        db_s = stack_object.Stack.get_by_id(other_ctx, stack_id)
+        self.assertIsNone(db_s)
+        self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
+                         loaded_stack.state)
+
     def test_delete_trust_backup(self):
         class FakeKeystoneClientFail(fake_ks.FakeKeystoneClient):
             def delete_trust(self, trust_id):
