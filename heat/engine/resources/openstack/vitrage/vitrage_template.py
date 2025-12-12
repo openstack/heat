@@ -35,7 +35,15 @@ class VitrageTemplate(resource.Resource):
 
     default_client_name = "vitrage"
 
-    support_status = support.SupportStatus(version='16.0.0')
+    support_status = support.SupportStatus(
+        version='26.0.0',
+        status=support.DEPRECATED,
+        message=_('Vitrage project was marked inactive'),
+        previous_status=support.SupportStatus(
+            version='16.0.0',
+            status=support.SUPPORTED
+        )
+    )
 
     TEMPLATE_NAME = 'template_name'
 

@@ -1,0 +1,5 @@
+---
+deprecations:
+  - |
+    The ``OS::Vitrage::Template`` resource is now deprecated. The vitrage
+    project was marked inactive.
