@@ -94,6 +94,7 @@ service_opts = [
                  min=0,
                  help=_('Timeout in seconds for template download.')),
     cfg.IntOpt('num_engine_workers',
+               min=1,
                help=_('Number of heat-engine processes to fork and run. '
                       'Will default to either to 4 or number of CPUs on '
                       'the host, whichever is greater.')),
