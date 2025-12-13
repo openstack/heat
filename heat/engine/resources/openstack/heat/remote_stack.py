@@ -217,14 +217,8 @@ class RemoteStack(resource.Resource):
 
     def _prepare_cloud_context(self):
         """Prepare context for remote cloud."""
-
         auth = self._fetch_barbican_credential()
         dict_ctxt = self.context.to_dict()
-        dict_ctxt.update({
-            'request_id': dict_ctxt['request_id'],
-            'global_request_id': dict_ctxt['global_request_id'],
-            'show_deleted': dict_ctxt['show_deleted']
-        })
         self._local_context = context.RequestContext.from_dict(dict_ctxt)
         if self._ssl_verify is not None:
             self._local_context.keystone_session.verify = self._ssl_verify
@@ -235,12 +229,10 @@ class RemoteStack(resource.Resource):
         return self._local_context
 
     def _prepare_region_context(self):
-
         # Build RequestContext from existing one
         dict_ctxt = self.context.to_dict()
-        dict_ctxt.update({'region_name': self._region_name,
-                          'overwrite': False})
-        self._local_context = context.RequestContext.from_dict(dict_ctxt)
+        self._local_context = context.RequestContext.from_dict(
+            dict_ctxt, region_name=self._region_name, overwrite=False)
         if self._ssl_verify is not None:
             self._local_context.keystone_session.verify = self._ssl_verify
         return self._local_context

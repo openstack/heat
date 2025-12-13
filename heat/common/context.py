@@ -67,6 +67,17 @@ class RequestContext(context.RequestContext):
     additional request information.
     """
 
+    FROM_DICT_EXTRA_KEYS = [
+        'username',
+        'password',
+        'aws_creds',
+        'trust_id',
+        'trustor_user_id',
+        'auth_token_info',
+        'auth_url',
+        'region_name',
+    ]
+
     def __init__(self, username=None, password=None, aws_creds=None,
                  auth_url=None, is_admin=None, trust_id=None,
                  trustor_user_id=None, auth_token_info=None, region_name=None,
@@ -126,55 +137,28 @@ class RequestContext(context.RequestContext):
         return self._clients
 
     def to_dict(self):
-        user_idt = '{user} {project}'.format(user=self.user_id or '-',
-                                             project=self.project_id or '-')
-
-        return {'auth_token': self.auth_token,
-                'username': self.username,
-                'user_id': self.user_id,
-                'password': self.password,
-                'aws_creds': self.aws_creds,
-                'tenant': self.project_name,
-                'tenant_id': self.project_id,
-                'project_name': self.project_name,
-                'project_id': self.project_id,
-                'trust_id': self.trust_id,
-                'trustor_user_id': self.trustor_user_id,
-                'auth_token_info': self.auth_token_info,
-                'auth_url': self.auth_url,
-                'roles': self.roles,
-                'is_admin': self.is_admin,
-                'user': self.username,
-                'request_id': self.request_id,
-                'global_request_id': self.global_request_id,
-                'show_deleted': self.show_deleted,
-                'region_name': self.region_name,
-                'user_identity': user_idt,
-                'user_domain_id': self.user_domain_id,
-                'project_domain_id': self.project_domain_id}
-
-    @classmethod
-    def from_dict(cls, values):
-        return cls(
-            auth_token=values.get('auth_token'),
-            username=values.get('username'),
-            user_id=values.get('user_id'),
-            password=values.get('password'),
-            aws_creds=values.get('aws_creds'),
-            project_name=values.get('project_name', values.get('tenant')),
-            project_id=values.get('project_id', values.get('tenant_id')),
-            trust_id=values.get('trust_id'),
-            trustor_user_id=values.get('trustor_user_id'),
-            auth_token_info=values.get('auth_token_info'),
-            auth_url=values.get('auth_url'),
-            roles=values.get('roles'),
-            is_admin=values.get('is_admin'),
-            request_id=values.get('request_id'),
-            show_deleted=values.get('show_deleted', False),
-            region_name=values.get('region_name'),
-            user_domain_id=values.get('user_domain_id'),
-            project_domain_id=values.get('project_domain_id')
-        )
+        values = super().to_dict()
+        values.update({
+            'username': self.username,
+            'password': self.password,
+            'aws_creds': self.aws_creds,
+            'trust_id': self.trust_id,
+            'trustor_user_id': self.trustor_user_id,
+            'auth_token_info': self.auth_token_info,
+            'auth_url': self.auth_url,
+            'region_name': self.region_name,
+            # TODO(tkajinam): Remove these
+            'tenant_id': self.project_id,
+            'tenant': self.project_name,
+            # NOTE(tkajinam): project_name is not present in original to_dict
+            'project_name': self.project_name,
+            # TODO(tkajinam) These were deprecated in oslo.context long ago
+            # and were even removed. We should consider removing these.
+            'user_id': self.user_id,
+            'user_domain_id': self.user_domain_id,
+            'project_domain_id': self.project_domain_id
+        })
+        return values
 
     def to_policy_values(self):
         policy = super(RequestContext, self).to_policy_values()
@@ -187,8 +171,24 @@ class RequestContext(context.RequestContext):
         policy['tenant'] = self.project_id
         policy['is_admin'] = self.is_admin
         policy['auth_token_info'] = self.auth_token_info
-
         return policy
+
+    @classmethod
+    def from_dict(cls, values, **kwargs):
+        keys_map = {
+            # Load old keys for backward compatibilities
+            'project_id': 'tenant_id',
+            'project_name': 'tenant',
+            'user_id': 'user_id',
+            'user_domain_id': 'user_domain_id',
+            'project_domain_id': 'project_domain_id'
+        }
+
+        for new_key, old_key in keys_map.items():
+            if old_key in values:
+                kwargs.setdefault(new_key, values.get(old_key))
+
+        return super().from_dict(values, **kwargs)
 
     @property
     def keystone_v3_endpoint(self):
