@@ -147,16 +147,8 @@ class RequestContext(context.RequestContext):
             'auth_token_info': self.auth_token_info,
             'auth_url': self.auth_url,
             'region_name': self.region_name,
-            # TODO(tkajinam): Remove these
-            'tenant_id': self.project_id,
-            'tenant': self.project_name,
             # NOTE(tkajinam): project_name is not present in original to_dict
-            'project_name': self.project_name,
-            # TODO(tkajinam) These were deprecated in oslo.context long ago
-            # and were even removed. We should consider removing these.
-            'user_id': self.user_id,
-            'user_domain_id': self.user_domain_id,
-            'project_domain_id': self.project_domain_id
+            'project_name': self.project_name
         })
         return values
 

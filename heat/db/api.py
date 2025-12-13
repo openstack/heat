@@ -1126,13 +1126,14 @@ def user_creds_create(context):
         user_creds_ref.trustor_user_id = values.get('trustor_user_id')
         user_creds_ref.username = None
         user_creds_ref.password = None
-        # TODO(tkajinam): Use project/project_id
-        user_creds_ref.tenant = values.get('tenant')
-        user_creds_ref.tenant_id = values.get('tenant_id')
+        user_creds_ref.tenant = values.get('project_name')
+        user_creds_ref.tenant_id = values.get('project_id')
         user_creds_ref.auth_url = values.get('auth_url')
         user_creds_ref.region_name = values.get('region_name')
     else:
         user_creds_ref.update(values)
+        user_creds_ref.tenant = values.get('project_name')
+        user_creds_ref.tenant_id = values.get('project_id')
         method, password = crypt.encrypt(values['password'])
         if len(str(password)) > 255:
             raise exception.Error(_("Length of OS_PASSWORD after encryption"
