@@ -327,8 +327,6 @@ class ContextMiddleware(wsgi.Middleware):
         username = None
         password = None
         aws_creds = None
-        user_domain_id = None
-        project_domain_id = None
 
         if headers.get('X-Auth-User') is not None:
             username = headers.get('X-Auth-User')
@@ -336,13 +334,6 @@ class ContextMiddleware(wsgi.Middleware):
         elif headers.get('X-Auth-EC2-Creds') is not None:
             aws_creds = headers.get('X-Auth-EC2-Creds')
 
-        if headers.get('X-User-Domain-Id') is not None:
-            user_domain_id = headers.get('X-User-Domain-Id')
-
-        if headers.get('X-Project-Domain-Id') is not None:
-            project_domain_id = headers.get('X-Project-Domain-Id')
-
-        project_name = headers.get('X-Project-Name')
         region_name = headers.get('X-Region-Name')
         auth_url = headers.get('X-Auth-Url')
 
@@ -351,13 +342,10 @@ class ContextMiddleware(wsgi.Middleware):
 
         req.context = self.ctxcls.from_environ(
             environ,
-            project_name=project_name,
             aws_creds=aws_creds,
             username=username,
             password=password,
             auth_url=auth_url,
-            user_domain_id=user_domain_id,
-            project_domain_id=project_domain_id,
             auth_token_info=token_info,
             region_name=region_name,
             auth_plugin=auth_plugin,
