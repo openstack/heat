@@ -106,7 +106,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_csc.assert_called_once_with(
             self.ctx, mock.ANY, self.stack.current_traversal,
             self.resource.id,
-            mock.ANY, True)
+            mock.ANY, True, None)
 
     @mock.patch.object(resource.Resource, 'load')
     @mock.patch.object(resource.Resource, 'make_replacement')
@@ -376,7 +376,7 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_csc.assert_called_once_with(self.ctx, self.stack,
                                          trav_id,
                                          resC.id, mock.ANY,
-                                         is_update)
+                                         is_update, None)
 
     @mock.patch.object(sync_point, 'sync')
     def test_retrigger_check_resource(self, mock_sync, mock_cru, mock_crc,
@@ -389,7 +389,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, resC.id,
                                          self.stack.current_traversal,
                                          mock.ANY, (resC.id, True), None,
-                                         True, None)
+                                         True, None,
+                                         converge=self.stack.converge)
         call_args, call_kwargs = mock_pcr.call_args
         actual_predecessors = call_args[4]
         self.assertCountEqual(expected_predecessors, actual_predecessors)
@@ -407,7 +408,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
                                          mock.ANY, (2, False), None,
-                                         False, None)
+                                         False, None,
+                                         converge=self.stack.converge)
 
     def test_delete_retrigger_check_resource_new_traversal_updates_rsrc(
             self, mock_cru, mock_crc, mock_pcr, mock_csc):
@@ -422,7 +424,8 @@ class CheckWorkflowUpdateTest(common.HeatTestCase):
         mock_pcr.assert_called_once_with(self.ctx, mock.ANY, 2,
                                          self.stack.current_traversal,
                                          mock.ANY, (2, True), None,
-                                         True, None)
+                                         True, None,
+                                         converge=self.stack.converge)
 
     @mock.patch.object(stack.Stack, 'purge_db')
     def test_handle_failure(self, mock_purgedb, mock_cru, mock_crc, mock_pcr,
@@ -580,10 +583,8 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         self.graph_key = (self.resource.id, self.is_update)
 
     @mock.patch.object(resource.Resource, 'load')
-    @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_cleanup_traversal(
-            self, tr, mock_load, mock_cru, mock_crc, mock_pcr, mock_csc):
-        tr.return_value = 317
+            self, mock_load, mock_cru, mock_crc, mock_pcr, mock_csc):
         mock_load.return_value = self.resource, self.stack, self.stack
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
@@ -592,20 +593,18 @@ class CheckWorkflowCleanupTest(common.HeatTestCase):
         mock_crc.assert_called_once_with(
             self.resource, self.resource.stack.t.id,
             self.worker.engine_id,
-            tr(), mock.ANY)
+            mock.ANY, mock.ANY)
 
-    @mock.patch.object(stack.Stack, 'time_remaining')
     def test_is_cleanup_traversal_raise_update_inprogress(
-            self, tr, mock_cru, mock_crc, mock_pcr, mock_csc):
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
         mock_crc.side_effect = exception.UpdateInProgress
-        tr.return_value = 317
         self.worker.check_resource(
             self.ctx, self.resource.id, self.stack.current_traversal, {},
             self.is_update, None)
         mock_crc.assert_called_once_with(self.resource,
                                          self.resource.stack.t.id,
                                          self.worker.engine_id,
-                                         tr(), mock.ANY)
+                                         mock.ANY, mock.ANY)
         self.assertFalse(mock_cru.called)
         self.assertFalse(mock_pcr.called)
         self.assertFalse(mock_csc.called)
@@ -671,7 +670,8 @@ class MiscMethodsTest(common.HeatTestCase):
             True)
         mock_sync.assert_called_once_with(
             self.ctx, self.stack.id, self.stack.current_traversal, True,
-            mock.ANY, mock.ANY, {(self.stack['E'].id, True): None})
+            mock.ANY, mock.ANY, {(self.stack['E'].id, True): None},
+            new_resource_failures=None)
 
     @mock.patch.object(sync_point, 'sync')
     def test_check_stack_complete_child(self, mock_sync):
@@ -737,7 +737,7 @@ class MiscMethodsTest(common.HeatTestCase):
         self.resource.current_template_id = 'new-template-id'
         check_resource.check_resource_cleanup(
             self.resource, self.resource.stack.t.id, 'engine-id',
-            self.stack.timeout_secs(), None)
+            self.stack, None)
         self.assertTrue(mock_delete.called)
 
     def test_check_message_raises_cancel_exception(self):
@@ -747,3 +747,178 @@ class MiscMethodsTest(common.HeatTestCase):
         msg_queue.put_nowait(rpc_api.THREAD_CANCEL)
         self.assertRaises(check_resource.CancelOperation,
                           check_resource._check_for_message, msg_queue)
+
+    # Tests for CHECK action convergence support
+
+    @mock.patch.object(resource.Resource, 'check_convergence')
+    @mock.patch.object(resource.Resource, 'create_convergence')
+    @mock.patch.object(resource.Resource, 'update_convergence')
+    def test_check_resource_update_check_action(
+            self, mock_update, mock_create, mock_check):
+        """Test that CHECK action calls check_convergence."""
+        self.stack.action = self.stack.CHECK
+        check_resource.check_resource_update(
+            self.resource, self.resource.stack.t.id, set(), 'engine-id',
+            self.stack, None)
+        self.assertTrue(mock_check.called)
+        self.assertFalse(mock_create.called)
+        self.assertFalse(mock_update.called)
+
+    @mock.patch.object(resource.Resource, 'delete_convergence')
+    def test_check_resource_cleanup_skips_for_check_action(self, mock_delete):
+        """Test that cleanup is skipped for CHECK action."""
+        self.stack.action = self.stack.CHECK
+        check_resource.check_resource_cleanup(
+            self.resource, self.resource.stack.t.id, 'engine-id',
+            self.stack, None)
+        self.assertFalse(mock_delete.called)
+
+
+@mock.patch.object(check_resource, 'check_stack_complete')
+@mock.patch.object(check_resource, 'propagate_check_resource')
+@mock.patch.object(check_resource, 'check_resource_cleanup')
+@mock.patch.object(check_resource, 'check_resource_update')
+class CheckWorkflowCheckActionTest(common.HeatTestCase):
+    """Tests for CHECK action in convergence mode."""
+
+    @mock.patch.object(worker_client.WorkerClient, 'check_resource',
+                       lambda *_: None)
+    def setUp(self):
+        super(CheckWorkflowCheckActionTest, self).setUp()
+        thread_group_mgr = mock.Mock()
+        cfg.CONF.set_default('convergence_engine', True)
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           thread_group_mgr)
+        self.cr = check_resource.CheckResource(self.worker.engine_id,
+                                               self.worker._rpc_client,
+                                               self.worker.thread_group_mgr,
+                                               mock.Mock(), {})
+        self.worker._rpc_client = worker_client.WorkerClient()
+        self.ctx = utils.dummy_context()
+        self.stack = tools.get_stack(
+            'check_workflow_check_stack', self.ctx,
+            template=tools.string_template_five, convergence=True)
+        self.stack.converge_stack(self.stack.t)
+        # Set stack to CHECK action
+        self.stack.action = self.stack.CHECK
+        self.stack.status = self.stack.IN_PROGRESS
+        self.resource = self.stack['A']
+        self.is_update = True
+        self.orig_load_method = stack.Stack.load
+        stack.Stack.load = mock.Mock(return_value=self.stack)
+
+    def tearDown(self):
+        super(CheckWorkflowCheckActionTest, self).tearDown()
+        stack.Stack.load = self.orig_load_method
+
+    def test_handle_resource_failure_returns_failure_for_check(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
+        """Test that CHECK failures return failure info for propagation."""
+        result = self.cr._handle_resource_failure(
+            self.ctx, self.is_update, self.resource.id,
+            self.stack, 'Check failed', rsrc_name=self.resource.name,
+            current_traversal=self.stack.current_traversal)
+        # Should return (True, True, failure_dict) to continue with skip
+        check_done, is_skip, rsrc_failure = result
+        self.assertTrue(check_done)
+        self.assertTrue(is_skip)
+        self.assertIsNotNone(rsrc_failure)
+        # Verify resource name is used in failure key
+        self.assertIn(self.resource.name, rsrc_failure)
+        self.assertEqual('Check failed', rsrc_failure[self.resource.name])
+
+    def test_handle_resource_failure_marks_failed_for_non_check(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
+        """Test that non-CHECK actions mark stack as failed."""
+        self.stack.action = self.stack.UPDATE  # Non-CHECK action
+        self.stack.mark_failed = mock.Mock(return_value=True)
+        result = self.cr._handle_resource_failure(
+            self.ctx, self.is_update, self.resource.id,
+            self.stack, 'Update failed', rsrc_name=self.resource.name,
+            current_traversal=self.stack.current_traversal)
+        # Should return (False, False, None)
+        self.assertEqual((False, False, None), result)
+        self.stack.mark_failed.assert_called_once()
+
+    def test_check_skips_when_skip_propagate_true(
+            self, mock_cru, mock_crc, mock_pcr, mock_csc):
+        """Test that check is skipped when skip_propagate is True."""
+        self.cr._initiate_propagate_resource = mock.Mock()
+        self.cr.check(
+            self.ctx, self.resource.id,
+            self.stack.current_traversal, {},
+            self.is_update, None, self.resource, self.stack,
+            skip_propagate=True)
+        # Should NOT call _do_check_resource when skip_propagate=True
+        self.assertFalse(mock_cru.called)
+        # But should still propagate
+        self.assertTrue(self.cr._initiate_propagate_resource.called)
+        # Verify is_skip=True and rsrc_failure=None are passed
+        call_args = self.cr._initiate_propagate_resource.call_args
+        self.assertTrue(call_args[1]['is_skip'])
+        self.assertIsNone(call_args[1]['rsrc_failure'])
+
+
+class CheckStackCompleteCheckActionTest(common.HeatTestCase):
+    """Tests for check_stack_complete with CHECK action."""
+
+    def setUp(self):
+        super(CheckStackCompleteCheckActionTest, self).setUp()
+        cfg.CONF.set_default('convergence_engine', True)
+        self.ctx = utils.dummy_context()
+        self.stack = tools.get_stack(
+            'check_complete_stack', self.ctx,
+            template=tools.string_template_five, convergence=True)
+        self.stack.converge_stack(self.stack.t)
+        self.stack.action = self.stack.CHECK
+
+    @mock.patch.object(sync_point, 'sync')
+    def test_check_stack_complete_aggregates_failures(self, mock_sync):
+        """Test that failures are aggregated for CHECK action."""
+        deps = self.stack.convergence_dependencies
+        # D is the root resource in string_template_five (D depends on C)
+        resource_d = self.stack['D']
+
+        # Simulate sync callback with resource failures
+        def call_callback(cnxt, entity_id, traversal, is_update, callback,
+                          predecessors, data, new_resource_failures=None,
+                          is_skip=False):
+            rsrc_failures = {'resource_A': 'Check failed'}
+            callback(self.stack.id, {}, rsrc_failures, False)
+
+        mock_sync.side_effect = call_callback
+        self.stack.mark_failed = mock.Mock()
+
+        check_resource.check_stack_complete(
+            self.ctx, self.stack, self.stack.current_traversal,
+            resource_d.id, deps, True)
+
+        # Verify mark_failed was called with formatted message
+        self.stack.mark_failed.assert_called_once()
+        call_args = self.stack.mark_failed.call_args[0][0]
+        self.assertIn('Resource CHECK failed:', call_args)
+        self.assertIn('resource_A', call_args)
+
+    @mock.patch.object(sync_point, 'sync')
+    def test_check_stack_complete_marks_complete_on_success(self, mock_sync):
+        """Test that stack is marked complete when no failures."""
+        deps = self.stack.convergence_dependencies
+        # D is the root resource in string_template_five (D depends on C)
+        resource_d = self.stack['D']
+
+        def call_callback(cnxt, entity_id, traversal, is_update, callback,
+                          predecessors, data, new_resource_failures=None,
+                          is_skip=False):
+            # No failures
+            callback(self.stack.id, {}, {}, False)
+
+        mock_sync.side_effect = call_callback
+        self.stack.mark_complete = mock.Mock()
+
+        check_resource.check_stack_complete(
+            self.ctx, self.stack, self.stack.current_traversal,
+            resource_d.id, deps, True)
+
+        self.stack.mark_complete.assert_called_once()

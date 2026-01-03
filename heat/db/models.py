@@ -98,6 +98,7 @@ class SyncPoint(BASE, HeatBase):
     stack_id = sqlalchemy.Column(sqlalchemy.String(36),
                                  nullable=False)
     input_data = sqlalchemy.Column(types.Json)
+    extra_data = sqlalchemy.Column(types.Json)
 
 
 class Stack(BASE, HeatBase, SoftDelete, StateAware):

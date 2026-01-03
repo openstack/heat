@@ -1967,12 +1967,17 @@ def sync_point_get(context, entity_id, traversal_id, is_update):
 @context_manager.writer
 def sync_point_update_input_data(context, entity_id,
                                  traversal_id, is_update, atomic_key,
-                                 input_data):
+                                 input_data, extra_data=None):
     entity_id = str(entity_id)
+    update_values = {"atomic_key": atomic_key + 1}
+    if input_data is not None:
+        update_values["input_data"] = input_data
+    if extra_data is not None:
+        update_values["extra_data"] = extra_data
     rows_updated = context.session.query(models.SyncPoint).filter_by(
         entity_id=entity_id,
         traversal_id=traversal_id,
         is_update=is_update,
         atomic_key=atomic_key
-    ).update({"input_data": input_data, "atomic_key": atomic_key + 1})
+    ).update(update_values)
     return rows_updated

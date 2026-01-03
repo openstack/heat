@@ -12,6 +12,7 @@
 
 from unittest import mock
 
+from oslo_config import cfg
 from oslo_messaging.rpc import dispatcher
 
 from heat.common import exception
@@ -122,6 +123,27 @@ class StackServiceActionsTest(common.HeatTestCase):
 
         self.man.stack_check(self.ctx, stk.identifier())
         self.assertTrue(stk.check.called)
+
+        stk.delete()
+
+    @mock.patch.object(stack.Stack, 'converge_stack')
+    @mock.patch.object(stack.Stack, 'load')
+    def test_stack_check_convergence(self, mock_load, mock_converge):
+        """Test stack_check uses converge_stack when convergence enabled."""
+        cfg.CONF.set_override('convergence_engine', True)
+        self.addCleanup(cfg.CONF.clear_override, 'convergence_engine')
+
+        stk = tools.get_stack('service_check_convergence_test_stack',
+                              self.ctx, convergence=True)
+        stk.store()
+        mock_load.return_value = stk
+
+        self.man.stack_check(self.ctx, stk.identifier())
+
+        # Verify thread_group_mgr was set on stack
+        self.assertEqual(self.man.thread_group_mgr, stk.thread_group_mgr)
+        # Verify converge_stack was called with CHECK action
+        mock_converge.assert_called_once_with(template=stk.t, action=stk.CHECK)
 
         stk.delete()
 

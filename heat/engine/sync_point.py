@@ -63,10 +63,10 @@ def delete_all(context, stack_id, traversal_id):
 
 
 def update_input_data(context, entity_id, current_traversal,
-                      is_update, atomic_key, input_data):
+                      is_update, atomic_key, input_data=None, extra_data=None):
     rows_updated = sync_point_object.SyncPoint.update_input_data(
         context, entity_id, current_traversal, is_update, atomic_key,
-        input_data)
+        input_data, extra_data)
 
     return rows_updated
 
@@ -103,21 +103,40 @@ def _serialize(d):
 
 
 def deserialize_input_data(db_input_data):
-    db_input_data = db_input_data.get('input_data')
-    if not db_input_data:
-        return {}
+    return _deserialize_data(db_input_data, 'input_data')
 
-    return dict(_deserialize(db_input_data))
+
+def deserialize_extra_data(db_extra_data):
+    return _deserialize_data(db_extra_data, 'extra_data')
+
+
+def _deserialize_data(db_data, key):
+    db_data = db_data.get(key)
+    if not db_data:
+        return {}
+    return dict(_deserialize(db_data))
 
 
 def serialize_input_data(input_data):
-    return {'input_data': _serialize(input_data)}
+    return _serialize_data(input_data, 'input_data')
 
 
-def sync(cnxt, entity_id, current_traversal, is_update, propagate,
-         predecessors, new_data):
-    # Retry waits up to 60 seconds at most, with exponentially increasing
-    # amounts of jitter per resource still outstanding
+def serialize_extra_data(extra_data):
+    return _serialize_data(extra_data, 'extra_data')
+
+
+def _serialize_data(data, key):
+    return {key: _serialize(data)}
+
+
+def update_sync_point(cnxt, entity_id, current_traversal, is_update,
+                      predecessors, new_data, new_resource_failures=None,
+                      is_skip=False):
+    """Update a sync point atomically with new data and failures.
+
+    Retry waits up to 60 seconds at most, with exponentially increasing
+    amounts of jitter per resource still outstanding.
+    """
     wait_strategy = tenacity.wait_random_exponential(max=60)
 
     def init_jitter(existing_input_data):
@@ -132,14 +151,50 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
     def _sync():
         sync_point = get(cnxt, entity_id, current_traversal, is_update)
         input_data = deserialize_input_data(sync_point.input_data)
+        extra_data = deserialize_extra_data(
+            sync_point.extra_data) if sync_point.extra_data is not None else {}
+        resource_failures = extra_data.get("resource_failures", {})
+        skip_propagate = extra_data.get("skip_propagate", False)
+        if new_resource_failures is not None:
+            resource_failures.update(new_resource_failures)
+            extra_data.update({"resource_failures": resource_failures})
+        if is_skip:
+            extra_data.update({"skip_propagate": is_skip})
+            skip_propagate = is_skip
+        if not extra_data:
+            extra_data = None
+        else:
+            extra_data = serialize_extra_data(extra_data)
         wait_strategy.multiplier = init_jitter(input_data)
-        input_data.update(new_data)
+        if new_data is not None:
+            input_data.update(new_data)
         rows_updated = update_input_data(
             cnxt, entity_id, current_traversal, is_update,
-            sync_point.atomic_key, serialize_input_data(input_data))
-        return input_data if rows_updated else None
+            sync_point.atomic_key,
+            serialize_input_data(input_data), extra_data)
+        return (input_data, resource_failures,
+                skip_propagate) if rows_updated else None
+    return _sync()
 
-    input_data = _sync()
+
+def sync(cnxt, entity_id, current_traversal, is_update, propagate,
+         predecessors, new_data, new_resource_failures=None,
+         is_skip=False):
+    """Synchronize resource state and propagate when all predecessors done.
+
+    This function updates the sync point with new data and resource failures,
+    and calls the propagate callback when all predecessors have reported.
+    """
+    result = update_sync_point(
+        cnxt, entity_id, current_traversal, is_update,
+        predecessors, new_data, new_resource_failures,
+        is_skip=is_skip)
+    if result is None:
+        # Sync point update failed (possibly deleted by another traversal)
+        LOG.warning('[%s] Sync point update failed for entity %s',
+                    current_traversal, entity_id)
+        return
+    input_data, resource_failures, skip_propagate = result
     waiting = predecessors - set(input_data)
     key = make_key(entity_id, current_traversal, is_update)
     if waiting:
@@ -148,4 +203,5 @@ def sync(cnxt, entity_id, current_traversal, is_update, propagate,
     else:
         LOG.debug('[%s] Ready %s: Got %s',
                   key, entity_id, _dump_list(input_data))
-        propagate(entity_id, serialize_input_data(input_data))
+        propagate(entity_id, serialize_input_data(input_data),
+                  resource_failures, skip_propagate)

@@ -91,15 +91,27 @@ class CheckResource(object):
         return False
 
     def _handle_resource_failure(self, cnxt, is_update, rsrc_id,
-                                 stack, failure_reason):
+                                 stack, failure_reason, rsrc_name=None,
+                                 current_traversal=None):
+        # Use stack's current traversal if not provided
+        if current_traversal is None:
+            current_traversal = stack.current_traversal
+        if stack.action == stack.CHECK:
+            # For CHECK action, continue traversal and let failures propagate
+            # through sync mechanism. Return failure info for propagation.
+            # Use resource name for better error messages if available
+            failure_key = rsrc_name if rsrc_name else str(rsrc_id)
+            # Return (check_done=True, is_skip=True, failure_info)
+            return True, True, {failure_key: failure_reason}
         failure_handled = stack.mark_failed(failure_reason)
         if not failure_handled:
             # Another concurrent update has taken over. But there is a
             # possibility for that update to be waiting for this rsrc to
             # complete, hence retrigger current rsrc for latest traversal.
-            self._retrigger_new_traversal(cnxt, stack.current_traversal,
+            self._retrigger_new_traversal(cnxt, current_traversal,
                                           is_update,
                                           stack.id, rsrc_id)
+        return False, False, None
 
     def _retrigger_new_traversal(self, cnxt, current_traversal, is_update,
                                  stack_id, rsrc_id):
@@ -152,13 +164,13 @@ class CheckResource(object):
                                                       tmpl.id, requires,
                                                       rsrc, stack,
                                                       adopt_stack_data)
-                    return False
+                    return False, False, None
 
             else:
-                check_resource_cleanup(rsrc, tmpl.id, self.engine_id,
-                                       stack.time_remaining(), self.msg_queue)
+                check_resource_cleanup(rsrc, tmpl.id, self.engine_id, stack,
+                                       self.msg_queue)
 
-            return True
+            return True, False, None
         except exception.UpdateInProgress:
             LOG.debug('Waiting for existing update to unlock resource %s',
                       rsrc.id)
@@ -175,18 +187,20 @@ class CheckResource(object):
             action = ex.action or rsrc.action
             reason = 'Resource %s failed: %s' % (action,
                                                  str(ex))
-            self._handle_resource_failure(cnxt, is_update, rsrc.id,
-                                          stack, reason)
+            return self._handle_resource_failure(
+                cnxt, is_update, rsrc.id, stack, reason,
+                rsrc_name=rsrc.name, current_traversal=current_traversal)
         except scheduler.Timeout:
-            self._handle_resource_failure(cnxt, is_update, rsrc.id,
-                                          stack, 'Timed out')
+            return self._handle_resource_failure(
+                cnxt, is_update, rsrc.id, stack, 'Timed out',
+                rsrc_name=rsrc.name, current_traversal=current_traversal)
         except CancelOperation:
             # Stack is already marked FAILED, so we just need to retrigger
             # in case a new traversal has started and is waiting on us.
             self._retrigger_new_traversal(cnxt, current_traversal, is_update,
                                           stack.id, rsrc.id)
 
-        return False
+        return False, False, None
 
     def retrigger_check_resource(self, cnxt, resource_id, stack):
         current_traversal = stack.current_traversal
@@ -206,14 +220,15 @@ class CheckResource(object):
         try:
             propagate_check_resource(cnxt, self._rpc_client, resource_id,
                                      current_traversal, predecessors, key,
-                                     None, key.is_update, None)
+                                     None, key.is_update, None,
+                                     converge=stack.converge)
         except exception.EntityNotFound as e:
             if e.entity != "Sync Point":
                 raise
 
     def _initiate_propagate_resource(self, cnxt, resource_id,
                                      current_traversal, is_update, rsrc,
-                                     stack):
+                                     stack, is_skip=False, rsrc_failure=None):
         deps = stack.convergence_dependencies
         graph = deps.graph()
         graph_key = parser.ConvergenceNode(resource_id, is_update)
@@ -255,7 +270,8 @@ class CheckResource(object):
                     cnxt, self._rpc_client, req_node.rsrc_id,
                     current_traversal, set(graph[req_node]),
                     graph_key, input_data, req_node.is_update,
-                    stack.adopt_stack_data)
+                    stack.adopt_stack_data, is_skip=is_skip,
+                    rsrc_failure=rsrc_failure, converge=stack.converge)
             if is_update:
                 if input_forward_data is None:
                     # we haven't resolved attribute data for the resource,
@@ -264,7 +280,8 @@ class CheckResource(object):
                 else:
                     rsrc.store_attributes()
             check_stack_complete(cnxt, stack, current_traversal,
-                                 graph_key.rsrc_id, deps, graph_key.is_update)
+                                 graph_key.rsrc_id, deps, graph_key.is_update,
+                                 rsrc_failure)
         except exception.EntityNotFound as e:
             if e.entity == "Sync Point":
                 # Reload the stack to determine the current traversal, and
@@ -284,7 +301,7 @@ class CheckResource(object):
 
     def check(self, cnxt, resource_id, current_traversal,
               resource_data, is_update, adopt_stack_data,
-              rsrc, stack):
+              rsrc, stack, skip_propagate=False, accumulated_failures=None):
         """Process a node in the dependency graph.
 
         The node may be associated with either an update or a cleanup of its
@@ -299,24 +316,32 @@ class CheckResource(object):
         stack.thread_group_mgr = self.thread_group_mgr
 
         try:
-            check_resource_done = self._do_check_resource(cnxt,
-                                                          current_traversal,
-                                                          tmpl, resource_data,
-                                                          is_update,
-                                                          rsrc, stack,
-                                                          adopt_stack_data)
+            if skip_propagate:
+                check_done, is_skip, rsrc_failure = (True, True, None)
+            else:
+                check_done, is_skip, rsrc_failure = self._do_check_resource(
+                    cnxt, current_traversal, tmpl, resource_data,
+                    is_update, rsrc, stack, adopt_stack_data
+                )
 
-            if check_resource_done:
+            if check_done:
+                # Merge own failure with accumulated failures from predecessors
+                merged_failures = dict(accumulated_failures or {})
+                if rsrc_failure:
+                    merged_failures.update(rsrc_failure)
                 # initiate check on next set of resources from graph
-                self._initiate_propagate_resource(cnxt, resource_id,
-                                                  current_traversal, is_update,
-                                                  rsrc, stack)
+                self._initiate_propagate_resource(
+                    cnxt, resource_id, current_traversal, is_update,
+                    rsrc, stack, is_skip=is_skip,
+                    rsrc_failure=merged_failures or None)
         except BaseException as exc:
             with excutils.save_and_reraise_exception():
                 msg = str(exc)
                 LOG.exception("Unexpected exception in resource check.")
-                self._handle_resource_failure(cnxt, is_update, rsrc.id,
-                                              stack, msg)
+                self._handle_resource_failure(
+                    cnxt, is_update, rsrc.id, stack, msg,
+                    rsrc_name=rsrc.name,
+                    current_traversal=current_traversal)
 
 
 def load_resource(cnxt, resource_id, resource_data,
@@ -330,7 +355,7 @@ def load_resource(cnxt, resource_id, resource_data,
 
 
 def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
-                         is_update):
+                         is_update, rsrc_failure=None):
     """Mark the stack complete if the update is complete.
 
     Complete is currently in the sense that all desired resources are in
@@ -341,25 +366,43 @@ def check_stack_complete(cnxt, stack, current_traversal, sender_id, deps,
     if (sender_id, is_update) not in roots:
         return
 
-    def mark_complete(stack_id, data):
+    def check_complete(stack_id, data, rsrc_failures, skip_propagate):
+        if stack.action == stack.CHECK:
+            # mark failed if resource_failures provided.
+            if rsrc_failures:
+                # Format failures into readable message
+                failure_msgs = [
+                    '{}: {}'.format(name, reason)
+                    for name, reason in rsrc_failures.items()]
+                reason = 'Resource CHECK failed: ' + '; '.join(failure_msgs)
+                stack.mark_failed(reason)
+                return
         stack.mark_complete()
 
     sender_key = parser.ConvergenceNode(sender_id, is_update)
     sync_point.sync(cnxt, stack.id, current_traversal, True,
-                    mark_complete, roots, {sender_key: None})
+                    check_complete, roots, {sender_key: None},
+                    new_resource_failures=rsrc_failure)
 
 
 def propagate_check_resource(cnxt, rpc_client, next_res_id,
                              current_traversal, predecessors, sender_key,
-                             sender_data, is_update, adopt_stack_data):
+                             sender_data, is_update, adopt_stack_data,
+                             is_skip=False, rsrc_failure=None, converge=False):
     """Trigger processing of node if all of its dependencies are satisfied."""
-    def do_check(entity_id, data):
+    def do_check(entity_id, data, rsrc_failures, skip_propagate):
+        # Pass accumulated failures through RPC so they propagate to dependents
         rpc_client.check_resource(cnxt, entity_id, current_traversal,
-                                  data, is_update, adopt_stack_data)
+                                  data, is_update, adopt_stack_data,
+                                  converge=converge,
+                                  skip_propagate=skip_propagate,
+                                  accumulated_failures=rsrc_failures or None)
 
     sync_point.sync(cnxt, next_res_id, current_traversal,
                     is_update, do_check, predecessors,
-                    {sender_key: sender_data})
+                    {sender_key: sender_data},
+                    new_resource_failures=rsrc_failure,
+                    is_skip=is_skip)
 
 
 def _check_for_message(msg_queue):
@@ -380,7 +423,10 @@ def check_resource_update(rsrc, template_id, requires, engine_id,
                           stack, msg_queue):
     """Create or update the Resource if appropriate."""
     check_message = functools.partial(_check_for_message, msg_queue)
-    if rsrc.action == resource.Resource.INIT:
+    if stack.action == stack.CHECK:
+        rsrc.check_convergence(engine_id, stack.time_remaining(),
+                               check_message)
+    elif rsrc.action == resource.Resource.INIT:
         rsrc.create_convergence(template_id, requires, engine_id,
                                 stack.time_remaining(), check_message)
     else:
@@ -389,9 +435,11 @@ def check_resource_update(rsrc, template_id, requires, engine_id,
                                 check_message)
 
 
-def check_resource_cleanup(rsrc, template_id, engine_id,
-                           timeout, msg_queue):
+def check_resource_cleanup(rsrc, template_id, engine_id, stack, msg_queue):
     """Delete the Resource if appropriate."""
+    if stack.action == stack.CHECK:
+        return
+
     check_message = functools.partial(_check_for_message, msg_queue)
-    rsrc.delete_convergence(template_id, engine_id, timeout,
-                            check_message)
+    rsrc.delete_convergence(template_id, engine_id,
+                            stack.time_remaining(), check_message)

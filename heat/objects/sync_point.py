@@ -36,6 +36,7 @@ class SyncPoint(
         'atomic_key': fields.IntegerField(),
         'stack_id': fields.StringField(),
         'input_data': heat_fields.JsonField(nullable=True),
+        'extra_data': heat_fields.JsonField(nullable=True),
     }
 
     @staticmethod
@@ -72,14 +73,16 @@ class SyncPoint(
                           traversal_id,
                           is_update,
                           atomic_key,
-                          input_data):
+                          input_data,
+                          extra_data=None):
         return db_api.sync_point_update_input_data(
             context,
             entity_id,
             traversal_id,
             is_update,
             atomic_key,
-            input_data)
+            input_data,
+            extra_data)
 
     @classmethod
     def delete_all_by_stack_and_traversal(cls,
