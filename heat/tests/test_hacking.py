@@ -17,32 +17,9 @@ from heat.tests import common
 
 
 class HackingTestCase(common.HeatTestCase):
-    def test_dict_iteritems(self):
-        self.assertEqual(1, len(list(checks.check_python3_no_iteritems(
-            "obj.iteritems()"))))
+    def test_log_warn(self):
+        self.assertEqual(1, len(list(checks.no_log_warn(
+            "LOG.warn('bad')"))))
 
-        self.assertEqual(0, len(list(checks.check_python3_no_iteritems(
-            "obj.items()"))))
-
-        self.assertEqual(0, len(list(checks.check_python3_no_iteritems(
-            "obj.items()"))))
-
-    def test_dict_iterkeys(self):
-        self.assertEqual(1, len(list(checks.check_python3_no_iterkeys(
-            "obj.iterkeys()"))))
-
-        self.assertEqual(0, len(list(checks.check_python3_no_iterkeys(
-            "obj.keys()"))))
-
-        self.assertEqual(0, len(list(checks.check_python3_no_iterkeys(
-            "obj.keys()"))))
-
-    def test_dict_itervalues(self):
-        self.assertEqual(1, len(list(checks.check_python3_no_itervalues(
-            "obj.itervalues()"))))
-
-        self.assertEqual(0, len(list(checks.check_python3_no_itervalues(
-            "obj.values()"))))
-
-        self.assertEqual(0, len(list(checks.check_python3_no_itervalues(
-            "obj.values()"))))
+        self.assertEqual(0, len(list(checks.no_log_warn(
+            "LOG.warning('bad')"))))
