@@ -14,6 +14,7 @@
 import functools
 
 from keystoneauth1 import access
+from keystoneauth1 import exceptions as ks_exceptions
 from keystoneauth1.identity import access as access_plugin
 from keystoneauth1.identity import generic
 from keystoneauth1 import loading as ks_loading
@@ -261,7 +262,10 @@ class RequestContext(context.RequestContext):
 class StoredContext(RequestContext):
     def _load_keystone_data(self):
         self._keystone_loaded = True
-        auth_ref = self.auth_plugin.get_access(self.keystone_session)
+        try:
+            auth_ref = self.auth_plugin.get_access(self.keystone_session)
+        except ks_exceptions.Unauthorized:
+            raise exception.AuthorizationFailure()
 
         self.roles = auth_ref.role_names
         self.user_domain_id = auth_ref.user_domain_id

@@ -1631,7 +1631,7 @@ class StackTest(common.HeatTestCase):
         saved_stack = stack.Stack.load(self.ctx, stack_id=stack_ownee.id)
         self.assertEqual(self.stack.id, saved_stack.owner_id)
 
-    def _test_load_with_refresh_cred(self, refresh=True):
+    def _test_load_with_refresh_cred(self, refresh=True, auth_fail=False):
         cfg.CONF.set_override('deferred_auth_method', 'trusts')
         self.patchobject(self.ctx.auth_plugin, 'get_user_id',
                          return_value='old_trustor_user_id')
@@ -1642,16 +1642,31 @@ class StackTest(common.HeatTestCase):
         old_context.trust_id = 'atrust123'
         old_context.trustor_user_id = (
             'trustor_user_id' if refresh else 'old_trustor_user_id')
+
         m_sc = self.patchobject(context, 'StoredContext')
-        m_sc.from_dict.return_value = old_context
+        if auth_fail:
+            m_sc.from_dict.side_effect = exception.AuthorizationFailure()
+        else:
+            m_sc.from_dict.return_value = old_context
+
         self.stack = stack.Stack(self.ctx, 'test_regenerate_trust', self.tmpl)
         self.stack.store()
         load_stack = stack.Stack.load(self.ctx, stack_id=self.stack.id,
                                       check_refresh_cred=True)
         self.assertEqual(refresh, load_stack.refresh_cred)
 
+        if auth_fail:
+            self.ctx.auth_plugin.get_user_id.assert_not_called()
+            self.ctx.auth_plugin.get_project_id.assert_not_called()
+        else:
+            self.ctx.auth_plugin.get_user_id.assert_called_once()
+            self.ctx.auth_plugin.get_project_id.assert_called_once()
+
     def test_load_with_refresh_cred(self):
         self._test_load_with_refresh_cred()
+
+    def test_load_with_refresh_auth_failure(self):
+        self._test_load_with_refresh_cred(refresh=True, auth_fail=True)
 
     def test_load_with_no_refresh_cred(self):
         self._test_load_with_refresh_cred(refresh=False)

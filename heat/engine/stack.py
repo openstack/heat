@@ -567,7 +567,14 @@ class Stack(collections.abc.Mapping):
             creds_obj = ucreds_object.UserCreds.get_by_id(
                 context, stack.user_creds_id)
             creds = creds_obj.obj_to_primitive()["versioned_object.data"]
-            stored_context = common_context.StoredContext.from_dict(creds)
+
+            try:
+                stored_context = common_context.StoredContext.from_dict(creds)
+            except exception.AuthorizationFailure:
+                LOG.debug(
+                    'Failed to load context from stored credential '
+                    'due to authorization failure. Regenerating the trust.')
+                return True
 
             if cfg.CONF.deferred_auth_method == 'trusts':
                 old_trustor_proj_id = stored_context.project_id
@@ -1928,8 +1935,14 @@ class Stack(collections.abc.Mapping):
                             LOG.debug("Context user_id doesn't match "
                                       "trustor, using stored context")
                             sc = self.stored_context()
-                            sc.clients.client('keystone').delete_trust(
-                                trust_id)
+
+                            try:
+                                sc.clients.client('keystone').delete_trust(
+                                    trust_id)
+                            except exception.AuthorizationFailure:
+                                LOG.warning(
+                                    "The stored context is no longer valid. "
+                                    "Skip deleting the trust %s.", trust_id)
                         else:
                             self.clients.client('keystone').delete_trust(
                                 trust_id)
