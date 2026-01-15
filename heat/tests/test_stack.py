@@ -29,6 +29,7 @@ from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils
 from heat.db import api as db_api
+from heat.db.api import MYSQL_TEXT_BYTE_LIMIT
 from heat.engine.clients.os import keystone
 from heat.engine.clients.os.keystone import fake_keystoneclient as fake_ks
 from heat.engine.clients.os import nova
@@ -2959,6 +2960,57 @@ class StackTest(common.HeatTestCase):
         self.stack.state_set(self.stack.UPDATE, self.stack.IN_PROGRESS, '')
         mock_sau.assert_called_once_with(mock.ANY, 1, mock.ANY,
                                          exp_trvsl='curr-traversal')
+
+    def test_state_set_long_status_reason(self):
+        """Test that very long status_reason is truncated for stacks.
+
+        This test verifies the fix for a bug where long error messages
+        would exceed MySQL's TEXT column limit (65,535 bytes) and cause
+        a database error, preventing stack status updates.
+        """
+        # Mock _is_mysql() to return True to test truncation behavior
+        with mock.patch('heat.db.api._is_mysql', return_value=True):
+            tmpl = template.Template({
+                'HeatTemplateFormatVersion': '2012-12-12',
+                'Resources': {
+                    'foo': {'Type': 'GenericResourceType'}
+                }
+            })
+            self.stack = stack.Stack(utils.dummy_context(),
+                                     'test_stack', tmpl, convergence=True)
+            self.stack.store()
+
+            # Create a very long status reason
+            long_reason = "Error in stack: " + ("X" * 70000)
+
+            # Manually call _persist_state to ensure the state is written to DB
+            # For non-convergence mode or certain actions, state persistence
+            # might be deferred
+            self.stack.state_set(self.stack.CREATE, self.stack.FAILED,
+                                 long_reason)
+
+            # Verify the stack state was set
+            self.assertEqual(self.stack.CREATE, self.stack.action)
+            self.assertEqual(self.stack.FAILED, self.stack.status)
+            self.assertIsNotNone(self.stack.status_reason)
+
+            # In-memory value should keep the FULL error message
+            # for debugging, logs, and API responses (NOT truncated)
+            self.assertEqual(len(self.stack.status_reason), len(long_reason))
+            self.assertEqual(self.stack.status_reason, long_reason)
+
+            # Database value should be truncated to respect
+            # MySQL TEXT column limit (65,535 bytes)
+            db_stack = stack_object.Stack.get_by_id(
+                self.stack.context, self.stack.id)
+            # First verify the action/status were persisted correctly
+            self.assertEqual(self.stack.CREATE, db_stack.action)
+            self.assertEqual(self.stack.FAILED, db_stack.status)
+            # Now check the status_reason
+            self.assertLessEqual(len(db_stack.status_reason.encode('utf-8')),
+                                 MYSQL_TEXT_BYTE_LIMIT)
+            self.assertTrue(
+                db_stack.status_reason.startswith('Error in stack'))
 
 
 class StackKwargsForCloningTest(common.HeatTestCase):

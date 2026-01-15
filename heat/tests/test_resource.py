@@ -28,6 +28,7 @@ from heat.common.i18n import _
 from heat.common import short_id
 from heat.common import timeutils
 from heat.db import api as db_api
+from heat.db.api import MYSQL_TEXT_BYTE_LIMIT
 from heat.db import models
 from heat.engine import attributes
 from heat.engine.cfn import functions as cfn_funcs
@@ -413,6 +414,51 @@ class ResourceTest(common.HeatTestCase):
         self.assertRaises(ValueError, res.state_set, 'foo', 'bla')
         self.assertRaises(ValueError, res.state_set, 'foo', res.COMPLETE)
         self.assertRaises(ValueError, res.state_set, res.CREATE, 'bla')
+
+    def test_state_set_long_status_reason(self):
+        """Test that very long status_reason is truncated.
+
+        This test verifies the fix for a bug where long error messages
+        (e.g., Nova errors containing large base64-encoded user_data)
+        would exceed MySQL's TEXT column limit (65,535 bytes) and cause
+        a database error, leaving resources stuck in an inconsistent state.
+        """
+        # Mock _is_mysql() to return True to test truncation behavior
+        with mock.patch('heat.db.api._is_mysql', return_value=True):
+            tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
+            res = generic_rsrc.GenericResource('test_resource', tmpl,
+                                               self.stack)
+
+            # Create a very long status reason similar to the bug scenario:
+            # Nova error with embedded base64 user_data
+            long_reason = (
+                "BadRequest: resources.controller: Invalid input for "
+                "field/attribute user_data. Value: " + ("X" * 70000) +
+                " is too long (HTTP 400)"
+            )
+
+            res.state_set(res.CREATE, res.FAILED, long_reason)
+
+            # Verify the resource state was set
+            self.assertEqual(res.CREATE, res.action)
+            self.assertEqual(res.FAILED, res.status)
+            self.assertIsNotNone(res.status_reason)
+
+            # In-memory value should keep the FULL error message
+            # for debugging, logs, and API responses (NOT truncated)
+            self.assertEqual(len(res.status_reason), len(long_reason))
+            self.assertEqual(res.status_reason, long_reason)
+
+            # Database value should be truncated to respect
+            # MySQL TEXT column limit (65,535 bytes)
+            db_res = resource_objects.Resource.get_obj(res.context, res.id)
+            self.assertEqual(res.CREATE, db_res.action)
+            self.assertEqual(res.FAILED, db_res.status)
+            self.assertLessEqual(len(db_res.status_reason.encode('utf-8')),
+                                 MYSQL_TEXT_BYTE_LIMIT)
+
+            # Verify we can still read the beginning of the error message
+            self.assertTrue(db_res.status_reason.startswith('BadRequest'))
 
     def test_state_del_stack(self):
         tmpl = rsrc_defn.ResourceDefinition('test_resource', 'Foo')
