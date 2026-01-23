@@ -264,56 +264,57 @@ engine_opts = [
                        'properties from reality and converge to '
                        'updated template.')),
     cfg.StrOpt('default_software_config_transport',
-               choices=['POLL_SERVER_CFN',
-                        'POLL_SERVER_HEAT',
-                        'POLL_TEMP_URL',
-                        'ZAQAR_MESSAGE'],
+               choices=[('POLL_SERVER_CFN',
+                         'Allow calls to the cfn API action '
+                         'DescribeStackResource authenticated with '
+                         'the provided keypair '
+                         '(requires enabled heat-api-cfn)'),
+                        ('POLL_SERVER_HEAT',
+                         'Allow calls to the Heat API resource-show using '
+                         'the provided keystone credentials '
+                         '(requires keystone v3 API, and configured '
+                         'stack_user_* config options)'),
+                        ('POLL_TEMP_URL',
+                         'Create and populate a Swift TempURL with metadata '
+                         'for polling (requires object-store endpoint which '
+                         'supports TempURL)'),
+                        ('ZAQAR_MESSAGE',
+                         'Create a dedicated zaqar queue and post '
+                         'the metadata for polling.')],
                default='POLL_SERVER_CFN',
                help=_('Template default for how the server should receive the '
-                      'metadata required for software configuration. '
-                      'POLL_SERVER_CFN will allow calls to the cfn API action '
-                      'DescribeStackResource authenticated with the provided '
-                      'keypair (requires enabled heat-api-cfn). '
-                      'POLL_SERVER_HEAT will allow calls to the '
-                      'Heat API resource-show using the provided keystone '
-                      'credentials (requires keystone v3 API, and configured '
-                      'stack_user_* config options). '
-                      'POLL_TEMP_URL will create and populate a '
-                      'Swift TempURL with metadata for polling (requires '
-                      'object-store endpoint which supports TempURL).'
-                      'ZAQAR_MESSAGE will create a dedicated zaqar queue and '
-                      'post the metadata for polling.')),
+                      'metadata required for software configuration.')),
     cfg.StrOpt('default_deployment_signal_transport',
-               choices=['CFN_SIGNAL',
-                        'TEMP_URL_SIGNAL',
-                        'HEAT_SIGNAL',
-                        'ZAQAR_SIGNAL'],
+               choices=[('CFN_SIGNAL',
+                         'Allow an HTTP POST to a CFN keypair signed URL '
+                         '(requires enabled heat-api-cfn)'),
+                        ('TEMP_URL_SIGNAL',
+                         'Create a Swift TempURL to be signed via HTTP PUT '
+                         '(requires object-store endpoint which supports '
+                         'TempURL)'),
+                        ('HEAT_SIGNAL',
+                         'Allow calls to the Heat API resource-signal using '
+                         'the provided keystone credentials'),
+                        ('ZAQAR_SIGNAL',
+                         'Create a dedicated zaqar queue to be signed using '
+                         'the provided keystone credentials')],
                default='CFN_SIGNAL',
                help=_('Template default for how the server should signal to '
-                      'heat with the deployment output values. CFN_SIGNAL '
-                      'will allow an HTTP POST to a CFN keypair signed URL '
-                      '(requires enabled heat-api-cfn). '
-                      'TEMP_URL_SIGNAL will create a Swift TempURL to be '
-                      'signaled via HTTP PUT (requires object-store endpoint '
-                      'which supports TempURL). '
-                      'HEAT_SIGNAL will allow calls to the Heat API '
-                      'resource-signal using the provided keystone '
-                      'credentials. ZAQAR_SIGNAL will create a dedicated '
-                      'zaqar queue to be signaled using the provided keystone '
-                      'credentials.')),
+                      'heat with the deployment output values.')),
     cfg.StrOpt('default_user_data_format',
-               choices=['HEAT_CFNTOOLS',
-                        'RAW',
-                        'SOFTWARE_CONFIG'],
+               choices=[('HEAT_CFNTOOLS',
+                         'The user_data is bundled as part of '
+                         'the heat-cfntools cloud-init boot configuration '
+                         'data'),
+                        ('RAW',
+                         'The user_data is passed to Nova unmodified'),
+                        ('SOFTWARE_CONFIG',
+                         'The user_data is bundled as part of the software '
+                         'config data, and metadata is derived from any '
+                         'associated SoftwareDeployment Resources')],
                default='HEAT_CFNTOOLS',
                help=_('Template default for how the user_data should be '
-                      'formatted for the server. For HEAT_CFNTOOLS, the '
-                      'user_data is bundled as part of the heat-cfntools '
-                      'cloud-init boot configuration data. For RAW the '
-                      'user_data is passed to Nova unmodified. For '
-                      'SOFTWARE_CONFIG user_data is bundled as part of the '
-                      'software config data, and metadata is derived from any '
-                      'associated SoftwareDeployment resources.')),
+                      'formatted for the server.')),
     cfg.ListOpt('hidden_stack_tags',
                 default=[],
                 help=_('Stacks containing these tag names will be hidden. '
