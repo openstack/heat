@@ -1,0 +1,15 @@
+---
+features:
+  - |
+    Stack check action is now convergence aware. When convergence is enabled,
+    stack check will traverse through all resources using the convergence
+    engine instead of the legacy sequential approach. This allows check to
+    continue processing remaining resources even if some resources fail
+    their check, providing a complete picture of the stack's health.
+upgrade:
+  - |
+    The RPC API version has been bumped to 1.37 for the engine service and
+    1.6 for the worker service to support the convergence-aware stack check
+    feature. Operators performing rolling upgrades should ensure all heat
+    services are upgraded together.
+

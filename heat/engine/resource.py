@@ -862,11 +862,12 @@ class Resource(status.ResourceStatus):
         In the legacy path, we always took a lock at the Stack level and never
         at the Resource level. In convergence, we lock at the Resource level
         for most operations. However, there are currently some exceptions:
-        the SUSPEND, RESUME, SNAPSHOT, and CHECK actions, and stack abandon.
+        the SUSPEND, RESUME, SNAPSHOT actions, and stack abandon.
         """
         return (self.stack.convergence and
                 not self.abandon_in_progress and
                 action in {self.ADOPT,
+                           self.CHECK,
                            self.CREATE,
                            self.UPDATE,
                            self.ROLLBACK,
@@ -1419,6 +1420,12 @@ class Resource(status.ResourceStatus):
             raise failure
         else:
             raise UpdateReplace(self.name)
+
+    def check_convergence(self, engine_id, timeout, progress_callback=None):
+        """Check the resource synchronously."""
+        self._calling_engine_id = engine_id
+        runner = scheduler.TaskRunner(self.check)
+        runner(timeout=timeout, progress_callback=progress_callback)
 
     def update_convergence(self, template_id, new_requires, engine_id,
                            timeout, new_stack, progress_callback=None):

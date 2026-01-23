@@ -1059,7 +1059,8 @@ class Stack(collections.abc.Mapping):
 
         if (self.convergence and
             self.action in {self.UPDATE, self.DELETE, self.CREATE,
-                            self.ADOPT, self.ROLLBACK, self.RESTORE}):
+                            self.ADOPT, self.ROLLBACK, self.RESTORE,
+                            self.CHECK}):
             # These operations do not use the stack lock in convergence, so
             # never defer.
             return False
@@ -1334,7 +1335,8 @@ class Stack(collections.abc.Mapping):
         all_supported = all(is_supported(res)
                             for res in self.resources.values())
 
-        if not all_supported:
+        if not all_supported and not self.convergence:
+            # only required when check under legacy mode
             msg = ". '%s' not fully supported (see resources)" % self.CHECK
             reason = self.status_reason + msg
             self.state_set(self.CHECK, self.status, reason)
@@ -1417,16 +1419,19 @@ class Stack(collections.abc.Mapping):
     def converge_stack(self, template, action=UPDATE, new_stack=None,
                        pre_converge=None):
         """Update the stack template and trigger convergence for resources."""
-        if action not in [self.CREATE, self.ADOPT]:
-            # no back-up template for create action
-            self.prev_raw_template_id = getattr(self.t, 'id', None)
+        if action != self.CHECK:
+            if action not in [self.CREATE, self.ADOPT]:
+                # no back-up template for create action
+                self.prev_raw_template_id = getattr(self.t, 'id', None)
 
-        # switch template and reset dependencies
-        self.defn = self.defn.clone_with_new_template(template,
-                                                      self.identifier(),
-                                                      clear_resource_data=True)
-        self.reset_dependencies()
-        self._resources = None
+            # switch template and reset dependencies
+            self.defn = self.defn.clone_with_new_template(
+                template, self.identifier(), clear_resource_data=True)
+
+            self.reset_dependencies()
+            self._resources = None
+        else:
+            assert new_stack is None
 
         if action != self.CREATE:
             self.updated_time = oslo_timeutils.utcnow()
@@ -2247,8 +2252,21 @@ class Stack(collections.abc.Mapping):
             'tags': self.tags,
         }
 
+    def _check_post_reason(self, reason):
+        """Add check-specific message to reason if applicable.
+
+        This is only required when operating check action under convergence.
+        """
+        if self.convergence and (
+            self.action == self.CHECK
+        ) and not self.supports_check_action():
+            return reason + (
+                ". '%s' not fully supported (see resources)" % self.CHECK)
+        return reason
+
     def mark_failed(self, failure_reason):
         """Mark the convergence update as failed."""
+        failure_reason = self._check_post_reason(failure_reason)
         updated = self.state_set(self.action, self.FAILED, failure_reason)
         if not updated:
             return False
@@ -2277,7 +2295,9 @@ class Stack(collections.abc.Mapping):
                  {'name': self.name, 'id': self.id,
                   'tid': self.current_traversal})
 
-        reason = 'Stack %s completed successfully' % self.action
+        reason = self._check_post_reason(
+            'Stack %s completed successfully' % self.action)
+
         updated = self.state_set(self.action, self.COMPLETE, reason)
         if not updated:
             return

@@ -95,3 +95,88 @@ class SyncPointTestCase(common.HeatTestCase):
         stack.converge_stack(stack.t, action=stack.CREATE)
         mock_sleep_time = self.sync_with_sleep(ctx, stack)
         self.assertTrue(mock_sleep_time.called)
+
+    def test_serialize_extra_data(self):
+        """Test serialization of extra_data."""
+        extra = {'resource_failures': {'A': 'error'}}
+        res = sync_point.serialize_extra_data(extra)
+        self.assertEqual({'extra_data': extra}, res)
+
+    def test_deserialize_extra_data(self):
+        """Test deserialization of extra_data."""
+        db_data = {'extra_data': {'resource_failures': {'A': 'error'}}}
+        res = sync_point.deserialize_extra_data(db_data)
+        self.assertEqual({'resource_failures': {'A': 'error'}}, res)
+
+    def test_deserialize_extra_data_empty(self):
+        """Test deserialization of empty extra_data."""
+        res = sync_point.deserialize_extra_data({})
+        self.assertEqual({}, res)
+
+    def test_update_sync_point_with_resource_failures(self):
+        """Test update_sync_point stores resource failures."""
+        ctx = utils.dummy_context()
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        resource = stack['A']
+
+        predecessors = set()
+        new_failures = {'resource_B': 'Check failed'}
+
+        result = sync_point.update_sync_point(
+            ctx, resource.id, stack.current_traversal, True,
+            predecessors, new_data={}, new_resource_failures=new_failures)
+
+        self.assertIsNotNone(result)
+        input_data, rsrc_failures, skip_propagate = result
+        self.assertEqual({'resource_B': 'Check failed'}, rsrc_failures)
+
+    def test_update_sync_point_with_skip_flag(self):
+        """Test update_sync_point stores skip_propagate flag."""
+        ctx = utils.dummy_context()
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        resource = stack['A']
+
+        predecessors = set()
+
+        result = sync_point.update_sync_point(
+            ctx, resource.id, stack.current_traversal, True,
+            predecessors, new_data={}, is_skip=True)
+
+        self.assertIsNotNone(result)
+        input_data, rsrc_failures, skip_propagate = result
+        self.assertTrue(skip_propagate)
+
+    def test_sync_propagates_failures_and_skip(self):
+        """Test sync passes failures and skip_propagate to callback."""
+        ctx = utils.dummy_context()
+        stack = tools.get_stack('test_stack', utils.dummy_context(),
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.converge_stack(stack.t, action=stack.CREATE)
+        resource = stack['A']  # A has no predecessors (leaf)
+        graph = stack.convergence_dependencies.graph()
+
+        sender = (3, True)
+        captured_args = {}
+
+        def callback(entity_id, data, rsrc_failures, skip_propagate):
+            captured_args['entity_id'] = entity_id
+            captured_args['rsrc_failures'] = rsrc_failures
+            captured_args['skip_propagate'] = skip_propagate
+
+        sync_point.sync(ctx, resource.id, stack.current_traversal, True,
+                        callback, set(graph[(resource.id, True)]),
+                        {sender: None},
+                        new_resource_failures={'B': 'failed'},
+                        is_skip=True)
+
+        # Callback should be called since A has no predecessors
+        self.assertEqual(resource.id, captured_args['entity_id'])
+        self.assertEqual({'B': 'failed'}, captured_args['rsrc_failures'])
+        self.assertTrue(captured_args['skip_propagate'])

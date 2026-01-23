@@ -662,6 +662,23 @@ Outputs:
     Value: {'Fn::GetAtt': [RealRandom, value]}
 '''
 
+    failed_templ = '''
+HeatTemplateFormatVersion: '2012-12-12'
+Resources:
+  check_succeed:
+    Type: OS::Heat::TestResource
+  check_failed:
+    Type: OS::Heat::TestResource
+    Properties:
+      fail: true
+  check_deps_failed:
+    Type: OS::Heat::TestResource
+    DependsOn: check_failed
+  check_deps_deps_failed:
+    Type: OS::Heat::TestResource
+    DependsOn: check_deps_failed
+'''
+
     def test_check(self):
         stack_identifier = self.stack_create(
             template=self.main_template,
@@ -670,6 +687,26 @@ Outputs:
 
         self.client.actions.check(stack_id=stack_identifier)
         self._wait_for_stack_status(stack_identifier, 'CHECK_COMPLETE')
+
+    def test_check_fail(self):
+        # Make sure check process will continue after one resource failed.
+        stack_identifier = self.stack_create(
+            template=self.failed_templ,
+            expected_status='CREATE_FAILED')
+        self.client.actions.check(stack_id=stack_identifier)
+        self._wait_for_resource_status(
+            stack_identifier, 'check_succeed', 'CHECK_COMPLETE')
+        self._wait_for_resource_status(
+            stack_identifier, 'check_failed', 'CHECK_FAILED')
+
+        # Resources depends on failure resource will cancel action.
+        self._wait_for_resource_status(
+            stack_identifier, 'check_deps_failed', 'INIT_COMPLETE')
+        self._wait_for_resource_status(
+            stack_identifier, 'check_deps_deps_failed', 'INIT_COMPLETE')
+
+        # Make sure eventially mark stack as check failed.
+        self._wait_for_stack_status(stack_identifier, 'CHECK_FAILED')
 
 
 class TemplateResourceErrorMessageTest(functional_base.FunctionalTestsBase):

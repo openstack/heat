@@ -189,6 +189,12 @@ class MigrationsWalk(
             for revision_script in revisions:
                 self._migrate_up(revision_script.revision, connection)
 
+    def _check_d2db381e3324(self, connection):
+        """Test d2db381e3324: Add extra_data column to sync_point table."""
+        inspector = sqlalchemy.inspect(connection)
+        columns = {c['name'] for c in inspector.get_columns('sync_point')}
+        self.assertIn('extra_data', columns)
+
 
 class TestMigrationsWalkSQLite(
     MigrationsWalk,

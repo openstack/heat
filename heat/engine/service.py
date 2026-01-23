@@ -412,7 +412,7 @@ class EngineService(service.ServiceBase):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.36'
+    RPC_API_VERSION = '1.37'
 
     def __init__(self, host, topic):
         resources.initialise()
@@ -2237,10 +2237,16 @@ class EngineService(service.ServiceBase):
         stack = parser.Stack.load(cnxt, stack=s)
         LOG.info("Checking stack %s", stack.name)
 
-        stored_event = NotifyEvent()
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              stack.check, notify=stored_event)
-        stored_event.wait()
+        if stack.convergence:
+            stack.thread_group_mgr = self.thread_group_mgr
+            stack.converge_stack(template=stack.t,
+                                 action=stack.CHECK)
+        else:
+            stored_event = NotifyEvent()
+            self.thread_group_mgr.start_with_lock(
+                cnxt, stack, self.engine_id,
+                stack.check, notify=stored_event)
+            stored_event.wait()
 
     @context.request_context
     def stack_restore(self, cnxt, stack_identity, snapshot_id):

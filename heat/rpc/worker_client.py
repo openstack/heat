@@ -29,6 +29,8 @@ class WorkerClient(object):
         1.2 - Add adopt data argument to check_resource.
         1.3 - Added cancel_check_resource API.
         1.4 - Add converge argument to check_resource
+        1.5 - Add skip_propagate argument to check_resource for CHECK action
+        1.6 - Add accumulated_failures argument to check_resource for CHECK
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -52,15 +54,17 @@ class WorkerClient(object):
 
     def check_resource(self, ctxt, resource_id,
                        current_traversal, data, is_update, adopt_stack_data,
-                       converge=False):
+                       converge=False, skip_propagate=False,
+                       accumulated_failures=None):
         self.cast(ctxt,
                   self.make_msg(
                       'check_resource', resource_id=resource_id,
                       current_traversal=current_traversal, data=data,
                       is_update=is_update, adopt_stack_data=adopt_stack_data,
-                      converge=converge
+                      converge=converge, skip_propagate=skip_propagate,
+                      accumulated_failures=accumulated_failures
                   ),
-                  version='1.4')
+                  version='1.6')
 
     def cancel_check_resource(self, ctxt, stack_id, engine_id):
         """Send check-resource cancel message.

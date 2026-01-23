@@ -206,6 +206,10 @@ class TestResource(resource.Resource):
     def check_delete_complete(self, cookie):
         return self._check_status_complete(*cookie)
 
+    def handle_check(self):
+        if not self.resource_id:
+            raise Exception('Resource not created')
+
     def _check_status_complete(self, started_at, wait_secs):
         def simulated_effort():
             client_name = self.properties[self.CLIENT_NAME]

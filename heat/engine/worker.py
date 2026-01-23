@@ -62,7 +62,7 @@ class WorkerService(object):
     or expect replies from these messages.
     """
 
-    RPC_API_VERSION = '1.4'
+    RPC_API_VERSION = '1.6'
 
     def __init__(self,
                  host,
@@ -164,7 +164,8 @@ class WorkerService(object):
     @context.request_context
     @log_exceptions
     def check_resource(self, cnxt, resource_id, current_traversal, data,
-                       is_update, adopt_stack_data, converge=False):
+                       is_update, adopt_stack_data, converge=False,
+                       skip_propagate=False, accumulated_failures=None):
         """Process a node in the dependency graph.
 
         The node may be associated with either an update or a cleanup of its
@@ -196,7 +197,8 @@ class WorkerService(object):
                 self._retrigger_replaced(is_update, rsrc, stack, cr)
             else:
                 cr.check(cnxt, resource_id, current_traversal, resource_data,
-                         is_update, adopt_stack_data, rsrc, stack)
+                         is_update, adopt_stack_data, rsrc, stack,
+                         skip_propagate, accumulated_failures)
         finally:
             self.thread_group_mgr.remove_msg_queue(None,
                                                    stack.id, msg_queue)
