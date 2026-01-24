@@ -1126,6 +1126,7 @@ def user_creds_create(context):
         user_creds_ref.trustor_user_id = values.get('trustor_user_id')
         user_creds_ref.username = None
         user_creds_ref.password = None
+        # TODO(tkajinam): Use project/project_id
         user_creds_ref.tenant = values.get('tenant')
         user_creds_ref.tenant_id = values.get('tenant_id')
         user_creds_ref.auth_url = values.get('auth_url')
