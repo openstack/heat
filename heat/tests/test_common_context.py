@@ -12,6 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import os
 from unittest import mock
 
@@ -43,14 +44,14 @@ class TestRequestContext(common.HeatTestCase):
             'trust_id': None,
             'show_deleted': False,
             'roles': ['arole', 'notadmin'],
-            'tenant_id': '456tenant',
-            'user_id': 'fooUser',
-            'tenant': 'tenant',
+            'project_id': '456tenant',
+            'user': 'fooUser',
+            'project_name': 'tenant',
             'auth_url': 'http://localhost:5000',
             'aws_creds': 'blah',
             'region_name': 'RegionOne',
-            'user_domain_id': 'userDomain',
-            'project_domain_id': 'projDomain'
+            'user_domain': 'userDomain',
+            'project_domain': 'projDomain'
         }
 
         super(TestRequestContext, self).setUp()
@@ -61,9 +62,9 @@ class TestRequestContext(common.HeatTestCase):
             username=self.ctx.get('username'),
             password=self.ctx.get('password'),
             aws_creds=self.ctx.get('aws_creds'),
-            project_name=self.ctx.get('tenant'),
-            project_id=self.ctx.get('tenant_id'),
-            user_id=self.ctx.get('user_id'),
+            project_name=self.ctx.get('project_name'),
+            project_id=self.ctx.get('project_id'),
+            user_id=self.ctx.get('user'),
             auth_url=self.ctx.get('auth_url'),
             roles=self.ctx.get('roles'),
             show_deleted=self.ctx.get('show_deleted'),
@@ -72,25 +73,17 @@ class TestRequestContext(common.HeatTestCase):
             trustor_user_id=self.ctx.get('trustor_user_id'),
             trust_id=self.ctx.get('trust_id'),
             region_name=self.ctx.get('region_name'),
-            user_domain_id=self.ctx.get('user_domain_id'),
-            project_domain_id=self.ctx.get('project_domain_id'),
+            user_domain_id=self.ctx.get('user_domain'),
+            project_domain_id=self.ctx.get('project_domain'),
         )
         ctx_dict = ctx.to_dict()
         for k, v in self.ctx.items():
             self.assertEqual(v, ctx_dict[k])
-        self.assertEqual(self.ctx['user_id'], ctx_dict['user'])
-        self.assertEqual(self.ctx['tenant'], ctx_dict['project_name'])
-        self.assertEqual(self.ctx['tenant_id'], ctx_dict['project'])
-        self.assertEqual(self.ctx['tenant_id'], ctx_dict['project_id'])
-        self.assertEqual(self.ctx['user_domain_id'],
-                         ctx_dict['user_domain'])
-        self.assertEqual(self.ctx['project_domain_id'],
-                         ctx_dict['project_domain'])
 
     def test_request_context_to_dict_unicode(self):
 
         self.ctx.update({
-            'tenant': '\u5218\u80dc',
+            'project_id': '\u5218\u80dc',
             'project_name': '\u5218\u80dc',
         })
 
@@ -99,9 +92,9 @@ class TestRequestContext(common.HeatTestCase):
             username=self.ctx.get('username'),
             password=self.ctx.get('password'),
             aws_creds=self.ctx.get('aws_creds'),
-            project_name=self.ctx.get('tenant'),
-            project_id=self.ctx.get('tenant_id'),
-            user_id=self.ctx.get('user_id'),
+            project_name=self.ctx.get('project_name'),
+            project_id=self.ctx.get('project_id'),
+            user_id=self.ctx.get('user'),
             auth_url=self.ctx.get('auth_url'),
             roles=self.ctx.get('roles'),
             show_deleted=self.ctx.get('show_deleted'),
@@ -110,44 +103,37 @@ class TestRequestContext(common.HeatTestCase):
             trustor_user_id=self.ctx.get('trustor_user_id'),
             trust_id=self.ctx.get('trust_id'),
             region_name=self.ctx.get('region_name'),
-            user_domain_id=self.ctx.get('user_domain_id'),
-            project_domain_id=self.ctx.get('project_domain_id'),
+            user_domain_id=self.ctx.get('user_domain'),
+            project_domain_id=self.ctx.get('project_domain'),
         )
         ctx_dict = ctx.to_dict()
         for k, v in self.ctx.items():
             self.assertEqual(v, ctx_dict[k], '%s does not match' % k)
-        self.assertEqual(self.ctx['user_id'], ctx_dict['user'])
-        self.assertEqual(self.ctx['tenant'], ctx_dict['project_name'])
-        self.assertEqual(self.ctx['tenant_id'], ctx_dict['project'])
-        self.assertEqual(self.ctx['tenant_id'], ctx_dict['project_id'])
-        self.assertEqual(self.ctx['user_domain_id'],
-                         ctx_dict['user_domain'])
-        self.assertEqual(self.ctx['project_domain_id'],
-                         ctx_dict['project_domain'])
 
     def test_request_context_from_dict(self):
         ctx = context.RequestContext.from_dict(self.ctx)
         ctx_dict = ctx.to_dict()
         for k, v in self.ctx.items():
             self.assertEqual(v, ctx_dict[k], '%s does not match' % k)
-        self.assertEqual(self.ctx['user_id'], ctx_dict['user'])
-        self.assertEqual(self.ctx['tenant'], ctx_dict['project_name'])
-        self.assertEqual(self.ctx['tenant_id'], ctx_dict['project'])
-        self.assertEqual(self.ctx['tenant_id'], ctx_dict['project_id'])
-        self.assertEqual(self.ctx['user_domain_id'],
-                         ctx_dict['user_domain'])
-        self.assertEqual(self.ctx['project_domain_id'],
-                         ctx_dict['project_domain'])
+
+    def test_request_context_from_dict_old_keys(self):
+        ctx_old = copy.deepcopy(self.ctx)
+        ctx_old['tenant_id'] = ctx_old.pop('project_id', None)
+        ctx_old['tenant'] = ctx_old.pop('project_name', None)
+        ctx_old['project_domain_id'] = ctx_old.pop('project_domain', None)
+        ctx_old['user_domain_id'] = ctx_old.pop('user_domain', None)
+        ctx_old['user_id'] = ctx_old.pop('user', None)
+
+        ctx = context.RequestContext.from_dict(ctx_old)
+        ctx_dict = ctx.to_dict()
+        for k, v in self.ctx.items():
+            self.assertEqual(v, ctx_dict[k], '%s does not match' % k)
 
     def test_request_context_update(self):
         ctx = context.RequestContext.from_dict(self.ctx)
 
         for k in self.ctx:
-            if k in ('user_domain_id', 'project_domain_id'):
-                continue
-
-            # these values are different between attribute and context
-            if k in ('tenant', 'tenant_id'):
+            if k in ('user_domain', 'project_domain', 'user'):
                 continue
 
             self.assertEqual(
@@ -294,12 +280,11 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'password': None,
                 'roles': [],
                 'show_deleted': False,
-                'tenant': None,
-                'tenant_id': None,
+                'project_name': None,
+                'project': None,
                 'trust_id': None,
                 'trustor_user_id': None,
                 'user': None,
-                'user_id': None,
                 'username': None
             })
     ), (
@@ -325,12 +310,11 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'password': 'my_password',
                 'roles': ['role1', 'role2', 'role3'],
                 'show_deleted': False,
-                'tenant': 'my_tenant',
-                'tenant_id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
+                'project_name': 'my_tenant',
+                'project': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
                 'trust_id': None,
                 'trustor_user_id': None,
                 'user': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
                 'username': 'my_username'
             })
     ), (
@@ -340,6 +324,7 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
             headers={
                 'X-Auth-EC2-Creds': '{"ec2Credentials": {}}',
                 'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'X-User-Name': 'my_user',
                 'X-Auth-Token': 'atoken',
                 'X-Project-Name': 'my_tenant',
                 'X-Project-Id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
@@ -354,13 +339,12 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'password': None,
                 'roles': ['role1', 'role2', 'role3'],
                 'show_deleted': False,
-                'tenant': 'my_tenant',
-                'tenant_id': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
+                'project_name': 'my_tenant',
+                'project': 'db6808c8-62d0-4d92-898c-d644a6af20e9',
                 'trust_id': None,
                 'trustor_user_id': None,
                 'user': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'username': None
+                'username': 'my_user',
             })
     ), (
         'token_creds',
@@ -368,6 +352,7 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
             environ={'keystone.token_info': {'info': 123}},
             headers={
                 'X-User-Id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
+                'X-User-Name': 'my_user2',
                 'X-Auth-Token': 'atoken2',
                 'X-Project-Name': 'my_tenant2',
                 'X-Project-Id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
@@ -383,13 +368,12 @@ class RequestContextMiddlewareTest(common.HeatTestCase):
                 'password': None,
                 'roles': ['role1', 'role2', 'role3'],
                 'show_deleted': False,
-                'tenant': 'my_tenant2',
-                'tenant_id': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
+                'project_name': 'my_tenant2',
+                'project': 'bb9108c8-62d0-4d92-898c-d644a6af20e9',
                 'trust_id': None,
                 'trustor_user_id': None,
                 'user': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'user_id': '7a87ff18-31c6-45ce-a186-ec7987f488c3',
-                'username': None
+                'username': 'my_user2'
             })
     )]
 

@@ -229,8 +229,8 @@ class KsClientWrapper(object):
                 required=_("roles %s") % role_kw)
 
         context_data = self.context.to_dict()
-        context_data['overwrite'] = False
-        trust_context = context.RequestContext.from_dict(context_data)
+        trust_context = context.RequestContext.from_dict(
+            context_data, overwrite=False)
         trust_context.trust_id = trust.id
         trust_context.trustor_user_id = trustor_user_id
         return trust_context

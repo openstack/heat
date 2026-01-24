@@ -309,13 +309,12 @@ class Stack(collections.abc.Mapping):
             # in situations where servicing a request requires switching from
             # the request context to the stored context
             creds = creds_obj.obj_to_primitive()["versioned_object.data"]
-            creds['request_id'] = self.context.request_id
+
             # We don't store roles in the user_creds table, so disable the
             # policy check for admin by setting is_admin=False.
-            creds['is_admin'] = False
-            creds['overwrite'] = False
-
-            return common_context.StoredContext.from_dict(creds)
+            return common_context.StoredContext.from_dict(
+                creds, request_id=self.context.request_id,
+                is_admin=False, overwrite=False)
         else:
             msg = _("Attempt to use stored_context with no user_creds")
             raise exception.Error(msg)
