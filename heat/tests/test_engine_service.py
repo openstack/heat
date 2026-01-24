@@ -722,6 +722,26 @@ class StackServiceTest(common.HeatTestCase):
                                resolve_outputs=True)
         self.assertEqual(exception.EntityNotFound, ex.exc_info[0])
 
+    def test_abandon_stack_convergence(self):
+        cfg.CONF.set_override('enable_stack_abandon', True)
+        stack = tools.get_stack('service_abandon_convergence',
+                                self.ctx,
+                                template=tools.string_template_five,
+                                convergence=True)
+        stack.status = stack.COMPLETE  # Ensure stack is not IN_PROGRESS
+        stack.store()
+        self.patchobject(parser.Stack, 'load', return_value=stack)
+        mock_converge = self.patchobject(stack, 'converge_stack')
+        self.patchobject(stack, 'prepare_abandon', return_value={})
+
+        self.eng.abandon_stack(self.ctx, stack.identifier())
+
+        # Verify converge_stack was called with abandon=True
+        mock_converge.assert_called_once()
+        call_kwargs = mock_converge.call_args[1]
+        self.assertEqual(stack.DELETE, call_kwargs['action'])
+        self.assertTrue(call_kwargs['abandon'])
+
     def test_stack_describe_nonexistent(self):
         non_exist_identifier = identifier.HeatIdentifier(
             self.ctx.project_id, 'wibble',

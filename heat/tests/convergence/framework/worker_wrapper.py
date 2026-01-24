@@ -30,7 +30,7 @@ class Worker(message_processor.MessageProcessor):
                        current_traversal, data,
                        is_update, adopt_stack_data, converge=False,
                        skip_propagate=False, accumulated_failures=None,
-                       node_type='resource'):
+                       node_type='resource', abandon=False):
         worker.WorkerService("fake_host", "fake_topic",
                              "fake_engine", mock.Mock()).check_resource(
                                  ctxt, resource_id,
@@ -39,7 +39,8 @@ class Worker(message_processor.MessageProcessor):
                                  adopt_stack_data,
                                  converge, skip_propagate,
                                  accumulated_failures,
-                                 node_type)
+                                 node_type=node_type,
+                                 abandon=abandon)
 
     def stop_traversal(self, current_stack):
         pass

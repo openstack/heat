@@ -31,7 +31,7 @@ from heat.tests import utils
 class WorkerServiceTest(common.HeatTestCase):
     def test_make_sure_rpc_version(self):
         self.assertEqual(
-            '1.8',
+            '1.9',
             worker.WorkerService.RPC_API_VERSION,
             ('RPC version is changed, please update this test to new version '
              'and make sure additional test cases are added for RPC APIs '
@@ -374,3 +374,26 @@ class WorkerServiceTest(common.HeatTestCase):
         # Verify load_resource was called (normal resource path)
         self.assertTrue(mock_load_resource.called)
         self.assertTrue(mock_check.called)
+
+    @mock.patch.object(check_resource, 'load_resource')
+    @mock.patch.object(check_resource.CheckResource, 'check')
+    def test_check_resource_with_abandon_flag(self, mock_check,
+                                              mock_load_resource):
+        """Test check_resource sets abandon_in_progress when abandon=True."""
+        mock_tgm = mock.MagicMock()
+        self.worker = worker.WorkerService('host-1', 'topic-1',
+                                           'engine_id', mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'test_traversal'
+        fake_res = mock.MagicMock()
+        fake_res.current_traversal = current_traversal
+        fake_res.abandon_in_progress = False
+        mock_load_resource.return_value = (fake_res, fake_res, fake_res)
+
+        # Call check_resource with abandon=True
+        self.worker.check_resource(
+            ctx, 'resource-123', current_traversal,
+            {}, False, None, node_type='resource', abandon=True)
+
+        # Verify abandon_in_progress was set on the resource
+        self.assertTrue(fake_res.abandon_in_progress)

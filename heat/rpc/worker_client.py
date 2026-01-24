@@ -33,6 +33,7 @@ class WorkerClient(object):
         1.6 - Add accumulated_failures argument to check_resource for CHECK
         1.7 - Added check_resource_delete_snapshot
         1.8 - Add node_type argument to check_resource for snapshot deletion
+        1.9 - Add abandon argument to check_resource for stack abandon
     """
 
     BASE_RPC_API_VERSION = '1.0'
@@ -72,7 +73,8 @@ class WorkerClient(object):
     def check_resource(self, ctxt, resource_id,
                        current_traversal, data, is_update, adopt_stack_data,
                        converge=False, skip_propagate=False,
-                       accumulated_failures=None, node_type='resource'):
+                       accumulated_failures=None, node_type='resource',
+                       abandon=False):
         self.cast(ctxt,
                   self.make_msg(
                       'check_resource', resource_id=resource_id,
@@ -80,9 +82,9 @@ class WorkerClient(object):
                       is_update=is_update, adopt_stack_data=adopt_stack_data,
                       converge=converge, skip_propagate=skip_propagate,
                       accumulated_failures=accumulated_failures,
-                      node_type=node_type
+                      node_type=node_type, abandon=abandon
                   ),
-                  version='1.8')
+                  version='1.9')
 
     def cancel_check_resource(self, ctxt, stack_id, engine_id):
         """Send check-resource cancel message.
