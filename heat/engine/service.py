@@ -412,7 +412,7 @@ class EngineService(service.ServiceBase):
     by the RPC caller.
     """
 
-    RPC_API_VERSION = '1.37'
+    RPC_API_VERSION = '1.36'
 
     def __init__(self, host, topic):
         resources.initialise()
@@ -2134,27 +2134,43 @@ class EngineService(service.ServiceBase):
     def stack_suspend(self, cnxt, stack_identity):
         """Handle request to perform suspend action on a stack."""
         s = self._get_stack(cnxt, stack_identity)
-
         stack = parser.Stack.load(cnxt, stack=s)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
-        stored_event = NotifyEvent()
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              stack.suspend,
-                                              notify=stored_event)
-        stored_event.wait()
+
+        if stack.convergence:
+            if stack.state == (stack.SUSPEND, stack.COMPLETE):
+                LOG.info('%s is already suspended', stack)
+                return
+            stack.thread_group_mgr = self.thread_group_mgr
+            stack.converge_stack(template=stack.t,
+                                 action=stack.SUSPEND)
+        else:
+            stored_event = NotifyEvent()
+            self.thread_group_mgr.start_with_lock(
+                cnxt, stack, self.engine_id,
+                stack.suspend, notify=stored_event)
+            stored_event.wait()
 
     @context.request_context
     def stack_resume(self, cnxt, stack_identity):
         """Handle request to perform a resume action on a stack."""
         s = self._get_stack(cnxt, stack_identity)
-
         stack = parser.Stack.load(cnxt, stack=s)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
-        stored_event = NotifyEvent()
-        self.thread_group_mgr.start_with_lock(cnxt, stack, self.engine_id,
-                                              stack.resume,
-                                              notify=stored_event)
-        stored_event.wait()
+
+        if stack.convergence:
+            if stack.state == (stack.RESUME, stack.COMPLETE):
+                LOG.info('%s is already resumed', stack)
+                return
+            stack.thread_group_mgr = self.thread_group_mgr
+            stack.converge_stack(template=stack.t,
+                                 action=stack.RESUME)
+        else:
+            stored_event = NotifyEvent()
+            self.thread_group_mgr.start_with_lock(
+                cnxt, stack, self.engine_id,
+                stack.resume, notify=stored_event)
+            stored_event.wait()
 
     @context.request_context
     def stack_snapshot(self, cnxt, stack_identity, name):

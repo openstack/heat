@@ -147,6 +147,50 @@ class StackServiceActionsTest(common.HeatTestCase):
 
         stk.delete()
 
+    @mock.patch.object(stack.Stack, 'converge_stack')
+    @mock.patch.object(stack.Stack, 'load')
+    def test_stack_suspend_convergence(self, mock_load, mock_converge):
+        """Test stack_suspend uses converge_stack when convergence enabled."""
+        cfg.CONF.set_override('convergence_engine', True)
+        self.addCleanup(cfg.CONF.clear_override, 'convergence_engine')
+
+        stk = tools.get_stack('service_suspend_convergence_test_stack',
+                              self.ctx, convergence=True)
+        stk.store()
+        mock_load.return_value = stk
+
+        self.man.stack_suspend(self.ctx, stk.identifier())
+
+        # Verify thread_group_mgr was set on stack
+        self.assertEqual(self.man.thread_group_mgr, stk.thread_group_mgr)
+        # Verify converge_stack was called with SUSPEND action
+        mock_converge.assert_called_once_with(template=stk.t,
+                                              action=stk.SUSPEND)
+
+        stk.delete()
+
+    @mock.patch.object(stack.Stack, 'converge_stack')
+    @mock.patch.object(stack.Stack, 'load')
+    def test_stack_resume_convergence(self, mock_load, mock_converge):
+        """Test stack_resume uses converge_stack when convergence enabled."""
+        cfg.CONF.set_override('convergence_engine', True)
+        self.addCleanup(cfg.CONF.clear_override, 'convergence_engine')
+
+        stk = tools.get_stack('service_resume_convergence_test_stack',
+                              self.ctx, convergence=True)
+        stk.store()
+        mock_load.return_value = stk
+
+        self.man.stack_resume(self.ctx, stk.identifier())
+
+        # Verify thread_group_mgr was set on stack
+        self.assertEqual(self.man.thread_group_mgr, stk.thread_group_mgr)
+        # Verify converge_stack was called with RESUME action
+        mock_converge.assert_called_once_with(template=stk.t,
+                                              action=stk.RESUME)
+
+        stk.delete()
+
 
 class StackServiceUpdateActionsNotSupportedTest(common.HeatTestCase):
 

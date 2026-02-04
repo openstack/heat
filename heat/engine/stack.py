@@ -1059,7 +1059,7 @@ class Stack(collections.abc.Mapping):
         if (self.convergence and
             self.action in {self.UPDATE, self.DELETE, self.CREATE,
                             self.ADOPT, self.ROLLBACK, self.RESTORE,
-                            self.CHECK}):
+                            self.CHECK, self.SUSPEND, self.RESUME}):
             # These operations do not use the stack lock in convergence, so
             # never defer.
             return False
@@ -1418,7 +1418,7 @@ class Stack(collections.abc.Mapping):
     def converge_stack(self, template, action=UPDATE, new_stack=None,
                        pre_converge=None):
         """Update the stack template and trigger convergence for resources."""
-        if action != self.CHECK:
+        if action not in [self.CHECK, self.SUSPEND, self.RESUME]:
             if action not in [self.CREATE, self.ADOPT]:
                 # no back-up template for create action
                 self.prev_raw_template_id = getattr(self.t, 'id', None)
@@ -1474,6 +1474,7 @@ class Stack(collections.abc.Mapping):
     @reset_state_on_error
     def _converge_create_or_update(self, pre_converge=None):
         current_resources = self._update_or_store_resources()
+
         self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies,
                                          current_resources)
         # Store list of edges
@@ -1618,7 +1619,6 @@ class Stack(collections.abc.Mapping):
                 if ConvergenceNode(rsrc.id, True) in dep:
                     dep += (ConvergenceNode(rsrc_id, False),
                             ConvergenceNode(rsrc_id, True))
-
         self._convg_deps = dep
 
     @property

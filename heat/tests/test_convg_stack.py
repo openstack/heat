@@ -611,7 +611,7 @@ class TestConvgStackStateSet(common.HeatTestCase):
         mock_ps.reset_mock()
         self.stack.state_set(self.stack.SUSPEND, self.stack.COMPLETE,
                              'Suspend complete')
-        self.assertFalse(mock_ps.called)
+        self.assertTrue(mock_ps.called)
 
     def test_state_set_stack_resume(self, mock_ps):
         self.stack.state_set(self.stack.RESUME, self.stack.IN_PROGRESS,
@@ -620,7 +620,7 @@ class TestConvgStackStateSet(common.HeatTestCase):
         mock_ps.reset_mock()
         self.stack.state_set(self.stack.RESUME, self.stack.COMPLETE,
                              'Resume complete')
-        self.assertFalse(mock_ps.called)
+        self.assertTrue(mock_ps.called)
 
     def test_state_set_stack_snapshot(self, mock_ps):
         self.stack.state_set(self.stack.SNAPSHOT, self.stack.IN_PROGRESS,
