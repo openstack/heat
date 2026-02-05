@@ -17,6 +17,7 @@ import datetime
 import functools
 import itertools
 import random
+from urllib.parse import urlparse
 
 from oslo_config import cfg
 from oslo_db import api as oslo_db_api
@@ -58,11 +59,80 @@ _facade = None
 
 LOG = logging.getLogger(__name__)
 
+# Maximum byte length for status_reason field in MySQL TEXT columns
+# MySQL TEXT columns have a 65,535 byte limit
+MYSQL_TEXT_BYTE_LIMIT = 65535
+
+
+_is_mysql_cache = None
+
+
+def _is_mysql():
+    """Check if the database backend is MySQL.
+
+    Uses lazy evaluation to detect the backend on first call, then caches
+    the result for subsequent calls. This ensures config is loaded before
+    we check the database connection string.
+
+    Returns True if the database backend is MySQL, False otherwise.
+    Defaults to True for safety if detection fails.
+    """
+    global _is_mysql_cache
+    if _is_mysql_cache is None:
+        try:
+            engine_name = urlparse(cfg.CONF.database.connection).scheme
+            _is_mysql_cache = engine_name.startswith('mysql')
+        except Exception:
+            # Default to True (apply truncation) for safety if we can't
+            # determine the backend type
+            _is_mysql_cache = True
+    return _is_mysql_cache
+
+
 # TODO(sbaker): fix tests so that sqlite_fk=True can be passed to configure
 context_manager = enginefacade.transaction_context()
 
 
 # utility methods
+
+
+def _truncate_status_reason(values):
+    """Truncate status_reason in values dict if needed for MySQL.
+
+    MySQL TEXT columns have a 65,535 byte limit. This function truncates
+    the status_reason field based on its actual UTF-8 byte length if MySQL
+    is the backend, to prevent database errors.
+
+    Args:
+        values: Dictionary that may contain a 'status_reason' key
+
+    Returns:
+        The values dict, possibly with status_reason truncated. If truncation
+        occurs, a copy of the dict is returned to avoid mutating the caller's
+        dict. Otherwise, the original dict is returned.
+    """
+    if not _is_mysql():
+        return values
+
+    if 'status_reason' not in values or not values['status_reason']:
+        return values
+
+    # Common case, UTF-8 chars are max 4 bytes
+    if len(values['status_reason']) < (MYSQL_TEXT_BYTE_LIMIT / 4):
+        return values
+
+    # Check UTF-8 byte length (status_reason is always a string at this point)
+    encoded = values['status_reason'].encode('utf-8')
+    if len(encoded) <= MYSQL_TEXT_BYTE_LIMIT:
+        return values
+
+    # Truncate to fit within byte limit
+    values = dict(values)  # Copy to avoid mutating caller's dict
+    truncated_bytes = encoded[:MYSQL_TEXT_BYTE_LIMIT]
+    # Use 'ignore' to handle any partial multi-byte character at the end
+    values['status_reason'] = truncated_bytes.decode('utf-8', errors='ignore')
+
+    return values
 
 
 def get_engine():
@@ -205,6 +275,8 @@ def _resource_create(context, values):
     resource_ref.data = []
     resource_ref.attr_data = None
     resource_ref.rsrc_attr_data = None
+    # Keep truncation as the last transformation before DB write
+    values = _truncate_status_reason(values)
     resource_ref.update(values)
     resource_ref.save(context.session)
     return resource_ref
@@ -440,6 +512,8 @@ def _resource_update(
     context, resource_id, values, atomic_key, expected_engine_id=None,
 ):
     _add_atomic_key_to_values(values, atomic_key)
+    # Keep truncation as the last transformation before DB write
+    values = _truncate_status_reason(values)
     rows_updated = context.session.query(models.Resource).filter_by(
         id=resource_id, engine_id=expected_engine_id,
         atomic_key=atomic_key).update(values)
@@ -450,6 +524,8 @@ def _resource_update(
 @context_manager.writer
 def resource_update_and_save(context, resource_id, values):
     resource = context.session.get(models.Resource, resource_id)
+    # Keep truncation as the last transformation before DB write
+    values = _truncate_status_reason(values)
     resource.update(values)
     resource.save(context.session)
     return _resource_get(context, resource.id)
@@ -900,6 +976,8 @@ def stack_create(context, values):
 @retry_on_db_error
 @context_manager.writer
 def stack_update(context, stack_id, values, exp_trvsl=None):
+    # Keep truncation as the last transformation before DB write
+    values = _truncate_status_reason(values)
     query = (context.session.query(models.Stack)
              .filter(and_(models.Stack.id == stack_id),
                      (models.Stack.deleted_at.is_(None))))

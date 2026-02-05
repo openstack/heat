@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Fixed an issue where long error messages from external services
+    (such as Nova errors containing large base64-encoded user_data) would
+    exceed MySQL's TEXT column limit (65,535 bytes) when being stored in the
+    ``status_reason`` field. This caused database constraint violations that
+    left resources in inconsistent states with unreleased locks, preventing
+    stack DELETE operations from completing. The database layer now truncates
+    ``status_reason`` to 65,535 bytes when using MySQL to prevent this issue.
+    See `story 2011188 <https://storyboard.openstack.org/#!/story/2011188>`_.
