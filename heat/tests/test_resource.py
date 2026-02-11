@@ -52,6 +52,8 @@ from heat.engine import translation
 from heat.objects import resource as resource_objects
 from heat.objects import resource_data as resource_data_object
 from heat.objects import resource_properties_data as rpd_object
+from heat.objects import resource_snapshot as rsrc_snapshot_objects
+from heat.objects import snapshot as snapshot_object
 from heat.tests import common
 from heat.tests.engine import tools
 from heat.tests import generic_resource as generic_rsrc
@@ -2124,6 +2126,49 @@ class ResourceTest(common.HeatTestCase):
         self.assertCountEqual([5, 3], res.requires)
         # The locking happens in create which we mocked out
         self._assert_resource_lock(res.id, None, None)
+
+    @mock.patch.object(resource.Resource, 'delete_snapshot')
+    def test_delete_snapshot_convergence(self, mock_delete_snapshot):
+        self.stack.convergence = True
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.store()
+        res.data_set('snapshot_id', 'foobar')
+        self._assert_resource_lock(res.id, None, None)
+        tr = scheduler.TaskRunner(res.delete_snapshot_convergence,
+                                  'engine-007', self.dummy_timeout,
+                                  self.dummy_event)
+        tr()
+        mock_delete_snapshot.assert_called_once_with(
+            data={'resource_data': {'snapshot_id': 'foobar'}})
+        self._assert_resource_lock(res.id, None, None)
+
+    @mock.patch.object(resource.Resource, 'snapshot')
+    def test_snapshot_convergence(self, mock_snapsnot):
+        self.stack.convergence = True
+        snapshot = snapshot_object.Snapshot.create(
+            self.stack.context, {
+                'tenant': self.stack.tenant_id,
+                'data': self.stack.prepare_abandon(no_resources=True),
+                'name': 'snapshot1', 'stack_id': self.stack.id,
+                'status': 'COMPLETE'})
+        self.stack.current_traversal = snapshot.id
+        tmpl = rsrc_defn.ResourceDefinition('test_res', 'Foo')
+        res = generic_rsrc.GenericResource('test_res', tmpl, self.stack)
+        res.store()
+        self._assert_resource_lock(res.id, None, None)
+        tr = scheduler.TaskRunner(res.snapshot_convergence,
+                                  'engine-007', self.dummy_timeout,
+                                  self.dummy_event)
+        tr()
+        mock_snapsnot.assert_called_once_with()
+        self._assert_resource_lock(res.id, None, None)
+
+        # Check resource snapshot object stored through resource_snapshot_set
+        r_snapshots = rsrc_snapshot_objects.ResourceSnapshot.get_all(
+            self.stack.context, snapshot.id)
+        self.assertEqual(res.name, r_snapshots[0].resource_name)
+        self.assertEqual(snapshot.id, r_snapshots[0].snapshot_id)
 
     @mock.patch.object(resource.Resource, 'adopt')
     def test_adopt_convergence_ok(self, mock_adopt):

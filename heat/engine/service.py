@@ -56,6 +56,7 @@ from heat.engine import parameter_groups
 from heat.engine import properties
 from heat.engine import resources
 from heat.engine import service_software_config
+from heat.engine import snapshots
 from heat.engine import stack as parser
 from heat.engine import stack_lock
 from heat.engine import stk_defn
@@ -2174,22 +2175,7 @@ class EngineService(service.ServiceBase):
 
     @context.request_context
     def stack_snapshot(self, cnxt, stack_identity, name):
-        def _stack_snapshot(stack, snapshot):
-
-            def save_snapshot(stack, action, status, reason):
-                """Function that saves snapshot before snapshot complete."""
-                data = stack.prepare_abandon()
-                data["status"] = status
-                snapshot_object.Snapshot.update(
-                    cnxt, snapshot.id,
-                    {'data': data, 'status': status,
-                     'status_reason': reason})
-
-            LOG.debug("Snapshotting stack %s", stack.name)
-            stack.snapshot(save_snapshot_func=save_snapshot)
-
         s = self._get_stack(cnxt, stack_identity)
-
         stack = parser.Stack.load(cnxt, stack=s)
         if stack.status == stack.IN_PROGRESS:
             LOG.info('%(stack)s is in state %(action)s_IN_PROGRESS, '
@@ -2210,41 +2196,87 @@ class EngineService(service.ServiceBase):
                             "snapshots.") % stack_limit
                 raise exception.RequestLimitExceeded(message=message)
 
-        lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
-
-        with lock.thread_lock():
+        if stack.convergence:
+            stack.thread_group_mgr = self.thread_group_mgr
+            data = stack.prepare_abandon(no_resources=True)
             snapshot = snapshot_object.Snapshot.create(cnxt, {
                 'tenant': cnxt.project_id,
+                'data': data,
                 'name': name,
                 'stack_id': stack.id,
                 'status': 'IN_PROGRESS'})
-            self.thread_group_mgr.start_with_acquired_lock(
-                stack, lock, _stack_snapshot, stack, snapshot)
+
+            LOG.debug("Snapshotting stack %s", stack.name)
+            # Use snapshot id as current_traversal id.
+            stack.converge_stack(template=stack.t,
+                                 action=stack.SNAPSHOT,
+                                 new_traversal_id=snapshot.id)
             return api.format_snapshot(snapshot)
+        else:
+            def _stack_snapshot(stack, snapshot):
+
+                def save_snapshot(stack, action, status, reason):
+                    """Function to saves snapshot before snapshot complete."""
+                    data = stack.prepare_abandon()
+                    data["status"] = status
+                    snapshot_object.Snapshot.update(
+                        cnxt, snapshot.id,
+                        {'data': data, 'status': status,
+                         'status_reason': reason})
+
+                LOG.debug("Snapshotting stack %s", stack.name)
+                stack.snapshot(save_snapshot_func=save_snapshot)
+
+            lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
+
+            with lock.thread_lock():
+                snapshot = snapshot_object.Snapshot.create(cnxt, {
+                    'tenant': cnxt.project_id,
+                    'name': name,
+                    'stack_id': stack.id,
+                    'status': 'IN_PROGRESS'})
+                self.thread_group_mgr.start_with_acquired_lock(
+                    stack, lock, _stack_snapshot, stack, snapshot)
+                return api.format_snapshot(snapshot)
 
     @context.request_context
     def show_snapshot(self, cnxt, stack_identity, snapshot_id):
         s = self._get_stack(cnxt, stack_identity)
         snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
-            cnxt, snapshot_id, s)
+            cnxt, snapshot_id, s, load_rsrc_snapshot=s.convergence)
         return api.format_snapshot(snapshot)
 
     @context.request_context
     def delete_snapshot(self, cnxt, stack_identity, snapshot_id):
-        def _delete_snapshot(stack, snapshot):
-            stack.delete_snapshot(snapshot)
-            snapshot_object.Snapshot.delete(cnxt, snapshot_id)
-
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
-        snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
-            cnxt, snapshot_id, s)
-        if snapshot.status == stack.IN_PROGRESS:
-            msg = _('Deleting in-progress snapshot')
-            raise exception.NotSupported(feature=msg)
 
-        self.thread_group_mgr.start(
-            stack.id, _delete_snapshot, stack, snapshot)
+        if stack.convergence:
+            snapshot = snapshots.Snapshot(
+                context=cnxt, snapshot_id=snapshot_id, stack_id=stack.id,
+                start_time=timeutils.utcnow(),
+                action=snapshots.Snapshot.DELETE_SNAPSHOT,
+                thread_group_mgr=self.thread_group_mgr)
+            try:
+                snapshot.delete_snapshot()
+            except exception.NotFound:
+                LOG.debug("Snapshot %(snapshot)s for stack %(stack)s is "
+                          "alread deleted.",
+                          {'snapshot': snapshot_id, 'stack': stack.id})
+                LOG.info("Delete snapshot %(snapshot_id)s complete.",
+                         {'snapshot_id': snapshot_id})
+        else:
+            def _delete_snapshot(stack, snapshot):
+                stack.delete_snapshot(snapshot)
+                snapshot_object.Snapshot.delete(cnxt, snapshot_id)
+
+            snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
+                cnxt, snapshot_id, s)
+            if snapshot.status == stack.IN_PROGRESS:
+                msg = _('Deleting in-progress snapshot')
+                raise exception.NotSupported(feature=msg)
+            self.thread_group_mgr.start(
+                stack.id, _delete_snapshot, stack, snapshot)
 
     @context.request_context
     def stack_check(self, cnxt, stack_identity):
@@ -2270,7 +2302,7 @@ class EngineService(service.ServiceBase):
         stack = parser.Stack.load(cnxt, stack=s)
         self.resource_enforcer.enforce_stack(stack, is_registered_policy=True)
         snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
-            cnxt, snapshot_id, s)
+            cnxt, snapshot_id, s, load_rsrc_snapshot=s.convergence)
         # FIXME(pas-ha) has to be amended to deny restoring stacks
         # that have disallowed for current user
 
@@ -2290,7 +2322,8 @@ class EngineService(service.ServiceBase):
     @context.request_context
     def stack_list_snapshots(self, cnxt, stack_identity):
         s = self._get_stack(cnxt, stack_identity)
-        data = snapshot_object.Snapshot.get_all_by_stack(cnxt, s.id)
+        data = snapshot_object.Snapshot.get_all(
+            cnxt, s.id, load_rsrc_snapshot=s.convergence)
         return [api.format_snapshot(snapshot) for snapshot in data]
 
     @context.request_context

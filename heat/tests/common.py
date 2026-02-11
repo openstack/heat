@@ -53,11 +53,11 @@ _TRUE_VALUES = ('True', 'true', '1', 'yes')
 
 
 class FakeLogMixin(object):
-    def setup_logging(self, quieten=True):
+    def setup_logging(self, quieten=True, allow_debug_log=False):
         # Assign default logs to self.LOG so we can still
         # assert on heat logs.
         default_level = logging.INFO
-        if os.environ.get('OS_DEBUG') in _TRUE_VALUES:
+        if os.environ.get('OS_DEBUG') in _TRUE_VALUES or allow_debug_log:
             default_level = logging.DEBUG
 
         self.LOG = self.useFixture(

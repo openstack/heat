@@ -234,6 +234,20 @@ SNAPSHOT_KEYS = (
     'creation_time'
 )
 
+RESOURCE_SNAPSHOT_KEYS = (
+    RESOURCE_SNAPSHOT_ID,
+    RESOURCE_SNAPSHOT_SNAPSHOT_ID,
+    RESOURCE_SNAPSHOT_RESOURCE_NAME,
+    RESOURCE_SNAPSHOT_DATA,
+    RESOURCE_SNAPSHOT_CREATION_TIME,
+) = (
+    'id',
+    'snapshot_id',
+    'resource_name',
+    'data',
+    'creation_time',
+)
+
 THREAD_MESSAGES = (THREAD_CANCEL,
                    THREAD_CANCEL_WITH_ROLLBACK
                    ) = ('cancel', 'cancel_with_rollback')

@@ -491,13 +491,14 @@ class TaskTest(common.HeatTestCase):
         task = DummyTask()
         task.do_step = mock.Mock(return_value=None)
 
+        m_post_call = mock.Mock()
         tr = scheduler.TaskRunner(task)
-        rt = tr.as_task()
+        rt = tr.as_task(post_func=m_post_call)
         next(rt)
         self.assertRaises(TestException, rt.throw, TestException)
 
         self.assertTrue(tr.done())
-
+        self.assertFalse(m_post_call.called)
         task.do_step.assert_called_once_with(1)
         self.mock_sleep.assert_not_called()
 
@@ -519,6 +520,22 @@ class TaskTest(common.HeatTestCase):
         self.assertFalse(tr.done())
         self.assertRaises(StopIteration, next, rt)
         self.assertTrue(tr.done())
+
+    def test_run_as_task_with_post_func(self):
+        task = DummyTask()
+        task.do_step = mock.Mock(return_value=None)
+        m_post_call = mock.Mock()
+        tr = scheduler.TaskRunner(task)
+        rt = tr.as_task(post_func=m_post_call)
+        for step in rt:
+            pass
+        self.assertTrue(tr.done())
+
+        task.do_step.assert_has_calls([mock.call(1), mock.call(2),
+                                       mock.call(3)])
+        self.assertEqual(3, task.do_step.call_count)
+        self.mock_sleep.assert_not_called()
+        self.assertTrue(m_post_call.called)
 
     def test_run_delays(self):
         task = DummyTask(delays=itertools.repeat(2))

@@ -20,14 +20,18 @@ import time
 from oslo_log import log as logging
 import oslo_messaging
 from oslo_utils import excutils
+from oslo_utils import timeutils as oslo_timeutils
 from oslo_utils import uuidutils
 from osprofiler import profiler
 
 from heat.common import context
+from heat.common import exception
 from heat.common import messaging as rpc_messaging
+from heat.common import timeutils as heat_timeutils
 from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import node_data
+from heat.engine import scheduler
 from heat.engine import stack as parser
 from heat.engine import sync_point
 from heat.objects import stack as stack_objects
@@ -62,7 +66,7 @@ class WorkerService(object):
     or expect replies from these messages.
     """
 
-    RPC_API_VERSION = '1.6'
+    RPC_API_VERSION = '1.8'
 
     def __init__(self,
                  host,
@@ -163,14 +167,52 @@ class WorkerService(object):
 
     @context.request_context
     @log_exceptions
+    def check_resource_delete_snapshot(self, cnxt, snapshot_id, resource_name,
+                                       start_time=None, is_stack_delete=False,
+                                       current_traversal=None):
+        if start_time is not None:
+            start_time = oslo_timeutils.datetime.datetime.strptime(
+                start_time, heat_timeutils.str_duration_format)
+        rsrc, stack, snapshot = check_resource.load_resource_from_snapshot(
+            cnxt, rsrc_name=resource_name, snapshot_id=snapshot_id,
+            thread_group_mgr=self.thread_group_mgr,
+            is_stack_delete=is_stack_delete,
+            current_traversal=current_traversal,
+            start_time=start_time)
+
+        if rsrc is None:
+            return
+
+        rsrc.stack = stack
+
+        msg_queue = queue.Queue()
+        try:
+            self.thread_group_mgr.add_msg_queue(snapshot.id, msg_queue)
+            cr = check_resource.CheckResource(self.engine_id,
+                                              self._rpc_client,
+                                              self.thread_group_mgr,
+                                              msg_queue, {})
+            cr.check_delete_snapshot(cnxt, rsrc, snapshot)
+        finally:
+            self.thread_group_mgr.remove_msg_queue(None,
+                                                   snapshot.id, msg_queue)
+
+    @context.request_context
+    @log_exceptions
     def check_resource(self, cnxt, resource_id, current_traversal, data,
                        is_update, adopt_stack_data, converge=False,
-                       skip_propagate=False, accumulated_failures=None):
+                       skip_propagate=False, accumulated_failures=None,
+                       node_type='resource'):
         """Process a node in the dependency graph.
 
         The node may be associated with either an update or a cleanup of its
-        associated resource.
+        associated resource, or a snapshot deletion.
         """
+        # Handle snapshot nodes differently
+        if node_type == 'snapshot':
+            return self._handle_snapshot_node(
+                cnxt, resource_id, current_traversal, data, is_update)
+
         in_data = sync_point.deserialize_input_data(data)
         resource_data = node_data.load_resources_data(in_data if is_update
                                                       else {})
@@ -202,6 +244,123 @@ class WorkerService(object):
         finally:
             self.thread_group_mgr.remove_msg_queue(None,
                                                    stack.id, msg_queue)
+
+    def _handle_snapshot_node(self, cnxt, snapshot_id, current_traversal,
+                              data, is_update):
+        """Handle snapshot deletion as part of convergence graph.
+
+        This method reuses the Snapshot class for the actual deletion work,
+        but handles graph propagation separately for the non-blocking flow.
+        """
+        from heat.engine import snapshots
+        from heat.objects import snapshot as snapshot_object
+
+        LOG.debug("Processing snapshot node %s for deletion", snapshot_id)
+
+        try:
+            snapshot_obj = snapshot_object.Snapshot.get_snapshot(
+                cnxt, snapshot_id, load_rsrc_snapshot=True)
+        except exception.NotFound:
+            LOG.debug("Snapshot %s already deleted", snapshot_id)
+            # Still need to propagate completion
+            self._propagate_snapshot_complete(
+                cnxt, snapshot_id, current_traversal, stack_id=None)
+            return
+
+        stack = parser.Stack.load(cnxt, stack_id=snapshot_obj.stack_id,
+                                  force_reload=True)
+
+        if current_traversal != stack.current_traversal:
+            LOG.debug('[%s] Traversal cancelled for snapshot deletion.',
+                      current_traversal)
+            return
+
+        # Create a Snapshot instance to reuse existing deletion logic
+        start_time = stack.updated_time or stack.created_time
+        snapshot = snapshots.Snapshot(
+            context=cnxt,
+            snapshot_id=snapshot_id,
+            stack_id=stack.id,
+            start_time=start_time,
+            thread_group_mgr=self.thread_group_mgr,
+            resources=snapshot_obj.data.get('resources'),
+            action=snapshots.Snapshot.DELETE_SNAPSHOT,
+            is_stack_delete=True,
+            current_traversal=current_traversal)
+
+        # Delete resource snapshots using resource's delete_snapshot method
+        try:
+            self._delete_snapshot_resources(cnxt, snapshot_obj, stack)
+            # Use Snapshot class to delete DB objects
+            snapshot.delete_snapshot_objs()
+            LOG.info("Snapshot %s deleted successfully", snapshot_id)
+        except Exception as ex:
+            LOG.error("Failed to delete snapshot %s: %s", snapshot_id, ex)
+            # Propagate failure through the convergence graph
+            self._propagate_snapshot_complete(
+                cnxt, snapshot_id, current_traversal,
+                stack_id=stack.id, failure=str(ex))
+            return
+
+        # Propagate completion through the convergence graph
+        self._propagate_snapshot_complete(
+            cnxt, snapshot_id, current_traversal, stack_id=stack.id)
+
+    def _delete_snapshot_resources(self, cnxt, snapshot_obj, stack):
+        """Delete all resource snapshots for a snapshot."""
+        resources_data = snapshot_obj.data.get('resources', {})
+        for rsrc_name, rsrc_data in resources_data.items():
+            rsrc = stack.resources.get(rsrc_name)
+            if rsrc and rsrc_data:
+                try:
+                    # Call delete_snapshot on the resource
+                    runner = scheduler.TaskRunner(rsrc.delete_snapshot,
+                                                  rsrc_data)
+                    runner(timeout=stack.timeout_secs())
+                except Exception as ex:
+                    LOG.warning("Failed to delete snapshot for resource "
+                                "%s: %s", rsrc_name, ex)
+
+    def _propagate_snapshot_complete(self, cnxt, snapshot_id,
+                                     current_traversal, stack_id=None,
+                                     failure=None):
+        """Propagate snapshot completion through the convergence graph."""
+        if stack_id is None:
+            # Snapshot was already deleted, can't determine stack
+            # For now, just return - the sync_point will time out
+            LOG.debug("Cannot propagate for already-deleted snapshot")
+            return
+
+        stack = parser.Stack.load(cnxt, stack_id=stack_id, force_reload=True)
+
+        if current_traversal != stack.current_traversal:
+            return
+
+        deps = stack.convergence_dependencies
+        graph = deps.graph()
+        graph_key = parser.ConvergenceNode(snapshot_id, False,
+                                           parser.NODE_TYPE_SNAPSHOT)
+
+        if failure:
+            # Mark stack as failed
+            stack.mark_failed('Snapshot deletion failed: %s' % failure)
+            return
+
+        # Propagate to dependent nodes (resources waiting on this snapshot)
+        if graph_key in graph:
+            for req_node in deps.required_by(graph_key):
+                # Snapshot nodes don't have input data to pass
+                check_resource.propagate_check_resource(
+                    cnxt, self._rpc_client, req_node.rsrc_id,
+                    current_traversal, set(graph[req_node]),
+                    graph_key, None, req_node.is_update,
+                    stack.adopt_stack_data, converge=stack.converge,
+                    node_type=req_node.node_type)
+
+        # Check if the whole stack operation is complete
+        check_resource.check_stack_complete(
+            cnxt, stack, current_traversal, snapshot_id, deps, False,
+            node_type=parser.NODE_TYPE_SNAPSHOT)
 
     @context.request_context
     @log_exceptions

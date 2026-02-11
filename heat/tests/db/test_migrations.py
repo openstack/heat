@@ -195,6 +195,18 @@ class MigrationsWalk(
         columns = {c['name'] for c in inspector.get_columns('sync_point')}
         self.assertIn('extra_data', columns)
 
+    def _check_88be64598c0f(self, connection):
+        """Test 88be64598c0f: Add resource_snapshot table."""
+        inspector = sqlalchemy.inspect(connection)
+        tables = inspector.get_table_names()
+        self.assertIn('resource_snapshot', tables)
+
+        columns = {c['name'] for c in
+                   inspector.get_columns('resource_snapshot')}
+        expected_columns = {'id', 'snapshot_id', 'resource_name', 'data',
+                            'created_at', 'updated_at'}
+        self.assertTrue(expected_columns.issubset(columns))
+
 
 class TestMigrationsWalkSQLite(
     MigrationsWalk,

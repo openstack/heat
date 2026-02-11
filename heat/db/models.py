@@ -372,6 +372,23 @@ class Snapshot(BASE, HeatBase):
     stack = relationship(Stack, backref=backref('snapshot'))
 
 
+class ResourceSnapshot(BASE, HeatBase):
+
+    __tablename__ = 'resource_snapshot'
+    __table_args__ = (
+        sqlalchemy.Index('ix_resource_snapshot_snapshot_id', 'snapshot_id'),)
+
+    id = sqlalchemy.Column('id', sqlalchemy.String(36), primary_key=True,
+                           default=lambda: str(uuid.uuid4()))
+    resource_name = sqlalchemy.Column('resource_name', sqlalchemy.String(255),
+                                      nullable=False)
+    snapshot_id = sqlalchemy.Column(sqlalchemy.String(36),
+                                    sqlalchemy.ForeignKey('snapshot.id'),
+                                    nullable=False)
+    data = sqlalchemy.Column('data', types.Json)
+    snapshot = relationship(Snapshot, backref=backref('resource_snapshot'))
+
+
 class Service(BASE, HeatBase, SoftDelete):
 
     __tablename__ = 'service'

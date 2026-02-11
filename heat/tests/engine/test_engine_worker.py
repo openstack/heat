@@ -13,8 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from oslo_utils import timeutils as oslo_timeutils
 from unittest import mock
 
+from heat.common import timeutils as heat_timeutils
 from heat.db import api as db_api
 from heat.engine import check_resource
 from heat.engine import stack as parser
@@ -29,7 +31,7 @@ from heat.tests import utils
 class WorkerServiceTest(common.HeatTestCase):
     def test_make_sure_rpc_version(self):
         self.assertEqual(
-            '1.6',
+            '1.8',
             worker.WorkerService.RPC_API_VERSION,
             ('RPC version is changed, please update this test to new version '
              'and make sure additional test cases are added for RPC APIs '
@@ -273,3 +275,102 @@ class WorkerServiceTest(common.HeatTestCase):
         self.assertNotEqual(old_trvsl, stack.current_traversal)
         mock_sau.assert_called_once_with(mock.ANY, stack.id, mock.ANY,
                                          exp_trvsl=old_trvsl)
+
+    @mock.patch.object(check_resource, 'load_resource_from_snapshot')
+    @mock.patch.object(check_resource.CheckResource, 'check_delete_snapshot')
+    def test_delete_snapshot_adds_and_removes_msg_queue(self,
+                                                        mock_check,
+                                                        mock_load_resource):
+        mock_tgm = mock.MagicMock()
+        mock_tgm.add_msg_queue = mock.Mock(return_value=None)
+        mock_tgm.remove_msg_queue = mock.Mock(return_value=None)
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'something'
+        fake_res = mock.MagicMock()
+        mock_load_resource.return_value = (fake_res, fake_res, fake_res)
+        start_time_date_time = oslo_timeutils.utcnow()
+        start_time = start_time_date_time.strftime(
+            heat_timeutils.str_duration_format)
+        self.worker.check_resource_delete_snapshot(
+            ctx, mock.Mock(), mock.Mock(), start_time,
+            current_traversal=current_traversal)
+
+        self.assertTrue(mock_tgm.add_msg_queue.called)
+        self.assertTrue(mock_tgm.remove_msg_queue.called)
+
+    @mock.patch.object(check_resource, 'load_resource_from_snapshot')
+    @mock.patch.object(check_resource.CheckResource, 'check_delete_snapshot')
+    def test_delete_snapshot_adds_and_removes_msg_queue_with_error(
+        self, mock_check, mock_load_resource
+    ):
+        mock_tgm = mock.MagicMock()
+        mock_tgm.add_msg_queue = mock.Mock(return_value=None)
+        mock_tgm.remove_msg_queue = mock.Mock(return_value=None)
+        self.worker = worker.WorkerService('host-1',
+                                           'topic-1',
+                                           'engine_id',
+                                           mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'something'
+        fake_res = mock.MagicMock()
+        mock_load_resource.return_value = (fake_res, fake_res, fake_res)
+        start_time_date_time = oslo_timeutils.utcnow()
+        start_time = start_time_date_time.strftime(
+            heat_timeutils.str_duration_format)
+        mock_check.side_effect = BaseException
+        self.assertRaises(
+            BaseException, self.worker.check_resource_delete_snapshot,
+            ctx, mock.Mock(), mock.Mock(), start_time,
+            current_traversal=current_traversal
+        )
+        self.assertTrue(mock_tgm.add_msg_queue.called)
+        self.assertTrue(mock_tgm.remove_msg_queue.called)
+
+    @mock.patch.object(worker.WorkerService, '_handle_snapshot_node')
+    @mock.patch.object(check_resource, 'load_resource')
+    def test_check_resource_with_snapshot_node_type(self, mock_load,
+                                                    mock_handle_snapshot):
+        """Test check_resource routes to _handle_snapshot_node."""
+        mock_tgm = mock.MagicMock()
+        self.worker = worker.WorkerService('host-1', 'topic-1',
+                                           'engine_id', mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'test_traversal'
+
+        # Call check_resource with node_type='snapshot'
+        self.worker.check_resource(
+            ctx, 'snapshot-123', current_traversal,
+            {}, False, None, node_type='snapshot')
+
+        # Verify _handle_snapshot_node was called
+        mock_handle_snapshot.assert_called_once_with(
+            ctx, 'snapshot-123', current_traversal, {}, False)
+        # Verify load_resource was NOT called (we bypass resource loading)
+        self.assertFalse(mock_load.called)
+
+    @mock.patch.object(check_resource, 'load_resource')
+    @mock.patch.object(check_resource.CheckResource, 'check')
+    def test_check_resource_with_resource_node_type(self, mock_check,
+                                                    mock_load_resource):
+        """Test check_resource still works for resource nodes (default)."""
+        mock_tgm = mock.MagicMock()
+        self.worker = worker.WorkerService('host-1', 'topic-1',
+                                           'engine_id', mock_tgm)
+        ctx = utils.dummy_context()
+        current_traversal = 'test_traversal'
+        fake_res = mock.MagicMock()
+        fake_res.current_traversal = current_traversal
+        mock_load_resource.return_value = (fake_res, fake_res, fake_res)
+
+        # Call check_resource with default node_type='resource'
+        self.worker.check_resource(
+            ctx, 'resource-123', current_traversal,
+            {}, True, None, node_type='resource')
+
+        # Verify load_resource was called (normal resource path)
+        self.assertTrue(mock_load_resource.called)
+        self.assertTrue(mock_check.called)

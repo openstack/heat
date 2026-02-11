@@ -494,6 +494,12 @@ class StackTest(common.HeatTestCase):
         self.assertFalse(identifier.path)
 
     def test_get_stack_abandon_data(self):
+        self._get_stack_abandon_data()
+
+    def test_get_stack_abandon_data_no_resources(self):
+        self._get_stack_abandon_data(no_resources=True)
+
+    def _get_stack_abandon_data(self, no_resources=False):
         tpl = {'HeatTemplateFormatVersion': '2012-12-12',
                'Parameters': {'param1': {'Type': 'String'}},
                'Resources':
@@ -513,11 +519,14 @@ class StackTest(common.HeatTestCase):
                                  stack_user_project_id='234',
                                  tags=['tag1', 'tag2'])
         self.stack.store()
-        info = self.stack.prepare_abandon()
+        info = self.stack.prepare_abandon(no_resources=no_resources)
         self.assertEqual('CREATE', info['action'])
         self.assertIn('id', info)
         self.assertEqual('stack_details_test', info['name'])
-        self.assertEqual(json.loads(resources), info['resources'])
+        if no_resources:
+            self.assertEqual({}, info['resources'])
+        else:
+            self.assertEqual(json.loads(resources), info['resources'])
         self.assertEqual('IN_PROGRESS', info['status'])
         self.assertEqual(tpl, info['template'])
         self.assertEqual('123', info['project_id'])
