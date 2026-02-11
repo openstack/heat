@@ -352,7 +352,32 @@ function configure_tempest_for_heat {
     local image_exists=$( openstack image list | grep "Fedora-Cloud-Base-37-1.7.x86_64" )
     if [[ -z $image_exists ]]; then
         if is_service_enabled g-api; then
-            upload_image $HEAT_TEST_FEDORA_IMAGE $TOKEN
+            # Verify the downloaded image is actually qcow2.
+            # Glance does not enforce format match even with
+            # require_image_format_match set, so a corrupted image
+            # can go active with the wrong format, causing Nova
+            # boot failures later.
+            local image_fname
+            image_fname=$(basename "$HEAT_TEST_FEDORA_IMAGE")
+            local image_name="${image_fname%.qcow2}"
+            local max_retries=3
+            local attempt
+            for attempt in $(seq $max_retries); do
+                upload_image $HEAT_TEST_FEDORA_IMAGE $TOKEN
+                local detected_format
+                detected_format=$(qemu-img info "$FILES/$image_fname" 2>/dev/null | awk '/^file format/ { print $3; exit }')
+                if [[ "$detected_format" == "qcow2" ]]; then
+                    break
+                fi
+                echo "WARNING: Downloaded image is '$detected_format', expected qcow2 (attempt $attempt/$max_retries)"
+                # Clean up the bad cached file and Glance image before retrying
+                rm -f "$FILES/$image_fname"
+                openstack image delete "$image_name" 2>/dev/null || true
+                if [[ "$attempt" -eq "$max_retries" ]]; then
+                    echo "ERROR: Failed to download a valid qcow2 image after $max_retries attempts"
+                    return 1
+                fi
+            done
         fi
     fi
 
