@@ -1625,26 +1625,40 @@ class EngineService(service.ServiceBase):
         if not cfg.CONF.enable_stack_abandon:
             raise exception.NotSupported(feature='Stack Abandon')
 
-        def _stack_abandon(stk, abandon):
-            if abandon:
-                LOG.info('abandoning stack %s', stk.name)
-                stk.delete(abandon=abandon)
-            else:
-                LOG.info('exporting stack %s', stk.name)
-
         st = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=st)
-        lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
-        with lock.thread_lock():
-            # Get stack details before deleting it.
-            stack_info = stack.prepare_abandon()
-            self.thread_group_mgr.start_with_acquired_lock(stack,
-                                                           lock,
-                                                           _stack_abandon,
-                                                           stack,
-                                                           abandon)
 
+        # Get stack details before deleting it.
+        stack_info = stack.prepare_abandon()
+
+        if not abandon:
+            # Export only - don't delete anything
+            LOG.info('exporting stack %s', stack.name)
             return stack_info
+
+        LOG.info('abandoning stack %s', stack.name)
+
+        if stack.convergence:
+            stack.thread_group_mgr = self.thread_group_mgr
+            template = templatem.Template.create_empty_template(
+                from_template=stack.t)
+
+            # stop existing traversal; mark stack as FAILED
+            if stack.status == stack.IN_PROGRESS:
+                self.worker_service.stop_traversal(stack)
+
+            def stop_workers():
+                self.worker_service.stop_all_workers(stack)
+
+            stack.converge_stack(template=template, action=stack.DELETE,
+                                 pre_converge=stop_workers, abandon=True)
+        else:
+            lock = stack_lock.StackLock(cnxt, stack.id, self.engine_id)
+            with lock.thread_lock():
+                self.thread_group_mgr.start_with_acquired_lock(
+                    stack, lock, stack.delete, abandon=True)
+
+        return stack_info
 
     def list_resource_types(self,
                             cnxt,

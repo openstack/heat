@@ -66,7 +66,7 @@ class WorkerService(object):
     or expect replies from these messages.
     """
 
-    RPC_API_VERSION = '1.8'
+    RPC_API_VERSION = '1.9'
 
     def __init__(self,
                  host,
@@ -202,7 +202,7 @@ class WorkerService(object):
     def check_resource(self, cnxt, resource_id, current_traversal, data,
                        is_update, adopt_stack_data, converge=False,
                        skip_propagate=False, accumulated_failures=None,
-                       node_type='resource'):
+                       node_type='resource', abandon=False):
         """Process a node in the dependency graph.
 
         The node may be associated with either an update or a cleanup of its
@@ -225,6 +225,8 @@ class WorkerService(object):
             return
 
         rsrc.converge = converge
+        if abandon:
+            rsrc.abandon_in_progress = True
 
         msg_queue = queue.Queue()
         try:

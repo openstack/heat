@@ -1443,7 +1443,8 @@ class Stack(collections.abc.Mapping):
     @profiler.trace('Stack.converge_stack', hide_args=False)
     @reset_state_on_error
     def converge_stack(self, template, action=UPDATE, new_stack=None,
-                       pre_converge=None, new_traversal_id=None):
+                       pre_converge=None, new_traversal_id=None,
+                       abandon=False):
         """Update the stack template and trigger convergence for resources."""
         if action not in [self.CHECK, self.SUSPEND, self.RESUME,
                           self.SNAPSHOT]:
@@ -1499,10 +1500,11 @@ class Stack(collections.abc.Mapping):
         # TODO(later): lifecycle_plugin_utils.do_pre_ops
 
         self.thread_group_mgr.start(self.id, self._converge_create_or_update,
-                                    pre_converge=pre_converge)
+                                    pre_converge=pre_converge,
+                                    abandon=abandon)
 
     @reset_state_on_error
-    def _converge_create_or_update(self, pre_converge=None):
+    def _converge_create_or_update(self, pre_converge=None, abandon=False):
         current_resources = self._update_or_store_resources()
 
         self._compute_convg_dependencies(self.ext_rsrcs_db, self.dependencies,
@@ -1558,7 +1560,8 @@ class Stack(collections.abc.Mapping):
                                                   input_data, node.is_update,
                                                   self.adopt_stack_data,
                                                   self.converge,
-                                                  node_type=node.node_type)
+                                                  node_type=node.node_type,
+                                                  abandon=abandon)
                 if scheduler.ENABLE_SLEEP:
                     time.sleep(1)
 

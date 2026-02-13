@@ -128,3 +128,73 @@ class WorkerClientTest(common.HeatTestCase):
                 version='1.7')
             # ensure correct rpc method is called
             mock_cast.cast.assert_called_with(mock_cnxt, method, **kwargs)
+
+    def test_check_resource(self):
+        resource_id = 'dummy-resource-id'
+        current_traversal = 'dummy-traversal'
+        mock_cnxt = mock.Mock()
+        method = 'check_resource'
+
+        kwargs = {
+            'resource_id': resource_id,
+            'current_traversal': current_traversal,
+            'data': {'input_data': {}},
+            'is_update': True,
+            'adopt_stack_data': None,
+            'converge': False,
+            'skip_propagate': False,
+            'accumulated_failures': None,
+            'node_type': 'resource',
+            'abandon': False,
+        }
+        mock_rpc_client = mock.MagicMock()
+        mock_cast = mock.MagicMock()
+        with mock.patch('heat.common.messaging.get_rpc_client') as mock_grc:
+            mock_grc.return_value = mock_rpc_client
+            mock_rpc_client.prepare.return_value = mock_cast
+            wc = rpc_client.WorkerClient()
+            ret_val = wc.check_resource(
+                mock_cnxt, resource_id, current_traversal,
+                {'input_data': {}}, True, None)
+            mock_grc.assert_called_with(
+                version=wc.BASE_RPC_API_VERSION,
+                topic=rpc_api.TOPIC)
+            self.assertIsNone(ret_val)
+            mock_rpc_client.prepare.assert_called_with(
+                version='1.9')
+            mock_cast.cast.assert_called_with(mock_cnxt, method, **kwargs)
+
+    def test_check_resource_with_abandon(self):
+        resource_id = 'dummy-resource-id'
+        current_traversal = 'dummy-traversal'
+        mock_cnxt = mock.Mock()
+        method = 'check_resource'
+
+        kwargs = {
+            'resource_id': resource_id,
+            'current_traversal': current_traversal,
+            'data': {'input_data': {}},
+            'is_update': False,
+            'adopt_stack_data': None,
+            'converge': False,
+            'skip_propagate': False,
+            'accumulated_failures': None,
+            'node_type': 'resource',
+            'abandon': True,
+        }
+        mock_rpc_client = mock.MagicMock()
+        mock_cast = mock.MagicMock()
+        with mock.patch('heat.common.messaging.get_rpc_client') as mock_grc:
+            mock_grc.return_value = mock_rpc_client
+            mock_rpc_client.prepare.return_value = mock_cast
+            wc = rpc_client.WorkerClient()
+            ret_val = wc.check_resource(
+                mock_cnxt, resource_id, current_traversal,
+                {'input_data': {}}, False, None, abandon=True)
+            mock_grc.assert_called_with(
+                version=wc.BASE_RPC_API_VERSION,
+                topic=rpc_api.TOPIC)
+            self.assertIsNone(ret_val)
+            mock_rpc_client.prepare.assert_called_with(
+                version='1.9')
+            mock_cast.cast.assert_called_with(mock_cnxt, method, **kwargs)

@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Stack abandon action is now convergence aware. When convergence engine is
+    enabled, abandoning a stack now uses the convergence workflow for resource
+    cleanup, allowing for better parallelism and consistency with other stack
+    operations. Physical resources are retained (not deleted) while Heat's
+    database records are cleaned up through the convergence flow.

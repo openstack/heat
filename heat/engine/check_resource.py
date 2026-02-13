@@ -179,11 +179,10 @@ class CheckResource(object):
                       rsrc.id)
             if self._stale_resource_needs_retry(cnxt, rsrc, prev_template_id):
                 rpc_data = sync_point.serialize_input_data(self.input_data)
-                self._rpc_client.check_resource(cnxt,
-                                                rsrc.id,
-                                                current_traversal,
-                                                rpc_data, is_update,
-                                                adopt_stack_data)
+                self._rpc_client.check_resource(
+                    cnxt, rsrc.id, current_traversal, rpc_data,
+                    is_update, adopt_stack_data,
+                    abandon=rsrc.abandon_in_progress)
             else:
                 rsrc.handle_preempt()
         except exception.ResourceFailure as ex:
@@ -274,7 +273,8 @@ class CheckResource(object):
                     current_traversal, set(graph[req_node]),
                     graph_key, input_data, req_node.is_update,
                     stack.adopt_stack_data, is_skip=is_skip,
-                    rsrc_failure=rsrc_failure, converge=stack.converge)
+                    rsrc_failure=rsrc_failure, converge=stack.converge,
+                    abandon=rsrc.abandon_in_progress)
             if is_update:
                 if input_forward_data is None:
                     # we haven't resolved attribute data for the resource,
@@ -481,7 +481,8 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
                              current_traversal, predecessors, sender_key,
                              sender_data, is_update, adopt_stack_data,
                              is_skip=False, rsrc_failure=None, converge=False,
-                             node_type=parser.NODE_TYPE_RESOURCE):
+                             node_type=parser.NODE_TYPE_RESOURCE,
+                             abandon=False):
     """Trigger processing of node if all of its dependencies are satisfied."""
     def do_check(entity_id, data, rsrc_failures, skip_propagate):
         # Pass accumulated failures through RPC so they propagate to dependents
@@ -490,7 +491,8 @@ def propagate_check_resource(cnxt, rpc_client, next_res_id,
                                   converge=converge,
                                   skip_propagate=skip_propagate,
                                   accumulated_failures=rsrc_failures or None,
-                                  node_type=node_type)
+                                  node_type=node_type,
+                                  abandon=abandon)
 
     sync_point.sync(cnxt, next_res_id, current_traversal,
                     is_update, do_check, predecessors,
