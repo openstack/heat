@@ -2218,7 +2218,8 @@ class EngineService(service.ServiceBase):
                 'data': data,
                 'name': name,
                 'stack_id': stack.id,
-                'status': 'IN_PROGRESS'})
+                'action': snapshots.Snapshot.CREATE,
+                'status': snapshots.Snapshot.IN_PROGRESS})
 
             LOG.debug("Snapshotting stack %s", stack.name)
             # Use snapshot id as current_traversal id.
@@ -2248,7 +2249,8 @@ class EngineService(service.ServiceBase):
                     'tenant': cnxt.project_id,
                     'name': name,
                     'stack_id': stack.id,
-                    'status': 'IN_PROGRESS'})
+                    'action': snapshots.Snapshot.CREATE,
+                    'status': snapshots.Snapshot.IN_PROGRESS})
                 self.thread_group_mgr.start_with_acquired_lock(
                     stack, lock, _stack_snapshot, stack, snapshot)
                 return api.format_snapshot(snapshot)
@@ -2267,19 +2269,22 @@ class EngineService(service.ServiceBase):
 
         snapshot_obj = snapshot_object.Snapshot.get_snapshot_by_stack(
             cnxt, snapshot_id, s)
-        if snapshot_obj.status == stack.IN_PROGRESS:
+        # NOTE(tkajinam): Check None for old services without action field
+        if (snapshot_obj.action in (None, snapshots.Snapshot.CREATE) and
+                snapshot_obj.status == snapshots.Snapshot.IN_PROGRESS):
             msg = _('Deleting in-progress snapshot')
             raise exception.NotSupported(feature=msg)
 
         if stack.convergence:
             snapshot_object.Snapshot.update(
                 cnxt, snapshot_id,
-                {'status': 'DELETE_IN_PROGRESS',
+                {'action': snapshots.Snapshot.DELETE,
+                 'status': snapshots.Snapshot.IN_PROGRESS,
                  'status_reason': 'Snapshot delete started'})
             snapshot = snapshots.Snapshot(
                 context=cnxt, snapshot_id=snapshot_id, stack_id=stack.id,
                 start_time=timeutils.utcnow(),
-                action=snapshots.Snapshot.DELETE_SNAPSHOT,
+                action=snapshots.Snapshot.DELETE,
                 thread_group_mgr=self.thread_group_mgr)
             try:
                 snapshot.delete_snapshot()

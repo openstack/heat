@@ -141,7 +141,7 @@ class CheckDeleteSnapshotWorkflowTest(common.HeatTestCase):
         dummy_ex = exception.ResourceNotAvailable(
             resource_name=self.resource.name)
         mock_dsc.side_effect = exception.ResourceFailure(
-            dummy_ex, self.resource, action='DELETE_SNAPSHOT')
+            dummy_ex, self.resource, action='DELETE')
         rsrc, stack, snap = check_resource.load_resource_from_snapshot(
             self.ctx, rsrc_name=self.resource.name,
             snapshot_id=self.snapshot.id,
@@ -156,7 +156,7 @@ class CheckDeleteSnapshotWorkflowTest(common.HeatTestCase):
             self.cr.engine_id)
         self.assertFalse(result)
         self.assertTrue(mock_dsc.called)
-        err_msg = ("Resource DELETE_SNAPSHOT failed: ResourceNotAvailable: "
+        err_msg = ("Resource snapshot DELETE failed: ResourceNotAvailable: "
                    "resources.A: The Resource (A) is not available.")
         mock_mf.assert_called_once_with('A', err_msg)
 

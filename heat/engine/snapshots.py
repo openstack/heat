@@ -37,9 +37,15 @@ class Snapshot(object):
     """Operate snapshot actions under convergence."""
 
     ACTIONS = (
-        DELETE_SNAPSHOT
+        CREATE, DELETE
     ) = (
-        'delete_snapshot'
+        'CREATE', 'DELETE'
+    )
+
+    STATUSES = (
+        IN_PROGRESS, FAILED, COMPLETE
+    ) = (
+        'IN_PROGRESS', 'FAILED', 'COMPLETE'
     )
 
     def __init__(self, context, snapshot_id, stack_id,
@@ -49,7 +55,7 @@ class Snapshot(object):
         self.context = context
         self.id = snapshot_id
         self.stack_id = stack_id
-        self.action = self.DELETE_SNAPSHOT if action is None else action
+        self.action = self.DELETE if action is None else action
         self.is_stack_delete = is_stack_delete
         self.current_traversal = current_traversal if (
             current_traversal is not None) else uuidutils.generate_uuid()
@@ -64,7 +70,9 @@ class Snapshot(object):
     def delete_snapshot(self):
         snapshot_obj = snapshot_object.Snapshot.get_snapshot(
             self.context, self.id, load_rsrc_snapshot=True)
-        if snapshot_obj.status == parser.Stack.IN_PROGRESS:
+        # NOTE(tkajinam): Check None for old services without action field
+        if (snapshot_obj.action in (None, self.CREATE) and
+                snapshot_obj.status == self.IN_PROGRESS):
             msg = _('Deleting in-progress snapshot')
             raise exception.NotSupported(feature=msg)
         if self.resources is None:
@@ -137,11 +145,11 @@ class Snapshot(object):
                  {'snapshot_id': self.id, 'stack_id': self.stack_id,
                   'action': self.action, 'rsrc_name': rsrc_name,
                   'reason': failure_reason})
-        # Update snapshot status to DELETE_FAILED
         try:
             snapshot_object.Snapshot.update(
                 self.context, self.id,
-                {'status': 'DELETE_FAILED',
+                {'status': self.FAILED,
+                 'action': self.action,
                  'status_reason': failure_reason})
         except Exception:
             LOG.debug("Failed to update snapshot %(snapshot_id)s status.",
@@ -222,7 +230,7 @@ def delete_snapshots(context, snapshot_ids, stack_id, current_traversal,
             stack_id=stack_id,
             start_time=start_time,
             thread_group_mgr=thread_group_mgr,
-            action=Snapshot.DELETE_SNAPSHOT,
+            action=Snapshot.DELETE,
             is_stack_delete=True,
             current_traversal=current_traversal)
         try:

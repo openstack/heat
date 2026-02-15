@@ -221,6 +221,7 @@ SNAPSHOT_KEYS = (
     SNAPSHOT_NAME,
     SNAPSHOT_STACK_ID,
     SNAPSHOT_DATA,
+    SNAPSHOT_ACTION,
     SNAPSHOT_STATUS,
     SNAPSHOT_STATUS_REASON,
     SNAPSHOT_CREATION_TIME,
@@ -229,6 +230,7 @@ SNAPSHOT_KEYS = (
     'name',
     'stack_id',
     'data',
+    'action',
     'status',
     'status_reason',
     'creation_time'

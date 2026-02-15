@@ -625,6 +625,7 @@ def format_snapshot(snapshot):
     result = {
         rpc_api.SNAPSHOT_ID: snapshot.id,
         rpc_api.SNAPSHOT_NAME: snapshot.name,
+        rpc_api.SNAPSHOT_ACTION: snapshot.action,
         rpc_api.SNAPSHOT_STATUS: snapshot.status,
         rpc_api.SNAPSHOT_STATUS_REASON: snapshot.status_reason,
         rpc_api.SNAPSHOT_DATA: snapshot.data,

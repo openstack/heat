@@ -395,7 +395,7 @@ def load_resource_from_snapshot(cnxt, rsrc_name, snapshot_id,
             context=cnxt,
             snapshot_id=snapshot_id,
             stack_id=stack.id,
-            action=snapshots.Snapshot.DELETE_SNAPSHOT,
+            action=snapshots.Snapshot.DELETE,
             resources=snapshot_obj.data['resources'],
             thread_group_mgr=thread_group_mgr,
             is_stack_delete=is_stack_delete,
@@ -550,13 +550,12 @@ def do_snapshot_delete(rsrc, snapshot, msg_queue, engine_id):
         check_message = functools.partial(
             _check_for_message, msg_queue)
         do_convergence = getattr(
-            rsrc, snapshot.action.lower() + "_convergence")
+            rsrc, snapshot.action.lower() + "_snapshot_convergence")
         do_convergence(
             engine_id, snapshot.time_remaining(), check_message)
     except exception.ResourceFailure as ex:
         action = ex.action or rsrc.action
-        reason = 'Resource %s failed: %s' % (action,
-                                             str(ex))
+        reason = 'Resource snapshot %s failed: %s' % (action, str(ex))
         snapshot.mark_failed(rsrc.name, reason)
         return False
     except scheduler.Timeout:

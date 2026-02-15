@@ -286,7 +286,7 @@ class WorkerService(object):
             start_time=start_time,
             thread_group_mgr=self.thread_group_mgr,
             resources=snapshot_obj.data.get('resources'),
-            action=snapshots.Snapshot.DELETE_SNAPSHOT,
+            action=snapshots.Snapshot.DELETE,
             is_stack_delete=True,
             current_traversal=current_traversal)
 

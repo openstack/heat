@@ -207,6 +207,12 @@ class MigrationsWalk(
                             'created_at', 'updated_at'}
         self.assertTrue(expected_columns.issubset(columns))
 
+    def _check_97b2a986f922(self, connection):
+        """Test 97b2a986f922: Make snapshot state aware."""
+        inspector = sqlalchemy.inspect(connection)
+        columns = {c['name'] for c in inspector.get_columns('snapshot')}
+        self.assertIn('action', columns)
+
 
 class TestMigrationsWalkSQLite(
     MigrationsWalk,
