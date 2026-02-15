@@ -416,11 +416,12 @@ def check_snapshot_complete(cnxt, snapshot, sender_id, deps, is_update):
     """Mark the snapshot complete if the update is complete."""
 
     roots = set(deps.roots())
+    sender_key = parser.ConvergenceNode(sender_id, is_update)
 
-    if (sender_id, is_update) not in roots:
+    if sender_key not in roots:
         return
 
-    def check_complete(snapshot_id, data, rsrc_failures):
+    def check_complete(snapshot_id, data, rsrc_failures, skip_propagate):
         if rsrc_failures:
             msg = (
                 "Snapshot %(snapshot_id)s %(action)s failed: "
@@ -433,8 +434,6 @@ def check_snapshot_complete(cnxt, snapshot, sender_id, deps, is_update):
             snapshot.mark_failed(snapshot_id, msg)
         else:
             snapshot.mark_complete(predecessors=roots)
-
-    sender_key = parser.ConvergenceNode(sender_id, is_update)
     try:
         sync_point.sync(cnxt, snapshot.id, snapshot.current_traversal, True,
                         check_complete, roots, {sender_key: None})

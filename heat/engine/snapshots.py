@@ -137,6 +137,15 @@ class Snapshot(object):
                  {'snapshot_id': self.id, 'stack_id': self.stack_id,
                   'action': self.action, 'rsrc_name': rsrc_name,
                   'reason': failure_reason})
+        # Update snapshot status to DELETE_FAILED
+        try:
+            snapshot_object.Snapshot.update(
+                self.context, self.id,
+                {'status': 'DELETE_FAILED',
+                 'status_reason': failure_reason})
+        except Exception:
+            LOG.debug("Failed to update snapshot %(snapshot_id)s status.",
+                      {'snapshot_id': self.id})
         # Clear sync_points for snapshot
         sync_point.delete_all(self.context, self.id, self.current_traversal)
         LOG.debug("Clear all sync_points for (snapshot, traversal): %s.",

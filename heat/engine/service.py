@@ -2265,7 +2265,17 @@ class EngineService(service.ServiceBase):
         s = self._get_stack(cnxt, stack_identity)
         stack = parser.Stack.load(cnxt, stack=s)
 
+        snapshot_obj = snapshot_object.Snapshot.get_snapshot_by_stack(
+            cnxt, snapshot_id, s)
+        if snapshot_obj.status == stack.IN_PROGRESS:
+            msg = _('Deleting in-progress snapshot')
+            raise exception.NotSupported(feature=msg)
+
         if stack.convergence:
+            snapshot_object.Snapshot.update(
+                cnxt, snapshot_id,
+                {'status': 'DELETE_IN_PROGRESS',
+                 'status_reason': 'Snapshot delete started'})
             snapshot = snapshots.Snapshot(
                 context=cnxt, snapshot_id=snapshot_id, stack_id=stack.id,
                 start_time=timeutils.utcnow(),
@@ -2275,22 +2285,17 @@ class EngineService(service.ServiceBase):
                 snapshot.delete_snapshot()
             except exception.NotFound:
                 LOG.debug("Snapshot %(snapshot)s for stack %(stack)s is "
-                          "alread deleted.",
+                          "already deleted.",
                           {'snapshot': snapshot_id, 'stack': stack.id})
                 LOG.info("Delete snapshot %(snapshot_id)s complete.",
                          {'snapshot_id': snapshot_id})
         else:
-            def _delete_snapshot(stack, snapshot):
-                stack.delete_snapshot(snapshot)
+            def _delete_snapshot(stack, snapshot_obj):
+                stack.delete_snapshot(snapshot_obj)
                 snapshot_object.Snapshot.delete(cnxt, snapshot_id)
 
-            snapshot = snapshot_object.Snapshot.get_snapshot_by_stack(
-                cnxt, snapshot_id, s)
-            if snapshot.status == stack.IN_PROGRESS:
-                msg = _('Deleting in-progress snapshot')
-                raise exception.NotSupported(feature=msg)
             self.thread_group_mgr.start(
-                stack.id, _delete_snapshot, stack, snapshot)
+                stack.id, _delete_snapshot, stack, snapshot_obj)
 
     @context.request_context
     def stack_check(self, cnxt, stack_identity):

@@ -265,3 +265,109 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.assertIn(expected, str(ex.exc_info[1]))
 
         mock_load.assert_called_once_with(self.ctx, stack=mock.ANY)
+
+
+class SnapshotServiceConvergenceTest(common.HeatTestCase):
+
+    def setUp(self):
+        super(SnapshotServiceConvergenceTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        cfg.CONF.set_default('convergence_engine', True)
+        self.engine = service.EngineService('a-host', 'a-topic')
+        self.engine.thread_group_mgr = tools.DummyThreadGroupManager()
+        self.useFixture(conffixture.ConfFixture(cfg.CONF))
+
+    def _create_convergence_stack(self, stack_name, files=None):
+        t = template_format.parse(tools.wp_template)
+        stk = utils.parse_stack(t, stack_name=stack_name, files=files)
+        stk.convergence = True
+        stk.state_set(stk.CREATE, stk.COMPLETE, 'mock completion')
+        return stk
+
+    @mock.patch.object(stack.Stack, 'load')
+    def test_delete_snapshot_convergence_no_resources(self, mock_load):
+        """Test convergence delete with no resources calls mark_complete."""
+        stk = self._create_convergence_stack(
+            'stack_snapshot_delete_conv_no_rsrc')
+        mock_load.return_value = stk
+
+        # Create snapshot with empty resources - this makes
+        # do_delete_snapshot go through mark_complete directly
+        data = stk.prepare_abandon(no_resources=True)
+        snapshot_obj = snapshot_objects.Snapshot.create(
+            self.ctx, {
+                'tenant': self.ctx.project_id,
+                'data': data,
+                'name': 'snap1',
+                'stack_id': stk.id,
+                'status': 'COMPLETE'})
+        snapshot_id = snapshot_obj.id
+
+        self.engine.delete_snapshot(
+            self.ctx, stk.identifier(), snapshot_id)
+
+        # Snapshot should be deleted after the call returns
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.show_snapshot, self.ctx,
+                               stk.identifier(), snapshot_id)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+    @mock.patch.object(snapshot_objects.Snapshot, 'update')
+    @mock.patch.object(stack.Stack, 'load')
+    def test_delete_snapshot_convergence_with_resources(
+            self, mock_load, mock_update):
+        """Test convergence delete with resources initiates async delete."""
+        stk = self._create_convergence_stack(
+            'stack_snapshot_delete_conv_rsrc')
+        mock_load.return_value = stk
+
+        data = stk.prepare_abandon()
+        snapshot_obj = snapshot_objects.Snapshot.create(
+            self.ctx, {
+                'tenant': self.ctx.project_id,
+                'data': data,
+                'name': 'snap1',
+                'stack_id': stk.id,
+                'status': 'COMPLETE'})
+        snapshot_id = snapshot_obj.id
+
+        self.engine.delete_snapshot(
+            self.ctx, stk.identifier(), snapshot_id)
+
+        # Verify snapshot status was set to DELETE_IN_PROGRESS
+        mock_update.assert_called_once_with(
+            mock.ANY, snapshot_id,
+            {'status': 'DELETE_IN_PROGRESS',
+             'status_reason': 'Snapshot delete started'})
+
+    @mock.patch.object(stack.Stack, 'load')
+    def test_delete_snapshot_convergence_not_found(self, mock_load):
+        """Test convergence delete of non-existent snapshot raises NotFound."""
+        stk = self._create_convergence_stack(
+            'stack_snapshot_delete_conv_not_found')
+        mock_load.return_value = stk
+
+        snapshot_id = str(uuid.uuid4())
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.delete_snapshot,
+                               self.ctx, stk.identifier(), snapshot_id)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+    @mock.patch.object(stack.Stack, 'load')
+    def test_delete_snapshot_convergence_in_progress(self, mock_load):
+        """Test convergence delete rejects in-progress snapshot."""
+        stk = self._create_convergence_stack(
+            'stack_snapshot_delete_conv_inprog')
+        mock_load.return_value = stk
+
+        snapshot_obj = mock.Mock()
+        snapshot_obj.id = str(uuid.uuid4())
+        snapshot_obj.status = 'IN_PROGRESS'
+        self.patchobject(snapshot_objects.Snapshot,
+                         'get_snapshot_by_stack').return_value = snapshot_obj
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.engine.delete_snapshot,
+                               self.ctx, stk.identifier(), snapshot_obj.id)
+        msg = 'Deleting in-progress snapshot is not supported'
+        self.assertIn(msg, str(ex.exc_info[1]))
+        self.assertEqual(exception.NotSupported, ex.exc_info[0])

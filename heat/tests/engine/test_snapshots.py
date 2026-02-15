@@ -176,12 +176,17 @@ class SnapshotTestCase(common.HeatTestCase):
             mock.ANY, self.stack.id, self.stack.current_traversal,
             True, predecessors=[], new_data=mock.ANY)
 
+    @mock.patch.object(snapshot_objects.Snapshot, 'update')
     @mock.patch.object(sync_point, 'update_sync_point')
     @mock.patch.object(sync_point, 'delete_all')
-    def test_mark_failed(self, mock_spda, mock_usp):
+    def test_mark_failed(self, mock_spda, mock_usp, mock_update):
         result = self.snapshot.mark_failed(
             self.resource.name, failure_reason='Something you should care')
         self.assertTrue(result)
+        mock_update.assert_called_once_with(
+            mock.ANY, self.snapshot.id,
+            {'status': 'DELETE_FAILED',
+             'status_reason': 'Something you should care'})
         mock_spda.assert_called_once_with(
             mock.ANY, self.snapshot.id, self.stack.current_traversal)
         self.assertFalse(mock_usp.called)
