@@ -1829,28 +1829,26 @@ class Stack(collections.abc.Mapping):
             self.t = newstack.t
             self._outputs = None
         finally:
-            if should_rollback:
-                # Already handled in rollback task
-                return
+            if not should_rollback:
+                # Don't use state_set to do only one update query and avoid
+                # race condition with the COMPLETE status
+                self.action = action
 
-            # Don't use state_set to do only one update query and avoid race
-            # condition with the COMPLETE status
-            self.action = action
+                self._log_status()
+                self._send_notification_and_add_event()
+                if self.status == self.FAILED:
+                    self._merge_user_param_template(existing_params,
+                                                    newstack.t,
+                                                    backup_stack.t)
+                self.store()
 
-            self._log_status()
-            self._send_notification_and_add_event()
-            if self.status == self.FAILED:
-                self._merge_user_param_template(existing_params, newstack.t,
-                                                backup_stack.t)
-            self.store()
+                if previous_template_id is not None:
+                    raw_template_object.RawTemplate.delete(
+                        self.context, previous_template_id)
 
-            if previous_template_id is not None:
-                raw_template_object.RawTemplate.delete(self.context,
-                                                       previous_template_id)
-
-            lifecycle_plugin_utils.do_post_ops(self.context, self,
-                                               newstack, action,
-                                               (self.status == self.FAILED))
+                lifecycle_plugin_utils.do_post_ops(
+                    self.context, self, newstack, action,
+                    (self.status == self.FAILED))
 
     def _merge_user_param_template(self, existing_params, new_template,
                                    bkp_stack_template):
