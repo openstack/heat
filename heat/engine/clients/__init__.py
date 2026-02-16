@@ -51,7 +51,6 @@ class OpenStackClients(object):
         return ctxt
 
     def client_plugin(self, name):
-        global _mgr
         if name in self._client_plugins:
             return self._client_plugins[name]
         if _mgr and name in _mgr.names():
