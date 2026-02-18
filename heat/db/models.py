@@ -367,6 +367,7 @@ class Snapshot(BASE, HeatBase):
     data = sqlalchemy.Column('data', types.Json)
     tenant = sqlalchemy.Column(
         'tenant', sqlalchemy.String(64), nullable=False, index=True)
+    action = sqlalchemy.Column('action', sqlalchemy.String(255))
     status = sqlalchemy.Column('status', sqlalchemy.String(255))
     status_reason = sqlalchemy.Column('status_reason', sqlalchemy.String(255))
     stack = relationship(Stack, backref=backref('snapshot'))

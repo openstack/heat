@@ -90,6 +90,7 @@ class SnapshotTestCase(common.HeatTestCase):
 
     @mock.patch.object(snapshot_objects.Snapshot, 'get_snapshot')
     def test_snapshot_delete_inprogress(self, mock_gs):
+        self.snapshot_obj.action = "CREATE"
         self.snapshot_obj.status = "IN_PROGRESS"
         mock_gs.return_value = self.snapshot_obj
         self.assertFalse(self.thread_group_mgr.called)
@@ -185,7 +186,8 @@ class SnapshotTestCase(common.HeatTestCase):
         self.assertTrue(result)
         mock_update.assert_called_once_with(
             mock.ANY, self.snapshot.id,
-            {'status': 'DELETE_FAILED',
+            {'action': 'DELETE',
+             'status': 'FAILED',
              'status_reason': 'Something you should care'})
         mock_spda.assert_called_once_with(
             mock.ANY, self.snapshot.id, self.stack.current_traversal)

@@ -86,9 +86,11 @@ class SnapshotServiceTest(common.HeatTestCase):
         self.assertIsNotNone(snapshot['id'])
         self.assertIsNotNone(snapshot['creation_time'])
         self.assertEqual('snap1', snapshot['name'])
+        self.assertEqual("CREATE", snapshot['action'])
         self.assertEqual("IN_PROGRESS", snapshot['status'])
         snapshot = self.engine.show_snapshot(
             self.ctx, stk.identifier(), snapshot['id'])
+        self.assertEqual("CREATE", snapshot['action'])
         self.assertEqual("COMPLETE", snapshot['status'])
         self.assertEqual("SNAPSHOT", snapshot['data']['action'])
         self.assertEqual("COMPLETE", snapshot['data']['status'])
@@ -177,6 +179,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         mock_load.return_value = stk
         snapshot = mock.Mock()
         snapshot.id = str(uuid.uuid4())
+        snapshot.action = 'CREATE'
         snapshot.status = 'IN_PROGRESS'
         self.patchobject(snapshot_objects.Snapshot,
                          'get_snapshot_by_stack').return_value = snapshot
@@ -219,6 +222,7 @@ class SnapshotServiceTest(common.HeatTestCase):
         expected = {
             "id": snapshot["id"],
             "name": "snap1",
+            "action": "CREATE",
             "status": "COMPLETE",
             "status_reason": "Stack SNAPSHOT completed successfully",
             "data": stk.prepare_abandon(),
@@ -300,6 +304,7 @@ class SnapshotServiceConvergenceTest(common.HeatTestCase):
                 'data': data,
                 'name': 'snap1',
                 'stack_id': stk.id,
+                'action': 'CREATE',
                 'status': 'COMPLETE'})
         snapshot_id = snapshot_obj.id
 
@@ -328,16 +333,17 @@ class SnapshotServiceConvergenceTest(common.HeatTestCase):
                 'data': data,
                 'name': 'snap1',
                 'stack_id': stk.id,
+                'action': 'CREATE',
                 'status': 'COMPLETE'})
         snapshot_id = snapshot_obj.id
 
         self.engine.delete_snapshot(
             self.ctx, stk.identifier(), snapshot_id)
 
-        # Verify snapshot status was set to DELETE_IN_PROGRESS
         mock_update.assert_called_once_with(
             mock.ANY, snapshot_id,
-            {'status': 'DELETE_IN_PROGRESS',
+            {'action': 'DELETE',
+             'status': 'IN_PROGRESS',
              'status_reason': 'Snapshot delete started'})
 
     @mock.patch.object(stack.Stack, 'load')
@@ -362,6 +368,7 @@ class SnapshotServiceConvergenceTest(common.HeatTestCase):
 
         snapshot_obj = mock.Mock()
         snapshot_obj.id = str(uuid.uuid4())
+        snapshot_obj.action = 'CREATE'
         snapshot_obj.status = 'IN_PROGRESS'
         self.patchobject(snapshot_objects.Snapshot,
                          'get_snapshot_by_stack').return_value = snapshot_obj

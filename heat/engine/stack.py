@@ -2353,7 +2353,9 @@ class Stack(collections.abc.Mapping):
             self.rollback()
         else:
             if self.action == self.SNAPSHOT:
-                self.update_snapshot(failure_reason, self.FAILED)
+                self.update_snapshot(failure_reason,
+                                     snapshots.Snapshot.CREATE,
+                                     snapshots.Snapshot.FAILED)
             self.purge_db()
         return True
 
@@ -2371,18 +2373,20 @@ class Stack(collections.abc.Mapping):
         if not updated:
             return
         if self.action == self.SNAPSHOT:
-            self.update_snapshot(reason, self.COMPLETE)
+            self.update_snapshot(reason,
+                                 snapshots.Snapshot.CREATE,
+                                 snapshots.Snapshot.COMPLETE)
 
         self.purge_db()
 
-    def update_snapshot(self, reason, status):
+    def update_snapshot(self, reason, action, status):
         # update snapshot object
         data = self.prepare_abandon(True if self.convergence else False)
         data["status"] = status
         snapshot_object.Snapshot.update(
             # We use current_traversal to store snapshot id.
             self.context, self.current_traversal,
-            {'data': data, 'status': status,
+            {'data': data, 'action': action, 'status': status,
              'status_reason': reason})
 
     def purge_db(self):

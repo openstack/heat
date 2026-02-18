@@ -37,6 +37,7 @@ class Snapshot(
         'stack_id': fields.StringField(),
         'data': heat_fields.JsonField(nullable=True),
         'tenant': fields.StringField(),
+        'action': fields.StringField(nullable=True),
         'status': fields.StringField(nullable=True),
         'status_reason': fields.StringField(nullable=True),
         'created_at': fields.DateTimeField(read_only=True),

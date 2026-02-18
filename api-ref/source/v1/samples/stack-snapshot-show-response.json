@@ -1,6 +1,7 @@
 {
     "snapshot": {
         "id": "7c4e1ef4-bf1b-41ab-a0c8-ce01f4ffdfa1",
+        "action": "CREATE",
         "name": "vol_snapshot",
         "status": "COMPLETE",
         "status_reason": "Stack SNAPSHOT completed successfully",
