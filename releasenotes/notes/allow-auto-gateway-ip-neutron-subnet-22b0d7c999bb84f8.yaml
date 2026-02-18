@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    Added support for ``auto`` as a valid value for the ``gateway_ip``
+    property in the ``OS::Neutron::Subnet`` resource. This allows Heat
+    templates to explicitly specify ``auto``. Note that ``auto`` can only be
+    used during subnet creation; it is not supported when updating an
+    existing subnet.

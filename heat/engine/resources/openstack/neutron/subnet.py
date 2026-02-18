@@ -339,7 +339,7 @@ class Subnet(neutron.NeutronResource):
         ]
 
     @classmethod
-    def _null_gateway_ip(cls, props):
+    def _normalize_gateway_ip(cls, props):
         if cls.GATEWAY_IP not in props:
             return
         # Specifying null in the gateway_ip will result in
@@ -349,6 +349,9 @@ class Subnet(neutron.NeutronResource):
         # See bug https://bugs.launchpad.net/heat/+bug/1226666
         if props.get(cls.GATEWAY_IP) == '':
             props[cls.GATEWAY_IP] = None
+
+        if props.get(cls.GATEWAY_IP) == 'auto':
+            props.pop(cls.GATEWAY_IP)
 
     def validate(self):
         super(Subnet, self).validate()
@@ -378,7 +381,7 @@ class Subnet(neutron.NeutronResource):
             raise exception.StackValidationFailed(message=msg)
 
         gateway_ip = self.properties.get(self.GATEWAY_IP)
-        if (gateway_ip and gateway_ip not in ['~', ''] and
+        if (gateway_ip and gateway_ip not in ['~', '', 'auto'] and
                 not netutils.is_valid_ip(gateway_ip)):
             msg = (_('Gateway IP address "%(gateway)s" is in '
                      'invalid format.'), gateway_ip)
@@ -396,7 +399,7 @@ class Subnet(neutron.NeutronResource):
 
         if self.SUBNETPOOL in props and props[self.SUBNETPOOL]:
             props['subnetpool_id'] = props.pop('subnetpool')
-        self._null_gateway_ip(props)
+        self._normalize_gateway_ip(props)
 
         subnet = self.client().create_subnet({'subnet': props})['subnet']
         self.resource_id_set(subnet['id'])
@@ -434,9 +437,16 @@ class Subnet(neutron.NeutronResource):
             if (self.SEGMENT in prop_diff and prop_diff[self.SEGMENT] and
                     self._validate_segment_update_supported()):
                 prop_diff['segment_id'] = prop_diff.pop(self.SEGMENT)
+            if (self.GATEWAY_IP in prop_diff and
+                    prop_diff[self.GATEWAY_IP] == 'auto'):
+                msg = _('The value "auto" for gateway_ip cannot be used to '
+                        'update an existing subnet. It is only supported '
+                        'during subnet creation.')
+                raise exception.ResourceActionNotSupported(action=msg)
+            else:
+                # If the new value is '', set to None
+                self._normalize_gateway_ip(prop_diff)
 
-            # If the new value is '', set to None
-            self._null_gateway_ip(prop_diff)
             if self.TAGS in prop_diff:
                 tags = prop_diff.pop(self.TAGS)
                 self.set_tags(tags)

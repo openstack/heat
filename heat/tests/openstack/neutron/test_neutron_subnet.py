@@ -316,6 +316,27 @@ class NeutronSubnetTest(common.HeatTestCase):
         rsrc.state_set(rsrc.CREATE, rsrc.COMPLETE, 'to delete again')
         self.assertIsNone(scheduler.TaskRunner(rsrc.delete)())
 
+    def test_update_subnet_gateway_ip_to_auto_not_allowed(self):
+        """Test that updating gateway_ip to 'auto' is not allowed."""
+        t, stack = self._setup_mock()
+        self.patchobject(stack['net'], 'FnGetRefId',
+                         return_value='fc68ea2c-b60b-4b4f-bd82-94ec81110766')
+        rsrc = self.create_subnet(t, stack, 'sub_net')
+        scheduler.TaskRunner(rsrc.create)()
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+
+        # Try to update gateway_ip to 'auto'
+        update_props = {'subnet': {'gateway_ip': 'auto'}}
+        update_snippet = rsrc_defn.ResourceDefinition(
+            rsrc.name, rsrc.type(), update_props['subnet'])
+
+        ex = self.assertRaises(exception.ResourceActionNotSupported,
+                               rsrc.handle_update,
+                               update_snippet, {}, update_props['subnet'])
+        self.assertIn('The value "auto" for gateway_ip cannot be used to '
+                      'update an existing subnet.',
+                      str(ex))
+
     def test_subnet_with_subnetpool(self):
         subnet_dict = {
             "subnet": {
@@ -460,20 +481,20 @@ class NeutronSubnetTest(common.HeatTestCase):
         self.assertIs(False, rsrc.FnGetAtt('enable_dhcp'))
         scheduler.TaskRunner(rsrc.delete)()
 
-    def test_null_gateway_ip(self):
+    def test_normalize_gateway_ip(self):
         p = {}
-        subnet.Subnet._null_gateway_ip(p)
+        subnet.Subnet._normalize_gateway_ip(p)
         self.assertEqual({}, p)
 
         p = {'foo': 'bar'}
-        subnet.Subnet._null_gateway_ip(p)
+        subnet.Subnet._normalize_gateway_ip(p)
         self.assertEqual({'foo': 'bar'}, p)
 
         p = {
             'foo': 'bar',
             'gateway_ip': '198.51.100.0'
         }
-        subnet.Subnet._null_gateway_ip(p)
+        subnet.Subnet._normalize_gateway_ip(p)
         self.assertEqual({
             'foo': 'bar',
             'gateway_ip': '198.51.100.0'
@@ -483,7 +504,7 @@ class NeutronSubnetTest(common.HeatTestCase):
             'foo': 'bar',
             'gateway_ip': ''
         }
-        subnet.Subnet._null_gateway_ip(p)
+        subnet.Subnet._normalize_gateway_ip(p)
         self.assertEqual({
             'foo': 'bar',
             'gateway_ip': None
@@ -495,11 +516,18 @@ class NeutronSubnetTest(common.HeatTestCase):
             'foo': 'bar',
             'gateway_ip': None
         }
-        subnet.Subnet._null_gateway_ip(p)
+        subnet.Subnet._normalize_gateway_ip(p)
         self.assertEqual({
             'foo': 'bar',
             'gateway_ip': None
         }, p)
+
+        p = {
+            'foo': 'bar',
+            'gateway_ip': 'auto'
+        }
+        subnet.Subnet._normalize_gateway_ip(p)
+        self.assertEqual({'foo': 'bar'}, p)
 
     def test_ipv6_subnet(self):
         t = template_format.parse(neutron_template)
