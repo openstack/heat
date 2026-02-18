@@ -443,9 +443,8 @@ class Subnet(neutron.NeutronResource):
                         'update an existing subnet. It is only supported '
                         'during subnet creation.')
                 raise exception.ResourceActionNotSupported(action=msg)
-            else:
-                # If the new value is '', set to None
-                self._normalize_gateway_ip(prop_diff)
+
+            self._normalize_gateway_ip(prop_diff)
 
             if self.TAGS in prop_diff:
                 tags = prop_diff.pop(self.TAGS)
