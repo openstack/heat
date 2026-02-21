@@ -20,22 +20,21 @@ cover
 .testrepository
 .project
 .pydevproject
+doc/build/
 doc/source/api/
-etc/heat/heat.conf.sample
 .idea
 # integration tests requirements are auto-generated from stub file
 heat_integrationtests/requirements.txt
 heat_integrationtests/heat_integrationtests.conf.sample
 
-# generated policy file
+# generated config/policy file
+etc/heat/heat.conf.sample
 etc/heat/policy.yaml.sample
 
-# sample policy file included in docs
+# sample config/policy included in docs
+doc/source/_static/heat.conf.sample
 doc/source/_static/heat.policy.yaml.sample
 
 # Files created by releasenotes build
 releasenotes/build
 releasenotes/notes/reno.cache
-
-# sample config included in docs
-doc/source/_static/heat.conf.sample
