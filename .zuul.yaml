@@ -27,6 +27,7 @@
         - heat-tempest-plugin
       devstack_localrc:
         CEILOMETER_PIPELINE_INTERVAL: 60
+        HEAT_ENABLE_ADOPT_ABANDON: True
       devstack_services:
         tls-proxy: false
         s-account: false
@@ -48,8 +49,6 @@
               hidden_stack_tags: hidden
               encrypt_parameters_and_properties: True
               logging_exception_prefix: "%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s"
-              enable_stack_adopt: true
-              enable_stack_abandon: true
               max_stacks_per_tenant: 256
             oslo_messaging_notifications:
               driver: messagingv2
