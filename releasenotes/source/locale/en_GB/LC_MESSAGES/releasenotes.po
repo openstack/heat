@@ -6,15 +6,16 @@
 # Andi Chandler <andi@gowling.com>, 2022. #zanata
 # Andi Chandler <andi@gowling.com>, 2023. #zanata
 # Andi Chandler <andi@gowling.com>, 2024. #zanata
+# Andi Chandler <andi@gowling.com>, 2026. #zanata
 msgid ""
 msgstr ""
 "Project-Id-Version: openstack-heat\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-21 15:03+0000\n"
+"POT-Creation-Date: 2026-02-21 13:45+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"PO-Revision-Date: 2024-12-17 10:00+0000\n"
+"PO-Revision-Date: 2026-02-21 04:57+0000\n"
 "Last-Translator: Andi Chandler <andi@gowling.com>\n"
 "Language-Team: English (United Kingdom)\n"
 "Language: en_GB\n"
@@ -31,18 +32,6 @@ msgstr ""
 msgid "10.0.0"
 msgstr "10.0.0"
 
-msgid "10.0.0.0b1"
-msgstr "10.0.0.0b1"
-
-msgid "10.0.0.0b2"
-msgstr "10.0.0.0b2"
-
-msgid "10.0.0.0b3"
-msgstr "10.0.0.0b3"
-
-msgid "10.0.0.0rc1"
-msgstr "10.0.0.0rc1"
-
 msgid "10.0.1"
 msgstr "10.0.1"
 
@@ -55,15 +44,6 @@ msgstr "10.0.3-31"
 msgid "11.0.0"
 msgstr "11.0.0"
 
-msgid "11.0.0.0b1"
-msgstr "11.0.0.0b1"
-
-msgid "11.0.0.0b3"
-msgstr "11.0.0.0b3"
-
-msgid "11.0.0.0rc1"
-msgstr "11.0.0.0rc1"
-
 msgid "11.0.2"
 msgstr "11.0.2"
 
@@ -73,17 +53,11 @@ msgstr "11.0.3"
 msgid "12.0.0"
 msgstr "12.0.0"
 
-msgid "12.0.0.0rc1"
-msgstr "12.0.0.0rc1"
-
 msgid "12.1.0"
 msgstr "12.1.0"
 
 msgid "13.0.0"
 msgstr "13.0.0"
-
-msgid "13.0.0.0rc1"
-msgstr "13.0.0.0rc1"
 
 msgid "13.0.1"
 msgstr "13.0.1"
@@ -103,14 +77,17 @@ msgstr "15.0.0"
 msgid "15.1.0"
 msgstr "15.1.0"
 
+msgid "15.1.0-23"
+msgstr "15.1.0-23"
+
 msgid "16.0.0"
 msgstr "16.0.0"
 
+msgid "16.1.0-11"
+msgstr "16.1.0-11"
+
 msgid "17.0.0"
 msgstr "17.0.0"
-
-msgid "17.0.0.0rc1"
-msgstr "17.0.0.0rc1"
 
 msgid "17.0.2"
 msgstr "17.0.2"
@@ -123,9 +100,6 @@ msgstr "18.0.1"
 
 msgid "19.0.0"
 msgstr "19.0.0"
-
-msgid "19.0.0.0rc1"
-msgstr "19.0.0.0rc1"
 
 msgid "19.0.1"
 msgstr "19.0.1"
@@ -142,11 +116,23 @@ msgstr "2023.1 Series Release Notes"
 msgid "2023.2 Series Release Notes"
 msgstr "2023.2 Series Release Notes"
 
+msgid "2023.2-eol"
+msgstr "2023.2-eol"
+
 msgid "2024.1 Series Release Notes"
 msgstr "2024.1 Series Release Notes"
 
+msgid "2024.1-eom"
+msgstr "2024.1-eom"
+
 msgid "2024.2 Series Release Notes"
 msgstr "2024.2 Series Release Notes"
+
+msgid "2025.1 Series Release Notes"
+msgstr "2025.1 Series Release Notes"
+
+msgid "2025.2 Series Release Notes"
+msgstr "2025.2 Series Release Notes"
 
 msgid "21.0.0"
 msgstr "21.0.0"
@@ -160,6 +146,27 @@ msgstr "22.0.1"
 msgid "23.0.0"
 msgstr "23.0.0"
 
+msgid "23.0.0-10"
+msgstr "23.0.0-10"
+
+msgid "24.0.0"
+msgstr "24.0.0"
+
+msgid "24.1.0"
+msgstr "24.1.0"
+
+msgid "24.1.0-8"
+msgstr "24.1.0-8"
+
+msgid "25.0.0"
+msgstr "25.0.0"
+
+msgid "25.0.0-38"
+msgstr "25.0.0-38"
+
+msgid "25.0.0-4"
+msgstr "25.0.0-4"
+
 msgid "5.0.1"
 msgstr "5.0.1"
 
@@ -169,47 +176,14 @@ msgstr "6.0.0"
 msgid "7.0.0"
 msgstr "7.0.0"
 
-msgid "7.0.0.0b1"
-msgstr "7.0.0.0b1"
-
-msgid "7.0.0.0b2"
-msgstr "7.0.0.0b2"
-
-msgid "7.0.0.0b3"
-msgstr "7.0.0.0b3"
-
-msgid "7.0.0.0rc1"
-msgstr "7.0.0.0rc1"
-
 msgid "8.0.0"
 msgstr "8.0.0"
-
-msgid "8.0.0.0b1"
-msgstr "8.0.0.0b1"
-
-msgid "8.0.0.0b2"
-msgstr "8.0.0.0b2"
-
-msgid "8.0.0.0b3"
-msgstr "8.0.0.0b3"
 
 msgid "8.0.7"
 msgstr "8.0.7"
 
 msgid "9.0.0"
 msgstr "9.0.0"
-
-msgid "9.0.0.0b1"
-msgstr "9.0.0.0b1"
-
-msgid "9.0.0.0b2"
-msgstr "9.0.0.0b2"
-
-msgid "9.0.0.0b3"
-msgstr "9.0.0.0b3"
-
-msgid "9.0.0.0rc1"
-msgstr "9.0.0.0rc1"
 
 msgid "9.0.3"
 msgstr "9.0.3"
@@ -1352,17 +1326,6 @@ msgstr ""
 "particular."
 
 msgid ""
-"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
-"types allow users to attach to Zaqar queues (respectively) notifications in "
-"general, and notifications that trigger Mistral workflow executions in "
-"particular."
-msgstr ""
-"New ``OS::Zaqar::Subscription`` and ``OS::Zaqar::MistralTrigger`` resource "
-"types allow users to attach to Zaqar queues (respectively) notifications in "
-"general, and notifications that trigger Mistral workflow executions in "
-"particular."
-
-msgid ""
 "New config ``max_nova_api_microversion`` to set the maximum nova API "
 "microversion for nova client plugin. If``max_nova_api_microversion`` is set, "
 "any nova features supported with microversion number above "
@@ -2143,6 +2106,39 @@ msgstr ""
 "created with that resource type still able to delete. It's recommand to "
 "switch that resource type ASAP, since we will remove that resource soon."
 
+msgid ""
+"Stack check action is now convergence aware. When convergence is enabled, "
+"stack check will traverse through all resources using the convergence engine "
+"instead of the legacy sequential approach. This allows check to continue "
+"processing remaining resources even if some resources fail their check, "
+"providing a complete picture of the stack's health."
+msgstr ""
+"Stack check action is now convergence aware. When convergence is enabled, "
+"stack check will traverse through all resources using the convergence engine "
+"instead of the legacy sequential approach. This allows the check to continue "
+"processing remaining resources even if some resources fail their check, "
+"providing a complete picture of the stack's health."
+
+msgid ""
+"Stack snapshot and restore actions are now convergence aware. Snapshots are "
+"integrated into the convergence dependency graph, enabling non-blocking "
+"snapshot deletion during stack delete operations. This improves performance "
+"by allowing snapshot cleanup to be processed in parallel with the "
+"convergence workflow rather than blocking the entire operation."
+msgstr ""
+"Stack snapshot and restore actions are now convergence aware. Snapshots are "
+"integrated into the convergence dependency graph, enabling non-blocking "
+"snapshot deletion during stack delete operations. This improves performance "
+"by allowing snapshot cleanup to be processed in parallel with the "
+"convergence workflow rather than blocking the entire operation."
+
+msgid ""
+"Stack suspend and resume actions are now convergence aware. These actions "
+"are fully supported by convergence mode."
+msgstr ""
+"Stack suspend and resume actions are now convergence aware. These actions "
+"are fully supported by the convergence mode."
+
 msgid "Start using reno to manage release notes."
 msgstr "Start using Reno to manage release notes."
 
@@ -2187,6 +2183,13 @@ msgstr "Support external resource reference in template."
 
 msgid "Support for Block Storage API v2 has been removed."
 msgstr "Support for Block Storage API v2 has been removed."
+
+msgid ""
+"Support for Python 3.9 has been removed. Now Python 3.10 is the minimum "
+"version supported."
+msgstr ""
+"Support for Python 3.9 has been removed. Now Python 3.10 is the minimum "
+"version supported."
 
 msgid ""
 "Support shared services in multi region mode. The services are declared in a "
@@ -2297,6 +2300,19 @@ msgstr ""
 "repository (https://git.openstack.org/cgit/openstack/heat-dashboard)."
 
 msgid ""
+"The Keystone v3 ec2token end point requires authenticated access. The Heat "
+"ec2token filter now requires Keystone auth settings to be able to verify EC2 "
+"credentials. For single cloud mode the ec2token filter will look in the "
+"``[ec2authtoken]`` section of the heat configuration for keystone "
+"authentication settings."
+msgstr ""
+"The Keystone v3 ec2token end point requires authenticated access. The Heat "
+"ec2token filter now requires Keystone auth settings to be able to verify EC2 "
+"credentials. For single cloud mode, the ec2token filter will look in the "
+"``[ec2authtoken]`` section of the heat configuration for keystone "
+"authentication settings."
+
+msgid ""
 "The OS::Nova::Server now supports a new property user_data_update_policy, "
 "which may be set to either 'REPLACE' (default) or 'IGNORE' if you wish to "
 "allow user_data updates to be ignored on stack update. This is useful when "
@@ -2317,6 +2333,17 @@ msgstr ""
 "The Pike version of HOT (2017-09-01) adds a make_url function to simplify "
 "combining data from different sources into a URL with correct handling for "
 "escaping and IPv6 addresses."
+
+msgid ""
+"The RPC API version has been bumped to 1.37 for the engine service and 1.6 "
+"for the worker service to support the convergence-aware stack check feature. "
+"Operators performing rolling upgrades should ensure all heat services are "
+"upgraded together."
+msgstr ""
+"The RPC API version has been bumped to 1.37 for the engine service and 1.6 "
+"for the worker service to support the convergence-aware stack check feature. "
+"Operators performing rolling upgrades should ensure all heat services are "
+"upgraded together."
 
 msgid ""
 "The SSL middleware ``heat.api.middleware.ssl:SSLMiddleware`` that has been "
@@ -2405,11 +2432,32 @@ msgstr ""
 "availability zone."
 
 msgid ""
+"The ``OS::Vitrage::Template`` resource is now deprecated. The vitrage "
+"project was marked inactive."
+msgstr ""
+"The ``OS::Vitrage::Template`` resource is now deprecated. The vitrage "
+"project was marked inactive."
+
+msgid ""
 "The ``[DEFAULT] onready`` option has been removed. This option has had no "
 "effect."
 msgstr ""
 "The ``[DEFAULT] onready`` option has been removed. This option has had no "
 "effect."
+
+msgid ""
+"The ``[ec2authtoken] allowed_auth_uris`` option was deprecated in favor of "
+"new ``[ec2authtoken] clouds`` options and ``[ec2authtoken.<name>]`` sections."
+msgstr ""
+"The ``[ec2authtoken] allowed_auth_uris`` option was deprecated in favor of "
+"new ``[ec2authtoken] clouds`` options and ``[ec2authtoken.<name>]`` sections."
+
+msgid ""
+"The ``[ec2authtoken] auth_uri`` option was deprecated in favor of "
+"keystoneauth options added to the same section."
+msgstr ""
+"The ``[ec2authtoken] auth_uri`` option was deprecated in favour of "
+"keystoneauth options added to the same section."
 
 msgid ""
 "The ``accessIPv4`` and ``accessIPv6`` attributes of the ``OS::Nova::Server`` "
@@ -2419,6 +2467,35 @@ msgstr ""
 "The ``accessIPv4`` and ``accessIPv6`` attributes of the ``OS::Nova::Server`` "
 "resource are now deprecated, since Nova returns empty values for them. Use "
 "the ``addresses`` attribute instead to get IP addresses."
+
+msgid ""
+"The ``disk_bus`` property of ``OS::Nova::Server`` resource's "
+"``block_device_mapping_v2`` now accepts 'sata' as a valid value. The SATA "
+"disk bus was added to Nova in the Queens release. See `story 2011600 "
+"<https://storyboard.openstack.org/#!/story/2011600>`_."
+msgstr ""
+"The ``disk_bus`` property of ``OS::Nova::Server`` resource's "
+"``block_device_mapping_v2`` now accepts 'sata' as a valid value. The SATA "
+"disk bus was added to Nova in the Queens release. See `story 2011600 "
+"<https://storyboard.openstack.org/#!/story/2011600>`_."
+
+msgid ""
+"The ``heat-all`` console script has been deprecated and will be removed in a "
+"future release."
+msgstr ""
+"The ``heat-all`` console script has been deprecated and will be removed in a "
+"future release."
+
+msgid ""
+"The ``heat-api`` console script and the ``heat-api-cfn`` console script, "
+"which are used to launch standalone api services, have been deprecated and "
+"will be removed in a future release. It is now highly recommended to Use the "
+"wsgi scripts (or wsgi applications directly) instead."
+msgstr ""
+"The ``heat-api`` console script and the ``heat-api-cfn`` console script, "
+"which are used to launch standalone api services, have been deprecated and "
+"will be removed in a future release. It is now highly recommended to use the "
+"WSGI scripts (or WSGI applications directly) instead."
 
 msgid ""
 "The ``heat-manage migrate_properties_data`` command is deprecated and is now "
@@ -2442,6 +2519,15 @@ msgstr ""
 "The ``resource mark unhealthy`` command now accepts either a logical "
 "resource name (as it did previously) or a physical resource ID to identify "
 "the resource to be marked unhealthy."
+
+msgid ""
+"The ``root_app_factory`` composite factory has been deprecated, because it "
+"is equivalent the ``urlmap`` factory from paste. Replace usage in ``api-"
+"paste.ini`` in case the file is modified to use customized pipelines."
+msgstr ""
+"The ``root_app_factory`` composite factory has been deprecated, because it "
+"is equivalent to the ``urlmap`` factory from paste. Replace usage in ``api-"
+"paste.ini`` in case the file is modified to use customised pipelines."
 
 msgid ""
 "The ``wallaby`` template version introduces a new 2-argument form of the "
@@ -2475,21 +2561,6 @@ msgstr ""
 "e. the name of the nested Heat stack which implemented the group). It will "
 "now return the UUID of the nested stack if available. This will also apply "
 "to any resource type that inherits from ``OS::Heat::AutoScalingGroup``."
-
-msgid ""
-"The behavior of ``get_resource`` on an ``OS::Heat::InstanceGroup`` resource "
-"has changed. Previously it returned the physical resource name (i.e. the "
-"name of the nested Heat stack which implemented the group). It will now "
-"return the UUID of the nested stack if available. This will also apply to "
-"any resource type that inherits from ``OS::Heat::AutoScalingGroup``, ``OS::"
-"Heat::InstanceGroup``, and ``AWS::AutoScaling::AutoScalingGroup``."
-msgstr ""
-"The behaviour of ``get_resource`` on an ``OS::Heat::InstanceGroup`` resource "
-"has changed. Previously it returned the physical resource name (i.e. the "
-"name of the nested Heat stack which implemented the group). It will now "
-"return the UUID of the nested stack if available. This will also apply to "
-"any resource type that inherits from ``OS::Heat::AutoScalingGroup``, ``OS::"
-"Heat::InstanceGroup``, and ``AWS::AutoScaling::AutoScalingGroup``."
 
 msgid ""
 "The ceilometer client plugin is no longer provided, due to the Ceilometer "
@@ -2581,6 +2652,11 @@ msgstr ""
 "response will contain all events down to the requested nested depth."
 
 msgid ""
+"The following options in the ``[ec2authtoken]`` section have been deprecated."
+msgstr ""
+"The following options in the ``[ec2authtoken]`` section have been deprecated."
+
+msgid ""
 "The following parameters have been added, to define timeout in internal HTTP "
 "requests."
 msgstr ""
@@ -2609,6 +2685,15 @@ msgid ""
 msgstr ""
 "The heat.resource_type custom constraint has been removed. This constraint "
 "never actually worked."
+
+msgid ""
+"The legacy engine has been deprecated and convergence engine will be the "
+"only supported engine. Due to this deprecation, the following options have "
+"been deprecated."
+msgstr ""
+"The legacy engine has been deprecated, and the convergence engine will be "
+"the only supported engine. Due to this deprecation, the following options "
+"have been deprecated."
 
 msgid ""
 "The list_concat function was added, which concats several lists using "
@@ -2878,6 +2963,12 @@ msgstr ""
 msgid "``OS::Monasca::*``"
 msgstr "``OS::Monasca::*``"
 
+msgid "``OS::Monasca::AlarmDefinition``"
+msgstr "``OS::Monasca::AlarmDefinition``"
+
+msgid "``OS::Monasca::Notifications``"
+msgstr "``OS::Monasca::Notifications``"
+
 msgid "``OS::Neutron::LBaaS::HealthMonitor``"
 msgstr "``OS::Neutron::LBaaS::HealthMonitor``"
 
@@ -2908,6 +2999,12 @@ msgstr ""
 "``mac_address`` property is modified. Neutron is unable to update the MAC "
 "address of a port once the port is in use."
 
+msgid "``OS::Neutron::ProviderNet``"
+msgstr "``OS::Neutron::ProviderNet``"
+
+msgid "``OS::Neutron::Router``"
+msgstr "``OS::Neutron::Router``"
+
 msgid "``OS::Sahara::*``"
 msgstr "``OS::Sahara::*``"
 
@@ -2928,6 +3025,15 @@ msgstr "``OS::Senlin::Profile``"
 
 msgid "``OS::Senlin::Receiver``"
 msgstr "``OS::Senlin::Receiver``"
+
+msgid "``[DEFAULT] convergence_engine``"
+msgstr "``[DEFAULT] convergence_engine``"
+
+msgid "``[DEFAULT] enable_stack_abandon``"
+msgstr "``[DEFAULT] enable_stack_abandon``"
+
+msgid "``[DEFAULT] enable_stack_adopt``"
+msgstr "``[DEFAULT] enable_stack_adopt``"
 
 msgid "``[DEFAULT] max_ironic_api_microversion``"
 msgstr "``[DEFAULT] max_ironic_api_microversion``"
@@ -2952,6 +3058,15 @@ msgstr "``[DEFAULT] template_fetch_timeout``"
 
 msgid "``[ec2authtoken] timeout``"
 msgstr "``[ec2authtoken] timeout``"
+
+msgid "``ca_file``: Use ``cafile``"
+msgstr "``ca_file``: Use ``cafile``"
+
+msgid "``cert_file``: Use ``certfile``"
+msgstr "``cert_file``: Use ``certfile``"
+
+msgid "``key_file``: Use ``keyfile``"
+msgstr "``key_file``: Use ``keyfile``"
 
 msgid ""
 "``multiattach``` property in ``OS::Cinder::Volume`` is now hidden. Please "
