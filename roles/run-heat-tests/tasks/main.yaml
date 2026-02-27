@@ -20,7 +20,7 @@
   command: git config --system --add safe.directory {{heat_tempest_plugin}}
 
 - name: Install plugins
-  command: tox -evenv-tempest -- pip install -c{{constraints_file}} {{heat_tempest_plugin}}
+  command: tox -evenv-tempest -- pip install -c{{constraints_file}} {{heat_tempest_plugin}} setuptools[core]<82.0.0
   become: true
   args:
     chdir: "{{devstack_base_dir}}/tempest"
