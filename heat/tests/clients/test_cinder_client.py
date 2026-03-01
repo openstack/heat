@@ -158,13 +158,40 @@ class QoSSpecsConstraintTest(common.HeatTestCase):
 
 class CinderClientAPIVersionTest(common.HeatTestCase):
 
-    def test_cinder_api_v3(self):
+    def test_get_max_microversion_api_limit(self):
         ctx = utils.dummy_context()
         self.patchobject(ctx.keystone_session, 'get_endpoint')
-        ctx.clients.client_plugin(
-            'cinder').max_microversion = cinder_api_versions.MAX_VERSION
+        self.patchobject(cinder_api_versions, 'get_highest_version',
+                         return_value=cinder_api_versions.APIVersion('3.50'))
+        plugin = ctx.clients.client_plugin('cinder')
         client = ctx.clients.client('cinder')
         self.assertEqual('3.0', client.version)
+        self.assertEqual('3.50', plugin.get_max_microversion())
+        cinder_api_versions.get_highest_version.assert_called_once()
+
+    def test_get_max_microversion_client_limit(self):
+        ctx = utils.dummy_context()
+        self.patchobject(ctx.keystone_session, 'get_endpoint')
+        self.patchobject(cinder_api_versions, 'get_highest_version',
+                         return_value=cinder_api_versions.APIVersion('3.1000'))
+        plugin = ctx.clients.client_plugin('cinder')
+        client = ctx.clients.client('cinder')
+        self.assertEqual('3.0', client.version)
+        self.assertEqual(cinder_api_versions.MAX_VERSION,
+                         plugin.get_max_microversion())
+        cinder_api_versions.get_highest_version.assert_called_once()
+
+    def test_get_max_microversion_configured_limit(self):
+        ctx = utils.dummy_context()
+        self.patchobject(ctx.keystone_session, 'get_endpoint')
+        self.patchobject(cinder_api_versions, 'get_highest_version',
+                         return_value=cinder_api_versions.APIVersion('3.50'))
+        plugin = ctx.clients.client_plugin('cinder')
+        plugin.max_microversion = '3.10'
+        client = ctx.clients.client('cinder')
+        self.assertEqual('3.0', client.version)
+        self.assertEqual('3.10', plugin.get_max_microversion())
+        cinder_api_versions.get_highest_version.assert_not_called()
 
     def test_cinder_api_not_supported(self):
         ctx = utils.dummy_context()

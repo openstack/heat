@@ -16,6 +16,7 @@ import collections
 from unittest import mock
 import uuid
 
+import novaclient
 from novaclient import client as nc
 from novaclient import exceptions as nova_exceptions
 from oslo_config import cfg
@@ -37,6 +38,7 @@ class NovaClientPluginTestCase(common.HeatTestCase):
         c = con.clients
         self.nova_plugin = c.client_plugin('nova')
         self.nova_plugin.client = lambda: self.nova_client
+        self.nova_plugin._create = lambda: self.nova_client
 
 
 class NovaClientPluginTest(NovaClientPluginTestCase):
@@ -66,6 +68,26 @@ class NovaClientPluginTest(NovaClientPluginTestCase):
 
         self.assertRaises(exception.InvalidServiceVersion,
                           plugin.client, '2.26')
+
+    def test_get_max_microversion_api_limit(self):
+        version_stub = mock.Mock()
+        version_stub.version = '2.50'
+        self.nova_client.versions.get_current.return_value = version_stub
+        self.assertEqual('2.50', self.nova_plugin.get_max_microversion())
+        self.nova_client.versions.get_current.assert_called_once()
+
+    def test_get_max_microversion_client_limit(self):
+        version_stub = mock.Mock()
+        version_stub.version = '2.1000'
+        self.nova_client.versions.get_current.return_value = version_stub
+        self.assertEqual(novaclient.API_MAX_VERSION.get_string(),
+                         self.nova_plugin.get_max_microversion())
+        self.nova_client.versions.get_current.assert_called_once()
+
+    def test_get_max_microversion_congigured_limit(self):
+        self.nova_plugin.max_microversion = '2.30'
+        self.assertEqual('2.30', self.nova_plugin.get_max_microversion())
+        self.nova_client.versions.get_current.assert_not_called()
 
     def test_get_ip(self):
         my_image = mock.MagicMock()
