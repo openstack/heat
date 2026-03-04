@@ -1,0 +1,12 @@
+---
+features:
+  - |
+    The ``block_device_mapping_v2`` property of the ``OS::Nova::Server``
+    resource now supports the ``volume_type`` parameter. This allows users
+    to specify the Cinder volume type when creating volumes from images,
+    snapshots, or blank sources during server creation, eliminating the need
+    to create separate ``OS::Cinder::Volume`` resources.
+
+    This feature requires Nova API microversion 2.67 or later. When using
+    ``volume_type`` with an older Nova API version, Heat will return a
+    validation error.

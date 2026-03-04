@@ -39,8 +39,9 @@ cfg.CONF.import_opt('default_user_data_format', 'heat.common.config')
 LOG = logging.getLogger(__name__)
 
 NOVA_MICROVERSIONS = (MICROVERSION_TAGS, MICROVERSION_STR_NETWORK,
-                      MICROVERSION_NIC_TAGS, MICROVERSION_PERSONALITY_REMOVED
-                      ) = ('2.26', '2.37', '2.42', '2.57')
+                      MICROVERSION_NIC_TAGS, MICROVERSION_PERSONALITY_REMOVED,
+                      MICROVERSION_VOLUME_TYPE
+                      ) = ('2.26', '2.37', '2.42', '2.57', '2.67')
 
 
 class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
@@ -95,6 +96,7 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         BLOCK_DEVICE_MAPPING_DELETE_ON_TERM,
         BLOCK_DEVICE_MAPPING_EPHEMERAL_SIZE,
         BLOCK_DEVICE_MAPPING_EPHEMERAL_FORMAT,
+        BLOCK_DEVICE_MAPPING_VOLUME_TYPE,
     ) = (
         'device_name',
         'volume_id',
@@ -108,7 +110,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
         'volume_size',
         'delete_on_termination',
         'ephemeral_size',
-        'ephemeral_format'
+        'ephemeral_format',
+        'volume_type',
     )
 
     _NETWORK_KEYS = (
@@ -335,6 +338,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                           'Defaults to "False" in case of a volume, snapshot '
                           'or image and to "True" in case of swap or '
                           'ephemeral.')
+                    ),
+                    BLOCK_DEVICE_MAPPING_VOLUME_TYPE: properties.Schema(
+                        properties.Schema.STRING,
+                        _('The type of volume to use when creating a volume '
+                          'from image, snapshot, or blank source. Maps to a '
+                          'specific Cinder backend. Requires Nova API '
+                          'microversion 2.67 or later.'),
+                        constraints=[
+                            constraints.CustomConstraint('cinder.vtype')
+                        ],
+                        support_status=support.SupportStatus(version='26.0.0')
                     ),
                 },
             ),
@@ -1106,7 +1120,8 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                             cls.BLOCK_DEVICE_MAPPING_DISK_BUS,
                             cls.BLOCK_DEVICE_MAPPING_BOOT_INDEX,
                             cls.BLOCK_DEVICE_MAPPING_VOLUME_SIZE,
-                            cls.BLOCK_DEVICE_MAPPING_DELETE_ON_TERM)
+                            cls.BLOCK_DEVICE_MAPPING_DELETE_ON_TERM,
+                            cls.BLOCK_DEVICE_MAPPING_VOLUME_TYPE)
 
             for update_prop in update_props:
                 if mapping.get(update_prop) is not None:
@@ -1631,6 +1646,17 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                     MICROVERSION_TAGS):
                 msg = (_('Cannot use "%s" property - nova does not support '
                          'required api microversion.') % self.TAGS)
+                raise exception.StackValidationFailed(message=msg)
+
+        # Check if volume_type in block_device_mapping_v2 is allowed
+        bdm_v2 = self.properties[self.BLOCK_DEVICE_MAPPING_V2] or []
+        if any(m.get(self.BLOCK_DEVICE_MAPPING_VOLUME_TYPE) for m in bdm_v2):
+            if not self.client_plugin().is_version_supported(
+                    MICROVERSION_VOLUME_TYPE):
+                msg = (_('Cannot use "%s" property in '
+                         'block_device_mapping_v2 - nova does not support '
+                         'required api microversion 2.67.') %
+                       self.BLOCK_DEVICE_MAPPING_VOLUME_TYPE)
                 raise exception.StackValidationFailed(message=msg)
 
         # retrieve provider's absolute limits if it will be needed

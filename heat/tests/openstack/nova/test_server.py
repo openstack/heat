@@ -3112,6 +3112,32 @@ class ServersTest(common.HeatTestCase):
              'ephemeral_format': 'ext4'}
         ]))
 
+        self.assertEqual([{
+            'uuid': '1', 'source_type': 'image',
+            'destination_type': 'volume', 'boot_index': 0,
+            'delete_on_termination': False, 'volume_type': 'luks-hdd'}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'image': '1', 'volume_type': 'luks-hdd'}
+        ]))
+
+        self.assertEqual([{
+            'uuid': '1', 'source_type': 'snapshot',
+            'destination_type': 'volume', 'boot_index': 0,
+            'delete_on_termination': False, 'volume_type': 'ssd'}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'snapshot_id': '1', 'volume_type': 'ssd'}
+        ]))
+
+        self.assertEqual([{
+            'uuid': '1', 'source_type': 'image',
+            'destination_type': 'volume', 'boot_index': 0,
+            'delete_on_termination': True, 'volume_size': 50,
+            'device_name': 'vda', 'volume_type': 'fast'}
+        ], servers.Server._build_block_device_mapping_v2([
+            {'image': '1', 'volume_type': 'fast', 'volume_size': 50,
+             'delete_on_termination': True, 'device_name': 'vda'}
+        ]))
+
     def test_block_device_mapping_v2_image_resolve(self):
         (tmpl, stack) = self._setup_test_stack('mapping',
                                                test_templ=bdm_v2_template)
@@ -3236,6 +3262,42 @@ class ServersTest(common.HeatTestCase):
                                    raise_exc=exception.StackValidationFailed,
                                    error_msg=msg,
                                    with_image=False)
+
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
+    def test_validate_bdm_v2_volume_type_requires_microversion(
+            self, mock_client):
+        """Test that volume_type in BDM v2 requires Nova API 2.67+"""
+        stack_name = 'bdm_v2_volume_type'
+        bdm_v2 = [{'image': 'F17-x86_64-gold',
+                   'volume_type': 'luks-hdd',
+                   'volume_size': 50}]
+
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=False)
+        self.stub_VolumeTypeConstraint_validate()
+
+        error_msg = ('Cannot use "volume_type" property in '
+                     'block_device_mapping_v2 - nova does not support '
+                     'required api microversion 2.67')
+
+        self._test_validate_bdm_v2(
+            stack_name, bdm_v2, with_image=False,
+            raise_exc=exception.StackValidationFailed,
+            error_msg=error_msg)
+
+    @mock.patch.object(nova.NovaClientPlugin, 'client')
+    def test_validate_bdm_v2_volume_type_success(self, mock_client):
+        """Test that volume_type in BDM v2 works with Nova API 2.67+"""
+        stack_name = 'bdm_v2_volume_type_ok'
+        bdm_v2 = [{'image': 'F17-x86_64-gold',
+                   'volume_type': 'luks-hdd',
+                   'volume_size': 50}]
+
+        self.patchobject(nova.NovaClientPlugin, 'is_version_supported',
+                         return_value=True)
+        self.stub_VolumeTypeConstraint_validate()
+
+        self._test_validate_bdm_v2(stack_name, bdm_v2, with_image=False)
 
     def test_validate_metadata_too_many(self):
         stack_name = 'srv_val_metadata'
