@@ -464,8 +464,8 @@ class EgressRuleNotAllowed(HeatException):
 class Error(HeatException):
     msg_fmt = "%(message)s"
 
-    def __init__(self, msg):
-        super(Error, self).__init__(message=msg)
+    def __init__(self, message):
+        super(Error, self).__init__(message=message)
 
 
 class NotFound(HeatException):
