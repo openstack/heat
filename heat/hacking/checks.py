@@ -13,8 +13,6 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import re
-
 from hacking import core
 
 
@@ -43,27 +41,3 @@ def no_log_warn(logical_line):
     """
     if logical_line.startswith('LOG.warn('):
         yield (0, 'HE301 Use LOG.warning() rather than LOG.warn()')
-
-
-@core.flake8ext
-def check_python3_no_iteritems(logical_line):
-    msg = ("HE302: Use dict.items() instead of dict.iteritems().")
-
-    if re.search(r".*\.iteritems\(\)", logical_line):
-        yield (0, msg)
-
-
-@core.flake8ext
-def check_python3_no_iterkeys(logical_line):
-    msg = ("HE303: Use dict.keys() instead of dict.iterkeys().")
-
-    if re.search(r".*\.iterkeys\(\)", logical_line):
-        yield (0, msg)
-
-
-@core.flake8ext
-def check_python3_no_itervalues(logical_line):
-    msg = ("HE304: Use dict.values() instead of dict.itervalues().")
-
-    if re.search(r".*\.itervalues\(\)", logical_line):
-        yield (0, msg)

@@ -9,9 +9,6 @@ Heat Specific Commandments
 --------------------------
 
 - [HE301] Use LOG.warning() rather than LOG.warn().
-- [HE302] Python 3: do not use dict.iteritems.
-- [HE303] Python 3: do not use dict.iterkeys.
-- [HE304] Python 3: do not use dict.itervalues.
 
 Creating unit tests
 -------------------
