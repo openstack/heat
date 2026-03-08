@@ -29,7 +29,6 @@
         CEILOMETER_PIPELINE_INTERVAL: 60
         HEAT_ENABLE_ADOPT_ABANDON: True
       devstack_services:
-        tls-proxy: false
         s-account: false
         s-container: false
         s-object: false
