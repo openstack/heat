@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    The OS::Neutron::RBACPolicy resource now supports additional object
+    types beyond network and qos_policy, including security_group,
+    address_scope, and subnetpool.
+
+    All new object types support the ``access_as_shared`` action.

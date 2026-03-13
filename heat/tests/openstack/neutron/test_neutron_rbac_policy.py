@@ -57,6 +57,15 @@ class RBACPolicyTest(common.HeatTestCase):
     def test_create_qos_policy_rbac(self):
         self._test_create(obj_type='qos_policy')
 
+    def test_create_security_group_rbac(self):
+        self._test_create(obj_type='security_group')
+
+    def test_create_address_scope_rbac(self):
+        self._test_create(obj_type='address_scope')
+
+    def test_create_subnetpool_rbac(self):
+        self._test_create(obj_type='subnetpool')
+
     def _test_validate_invalid_action(self, msg,
                                       invalid_action='invalid',
                                       obj_type='network'):
@@ -86,6 +95,33 @@ class RBACPolicyTest(common.HeatTestCase):
                'qos_policy. Valid actions: access_as_shared')
         self._test_validate_invalid_action(msg,
                                            obj_type='qos_policy',
+                                           invalid_action='access_as_external')
+
+    def test_validate_action_for_security_group(self):
+        # we dont support access_as_external for security_group
+        msg = ('Property error: resources.rbac.properties.action: '
+               'Invalid action "access_as_external" for object type '
+               'security_group. Valid actions: access_as_shared')
+        self._test_validate_invalid_action(msg,
+                                           obj_type='security_group',
+                                           invalid_action='access_as_external')
+
+    def test_validate_action_for_address_scope(self):
+        # we dont support access_as_external for address_scope
+        msg = ('Property error: resources.rbac.properties.action: '
+               'Invalid action "access_as_external" for object type '
+               'address_scope. Valid actions: access_as_shared')
+        self._test_validate_invalid_action(msg,
+                                           obj_type='address_scope',
+                                           invalid_action='access_as_external')
+
+    def test_validate_action_for_subnetpool(self):
+        # we dont support access_as_external for subnetpool
+        msg = ('Property error: resources.rbac.properties.action: '
+               'Invalid action "access_as_external" for object type '
+               'subnetpool. Valid actions: access_as_shared')
+        self._test_validate_invalid_action(msg,
+                                           obj_type='subnetpool',
                                            invalid_action='access_as_external')
 
     def test_validate_invalid_type(self):

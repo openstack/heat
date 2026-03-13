@@ -24,7 +24,8 @@ class RBACPolicy(neutron.NeutronResource):
     """A Resource for managing RBAC policy in Neutron.
 
     This resource creates and manages Neutron RBAC policy,
-    which allows to share Neutron networks and qos-policies
+    which allows to share Neutron networks, qos-policies,
+    security-groups, address-scopes, subnetpools
     to subsets of tenants.
     """
 
@@ -41,9 +42,11 @@ class RBACPolicy(neutron.NeutronResource):
     )
 
     OBJECT_TYPE_KEYS = (
-        OBJECT_NETWORK, OBJECT_QOS_POLICY,
+        OBJECT_NETWORK, OBJECT_QOS_POLICY, OBJECT_SECURITY_GROUP,
+        OBJECT_ADDRESS_SCOPE, OBJECT_SUBNETPOOL,
     ) = (
-        'network', 'qos_policy',
+        'network', 'qos_policy', 'security_group',
+        'address_scope', 'subnetpool',
     )
 
     ACTION_KEYS = (
@@ -56,6 +59,9 @@ class RBACPolicy(neutron.NeutronResource):
     SUPPORTED_TYPES_ACTIONS = {
         OBJECT_NETWORK: [ACCESS_AS_SHARED, ACCESS_AS_EXTERNAL],
         OBJECT_QOS_POLICY: [ACCESS_AS_SHARED],
+        OBJECT_SECURITY_GROUP: [ACCESS_AS_SHARED],
+        OBJECT_ADDRESS_SCOPE: [ACCESS_AS_SHARED],
+        OBJECT_SUBNETPOOL: [ACCESS_AS_SHARED],
     }
 
     properties_schema = {
@@ -110,13 +116,16 @@ class RBACPolicy(neutron.NeutronResource):
         ]
 
     def _get_client_res_type(self, object_type):
+        """Map Heat object types to Neutron client resource types."""
         client_plugin = self.client_plugin()
-        if object_type == self.OBJECT_NETWORK:
-            return client_plugin.RES_TYPE_NETWORK
-        elif object_type == self.OBJECT_QOS_POLICY:
-            return client_plugin.RES_TYPE_QOS_POLICY
-        else:
-            return object_type
+        mapping = {
+            self.OBJECT_NETWORK: client_plugin.RES_TYPE_NETWORK,
+            self.OBJECT_QOS_POLICY: client_plugin.RES_TYPE_QOS_POLICY,
+            self.OBJECT_SECURITY_GROUP: client_plugin.RES_TYPE_SECURITY_GROUP,
+            self.OBJECT_ADDRESS_SCOPE: client_plugin.RES_TYPE_ADDRESS_SCOPE,
+            self.OBJECT_SUBNETPOOL: client_plugin.RES_TYPE_SUBNET_POOL,
+        }
+        return mapping.get(object_type, object_type)
 
     def handle_create(self):
         props = self.prepare_properties(
