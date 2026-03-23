@@ -36,9 +36,9 @@ class SecurityGroup(neutron.NeutronResource):
     support_status = support.SupportStatus(version='2014.1')
 
     PROPERTIES = (
-        NAME, DESCRIPTION, RULES,
+        NAME, DESCRIPTION, RULES, STATEFUL,
     ) = (
-        'name', 'description', 'rules',
+        'name', 'description', 'rules', 'stateful',
     )
 
     _RULE_KEYS = (
@@ -149,6 +149,13 @@ class SecurityGroup(neutron.NeutronResource):
             ),
             update_allowed=True
         ),
+        STATEFUL: properties.Schema(
+            properties.Schema.BOOLEAN,
+            _('Whether to create this security group as stateful or '
+              'stateless.'),
+            update_allowed=True,
+            support_status=support.SupportStatus(version='27.0.0')
+        ),
     }
 
     default_egress_rules = [
@@ -175,12 +182,42 @@ class SecurityGroup(neutron.NeutronResource):
         if self.properties[self.NAME] == 'default':
             msg = _('Security groups cannot be assigned the name "default".')
             raise exception.StackValidationFailed(message=msg)
+        self._ensure_stateless_supported(self.properties.get(self.STATEFUL))
+
+    def _ensure_stateless_supported(self, stateful_value):
+        if (stateful_value is False and
+                not self.client_plugin().has_extension(
+                    'stateful-security-group')):
+            msg = _('Neutron does not support stateless security groups; '
+                    'remove the "stateful" property or set it to true.')
+            raise exception.StackValidationFailed(message=msg)
+
+    def _ensure_stateful_update_allowed(self, new_stateful):
+        if new_stateful == self.properties[self.STATEFUL]:
+            return
+
+        # This only sees ports visible to the acting user. If the security
+        # group is shared via RBAC and another tenant still has ports attached,
+        # a non-admin updater might not detect them and Neutron will enforce
+        # the constraint later.
+        ports = self.client().list_ports(
+            security_groups=[self.resource_id]).get('ports', [])
+        if not ports:
+            return
+
+        feature = _(
+            'Updating the "stateful" property while security '
+            'group "%(sg)s" is attached to ports. Detach all ports '
+            'from the security group and retry.') % {'sg': self.resource_id}
+        raise exception.NotSupported(feature=feature)
 
     def handle_create(self):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
         rules = props.pop(self.RULES, [])
+        if not self.client_plugin().has_extension('stateful-security-group'):
+            props.pop(self.STATEFUL, None)
 
         sec = self.client().create_security_group(
             {'security_group': props})['security_group']
@@ -275,6 +312,15 @@ class SecurityGroup(neutron.NeutronResource):
 
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
         rules = prop_diff.pop(self.RULES, None)
+        # When rules change we let _update_rules reconcile them against
+        # Neutron, which deletes stale entries, adds missing ones, and
+        # ensures default egress rules remain present.
+
+        if self.STATEFUL in prop_diff:
+            new_stateful = prop_diff[self.STATEFUL]
+            # Neutron rejects toggling the stateful flag when ports reference
+            # the security group, so fail fast before mutating rules.
+            self._ensure_stateful_update_allowed(new_stateful)
 
         if prop_diff:
             self.prepare_update_properties(prop_diff)

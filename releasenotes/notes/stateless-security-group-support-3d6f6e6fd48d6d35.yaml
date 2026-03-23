@@ -1,0 +1,8 @@
+---
+features:
+  - |
+    ``OS::Neutron::SecurityGroup`` now exposes a ``stateful`` property so Heat
+    can request stateless groups when the Neutron ``stateful-security-group``
+    alias is enabled. Heat validates that alias before accepting templates with
+    ``stateful: false``; otherwise stacks should leave ``stateful`` unset to
+    rely on Neutron's legacy stateful default.

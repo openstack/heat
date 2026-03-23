@@ -101,6 +101,35 @@ resources:
       name: default
 '''
 
+    test_template_explicit_stateless = '''
+heat_template_version: 2015-04-30
+resources:
+  the_sg:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Stateless SG
+      stateful: false
+'''
+
+    test_template_explicit_stateful = '''
+heat_template_version: 2015-04-30
+resources:
+  the_sg:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Explicit Stateful SG
+      stateful: true
+'''
+
+    test_template_implicit_stateful = '''
+heat_template_version: 2015-04-30
+resources:
+  the_sg:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Implicit Stateful SG
+'''
+
     def setUp(self):
         super(SecurityGroupTest, self).setUp()
         self.mockclient = mock.Mock(spec=neutronclient.Client)
@@ -133,6 +162,19 @@ resources:
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.assertEqual(ref_id, rsrc.FnGetRefId())
         self.assertEqual(metadata, dict(rsrc.metadata_get()))
+
+    def assert_create_sg_called_with(self, name, description, stateful=None):
+        self.mockclient.create_security_group.assert_called_once()
+        payload = self.mockclient.create_security_group.call_args[0][0]
+        expected = {
+            'security_group': {
+                'name': name,
+                'description': description,
+            }
+        }
+        if stateful is not None:
+            expected['security_group']['stateful'] = stateful
+        self.assertEqual(expected, payload)
 
     def test_security_group(self):
 
@@ -373,12 +415,8 @@ resources:
 
         stack.delete()
 
-        self.mockclient.create_security_group.assert_called_once_with({
-            'security_group': {
-                'name': sg_name,
-                'description': 'HTTP and SSH access'
-            }
-        })
+        self.assert_create_sg_called_with(
+            sg_name, 'HTTP and SSH access')
         self.mockclient.create_security_group_rule.assert_has_calls([
             mock.call({
                 'security_group_rules': [
@@ -625,12 +663,8 @@ resources:
         sg.resource_id = 'aaaa'
         stack.delete()
 
-        self.mockclient.create_security_group.assert_called_once_with({
-            'security_group': {
-                'name': sg_name,
-                'description': 'HTTP and SSH access'
-            }
-        })
+        self.assert_create_sg_called_with(
+            sg_name, 'HTTP and SSH access')
         self.mockclient.create_security_group_rule.assert_called_once_with({
             'security_group_rules': [
                 {
@@ -713,3 +747,120 @@ resources:
         self.assertEqual(
             'Security groups cannot be assigned the name "default".',
             ex.message)
+
+    def test_security_group_create_explicit_stateful_false(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
+        self.mockclient.create_security_group.return_value = {
+            'security_group': {
+                'id': 'aaaa',
+                'name': sg_name,
+                'description': 'Stateless SG',
+            }
+        }
+
+        stack = self.create_stack(self.test_template_explicit_stateless)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'aaaa')
+
+        self.assert_create_sg_called_with(
+            sg_name, 'Stateless SG', stateful=False)
+
+    def test_security_group_create_explicit_stateful_true(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
+        self.mockclient.create_security_group.return_value = {
+            'security_group': {
+                'id': 'bbbb',
+                'name': sg_name,
+                'description': 'Explicit Stateful SG',
+            }
+        }
+
+        stack = self.create_stack(self.test_template_explicit_stateful)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'bbbb')
+
+        self.assert_create_sg_called_with(
+            sg_name, 'Explicit Stateful SG', stateful=True)
+
+    def test_security_group_create_implicit_stateful(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
+        self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
+                         return_value=True)
+        self.mockclient.create_security_group.return_value = {
+            'security_group': {
+                'id': 'cccc',
+                'name': sg_name,
+                'description': 'Implicit Stateful SG',
+            }
+        }
+
+        stack = self.create_stack(self.test_template_implicit_stateful)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'cccc')
+
+        self.assert_create_sg_called_with(
+            sg_name, 'Implicit Stateful SG')
+
+    def test_security_group_update_stateful_flag(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
+        self.mockclient.create_security_group.return_value = {
+            'security_group': {
+                'id': 'aaaa',
+                'name': sg_name,
+                'description': 'Stateless SG',
+            }
+        }
+        self.mockclient.update_security_group.return_value = {
+            'security_group': {
+                'id': 'aaaa',
+                'name': sg_name,
+                'description': 'Explicit Stateful SG',
+                'stateful': True,
+            }
+        }
+
+        stack = self.create_stack(self.test_template_explicit_stateless)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'aaaa')
+
+        self.mockclient.list_ports.return_value = {'ports': []}
+        updated_tmpl = template_format.parse(
+            self.test_template_explicit_stateful)
+        updated_stack = utils.parse_stack(updated_tmpl)
+        stack.update(updated_stack)
+
+        self.mockclient.update_security_group.assert_called_once_with(
+            'aaaa', {'security_group': {
+                'description': 'Explicit Stateful SG',
+                'stateful': True}})
+        self.mockclient.list_ports.assert_called_once_with(
+            security_groups=['aaaa'])
+
+    def test_security_group_update_stateful_rejects_bound_ports(self):
+        sg_name = utils.PhysName('test_stack', 'the_sg')
+        self.mockclient.create_security_group.return_value = {
+            'security_group': {
+                'id': 'aaaa',
+                'name': sg_name,
+                'description': 'Stateless SG',
+                'stateful': False,
+            }
+        }
+
+        stack = self.create_stack(self.test_template_explicit_stateless)
+        sg = stack['the_sg']
+        self.assertResourceState(sg, 'aaaa')
+
+        self.mockclient.list_ports.return_value = {
+            'ports': [{'id': 'port-id'}]}
+
+        ex = self.assertRaises(
+            exception.NotSupported,
+            sg.handle_update, None, None, {sg.STATEFUL: True})
+        self.assertIn('Updating the \"stateful\" property',
+                      str(ex))
+        self.mockclient.update_security_group.assert_not_called()
