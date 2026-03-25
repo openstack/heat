@@ -34,16 +34,10 @@ class dependenciesTest(common.HeatTestCase):
             checkorder(order.index(fr), order.index(lr))
 
     def _dep_test_fwd(self, *deps):
-        def assertLess(a, b):
-            self.assertTrue(a < b,
-                            '"%s" is not less than "%s"' % (str(a), str(b)))
-        self._dep_test(iter, assertLess, deps)
+        self._dep_test(iter, self.assertLess, deps)
 
     def _dep_test_rev(self, *deps):
-        def assertGreater(a, b):
-            self.assertTrue(a > b,
-                            '"%s" is not greater than "%s"' % (str(a), str(b)))
-        self._dep_test(reversed, assertGreater, deps)
+        self._dep_test(reversed, self.assertGreater, deps)
 
     def test_edges(self):
         input_edges = [('1', None), ('2', '3'), ('2', '4')]
