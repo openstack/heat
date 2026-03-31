@@ -156,6 +156,20 @@ class SecurityGroup(neutron.NeutronResource):
         {"direction": "egress", "ethertype": "IPv6"}
     ]
 
+    _COMPARABLE_RULE_KEYS = (
+        'direction', 'ethertype', 'protocol',
+        'port_range_min', 'port_range_max',
+        'remote_group_id', 'remote_ip_prefix',
+        'security_group_id',
+    )
+
+    @staticmethod
+    def _rule_key(rule):
+        return tuple(
+            str(rule.get(k)) if rule.get(k) is not None else None
+            for k in SecurityGroup._COMPARABLE_RULE_KEYS
+        )
+
     def validate(self):
         super(SecurityGroup, self).validate()
         if self.properties[self.NAME] == 'default':
@@ -197,27 +211,17 @@ class SecurityGroup(neutron.NeutronResource):
         return rule
 
     def _create_rules(self, rules):
-        egress_deleted = False
+        if not rules:
+            return
 
-        for i in rules:
-            if i[self.RULE_DIRECTION] == 'egress' and not egress_deleted:
-                # There is at least one egress rule, so delete the default
-                # rules which allow all egress traffic
-                egress_deleted = True
+        if any(r[self.RULE_DIRECTION] == 'egress' for r in rules):
+            self._delete_rules(
+                lambda rule: rule[self.RULE_DIRECTION] == 'egress')
 
-                def is_egress(rule):
-                    return rule[self.RULE_DIRECTION] == 'egress'
+        formatted_rules = [self._format_rule(r) for r in rules]
 
-                self._delete_rules(is_egress)
-
-            rule = self._format_rule(i)
-
-            try:
-                self.client().create_security_group_rule(
-                    {'security_group_rule': rule})
-            except Exception as ex:
-                if not self.client_plugin().is_conflict(ex):
-                    raise
+        self.client().create_security_group_rule(
+            {'security_group_rules': formatted_rules})
 
     def _delete_rules(self, to_delete=None):
         try:
@@ -239,23 +243,46 @@ class SecurityGroup(neutron.NeutronResource):
         with self.client_plugin().ignore_not_found:
             self.client().delete_security_group(self.resource_id)
 
+    def _update_rules(self, rules):
+        desired_rules = list(rules) if rules else []
+        if not any(r[self.RULE_DIRECTION] == 'egress'
+                   for r in desired_rules):
+            desired_rules.extend(self.default_egress_rules)
+
+        desired = [(self._rule_key(r), r)
+                   for r in (self._format_rule(r) for r in desired_rules)]
+        desired_keys = set(k for k, r in desired)
+
+        sec = self.client().show_security_group(
+            self.resource_id)['security_group']
+
+        current = [(self._rule_key(r), r)
+                   for r in sec['security_group_rules']]
+        current_keys = set(k for k, r in current)
+
+        stale = current_keys - desired_keys
+        missing = desired_keys - current_keys
+
+        for key, rule in current:
+            if key in stale:
+                with self.client_plugin().ignore_not_found:
+                    self.client().delete_security_group_rule(rule['id'])
+
+        if missing:
+            new_rules = [rule for key, rule in desired if key in missing]
+            self.client().create_security_group_rule(
+                {'security_group_rules': new_rules})
+
     def handle_update(self, json_snippet, tmpl_diff, prop_diff):
-        # handle rules changes by:
-        # * deleting all rules
-        # * restoring the default egress rules
-        # * creating new rules
-        rules = None
-        if self.RULES in prop_diff:
-            rules = prop_diff.pop(self.RULES)
-            self._delete_rules()
-            self._create_rules(self.default_egress_rules)
+        rules = prop_diff.pop(self.RULES, None)
 
         if prop_diff:
             self.prepare_update_properties(prop_diff)
             self.client().update_security_group(
                 self.resource_id, {'security_group': prop_diff})
-        if rules:
-            self._create_rules(rules)
+
+        if rules is not None:
+            self._update_rules(rules)
 
 
 def resource_mapping():
