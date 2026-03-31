@@ -71,8 +71,25 @@ resources:
       rules:
       - port_range_min: 22
         port_range_max: 22
-        remote_ip_prefix: 10.0.0.10/24
+        remote_ip_prefix: 0.0.0.0/0
         protocol: tcp
+      - port_range_min: 443
+        port_range_max: 443
+        remote_ip_prefix: 0.0.0.0/0
+        protocol: tcp
+      - port_range_min: 8080
+        port_range_max: 8080
+        remote_ip_prefix: 0.0.0.0/0
+        protocol: tcp
+      - port_range_min: 53
+        port_range_max: 53
+        remote_ip_prefix: 0.0.0.0/0
+        protocol: udp
+      - direction: egress
+        port_range_min: 22
+        port_range_max: 22
+        protocol: tcp
+        remote_ip_prefix: 10.0.1.0/24
 '''
 
     test_template_validate = '''
@@ -227,125 +244,72 @@ resources:
             }
         }
 
-        self.mockclient.create_security_group_rule.side_effect = [
-            {
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '0.0.0.0/0',
-                    'port_range_min': '22',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '22',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa',
-                    'id': 'bbbb'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '0.0.0.0/0',
-                    'port_range_min': '80',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '80',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa',
-                    'id': 'cccc'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': 'wwww',
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa',
-                    'id': 'dddd'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '10.0.1.0/24',
-                    'port_range_min': '22',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '22',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa',
-                    'id': 'eeee'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': 'xxxx',
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': None,
-                    'security_group_id': 'aaaa',
-                    'id': 'ffff'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': 'aaaa',
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': None,
-                    'security_group_id': 'aaaa',
-                    'id': 'gggg'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': None,
-                    'security_group_id': 'aaaa',
-                    'id': 'hhhh'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv6',
-                    'port_range_max': None,
-                    'protocol': None,
-                    'security_group_id': 'aaaa',
-                    'id': 'iiii'
-                }
-            },
-            {
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '10.0.0.10/24',
-                    'port_range_min': '22',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '22',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa',
-                    'id': 'jjjj'
-                }
-            },
-        ]
+        self.mockclient.create_security_group_rule.return_value = {
+            'security_group_rules': []
+        }
+
+        show_after_update = {'security_group': {
+            'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+            'name': 'myrules',
+            'description': 'SSH access for private network',
+            'security_group_rules': [{
+                'direction': 'ingress',
+                'protocol': 'tcp',
+                'port_range_max': '22',
+                'id': 'bbbb',
+                'ethertype': 'IPv4',
+                'security_group_id': 'aaaa',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                'port_range_min': '22'
+            }, {
+                'direction': 'egress',
+                'protocol': 'tcp',
+                'port_range_max': '22',
+                'id': 'eeee',
+                'ethertype': 'IPv4',
+                'security_group_id': 'aaaa',
+                'remote_group_id': None,
+                'remote_ip_prefix': '10.0.1.0/24',
+                'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                'port_range_min': '22'
+            }, {
+                'direction': 'ingress',
+                'protocol': 'tcp',
+                'port_range_max': '443',
+                'id': 'hhhh',
+                'ethertype': 'IPv4',
+                'security_group_id': 'aaaa',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                'port_range_min': '443'
+            }, {
+                'direction': 'ingress',
+                'protocol': 'tcp',
+                'port_range_max': '8080',
+                'id': 'iiii',
+                'ethertype': 'IPv4',
+                'security_group_id': 'aaaa',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                'port_range_min': '8080'
+            }, {
+                'direction': 'ingress',
+                'protocol': 'udp',
+                'port_range_max': '53',
+                'id': 'jjjj',
+                'ethertype': 'IPv4',
+                'security_group_id': 'aaaa',
+                'remote_group_id': None,
+                'remote_ip_prefix': '0.0.0.0/0',
+                'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                'port_range_min': '53'
+            }],
+            'id': 'aaaa'}
+        }
 
         self.mockclient.show_security_group.side_effect = [
             {
@@ -380,16 +344,7 @@ resources:
                 }
             },
             show_created,
-            {
-                'security_group': {
-                    'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
-                    'name': 'sc1',
-                    'description': '',
-                    'security_group_rules': [],
-                    'id': 'aaaa'
-                }
-            },
-            show_created,
+            show_after_update,
         ]
         self.mockclient.delete_security_group_rule.return_value = None
 
@@ -426,122 +381,119 @@ resources:
         })
         self.mockclient.create_security_group_rule.assert_has_calls([
             mock.call({
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '0.0.0.0/0',
-                    'port_range_min': '22',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '22',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa'
-                }
+                'security_group_rules': [
+                    {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': '22',
+                        'ethertype': 'IPv4',
+                        'port_range_max': '22',
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': '80',
+                        'ethertype': 'IPv4',
+                        'port_range_max': '80',
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'ingress',
+                        'remote_group_id': 'wwww',
+                        'remote_ip_prefix': None,
+                        'port_range_min': None,
+                        'ethertype': 'IPv4',
+                        'port_range_max': None,
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'egress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '10.0.1.0/24',
+                        'port_range_min': '22',
+                        'ethertype': 'IPv4',
+                        'port_range_max': '22',
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'egress',
+                        'remote_group_id': 'xxxx',
+                        'remote_ip_prefix': None,
+                        'port_range_min': None,
+                        'ethertype': 'IPv4',
+                        'port_range_max': None,
+                        'protocol': None,
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'egress',
+                        'remote_group_id': 'aaaa',
+                        'remote_ip_prefix': None,
+                        'port_range_min': None,
+                        'ethertype': 'IPv4',
+                        'port_range_max': None,
+                        'protocol': None,
+                        'security_group_id': 'aaaa'
+                    },
+                ]
             }),
             mock.call({
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '0.0.0.0/0',
-                    'port_range_min': '80',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '80',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': 'wwww',
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '10.0.1.0/24',
-                    'port_range_min': '22',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '22',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': 'xxxx',
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': None,
-                    'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'remote_group_id': 'aaaa',
-                    'remote_ip_prefix': None,
-                    'port_range_min': None,
-                    'ethertype': 'IPv4',
-                    'port_range_max': None,
-                    'protocol': None,
-                    'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'ethertype': 'IPv4',
-                    'security_group_id': 'aaaa',
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'egress',
-                    'ethertype': 'IPv6',
-                    'security_group_id': 'aaaa',
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
-                    'direction': 'ingress',
-                    'remote_group_id': None,
-                    'remote_ip_prefix': '10.0.0.10/24',
-                    'port_range_min': '22',
-                    'ethertype': 'IPv4',
-                    'port_range_max': '22',
-                    'protocol': 'tcp',
-                    'security_group_id': 'aaaa'
-                }
+                'security_group_rules': [
+                    {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': '443',
+                        'ethertype': 'IPv4',
+                        'port_range_max': '443',
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': '8080',
+                        'ethertype': 'IPv4',
+                        'port_range_max': '8080',
+                        'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'ingress',
+                        'remote_group_id': None,
+                        'remote_ip_prefix': '0.0.0.0/0',
+                        'port_range_min': '53',
+                        'ethertype': 'IPv4',
+                        'port_range_max': '53',
+                        'protocol': 'udp',
+                        'security_group_id': 'aaaa'
+                    },
+                ]
             }),
         ])
         self.mockclient.show_security_group.assert_called_with('aaaa')
         self.mockclient.delete_security_group_rule.assert_has_calls([
             mock.call('aaaa-1'),
             mock.call('aaaa-2'),
-            # update script
-            mock.call('bbbb'),
+            # update: delete only stale rules (bbbb, eeee kept)
             mock.call('cccc'),
             mock.call('dddd'),
-            mock.call('eeee'),
             mock.call('ffff'),
             mock.call('gggg'),
-            # delete script
+            # delete: remove all remaining rules
             mock.call('bbbb'),
-            mock.call('cccc'),
-            mock.call('dddd'),
             mock.call('eeee'),
-            mock.call('ffff'),
-            mock.call('gggg'),
+            mock.call('hhhh'),
+            mock.call('iiii'),
+            mock.call('jjjj'),
         ])
         self.mockclient.update_security_group.assert_called_once_with(
             'aaaa',
@@ -563,14 +515,9 @@ resources:
                 'id': 'aaaa'
             }
         }
-        self.mockclient.create_security_group_rule.side_effect = [
-            neutron_exc.Conflict,
-            neutron_exc.Conflict,
-            neutron_exc.Conflict,
-            neutron_exc.Conflict,
-            neutron_exc.Conflict,
-            neutron_exc.Conflict,
-        ]
+        self.mockclient.create_security_group_rule.return_value = {
+            'security_group_rules': []
+        }
 
         self.mockclient.show_security_group.side_effect = [
             {
@@ -684,9 +631,9 @@ resources:
                 'description': 'HTTP and SSH access'
             }
         })
-        self.mockclient.create_security_group_rule.assert_has_calls([
-            mock.call({
-                'security_group_rule': {
+        self.mockclient.create_security_group_rule.assert_called_once_with({
+            'security_group_rules': [
+                {
                     'direction': 'ingress',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
@@ -695,10 +642,8 @@ resources:
                     'port_range_max': '22',
                     'protocol': 'tcp',
                     'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
+                },
+                {
                     'direction': 'ingress',
                     'remote_group_id': None,
                     'remote_ip_prefix': '0.0.0.0/0',
@@ -707,10 +652,8 @@ resources:
                     'port_range_max': '80',
                     'protocol': 'tcp',
                     'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
+                },
+                {
                     'direction': 'ingress',
                     'remote_group_id': 'wwww',
                     'remote_ip_prefix': None,
@@ -719,10 +662,8 @@ resources:
                     'port_range_max': None,
                     'protocol': 'tcp',
                     'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
+                },
+                {
                     'direction': 'egress',
                     'remote_group_id': None,
                     'remote_ip_prefix': '10.0.1.0/24',
@@ -731,10 +672,8 @@ resources:
                     'port_range_max': '22',
                     'protocol': 'tcp',
                     'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
+                },
+                {
                     'direction': 'egress',
                     'remote_group_id': 'xxxx',
                     'remote_ip_prefix': None,
@@ -743,10 +682,8 @@ resources:
                     'port_range_max': None,
                     'protocol': None,
                     'security_group_id': 'aaaa'
-                }
-            }),
-            mock.call({
-                'security_group_rule': {
+                },
+                {
                     'direction': 'egress',
                     'remote_group_id': 'aaaa',
                     'remote_ip_prefix': None,
@@ -755,9 +692,9 @@ resources:
                     'port_range_max': None,
                     'protocol': None,
                     'security_group_id': 'aaaa'
-                }
-            }),
-        ])
+                },
+            ]
+        })
         self.mockclient.show_security_group.assert_called_with('aaaa')
         self.mockclient.delete_security_group_rule.assert_has_calls([
             mock.call('bbbb'),
