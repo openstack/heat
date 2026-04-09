@@ -1,0 +1,8 @@
+---
+fixes:
+  - |
+    Fixed inconsistency between ``OS::Neutron::SecurityGroup`` embedded
+    ``rules`` property and the``OS::Neutron::SecurityGroupRule``
+    resource. The embedded rules now support the same ``description`` field
+    and document the same comprehensive list of protocols, resolving
+    confusion about which protocols are actually supported.

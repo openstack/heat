@@ -41,10 +41,12 @@ resources:
         port_range_max: 22
         remote_ip_prefix: 0.0.0.0/0
         protocol: tcp
+        description: SSH access
       - port_range_min: 80
         port_range_max: 80
         protocol: tcp
         remote_ip_prefix: 0.0.0.0/0
+        description: HTTP traffic
       - remote_mode: remote_group_id
         remote_group_id: wwww
         protocol: tcp
@@ -53,6 +55,11 @@ resources:
         port_range_max: 22
         protocol: tcp
         remote_ip_prefix: 10.0.1.0/24
+      - direction: egress
+        remote_mode: remote_group_id
+        remote_group_id: xxxx
+        protocol: gre
+        description: GRE tunnel
       - direction: egress
         remote_mode: remote_group_id
         remote_group_id: xxxx
@@ -186,7 +193,7 @@ resources:
                 'port_range_min': '22'
             }, {
                 'direction': 'egress',
-                'protocol': None,
+                'protocol': 'gre',
                 'port_range_max': None,
                 'id': 'ffff',
                 'ethertype': 'IPv4',
@@ -200,6 +207,17 @@ resources:
                 'protocol': None,
                 'port_range_max': None,
                 'id': 'gggg',
+                'ethertype': 'IPv4',
+                'security_group_id': 'aaaa',
+                'remote_group_id': 'xxxx',
+                'remote_ip_prefix': None,
+                'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                'port_range_min': None
+            }, {
+                'direction': 'egress',
+                'protocol': None,
+                'port_range_max': None,
+                'id': 'hhhh',
                 'ethertype': 'IPv4',
                 'security_group_id': 'aaaa',
                 'remote_group_id': 'aaaa',
@@ -390,6 +408,7 @@ resources:
                         'ethertype': 'IPv4',
                         'port_range_max': '22',
                         'protocol': 'tcp',
+                        'description': 'SSH access',
                         'security_group_id': 'aaaa'
                     },
                     {
@@ -400,6 +419,7 @@ resources:
                         'ethertype': 'IPv4',
                         'port_range_max': '80',
                         'protocol': 'tcp',
+                        'description': 'HTTP traffic',
                         'security_group_id': 'aaaa'
                     },
                     {
@@ -420,6 +440,17 @@ resources:
                         'ethertype': 'IPv4',
                         'port_range_max': '22',
                         'protocol': 'tcp',
+                        'security_group_id': 'aaaa'
+                    },
+                    {
+                        'direction': 'egress',
+                        'remote_group_id': 'xxxx',
+                        'remote_ip_prefix': None,
+                        'port_range_min': None,
+                        'ethertype': 'IPv4',
+                        'port_range_max': None,
+                        'protocol': 'gre',
+                        'description': 'GRE tunnel',
                         'security_group_id': 'aaaa'
                     },
                     {
@@ -488,6 +519,7 @@ resources:
             mock.call('dddd'),
             mock.call('ffff'),
             mock.call('gggg'),
+            mock.call('hhhh'),
             # delete: remove all remaining rules
             mock.call('bbbb'),
             mock.call('eeee'),
@@ -581,13 +613,13 @@ resources:
                         'port_range_min': '22'
                     }, {
                         'direction': 'egress',
-                        'protocol': None,
+                        'protocol': 'gre',
                         'port_range_max': None,
                         'id': 'ffff',
                         'ethertype': 'IPv4',
                         'security_group_id': 'aaaa',
-                        'remote_group_id': None,
-                        'remote_ip_prefix': 'xxxx',
+                        'remote_group_id': 'xxxx',
+                        'remote_ip_prefix': None,
                         'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                         'port_range_min': None
                     }, {
@@ -597,8 +629,19 @@ resources:
                         'id': 'gggg',
                         'ethertype': 'IPv4',
                         'security_group_id': 'aaaa',
-                        'remote_group_id': None,
-                        'remote_ip_prefix': 'aaaa',
+                        'remote_group_id': 'xxxx',
+                        'remote_ip_prefix': None,
+                        'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
+                        'port_range_min': None
+                    }, {
+                        'direction': 'egress',
+                        'protocol': None,
+                        'port_range_max': None,
+                        'id': 'hhhh',
+                        'ethertype': 'IPv4',
+                        'security_group_id': 'aaaa',
+                        'remote_group_id': 'aaaa',
+                        'remote_ip_prefix': None,
                         'tenant_id': 'f18ca530cc05425e8bac0a5ff92f7e88',
                         'port_range_min': None
                     }],
@@ -641,6 +684,7 @@ resources:
                     'ethertype': 'IPv4',
                     'port_range_max': '22',
                     'protocol': 'tcp',
+                    'description': 'SSH access',
                     'security_group_id': 'aaaa'
                 },
                 {
@@ -651,6 +695,7 @@ resources:
                     'ethertype': 'IPv4',
                     'port_range_max': '80',
                     'protocol': 'tcp',
+                    'description': 'HTTP traffic',
                     'security_group_id': 'aaaa'
                 },
                 {
@@ -671,6 +716,17 @@ resources:
                     'ethertype': 'IPv4',
                     'port_range_max': '22',
                     'protocol': 'tcp',
+                    'security_group_id': 'aaaa'
+                },
+                {
+                    'direction': 'egress',
+                    'remote_group_id': 'xxxx',
+                    'remote_ip_prefix': None,
+                    'port_range_min': None,
+                    'ethertype': 'IPv4',
+                    'port_range_max': None,
+                    'protocol': 'gre',
+                    'description': 'GRE tunnel',
                     'security_group_id': 'aaaa'
                 },
                 {
@@ -703,6 +759,7 @@ resources:
             mock.call('eeee'),
             mock.call('ffff'),
             mock.call('gggg'),
+            mock.call('hhhh'),
         ])
         self.mockclient.delete_security_group.assert_called_with('aaaa')
 

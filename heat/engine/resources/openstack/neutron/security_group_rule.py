@@ -42,13 +42,6 @@ class SecurityGroupRule(neutron.NeutronResource):
         'remote_ip_prefix'
     )
 
-    _allowed_protocols = list(range(256)) + [
-        'ah', 'dccp', 'egp', 'esp', 'gre', 'icmp', 'icmpv6', 'igmp',
-        'ipv6-encap', 'ipv6-frag', 'ipv6-icmp', 'ipv6-nonxt', 'ipv6-opts',
-        'ipv6-route', 'ospf', 'pgm', 'rsvp', 'sctp', 'tcp', 'udp', 'udplite',
-        'vrrp'
-    ]
-
     properties_schema = {
         SECURITY_GROUP: properties.Schema(
             properties.Schema.STRING,
@@ -105,13 +98,10 @@ class SecurityGroupRule(neutron.NeutronResource):
         ),
         PROTOCOL: properties.Schema(
             properties.Schema.STRING,
-            _('The protocol that is matched by the security group rule. '
-              'Allowed values are ah, dccp, egp, esp, gre, icmp, icmpv6, '
-              'igmp, ipv6-encap, ipv6-frag, ipv6-icmp, ipv6-nonxt, ipv6-opts, '
-              'ipv6-route, ospf, pgm, rsvp, sctp, tcp, udp, udplite, vrrp '
-              'and integer representations [0-255].'),
+            _(neutron.SECURITY_GROUP_PROTOCOL_DESCRIPTION),
             default='tcp',
-            constraints=[constraints.AllowedValues(_allowed_protocols)]
+            constraints=[constraints.AllowedValues(
+                neutron.ALLOWED_SECURITY_GROUP_PROTOCOLS)]
             ),
         REMOTE_GROUP: properties.Schema(
             properties.Schema.STRING,

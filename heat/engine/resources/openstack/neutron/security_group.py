@@ -44,11 +44,11 @@ class SecurityGroup(neutron.NeutronResource):
     _RULE_KEYS = (
         RULE_DIRECTION, RULE_ETHERTYPE, RULE_PORT_RANGE_MIN,
         RULE_PORT_RANGE_MAX, RULE_PROTOCOL, RULE_REMOTE_MODE,
-        RULE_REMOTE_GROUP_ID, RULE_REMOTE_IP_PREFIX,
+        RULE_REMOTE_GROUP_ID, RULE_REMOTE_IP_PREFIX, RULE_DESCRIPTION,
     ) = (
         'direction', 'ethertype', 'port_range_min',
         'port_range_max', 'protocol', 'remote_mode',
-        'remote_group_id', 'remote_ip_prefix',
+        'remote_group_id', 'remote_ip_prefix', 'description',
     )
 
     _rule_schema = {
@@ -95,8 +95,12 @@ class SecurityGroup(neutron.NeutronResource):
         ),
         RULE_PROTOCOL: properties.Schema(
             properties.Schema.STRING,
-            _('The protocol that is matched by the security group rule. '
-              'Valid values include tcp, udp, and icmp.')
+            _(neutron.SECURITY_GROUP_PROTOCOL_DESCRIPTION +
+              ' If not specified, all protocols will be matched.'),
+            constraints=[
+                constraints.AllowedValues(
+                    neutron.ALLOWED_SECURITY_GROUP_PROTOCOLS)
+            ]
         ),
         RULE_REMOTE_MODE: properties.Schema(
             properties.Schema.STRING,
@@ -124,6 +128,11 @@ class SecurityGroup(neutron.NeutronResource):
             constraints=[
                 constraints.CustomConstraint('net_cidr')
             ]
+        ),
+        RULE_DESCRIPTION: properties.Schema(
+            properties.Schema.STRING,
+            _('Description of the security group rule.'),
+            support_status=support.SupportStatus(version='27.0.0')
         ),
     }
 
@@ -208,6 +217,11 @@ class SecurityGroup(neutron.NeutronResource):
         for key in (self.RULE_PORT_RANGE_MIN, self.RULE_PORT_RANGE_MAX):
             if rule.get(key) is not None:
                 rule[key] = str(rule[key])
+
+        # Remove description if None - Neutron API doesn't accept None
+        if rule.get(self.RULE_DESCRIPTION) is None:
+            rule.pop(self.RULE_DESCRIPTION, None)
+
         return rule
 
     def _create_rules(self, rules):
