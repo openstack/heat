@@ -1,0 +1,4 @@
+---
+upgrade:
+  - |
+    The ``heat-manage migrate_properties_data`` command was removed.
