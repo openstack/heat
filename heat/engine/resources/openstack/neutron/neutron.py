@@ -19,22 +19,24 @@ from heat.engine import resource
 
 LOG = logging.getLogger(__name__)
 
-# Allowed protocols for security group rules
-# Supports both named protocols and integer representations (0-255)
-ALLOWED_SECURITY_GROUP_PROTOCOLS = list(range(256)) + [
+_ALLOWED_SECURITY_GROUP_PROTOCOL_NAMES = [
     'ah', 'dccp', 'egp', 'esp', 'gre', 'icmp', 'icmpv6', 'igmp',
     'ipv6-encap', 'ipv6-frag', 'ipv6-icmp', 'ipv6-nonxt', 'ipv6-opts',
     'ipv6-route', 'ospf', 'pgm', 'rsvp', 'sctp', 'tcp', 'udp', 'udplite',
     'vrrp'
 ]
 
+# Allowed protocols for security group rules
+# Supports both named protocols and integer representations (0-255)
+ALLOWED_SECURITY_GROUP_PROTOCOLS = (
+    list(range(256)) + _ALLOWED_SECURITY_GROUP_PROTOCOL_NAMES)
+
 # Protocol description for security group rule schema
 SECURITY_GROUP_PROTOCOL_DESCRIPTION = (
     'The protocol that is matched by the security group rule. '
-    'Allowed values are ah, dccp, egp, esp, gre, icmp, icmpv6, '
-    'igmp, ipv6-encap, ipv6-frag, ipv6-icmp, ipv6-nonxt, ipv6-opts, '
-    'ipv6-route, ospf, pgm, rsvp, sctp, tcp, udp, udplite, vrrp '
-    'and integer representations [0-255].')
+    'Allowed values are ' +
+    ', '.join(_ALLOWED_SECURITY_GROUP_PROTOCOL_NAMES) +
+    ' and integer representations [0-255].')
 
 
 class NeutronResource(resource.Resource):
