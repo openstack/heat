@@ -1,0 +1,5 @@
+---
+upgrade:
+  - |
+    Integration with vitrage has been removed. The ``OS::Vitrage::Template``
+    resource type is no longer supported and is now hidden.
