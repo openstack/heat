@@ -15,20 +15,14 @@ import hashlib
 import itertools
 
 from oslo_config import cfg
-from oslo_config import types
 from oslo_log import log as logging
 from oslo_serialization import jsonutils as json
-from oslo_utils import strutils
 import webob
 
-from keystoneauth1 import adapter as ks_adapter
 from keystoneauth1 import exceptions as ks_exceptions
 from keystoneauth1 import loading as ks_loading
-from keystoneauth1 import noauth as ks_noauth
-from keystoneauth1 import session as ks_session
 
 from heat.api.aws import exception
-from heat.common import endpoint_utils
 from heat.common.i18n import _
 from heat.common import wsgi
 
@@ -36,12 +30,6 @@ LOG = logging.getLogger(__name__)
 
 
 opts = [
-    cfg.URIOpt('auth_uri',
-               schemes=['http', 'https'],
-               help=_("Authentication Endpoint URI."),
-               deprecated_for_removal=True,
-               deprecated_reason='Superseded by the endpoint_override option'
-               ),
     cfg.BoolOpt('multi_cloud',
                 default=False,
                 help=_('Allow orchestration of multiple clouds.')),
@@ -50,28 +38,12 @@ opts = [
                 help=_('A list of names of clouds when multicloud is enabled. '
                        'At least one should be defined when multi_cloud is '
                        'enabled. For each name there must be a section '
-                       '[ec2authtoken.<name>] with keystone auth settings.'),),
-    cfg.ListOpt('allowed_auth_uris',
-                default=[],
-                item_type=types.URI(schemes=['http', 'https']),
-                help=_('Allowed keystone endpoints for auth_uri when '
-                       'multi_cloud is enabled. At least one endpoint needs '
-                       'to be specified.'),
-                deprecated_for_removal=True,
-                deprecated_reason='Superseded by the clouds option'
-                ),
+                       '[ec2authtoken.<name>] with keystone auth settings.')),
 ]
-
-_deprecated_opts = {
-    'certfile': [cfg.DeprecatedOpt('cert_file')],
-    'keyfile': [cfg.DeprecatedOpt('key_file')],
-    'cafile': [cfg.DeprecatedOpt('ca_file')]
-}
 
 cfg.CONF.register_opts(opts, group='ec2authtoken')
 ks_loading.register_auth_conf_options(cfg.CONF, 'ec2authtoken')
-ks_loading.register_session_conf_options(
-    cfg.CONF, 'ec2authtoken', deprecated_opts=_deprecated_opts)
+ks_loading.register_session_conf_options(cfg.CONF, 'ec2authtoken')
 ks_loading.register_adapter_conf_options(cfg.CONF, 'ec2authtoken')
 cfg.CONF.set_default('service_type', 'identity', group='ec2authtoken')
 
@@ -98,75 +70,20 @@ class EC2Token(wsgi.Middleware):
         return ks_loading.load_adapter_from_conf_options(
             cfg.CONF, cfg_group, session=session)
 
-    def _create_noauth_ks_adapter(self, auth_url):
-        insecure = strutils.bool_from_string(
-            self.conf.get('insecure', cfg.CONF.ec2authtoken.insecure))
-        certfile = self.conf.get('cert_file', cfg.CONF.ec2authtoken.certfile)
-        keyfile = self.conf.get('key_file', cfg.CONF.ec2authtoken.keyfile)
-        cafile = self.conf.get('ca_file', cfg.CONF.ec2authtoken.cafile)
-
-        verify = False
-        cert = None
-        if not insecure:
-            verify = cafile or True
-            cert = (certfile, keyfile) if keyfile else certfile
-
-        auth = ks_noauth.NoAuth()
-        session = ks_session.Session(
-            auth=auth,
-            verify=verify,
-            cert=cert,
-            timeout=cfg.CONF.ec2authtoken.timeout,
-        )
-        return ks_adapter.Adapter(session=session,
-                                  endpoint_override=auth_url)
-
     def _create_keystone_adapters(self):
-        # Create a keystone adapters for each auth_uri to make requests
+        # Create a keystone adapters for each cloud to make requests
         # against the v3/ec2token endpoint.
         ks_adapters = {}
         if self._conf_get('multi_cloud'):
-            allowed_auth_uris = self._conf_get('allowed_auth_uris')
-
             clouds = self._conf_get('clouds')
-            if clouds:
-                # match each clouds value with an
-                # ec2authtoken.<value> section.
-                for cloud in clouds:
-                    cfg_group = f'ec2authtoken.{cloud}'
-                    self._register_ks_opts(cfg_group)
-                    ks_adapters[cloud] = self._create_ks_adapter(cfg_group)
-            elif allowed_auth_uris:
-                LOG.warning(
-                    'ec2tokens API calls will be unauthenticated because of '
-                    'legacy allowed_auth_uris being used. The API call may be '
-                    'rejected by keystone due to recent policy change.')
-                for auth_uri in allowed_auth_uris:
-                    ks_adapters[auth_uri] = self._create_noauth_ks_adapter(
-                        self._strip_ec2tokens_uri(auth_uri))
-            else:
-                LOG.error(
-                    'Configuration multi_cloud enabled but neither '
-                    'allowed_auth_uris or clouds set. '
-                    'ec2tokenauth will not be able to validate EC2 '
-                    'credentials.'
-                )
-
+            # match each clouds value with an ec2authtoken.<value> section.
+            for cloud in clouds:
+                cfg_group = f'ec2authtoken.{cloud}'
+                self._register_ks_opts(cfg_group)
+                ks_adapters[cloud] = self._create_ks_adapter(cfg_group)
         else:
             adapter = self._create_ks_adapter('ec2authtoken')
-            if adapter.session.auth and adapter.get_endpoint():
-                ks_adapters[None] = adapter
-            else:
-                LOG.warning(
-                    'The [ec2authtoken] section does not include details to '
-                    'detect endpoint url. Using the legacy endpoint detection '
-                    'and API call without authentication. This may be '
-                    'rejected by keystone due to recent policy change.')
-                auth_uri = self._conf_get_auth_uri()
-                if auth_uri:
-                    adapter = self._create_noauth_ks_adapter(
-                        self._strip_ec2tokens_uri(auth_uri))
-                    ks_adapters[None] = adapter
+            ks_adapters[None] = adapter
 
         return ks_adapters
 
@@ -176,22 +93,6 @@ class EC2Token(wsgi.Middleware):
             return self.conf[name]
         else:
             return cfg.CONF.ec2authtoken[name]
-
-    def _strip_ec2tokens_uri(self, auth_uri):
-        # NOTE(tkajinam): Due to heat accepted auth_uri with full URI for
-        # ec2tokens API, we strip the uri part here. This will be removed
-        # when auth_uri is removed.
-        auth_uri = auth_uri.replace('v2.0', 'v3')
-        for suffix in ['/', '/ec2tokens', '/v3']:
-            if auth_uri.endswith(suffix):
-                auth_uri = auth_uri.rsplit(suffix, 1)[0]
-        return auth_uri
-
-    def _conf_get_auth_uri(self):
-        auth_uri = self._conf_get('auth_uri')
-        if auth_uri:
-            return auth_uri.replace('v2.0', 'v3')
-        return endpoint_utils.get_auth_uri()
 
     def _get_signature(self, req):
         """Extract the signature from the request.
@@ -235,30 +136,21 @@ class EC2Token(wsgi.Middleware):
         if not self._conf_get('multi_cloud'):
             return self._authorize(req, None)
         else:
-            # attempt to authorize for each configured allowed_auth_uris
-            # until one is successful.
+            # attempt to authorize for each configured cloud until one is
+            # successful.
             # This is safe for the following reasons:
             # 1. AWSAccessKeyId is a randomly generated sequence
             # 2. No secret is transferred to validate a request
             last_failure = None
             clouds = self._conf_get('clouds')
 
-            if clouds:
-                for cloud in clouds:
-                    try:
-                        LOG.debug("Attempt authorize on %s", cloud)
-                        return self._authorize(req, cloud)
-                    except exception.HeatAPIException as e:
-                        LOG.debug("Authorize failed: %s", e.__class__)
-                        last_failure = e
-            else:
-                for auth_uri in self._conf_get('allowed_auth_uris'):
-                    try:
-                        LOG.debug("Attempt authorize on %s", auth_uri)
-                        return self._authorize(req, auth_uri)
-                    except exception.HeatAPIException as e:
-                        LOG.debug("Authorize failed: %s", e.__class__)
-                        last_failure = e
+            for cloud in clouds:
+                try:
+                    LOG.debug("Attempt authorize on %s", cloud)
+                    return self._authorize(req, cloud)
+                except exception.HeatAPIException as e:
+                    LOG.debug("Authorize failed: %s", e.__class__)
+                    last_failure = e
 
             raise last_failure or exception.HeatAccessDeniedError()
 
@@ -388,7 +280,6 @@ def list_opts():
         opts,
         ks_loading.get_auth_common_conf_options(),
         ks_loading.get_auth_plugin_conf_options('v3password'),
-        ks_loading.get_session_conf_options(
-            deprecated_opts=_deprecated_opts),
+        ks_loading.get_session_conf_options(),
         ks_loading.get_adapter_conf_options()
     )

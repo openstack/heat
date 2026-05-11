@@ -1,0 +1,14 @@
+---
+upgrade:
+  - |
+    The following deprecated options in the ``[ec2authtoken]`` section have
+    been removed. Due to this removal, the ec2authtoken middleware now requires
+    that credential options are properly set in the ``[ec2authtoken]`` section
+    or the per-cloud ``[ec2authtoken.<name>]`` sections.
+
+    - ``auth_uri``
+    - ``allowed_auth_uris``
+    - ``ca_file``
+    - ``cert_file``
+    - ``key_file``
+
