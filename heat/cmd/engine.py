@@ -45,14 +45,12 @@ i18n.enable_lazy()
 CONF = cfg.CONF
 
 
-def launch_engine(setup_logging=True):
-    if setup_logging:
-        logging.register_options(CONF)
+def launch_engine():
+    logging.register_options(CONF)
     CONF(project='heat', prog='heat-engine',
          version=version.version_info.version_string())
-    if setup_logging:
-        logging.setup(CONF, CONF.prog)
-        logging.set_defaults()
+    logging.setup(CONF, CONF.prog)
+    logging.set_defaults()
     LOG = logging.getLogger(CONF.prog)
     messaging.setup()
 
