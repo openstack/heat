@@ -4,7 +4,7 @@ Install and configure for Ubuntu
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This section describes how to install and configure the Orchestration service
-for Ubuntu 14.04 (LTS).
+for Ubuntu.
 
 Prerequisites
 -------------
