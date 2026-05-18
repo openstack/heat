@@ -4,7 +4,7 @@ Install and configure for Red Hat Enterprise Linux and CentOS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This section describes how to install and configure the Orchestration service
-for Red Hat Enterprise Linux 7 and CentOS 7.
+for Red Hat Enterprise Linux or CentOS.
 
 Prerequisites
 -------------
