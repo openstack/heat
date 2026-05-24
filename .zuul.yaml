@@ -12,11 +12,12 @@
     required-projects:
       - openstack/barbican
       - openstack/heat
+      - openstack/heat-agents
       - openstack/heat-templates
       - openstack/heat-tempest-plugin
-      - openstack/octavia
       - openstack/neutron
-      - openstack/heat-agents
+      - openstack/octavia
+      - openstack/python-heatclient
       - openstack/tempest
     vars:
       configure_swap_size: 8192
