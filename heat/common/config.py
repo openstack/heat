@@ -241,15 +241,9 @@ engine_opts = [
                       ' for stack locking.')),
     cfg.BoolOpt('enable_stack_abandon',
                 default=False,
-                deprecated_for_removal=True,
-                deprecated_reason="Stack abandon is not supported by "
-                                  "convergence engine.",
                 help=_('Enable the preview Stack Abandon feature.')),
     cfg.BoolOpt('enable_stack_adopt',
                 default=False,
-                deprecated_for_removal=True,
-                deprecated_reason="Stack adopt is not supported by "
-                                  "convergence engine.",
                 help=_('Enable the preview Stack Adopt feature.')),
     cfg.BoolOpt('convergence_engine',
                 default=True,
