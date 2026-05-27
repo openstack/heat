@@ -1,0 +1,7 @@
+---
+upgrade:
+  - |
+    The ``enable_stack_abandon`` and ``enable_stack_adopt`` configuration
+    options are no longer deprecated. Both features now work with the
+    convergence engine, so these options remain supported for enabling stack
+    abandon and stack adopt.
