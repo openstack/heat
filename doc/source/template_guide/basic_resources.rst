@@ -134,6 +134,43 @@ port:
           networks:
             - port: { get_resource: instance_port }
 
+Heat 27.0.0 introduced the ``stateful`` property for
+``OS::Neutron::SecurityGroup``, which lets users configure security groups as
+either statefull or stateless. The next example shows how to request
+a stateless group explicitly:
+
+.. code-block:: yaml
+
+    resources:
+      stateless_web_secgroup:
+        type: OS::Neutron::SecurityGroup
+        properties:
+          description: Stateless frontend SG
+          stateful: false
+          rules:
+            - protocol: tcp
+              remote_ip_prefix: 0.0.0.0/0
+              port_range_min: 80
+              port_range_max: 80
+
+      stateless_instance_port:
+        type: OS::Neutron::Port
+        properties:
+          network: private
+          security_groups:
+            - default
+            - { get_resource: stateless_web_secgroup }
+          fixed_ips:
+            - subnet_id: private-subnet
+
+      stateless_instance:
+        type: OS::Nova::Server
+        properties:
+          flavor: m1.small
+          image: ubuntu-trusty-x86_64
+          networks:
+            - port: { get_resource: stateless_instance_port }
+
 
 Create and associate a floating IP to an instance
 -------------------------------------------------
