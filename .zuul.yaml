@@ -42,7 +42,6 @@
               stack_scheduler_hints: true
               hidden_stack_tags: hidden
               encrypt_parameters_and_properties: True
-              logging_exception_prefix: "%(asctime)s.%(msecs)03d %(process)d TRACE %(name)s %(instance)s"
               max_stacks_per_tenant: 256
             oslo_messaging_notifications:
               driver: messagingv2
