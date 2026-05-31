@@ -34,7 +34,7 @@ class DesignateClientPluginTest(common.HeatTestCase):
 
         # Make sure proper client is created with expected args
         client_designate.assert_called_once_with(
-            endpoint_type='publicURL', service_type='dns',
+            endpoint_type='public', service_type='dns',
             session=session, region_name='region1',
             version='2')
 

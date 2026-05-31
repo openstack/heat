@@ -87,7 +87,7 @@ class KeystoneClientTest(common.HeatTestCase):
             session=utils.AnyInstance(ks_session.Session),
             auth=self.mock_ks_auth,
             connect_retries=2,
-            interface='publicURL',
+            interface='public',
             region_name=None)
 
     def _stubs_auth(self, method='token', trust_scoped=True,
@@ -170,7 +170,7 @@ class KeystoneClientTest(common.HeatTestCase):
             self.m_client.assert_any_call(
                 session=utils.AnyInstance(ks_session.Session),
                 connect_retries=2,
-                interface='publicURL',
+                interface='public',
                 region_name=None)
         if self.stub_admin_auth:
             self.mock_admin_ks_auth.get_user_id.assert_called_once_with(
@@ -1599,7 +1599,7 @@ class KeystoneClientTestDomainName(KeystoneClientTest):
             session=utils.AnyInstance(ks_session.Session),
             auth=self.mock_ks_auth,
             connect_retries=2,
-            interface='publicURL',
+            interface='public',
             region_name=None)
 
     def _stub_domain_admin_client(self, domain_id='adomain123'):
