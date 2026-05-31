@@ -11,7 +11,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-
 import json
 import pathlib
 from unittest import mock
@@ -20,9 +19,7 @@ from oslo_config import cfg
 
 import keystoneauth1.discover
 from keystoneauth1 import exceptions as ks_exceptions
-import keystoneauth1.loading.conf
-from keystoneauth1 import noauth as ks_noauth
-import keystoneauth1.session
+from keystoneauth1.loading import conf as ks_conf
 
 from heat.api.aws import ec2token
 from heat.api.aws import exception
@@ -46,39 +43,9 @@ class Ec2TokenTest(common.HeatTestCase):
         # Ensure that the various auth urls are available for the tests.
         self.create_keystone_adapters.return_value = {
             None: self.mock_adapter,
-            'http://192.0.2.9/v2.0': self.mock_adapter,
-            'http://192.0.2.9/v3': self.mock_adapter,
-            'http://key1.example.com:5000/v3': self.mock_adapter,
-            'http://key1.example.com:5000/v2.0': self.mock_adapter,
-            'http://key2.example.com:5000/v2.0': self.mock_adapter,
+            'alice': self.mock_adapter,
+            'bob': self.mock_adapter,
         }
-
-    def test_conf_get_paste(self):
-        dummy_conf = {'auth_uri': 'http://192.0.2.9/v2.0'}
-        ec2 = ec2token.EC2Token(app=None, conf=dummy_conf)
-        self.assertEqual('http://192.0.2.9/v2.0', ec2._conf_get('auth_uri'))
-        self.assertEqual(
-            'http://192.0.2.9/v3', ec2._conf_get_auth_uri())
-
-    def test_conf_get_opts(self):
-        cfg.CONF.set_default('auth_uri', 'http://192.0.2.9/v2.0/',
-                             group='ec2authtoken')
-        cfg.CONF.set_default('auth_uri', 'http://this-should-be-ignored/',
-                             group='clients_keystone')
-        ec2 = ec2token.EC2Token(app=None, conf={})
-        self.assertEqual('http://192.0.2.9/v2.0/', ec2._conf_get('auth_uri'))
-        self.assertEqual(
-            'http://192.0.2.9/v3/', ec2._conf_get_auth_uri())
-
-    def test_conf_get_clients_keystone_opts(self):
-        cfg.CONF.set_default('auth_uri', None, group='ec2authtoken')
-        cfg.CONF.set_default('auth_uri', 'http://192.0.2.9',
-                             group='clients_keystone')
-        with mock.patch.object(keystoneauth1.discover, 'Discover') as discover:
-            discover.return_value.url_for.return_value = 'http://192.0.2.9/v3/'
-            ec2 = ec2token.EC2Token(app=None, conf={})
-            self.assertEqual(
-                'http://192.0.2.9/v3/', ec2._conf_get_auth_uri())
 
     def test_get_signature_param_old(self):
         params = {'Signature': 'foo'}
@@ -294,8 +261,7 @@ class Ec2TokenTest(common.HeatTestCase):
             headers=self.verify_req_headers)
 
     def test_call_err_tokenid(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v2.0/'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
+        ec2 = ec2token.EC2Token(app='woot', conf={})
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
                     'SignedHeaders=content-type;host;x-amz-date, '
@@ -318,8 +284,7 @@ class Ec2TokenTest(common.HeatTestCase):
             headers=self.verify_req_headers)
 
     def test_call_err_signature(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v2.0'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
+        ec2 = ec2token.EC2Token(app='woot', conf={})
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
                     'SignedHeaders=content-type;host;x-amz-date, '
@@ -342,8 +307,7 @@ class Ec2TokenTest(common.HeatTestCase):
             headers=self.verify_req_headers)
 
     def test_call_err_denied(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v2.0'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
+        ec2 = ec2token.EC2Token(app='woot', conf={})
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
                     'SignedHeaders=content-type;host;x-amz-date, '
@@ -366,8 +330,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
     def test_call_err_unauthorized(self):
         # test when Keystone returns unauthenticated error.
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v3'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
+        ec2 = ec2token.EC2Token(app='woot', conf={})
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
                     'SignedHeaders=content-type;host;x-amz-date, '
@@ -391,8 +354,7 @@ class Ec2TokenTest(common.HeatTestCase):
     def test_call_err_ks_plugin_unauthorized(self):
         # test when the keystone session fails to auth while obtaining
         # an auth token
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v3'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
+        ec2 = ec2token.EC2Token(app='woot', conf={})
 
         auth_str = ('Authorization: foo  Credential=foo/bar, '
                     'SignedHeaders=content-type;host;x-amz-date, '
@@ -432,9 +394,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
     def test_call_ok_multicloud(self):
         dummy_conf = {
-            'allowed_auth_uris': [
-                'http://key1.example.com:5000/v2.0',
-                'http://key2.example.com:5000/v2.0'],
+            'clouds': ['alice', 'bob'],
             'multi_cloud': True
         }
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
@@ -481,9 +441,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
     def test_call_err_multicloud(self):
         dummy_conf = {
-            'allowed_auth_uris': [
-                'http://key1.example.com:5000/v2.0',
-                'http://key2.example.com:5000/v2.0'],
+            'clouds': ['alice', 'bob'],
             'multi_cloud': True
         }
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
@@ -500,13 +458,13 @@ class Ec2TokenTest(common.HeatTestCase):
 
         # first request fails with HeatAccessDeniedError
         m_p = self._stub_http_connection(
-            req_url='http://key1.example.com:5000/v2.0/ec2tokens',
+            req_url='http://key1.example.com:5000/v3/ec2tokens',
             response=err_resp1,
             params={'AWSAccessKeyId': 'foo'}, direct_mock=False)
 
         # second request fails with HeatInvalidClientTokenIdError
         m_p2 = self._stub_http_connection(
-            req_url='http://key2.example.com:5000/v2.0/ec2tokens',
+            req_url='http://key2.example.com:5000/v3/ec2tokens',
             response=err_resp2,
             params={'AWSAccessKeyId': 'foo'}, direct_mock=False)
 
@@ -530,7 +488,7 @@ class Ec2TokenTest(common.HeatTestCase):
 
     def test_call_err_multicloud_none_allowed(self):
         dummy_conf = {
-            'allowed_auth_uris': [],
+            'clouds': [],
             'multi_cloud': True
         }
         ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
@@ -542,63 +500,6 @@ class Ec2TokenTest(common.HeatTestCase):
 
         self.assertRaises(exception.HeatAccessDeniedError,
                           ec2.__call__, dummy_req)
-
-    def test_call_badconf_no_authuri(self):
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        # Clear _ks_adapters to simulate no authuri
-        ec2._ks_adapters = {}
-        params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
-        req_env = {'SERVER_NAME': 'heat',
-                   'SERVER_PORT': '8000',
-                   'PATH_INFO': '/v1'}
-        dummy_req = _dummy_GET_request(params, req_env)
-
-        ex = self.assertRaises(exception.HeatInternalFailureError,
-                               ec2.__call__, dummy_req)
-        self.assertEqual('Service misconfigured', str(ex))
-
-    def test_call_ok_auth_uri_ec2authtoken(self):
-        dummy_url = 'http://key1.example.com:5000/v2.0'
-        cfg.CONF.set_default('auth_uri', dummy_url, group='ec2authtoken')
-
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
-        req_env = {'SERVER_NAME': 'heat',
-                   'SERVER_PORT': '8000',
-                   'PATH_INFO': '/v1'}
-        dummy_req = _dummy_GET_request(params, req_env)
-
-        ok_resp = json.dumps({'token': {
-            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
-        self._stub_http_connection(response=ok_resp,
-                                   params={'AWSAccessKeyId': 'foo'})
-        self.assertEqual('woot', ec2.__call__(dummy_req))
-
-        self.mock_adapter.post.assert_called_once_with(
-            self.verify_req_url, data=self.verify_data,
-            headers=self.verify_req_headers)
-
-    def test_call_ok_auth_uri_ec2authtoken_long(self):
-        # Prove we tolerate a url which already includes the /ec2tokens path
-        dummy_url = 'http://key1.example.com:5000/v2.0/ec2tokens'
-        cfg.CONF.set_default('auth_uri', dummy_url, group='ec2authtoken')
-
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        params = {'AWSAccessKeyId': 'foo', 'Signature': 'xyz'}
-        req_env = {'SERVER_NAME': 'heat',
-                   'SERVER_PORT': '8000',
-                   'PATH_INFO': '/v1'}
-        dummy_req = _dummy_GET_request(params, req_env)
-
-        ok_resp = json.dumps({'token': {
-            'project': {'name': 'tenant', 'id': 'abcd1234'}}})
-        self._stub_http_connection(response=ok_resp,
-                                   params={'AWSAccessKeyId': 'foo'})
-        self.assertEqual('woot', ec2.__call__(dummy_req))
-
-        self.mock_adapter.post.assert_called_once_with(
-            self.verify_req_url, data=self.verify_data,
-            headers=self.verify_req_headers)
 
     def test_filter_factory(self):
         ec2_filter = ec2token.EC2Token_filter_factory(global_conf={})
@@ -624,15 +525,26 @@ class Ec2TokenConfigurationTest(common.HeatTestCase):
         super().tearDown()
         # unregister any dynamic opts that were creating in the testing.
         cfg.CONF.reset()
-        opts = keystoneauth1.loading.conf.get_plugin_conf_options('password')
+        opts = ks_conf.get_plugin_conf_options('password')
         for group in cfg.CONF.keys():
             if (group.startswith("ec2authtoken") or
                     group == "keystone_authtoken"):
                 cfg.CONF.unregister_opts(opts, group)
 
-    def test_init_ks_session_fails(self):
+    def test_init_ks_session_no_config(self):
         ec2 = ec2token.EC2Token(app='woot', conf={})
-        self.assertEqual(ec2._ks_adapters, {})
+        self.assertEqual(1, len(ec2._ks_adapters))
+        self.assertIn(None, ec2._ks_adapters)
+        self.assertIsNone(ec2._ks_adapters[None].session.auth)
+
+    def test_init_ks_session(self):
+        load_config_file('ec2authtoken.conf')
+        ec2 = ec2token.EC2Token(app='woot', conf={})
+        self.assertEqual(1, len(ec2._ks_adapters))
+        self.assertIn(None, ec2._ks_adapters)
+        self.assertIsNotNone(ec2._ks_adapters[None].session.auth)
+        self.assertEqual('http://key1.example.com:5000',
+                         ec2._ks_adapters[None].get_endpoint())
 
     def test_init_ks_session_multicloud(self):
         load_config_file('multi_cloud_enabled.conf')
@@ -665,189 +577,6 @@ class Ec2TokenConfigurationTest(common.HeatTestCase):
             'http://key2.example.com:5000',
             ec2._ks_adapters['bob'].get_endpoint())
         self.assertIsNone(ec2._ks_adapters['fred'].session.auth)
-
-    def test_init_ks_session_allowed_auth_uris_in_conf(self):
-        load_config_file('multi_cloud_auth_uris.conf')
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        self.assertEqual(2, len(ec2._ks_adapters))
-        for url in [
-                'http://key1.example.com:5000/v2.0',
-                'http://key2.example.com:5000/v3']:
-            self.assertIsInstance(ec2._ks_adapters[url].session.auth,
-                                  ks_noauth.NoAuth)
-            self.assertEqual(url.rsplit('/', 1)[0],
-                             ec2._ks_adapters[url].get_endpoint())
-
-    def test_init_ks_session_allowed_auth_uris_in_paste(self):
-        load_config_file('ec2authtoken.conf')
-        paste_conf = {
-            "multi_cloud": True,
-            "allowed_auth_uris": ["http://key1.example.com:5000/v2.0",
-                                  "http://key2.example.com:5000/v3"]}
-        ec2 = ec2token.EC2Token(app='woot', conf=paste_conf)
-        self.assertSequenceEqual(
-            ["http://key1.example.com:5000/v2.0",
-                "http://key2.example.com:5000/v3"],
-            list(ec2._ks_adapters.keys()))
-        for url in [
-                'http://key1.example.com:5000/v2.0',
-                'http://key2.example.com:5000/v3']:
-            self.assertIsInstance(ec2._ks_adapters[url].session.auth,
-                                  ks_noauth.NoAuth)
-            self.assertEqual(url.rsplit('/', 1)[0],
-                             ec2._ks_adapters[url].get_endpoint())
-
-    def test_init_ks_session_from_keystone_authtoken_section(self):
-        load_config_file('keystone_authtoken.conf')
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsNotNone(ec2._ks_adapters[None].session.auth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_auth_uri(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsInstance(ec2._ks_adapters[None].session.auth,
-                              ks_noauth.NoAuth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_auth_uri_trailing_slash(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsInstance(ec2._ks_adapters[None].session.auth,
-                              ks_noauth.NoAuth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_auth_uri_v2(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v2.0'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsInstance(ec2._ks_adapters[None].session.auth,
-                              ks_noauth.NoAuth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_auth_uri_v3(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v3'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsInstance(ec2._ks_adapters[None].session.auth,
-                              ks_noauth.NoAuth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_auth_uri_ec2tokens(self):
-        dummy_conf = {'auth_uri': 'http://key1.example.com:5000/v3/ec2tokens'}
-        ec2 = ec2token.EC2Token(app='woot', conf=dummy_conf)
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsInstance(ec2._ks_adapters[None].session.auth,
-                              ks_noauth.NoAuth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_typical_standalone_config(self):
-        load_config_file('typical_standalone.conf')
-        self.mock_discover.url_for.return_value = \
-            'http://key1.example.com:5000/v3'
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsNotNone(ec2._ks_adapters[None].session.auth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_typical_config(self):
-        # The auth_uri is from the clients_keystone section
-        # the auth details are in the keystone_authtoken section
-        load_config_file('typical.conf')
-        self.mock_discover.url_for.return_value = \
-            'http://key1.example.com:5000/v3'
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIsNotNone(ec2._ks_adapters[None].session.auth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_ec2authtoken_config(self):
-        load_config_file('ec2authtoken.conf')
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIn(None, ec2._ks_adapters)
-        self.assertIsNotNone(ec2._ks_adapters[None].session.auth)
-        self.assertEqual('http://key1.example.com:5000',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_init_ks_session_devstack_config(self):
-        load_config_file('long_auth_path.conf')
-        self.mock_discover.url_for.return_value = \
-            'http://key1.example.com/identity/v3'
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-        self.assertEqual(1, len(ec2._ks_adapters))
-        self.assertIn(None, ec2._ks_adapters)
-        self.assertIsNotNone(ec2._ks_adapters[None].session.auth)
-        self.assertEqual('http://key1.example.com/identity',
-                         ec2._ks_adapters[None].get_endpoint())
-
-    def test_conf_ssl_opttions_default(self):
-        cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
-                             group='ec2authtoken')
-        ec2 = ec2token.EC2Token(app=None, conf={})
-        adapter = ec2._ks_adapters[None]
-        self.assertTrue(adapter.session.verify)
-        self.assertIsNone(adapter.session.cert)
-
-    def test_conf_ssl_insecure(self):
-        cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
-                             group='ec2authtoken')
-        cfg.CONF.set_default('insecure', True,
-                             group='ec2authtoken')
-        ec2 = ec2token.EC2Token(app=None, conf={})
-        adapter = ec2._ks_adapters[None]
-        self.assertFalse(adapter.session.verify)
-        self.assertIsNone(adapter.session.cert)
-
-    def test_conf_ssl_opttions(self):
-        cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
-                             group='ec2authtoken')
-        cfg.CONF.set_default('cafile', '/home/user/cacert.pem',
-                             group='ec2authtoken')
-        cfg.CONF.set_default('insecure', False, group='ec2authtoken')
-        cfg.CONF.set_default('certfile', '/home/user/mycert',
-                             group='ec2authtoken')
-        cfg.CONF.set_default('keyfile', '/home/user/mykey',
-                             group='ec2authtoken')
-        ec2 = ec2token.EC2Token(app=None, conf={})
-        adapter = ec2._ks_adapters[None]
-        self.assertEqual('/home/user/cacert.pem', adapter.session.verify)
-        self.assertEqual(('/home/user/mycert', '/home/user/mykey'),
-                         adapter.session.cert)
-
-    def test_conf_ssl_insecure_paste(self):
-        cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
-                             group='ec2authtoken')
-        ec2 = ec2token.EC2Token(app=None, conf={
-            'insecure': 'True'
-        })
-        adapter = ec2._ks_adapters[None]
-        self.assertFalse(adapter.session.verify)
-
-    def test_conf_ssl_options_paste(self):
-        cfg.CONF.set_default('auth_uri', 'https://192.0.2.9/v2.0/',
-                             group='ec2authtoken')
-        ec2 = ec2token.EC2Token(app=None, conf={
-            'ca_file': '/home/user/cacert.pem',
-            'cert_file': '/home/user/mycert',
-            'key_file': '/home/user/mykey'
-        })
-        adapter = ec2._ks_adapters[None]
-        self.assertEqual('/home/user/cacert.pem', adapter.session.verify)
-        self.assertEqual(('/home/user/mycert', '/home/user/mykey'),
-                         adapter.session.cert)
 
 
 def load_config_file(file_name):
