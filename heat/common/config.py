@@ -369,7 +369,9 @@ auth_password_opts = [
 # these options define baseline defaults that apply to all clients
 default_clients_opts = [
     cfg.StrOpt('endpoint_type',
-               default='publicURL',
+               default='public',
+               choices=['publicURL', 'internalURL', 'adminURL',
+                        'public', 'internal', 'admin'],
                help=_(
                    'Type of endpoint in Identity service catalog to use '
                    'for communication with the OpenStack service.')),
@@ -390,6 +392,8 @@ default_clients_opts = [
 # specific group is looked up on the generic group above
 clients_opts = [
     cfg.StrOpt('endpoint_type',
+               choices=['publicURL', 'internalURL', 'adminURL',
+                        'public', 'internal', 'admin'],
                help=_(
                    'Type of endpoint in Identity service catalog to use '
                    'for communication with the OpenStack service.')),
