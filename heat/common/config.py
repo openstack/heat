@@ -16,6 +16,7 @@ import os
 import socket
 
 from oslo_config import cfg
+from oslo_config import types
 from oslo_db import options as oslo_db_ops
 from oslo_log import log as logging
 from oslo_middleware import cors
@@ -359,6 +360,7 @@ auth_password_opts = [
                 default=False,
                 help=_('Allow orchestration of multiple clouds.')),
     cfg.ListOpt('allowed_auth_uris',
+                item_type=types.URI(schemes=['http', 'https']),
                 default=[],
                 help=_('Allowed keystone endpoints for auth_uri when '
                        'multi_cloud is enabled. At least one endpoint needs '
