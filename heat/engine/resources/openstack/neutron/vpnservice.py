@@ -11,6 +11,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from neutron_lib.api.definitions import vpn as neutron_vpn
+from neutron_lib.api.definitions import vpn_aes_ctr
+from neutron_lib.api.definitions import vpn_no_sha1_3des
+
 from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import attributes
@@ -19,6 +23,13 @@ from heat.engine import properties
 from heat.engine.resources.openstack.neutron import neutron
 from heat.engine import support
 from heat.engine import translation
+
+VPN_AUTH_ALGORITHMS = list(neutron_vpn.VPN_SUPPORTED_AUTH_ALGORITHMS)
+
+VPN_ENCRYPTION_ALGORITHMS = list(
+    vpn_aes_ctr.VPN_SUPPORTED_ENCRYPTION_ALGORITHMS_WITH_CTR)
+
+VPN_PFS_GROUPS = list(neutron_vpn.VPN_SUPPORTED_PFSES)
 
 
 class VPNService(neutron.NeutronResource):
@@ -543,11 +554,12 @@ class IKEPolicy(neutron.NeutronResource):
         ),
         AUTH_ALGORITHM: properties.Schema(
             properties.Schema.STRING,
-            _('Authentication hash algorithm for the ike policy.'),
+            _('Authentication hash algorithm for the ike policy. '
+              'Defaults to sha256 when the vpn-no-sha1-3des Neutron '
+              'extension is enabled, otherwise sha1.'),
             default='sha1',
             constraints=[
-                constraints.AllowedValues(['sha1', 'sha256',
-                                           'sha384', 'sha512']),
+                constraints.AllowedValues(VPN_AUTH_ALGORITHMS),
             ],
             update_allowed=True
         ),
@@ -556,8 +568,7 @@ class IKEPolicy(neutron.NeutronResource):
             _('Encryption algorithm for the ike policy.'),
             default='aes-128',
             constraints=[
-                constraints.AllowedValues(['3des', 'aes-128', 'aes-192',
-                                           'aes-256']),
+                constraints.AllowedValues(VPN_ENCRYPTION_ALGORITHMS),
             ],
             update_allowed=True
         ),
@@ -595,7 +606,7 @@ class IKEPolicy(neutron.NeutronResource):
             _('Perfect forward secrecy in lowercase for the ike policy.'),
             default='group5',
             constraints=[
-                constraints.AllowedValues(['group2', 'group5', 'group14']),
+                constraints.AllowedValues(VPN_PFS_GROUPS),
             ],
             update_allowed=True
         ),
@@ -654,6 +665,9 @@ class IKEPolicy(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+        if (self.properties.get_user_value(self.AUTH_ALGORITHM) is None and
+                self.client_plugin().has_extension(vpn_no_sha1_3des.ALIAS)):
+            props[self.AUTH_ALGORITHM] = 'sha256'
         ikepolicy = self.client().create_ikepolicy({'ikepolicy': props})[
             'ikepolicy']
         self.resource_id_set(ikepolicy['id'])
@@ -736,10 +750,12 @@ class IPsecPolicy(neutron.NeutronResource):
         ),
         AUTH_ALGORITHM: properties.Schema(
             properties.Schema.STRING,
-            _('Authentication hash algorithm for the ipsec policy.'),
+            _('Authentication hash algorithm for the ipsec policy. '
+              'Defaults to sha256 when the vpn-no-sha1-3des Neutron '
+              'extension is enabled, otherwise sha1.'),
             default='sha1',
             constraints=[
-                constraints.AllowedValues(['sha1']),
+                constraints.AllowedValues(VPN_AUTH_ALGORITHMS),
             ]
         ),
         ENCRYPTION_ALGORITHM: properties.Schema(
@@ -747,8 +763,7 @@ class IPsecPolicy(neutron.NeutronResource):
             _('Encryption algorithm for the ipsec policy.'),
             default='aes-128',
             constraints=[
-                constraints.AllowedValues(['3des', 'aes-128', 'aes-192',
-                                           'aes-256']),
+                constraints.AllowedValues(VPN_ENCRYPTION_ALGORITHMS),
             ]
         ),
         LIFETIME: properties.Schema(
@@ -778,7 +793,7 @@ class IPsecPolicy(neutron.NeutronResource):
             _('Perfect forward secrecy for the ipsec policy.'),
             default='group5',
             constraints=[
-                constraints.AllowedValues(['group2', 'group5', 'group14']),
+                constraints.AllowedValues(VPN_PFS_GROUPS),
             ]
         ),
     }
@@ -827,6 +842,9 @@ class IPsecPolicy(neutron.NeutronResource):
         props = self.prepare_properties(
             self.properties,
             self.physical_resource_name())
+        if (self.properties.get_user_value(self.AUTH_ALGORITHM) is None and
+                self.client_plugin().has_extension(vpn_no_sha1_3des.ALIAS)):
+            props[self.AUTH_ALGORITHM] = 'sha256'
         ipsecpolicy = self.client().create_ipsecpolicy(
             {'ipsecpolicy': props})['ipsecpolicy']
         self.resource_id_set(ipsecpolicy['id'])

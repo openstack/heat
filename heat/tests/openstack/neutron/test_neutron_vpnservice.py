@@ -22,6 +22,7 @@ from oslo_config import cfg
 from heat.common import exception
 from heat.common import template_format
 from heat.engine.clients.os import neutron
+from heat.engine import constraints
 from heat.engine.resources.openstack.neutron import vpnservice
 from heat.engine import scheduler
 from heat.tests import common
@@ -89,6 +90,24 @@ resources:
       ike_version: v1
 '''
 
+ikepolicy_default_auth_template = '''
+heat_template_version: 2015-04-30
+description: Template to test IKE policy resource defaults
+resources:
+  IKEPolicy:
+    type: OS::Neutron::IKEPolicy
+    properties:
+      name: IKEPolicy
+      description: My new IKE policy
+      encryption_algorithm: aes-128
+      phase1_negotiation_mode: main
+      lifetime:
+        units: seconds
+        value: 3600
+      pfs: group5
+      ike_version: v1
+'''
+
 ipsecpolicy_template = '''
 heat_template_version: 2015-04-30
 description: Template to test IPsec policy resource
@@ -102,6 +121,24 @@ resources:
       encapsulation_mode: tunnel
       auth_algorithm: sha1
       encryption_algorithm: 3des
+      lifetime:
+        units: seconds
+        value: 3600
+      pfs : group5
+'''
+
+ipsecpolicy_default_auth_template = '''
+heat_template_version: 2015-04-30
+description: Template to test IPsec policy resource defaults
+resources:
+  IPsecPolicy:
+    type: OS::Neutron::IPsecPolicy
+    properties:
+      name: IPsecPolicy
+      description: My new IPsec policy
+      transform_protocol: esp
+      encapsulation_mode: tunnel
+      encryption_algorithm: aes-128
       lifetime:
         units: seconds
         value: 3600
@@ -605,25 +642,82 @@ class IKEPolicyTest(common.HeatTestCase):
         self.mockclient = mock.Mock(spec=neutronclient.Client)
         self.patchobject(neutronclient, 'Client', return_value=self.mockclient)
 
+        self.loaded_extensions = {'vpnaas'}
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
-                         return_value=True)
+                         side_effect=self._has_extension)
 
-    def create_ikepolicy(self):
+    def _has_extension(self, extension):
+        return extension in self.loaded_extensions
+
+    def _allowed_values(self, rsrc, prop):
+        for constraint in rsrc.properties_schema[prop].constraints:
+            if isinstance(constraint, constraints.AllowedValues):
+                return list(constraint.allowed)
+        self.fail('AllowedValues constraint not found for %s' % prop)
+
+    def _resource_definition(self, snippet):
+        stack = utils.parse_stack(snippet)
+        resource_defns = stack.t.resource_definitions(stack)
+        return stack, resource_defns['IKEPolicy']
+
+    def create_ikepolicy(self, tmpl=ikepolicy_template):
         self.mockclient.create_ikepolicy.return_value = {
             'ikepolicy': {'id': 'ike123'}
         }
-        snippet = template_format.parse(ikepolicy_template)
-        self.stack = utils.parse_stack(snippet)
-        resource_defns = self.stack.t.resource_definitions(self.stack)
-        return vpnservice.IKEPolicy('ikepolicy',
-                                    resource_defns['IKEPolicy'],
-                                    self.stack)
+        snippet = template_format.parse(tmpl)
+        self.stack, resource_defn = self._resource_definition(snippet)
+        return vpnservice.IKEPolicy('ikepolicy', resource_defn, self.stack)
 
     def test_create(self):
         rsrc = self.create_ikepolicy()
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
+        self.mockclient.create_ikepolicy.assert_called_once_with(
+            self.IKE_POLICY_CONF)
+
+    def test_schema(self):
+        rsrc = self.create_ikepolicy()
+
+        self.assertEqual(
+            'sha1',
+            rsrc.properties_schema[rsrc.AUTH_ALGORITHM].default)
+        self.assertEqual(
+            vpnservice.VPN_AUTH_ALGORITHMS,
+            self._allowed_values(rsrc, rsrc.AUTH_ALGORITHM))
+        self.assertEqual(
+            vpnservice.VPN_ENCRYPTION_ALGORITHMS,
+            self._allowed_values(rsrc, rsrc.ENCRYPTION_ALGORITHM))
+        self.assertEqual(
+            vpnservice.VPN_PFS_GROUPS,
+            self._allowed_values(rsrc, rsrc.PFS))
+
+    def test_create_default_auth_without_vpn_no_sha1_3des_extension(self):
+        rsrc = self.create_ikepolicy(ikepolicy_default_auth_template)
+        expected = copy.deepcopy(self.IKE_POLICY_CONF)
+        expected['ikepolicy']['encryption_algorithm'] = 'aes-128'
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.mockclient.create_ikepolicy.assert_called_once_with(expected)
+
+    def test_create_default_auth_with_vpn_no_sha1_3des_extension(self):
+        self.loaded_extensions.add(vpnservice.vpn_no_sha1_3des.ALIAS)
+        rsrc = self.create_ikepolicy(ikepolicy_default_auth_template)
+        expected = copy.deepcopy(self.IKE_POLICY_CONF)
+        expected['ikepolicy']['auth_algorithm'] = 'sha256'
+        expected['ikepolicy']['encryption_algorithm'] = 'aes-128'
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.mockclient.create_ikepolicy.assert_called_once_with(expected)
+
+    def test_create_explicit_auth_with_vpn_no_sha1_3des_extension(self):
+        self.loaded_extensions.add(vpnservice.vpn_no_sha1_3des.ALIAS)
+        rsrc = self.create_ikepolicy()
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.mockclient.create_ikepolicy.assert_called_once_with(
             self.IKE_POLICY_CONF)
 
@@ -762,6 +856,28 @@ class IKEPolicyTest(common.HeatTestCase):
         self.mockclient.update_ikepolicy.assert_called_once_with(
             'ike123', update_body)
 
+    def test_stack_update_keeps_existing_auth_algorithm(self):
+        rsrc = self.create_ikepolicy(ikepolicy_default_auth_template)
+        expected = copy.deepcopy(self.IKE_POLICY_CONF)
+        expected['ikepolicy']['encryption_algorithm'] = 'aes-128'
+
+        scheduler.TaskRunner(rsrc.create)()
+        self.mockclient.create_ikepolicy.assert_called_once_with(expected)
+
+        self.loaded_extensions.add(vpnservice.vpn_no_sha1_3des.ALIAS)
+        self.mockclient.update_ikepolicy.reset_mock()
+
+        update_snippet = template_format.parse(ikepolicy_default_auth_template)
+        update_snippet['resources']['IKEPolicy']['properties'][
+            'description'] = 'Updated IKE policy'
+        _, update_defn = self._resource_definition(update_snippet)
+
+        scheduler.TaskRunner(rsrc.update, update_defn)()
+
+        self.mockclient.update_ikepolicy.assert_called_once_with(
+            'ike123',
+            {'ikepolicy': {'description': 'Updated IKE policy'}})
+
 
 class IPsecPolicyTest(common.HeatTestCase):
 
@@ -786,14 +902,24 @@ class IPsecPolicyTest(common.HeatTestCase):
         self.mockclient = mock.Mock(spec=neutronclient.Client)
         self.patchobject(neutronclient, 'Client', return_value=self.mockclient)
 
+        self.loaded_extensions = {'vpnaas'}
         self.patchobject(neutron.NeutronClientPlugin, 'has_extension',
-                         return_value=True)
+                         side_effect=self._has_extension)
 
-    def create_ipsecpolicy(self):
+    def _has_extension(self, extension):
+        return extension in self.loaded_extensions
+
+    def _allowed_values(self, rsrc, prop):
+        for constraint in rsrc.properties_schema[prop].constraints:
+            if isinstance(constraint, constraints.AllowedValues):
+                return list(constraint.allowed)
+        self.fail('AllowedValues constraint not found for %s' % prop)
+
+    def create_ipsecpolicy(self, tmpl=ipsecpolicy_template):
         self.mockclient.create_ipsecpolicy.return_value = {
             'ipsecpolicy': {'id': 'ips123'}
         }
-        snippet = template_format.parse(ipsecpolicy_template)
+        snippet = template_format.parse(tmpl)
         self.stack = utils.parse_stack(snippet)
         resource_defns = self.stack.t.resource_definitions(self.stack)
         return vpnservice.IPsecPolicy('ipsecpolicy',
@@ -806,6 +932,53 @@ class IPsecPolicyTest(common.HeatTestCase):
         scheduler.TaskRunner(rsrc.create)()
         self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
 
+        self.mockclient.create_ipsecpolicy.assert_called_once_with(
+            self.IPSEC_POLICY_CONF)
+
+    def test_schema(self):
+        rsrc = self.create_ipsecpolicy()
+
+        self.assertEqual(
+            'sha1',
+            rsrc.properties_schema[rsrc.AUTH_ALGORITHM].default)
+        self.assertEqual(
+            vpnservice.VPN_AUTH_ALGORITHMS,
+            self._allowed_values(rsrc, rsrc.AUTH_ALGORITHM))
+        self.assertEqual(
+            vpnservice.VPN_ENCRYPTION_ALGORITHMS,
+            self._allowed_values(rsrc, rsrc.ENCRYPTION_ALGORITHM))
+        self.assertEqual(
+            vpnservice.VPN_PFS_GROUPS,
+            self._allowed_values(rsrc, rsrc.PFS))
+
+    def test_create_default_auth_without_vpn_no_sha1_3des_extension(self):
+        rsrc = self.create_ipsecpolicy(ipsecpolicy_default_auth_template)
+        expected = copy.deepcopy(self.IPSEC_POLICY_CONF)
+        expected['ipsecpolicy']['encryption_algorithm'] = 'aes-128'
+
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.mockclient.create_ipsecpolicy.assert_called_once_with(expected)
+
+    def test_create_default_auth_with_vpn_no_sha1_3des_extension(self):
+        self.loaded_extensions.add(vpnservice.vpn_no_sha1_3des.ALIAS)
+        rsrc = self.create_ipsecpolicy(ipsecpolicy_default_auth_template)
+        expected = copy.deepcopy(self.IPSEC_POLICY_CONF)
+        expected['ipsecpolicy']['auth_algorithm'] = 'sha256'
+        expected['ipsecpolicy']['encryption_algorithm'] = 'aes-128'
+
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
+        self.mockclient.create_ipsecpolicy.assert_called_once_with(expected)
+
+    def test_create_explicit_auth_with_vpn_no_sha1_3des_extension(self):
+        self.loaded_extensions.add(vpnservice.vpn_no_sha1_3des.ALIAS)
+        rsrc = self.create_ipsecpolicy()
+        scheduler.TaskRunner(rsrc.create)()
+
+        self.assertEqual((rsrc.CREATE, rsrc.COMPLETE), rsrc.state)
         self.mockclient.create_ipsecpolicy.assert_called_once_with(
             self.IPSEC_POLICY_CONF)
 

@@ -1,0 +1,16 @@
+---
+features:
+  - |
+    The allowed ``auth_algorithm``, ``encryption_algorithm`` and ``pfs``
+    values for ``OS::Neutron::IKEPolicy`` and ``OS::Neutron::IPsecPolicy``
+    now follow Neutron's ``neutron-lib`` VPN definitions, so newer
+    algorithms (for example the AES-GCM, AES-CCM and AES-CTR encryption
+    modes and the additional PFS groups) can be used. Neutron remains the
+    authority on which algorithms a given deployment actually accepts.
+upgrade:
+  - |
+    When Neutron advertises the ``vpn-no-sha1-3des`` extension, new
+    ``OS::Neutron::IKEPolicy`` and ``OS::Neutron::IPsecPolicy`` resources
+    that do not set ``auth_algorithm`` now default to ``sha256`` instead of
+    ``sha1``. Existing resources and stack updates keep their configured
+    algorithms.
