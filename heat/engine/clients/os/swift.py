@@ -13,9 +13,8 @@
 
 import datetime
 import email.utils
-import hashlib
 import logging
-import random
+import secrets
 import time
 from urllib import parse
 
@@ -96,9 +95,7 @@ class SwiftClientPlugin(client_plugin.ClientPlugin):
         key_header = 'x-account-meta-temp-url-key'
         if key_header not in self.client().head_account():
             self.client().post_account({
-                key_header: hashlib.sha224(
-                    str(random.getrandbits(256)).encode(
-                        "latin-1")).hexdigest()[:32]})
+                key_header: secrets.token_hex(16)})
 
         key = self.client().head_account()[key_header]
 

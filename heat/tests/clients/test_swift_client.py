@@ -101,8 +101,12 @@ class SwiftUtilsTest(SwiftClientPluginTestCase):
         obj_name = '%s-%s' % (stack_name, handle_name)
 
         self.assertNotIn('x-account-meta-temp-url-key', head_account)
-        self.swift_plugin.get_temp_url(container_name, obj_name)
+        with mock.patch('heat.engine.clients.os.swift.secrets.token_hex',
+                        return_value='a' * 32) as mock_token_hex:
+            self.swift_plugin.get_temp_url(container_name, obj_name)
         self.assertIn('x-account-meta-temp-url-key', head_account)
+        self.assertEqual('a' * 32, head_account['x-account-meta-temp-url-key'])
+        mock_token_hex.assert_called_once_with(16)
 
     def test_get_signal_url(self):
         self.swift_client.url = ("http://fake-host.com:8080/v1/"
