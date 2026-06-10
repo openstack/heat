@@ -33,6 +33,7 @@
         s-container: false
         s-object: false
         s-proxy: false
+        neutron-trunk: true
         tempest: true
         openstack-cli-server: false
       devstack_plugins:
