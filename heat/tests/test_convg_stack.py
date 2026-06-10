@@ -462,7 +462,7 @@ class StackConvergenceCreateUpdateDeleteTest(common.HeatTestCase):
             return db_res
 
         start_time = datetime.datetime.fromtimestamp(
-            0, tz=datetime.timezone.utc).replace(tzinfo=None)
+            0, tz=datetime.UTC).replace(tzinfo=None)
 
         def t(minutes):
             return start_time + datetime.timedelta(minutes=minutes)
