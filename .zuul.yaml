@@ -28,6 +28,7 @@
         HEAT_ENABLE_ADOPT_ABANDON: True
         CINDER_BACKUP_DRIVER: swift
       devstack_services:
+        neutron-trunk: true
         tempest: true
         openstack-cli-server: false
       devstack_plugins:
