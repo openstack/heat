@@ -13,6 +13,7 @@
 
 """Implementation of SQLAlchemy backend."""
 
+import copy
 import datetime
 import functools
 import itertools
@@ -208,7 +209,6 @@ def raw_template_update(context, template_id, values):
     if values:
         for k, v in values.items():
             setattr(raw_template_ref, k, v)
-
     return raw_template_ref
 
 
@@ -2113,3 +2113,187 @@ def sync_point_update_input_data(context, entity_id,
         atomic_key=atomic_key
     ).update(update_values)
     return rows_updated
+
+
+def _crypt_action(encrypt):
+    if encrypt:
+        return _('encrypt')
+    return _('decrypt')
+
+
+def _encrypt_or_decrypt_template_params(
+        context, encryption_key, encrypt=False, batch_size=50, verbose=False):
+    from heat.engine import template
+    session = context.session
+    excs = []
+    query = session.query(models.RawTemplate)
+    template_batches = _get_batch(
+        session, context=context, query=query, model=models.RawTemplate,
+        batch_size=batch_size)
+    next_batch = list(itertools.islice(template_batches, batch_size))
+    while next_batch:
+        for raw_template in next_batch:
+            try:
+                if verbose:
+                    LOG.info("Processing raw_template %s...", raw_template.id)
+                env = raw_template.environment
+                needs_update = False
+                # using "in env.keys()" so an exception is raised
+                # if env is something weird like a string.
+                if env is None or 'parameters' not in env.keys():
+                    continue
+                if 'encrypted_param_names' in env:
+                    encrypted_params = env['encrypted_param_names']
+                else:
+                    encrypted_params = []
+
+                newenv = copy.deepcopy(env)
+                if encrypt:
+                    tmpl = template.Template.load(
+                        context, raw_template.id, raw_template)
+                    param_schemata = tmpl.param_schemata()
+                    if not param_schemata:
+                        continue
+
+                    for param_name, param_val in env['parameters'].items():
+                        if (param_name in encrypted_params or
+                                param_name not in param_schemata or
+                                not param_schemata[param_name].hidden):
+                            continue
+                        encrypted_val = crypt.encrypt(
+                            str(param_val), encryption_key)
+                        newenv['parameters'][param_name] = encrypted_val
+                        encrypted_params.append(param_name)
+                        needs_update = True
+                    if needs_update:
+                        newenv['encrypted_param_names'] = encrypted_params
+                else:  # decrypt
+                    for param_name in encrypted_params:
+                        method, value = env['parameters'][param_name]
+                        decrypted_val = crypt.decrypt(method, value,
+                                                      encryption_key)
+                        newenv['parameters'][param_name] = decrypted_val
+                        needs_update = True
+                    if needs_update:
+                        newenv['encrypted_param_names'] = []
+
+                if needs_update:
+                    raw_template_update(context, raw_template.id,
+                                        {'environment': newenv})
+            except Exception as exc:
+                LOG.exception('Failed to %(crypt_action)s parameters '
+                              'of raw template %(id)d',
+                              {'id': raw_template.id,
+                               'crypt_action': _crypt_action(encrypt)})
+                excs.append(exc)
+                continue
+            finally:
+                if verbose:
+                    LOG.info("Finished %(crypt_action)s processing of "
+                             "raw_template %(id)d.",
+                             {'id': raw_template.id,
+                              'crypt_action': _crypt_action(encrypt)})
+        next_batch = list(itertools.islice(template_batches, batch_size))
+    return excs
+
+
+def _encrypt_or_decrypt_resource_prop_data(
+        context, encryption_key, encrypt=False, batch_size=50, verbose=False):
+    session = context.session
+    excs = []
+    # Older resources may have properties_data in the legacy column,
+    # so update those as needed
+    query = session.query(models.ResourcePropertiesData).filter(
+        models.ResourcePropertiesData.encrypted.isnot(encrypt))
+    rpd_batches = _get_batch(
+        session=session, context=context, query=query,
+        model=models.ResourcePropertiesData, batch_size=batch_size)
+    next_batch = list(itertools.islice(rpd_batches, batch_size))
+    while next_batch:
+        for rpd in next_batch:
+            if not rpd.data:
+                continue
+            try:
+                if verbose:
+                    LOG.info("Processing resource_properties_data %s...",
+                             rpd.id)
+                if encrypt:
+                    result = crypt.encrypted_dict(rpd.data, encryption_key)
+                else:
+                    result = crypt.decrypted_dict(rpd.data, encryption_key)
+                rpd.update({'data': result, 'encrypted': encrypt})
+            except Exception as exc:
+                LOG.exception(
+                    "Failed to %(crypt_action)s "
+                    "data of resource_properties_data %(id)d",
+                    {'id': rpd.id,
+                     'crypt_action': _crypt_action(encrypt)})
+                excs.append(exc)
+                continue
+            finally:
+                if verbose:
+                    LOG.info(
+                        "Finished processing resource_properties_data %s.",
+                        rpd.id)
+        next_batch = list(itertools.islice(rpd_batches, batch_size))
+    return excs
+
+
+@context_manager.writer
+def encrypt_parameters_and_properties(context, encryption_key, batch_size=50,
+                                      verbose=False):
+    """Encrypt parameters and properties for all templates in db.
+
+    :param context: RPC context
+    :param encryption_key: key that will be used for parameter and property
+                           encryption
+    :param batch_size: number of templates requested from DB in each iteration.
+                       50 means that heat requests 50 templates, encrypt them
+                       and proceed with next 50 items.
+    :param verbose: log an INFO message when processing of each raw_template or
+                    resource begins or ends
+    :return: list of exceptions encountered during encryption
+    """
+    excs = []
+    excs.extend(_encrypt_or_decrypt_template_params(
+        context, encryption_key, True, batch_size, verbose))
+    excs.extend(_encrypt_or_decrypt_resource_prop_data(
+        context, encryption_key, True, batch_size, verbose))
+    return excs
+
+
+@context_manager.writer
+def decrypt_parameters_and_properties(context, encryption_key, batch_size=50,
+                                      verbose=False):
+    """Decrypt parameters and properties for all templates in db.
+
+    :param context: RPC context
+    :param encryption_key: key that will be used for parameter and property
+                           decryption
+    :param batch_size: number of templates requested from DB in each iteration.
+                       50 means that heat requests 50 templates, encrypt them
+                       and proceed with next 50 items.
+    :param verbose: log an INFO message when processing of each raw_template or
+                    resource begins or ends
+    :return: list of exceptions encountered during decryption
+    """
+    excs = []
+    excs.extend(_encrypt_or_decrypt_template_params(
+        context, encryption_key, False, batch_size, verbose))
+    excs.extend(_encrypt_or_decrypt_resource_prop_data(
+        context, encryption_key, False, batch_size, verbose))
+    return excs
+
+
+def _get_batch(session, context, query, model, batch_size=50):
+    last_batch_marker = None
+    while True:
+        results = _paginate_query(
+            context=context, query=query, model=model, limit=batch_size,
+            marker=last_batch_marker).all()
+        if not results:
+            break
+        else:
+            for result in results:
+                yield result
+            last_batch_marker = results[-1].id
