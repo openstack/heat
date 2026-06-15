@@ -1,0 +1,4 @@
+---
+fixes:
+  - |
+    Fixed the broken ``heat-manage update_params`` command.

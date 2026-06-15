@@ -11,8 +11,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import copy
 import datetime
+import fixtures
 import json
+import logging
 import time
 from unittest import mock
 import uuid
@@ -1531,13 +1534,12 @@ def create_stack(ctx, template, user_creds, **kwargs):
     return db_api.stack_create(ctx, values)
 
 
-def create_resource(ctx, stack, legacy_prop_data=False, **kwargs):
+def create_resource(ctx, stack, **kwargs):
     phy_res_id = UUID1
     if 'phys_res_id' in kwargs:
         phy_res_id = kwargs.pop('phys_res_id')
-    if not legacy_prop_data:
-        rpd = db_api.resource_prop_data_create(ctx, {'data': {'foo1': 'bar1'},
-                                                     'encrypted': False})
+    rpd = db_api.resource_prop_data_create(ctx, {'data': {'foo1': 'bar1'},
+                                                 'encrypted': False})
     values = {
         'name': 'test_resource_name',
         'physical_resource_id': phy_res_id,
@@ -1547,11 +1549,8 @@ def create_resource(ctx, stack, legacy_prop_data=False, **kwargs):
         'rsrc_metadata': json.loads('{"foo": "123"}'),
         'stack_id': stack.id,
         'atomic_key': 1,
+        'rsrc_prop_data': rpd,
     }
-    if not legacy_prop_data:
-        values['rsrc_prop_data'] = rpd
-    else:
-        values['properties_data'] = {'foo1': 'bar1'}
     values.update(kwargs)
     return db_api.resource_create(ctx, values)
 
@@ -1575,11 +1574,10 @@ def create_resource_prop_data(ctx, **kwargs):
     return db_api.resource_prop_data_create(ctx, **values)
 
 
-def create_event(ctx, legacy_prop_data=False, **kwargs):
-    if not legacy_prop_data:
-        rpd = db_api.resource_prop_data_create(ctx,
-                                               {'data': {'foo2': 'ev_bar'},
-                                                'encrypted': False})
+def create_event(ctx, **kwargs):
+    rpd = db_api.resource_prop_data_create(ctx,
+                                           {'data': {'foo2': 'ev_bar'},
+                                            'encrypted': False})
     values = {
         'stack_id': 'test_stack_id',
         'resource_action': 'create',
@@ -1587,11 +1585,8 @@ def create_event(ctx, legacy_prop_data=False, **kwargs):
         'resource_name': 'res',
         'physical_resource_id': UUID1,
         'resource_status_reason': "create_complete",
+        'rsrc_prop_data': rpd,
     }
-    if not legacy_prop_data:
-        values['rsrc_prop_data'] = rpd
-    else:
-        values['resource_properties'] = {'foo2': 'ev_bar'}
     values.update(kwargs)
     return db_api.event_create(ctx, values)
 
@@ -2389,7 +2384,6 @@ class DBAPIStackTest(common.HeatTestCase):
                 create_resource(
                     self.ctx,
                     stack,
-                    False,
                     name='%s-%s' % (stack.name, i),
                     root_stack_id=root_stack_id
                 )
@@ -2533,7 +2527,7 @@ class DBAPIResourceTest(common.HeatTestCase):
             {'name': 'res2'},
             {'name': 'res3'},
         ]
-        [create_resource(self.ctx, self.stack, False, **val)
+        [create_resource(self.ctx, self.stack, **val)
          for val in values]
 
         resources = db_api.resource_get_all(self.ctx)
@@ -2551,7 +2545,7 @@ class DBAPIResourceTest(common.HeatTestCase):
             {'name': 'res3', 'stack_id': self.stack.id},
             {'name': 'res4', 'stack_id': stack1.id},
         ]
-        [create_resource(self.ctx, self.stack, False, **val)
+        [create_resource(self.ctx, self.stack, **val)
          for val in values]
 
         # Test for all resources in a stack
@@ -3150,8 +3144,7 @@ class DBAPIResourceUpdateTest(common.HeatTestCase):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
         stack = create_stack(self.ctx, template, user_creds)
-        self.resource = create_resource(self.ctx, stack, False,
-                                        atomic_key=0)
+        self.resource = create_resource(self.ctx, stack, atomic_key=0)
 
     def test_unlocked_resource_update(self):
         values = {'engine_id': 'engine-1',
@@ -3432,6 +3425,421 @@ class DBAPISyncPointTest(common.HeatTestCase):
                                   stack_id=self.stack.id,
                                   traversal_id=self.stack.current_traversal)
             self.assertEqual(len(self.resources) * 21, add.call_count)
+
+
+class DBAPICryptParamsPropsTest(common.HeatTestCase):
+    def setUp(self):
+        super(DBAPICryptParamsPropsTest, self).setUp()
+        self.ctx = utils.dummy_context()
+        self.template = self._create_template()
+        self.user_creds = create_user_creds(self.ctx)
+        self.stack = create_stack(self.ctx, self.template, self.user_creds)
+        self.resources = [create_resource(self.ctx, self.stack, name='res1')]
+
+    hidden_params_dict = {
+        'param2': 'bar',
+        'param_number': '456',
+        'param_boolean': '1',
+        'param_map': '{\"test\":\"json\"}',
+        'param_comma_list': '[\"Hola\", \"Senor\"]'}
+
+    def _create_template(self):
+        """Initialize sample template."""
+        self.t = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+            param3:
+                type: string
+                description: value3
+                hidden: true
+                default: "don't encrypt me! I'm not sensitive enough"
+            param_string_default_int:
+                type: string
+                description: String parameter with integer default value
+                default: 4353
+                hidden: true
+            param_number:
+                type: number
+                description: Number parameter
+                default: 4353
+                hidden: true
+            param_boolean:
+                type: boolean
+                description: boolean parameter
+                default: true
+                hidden: true
+            param_map:
+                type: json
+                description: json parameter
+                default: {"fee": {"fi":"fo"}}
+                hidden: true
+            param_comma_list:
+                type: comma_delimited_list
+                description: cdl parameter
+                default: ["hola", "senorita"]
+                hidden: true
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        template = {
+            'template': self.t,
+            'files': {'foo': 'bar'},
+            'environment': {
+                'parameters': {
+                    'param1': 'foo',
+                    'param2': 'bar',
+                    'param_number': '456',
+                    'param_boolean': '1',
+                    'param_map': '{\"test\":\"json\"}',
+                    'param_comma_list': '[\"Hola\", \"Senor\"]'}}}
+
+        return db_api.raw_template_create(self.ctx, template)
+
+    def encrypt(self, enc_key=None, batch_size=50):
+        if enc_key is None:
+            enc_key = cfg.CONF.auth_encryption_key
+        self.assertEqual([], db_api.encrypt_parameters_and_properties(
+            self.ctx, enc_key, batch_size=batch_size))
+        with db_api.context_manager.reader.using(self.ctx):
+            session = self.ctx.session
+            for enc_tmpl in session.query(models.RawTemplate).all():
+                for param_name in self.hidden_params_dict.keys():
+                    self.assertEqual(
+                        ['cryptography_decrypt_v1', mock.ANY],
+                        enc_tmpl.environment['parameters'][param_name])
+                self.assertEqual(
+                    'foo', enc_tmpl.environment['parameters']['param1'])
+                # test that decryption does not store (or encrypt) default
+                # values in template's environment['parameters']
+                self.assertIsNone(
+                    enc_tmpl.environment['parameters'].get('param3'))
+
+            encrypt_value = enc_tmpl.environment['parameters']['param2'][1]
+
+            enc_resources = session.query(models.Resource).all()
+            self.assertNotEqual([], enc_resources)
+            for enc_resource in enc_resources:
+                self.assertEqual(
+                    ['cryptography_decrypt_v1', mock.ANY],
+                    enc_resource.rsrc_prop_data.data['foo1'])
+
+        return encrypt_value
+
+    def decrypt(self, encrypt_value, enc_key=None, batch_size=50):
+        if enc_key is None:
+            enc_key = cfg.CONF.auth_encryption_key
+
+        self.assertEqual([], db_api.decrypt_parameters_and_properties(
+            self.ctx, enc_key, batch_size=batch_size))
+
+        with db_api.context_manager.reader.using(self.ctx):
+            session = self.ctx.session
+            for dec_tmpl in session.query(models.RawTemplate).all():
+                self.assertNotEqual(
+                    encrypt_value,
+                    dec_tmpl.environment['parameters']['param2'][1])
+                for param_name, param_value in self.hidden_params_dict.items():
+                    self.assertEqual(
+                        param_value,
+                        dec_tmpl.environment['parameters'][param_name])
+                self.assertEqual(
+                    'foo', dec_tmpl.environment['parameters']['param1'])
+                self.assertIsNone(
+                    dec_tmpl.environment['parameters'].get('param3'))
+
+                # test that decryption does not store default
+                # values in template's environment['parameters']
+                self.assertIsNone(dec_tmpl.environment['parameters'].get(
+                    'param3'))
+
+            decrypt_value = dec_tmpl.environment['parameters']['param2'][1]
+
+            dec_resources = session.query(models.Resource).all()
+            self.assertNotEqual([], dec_resources)
+            for dec_resource in dec_resources:
+                self.assertEqual(
+                    'bar1', dec_resource.rsrc_prop_data.data['foo1'])
+
+        return decrypt_value
+
+    def _test_encrypt_decrypt(self, batch_size=50):
+        with db_api.context_manager.reader.using(self.ctx):
+            session = self.ctx.session
+            raw_templates = session.query(models.RawTemplate).all()
+            self.assertNotEqual([], raw_templates)
+            for r_tmpl in raw_templates:
+                for param_name, param_value in self.hidden_params_dict.items():
+                    self.assertEqual(
+                        param_value,
+                        r_tmpl.environment['parameters'][param_name])
+                    self.assertEqual(
+                        'foo',
+                        r_tmpl.environment['parameters']['param1'])
+
+            resources = session.query(models.Resource).all()
+            self.assertNotEqual([], resources)
+            self.assertEqual(len(resources), len(raw_templates))
+            for resource in resources:
+                resource = db_api.resource_get(self.ctx, resource.id)
+                self.assertEqual('bar1', resource.rsrc_prop_data.data['foo1'])
+
+        # Test encryption
+        encrypt_value = self.encrypt(batch_size=batch_size)
+
+        # Test that encryption is idempotent
+        encrypt_value2 = self.encrypt(batch_size=batch_size)
+        self.assertEqual(encrypt_value, encrypt_value2)
+
+        # Test decryption
+        decrypt_value = self.decrypt(encrypt_value, batch_size=batch_size)
+
+        # Test that decryption is idempotent
+        decrypt_value2 = self.decrypt(encrypt_value, batch_size=batch_size)
+        self.assertEqual(decrypt_value, decrypt_value2)
+
+        # Test using a different encryption key to encrypt & decrypt
+        encrypt_value3 = self.encrypt(
+            enc_key='774c15be099ea74123a9b9592ff12680',
+            batch_size=batch_size)
+        decrypt_value3 = self.decrypt(
+            encrypt_value3, enc_key='774c15be099ea74123a9b9592ff12680',
+            batch_size=batch_size)
+        self.assertEqual(decrypt_value, decrypt_value3)
+        self.assertNotEqual(encrypt_value, decrypt_value)
+        self.assertNotEqual(encrypt_value3, decrypt_value3)
+        self.assertNotEqual(encrypt_value, encrypt_value3)
+
+    def test_encrypt_decrypt(self):
+        """Test encryption and decryption for single template and resource."""
+        self._test_encrypt_decrypt()
+
+    def test_encrypt_decrypt_in_batches(self):
+        """Test encryption and decryption for several templates and resources.
+
+        Test encryption and decryption with set batch size of
+        templates and resources.
+        """
+        tmpl1 = self._create_template()
+        tmpl2 = self._create_template()
+        stack = create_stack(self.ctx, tmpl1, self.user_creds)
+        create_resource(self.ctx, stack, name='res1')
+        stack2 = create_stack(self.ctx, tmpl2, self.user_creds)
+        create_resource(self.ctx, stack2, name='res2')
+
+        self._test_encrypt_decrypt(batch_size=1)
+
+    def test_encrypt_decrypt_exception_continue(self):
+        """Test that encryption and decryption proceed after an exception"""
+        def create_malformed_template():
+            """Initialize a malformed template which should fail encryption."""
+            t = template_format.parse('''
+            heat_template_version: 2013-05-23
+            parameters:
+                param1:
+                    type: string
+                    description: value1.
+                param2:
+                    type: string
+                    description: value2.
+                    hidden: true
+                param3:
+                    type: string
+                    description: value3
+                    hidden: true
+                    default: "don't encrypt me! I'm not sensitive enough"
+            resources:
+                a_resource:
+                    type: GenericResourceType
+            ''')
+            template = {
+                'template': t,
+                'files': {'foo': 'bar'},
+                'environment': ''}  # <- environment should be a dict
+
+            return db_api.raw_template_create(self.ctx, template)
+
+        create_malformed_template()
+        self._create_template()
+
+        # Test encryption
+        enc_result = db_api.encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
+        self.assertEqual(1, len(enc_result))
+        self.assertIs(AttributeError, type(enc_result[0]))
+        with db_api.context_manager.reader.using(self.ctx):
+            enc_tmpls = self.ctx.session.query(models.RawTemplate).all()
+        self.assertEqual('', enc_tmpls[1].environment)
+        self.assertEqual(
+            'cryptography_decrypt_v1',
+            enc_tmpls[2].environment['parameters']['param2'][0])
+        self.assertNotEqual(
+            'bar',
+            enc_tmpls[2].environment['parameters']['param2'][1])
+
+        # Test decryption
+        dec_result = db_api.decrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key, batch_size=50)
+        self.assertEqual(len(dec_result), 1)
+        self.assertIs(AttributeError, type(dec_result[0]))
+        with db_api.context_manager.reader.using(self.ctx):
+            dec_tmpls = self.ctx.session.query(models.RawTemplate).all()
+        self.assertEqual('', dec_tmpls[1].environment)
+        self.assertEqual('bar',
+                         dec_tmpls[2].environment['parameters']['param2'])
+
+    def test_encrypt_no_env(self):
+        template = {
+            'template': self.t,
+            'files': {'foo': 'bar'},
+            'environment': None}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+
+    def test_encrypt_no_env_parameters(self):
+        template = {
+            'template': self.t,
+            'files': {'foo': 'bar'},
+            'environment': {'encrypted_param_names': ['a']}}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+
+    def test_encrypt_no_properties_data(self):
+        ctx = utils.dummy_context()
+        template = self._create_template()
+        user_creds = create_user_creds(ctx)
+        stack = create_stack(ctx, template, user_creds)
+        resources = [create_resource(ctx, stack, name='res1')]
+        resources[0].properties_data = None
+        self.assertEqual([], db_api.encrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key))
+
+    def test_encrypt_decrypt_verbose_on(self):
+        info_logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
+        ctx = utils.dummy_context()
+        template = self._create_template()
+        user_creds = create_user_creds(ctx)
+        stack = create_stack(ctx, template, user_creds)
+        create_resource(ctx, stack, name='res2')
+
+        db_api.encrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=True)
+        self.assertIn("Processing raw_template 1", info_logger.output)
+        self.assertIn("Finished encrypt processing of raw_template 1",
+                      info_logger.output)
+        self.assertIn("Processing resource_properties_data 1",
+                      info_logger.output)
+        self.assertIn("Finished processing resource_properties_data 1",
+                      info_logger.output)
+
+        info_logger2 = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
+
+        db_api.decrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=True)
+        self.assertIn("Processing raw_template 1", info_logger2.output)
+        self.assertIn("Finished decrypt processing of raw_template 1",
+                      info_logger2.output)
+        self.assertIn("Processing resource_properties_data 1",
+                      info_logger.output)
+        self.assertIn("Finished processing resource_properties_data 1",
+                      info_logger.output)
+
+    def test_encrypt_decrypt_verbose_off(self):
+        info_logger = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
+        ctx = utils.dummy_context()
+        template = self._create_template()
+        user_creds = create_user_creds(ctx)
+        stack = create_stack(ctx, template, user_creds)
+        create_resource(ctx, stack, name='res1')
+
+        db_api.encrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=False)
+        self.assertNotIn("Processing raw_template 1", info_logger.output)
+        self.assertNotIn("Successfully processed raw_template 1",
+                         info_logger.output)
+
+        info_logger2 = self.useFixture(
+            fixtures.FakeLogger(level=logging.INFO,
+                                format="%(levelname)8s [%(name)s] "
+                                       "%(message)s"))
+
+        db_api.decrypt_parameters_and_properties(
+            ctx, cfg.CONF.auth_encryption_key, verbose=False)
+        self.assertNotIn("Processing raw_template 1", info_logger2.output)
+        self.assertNotIn("Successfully processed raw_template 1",
+                         info_logger2.output)
+
+    def test_encrypt_no_param_schema(self):
+        t = copy.deepcopy(self.t)
+        del t['parameters']['param2']
+        template = {
+            'template': t,
+            'files': {'foo': 'bar'},
+            'environment': {'encrypted_param_names': [],
+                            'parameters': {'param2': 'foo'}}}
+        db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+
+    def test_encrypt_non_string_param_type(self):
+        t = template_format.parse('''
+        heat_template_version: 2013-05-23
+        parameters:
+            param1:
+                type: string
+                description: value1.
+            param2:
+                type: string
+                description: value2.
+                hidden: true
+            param3:
+                type: string
+                description: value3
+                hidden: true
+                default: 1234
+        resources:
+            a_resource:
+                type: GenericResourceType
+        ''')
+        template = {
+            'template': t,
+            'files': {},
+            'environment': {'parameters': {
+                'param1': 'foo',
+                'param2': 'bar',
+                'param3': 12345}}}
+        tmpl = db_api.raw_template_create(self.ctx, template)
+        self.assertEqual([], db_api.encrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key))
+        tmpl = db_api.raw_template_get(self.ctx, tmpl.id)
+        enc_params = copy.copy(tmpl.environment['parameters'])
+
+        self.assertEqual([], db_api.decrypt_parameters_and_properties(
+            self.ctx, cfg.CONF.auth_encryption_key, batch_size=50))
+        tmpl = db_api.raw_template_get(self.ctx, tmpl.id)
+        dec_params = tmpl.environment['parameters']
+
+        self.assertNotEqual(enc_params['param3'], dec_params['param3'])
+        self.assertEqual('bar', dec_params['param2'])
+        self.assertEqual('12345', dec_params['param3'])
 
 
 class ResetStackStatusTests(common.HeatTestCase):
