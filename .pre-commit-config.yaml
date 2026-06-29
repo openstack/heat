@@ -16,12 +16,12 @@ repos:
         files: .*\.(yaml|yml)$
         exclude: 'rally-scenarios/heat-fakevirt.yaml'
   - repo: https://opendev.org/openstack/hacking
-    rev: 8.0.0
+    rev: 8.1.0
     hooks:
       - id: hacking
         additional_dependencies: []
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.9.3
+    rev: 1.9.4
     hooks:
       - id: bandit
         args: ['-c', 'pyproject.toml']
