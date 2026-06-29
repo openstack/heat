@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: bandit
         args: ['-c', 'pyproject.toml']
-        additional_dependencies: ["bandit[toml]"]
+        additional_dependencies: [".[toml]"]
   - repo: https://github.com/PyCQA/doc8
     rev: v2.0.0
     hooks:
