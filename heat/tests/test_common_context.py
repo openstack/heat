@@ -16,6 +16,7 @@ import copy
 import os
 from unittest import mock
 
+from keystoneauth1 import exceptions as ks_exceptions
 from keystoneauth1 import loading as ks_loading
 from oslo_config import cfg
 from oslo_config import fixture as config_fixture
@@ -239,6 +240,18 @@ class TestRequestContext(common.HeatTestCase):
                          return_value=None)
         self.assertRaises(exception.AuthorizationFailure, getattr,
                           ctx, 'auth_plugin')
+
+    def test_stored_context_keystone_data_not_found(self):
+        auth_plugin = mock.Mock()
+        auth_plugin.get_access.side_effect = ks_exceptions.NotFound()
+        ctx = context.StoredContext.from_dict(
+            self.ctx, is_admin=False, auth_plugin=auth_plugin
+        )
+        ctx.user_domain_id = None
+        ctx.project_domain_id = None
+
+        self.assertRaises(exception.AuthorizationFailure, getattr, ctx,
+                          'user_domain_id')
 
     def test_cache(self):
         ctx = context.RequestContext.from_dict(self.ctx)
