@@ -256,7 +256,7 @@ class StoredContext(RequestContext):
         self._keystone_loaded = True
         try:
             auth_ref = self.auth_plugin.get_access(self.keystone_session)
-        except ks_exceptions.Unauthorized:
+        except (ks_exceptions.Unauthorized, ks_exceptions.NotFound):
             raise exception.AuthorizationFailure()
 
         self.roles = auth_ref.role_names
