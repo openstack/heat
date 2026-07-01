@@ -2760,6 +2760,35 @@ class DBAPIResourceTest(common.HeatTestCase):
         self.assertRaises(exception.NotFound, db_api.resource_get,
                           self.ctx, resource.id)
 
+    def test_resource_purge_deleted_deletes_orphaned_current_template(self):
+        old_tmpl = create_raw_template(self.ctx)
+        val = {'name': 'res1',
+               'action': rsrc.Resource.DELETE,
+               'status': rsrc.Resource.COMPLETE,
+               'current_template_id': old_tmpl.id}
+        resource = create_resource(self.ctx, self.stack, **val)
+
+        db_api.resource_purge_deleted(self.ctx, self.stack.id)
+
+        self.assertRaises(exception.NotFound, db_api.resource_get,
+                          self.ctx, resource.id)
+        self.assertRaises(exception.NotFound, db_api.raw_template_get,
+                          self.ctx, old_tmpl.id)
+
+    def test_resource_purge_deleted_keeps_stack_current_template(self):
+        val = {'name': 'res1',
+               'action': rsrc.Resource.DELETE,
+               'status': rsrc.Resource.COMPLETE,
+               'current_template_id': self.template.id}
+        resource = create_resource(self.ctx, self.stack, **val)
+
+        db_api.resource_purge_deleted(self.ctx, self.stack.id)
+
+        self.assertRaises(exception.NotFound, db_api.resource_get,
+                          self.ctx, resource.id)
+        self.assertIsNotNone(db_api.raw_template_get(self.ctx,
+                                                     self.template.id))
+
     @mock.patch.object(time, 'sleep')
     def test_resource_purge_deleted_by_stack_retry_on_deadlock(self, m_sleep):
         val = {'name': 'res1', 'action': rsrc.Resource.DELETE,
