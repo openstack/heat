@@ -483,12 +483,37 @@ def resource_purge_deleted(context, stack_id):
     filters = {'stack_id': stack_id, 'action': 'DELETE', 'status': 'COMPLETE'}
     query = context.session.query(models.Resource)
     result = query.filter_by(**filters)
-    attr_ids = [r.attr_data_id for r in result if r.attr_data_id is not None]
+    resources = result.all()
+    attr_ids = [r.attr_data_id for r in resources
+                if r.attr_data_id is not None]
+    raw_template_ids = {r.current_template_id for r in resources
+                        if r.current_template_id is not None}
     result.delete()
     if attr_ids:
         context.session.query(models.ResourcePropertiesData).filter(
             models.ResourcePropertiesData.id.in_(attr_ids)).delete(
                 synchronize_session=False)
+    if raw_template_ids:
+        refs = context.session.query(
+            models.Stack.raw_template_id.label('id')
+        ).filter(
+            models.Stack.raw_template_id.in_(raw_template_ids)
+        ).union(
+            context.session.query(
+                models.Stack.prev_raw_template_id.label('id')
+            ).filter(
+                models.Stack.prev_raw_template_id.in_(raw_template_ids)
+            ),
+            context.session.query(
+                models.Resource.current_template_id.label('id')
+            ).filter(
+                models.Resource.current_template_id.in_(raw_template_ids)
+            )
+        )
+        still_referenced = {i[0] for i in refs}
+
+        for template_id in raw_template_ids - still_referenced:
+            raw_template_delete(context, template_id)
 
 
 def _add_atomic_key_to_values(values, atomic_key):
