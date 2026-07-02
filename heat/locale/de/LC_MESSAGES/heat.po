@@ -14,7 +14,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2026-02-21 13:51+0000\n"
+"POT-Creation-Date: 2026-07-01 09:52+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -1284,9 +1284,6 @@ msgstr "Attribut %(attr)s für Fassade %(type)s fehlt im Provider"
 
 msgid "Audit status of this firewall policy."
 msgstr "Überwachungsstatus dieser Firewall-Richtlinie"
-
-msgid "Authentication Endpoint URI."
-msgstr "Authentifizierungsendpunkt-URI."
 
 msgid "Authentication hash algorithm for the ike policy."
 msgstr "Authentifizierungs-Hash-Algorithmus für die Ike-Richtlinie."
@@ -7553,24 +7550,6 @@ msgstr "Der private Schlüssel, wenn er gespeichert wurde."
 msgid "The profile of certificate to use."
 msgstr "Das Profil des zu verwendenden Zertifikats."
 
-msgid ""
-"The protocol that is matched by the security group rule. Allowed values are "
-"ah, dccp, egp, esp, gre, icmp, icmpv6, igmp, ipv6-encap, ipv6-frag, ipv6-"
-"icmp, ipv6-nonxt, ipv6-opts, ipv6-route, ospf, pgm, rsvp, sctp, tcp, udp, "
-"udplite, vrrp and integer representations [0-255]."
-msgstr ""
-"Das Protokoll, dem die Sicherheitsgruppenregel entspricht. Erlaubte Werte "
-"sind: ah, dccp, egp, esp, gre, icmp, icmpv6, igmp, ipv6-encap, ipv6-frag, "
-"ipv6-icmp, ipv6-nonxt, ipv6-opts, ipv6-route, ospf, pgm, rsvp, sctp , tcp, "
-"udp, udplite, vrrp und Integer-Repräsentationen [0-255]."
-
-msgid ""
-"The protocol that is matched by the security group rule. Valid values "
-"include tcp, udp, and icmp."
-msgstr ""
-"Das Protokoll, dem die Sicherheitsgruppenregel entspricht. Zu den gültigen "
-"Werten gehören tcp, udp und icmp."
-
 msgid "The public key."
 msgstr "Der öffentliche Schlüssel."
 
@@ -8928,6 +8907,9 @@ msgstr ""
 msgid "could not find user %s"
 msgstr "Benutzer %s konnte nicht gefunden werden"
 
+msgid "decrypt"
+msgstr "entschlüsseln"
+
 msgid "deployment_id must be specified"
 msgstr "deployment_id muss angegeben werden"
 
@@ -8948,6 +8930,9 @@ msgstr "aufgrund der Abklingzeit, Abklingzeit %s"
 
 msgid "due to scaling activity"
 msgstr "aufgrund der Skalierungsaktivität"
+
+msgid "encrypt"
+msgstr "verschlüsseln"
 
 #, python-format
 msgid "environment has empty section \"%s\""

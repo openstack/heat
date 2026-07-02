@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2026-02-21 13:51+0000\n"
+"POT-Creation-Date: 2026-07-01 09:52+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -842,9 +842,6 @@ msgstr "Атрибут %(attr)s для фасада %(type)s не указан �
 
 msgid "Audit status of this firewall policy."
 msgstr "Состояние контроля этой стратегии брандмауэра."
-
-msgid "Authentication Endpoint URI."
-msgstr "URI конечной точки идентификации."
 
 msgid "Authentication hash algorithm for the ike policy."
 msgstr "Хэш-алгоритм идентификации для стратегии ike."
@@ -5331,13 +5328,6 @@ msgstr "Личный ключ, если он сохранен."
 
 msgid "The profile of certificate to use."
 msgstr "Профиль сертификата для использования."
-
-msgid ""
-"The protocol that is matched by the security group rule. Valid values "
-"include tcp, udp, and icmp."
-msgstr ""
-"Протокол, который соответствует правилу группы защиты. Верными значениями "
-"являются tcp, udp и icmp."
 
 msgid "The public key."
 msgstr "Общий ключ."
