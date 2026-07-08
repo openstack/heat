@@ -18,5 +18,4 @@ create_stacks:
   actions:
     - "create"
   allowed:
-    - "system_reader"
     - "project_reader"
