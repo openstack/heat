@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2026-02-21 13:51+0000\n"
+"POT-Creation-Date: 2026-07-01 09:52+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -866,9 +866,6 @@ msgstr "Falta el atributo %(attr)s para la fachada %(type)s en el proveedor"
 
 msgid "Audit status of this firewall policy."
 msgstr "Estado de auditoría de esta política de cortafuegos."
-
-msgid "Authentication Endpoint URI."
-msgstr "URI de Autenticación del Punto de Acceso."
 
 msgid "Authentication hash algorithm for the ike policy."
 msgstr "El algoritmo hash de autenticación para la política ike."
@@ -5514,13 +5511,6 @@ msgstr "La clave privada si se ha guardado."
 
 msgid "The profile of certificate to use."
 msgstr "El perfil del certificado a utilizar."
-
-msgid ""
-"The protocol that is matched by the security group rule. Valid values "
-"include tcp, udp, and icmp."
-msgstr ""
-"El protocólo que está coincidido con la regla de grupo de seguridad. Valores "
-"válido incluyen tcp, udp, y icmp."
 
 msgid "The public key."
 msgstr "La clave pública."

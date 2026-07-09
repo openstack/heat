@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2026-02-21 13:51+0000\n"
+"POT-Creation-Date: 2026-07-01 09:52+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -763,9 +763,6 @@ msgstr "提供程序中缺少外观 %(type)s 的属性 %(attr)s"
 
 msgid "Audit status of this firewall policy."
 msgstr "此防火墙策略的审计状态。"
-
-msgid "Authentication Endpoint URI."
-msgstr "认证端点 URI。"
 
 msgid "Authentication hash algorithm for the ike policy."
 msgstr "ike 策略的认证散列算法。"
@@ -4916,11 +4913,6 @@ msgstr "专用密钥（如果已保存）。"
 
 msgid "The profile of certificate to use."
 msgstr "要使用的证书的概要文件。"
-
-msgid ""
-"The protocol that is matched by the security group rule. Valid values "
-"include tcp, udp, and icmp."
-msgstr "通过安全组规则匹配的协议。有效值包括 tcp、udp 和 icmp。"
 
 msgid "The public key."
 msgstr "公用密钥。"
