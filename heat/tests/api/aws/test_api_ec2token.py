@@ -328,29 +328,6 @@ class Ec2TokenTest(common.HeatTestCase):
             self.verify_req_url, data=self.verify_data,
             headers=self.verify_req_headers)
 
-    def test_call_err_unauthorized(self):
-        # test when Keystone returns unauthenticated error.
-        ec2 = ec2token.EC2Token(app='woot', conf={})
-
-        auth_str = ('Authorization: foo  Credential=foo/bar, '
-                    'SignedHeaders=content-type;host;x-amz-date, '
-                    'Signature=xyz')
-        req_env = {'SERVER_NAME': 'heat',
-                   'SERVER_PORT': '8000',
-                   'PATH_INFO': '/v1',
-                   'HTTP_AUTHORIZATION': auth_str}
-        dummy_req = _dummy_GET_request(environ=req_env)
-
-        msg = "The request you have made requires authentication."
-        bad_resp = json.dumps({'error': {'message': msg}})
-        self._stub_http_connection(headers={'Authorization': auth_str},
-                                   response=bad_resp)
-        self.assertRaises(exception.HeatAccessDeniedError,
-                          ec2.__call__, dummy_req)
-        self.mock_adapter.post.assert_called_once_with(
-            self.verify_req_url, data=self.verify_data,
-            headers=self.verify_req_headers)
-
     def test_call_err_ks_plugin_unauthorized(self):
         # test when the keystone session fails to auth while obtaining
         # an auth token

@@ -237,16 +237,8 @@ class EC2Token(wsgi.Middleware):
                 raise exception.HeatInvalidClientTokenIdError()
             elif reason == "EC2 signature not supplied.":
                 raise exception.HeatSignatureError()
-            elif (reason ==
-                  "The request you have made requires authentication."):
-                # We tried to make an unauthenticated requests to Keystone
-                LOG.error(
-                    "Keystone endpoint %s requires authentication",
-                    keystone_ec2_uri
-                )
-                raise exception.HeatAccessDeniedError()
-            else:
-                raise exception.HeatAccessDeniedError()
+
+            raise exception.HeatAccessDeniedError()
         else:
             LOG.info("AWS authentication successful.")
 
