@@ -58,6 +58,10 @@ HEAT_API_UWSGI=heat.wsgi.api:application
 HEAT_CFN_API_UWSGI=heat.wsgi.cfn:application
 
 HEAT_ENFORCE_NEW_DEFAULTS=$(trueorfalse True HEAT_ENFORCE_NEW_DEFAULTS)
+# Support the deprecated HEAT_ENFORCE_SCOPE variable as a fallback.
+if [[ -n "${HEAT_ENFORCE_SCOPE}" ]]; then
+    HEAT_ENFORCE_NEW_DEFAULTS=$(trueorfalse True HEAT_ENFORCE_SCOPE)
+fi
 
 # other default options
 if [[ "$HEAT_STANDALONE" == "True" ]]; then
