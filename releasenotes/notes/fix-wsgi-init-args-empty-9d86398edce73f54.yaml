@@ -1,0 +1,11 @@
+---
+fixes:
+  - |
+    Fixed an issue where ``heat-api`` and ``heat-api-cfn``, when running
+    under uWSGI with ``wsgi-file``, could fail to load the WSGI application
+    with ``unable to load app 0 ... (callable not found or import error)``.
+    The ``init_application`` functions in ``heat.api.openstack.wsgi`` and
+    ``heat.api.cfn.wsgi`` invoked ``oslo.config`` without ``args=[]``, so
+    ``oslo.config`` fell back to ``sys.argv[1:]`` and rejected uWSGI's own
+    arguments (e.g. ``--ini``) with ``SystemExit(2)``. The calls now pass
+    an explicit empty argument list.
