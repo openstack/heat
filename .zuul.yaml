@@ -26,7 +26,6 @@
       devstack_localrc:
         CEILOMETER_PIPELINE_INTERVAL: 60
         HEAT_ENABLE_ADOPT_ABANDON: True
-        CINDER_BACKUP_DRIVER: swift
       devstack_services:
         neutron-trunk: true
         tempest: true
