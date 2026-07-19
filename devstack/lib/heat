@@ -138,6 +138,8 @@ function configure_heat {
         iniset $HEAT_CONF DEFAULT deferred_auth_method $HEAT_DEFERRED_AUTH
     fi
 
+    iniset $HEAT_CONF DEFAULT hidden_stack_tags hidden
+
     write_uwsgi_config "$HEAT_API_UWSGI_CONF" "$HEAT_API_UWSGI" "/heat-api" "" "heat-api"
     # configure threads for h-api to avoid IO wait and messaging timeout. We use
     # 'nproc/4' to calculate API workers, hence, 4 would be probably correct
@@ -398,6 +400,8 @@ function configure_tempest_for_heat {
 
     iniset $TEMPEST_CONFIG heat_plugin admin_username admin
     iniset $TEMPEST_CONFIG heat_plugin admin_password $ADMIN_PASSWORD
+    iniset $TEMPEST_CONFIG heat_plugin hidden_stack_tag hidden
+
 }
 
 # Restore xtrace

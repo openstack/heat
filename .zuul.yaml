@@ -41,7 +41,6 @@
             DEFAULT:
               convergence_engine: true
               stack_scheduler_hints: true
-              hidden_stack_tags: hidden
               encrypt_parameters_and_properties: True
               max_stacks_per_tenant: 256
             oslo_messaging_notifications:
@@ -56,7 +55,6 @@
               instance_type: m1.heat_int
               minimal_instance_type: m1.heat_micro
               image_ref: Fedora-Cloud-Base-37-1.7.x86_64
-              hidden_stack_tag: hidden
               heat_config_notify_script: /opt/stack/heat-agents/heat-config/bin/heat-config-notify
               boot_config_env: /opt/stack/heat-templates/hot/software-config/boot-config/test_image_env.yaml
               credential_secret_id: $OS_CREDENTIAL_SECRET_ID
