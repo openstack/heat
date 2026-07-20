@@ -42,8 +42,6 @@
               hidden_stack_tags: hidden
               encrypt_parameters_and_properties: True
               max_stacks_per_tenant: 256
-            oslo_messaging_notifications:
-              driver: messagingv2
         test-config:
           $TEMPEST_CONFIG:
             service_available:
