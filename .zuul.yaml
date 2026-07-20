@@ -25,7 +25,6 @@
         - heat-tempest-plugin
       devstack_localrc:
         HEAT_ENABLE_ADOPT_ABANDON: True
-        CINDER_BACKUP_DRIVER: swift
       devstack_services:
         neutron-trunk: true
         tempest: true
