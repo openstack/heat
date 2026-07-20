@@ -395,6 +395,8 @@ function configure_tempest_for_heat {
         '{"auth_type": "v3applicationcredential", "auth": {"auth_url": $OS_AUTH_URL, "application_credential_id": $app_cred_id, "application_credential_secret": "secret"}}'\
         -c "Secret href" -f value)
 
+    iniset $TEMPEST_CONFIG service_available heat "True"
+
     iniset $TEMPEST_CONFIG heat_plugin username demo
     iniset $TEMPEST_CONFIG heat_plugin password $ADMIN_PASSWORD
     iniset $TEMPEST_CONFIG heat_plugin project_name demo
