@@ -58,8 +58,6 @@
               credential_secret_id: $OS_CREDENTIAL_SECRET_ID
             heat_features_enabled:
               multi_cloud: True
-            volume-feature-enabled:
-              backup: True
       test_results_stage_name: test_results
       zuul_copy_output:
         '{{ devstack_base_dir }}/tempest/etc/tempest.conf': logs
