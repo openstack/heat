@@ -53,8 +53,6 @@
               driver: messagingv2
         test-config:
           $TEMPEST_CONFIG:
-            service_available:
-              heat: True
             heat_plugin:
               convergence_engine_enabled: true
               image_ref: Fedora-Cloud-Base-37-1.7.x86_64
