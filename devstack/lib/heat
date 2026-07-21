@@ -115,6 +115,8 @@ function configure_heat {
 
     # common options
     iniset_rpc_backend heat $HEAT_CONF
+    iniset $HEAT_CONF oslo_messaging_notifications driver "messagingv2"
+
     iniset $HEAT_CONF DEFAULT heat_metadata_server_url http://$HEAT_API_CFN_HOST/heat-api-cfn
     iniset $HEAT_CONF DEFAULT heat_waitcondition_server_url http://$HEAT_API_CFN_HOST/heat-api-cfn/v1/waitcondition
 
