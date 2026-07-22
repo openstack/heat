@@ -13,6 +13,8 @@
 # stack.sh
 # ---------
 # - install_heatclient
+# - install_heat_agents
+# - install_heat_templates
 # - install_heat
 # - configure_heatclient
 # - configure_heat
@@ -30,10 +32,14 @@ set +o xtrace
 
 # set up default directories
 GITDIR["python-heatclient"]=$DEST/python-heatclient
-
-# python heat client library
 GITREPO["python-heatclient"]=${HEATCLIENT_REPO:-${GIT_BASE}/openstack/python-heatclient.git}
 GITBRANCH["python-heatclient"]=${HEATCLIENT_BRANCH:-master}
+GITDIR["heat-agents"]=$DEST/heat-agents
+GITREPO["heat-agents"]=${HEATAGENTS_REPO:-${GIT_BASE}/openstack/heat-agents.git}
+GITBRANCH["heat-agents"]=${HEATAGENTS_BRANCH:-master}
+GITDIR["heat-templates"]=$DEST/heat-templates
+GITREPO["heat-templates"]=${HEATTEMPLATES_REPO:-${GIT_BASE}/openstack/heat-templates.git}
+GITBRANCH["heat-templates"]=${HEATTEMPLATES_BRANCH:-master}
 
 HEAT_DIR=$DEST/heat
 
@@ -236,6 +242,20 @@ function install_heatclient {
     fi
 }
 
+# install_heat_agents() - Collect source and prepare
+function install_heat_agents {
+    if use_library_from_git "heat-agents"; then
+        git_clone_by_name "heat-agents"
+    fi
+}
+
+# install_heat_templates() - Collect source and prepare
+function install_heat_templates {
+    if use_library_from_git "heat-templates"; then
+        git_clone_by_name "heat-templates"
+    fi
+}
+
 # install_heat() - Collect source and prepare
 function install_heat {
     setup_develop $HEAT_DIR
@@ -397,6 +417,13 @@ function configure_tempest_for_heat {
     iniset $TEMPEST_CONFIG heat_plugin image_ref $image_name
     iniset $TEMPEST_CONFIG heat_plugin instance_type m1.heat_int
     iniset $TEMPEST_CONFIG heat_plugin minimal_instance_type m1.heat_micro
+
+    if use_library_from_git "heat-agents"; then
+        iniset $TEMPEST_CONFIG heat_plugin heat_config_notify_script ${GITDIR["heat-agents"]}/heat-config/bin/heat-config-notify
+    fi
+    if use_library_from_git "heat-templates"; then
+        iniset $TEMPEST_CONFIG heat_plugin boot_config_env ${GITDIR["heat-templates"]}/hot/software-config/boot-config/test_image_env.yaml
+    fi
 }
 
 # Restore xtrace

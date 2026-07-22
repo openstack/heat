@@ -15,6 +15,10 @@ if is_heat_enabled; then
         stack_install_service heat
         echo_summary "Installing heatclient"
         install_heatclient
+        echo_summary "Installing heat-agents"
+        install_heat_agents
+        echo_summary "Installing heat-templates"
+        install_heat_templates
 
     elif [[ "$1" == "stack" && "$2" == "test-config" ]]; then
         if is_service_enabled tempest; then
