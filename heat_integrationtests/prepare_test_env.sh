@@ -53,11 +53,6 @@ function _config_iniset {
     source $TOP_DIR/openrc admin admin
     iniset $conf_file heat_plugin admin_username $OS_USERNAME
     iniset $conf_file heat_plugin admin_password $OS_PASSWORD
-
-
-    if [ "$DISABLE_CONVERGENCE" == "true" ]; then
-        iniset $conf_file heat_plugin convergence_engine_enabled false
-    fi
 }
 
 
@@ -72,31 +67,4 @@ function _config_functionaltests
     cat $conf_file
 }
 
-function _config_tempest_plugin
-{
-    local conf_file=$CONF_DEST/tempest/etc/tempest.conf
-    iniset_multiline $conf_file service_available heat_plugin True
-    _config_iniset $conf_file
-    iniset $conf_file heat_plugin heat_config_notify_script $CONF_DEST/heat-agents/heat-config/bin/heat-config-notify
-    iniset $conf_file heat_plugin boot_config_env $CONF_DEST/heat-templates/hot/software-config/boot-config/test_image_env.yaml
-
-    # support test multi-cloud
-    app_cred_id=$((openstack application credential show  heat_multicloud || openstack application credential create heat_multicloud \
-        --secret secret --unrestricted) | grep ' id '|awk '{print $4}')
-    export OS_CREDENTIAL_SECRET_ID=$(openstack secret store -n heat-multi-cloud-test-cred --payload '{"auth_type": "v3applicationcredential", "auth": {"auth_url": $OS_AUTH_URL, "application_credential_id": $app_cred_id, "application_credential_secret": "secret"}}')
-    iniset $conf_file heat_features_enabled multi_cloud True
-    iniset $conf_file heat_plugin heat_plugin credential_secret_id $OS_CREDENTIAL_SECRET_ID
-
-    # Skip SoftwareConfigIntegrationTest because it requires a custom image
-    iniset $conf_file heat_plugin skip_scenario_test_list 'SoftwareConfigIntegrationTest'
-
-    iniset $conf_file heat_plugin skip_functional_test_list ''
-
-    # disable cinder backup feature
-    iniset $conf_file volume-feature-enabled backup False
-
-    cat $conf_file
-}
-
 _config_functionaltests
-_config_tempest_plugin
