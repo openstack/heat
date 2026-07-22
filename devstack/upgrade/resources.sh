@@ -57,7 +57,6 @@ function _run_heat_integrationtests {
     pushd $devstack_dir/../tempest
     export DEST=$(dirname $devstack_dir)
     $DEST/heat/heat_integrationtests/prepare_test_env.sh
-    $DEST/heat/heat_integrationtests/prepare_test_network.sh
 
     # Run set of specified functional tests
     UPGRADE_TESTS=upgrade_tests.list

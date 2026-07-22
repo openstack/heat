@@ -11,7 +11,6 @@ To run the tests against DevStack, do the following::
 
     # create test resources and write config
     $DEST/heat/heat_integrationtests/prepare_test_env.sh
-    $DEST/heat/heat_integrationtests/prepare_test_network.sh
 
     # run the heat integration tests
     cd $DEST/heat
