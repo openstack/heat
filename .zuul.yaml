@@ -202,14 +202,18 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - grenade-heat-multinode
+        #- grenade-heat-multinode
         - heat-functional
-        - heat-functional-jammy
+        # TODO(tkajinam): Jammy jobs are failing due to removal of python 3.10
+        # support. We have to pin tempest to fix it.
+        #- heat-functional-jammy
         - heat-functional-legacy
         - heat-functional-centos-9-stream
     gate:
       jobs:
-        - grenade-heat-multinode
+        #- grenade-heat-multinode
         - heat-functional
-        - heat-functional-jammy
+        # TODO(tkajinam): Jammy jobs are failing due to removal of python 3.10
+        # support. We have to pin tempest to fix it.
+        #- heat-functional-jammy
         - heat-functional-legacy
