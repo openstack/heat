@@ -361,24 +361,13 @@ class NovaClientPlugin(microversion_mixin.MicroversionMixin,
 
         if instance_user:
             config_custom_user = 'user: %s' % instance_user
-            # FIXME(shadower): compatibility workaround for cloud-init 0.6.3.
-            # We can drop this once we stop supporting 0.6.3 (which ships
-            # with Ubuntu 12.04 LTS).
-            #
-            # See bug https://bugs.launchpad.net/heat/+bug/1257410
-            boothook_custom_user = r"""useradd -m %s
-echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
-""" % (instance_user, instance_user)
         else:
             config_custom_user = ''
-            boothook_custom_user = ''
 
         cloudinit_config = string.Template(
             read_cloudinit_file('config')).safe_substitute(
                 add_custom_user=config_custom_user)
-        cloudinit_boothook = string.Template(
-            read_cloudinit_file('boothook.sh')).safe_substitute(
-                add_custom_user=boothook_custom_user)
+        cloudinit_boothook = read_cloudinit_file('boothook.sh')
 
         attachments = [(cloudinit_config, 'cloud-config'),
                        (cloudinit_boothook, 'boothook.sh', 'cloud-boothook'),

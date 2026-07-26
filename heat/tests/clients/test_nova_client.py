@@ -465,7 +465,6 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
                               'http://server.test:123')
         data = self.nova_plugin.build_userdata({}, instance_user=None)
         self.assertNotIn('user: ', data)
-        self.assertNotIn('useradd', data)
         self.assertNotIn('ec2-user', data)
 
     def test_build_userdata_with_instance_user(self):
@@ -474,7 +473,6 @@ class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
                               'http://server.test:123')
         data = self.nova_plugin.build_userdata({}, instance_user='ec2-user')
         self.assertIn('user: ', data)
-        self.assertIn('useradd', data)
         self.assertIn('ec2-user', data)
 
     def test_build_userdata_with_ignition(self):
