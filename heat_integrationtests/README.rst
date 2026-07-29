@@ -9,9 +9,6 @@ To run the tests against DevStack, do the following::
 
     export DEST=/opt/stack
 
-    # create test resources and write config
-    $DEST/heat/heat_integrationtests/prepare_test_env.sh
-
     # run the heat integration tests
     cd $DEST/heat
     stestr --test-path=heat_integrationtests run
