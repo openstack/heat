@@ -25,7 +25,6 @@ doc/source/api/
 .idea
 # integration tests requirements are auto-generated from stub file
 heat_integrationtests/requirements.txt
-heat_integrationtests/heat_integrationtests.conf.sample
 
 # generated config/policy file
 etc/heat/heat.conf.sample
