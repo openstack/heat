@@ -366,12 +366,18 @@ function configure_tempest_for_heat {
     if is_service_enabled tls-proxy; then
         iniset $TEMPEST_CONFIG heat_plugin ca_file $SSL_BUNDLE_FILE
     fi
-    # add application credential and secret to support test multi-cloud
-    app_cred_id=$(openstack application credential show  heat_multicloud || openstack application credential create heat_multicloud \
-        --secret secret --unrestricted -c id -f value)
-    export OS_CREDENTIAL_SECRET_ID=$(openstack secret store -n heat-multi-cloud-test-cred --payload \
-        '{"auth_type": "v3applicationcredential", "auth": {"auth_url": $OS_AUTH_URL, "application_credential_id": $app_cred_id, "application_credential_secret": "secret"}}'\
-        -c "Secret href" -f value)
+
+    if is_service_enabled barbican; then
+        # add application credential and secret to support test multi-cloud
+        app_cred_id=$(openstack application credential show  heat_multicloud || openstack application credential create heat_multicloud \
+            --secret secret --unrestricted -c id -f value)
+        export OS_CREDENTIAL_SECRET_ID=$(openstack secret store -n heat-multi-cloud-test-cred --payload \
+            '{"auth_type": "v3applicationcredential", "auth": {"auth_url": $OS_AUTH_URL, "application_credential_id": $app_cred_id, "application_credential_secret": "secret"}}'\
+            -c "Secret href" -f value)
+
+        iniset $TEMPEST_CONFIG heat_plugin credential_secret_id $OS_CREDENTIAL_SECRET_ID
+        iniset $TEMPEST_CONFIG heat_feature_enabled multi_cloud "True"
+    fi
 
     iniset $TEMPEST_CONFIG service_available heat "True"
 
