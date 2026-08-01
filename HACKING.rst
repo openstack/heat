@@ -5,11 +5,6 @@ Heat Style Commandments
   https://docs.openstack.org/hacking/
 - Step 2: Read on
 
-Heat Specific Commandments
---------------------------
-
-- [HE301] Use LOG.warning() rather than LOG.warn().
-
 Creating unit tests
 -------------------
 For every new feature, unit tests should be created that both test and
