@@ -1,16 +1,3 @@
-- hosts: primary
-  name: Clear test env
-  tasks:
-    - name: clear test env
-      shell:
-        cmd: |
-            /opt/stack/heat/heat_integrationtests/cleanup_test_env.sh
-        executable: /bin/bash
-        chdir: "{{ zuul.project.src_dir }}"
-      environment:
-        DEVSTACK_BASE_DIR: "{{ devstack_base_dir }}"
-      become: true
-
 - hosts: tempest
   become: true
   roles:
