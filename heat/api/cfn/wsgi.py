@@ -37,7 +37,8 @@ def init_application():
     # already contain registered options if the app is reloaded.
     CONF.reset()
     logging.register_options(CONF)
-    CONF(project='heat',
+    CONF(args=[],
+         project='heat',
          prog='heat-api-cfn',
          version=version.version_info.version_string())
     logging.setup(CONF, CONF.prog)

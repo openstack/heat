@@ -38,7 +38,7 @@ def init_application():
     CONF.reset()
     logging.register_options(CONF)
     version = hversion.version_info.version_string()
-    CONF(project='heat', prog='heat-api', version=version)
+    CONF(args=[], project='heat', prog='heat-api', version=version)
     logging.setup(CONF, CONF.prog)
     config.set_config_defaults()
     messaging.setup()
