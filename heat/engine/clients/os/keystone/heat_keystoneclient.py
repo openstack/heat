@@ -591,9 +591,7 @@ class KsClientWrapper(object):
 
     def server_keystone_endpoint_url(self, fallback_endpoint):
         ks_endpoint_type = cfg.CONF.server_keystone_endpoint_type
-        if ((ks_endpoint_type == 'public') or (
-            ks_endpoint_type == 'internal') or
-                (ks_endpoint_type == 'admin')):
+        if ks_endpoint_type:
             if (hasattr(self.context, 'auth_plugin') and
                     hasattr(self.context.auth_plugin, 'get_access')):
                 try:
