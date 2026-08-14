@@ -47,7 +47,7 @@ following tasks:
 
 #. A special OpenStack Identity service domain is created. For
    example, a domain that is called ``heat`` and the ID is set with the
-   ``stack_user_domain`` option in the :file:`heat.conf` file.
+   ``stack_user_domain_id`` option in the :file:`heat.conf` file.
 #. A user with sufficient permissions to create and delete projects
    and users in the ``heat`` domain is created.
 #. The username and password for the domain admin user is set in the
@@ -106,7 +106,7 @@ To set up stack domain users, complete the following steps:
 
        stack_domain_admin_password = password
        stack_domain_admin = heat_domain_admin
-       stack_user_domain = domain id returned from domain create above
+       stack_user_domain_id = $HEAT_DOMAIN_ID
 
 Usage workflow
 ~~~~~~~~~~~~~~

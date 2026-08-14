@@ -1,0 +1,5 @@
+---
+features:
+  - |
+    The deprecated ``[DEFAULT] stack_user_domain`` option has been removed.
+    Use the ``[DEFAULT] stack_user_domain_id`` option instead.

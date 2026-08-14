@@ -69,8 +69,6 @@ service_opts = [
                default="heat_stack_user",
                help=_('Keystone role for heat template-defined users.')),
     cfg.StrOpt('stack_user_domain_id',
-               deprecated_opts=[cfg.DeprecatedOpt('stack_user_domain',
-                                                  group=None)],
                help=_('Keystone domain ID which contains heat '
                       'template-defined users. If this option is set, '
                       'stack_user_domain_name option will be ignored.')),
