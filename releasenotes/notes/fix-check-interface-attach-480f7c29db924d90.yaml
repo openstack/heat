@@ -1,0 +1,7 @@
+---
+fixes:
+  - |
+    Fixed a race in ``OS::Nova::Server`` network updates where the
+    ``networks`` and ``addresses`` attributes could resolve to a stale or
+    empty value right after an interface attach. The attach check now waits
+    for the port's fixed IPs to appear in the server addresses.

@@ -847,12 +847,27 @@ echo -e '%s\tALL=(ALL)\tNOPASSWD: ALL' >> /etc/sudoers
             return True
 
         server = self.fetch_server(server_id)
-        if server:
-            interfaces = server.interface_list()
-            for iface in interfaces:
-                if iface.port_id == port_id:
-                    return True
-        return False
+        if not server:
+            return False
+
+        # The 'networks'/'addresses' attributes are resolved from the servers
+        # API addresses field, which lags behind the os-interface API. Wait for
+        # the attached port's fixed IPs to appear there so those attributes are
+        # consistent once the attach is reported complete.
+        port = self.clients.client('neutron').show_port(port_id)['port']
+        fixed_ips = [fip['ip_address'] for fip in port.get('fixed_ips', [])
+                     if fip.get('ip_address')]
+
+        if not fixed_ips:
+            return port_id in [iface.port_id
+                               for iface in server.interface_list()]
+
+        server_addresses = getattr(server, 'addresses', None) or {}
+        reflected_ips = {addr['addr']
+                         for net_addrs in server_addresses.values()
+                         for addr in net_addrs
+                         if addr.get('OS-EXT-IPS:type') == 'fixed'}
+        return all(ip in reflected_ips for ip in fixed_ips)
 
 
 class NovaBaseConstraint(constraints.BaseCustomConstraint):

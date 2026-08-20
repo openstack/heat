@@ -386,6 +386,61 @@ class NovaClientPluginCheckActiveTest(NovaClientPluginTestCase):
         self.assertEqual(0, self.r_mock.call_count)
 
 
+class NovaClientPluginCheckInterfaceAttachTest(NovaClientPluginTestCase):
+
+    def setUp(self):
+        super(NovaClientPluginCheckInterfaceAttachTest, self).setUp()
+        self.server = mock.Mock()
+        self.server.id = 'server-1'
+        self.f_mock = self.patchobject(self.nova_plugin, 'fetch_server',
+                                       return_value=self.server)
+        self.neutron = mock.Mock()
+        clients_obj = mock.Mock()
+        clients_obj.client.return_value = self.neutron
+        self.nova_plugin._clients = lambda: clients_obj
+
+    def _check(self, server_id, port_id):
+        # __wrapped__ bypasses the tenacity retry loop
+        return nova.NovaClientPlugin.check_interface_attach.__wrapped__(
+            self.nova_plugin, server_id, port_id)
+
+    def test_no_port_id_returns_true(self):
+        self.assertTrue(self._check('server-1', None))
+        self.assertEqual(0, self.f_mock.call_count)
+
+    def test_server_not_found_returns_false(self):
+        self.f_mock.return_value = None
+        self.assertFalse(self._check('server-1', 'port-1'))
+
+    def test_waits_for_fixed_ip_in_addresses(self):
+        self.neutron.show_port.return_value = {
+            'port': {'fixed_ips': [{'ip_address': '12.12.12.3'}]}}
+        self.server.addresses = {
+            'the_net': [{'addr': '11.11.11.3',
+                         'OS-EXT-IPS:type': 'fixed'}]}
+        self.assertFalse(self._check('server-1', 'port-1'))
+        self.server.addresses = {
+            'the_net': [{'addr': '12.12.12.3',
+                         'OS-EXT-IPS:type': 'fixed'}]}
+        self.assertTrue(self._check('server-1', 'port-1'))
+
+    def test_floating_ip_addresses_are_ignored(self):
+        self.neutron.show_port.return_value = {
+            'port': {'fixed_ips': [{'ip_address': '12.12.12.3'}]}}
+        self.server.addresses = {
+            'the_net': [{'addr': '12.12.12.3',
+                         'OS-EXT-IPS:type': 'floating'}]}
+        self.assertFalse(self._check('server-1', 'port-1'))
+
+    def test_port_without_fixed_ip_falls_back_to_interface_list(self):
+        self.neutron.show_port.return_value = {'port': {'fixed_ips': []}}
+        iface = collections.namedtuple('iface', ['port_id'])
+        self.server.interface_list.return_value = [iface('port-1')]
+        self.assertTrue(self._check('server-1', 'port-1'))
+        self.server.interface_list.return_value = [iface('other-port')]
+        self.assertFalse(self._check('server-1', 'port-1'))
+
+
 class NovaClientPluginUserdataTest(NovaClientPluginTestCase):
 
     def test_build_userdata(self):
