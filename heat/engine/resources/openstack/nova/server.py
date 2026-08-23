@@ -1470,6 +1470,9 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                 prg.complete = check_complete(*prg.checker_args,
                                               **prg.checker_kwargs)
                 break
+        # Delete internal ports of detached interfaces only now that
+        # nova has confirmed the detach.
+        self._delete_detached_internal_ports(updaters)
         status = all(prg.complete for prg in updaters)
         if status:
             self.store_external_ports()

@@ -1,0 +1,9 @@
+---
+fixes:
+  - |
+    Delay the deletion of an ``OS::Nova::Server`` internal port until
+    Nova confirms the interface detach. Previously, the port
+    was removed from Neutron while still bound to the instance, which
+    could corrupt the Nova instance info cache and leave the server's
+    ``addresses`` and ``networks`` attributes permanently empty, causing
+    stack updates to fail with a RetryError.

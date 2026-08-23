@@ -524,10 +524,6 @@ class ServerNetworkMixin(object):
                 not_updated_nets = self._exclude_not_updated_networks(
                     old_nets, new_nets, ifaces)
 
-                # according to nova interface-detach command detached port
-                # will be deleted
-                inter_port_data = self._data_get_ports()
-                inter_port_ids = [p['id'] for p in inter_port_data]
                 for net in old_nets:
                     port_id = net.get(self.NETWORK_PORT)
                     # we can't match the port for some user case, like:
@@ -536,14 +532,32 @@ class ServerNetworkMixin(object):
                     # port will remains till we delete the server resource.
                     if port_id:
                         remove_ports.append(port_id)
-                        if port_id in inter_port_ids:
-                            # if we have internal port with such id, remove it
-                            # instantly.
-                            self._delete_internal_port(port_id)
+                        # The internal port must not be deleted here;
+                        # the nova os-interface DELETE is asynchronous.
+                        # See _delete_detached_internal_ports().
                     if net.get(self.NETWORK_FLOATING_IP):
                         self._floating_ip_disassociate(
                             net.get(self.NETWORK_FLOATING_IP))
         return remove_ports, not_updated_nets
+
+    def _delete_detached_internal_ports(self, updaters):
+        """Delete internal ports once nova has confirmed their detach.
+
+        The nova os-interface DELETE is asynchronous (an RPC cast).
+        Deleting the port while nova still has it bound makes neutron
+        emit a network-vif-deleted event for a still-bound port, and
+        the nova event handler saves its stale info cache. The event
+        is processed as a separate asynchronous RPC, so that save can
+        land after the following attach, erasing the attached port
+        from the cache and leaving the server addresses empty.
+        """
+        for prg in updaters:
+            if not prg.complete or prg.handler != 'interface_detach':
+                continue
+            # checker args are (resource_id, port_id), see _update_networks
+            port_id = prg.checker_args[1]
+            if port_id in [p['id'] for p in self._data_get_ports()]:
+                self._delete_internal_port(port_id)
 
     def _calculate_add_nets(self, new_nets, not_updated_nets,
                             security_groups):

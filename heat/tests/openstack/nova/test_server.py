@@ -33,6 +33,7 @@ from heat.engine.clients.os import neutron
 from heat.engine.clients.os import nova
 from heat.engine.clients.os import swift
 from heat.engine.clients.os import zaqar
+from heat.engine.clients import progress
 from heat.engine import environment
 from heat.engine import resource
 from heat.engine.resources.openstack.nova import server as servers
@@ -5057,7 +5058,7 @@ class ServerInternalPortTest(ServersTest):
         # mac_address has no update_allowed, so port must be replaced
         # via detach/attach, not updated in-place
         self.assertIn('old-port-id', remove_ports)
-        self.port_delete.assert_called_once_with('old-port-id')
+        self.port_delete.assert_not_called()
         mock_update_port.assert_not_called()
         self.port_create.assert_called_once_with(
             {'port': {'name': 'server-port-0',
@@ -5154,9 +5155,9 @@ class ServerInternalPortTest(ServersTest):
         remove_ports, add_nets = server.calculate_networks(
             old_net, new_net, ifaces)
 
-        # Old internal port should be detached and deleted
+        # Old internal port should be detached
         self.assertIn('old-port-id', remove_ports)
-        self.port_delete.assert_called_once_with('old-port-id')
+        self.port_delete.assert_not_called()
         # New network attached without internal port (Nova picks port)
         self.assertEqual([{'port_id': None,
                            'net_id': '4321',
@@ -5459,8 +5460,7 @@ class ServerInternalPortTest(ServersTest):
         t, stack, server = self._return_template_stack_and_rsrc_defn('test',
                                                                      tmpl)
         data_mock = self.patchobject(server, '_data_get_ports')
-        data_mock.side_effect = [[{"id": "1122"}], [{"id": "1122"}],
-                                 [{"id": "1122"}], []]
+        data_mock.side_effect = [[{"id": "1122"}], [{"id": "1122"}]]
         self.port_create.return_value = {'port': {'id': '7788'}}
         data_set = self.patchobject(resource.Resource, 'data_set')
 
@@ -5483,19 +5483,87 @@ class ServerInternalPortTest(ServersTest):
 
         server.calculate_networks(old_net, new_net, interfaces)
 
-        # we can only delete the port 1122,
-        # port 3344 is external port, cant delete it
-        self.port_delete.assert_called_once_with('1122')
+        self.port_delete.assert_not_called()
         self.port_create.assert_called_once_with(
             {'port': {'name': 'server-port-1',
                       'network_id': '4321',
                       'fixed_ips': [{'subnet_id': '5678',
                                      'ip_address': '10.0.0.1'}]}})
 
-        self.assertEqual(2, data_set.call_count)
-        data_set.assert_has_calls((
-            mock.call('internal_ports', '[]'),
-            mock.call('internal_ports', '[{"id": "7788"}]')))
+        data_set.assert_called_once_with(
+            'internal_ports', '[{"id": "1122"}, {"id": "7788"}]')
+
+    def _internal_port_update_template(self):
+        return """
+        heat_template_version: 2015-10-15
+        resources:
+          server:
+            type: OS::Nova::Server
+            properties:
+              flavor: m1.small
+              image: F17-x86_64-gold
+              networks:
+                - network: 4321
+        """
+
+    def _interface_detach_updater(self, port_id, complete):
+        updater = progress.ServerUpdateProgress(
+            'server123', 'interface_detach',
+            handler_extra={'args': (port_id,)},
+            checker_extra={'args': (port_id,)})
+        updater.called = True
+        updater.complete = complete
+        return updater
+
+    def test_delete_detached_internal_port(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', self._internal_port_update_template())
+        server._data = {'internal_ports': '[{"id": "1122"}]'}
+        data_set = self.patchobject(resource.Resource, 'data_set')
+
+        server._delete_detached_internal_ports(
+            [self._interface_detach_updater('1122', True)])
+
+        self.port_delete.assert_called_once_with('1122')
+        data_set.assert_called_once_with('internal_ports', '[]')
+
+    def test_delete_detached_internal_port_incomplete(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', self._internal_port_update_template())
+        server._data = {'internal_ports': '[{"id": "1122"}]'}
+        data_set = self.patchobject(resource.Resource, 'data_set')
+
+        server._delete_detached_internal_ports(
+            [self._interface_detach_updater('1122', False)])
+
+        self.port_delete.assert_not_called()
+        self.assertEqual(0, data_set.call_count)
+
+    def test_delete_detached_internal_port_external(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', self._internal_port_update_template())
+        server._data = {'internal_ports': '[]'}
+        data_set = self.patchobject(resource.Resource, 'data_set')
+
+        server._delete_detached_internal_ports(
+            [self._interface_detach_updater('3344', True)])
+
+        self.port_delete.assert_not_called()
+        self.assertEqual(0, data_set.call_count)
+
+    def test_check_update_complete_deletes_detached_internal_port(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', self._internal_port_update_template())
+        server._data = {'internal_ports': '[{"id": "1122"}]'}
+        data_set = self.patchobject(resource.Resource, 'data_set')
+        store_ext = self.patchobject(servers.Server, 'store_external_ports')
+
+        self.assertTrue(server.check_update_complete(
+            [self._interface_detach_updater('1122', True)]))
+
+        self.port_delete.assert_called_once_with('1122')
+        data_set.assert_called_once_with('internal_ports', '[]')
+        store_ext.assert_called_once_with()
 
     def test_calculate_networks_internal_ports_with_fipa(self):
         tmpl = """
