@@ -23,7 +23,12 @@ from heat.engine import support
 
 class WaitCondition(heat_wc.HeatWaitCondition):
 
-    support_status = support.SupportStatus(version='2014.1')
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated; use '
+                  'OS::Heat::WaitCondition instead'),
+        previous_status=support.SupportStatus(version='2014.1'))
 
     PROPERTIES = (
         HANDLE, TIMEOUT, COUNT,

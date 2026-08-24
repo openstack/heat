@@ -11,6 +11,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from heat.common.i18n import _
 from heat.engine.resources import wait_condition as wc_base
 from heat.engine import support
 
@@ -25,7 +26,13 @@ class WaitConditionHandle(wc_base.BaseCfnWaitConditionHandle):
     WaitCondition will poll it to see if has been written to.
     """
 
-    support_status = support.SupportStatus(version='2014.1')
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated; use '
+                  'OS::Heat::WaitConditionHandle with signal_transport set '
+                  'to CFN_SIGNAL instead'),
+        previous_status=support.SupportStatus(version='2014.1'))
 
 
 def resource_mapping():

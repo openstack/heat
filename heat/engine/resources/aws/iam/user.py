@@ -20,6 +20,7 @@ from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
 from heat.engine.resources import stack_user
+from heat.engine import support
 
 LOG = logging.getLogger(__name__)
 
@@ -33,6 +34,12 @@ LOG = logging.getLogger(__name__)
 
 
 class User(stack_user.StackUser):
+
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated'))
+
     PROPERTIES = (
         PATH, GROUPS, LOGIN_PROFILE, POLICIES,
     ) = (
@@ -128,6 +135,12 @@ class User(stack_user.StackUser):
 
 
 class AccessKey(resource.Resource):
+
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated'))
+
     PROPERTIES = (
         SERIAL, USER_NAME, STATUS,
     ) = (

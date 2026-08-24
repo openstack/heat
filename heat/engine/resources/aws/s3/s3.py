@@ -18,9 +18,15 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class S3Bucket(resource.Resource):
+
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated'))
 
     PROPERTIES = (
         ACCESS_CONTROL, WEBSITE_CONFIGURATION, TAGS,
