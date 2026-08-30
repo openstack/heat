@@ -45,8 +45,6 @@
           $TEMPEST_CONFIG:
             heat_plugin:
               convergence_engine_enabled: true
-              heat_config_notify_script: /opt/stack/heat-agents/heat-config/bin/heat-config-notify
-              boot_config_env: /opt/stack/heat-templates/hot/software-config/boot-config/test_image_env.yaml
       test_results_stage_name: test_results
       zuul_copy_output:
         '{{ devstack_base_dir }}/tempest/etc/tempest.conf': logs
@@ -94,9 +92,11 @@
     name: grenade-heat-multinode
     parent: grenade-multinode
     required-projects:
-      - opendev.org/openstack/heat
-      - opendev.org/openstack/heat-tempest-plugin
-      - opendev.org/openstack/python-heatclient
+      - openstack/heat
+      - openstack/heat-tempest-plugin
+      - openstack/python-heatclient
+      - openstack/heat-agents
+      - openstack/heat-templates
     vars:
       grenade_devstack_localrc:
         shared:
