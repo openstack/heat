@@ -21,6 +21,7 @@ from heat.db import api as db_api
 from heat.objects import base as heat_base
 
 
+@heat_base.HeatObjectRegistry.register
 class StackTag(
         heat_base.HeatObject,
         base.VersionedObjectDictCompat,
@@ -69,13 +70,13 @@ class StackTagList(
     def get(cls, context, stack_id):
         db_tags = db_api.stack_tags_get(context, stack_id)
         if db_tags:
-            return base.obj_make_list(context, cls(), StackTag, db_tags)
+            return base.obj_make_list(context, cls(), db_tags)
 
     @classmethod
     def set(cls, context, stack_id, tags):
         db_tags = db_api.stack_tags_set(context, stack_id, tags)
         if db_tags:
-            return base.obj_make_list(context, cls(), StackTag, db_tags)
+            return base.obj_make_list(context, cls(), db_tags)
 
     @classmethod
     def delete(cls, context, stack_id):
@@ -84,4 +85,4 @@ class StackTagList(
     @classmethod
     def from_db_object(cls, context, db_tags):
         if db_tags is not None:
-            return base.obj_make_list(context, cls(), StackTag, db_tags)
+            return base.obj_make_list(context, cls(), db_tags)
