@@ -621,7 +621,7 @@ class EngineService(service.ServiceBase):
         return [show(stack) for stack in stacks]
 
     def get_revision(self, cnxt):
-        return cfg.CONF.revision['heat_revision']
+        return cfg.CONF.revision.heat_revision
 
     @context.request_context
     def list_stacks(self, cnxt, limit=None, marker=None, sort_keys=None,

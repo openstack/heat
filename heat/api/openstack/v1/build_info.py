@@ -36,7 +36,7 @@ class BuildInfoController(object):
     def build_info(self, req):
         engine_revision = self.rpc_client.get_revision(req.context)
         build_info = {
-            'api': {'revision': cfg.CONF.revision['heat_revision']},
+            'api': {'revision': cfg.CONF.revision.heat_revision},
             'engine': {'revision': engine_revision}
         }
 
