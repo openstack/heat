@@ -57,8 +57,14 @@ class ManilaClientPluginTest(common.HeatTestCase):
         plugin = context.clients.client_plugin('manila')
         client = plugin.client()
         self.assertIsNotNone(client.security_services)
-        self.assertEqual('http://server.test:5000/v3',
-                         client.client.endpoint_url)
+        if hasattr(client.client, 'endpoint_url'):
+            # manilaclient < 6.3.0
+            self.assertEqual('http://server.test:5000/v3',
+                             client.client.endpoint_url)
+        else:
+            # manilaclient >= 6.3.0
+            self.assertEqual('http://server.test:5000/v3',
+                             client.client.endpoint_override)
 
     def test_manila_get_method(self):
         # set item list as client output
