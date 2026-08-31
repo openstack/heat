@@ -13,6 +13,8 @@
 
 from unittest import mock
 
+from oslo_config import cfg
+
 import heat.api.middleware.fault as fault
 import heat.api.openstack.v1.build_info as build_info
 from heat.common import policy
@@ -37,18 +39,21 @@ class BuildInfoControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.assertIn('revision', response['api'])
         self.assertEqual('unknown', response['api']['revision'])
 
-    @mock.patch.object(build_info.cfg, 'CONF')
-    def test_response_api_build_revision_from_config_file(
-            self, mock_conf, mock_enforce):
+    def test_response_api_build_revision_from_config_file(self, mock_enforce):
+        cfg.CONF.set_override('heat_revision', 'test', group='revision')
         self._mock_enforce_setup(mock_enforce, 'build_info', True)
         req = self._get('/build_info')
         mock_engine = mock.Mock()
         mock_engine.get_revision.return_value = 'engine_revision'
         self.controller.rpc_client = mock_engine
-        mock_conf.revision = {'heat_revision': 'test'}
 
         response = self.controller.build_info(req, tenant_id=self.tenant)
+        self.assertIn('api', response)
+        self.assertIn('revision', response['api'])
         self.assertEqual('test', response['api']['revision'])
+        self.assertIn('engine', response)
+        self.assertIn('revision', response['engine'])
+        self.assertEqual('engine_revision', response['engine']['revision'])
 
     def test_retrieves_build_revision_from_the_engine(self, mock_enforce):
         self._mock_enforce_setup(mock_enforce, 'build_info', True)
@@ -58,6 +63,9 @@ class BuildInfoControllerTest(tools.ControllerTest, common.HeatTestCase):
         self.controller.rpc_client = mock_engine
 
         response = self.controller.build_info(req, tenant_id=self.tenant)
+        self.assertIn('api', response)
+        self.assertIn('revision', response['api'])
+        self.assertEqual('unknown', response['api']['revision'])
         self.assertIn('engine', response)
         self.assertIn('revision', response['engine'])
         self.assertEqual('engine_revision', response['engine']['revision'])
