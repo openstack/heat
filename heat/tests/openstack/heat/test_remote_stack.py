@@ -350,7 +350,7 @@ class RemoteStackTest(tests_common.HeatTestCase):
             ks_loading, 'get_plugin_loader', return_value=self.m_plugin)
         self._create_with_remote_credential('cred_2')
         self.assertEqual(
-            [mock.call(secret_ref='secrets/cred_2')] * 2,
+            [mock.call(secret_ref='cred_2')] * 2,
             m_gsbr.call_args_list)
         expected_load_options = [
             mock.call(

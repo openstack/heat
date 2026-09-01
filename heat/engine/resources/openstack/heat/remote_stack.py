@@ -176,10 +176,8 @@ class RemoteStack(resource.Resource):
         return self._cacert
 
     def _get_from_secret(self, key):
-        result = super(RemoteStack, self).client_plugin(
-            'barbican').get_secret_payload_by_ref(
-            secret_ref='secrets/%s' % (key))
-        return result
+        client = super(RemoteStack, self).client_plugin('barbican')
+        return client.get_secret_payload_by_ref(secret_ref=key)
 
     def _context(self, cacert_path=None):
         need_reassign = False
