@@ -1709,7 +1709,7 @@ def snapshot_delete(context, snapshot_id):
 @context_manager.reader
 def snapshot_get_all_by_stack(context, stack_id):
     return context.session.query(models.Snapshot).filter_by(
-        stack_id=stack_id, tenant=context.project_id)
+        stack_id=stack_id, tenant=context.project_id).all()
 
 
 @context_manager.reader
@@ -1767,7 +1767,7 @@ def resource_snapshot_delete(context, resource_snapshot_id):
 @context_manager.reader
 def resource_snapshot_get_all(context, snapshot_id):
     return context.session.query(models.ResourceSnapshot).filter_by(
-        snapshot_id=snapshot_id)
+        snapshot_id=snapshot_id).all()
 
 
 # service

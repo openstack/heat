@@ -1456,6 +1456,22 @@ class SqlAlchemyTest(common.HeatTestCase):
         self.assertEqual(values['status'], snapshot.status)
         self.assertIsNotNone(snapshot.created_at)
 
+    def test_snapshot_get_all_by_stack_returns_list(self):
+        template = create_raw_template(self.ctx)
+        user_creds = create_user_creds(self.ctx)
+        stack = create_stack(self.ctx, template, user_creds)
+        values = {'tenant': self.ctx.project_id, 'status': 'IN_PROGRESS',
+                  'stack_id': stack.id}
+        db_api.snapshot_create(self.ctx, values)
+
+        result = db_api.snapshot_get_all_by_stack(self.ctx, stack.id)
+        self.assertIsInstance(result, list)
+        self.assertEqual(1, len(result))
+        for s in result:
+            _ = s.status
+            _ = s.tenant
+            _ = s.created_at
+
     def test_snapshot_count_all_by_stack(self):
         template = create_raw_template(self.ctx)
         user_creds = create_user_creds(self.ctx)
@@ -1585,6 +1601,18 @@ class SqlAlchemyTest(common.HeatTestCase):
             rsrc_snap.id)
 
         self.assertIn(rsrc_snap.id, str(err))
+
+    def test_resource_snapshot_get_all_returns_list(self):
+        rsrc_snap = self._resource_snapshot_create()
+
+        result = db_api.resource_snapshot_get_all(
+            self.ctx, rsrc_snap.snapshot_id)
+        self.assertIsInstance(result, list)
+        self.assertEqual(1, len(result))
+        for rs in result:
+            _ = rs.resource_name
+            _ = rs.snapshot_id
+            _ = rs.created_at
 
     def _create_snapshot(self):
         template = create_raw_template(self.ctx)
