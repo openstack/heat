@@ -4717,8 +4717,7 @@ class ServersTest(common.HeatTestCase):
         rsrc.handle_snapshot_delete((rsrc.CREATE, rsrc.FAILED))
         delete_server.assert_called_once_with('4567')
         create_image.assert_not_called()
-        # attempt to delete internal_ports if has resource_id
-        self.assertEqual(2, delete_internal_ports.call_count)
+        delete_internal_ports.assert_called_once_with()
 
     def test_handle_delete_without_resource_id(self):
         t = template_format.parse(wp_template)
@@ -5564,6 +5563,37 @@ class ServerInternalPortTest(ServersTest):
         self.port_delete.assert_called_once_with('1122')
         data_set.assert_called_once_with('internal_ports', '[]')
         store_ext.assert_called_once_with()
+
+    def test_delete_does_not_delete_attached_internal_ports(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', self._internal_port_update_template())
+        server._data = {'internal_ports': '[{"id": "1122"}]'}
+        server.resource_id = 'server123'
+        self.patchobject(servers.Server, 'user_data_software_config',
+                         return_value=False)
+        mock_plugin = self.patchobject(nova.NovaClientPlugin, 'client')
+        mock_plugin.return_value = self.fc
+        self.patchobject(self.fc.servers, 'delete')
+
+        server._delete()
+
+        self.port_delete.assert_not_called()
+
+    def test_check_delete_complete_deletes_internal_ports(self):
+        t, stack, server = self._return_template_stack_and_rsrc_defn(
+            'test', self._internal_port_update_template())
+        server._data = {'internal_ports': '[{"id": "1122"}]'}
+        data_set = self.patchobject(resource.Resource, 'data_set')
+        check_complete = self.patchobject(
+            nova.NovaClientPlugin, 'check_delete_server_complete',
+            return_value=True)
+
+        self.assertTrue(server.check_delete_complete(
+            progress.ServerDeleteProgress('server123')))
+
+        check_complete.assert_called_once_with('server123')
+        self.port_delete.assert_called_once_with('1122')
+        data_set.assert_called_once_with('internal_ports', '[]')
 
     def test_calculate_networks_internal_ports_with_fipa(self):
         tmpl = """

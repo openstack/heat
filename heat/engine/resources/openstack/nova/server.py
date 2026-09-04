@@ -1711,11 +1711,12 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
             self._delete_user()
             self._delete_temp_url()
 
-        # remove internal and external ports
-        self._delete_internal_ports()
+        # remove external ports data
         self.data_delete('external_ports')
 
         if self.resource_id is None:
+            # No server; internal ports were never attached
+            self._delete_internal_ports()
             return
 
         try:
@@ -1752,8 +1753,14 @@ class Server(server_base.BaseServer, sh.SchedulerHintsMixin,
                     return True
             return False
 
-        return self.client_plugin().check_delete_server_complete(
+        complete = self.client_plugin().check_delete_server_complete(
             prg.server_id)
+        if complete:
+            # Server is gone and nova deleted attached ports; clean up
+            # the rest. Deleting attached ports is denied by neutron
+            # policy for project members.
+            self._delete_internal_ports()
+        return complete
 
     def handle_suspend(self):
         """Suspend a server.
