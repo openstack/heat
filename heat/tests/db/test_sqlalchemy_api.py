@@ -2273,19 +2273,19 @@ class DBAPIStackTest(common.HeatTestCase):
 
         db_api.purge_deleted(age=1, granularity='days')
         admin_ctx = utils.dummy_context(is_admin=True)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=22, granularity='hours')
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1, 2), (3, 4))
 
         db_api.purge_deleted(age=1100, granularity='minutes')
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1), (2, 3, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds')
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (), (0, 1, 2, 3, 4))
 
         # test wrong age
@@ -2318,27 +2318,27 @@ class DBAPIStackTest(common.HeatTestCase):
 
         db_api.purge_deleted(age=1, granularity='days', project_id=UUID1)
         admin_ctx = utils.dummy_context(is_admin=True)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1, 2, 3, 4), ())
 
         db_api.purge_deleted(age=22, granularity='hours', project_id=UUID1)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1, 2, 3, 4), ())
 
         db_api.purge_deleted(age=1100, granularity='minutes', project_id=UUID1)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1, 3, 4), (2,))
 
         db_api.purge_deleted(age=30, granularity='hours', project_id=UUID2)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (0, 1, 3), (2, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID1)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (3,), (0, 1, 2, 4))
 
         db_api.purge_deleted(age=3600, granularity='seconds', project_id=UUID2)
-        self._deleted_stack_existance(admin_ctx, stacks, resources,
+        self._deleted_stack_existence(admin_ctx, stacks, resources,
                                       events, tmpl_files, (), (0, 1, 2, 3, 4))
 
     def test_purge_deleted_prev_raw_template(self):
@@ -2434,7 +2434,7 @@ class DBAPIStackTest(common.HeatTestCase):
                           db_api.raw_template_files_get,
                           self.ctx, tmpl_files[2].files_id)
 
-    def _deleted_stack_existance(self, ctx, stacks, resources, events,
+    def _deleted_stack_existence(self, ctx, stacks, resources, events,
                                  tmpl_files, existing, deleted):
         for s in existing:
             self.assertIsNotNone(db_api.stack_get(ctx, stacks[s].id,
