@@ -69,6 +69,7 @@
       - ^heat/locale/.*$
       - ^heat/tests/.*$
       - ^releasenotes/.*$
+      - ^tox\.ini$
 
 - job:
     name: heat-functional
