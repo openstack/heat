@@ -317,7 +317,6 @@ function create_heat_accounts {
 function configure_tempest_for_heat {
     # Skip SoftwareConfigIntegrationTest because it requires a custom image
     SKIP_SCENARIO_TEST_LIST='SoftwareConfigIntegrationTest'
-    SKIP_SCENARIO_TEST_LIST+=',AodhAlarmTest'
     # Skip CfnInitIntegrationTest as latest fedora images don't have heat-cfntools
     SKIP_SCENARIO_TEST_LIST+=',CfnInitIntegrationTest'
     iniset $TEMPEST_CONFIG heat_plugin skip_scenario_test_list $SKIP_SCENARIO_TEST_LIST
