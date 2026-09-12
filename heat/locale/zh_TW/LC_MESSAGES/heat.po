@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: heat VERSION\n"
 "Report-Msgid-Bugs-To: https://bugs.launchpad.net/openstack-i18n/\n"
-"POT-Creation-Date: 2026-07-01 09:52+0000\n"
+"POT-Creation-Date: 2026-09-11 17:28+0000\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -762,12 +762,6 @@ msgstr "提供者中遺漏了 Facade %(type)s 的屬性 %(attr)s"
 
 msgid "Audit status of this firewall policy."
 msgstr "此防火牆原則的審核狀態。"
-
-msgid "Authentication hash algorithm for the ike policy."
-msgstr "IKE 原則的鑑別雜湊演算法。"
-
-msgid "Authentication hash algorithm for the ipsec policy."
-msgstr "IPSec 原則的鑑別雜湊演算法。"
 
 msgid "AutoScaling group ID to apply policy to."
 msgstr "要套用原則的 AutoScaling 群組 ID。"
