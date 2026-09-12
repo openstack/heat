@@ -10,7 +10,9 @@
       - zuul: opendev.org/openstack/devstack
       - zuul: opendev.org/openstack/tempest
     required-projects:
+      - openstack/aodh
       - openstack/barbican
+      - openstack/ceilometer
       - openstack/heat
       - openstack/heat-agents
       - openstack/heat-templates
@@ -30,7 +32,9 @@
         tempest: true
         openstack-cli-server: false
       devstack_plugins:
+        aodh: https://opendev.org/openstack/aodh
         barbican: https://opendev.org/openstack/barbican
+        ceilometer: https://opendev.org/openstack/ceilometer
         heat: https://opendev.org/openstack/heat
         octavia: https://opendev.org/openstack/octavia
       devstack_local_conf:
