@@ -358,13 +358,13 @@ class KsClientWrapper(object):
         # We are creating automated user, for which most of security
         # compliance restrictions possibly set in Keystone should not apply,
         # https://docs.openstack.org/keystone/latest/admin/security-compliance.html
-        # TODO(pas-ha) find a way to deal with password_regex and
-        # disable_user_account_days_inactive
+        # TODO(pas-ha) find a way to deal with password_regex
         # TODO(pas-ha) think if we also need to add lock_password too
         user_options = {
             "ignore_change_password_upon_first_use": True,  # nosec: B105
             "ignore_password_expiry": True,  # nosec: B105
-            "ignore_lockout_failure_attempts": True
+            "ignore_lockout_failure_attempts": True,
+            "ignore_user_inactivity": True,
         }
         # We add the new user to a special keystone role
         # This role is designed to allow easier differentiation of the

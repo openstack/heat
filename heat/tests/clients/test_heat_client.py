@@ -255,9 +255,12 @@ class KeystoneClientTest(common.HeatTestCase):
         ctx = utils.dummy_context()
         self.patchobject(ctx, '_create_auth_plugin')
         ctx.trust_id = None
-        user_options = dict(ignore_password_expiry=True,
-                            ignore_change_password_upon_first_use=True,
-                            ignore_lockout_failure_attempts=True)
+        user_options = dict(
+            ignore_password_expiry=True,
+            ignore_change_password_upon_first_use=True,
+            ignore_lockout_failure_attempts=True,
+            ignore_user_inactivity=True,
+        )
 
         # mock keystone client functions
         self._stub_domain_admin_client()
