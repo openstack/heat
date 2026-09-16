@@ -109,6 +109,47 @@ class BaseWaitConditionHandle(signal_responder.SignalResponder):
                 if v[self.STATUS] == status]
 
 
+class BaseCfnWaitConditionHandle(BaseWaitConditionHandle):
+    """WaitConditionHandle with the CFN signal metadata format.
+
+    Handles receive signals in the CloudFormation WaitConditionHandle
+    format::
+
+        {
+            "Status" : "Status (must be SUCCESS or FAILURE)",
+            "UniqueId" : "Some ID, should be unique for Count>1",
+            "Data" : "Arbitrary Data",
+            "Reason" : "Reason String"
+        }
+
+    and expose an EC2-signed URL as the physical reference, which is the
+    URL posted-to by cfn-signal.
+    """
+
+    METADATA_KEYS = (
+        DATA, REASON, STATUS, UNIQUE_ID
+    ) = (
+        'Data', 'Reason', 'Status', 'UniqueId'
+    )
+
+    def get_reference_id(self):
+        if self.resource_id:
+            wc = signal_responder.WAITCONDITION
+            return str(self._get_ec2_signed_url(signal_type=wc))
+        else:
+            return str(self.name)
+
+    def metadata_update(self, new_metadata=None):
+        """DEPRECATED. Should use handle_signal instead."""
+        self.handle_signal(details=new_metadata)
+
+    def handle_signal(self, details=None):
+        if details is None:
+            return
+        return super(BaseCfnWaitConditionHandle,
+                     self).handle_signal(details)
+
+
 class WaitConditionFailure(exception.Error):
     def __init__(self, wait_condition, handle):
         reasons = handle.get_status_reason(handle.STATUS_FAILURE)

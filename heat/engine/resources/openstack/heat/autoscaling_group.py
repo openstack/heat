@@ -12,6 +12,7 @@
 #    under the License.
 
 from oslo_log import log as logging
+from oslo_utils import excutils
 
 from heat.common import exception
 from heat.common import grouputils
@@ -19,11 +20,15 @@ from heat.common.i18n import _
 from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine.hot import template
+from heat.engine.notification import autoscaling as notification
 from heat.engine import output
 from heat.engine import properties
-from heat.engine.resources.aws.autoscaling import autoscaling_group as aws_asg
+from heat.engine import resource
+from heat.engine.resources.openstack.heat import instance_group as instgrp
 from heat.engine import rsrc_defn
 from heat.engine import support
+from heat.scaling import cooldown
+from heat.scaling import scalingutil as sc_util
 
 LOG = logging.getLogger(__name__)
 
@@ -43,7 +48,8 @@ class HOTInterpreter(template.HOTemplate20150430):
         return snippet
 
 
-class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
+class AutoScalingResourceGroup(cooldown.CooldownMixin,
+                               instgrp.InstanceGroup):
     """An autoscaling group that can scale arbitrary resources.
 
     An autoscaling group allows the creation of a desired count of similar
@@ -177,6 +183,180 @@ class AutoScalingResourceGroup(aws_asg.AutoScalingGroup):
 
     }
     update_policy_schema = {}
+
+    def get_size(self):
+        """Get desired capacity."""
+        return self.properties[self.DESIRED_CAPACITY]
+
+    def handle_create(self):
+        return self.create_with_template(self.child_template())
+
+    def _tags(self):
+        # The group name must match what is returned from FnGetRefId.
+        autoscaling_tag = [{self.TAG_KEY: 'metering.AutoScalingGroupName',
+                            self.TAG_VALUE: self.FnGetRefId()}]
+        return super(AutoScalingResourceGroup, self)._tags() + autoscaling_tag
+
+    def check_create_complete(self, task):
+        """Update cooldown timestamp after create succeeds."""
+        done = super(AutoScalingResourceGroup, self).check_create_complete(
+            task)
+        cooldown = self.properties[self.COOLDOWN]
+        if done:
+            self._finished_scaling(cooldown,
+                                   "%s : %s" % (sc_util.EXACT_CAPACITY,
+                                                grouputils.get_size(self)))
+        return done
+
+    def check_update_complete(self, cookie):
+        """Update the cooldown timestamp after update succeeds."""
+        done = super(AutoScalingResourceGroup, self).check_update_complete(
+            cookie)
+        cooldown = self.properties[self.COOLDOWN]
+        if done:
+            self._finished_scaling(cooldown,
+                                   "%s : %s" % (sc_util.EXACT_CAPACITY,
+                                                grouputils.get_size(self)))
+        return done
+
+    def _get_new_capacity(self, capacity,
+                          adjustment,
+                          adjustment_type=sc_util.EXACT_CAPACITY,
+                          min_adjustment_step=None):
+        lower = self.properties[self.MIN_SIZE]
+        upper = self.properties[self.MAX_SIZE]
+        return sc_util.calculate_new_capacity(capacity, adjustment,
+                                              adjustment_type,
+                                              min_adjustment_step,
+                                              lower, upper)
+
+    def resize(self, capacity):
+        try:
+            super(AutoScalingResourceGroup, self).resize(capacity)
+        finally:
+            # allow outputs to be re-resolved
+            self.clear_stored_attributes()
+
+    def handle_update(self, json_snippet, tmpl_diff, prop_diff):
+        """Updates self.properties, if Properties has changed.
+
+        If Properties has changed, update self.properties, so we get the new
+        values during any subsequent adjustment.
+        """
+        if tmpl_diff:
+            # parse update policy
+            if tmpl_diff.update_policy_changed():
+                up = json_snippet.update_policy(self.update_policy_schema,
+                                                self.context)
+                self.update_policy = up
+
+        self.properties = json_snippet.properties(self.properties_schema,
+                                                  self.context)
+        if prop_diff:
+            # Replace resources first if the definition has changed
+            self._try_rolling_update(prop_diff)
+
+        # Update will happen irrespective of whether auto-scaling
+        # is in progress or not.
+        capacity = grouputils.get_size(self)
+        desired_capacity = self.properties[self.DESIRED_CAPACITY] or capacity
+        new_capacity = self._get_new_capacity(capacity, desired_capacity)
+        self.resize(new_capacity)
+
+    def adjust(self, adjustment,
+               adjustment_type=sc_util.CHANGE_IN_CAPACITY,
+               min_adjustment_step=None, cooldown=None):
+        """Adjust the size of the scaling group if the cooldown permits."""
+        if self.status != self.COMPLETE:
+            LOG.info("%s NOT performing scaling adjustment, "
+                     "when status is not COMPLETE", self.name)
+            raise resource.NoActionRequired
+
+        capacity = grouputils.get_size(self)
+        new_capacity = self._get_new_capacity(capacity, adjustment,
+                                              adjustment_type,
+                                              min_adjustment_step)
+        if new_capacity == capacity:
+            LOG.info("%s NOT performing scaling adjustment, "
+                     "as there is no change in capacity.", self.name)
+            raise resource.NoActionRequired
+
+        if cooldown is None:
+            cooldown = self.properties[self.COOLDOWN]
+
+        self._check_scaling_allowed(cooldown)
+
+        # send a notification before, on-error and on-success.
+        notif = {
+            'stack': self.stack,
+            'adjustment': adjustment,
+            'adjustment_type': adjustment_type,
+            'capacity': capacity,
+            'groupname': self.FnGetRefId(),
+            'message': _("Start resizing the group %(group)s") % {
+                'group': self.FnGetRefId()},
+            'suffix': 'start',
+        }
+        size_changed = False
+        try:
+            notification.send(**notif)
+            try:
+                self.resize(new_capacity)
+            except Exception as resize_ex:
+                with excutils.save_and_reraise_exception():
+                    try:
+                        notif.update({'suffix': 'error',
+                                      'message': str(resize_ex),
+                                      'capacity': grouputils.get_size(self),
+                                      })
+                        notification.send(**notif)
+                    except Exception:
+                        LOG.exception('Failed sending error notification')
+            else:
+                size_changed = True
+                notif.update({
+                    'suffix': 'end',
+                    'capacity': new_capacity,
+                    'message': _("End resizing the group %(group)s") % {
+                        'group': notif['groupname']},
+                })
+                notification.send(**notif)
+        except Exception:
+            LOG.error("Error in performing scaling adjustment for "
+                      "group %s.", self.name)
+            raise
+        finally:
+            self._finished_scaling(cooldown,
+                                   "%s : %s" % (adjustment_type, adjustment),
+                                   size_changed=size_changed)
+
+    def validate(self):
+        # check validity of group size
+        min_size = self.properties[self.MIN_SIZE]
+        max_size = self.properties[self.MAX_SIZE]
+
+        if max_size < min_size:
+            msg = _("MinSize can not be greater than MaxSize")
+            raise exception.StackValidationFailed(message=msg)
+
+        if min_size < 0:
+            msg = _("The size of AutoScalingGroup can not be less than zero")
+            raise exception.StackValidationFailed(message=msg)
+
+        if self.properties[self.DESIRED_CAPACITY] is not None:
+            desired_capacity = self.properties[self.DESIRED_CAPACITY]
+            if desired_capacity < min_size or desired_capacity > max_size:
+                msg = _("DesiredCapacity must be between MinSize and MaxSize")
+                raise exception.StackValidationFailed(message=msg)
+
+        super(AutoScalingResourceGroup, self).validate()
+
+    def child_template(self):
+        if self.properties[self.DESIRED_CAPACITY]:
+            num_instances = self.properties[self.DESIRED_CAPACITY]
+        else:
+            num_instances = self.properties[self.MIN_SIZE]
+        return self._create_template(num_instances)
 
     def _get_resource_definition(self):
         resource_def = self.properties[self.RESOURCE]
