@@ -19,7 +19,6 @@ from heat.engine import attributes
 from heat.engine import constraints
 from heat.engine import properties
 from heat.engine import resource
-from heat.engine.resources.aws.cfn import wait_condition_handle as aws_wch
 from heat.engine.resources import signal_responder
 from heat.engine.resources import wait_condition as wc_base
 from heat.engine import support
@@ -220,7 +219,7 @@ class HeatWaitConditionHandle(wc_base.BaseWaitConditionHandle):
         return metadata
 
 
-class UpdateWaitConditionHandle(aws_wch.WaitConditionHandle):
+class UpdateWaitConditionHandle(wc_base.BaseCfnWaitConditionHandle):
     """WaitConditionHandle that clears signals and changes handle on update.
 
     This works similarly to an AWS::CloudFormation::WaitConditionHandle, except

@@ -222,14 +222,15 @@ class TestGroupAdjust(common.HeatTestCase):
 
         expected_notifies = [
             mock.call(
-                capacity=0, suffix='start', adjustment_type='ChangeInCapacity',
+                capacity=0, suffix='start',
+                adjustment_type='change_in_capacity',
                 groupname='my-group',
                 message='Start resizing the group my-group',
                 adjustment=1,
                 stack=self.group.stack),
             mock.call(
                 capacity=1, suffix='end',
-                adjustment_type='ChangeInCapacity',
+                adjustment_type='change_in_capacity',
                 groupname='my-group',
                 message='End resizing the group my-group',
                 adjustment=1,
@@ -238,7 +239,7 @@ class TestGroupAdjust(common.HeatTestCase):
         self.assertEqual(expected_notifies, notify.call_args_list)
         resize.assert_called_once_with(1)
         finished_scaling.assert_called_once_with(None,
-                                                 'ChangeInCapacity : 1',
+                                                 'change_in_capacity : 1',
                                                  size_changed=True)
         grouputils.get_size.assert_called_once_with(self.group)
 
@@ -254,14 +255,14 @@ class TestGroupAdjust(common.HeatTestCase):
         expected_notifies = [
             mock.call(
                 capacity=0, suffix='start',
-                adjustment_type='ChangeInCapacity',
+                adjustment_type='change_in_capacity',
                 groupname='my-group',
                 message='Start resizing the group my-group',
                 adjustment=1,
                 stack=self.group.stack),
             mock.call(
                 capacity=0, suffix='error',
-                adjustment_type='ChangeInCapacity',
+                adjustment_type='change_in_capacity',
                 groupname='my-group',
                 message='test error',
                 adjustment=1,
