@@ -17,9 +17,15 @@ from heat.engine import constraints
 from heat.engine import function
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class LaunchConfiguration(resource.Resource):
+
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated'))
 
     PROPERTIES = (
         IMAGE_ID, INSTANCE_TYPE, KEY_NAME, USER_DATA, SECURITY_GROUPS,

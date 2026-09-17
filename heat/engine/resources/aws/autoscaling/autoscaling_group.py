@@ -34,7 +34,12 @@ LOG = logging.getLogger(__name__)
 class AutoScalingGroup(native_asg.AutoScalingResourceGroup):
     """AWS CloudFormation compatible autoscaling group."""
 
-    support_status = support.SupportStatus(version='2014.1')
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated; use '
+                  'OS::Heat::AutoScalingGroup instead'),
+        previous_status=support.SupportStatus(version='2014.1'))
 
     PROPERTIES = (
         AVAILABILITY_ZONES, LAUNCH_CONFIGURATION_NAME, MAX_SIZE, MIN_SIZE,

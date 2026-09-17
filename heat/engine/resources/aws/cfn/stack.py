@@ -20,10 +20,17 @@ from heat.common import urlfetch
 from heat.engine import attributes
 from heat.engine import properties
 from heat.engine.resources import stack_resource
+from heat.engine import support
 
 
 class NestedStack(stack_resource.StackResource):
     """Represents a child stack to allow composition of templates."""
+
+    support_status = support.SupportStatus(
+        version='27.0.0',
+        status=support.DEPRECATED,
+        message=_('AWS-compatible resources are deprecated; use '
+                  'OS::Heat::Stack instead'))
 
     PROPERTIES = (
         TEMPLATE_URL, TIMEOUT_IN_MINS, PARAMETERS,
