@@ -101,26 +101,22 @@ class ClientManager(object):
             self.HEAT_API_VERSION,
             endpoint,
             session=session,
-            endpoint_type='publicURL',
-            service_type='orchestration',
+            endpoint_type=self.conf.endpoint_type,
+            service_type=self.conf.catalog_type,
             region_name=self.conf.region,
             username=self._username(),
             password=self._password())
 
     def _get_identity_client(self):
-        user_domain_id = self.conf.user_domain_id
-        project_domain_id = self.conf.project_domain_id
-        user_domain_name = self.conf.user_domain_name
-        project_domain_name = self.conf.project_domain_name
         kwargs = {
             'username': self._username(),
             'password': self._password(),
             'project_name': self._project_name(),
             'auth_url': self.conf.auth_url,
-            'user_domain_id': user_domain_id,
-            'project_domain_id': project_domain_id,
-            'user_domain_name': user_domain_name,
-            'project_domain_name': project_domain_name
+            'user_domain_id': self.conf.user_domain_id,
+            'project_domain_id': self.conf.project_domain_id,
+            'user_domain_name': self.conf.user_domain_name,
+            'project_domain_name': self.conf.project_domain_name,
         }
         auth = password.Password(**kwargs)
         if self.insecure:
