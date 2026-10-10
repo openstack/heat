@@ -13,7 +13,6 @@
 import os
 import random
 import re
-import subprocess
 import time
 import urllib
 
@@ -126,13 +125,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             if elapsed_time > timeout:
                 raise exceptions.TimeoutException()
 
-    def _log_console_output(self, servers=None):
-        if not servers:
-            servers = self.compute_client.servers.list()
-        for server in servers:
-            LOG.info('Console output for %s', server.id)
-            LOG.info(server.get_console_output())
-
     def _load_template(self, base_file, file_name, sub_dir=None):
         sub_dir = sub_dir or ''
         filepath = os.path.join(os.path.dirname(os.path.realpath(base_file)),
@@ -194,19 +186,6 @@ class HeatIntegrationTest(testscenarios.WithScenarios,
             if o['output_key'] == output_key:
                 value = o['output_value']
         return value
-
-    def _ping_ip_address(self, ip_address, should_succeed=True):
-        cmd = ['ping', '-c1', '-w1', ip_address]
-
-        def ping():
-            proc = subprocess.Popen(cmd,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE)
-            proc.wait()
-            return (proc.returncode == 0) == should_succeed
-
-        return call_until_true(
-            self.conf.build_timeout, 1, ping)
 
     def _wait_for_all_resource_status(self, stack_identifier,
                                       status, failure_pattern='^.*_FAILED$',

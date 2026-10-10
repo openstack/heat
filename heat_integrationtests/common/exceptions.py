@@ -40,16 +40,8 @@ class IntegrationException(Exception):
         return self._error_string
 
 
-class InvalidCredentials(IntegrationException):
-    message = "Invalid Credentials"
-
-
 class TimeoutException(IntegrationException):
     message = "Request timed out"
-
-
-class BuildErrorException(IntegrationException):
-    message = "Server %(server_id)s failed to build and is in ERROR status"
 
 
 class StackBuildErrorException(IntegrationException):
@@ -61,18 +53,3 @@ class StackResourceBuildErrorException(IntegrationException):
     message = ("Resource %(resource_name)s in stack %(stack_identifier)s is "
                "in %(resource_status)s status due to "
                "'%(resource_status_reason)s'")
-
-
-class SSHTimeout(IntegrationException):
-    message = ("Connection to the %(host)s via SSH timed out.\n"
-               "User: %(user)s, Password: %(password)s")
-
-
-class SSHExecCommandFailed(IntegrationException):
-    """Raised when remotely executed command returns nonzero status."""
-    message = ("Command '%(command)s', exit status: %(exit_status)d, "
-               "Error:\n%(strerror)s")
-
-
-class ServerUnreachable(IntegrationException):
-    message = "The server is not reachable via the configured network"
