@@ -546,6 +546,34 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
                                **sd_kwargs)
         self.assertEqual(exception.Invalid, ex.exc_info[0])
 
+    def test_create_software_deployment_invalid_config_id(self):
+        kwargs = {
+            'config_id': 'this_is_invalid',
+            'input_values': {'mode': 'standalone'},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': ''
+        }
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._create_software_deployment,
+                               **kwargs)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+    def test_create_software_deployment_unauthorized_config_id(self):
+        ctx_alt = utils.dummy_context(tenant_id='alt_test_tenant_id')
+        config = self._create_software_config(context=ctx_alt)
+        kwargs = {
+            'config_id': config['id'],
+            'input_values': {'mode': 'standalone'},
+            'action': 'INIT',
+            'status': 'COMPLETE',
+            'status_reason': ''
+        }
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self._create_software_deployment,
+                               **kwargs)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
     @mock.patch.object(service_software_config.SoftwareConfigService,
                        '_refresh_swift_software_deployment')
     def test_show_software_deployment_refresh(
@@ -579,7 +607,6 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
             _refresh_swift_software_deployment.call_args[0])
 
     def test_update_software_deployment_new_config(self):
-
         server_id = str(uuid.uuid4())
         mock_push = self.patchobject(self.engine.software_config,
                                      '_push_metadata_software_deployments')
@@ -600,6 +627,45 @@ class SoftwareConfigServiceTest(common.HeatTestCase):
         self.assertEqual('DEPLOY', updated['action'])
         self.assertEqual('WAITING', updated['status'])
         self.assertEqual(2, mock_push.call_count)
+
+    def test_update_software_deployment_invalid_config_id(self):
+        server_id = str(uuid.uuid4())
+        deployment = self._create_software_deployment(server_id=server_id)
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        deployment_action = deployment['action']
+        self.assertEqual('INIT', deployment_action)
+        config_id = deployment['config_id']
+        self.assertIsNotNone(config_id)
+        ex = self.assertRaises(
+            dispatcher.ExpectedException,
+            self.engine.update_software_deployment,
+            self.ctx, deployment_id=deployment_id,
+            config_id='invalid_id',
+            input_values={}, output_values={}, action='DEPLOY',
+            status='WAITING', status_reason='', updated_at=None)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
+
+    def test_update_software_deployment_unauthorized_config_id(self):
+        server_id = str(uuid.uuid4())
+        deployment = self._create_software_deployment(server_id=server_id)
+        self.assertIsNotNone(deployment)
+        deployment_id = deployment['id']
+        deployment_action = deployment['action']
+        self.assertEqual('INIT', deployment_action)
+        config_id = deployment['config_id']
+        self.assertIsNotNone(config_id)
+
+        ctx_alt = utils.dummy_context(tenant_id='alt_test_tenant_id')
+        config = self._create_software_config(context=ctx_alt)
+        ex = self.assertRaises(
+            dispatcher.ExpectedException,
+            self.engine.update_software_deployment,
+            self.ctx, deployment_id=deployment_id,
+            config_id=config['id'],
+            input_values={}, output_values={}, action='DEPLOY',
+            status='WAITING', status_reason='', updated_at=None)
+        self.assertEqual(exception.NotFound, ex.exc_info[0])
 
     def test_update_software_deployment_status(self):
 
@@ -1124,24 +1190,3 @@ class SoftwareConfigIOSchemaTest(common.HeatTestCase):
 
         self.assertEqual({'type': 'Number', 'name': 'baz', 'default': ''},
                          inp.as_dict())
-
-
-class SoftwareConfigServiceTestWithConstraint(SoftwareConfigServiceTest):
-    """Test cases which require FK constraints"""
-
-    def setUp(self):
-        super(SoftwareConfigServiceTestWithConstraint, self).setUp()
-        self.useFixture(utils.ForeignKeyConstraintFixture())
-
-    def test_create_software_deployment_invalid_config_id(self):
-        kwargs = {
-            'config_id': 'this_is_invalid',
-            'input_values': {'mode': 'standalone'},
-            'action': 'INIT',
-            'status': 'COMPLETE',
-            'status_reason': ''
-        }
-        ex = self.assertRaises(dispatcher.ExpectedException,
-                               self._create_software_deployment,
-                               **kwargs)
-        self.assertEqual(exception.Invalid, ex.exc_info[0])
