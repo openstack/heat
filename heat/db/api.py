@@ -1454,15 +1454,12 @@ def software_config_delete(context, config_id):
 
 @context_manager.writer
 def software_deployment_create(context, values):
+    if 'config_id' in values:
+        _software_config_get(context, values['config_id'])
+
     obj_ref = models.SoftwareDeployment()
     obj_ref.update(values)
-
-    try:
-        obj_ref.save(context.session)
-    except db_exception.DBReferenceError:
-        # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
-        err_msg = _('Config with id %s not found') % values['config_id']
-        raise exception.Invalid(reason=err_msg)
+    obj_ref.save(context.session)
 
     return _software_deployment_get(context, obj_ref.id)
 
@@ -1532,14 +1529,12 @@ def software_deployment_count_all(context):
 
 @context_manager.writer
 def software_deployment_update(context, deployment_id, values):
+    if 'config_id' in values:
+        _software_config_get(context, values['config_id'])
+
     deployment = _software_deployment_get(context, deployment_id)
-    try:
-        for k, v in values.items():
-            setattr(deployment, k, v)
-    except db_exception.DBReferenceError:
-        # NOTE(tkajinam): config_id is the only FK in SoftwareDeployment
-        err_msg = _('Config with id %s not found') % values['config_id']
-        raise exception.Invalid(reason=err_msg)
+    for k, v in values.items():
+        setattr(deployment, k, v)
     return deployment
 
 
