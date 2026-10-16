@@ -1,0 +1,7 @@
+---
+security:
+  - |
+    `story 2011905 <https://storyboard.openstack.org/#!/story/2011905>`_: Fixed
+    creating or updating software deployment does not check access to
+    the referenced software config.
+
