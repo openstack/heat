@@ -15,6 +15,7 @@ from heat.common import exception
 from heat.common.i18n import _
 from heat.engine import properties
 from heat.engine import resource
+from heat.engine import support
 
 
 class AccessPolicy(resource.Resource):
@@ -40,6 +41,13 @@ class AccessPolicy(resource.Resource):
             required=True
         ),
     }
+
+    support_status = support.SupportStatus(
+        version='28.0.0',
+        status=support.DEPRECATED,
+        message=_('This resource is only usable with the deprecated '
+                  'AWS::IAM::User resource for access control via the '
+                  'DescribeStackResource API.'))
 
     def handle_create(self):
         pass

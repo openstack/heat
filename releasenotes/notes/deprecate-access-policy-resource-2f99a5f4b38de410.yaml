@@ -1,0 +1,7 @@
+---
+deprecations:
+  - |
+    The ``OS::Heat::AccessPolicy`` resource is now deprecated. It is
+    only usable with the already deprecated ``AWS::IAM::User``
+    resource, for access control via the CloudFormation
+    DescribeStackResource API.
