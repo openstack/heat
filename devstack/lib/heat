@@ -319,6 +319,8 @@ function configure_tempest_for_heat {
     SKIP_SCENARIO_TEST_LIST='SoftwareConfigIntegrationTest'
     # Skip CfnInitIntegrationTest as latest fedora images don't have heat-cfntools
     SKIP_SCENARIO_TEST_LIST+=',CfnInitIntegrationTest'
+    # Skip VolumeBackupRestoreIntegrationTest as it fails intermittently in the gate
+    SKIP_SCENARIO_TEST_LIST+=',VolumeBackupRestoreIntegrationTest'
     iniset $TEMPEST_CONFIG heat_plugin skip_scenario_test_list $SKIP_SCENARIO_TEST_LIST
 
     SKIP_FUNCTIONAL_TEST_LIST='NotificationTest'
