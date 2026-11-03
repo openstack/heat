@@ -373,6 +373,132 @@ class StackServiceAuthorizeTest(common.HeatTestCase):
             self.ctx, self.stack, 'WebServer'))
 
 
+class StackServiceSignalStackUserTest(common.HeatTestCase):
+    """Tests the stack-user binding enforced by resource_signal.
+
+    A holder of a stack-user credential must only be able to signal
+    the resource that credential is bound to, mirroring the
+    describe_stack_resource authorization. The access handlers are
+    registered from the stored resource data when the stack is loaded,
+    as another engine process loading the stack for a signal would see
+    it.
+    """
+
+    signal_authz_template = '''
+heat_template_version: 2013-05-23
+resources:
+  WebServer:
+    type: OS::Nova::Server
+    properties:
+      image: F17-x86_64-gold
+      flavor: m1.large
+  WaitHandle:
+    type: AWS::CloudFormation::WaitConditionHandle
+'''
+
+    def setUp(self):
+        super(StackServiceSignalStackUserTest, self).setUp()
+
+        self.ctx = utils.dummy_context(tenant_id='signal_authz_test_tenant')
+        self.ctx.user_id = 'signal_stack_user_id'
+        self.eng = service.EngineService('a-host', 'a-topic')
+        self.eng.thread_group_mgr = tools.DummyThreadGroupManager()
+        self.eng.engine_id = 'engine-fake-uuid'
+
+    def _create_signal_stack(self):
+        stack = tools.get_stack('signal_authz_stack', self.ctx,
+                                template=self.signal_authz_template)
+        stack.store()
+        handle = stack['WaitHandle']
+        handle.state_set(handle.CREATE, handle.COMPLETE, 'Created')
+        handle.resource_id_set('wait_handle_phys_id')
+        handle.store()
+        handle.data_set('user_id', self.ctx.user_id)
+        handle.data_set('access_key', 'stack_user_access_key', redact=True)
+        handle.data_set('secret_key', 'stack_user_secret_key', redact=True)
+        return stack
+
+    def _signal_stack(self):
+        stack = self._create_signal_stack()
+        self.patchobject(
+            self.eng, '_get_stack',
+            return_value=stack_object.Stack.get_by_id(self.ctx, stack.id))
+        # Note: parser.Stack.load is deliberately NOT patched, so the
+        # signal path loads the stack fresh from the database and the
+        # access handlers get registered from the resource data, like
+        # in the real engine.
+        self.patchobject(res.Resource, '_signal_check_action',
+                         return_value=None)
+        self.patchobject(res.Resource, '_signal_check_hook',
+                         return_value=None)
+        self.patchobject(res.Resource, 'metadata_get', return_value={})
+        return stack
+
+    def test_resource_signal_stack_user_unbound_forbidden(self):
+        self.ctx.roles = [cfg.CONF.heat_stack_user_role]
+        stack = self._signal_stack()
+
+        # The credential is bound to the WaitHandle resource only.
+        # The RPC layer wraps heat exceptions in ExpectedException.
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_signal,
+                               self.ctx, dict(stack.identifier()),
+                               'WebServer', {'Foo': 'bar'})
+        self.assertEqual(exception.Forbidden, ex.exc_info[0])
+
+    def test_resource_signal_stack_user_bound_allowed(self):
+        self.ctx.roles = [cfg.CONF.heat_stack_user_role]
+        stack = self._signal_stack()
+        signal = self.patchobject(res.Resource, 'signal',
+                                  return_value=False)
+
+        self.eng.resource_signal(self.ctx, dict(stack.identifier()),
+                                 'WaitHandle', {'Foo': 'bar'},
+                                 sync_call=True)
+        signal.assert_called_once_with({'Foo': 'bar'}, False)
+
+    def test_resource_signal_stack_user_ec2_creds_allowed(self):
+        self.ctx.roles = [cfg.CONF.heat_stack_user_role]
+        self.ctx.aws_creds = '{"ec2Credentials": {"access": ' \
+                             '"stack_user_access_key"}}'
+        stack = self._signal_stack()
+        signal = self.patchobject(res.Resource, 'signal',
+                                  return_value=False)
+
+        # The signal passes the binding through the ec2-credential
+        # fallback of _authorize_stack_user, keeping the CFN flow working.
+        self.eng.resource_signal(self.ctx, dict(stack.identifier()),
+                                 'WaitHandle', {'Foo': 'bar'})
+        signal.assert_called_once_with({'Foo': 'bar'}, False)
+
+    def test_resource_signal_stack_user_ec2_creds_unbound_forbidden(self):
+        # A stack user exists and is bound to WaitHandle, but the
+        # requesting credential is neither that user nor its access key.
+        self.ctx.roles = [cfg.CONF.heat_stack_user_role]
+        stack = self._signal_stack()
+        self.ctx.user_id = 'unbound_stack_user'
+        self.ctx.aws_creds = '{"ec2Credentials": {"access": "wrong_key"}}'
+
+        ex = self.assertRaises(dispatcher.ExpectedException,
+                               self.eng.resource_signal,
+                               self.ctx, dict(stack.identifier()),
+                               'WaitHandle', {'Foo': 'bar'})
+        self.assertEqual(exception.Forbidden, ex.exc_info[0])
+
+    def test_resource_signal_non_stack_user_not_binding_checked(self):
+        self.ctx.roles = []
+        stack = self._signal_stack()
+        signal = self.patchobject(res.Resource, 'signal',
+                                  return_value=False)
+
+        # The stored credential is not looked up for a non stack-user
+        # context: the binding only applies to stack-user credentials.
+        self.eng.resource_signal(self.ctx, dict(stack.identifier()),
+                                 'WaitHandle', {'Foo': 'bar'},
+                                 sync_call=True)
+        signal.assert_called_once_with({'Foo': 'bar'}, False)
+
+
 class StackServiceTest(common.HeatTestCase):
 
     def setUp(self):

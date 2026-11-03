@@ -53,6 +53,11 @@ class SignalResponder(stack_user.StackUser):
     # API operations as a consequence of handling a signal
     requires_deferred_auth = True
 
+    def __init__(self, name, json_snippet, stack):
+        super(SignalResponder, self).__init__(name, json_snippet, stack)
+        if not stack.in_convergence_check:
+            self._register_access_key()
+
     def handle_delete(self):
         self._delete_signals()
         return super(SignalResponder, self).handle_delete()
