@@ -165,10 +165,6 @@ class BaseServer(stack_user.StackUser):
         self._register_access_key()
 
     @property
-    def access_key(self):
-        return self.data().get('access_key')
-
-    @property
     def secret_key(self):
         return self.data().get('secret_key')
 

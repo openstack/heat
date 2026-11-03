@@ -1,0 +1,13 @@
+---
+security:
+  - |
+    `story 2011933 <https://storyboard.openstack.org/#!/story/2011933>`_: Fixed
+    the resource signal API does not check that the requesting stack-user
+    credential is bound to the resource being signalled. Stack users are
+    per-stack domain users, so a leaked stack-user credential only exposes
+    the resources of its own stack, but any resource within that stack
+    could be signalled, forging deployment output values that heat consumes
+    in owner-driven stack updates. The signal path now enforces the same
+    stack-user binding as ``DescribeStackResource``; signals authenticated
+    with ec2 credentials and contexts without the stack-user role are
+    unaffected.
