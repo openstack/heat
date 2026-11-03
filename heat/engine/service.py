@@ -1985,6 +1985,14 @@ class EngineService(service.ServiceBase):
         # the user associated with the cfn-credentials file
         stack = parser.Stack.load(cnxt, stack=s, use_stored_context=True)
 
+        # A stack user must only be able to signal the resource that
+        # its credential is bound to, mirroring the
+        # describe_stack_resource authorization.
+        if cfg.CONF.heat_stack_user_role in cnxt.roles:
+            if not self._authorize_stack_user(cnxt, stack, resource_name):
+                LOG.warning("Access denied to resource %s", resource_name)
+                raise exception.Forbidden()
+
         rsrc = stack.resource_get(resource_name)
         if rsrc is None:
             raise exception.ResourceNotFound(resource_name=resource_name,
