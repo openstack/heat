@@ -50,8 +50,10 @@ class StackController(object):
 
     def _enforce(self, req, action):
         """Authorize an action against the policy.yaml and policies in code."""
+        _target = {'project_id': req.context.project_id}
         try:
-            self.policy.enforce(req.context, action, is_registered_policy=True)
+            self.policy.enforce(req.context, action, target=_target,
+                                is_registered_policy=True)
         except heat_exception.Forbidden:
             msg = _('Action %s not allowed for user') % action
             raise exception.HeatAccessDeniedError(msg)
