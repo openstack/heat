@@ -1636,3 +1636,35 @@ class CfnStackControllerTest(common.HeatTestCase):
         self.m_call.assert_called_once_with(
             dummy_req.context, ('identify_stack', {'stack_name': stack_name})
         )
+
+
+class CfnStackControllerEnforceTest(common.HeatTestCase):
+    """Tests the CFN API policy enforcement with real policy rules."""
+
+    def setUp(self):
+        super(CfnStackControllerEnforceTest, self).setUp(
+            mock_keystone=False, mock_find_file=False)
+        self.fixture = self.useFixture(config_fixture.Config())
+        self.fixture.conf(args=['--config-dir', policy_path])
+
+        class DummyConfig(object):
+            bind_port = 8000
+        cfgopts = DummyConfig()
+        self.controller = stacks.StackController(options=cfgopts)
+
+    def _dummy_GET_request(self, params=None):
+        params = params or {}
+        qs = "&".join(["=".join([k, str(params[k])]) for k in params])
+        environ = {'REQUEST_METHOD': 'GET', 'QUERY_STRING': qs}
+        req = wsgi.Request(environ)
+        req.context = utils.dummy_context(roles=['heat_stack_user'])
+        return req
+
+    def test_enforce_with_new_defaults_for_stack_user(self):
+        params = {'Action': 'DescribeStackResource'}
+        dummy_req = self._dummy_GET_request(params)
+        self.fixture.config(group='oslo_policy', enforce_new_defaults=True)
+
+        response = self.controller._enforce(dummy_req,
+                                            'DescribeStackResource')
+        self.assertIsNone(response)
