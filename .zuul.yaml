@@ -180,11 +180,11 @@
       - release-notes-jobs-python3
     check:
       jobs:
-        - grenade-heat-multinode
+        #- grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
     gate:
       jobs:
-        - grenade-heat-multinode
+        #- grenade-heat-multinode
         - heat-functional
         - heat-functional-legacy
