@@ -14,6 +14,7 @@
 from unittest import mock
 
 from heat.common import exception
+from heat.engine.resources.openstack.heat import software_deployment as sd
 from heat.engine.resources.openstack.heat import structured_config as sc
 from heat.engine import rsrc_defn
 from heat.engine import software_config_io as swc_io
@@ -168,6 +169,16 @@ class StructuredDeploymentDerivedTest(common.HeatTestCase):
             self.ctx, 'software_deploly_test_stack',
             template.Template(self.template))
         self.deployment = self.stack['deploy_mysql']
+        get_heat_signal_credentials = self.patchobject(
+            sd.SoftwareDeployment, '_get_heat_signal_credentials')
+        get_heat_signal_credentials.return_value = {
+            'auth_url': 'http://192.0.2.3/heat',
+            'username': 'test_stack_user',
+            'user_id': '6c6d452e8baf4e4c8e19b1a1b1b1b1b1',
+            'password': 'apassword',
+            'project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
+            'region_name': None,
+        }
 
     def test_build_derived_config(self):
         source = {
@@ -279,7 +290,7 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
              'name': None,
              'server': 'uuid1',
              'input_key': 'get_input',
-             'signal_transport': 'CFN_SIGNAL',
+             'signal_transport': 'HEAT_SIGNAL',
              'input_values_validate': 'LAX'})
 
         rdef = resg.get_resource_def()
@@ -324,7 +335,7 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
                         'input_key': 'get_input',
                         'input_values': None,
                         'name': None,
-                        'signal_transport': 'CFN_SIGNAL',
+                        'signal_transport': 'HEAT_SIGNAL',
                         'input_values_validate': 'LAX'
                     }
                 },
@@ -337,7 +348,7 @@ class StructuredDeploymentGroupTest(common.HeatTestCase):
                         'input_key': 'get_input',
                         'input_values': None,
                         'name': None,
-                        'signal_transport': 'CFN_SIGNAL',
+                        'signal_transport': 'HEAT_SIGNAL',
                         'input_values_validate': 'LAX'
                     }
                 }

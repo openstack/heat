@@ -274,7 +274,7 @@ engine_opts = [
                         ('ZAQAR_MESSAGE',
                          'Create a dedicated zaqar queue and post '
                          'the metadata for polling.')],
-               default='POLL_SERVER_CFN',
+               default='POLL_SERVER_HEAT',
                help=_('Template default for how the server should receive the '
                       'metadata required for software configuration.')),
     cfg.StrOpt('default_deployment_signal_transport',
@@ -291,7 +291,7 @@ engine_opts = [
                         ('ZAQAR_SIGNAL',
                          'Create a dedicated zaqar queue to be signed using '
                          'the provided keystone credentials')],
-               default='CFN_SIGNAL',
+               default='HEAT_SIGNAL',
                help=_('Template default for how the server should signal to '
                       'heat with the deployment output values.')),
     cfg.StrOpt('default_user_data_format',

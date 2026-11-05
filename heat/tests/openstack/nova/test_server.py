@@ -855,6 +855,7 @@ class ServersTest(common.HeatTestCase):
         self.stack = stack
         self.server_props = tmpl['Resources']['WebServer']['Properties']
         self.server_props['user_data_format'] = 'SOFTWARE_CONFIG'
+        self.server_props['software_config_transport'] = 'POLL_SERVER_CFN'
         if md is not None:
             tmpl['Resources']['WebServer']['Metadata'] = md
 
