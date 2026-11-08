@@ -431,6 +431,5 @@ Finalize installation
 
    .. code-block:: console
 
-      # systemctl restart heat-api
-      # systemctl restart heat-api-cfn
+      # systemctl restart apache2
       # systemctl restart heat-engine
