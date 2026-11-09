@@ -252,6 +252,9 @@ class RequestContext(context.RequestContext):
 
 
 class StoredContext(RequestContext):
+    def validate(self):
+        self._load_keystone_data()
+
     def _load_keystone_data(self):
         self._keystone_loaded = True
         try:

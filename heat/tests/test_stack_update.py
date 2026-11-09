@@ -15,6 +15,7 @@ import copy
 from unittest import mock
 
 
+from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.db import api as db_api
@@ -97,6 +98,7 @@ class StackUpdateTest(common.HeatTestCase):
 
         mock_del_trust = self.patchobject(
             fake_keystoneclient.FakeKeystoneClient, 'delete_trust')
+        self.patchobject(context.StoredContext, 'validate')
 
         self.stack.update(updated_stack)
         self.assertEqual((stack.Stack.UPDATE, stack.Stack.COMPLETE),
