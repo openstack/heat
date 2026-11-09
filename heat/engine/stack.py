@@ -1991,6 +1991,7 @@ class Stack(collections.abc.Mapping):
                             sc = self.stored_context()
 
                             try:
+                                sc.validate()
                                 sc.clients.client('keystone').delete_trust(
                                     trust_id)
                             except exception.AuthorizationFailure:
