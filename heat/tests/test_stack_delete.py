@@ -19,6 +19,7 @@ import fixtures
 from keystoneauth1 import exceptions as kc_exceptions
 from oslo_log import log as logging
 
+from heat.common import context
 from heat.common import exception
 from heat.common import template_format
 from heat.common import timeutils
@@ -253,6 +254,7 @@ class StackTest(common.HeatTestCase):
         trustor_ctx = utils.dummy_context(user_id='thetrustor')
         other_ctx = utils.dummy_context(user_id='nottrustor')
         stored_ctx = utils.dummy_context(trust_id='thetrust')
+        self.patchobject(context.StoredContext, 'validate')
 
         mock_kc = self.patchobject(hkc, 'KeystoneClient')
         self.stub_keystoneclient(user_id='thetrustor')
@@ -283,12 +285,51 @@ class StackTest(common.HeatTestCase):
         self.assertEqual((stack.Stack.DELETE, stack.Stack.COMPLETE),
                          loaded_stack.state)
 
+    def test_delete_trust_not_trustor_keystone_not_found(self):
+        trustor_ctx = utils.dummy_context(user_id='thetrustor')
+        other_ctx = utils.dummy_context(user_id='nottrustor')
+
+        mock_kc = self.patchobject(hkc, 'KeystoneClient')
+        self.stub_keystoneclient(user_id='thetrustor')
+
+        self.stack = stack.Stack(trustor_ctx, 'delete_trust_nf', self.tmpl)
+        stack_id = self.stack.store()
+
+        creds = {'auth_token': 'abcd1234',
+                 'username': 'test_username',
+                 'auth_url': 'http://server.test:5000/v3',
+                 'trust_id': 'thetrust',
+                 'trustor_user_id': 'thetrustor',
+                 'tenant_id': 'test_tenant_id'}
+        stored_ctx = context.StoredContext.from_dict(creds)
+        auth_plugin = mock.Mock()
+        auth_plugin.get_access.side_effect = kc_exceptions.http.NotFound(
+            'Could not find user: T814812. (HTTP 404)')
+        self.patchobject(context.StoredContext, 'auth_plugin',
+                         new=auth_plugin)
+        self.patchobject(context.StoredContext, 'keystone_session',
+                         new=mock.Mock())
+
+        mock_sc = self.patchobject(stack.Stack, 'stored_context')
+        mock_sc.return_value = stored_ctx
+
+        fkc = mock.Mock()
+        fkc.client = mock.PropertyMock(
+            side_effect=AssertionError('delete_trust should not be called'))
+        mock_kc.return_value = fkc
+
+        loaded_stack = stack.Stack.load(other_ctx, stack_id)
+        loaded_stack._delete_user_cred(raise_keystone_exception=True)
+        mock_sc.assert_called_with()
+        fkc.delete_trust.assert_not_called()
+
     def test_delete_trust_not_trustor_auth_fail(self):
         # Stack gets created with trustor_ctx, deleted with other_ctx
         # then the trust delete should be with stored_ctx (and fails)
         trustor_ctx = utils.dummy_context(user_id='thetrustor')
         other_ctx = utils.dummy_context(user_id='nottrustor')
         stored_ctx = utils.dummy_context(trust_id='thetrust')
+        self.patchobject(context.StoredContext, 'validate')
 
         mock_kc = self.patchobject(hkc, 'KeystoneClient')
         self.stub_keystoneclient(user_id='thetrustor')
@@ -381,6 +422,7 @@ class StackTest(common.HeatTestCase):
 
         mock_kcp = self.patchobject(keystone.KeystoneClientPlugin, '_create',
                                     return_value=FakeKeystoneClientFail())
+        self.patchobject(context.StoredContext, 'validate')
 
         self.stack = stack.Stack(self.ctx, 'delete_trust', self.tmpl)
         stack_id = self.stack.store()
