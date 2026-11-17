@@ -136,13 +136,13 @@ def purge_deleted():
 def do_crypt_parameters_and_properties():
     """Encrypt/decrypt hidden parameters and resource properties data."""
     ctxt = context.get_admin_context()
-    prev_encryption_key = CONF.command.previous_encryption_key
+    encryption_key = CONF.command.encryption_key
     if CONF.command.crypt_operation == "encrypt":
         db_api.encrypt_parameters_and_properties(
-            ctxt, prev_encryption_key, CONF.command.verbose_update_params)
+            ctxt, encryption_key, CONF.command.verbose_update_params)
     elif CONF.command.crypt_operation == "decrypt":
         db_api.decrypt_parameters_and_properties(
-            ctxt, prev_encryption_key, CONF.command.verbose_update_params)
+            ctxt, encryption_key, CONF.command.verbose_update_params)
 
 
 def add_command_parsers(subparsers):
@@ -193,11 +193,12 @@ def add_command_parsers(subparsers):
                                'heat-engine processes must be stopped to use '
                                'this.'))
     # positional parameter, can be skipped. default=None
-    parser.add_argument('previous_encryption_key',
+    parser.add_argument('encryption_key',
                         nargs='?',
                         default=None,
-                        help=_('Provide old encryption key. New encryption'
-                               ' key would be used from config file.'))
+                        help=_('Provide key to encrypt or decrypt data. '
+                               'If not set, the key is loaded from '
+                               'the [DEFAULT] auth_encryption_key option.'))
     parser.add_argument('--verbose-update-params', action='store_true',
                         help=_('Print an INFO message when processing of each '
                                'raw_template or resource begins or ends'))
