@@ -1,0 +1,19 @@
+---
+upgrade:
+  - |
+    The following resources are now hidden and have no effect, because
+    the networking-sfc plugin is now deprecated and was removed from
+    the coordinated release in 2027.1 release.
+
+    - ``OS::Neutron::FlowClassifier``
+    - ``OS::Neutron::PortChain``
+    - ``OS::Neutron::PortPair``
+    - ``OS::Neutron::PortPairGroup``
+
+  - |
+    The following constraints now have no effect and always succeed, due to
+    removal of networking-sfc support.
+
+    - ``neutron.flow_classifier``
+    - ``neutron.port_pair``
+    - ``neutron.port_pair_group``
