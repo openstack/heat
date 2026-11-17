@@ -23,8 +23,9 @@ Run with -h to see a list of available commands:
 ``heat-manage -h``
 
 Commands are ``db_version``, ``db_sync``, ``purge_deleted``,
-``migrate_convergence_1``, ``migrate_properties_data``, and
-``service``. Detailed descriptions are below.
+``migrate_convergence_1``, ``migrate_properties_data``,
+``rotate_auth_encryption_key``, and ``service``. Detailed descriptions are
+below.
 
 ``heat-manage db_version``
 
@@ -49,6 +50,16 @@ Commands are ``db_version``, ``db_sync``, ``purge_deleted``,
 
     Migrates [stack_id] from non-convergence to convergence. This requires running
     convergence enabled heat engine(s) and can't be done when they are offline.
+
+``heat-manage rotate_auth_encryption_key [--batch-size BATCH_SIZE] [--verbose]``
+
+    Re-encrypts hidden template parameters, resource properties data, redacted
+    resource data, and stored user credentials with the current
+    ``auth_encryption_key``. Previous keys configured through
+    ``auth_encryption_old_keys`` are used to decrypt existing records. Remove
+    the old keys from ``auth_encryption_old_keys`` after the command succeeds.
+    Stop heat-engine services while running this command to avoid concurrent
+    updates to the same records.
 
 ``heat-manage service list``
 

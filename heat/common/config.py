@@ -472,6 +472,17 @@ def startup_sanity_check():
         raise exception.Error(_('heat.conf misconfigured, auth_encryption_key '
                                 'must be 32 characters'))
 
+    for old_key in cfg.CONF.auth_encryption_old_keys:
+        old_key_len = len(old_key)
+        if old_key_len in (16, 24):
+            LOG.warning(
+                'Please update all auth_encryption_old_keys to be 32 '
+                'characters.')
+        elif old_key_len != 32:
+            raise exception.Error(
+                _('heat.conf misconfigured, auth_encryption_old_keys must be '
+                  '32 characters'))
+
 
 def list_opts():
     yield None, rpc_opts

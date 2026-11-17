@@ -32,7 +32,14 @@ auth_opts = [
                secret=True,
                default='notgood but just long enough i t',
                help=_('Key used to encrypt authentication info in the '
-                      'database. Length of this key must be 32 characters.'))
+                      'database. Length of this key must be 32 characters.')),
+    cfg.MultiStrOpt('auth_encryption_old_keys',
+                    secret=True,
+                    default=[],
+                    help=_('Old keys that can still be used to decrypt '
+                           'authentication info in the database. New data is '
+                           'always encrypted with auth_encryption_key. Length '
+                           'of each key must be 32 characters.'))
 ]
 
 cfg.CONF.register_opts(auth_opts)
@@ -101,9 +108,17 @@ def decrypt(method, data, encryption_key=None):
     if method is None or data is None:
         return None
     decryptor = getattr(sys.modules[__name__], method)
-    value = decryptor(data, encryption_key)
-    if value is not None:
-        return encodeutils.safe_decode(value, 'utf-8')
+    first_exc = None
+    for key in get_valid_encryption_keys(encryption_key):
+        try:
+            value = decryptor(data, key)
+            if value is not None:
+                return encodeutils.safe_decode(value, 'utf-8')
+        except (exception.InvalidEncryptionKey, UnicodeDecodeError,
+                ValueError, TypeError) as exc:
+            first_exc = first_exc or exc
+            continue
+    raise exception.InvalidEncryptionKey() from first_exc
 
 
 def encrypted_dict(data, encryption_key=None):
@@ -125,12 +140,7 @@ def decrypted_dict(data, encryption_key=None):
         return return_data
     for prop_name, prop_value in data.items():
         method, value = prop_value
-        try:
-            decrypted_value = decrypt(method, value, encryption_key)
-        except UnicodeDecodeError:
-            # The dict contained valid JSON on the way in, so if what comes
-            # out is garbage then the key was incorrect.
-            raise exception.InvalidEncryptionKey()
+        decrypted_value = decrypt(method, value, encryption_key)
         prop_string = jsonutils.loads(decrypted_value)
         return_data[prop_name] = prop_string
     return return_data
@@ -161,6 +171,22 @@ def get_valid_encryption_key(encryption_key, fix_length=False):
         encryption_key = encryption_key * 2
 
     return encryption_key[:32]
+
+
+def get_valid_encryption_keys(encryption_key=None):
+    """Return keys used for decryption, primary first."""
+    if encryption_key is not None:
+        configured_keys = [encryption_key]
+    else:
+        configured_keys = [cfg.CONF.auth_encryption_key]
+        configured_keys.extend(cfg.CONF.auth_encryption_old_keys)
+
+    keys = []
+    for key in configured_keys:
+        valid_key = get_valid_encryption_key(key)
+        if valid_key not in keys:
+            keys.append(valid_key)
+    return keys
 
 
 def heat_decrypt(value, encryption_key=None):

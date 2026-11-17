@@ -145,6 +145,18 @@ def do_crypt_parameters_and_properties():
             ctxt, prev_encryption_key, CONF.command.verbose_update_params)
 
 
+def do_rotate_auth_encryption_key():
+    """Re-encrypt all data with the configured primary encryption key."""
+    ctxt = context.get_admin_context(show_deleted=True)
+    excs = db_api.rotate_auth_encryption_key(
+        ctxt, CONF.command.batch_size, CONF.command.verbose)
+    if excs:
+        raise SystemExit(
+            _('Failed to re-encrypt %d database records. See the log for '
+              'details.') % len(excs))
+    print(_('All encrypted database records now use auth_encryption_key.'))
+
+
 def add_command_parsers(subparsers):
     # db_version parser
     parser = subparsers.add_parser('db_version')
@@ -201,6 +213,16 @@ def add_command_parsers(subparsers):
     parser.add_argument('--verbose-update-params', action='store_true',
                         help=_('Print an INFO message when processing of each '
                                'raw_template or resource begins or ends'))
+
+    # rotate_auth_encryption_key parser
+    parser = subparsers.add_parser('rotate_auth_encryption_key')
+    parser.set_defaults(func=do_rotate_auth_encryption_key)
+    parser.add_argument('--batch-size', type=int, default=50,
+                        help=_('Number of database records processed in each '
+                               'batch. Defaults to 50.'))
+    parser.add_argument('--verbose', action='store_true',
+                        help=_('Print an INFO message when processing of each '
+                               'database record begins or ends'))
 
     parser = subparsers.add_parser('resource_data_list')
     parser.set_defaults(func=do_resource_data_list)
