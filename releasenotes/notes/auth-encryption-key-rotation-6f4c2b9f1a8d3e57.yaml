@@ -1,0 +1,19 @@
+---
+features:
+  - |
+    A new ``[DEFAULT] auth_encryption_old_keys`` option allows Heat to
+    decrypt data encrypted with previous ``auth_encryption_key`` values.
+    New data is always encrypted with the current ``auth_encryption_key``.
+  - |
+    A new ``heat-manage rotate_auth_encryption_key`` command re-encrypts
+    hidden template parameters, resource properties data, redacted resource
+    data, and stored user credentials with the current
+    ``auth_encryption_key``.
+upgrade:
+  - |
+    To rotate the ``auth_encryption_key``, move the current key to
+    ``auth_encryption_old_keys`` and set the new key as
+    ``auth_encryption_key``. Then run
+    ``heat-manage rotate_auth_encryption_key`` and remove the old key from
+    ``auth_encryption_old_keys`` after the command succeeds. Stop heat-engine
+    services while running the command to avoid concurrent updates.

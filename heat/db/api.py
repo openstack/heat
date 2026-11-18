@@ -2305,6 +2305,162 @@ def decrypt_parameters_and_properties(context, encryption_key, batch_size=50,
     return excs
 
 
+def _reencrypt_raw_templates(context, batch_size, verbose):
+    session = context.session
+    excs = []
+    query = session.query(models.RawTemplate).filter(
+        models.RawTemplate.environment.isnot(None))
+    for raw_template in _get_batch(
+            session=session, context=context, query=query,
+            model=models.RawTemplate, batch_size=batch_size):
+        env = raw_template.environment
+        if not env or 'parameters' not in env:
+            continue
+        encrypted_params = env.get('encrypted_param_names') or []
+        if not encrypted_params:
+            continue
+        try:
+            if verbose:
+                LOG.info("Re-encrypting raw_template %s...", raw_template.id)
+            newenv = copy.deepcopy(env)
+            for param_name in encrypted_params:
+                encrypted_value = env['parameters'].get(param_name)
+                if not (isinstance(encrypted_value, (list, tuple)) and
+                        len(encrypted_value) == 2):
+                    continue
+                method, value = encrypted_value
+                if not method or value is None:
+                    continue
+                newenv['parameters'][param_name] = crypt.encrypt(
+                    crypt.decrypt(method, value))
+            raw_template_update(
+                context, raw_template.id, {'environment': newenv})
+        except Exception as exc:
+            LOG.exception('Failed to re-encrypt parameters of raw template '
+                          '%s', raw_template.id)
+            excs.append(exc)
+            continue
+        finally:
+            if verbose:
+                LOG.info("Finished re-encrypting raw_template %s.",
+                         raw_template.id)
+    return excs
+
+
+def _reencrypt_resource_properties_data(context, batch_size, verbose):
+    session = context.session
+    excs = []
+    query = session.query(models.ResourcePropertiesData).filter(
+        models.ResourcePropertiesData.encrypted.is_(True),
+        models.ResourcePropertiesData.data.isnot(None))
+    for rpd in _get_batch(
+            session=session, context=context, query=query,
+            model=models.ResourcePropertiesData, batch_size=batch_size):
+        try:
+            if verbose:
+                LOG.info("Re-encrypting resource_properties_data %s...",
+                         rpd.id)
+            decrypted = crypt.decrypted_dict(rpd.data)
+            rpd.update({'data': crypt.encrypted_dict(decrypted),
+                        'encrypted': True})
+        except Exception as exc:
+            LOG.exception('Failed to re-encrypt data of '
+                          'resource_properties_data %s', rpd.id)
+            excs.append(exc)
+            continue
+        finally:
+            if verbose:
+                LOG.info("Finished re-encrypting resource_properties_data "
+                         "%s.", rpd.id)
+    return excs
+
+
+def _reencrypt_resource_data(context, batch_size, verbose):
+    session = context.session
+    excs = []
+    query = session.query(models.ResourceData).filter(
+        models.ResourceData.redact.is_(True),
+        models.ResourceData.value.isnot(None))
+    for resource_data in _get_batch(
+            session=session, context=context, query=query,
+            model=models.ResourceData, batch_size=batch_size):
+        if resource_data.decrypt_method is None:
+            continue
+        try:
+            if verbose:
+                LOG.info("Re-encrypting resource_data %s...",
+                         resource_data.id)
+            method, value = crypt.encrypt(
+                crypt.decrypt(resource_data.decrypt_method,
+                              resource_data.value))
+            resource_data.update({'value': value, 'decrypt_method': method})
+        except Exception as exc:
+            LOG.exception('Failed to re-encrypt resource_data %s',
+                          resource_data.id)
+            excs.append(exc)
+            continue
+        finally:
+            if verbose:
+                LOG.info("Finished re-encrypting resource_data %s.",
+                         resource_data.id)
+    return excs
+
+
+def _reencrypt_user_creds(context, batch_size, verbose):
+    session = context.session
+    excs = []
+    query = session.query(models.UserCreds).filter(
+        sqlalchemy.or_(models.UserCreds.password.isnot(None),
+                       models.UserCreds.trust_id.isnot(None)))
+    for user_creds in _get_batch(
+            session=session, context=context, query=query,
+            model=models.UserCreds, batch_size=batch_size):
+        if user_creds.decrypt_method is None:
+            continue
+        try:
+            if verbose:
+                LOG.info("Re-encrypting user_creds %s...", user_creds.id)
+            updates = {}
+            if user_creds.password is not None:
+                method, value = crypt.encrypt(
+                    crypt.decrypt(user_creds.decrypt_method,
+                                  user_creds.password))
+                updates.update({'password': value, 'decrypt_method': method})
+            if user_creds.trust_id is not None:
+                method, value = crypt.encrypt(
+                    crypt.decrypt(user_creds.decrypt_method,
+                                  user_creds.trust_id))
+                updates.update({'trust_id': value, 'decrypt_method': method})
+            if updates:
+                user_creds.update(updates)
+        except Exception as exc:
+            LOG.exception('Failed to re-encrypt user_creds %s', user_creds.id)
+            excs.append(exc)
+            continue
+        finally:
+            if verbose:
+                LOG.info("Finished re-encrypting user_creds %s.",
+                         user_creds.id)
+    return excs
+
+
+@context_manager.writer
+def rotate_auth_encryption_key(context, batch_size=50, verbose=False):
+    """Re-encrypt all data with the configured primary encryption key.
+
+    Old keys configured through auth_encryption_old_keys are used to decrypt
+    existing data. The return value is a list of exceptions encountered while
+    processing the database records.
+    """
+    excs = []
+    excs.extend(_reencrypt_raw_templates(context, batch_size, verbose))
+    excs.extend(
+        _reencrypt_resource_properties_data(context, batch_size, verbose))
+    excs.extend(_reencrypt_resource_data(context, batch_size, verbose))
+    excs.extend(_reencrypt_user_creds(context, batch_size, verbose))
+    return excs
+
+
 def _get_batch(session, context, query, model, batch_size=50):
     last_batch_marker = None
     while True:

@@ -27,12 +27,66 @@ class CryptTest(common.HeatTestCase):
         self.assertEqual('cryptography_decrypt_v1', method)
         self.assertIsNotNone(result)
 
+    def test_decrypt_with_old_key(self):
+        old_key = 'o' * 32
+        new_key = 'n' * 32
+        cfg.CONF.set_override('auth_encryption_key', new_key)
+        cfg.CONF.set_override('auth_encryption_old_keys', [old_key])
+
+        method, result = crypt.encrypt('foo', old_key)
+        self.assertEqual('foo', crypt.decrypt(method, result))
+
+    def test_encrypt_uses_primary_key(self):
+        old_key = 'o' * 32
+        new_key = 'n' * 32
+        cfg.CONF.set_override('auth_encryption_key', new_key)
+        cfg.CONF.set_override('auth_encryption_old_keys', [old_key])
+
+        method, result = crypt.encrypt('foo')
+        self.assertEqual('foo', crypt.decrypt(method, result, new_key))
+        self.assertRaises(exception.InvalidEncryptionKey,
+                          crypt.decrypt, method, result, old_key)
+
+    def test_decrypt_no_matching_key(self):
+        cfg.CONF.set_override('auth_encryption_key', 'n' * 32)
+        cfg.CONF.set_override('auth_encryption_old_keys', ['o' * 32])
+
+        method, result = crypt.encrypt('foo', 'm' * 32)
+        ex = self.assertRaises(exception.InvalidEncryptionKey,
+                               crypt.decrypt, method, result)
+        self.assertIsInstance(ex.__cause__,
+                              exception.InvalidEncryptionKey)
+
+    def test_get_valid_encryption_keys(self):
+        cfg.CONF.set_override('auth_encryption_key', 'n' * 32)
+        cfg.CONF.set_override('auth_encryption_old_keys',
+                              ['o' * 32, 'p' * 32, 'n' * 32])
+        self.assertEqual(['n' * 32, 'o' * 32, 'p' * 32],
+                         crypt.get_valid_encryption_keys())
+
+    def test_decrypt_with_old_key_legacy_length(self):
+        old_key = 'o' * 16
+        cfg.CONF.set_override('auth_encryption_key', 'n' * 32)
+        cfg.CONF.set_override('auth_encryption_old_keys', [old_key])
+
+        method, result = crypt.encrypt('foo', old_key)
+        self.assertEqual('foo', crypt.decrypt(method, result))
+
     def test_init_auth_encryption_key_length(self):
         """Test for length of the auth_encryption_length in config file"""
         cfg.CONF.set_override('auth_encryption_key', 'abcdefghijklma')
         err = self.assertRaises(exception.Error,
                                 config.startup_sanity_check)
         exp_msg = ('heat.conf misconfigured, auth_encryption_key '
+                   'must be 32 characters')
+        self.assertIn(exp_msg, str(err))
+
+    def test_init_auth_encryption_old_key_length(self):
+        cfg.CONF.set_override('auth_encryption_old_keys',
+                              ['abcdefghijklma'])
+        err = self.assertRaises(exception.Error,
+                                config.startup_sanity_check)
+        exp_msg = ('heat.conf misconfigured, auth_encryption_old_keys '
                    'must be 32 characters')
         self.assertIn(exp_msg, str(err))
 

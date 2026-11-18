@@ -3965,6 +3965,62 @@ class DBAPICryptParamsPropsTest(common.HeatTestCase):
         self.assertEqual([], db_api.encrypt_parameters_and_properties(
             self.ctx, cfg.CONF.auth_encryption_key))
 
+    def test_rotate_auth_encryption_key(self):
+        old_key = cfg.CONF.auth_encryption_key
+        new_key = 'n' * 32
+        encrypt_value = self.encrypt()
+        create_resource_data(
+            self.ctx, self.resources[0], value='secret', redact=True)
+
+        cfg.CONF.set_override('auth_encryption_key', new_key)
+        cfg.CONF.set_override('auth_encryption_old_keys', [old_key])
+        self.assertEqual([], db_api.rotate_auth_encryption_key(self.ctx))
+
+        cfg.CONF.set_override('auth_encryption_old_keys', [])
+        self.decrypt(encrypt_value, enc_key=new_key)
+        self.assertEqual(
+            'secret',
+            db_api.resource_data_get(
+                self.ctx, self.resources[0].id, 'test_resource_key'))
+        self.assertEqual(
+            '',
+            db_api.user_creds_get(self.ctx, self.user_creds['id'])['password'])
+
+    def test_rotate_auth_encryption_key_user_creds(self):
+        old_key = cfg.CONF.auth_encryption_key
+        new_key = 'n' * 32
+        creds = create_user_creds(self.ctx, password='secretpassword')
+        trust_creds = create_user_creds(
+            self.ctx, trust_id='test_trust_id', trustor_user_id='atrustor123')
+
+        cfg.CONF.set_override('auth_encryption_key', new_key)
+        cfg.CONF.set_override('auth_encryption_old_keys', [old_key])
+        self.assertEqual([], db_api.rotate_auth_encryption_key(self.ctx))
+
+        cfg.CONF.set_override('auth_encryption_old_keys', [])
+        self.assertEqual(
+            'secretpassword',
+            db_api.user_creds_get(self.ctx, creds['id'])['password'])
+        self.assertEqual(
+            'test_trust_id',
+            db_api.user_creds_get(self.ctx, trust_creds['id'])['trust_id'])
+        self.assertEqual(
+            'atrustor123',
+            db_api.user_creds_get(
+                self.ctx, trust_creds['id'])['trustor_user_id'])
+
+    def test_rotate_auth_encryption_key_invalid_key(self):
+        old_key = cfg.CONF.auth_encryption_key
+        creds = create_user_creds(self.ctx, password='secretpassword')
+
+        cfg.CONF.set_override('auth_encryption_key', 'n' * 32)
+        self.assertEqual(2, len(db_api.rotate_auth_encryption_key(self.ctx)))
+
+        cfg.CONF.set_override('auth_encryption_key', old_key)
+        self.assertEqual(
+            'secretpassword',
+            db_api.user_creds_get(self.ctx, creds['id'])['password'])
+
     def test_encrypt_non_string_param_type(self):
         t = template_format.parse('''
         heat_template_version: 2013-05-23
