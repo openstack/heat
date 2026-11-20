@@ -186,15 +186,7 @@ class NeutronClientPlugin(os_client.ExtensionMixin,
     def _resolve_resource_path(self, resource):
         """Returns ext resource path."""
 
-        if resource == 'port_pair':
-            path = "/sfc/port_pairs"
-        elif resource == 'port_pair_group':
-            path = "/sfc/port_pair_groups"
-        elif resource == 'flow_classifier':
-            path = "/sfc/flow_classifiers"
-        elif resource == 'port_chain':
-            path = "/sfc/port_chains"
-        elif resource == 'tap_service':
+        if resource == 'tap_service':
             path = "/taas/tap_services"
         elif resource == 'tap_flow':
             path = "/taas/tap_flows"

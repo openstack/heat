@@ -25,6 +25,12 @@ from heat.common import netutils as heat_netutils
 from heat.engine import constraints
 
 
+class NoopConstraint(constraints.BaseCustomConstraint):
+
+    def validate(self, value, context):
+        return True
+
+
 class TestConstraintDelay(constraints.BaseCustomConstraint):
 
     def validate_with_client(self, client, value):

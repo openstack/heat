@@ -18,6 +18,16 @@ from heat.tests import common
 from heat.tests import utils
 
 
+class TestNoopConstraint(common.HeatTestCase):
+    def setUp(self):
+        super(TestNoopConstraint, self).setUp()
+        self.constraint = cc.NoopConstraint()
+
+    def test_validate(self):
+        for val in [4, 'abc', True]:
+            self.assertTrue(self.constraint.validate(val, None))
+
+
 class TestIPConstraint(common.HeatTestCase):
 
     def setUp(self):

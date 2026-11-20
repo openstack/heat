@@ -84,21 +84,6 @@ class QoSPolicyConstraint(NeutronConstraint):
     extension = 'qos'
 
 
-class PortPairConstraint(NeutronExtConstraint):
-    resource_name = 'port_pair'
-    extension = 'sfc'
-
-
-class PortPairGroupConstraint(NeutronExtConstraint):
-    resource_name = 'port_pair_group'
-    extension = 'sfc'
-
-
-class FlowClassifierConstraint(NeutronExtConstraint):
-    resource_name = 'flow_classifier'
-    extension = 'sfc'
-
-
 class ProviderConstraint(constraints.BaseCustomConstraint):
 
     expected_exceptions = (exception.StackValidationFailed,)
