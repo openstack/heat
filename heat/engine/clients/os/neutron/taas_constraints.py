@@ -26,7 +26,3 @@ class TapServiceConstraint(nc.NeutronExtConstraint):
 class TapFlowConstraint(nc.NeutronExtConstraint):
     resource_name = 'tap_flow'
     extension = 'taas'
-
-
-class TaaSProviderConstraint(nc.ProviderConstraint):
-    service_type = 'TAPASASERVICE'

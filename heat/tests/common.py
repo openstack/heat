@@ -309,10 +309,6 @@ class HeatTestCase(testscenarios.WithScenarios,
                                     'validate')
         validate.return_value = True
 
-    def stub_ProviderConstraint_validate(self):
-        validate = self.patchobject(neutron.ProviderConstraint, 'validate')
-        validate.return_value = True
-
     def stub_SecretConstraint_validate(self):
         validate = self.patchobject(barbican.SecretConstraint, 'validate')
         validate.return_value = True

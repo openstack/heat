@@ -35,23 +35,16 @@ class NeutronClientPlugin(os_client.ExtensionMixin,
         RES_TYPE_SUBNET_POOL, RES_TYPE_ADDRESS_SCOPE,
         RES_TYPE_SECURITY_GROUP,
         RES_TYPE_QOS_POLICY,
-        RES_TYPE_LOADBALANCER,
-        RES_TYPE_LB_LISTENER, RES_TYPE_LB_POOL, RES_TYPE_LB_L7POLICY,
     ) = (
         'network', 'subnet', 'router', 'port',
         'subnetpool', 'address_scope',
         'security_group',
         'policy',
-        'loadbalancer',
-        'listener', 'pool', 'l7policy',
     )
 
     _res_cmdres_mapping = {
         # resource: cmd_resource
         RES_TYPE_QOS_POLICY: 'qos_policy',
-        RES_TYPE_LOADBALANCER: 'lbaas_loadbalancer',
-        RES_TYPE_LB_POOL: 'lbaas_pool',
-        RES_TYPE_LB_L7POLICY: 'lbaas_l7policy'
     }
 
     def _create(self):

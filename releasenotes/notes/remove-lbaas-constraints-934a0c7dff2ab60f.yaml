@@ -1,0 +1,11 @@
+---
+upgrade:
+  - |
+    The following constraints, which was used in integration with neutron
+    LBaaS, have no effect now and always succeeds.
+
+    - ``neutron.lbaas.listener``
+    - ``neutron.lbaas.loadbalancer``
+    - ``neutron.lbaas.pool``
+    - ``neutron.lbaas.provider``
+
