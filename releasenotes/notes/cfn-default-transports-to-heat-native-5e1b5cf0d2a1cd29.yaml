@@ -1,0 +1,15 @@
+---
+upgrade:
+  - |
+    The ``default_software_config_transport`` default has changed from
+    ``POLL_SERVER_CFN`` to ``POLL_SERVER_HEAT`` and the
+    ``default_deployment_signal_transport`` default from ``CFN_SIGNAL``
+    to ``HEAT_SIGNAL``. The new defaults use the Heat API with
+    keystone-authenticated stack users instead of EC2-signed URLs and
+    do not require ``heat-api-cfn``. They require keystone v3, a
+    configured stack user domain, and images with heat-agents (already
+    required by SoftwareDeployment). Existing deployments switch to
+    ``HEAT_SIGNAL`` the next time their configuration is re-derived on
+    update; untouched ones keep signaling with their existing
+    EC2-signed URLs. Set the old values in ``heat.conf`` to restore
+    the previous behavior.

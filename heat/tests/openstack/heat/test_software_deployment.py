@@ -197,6 +197,16 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         get_ec2_signed_url = self.patchobject(
             sd.SoftwareDeployment, '_get_ec2_signed_url')
         get_ec2_signed_url.return_value = 'http://192.0.2.2/signed_url'
+        get_heat_signal_credentials = self.patchobject(
+            sd.SoftwareDeployment, '_get_heat_signal_credentials')
+        get_heat_signal_credentials.return_value = {
+            'auth_url': 'http://192.0.2.3/heat',
+            'username': 'test_stack_user',
+            'user_id': '6c6d452e8baf4e4c8e19b1a1b1b1b1b1',
+            'password': 'apassword',
+            'project_id': '65728b74-cfe7-4f17-9c15-11d4f686e591',
+            'region_name': None,
+        }
 
         self.deployment = self.stack['deployment_mysql']
         self.rpc_client = mock.MagicMock()
@@ -217,7 +227,7 @@ class SoftwareDeploymentTest(common.HeatTestCase):
         props['user_data_format'] = 'SOFTWARE_CONFIG'
         self._create_stack(self.template_with_server)
         mock_sd = self.deployment
-        self.assertEqual('CFN_SIGNAL',
+        self.assertEqual('HEAT_SIGNAL',
                          mock_sd.properties.get('signal_transport'))
         mock_sd.validate()
 
@@ -1472,7 +1482,7 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
                 'input_values': {'foo': 'bar'},
                 'name': '10_config',
                 'server': 'uuid1',
-                'signal_transport': 'CFN_SIGNAL'})
+                'signal_transport': 'HEAT_SIGNAL'})
 
         rdef = resg.get_resource_def()
         self.assertEqual(
@@ -1515,7 +1525,7 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
                         'config': 'config_uuid',
                         'input_values': {'foo': 'bar'},
                         'name': '10_config',
-                        'signal_transport': 'CFN_SIGNAL'
+                        'signal_transport': 'HEAT_SIGNAL'
                     }
                 },
                 "server2": {
@@ -1526,7 +1536,7 @@ class SoftwareDeploymentGroupTest(common.HeatTestCase):
                         'config': 'config_uuid',
                         'input_values': {'foo': 'bar'},
                         'name': '10_config',
-                        'signal_transport': 'CFN_SIGNAL'
+                        'signal_transport': 'HEAT_SIGNAL'
                     }
                 }
             }
